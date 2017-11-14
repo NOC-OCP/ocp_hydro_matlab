@@ -1,1 +1,0 @@
-This is for MEXEC processing scripts only.  There is a separate proect for MEXEC.
