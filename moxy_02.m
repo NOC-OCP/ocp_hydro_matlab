@@ -1,0 +1,58 @@
+% moxy_02: paste oxy data into sam file
+%
+% modified to input bottle oxygen data to variable 'botoxy_per_l' from
+% station 98 onwards.  moxy_02_oxykg should be run afterwards to calculate
+% bottle oxygen in umol/kg.  CPA 6/2/10
+
+scriptname = 'moxy_02';
+cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+
+if ~exist('stn','var')
+    stn = input('type stn number ');
+end
+stn_string = sprintf('%03d',stn);
+stnlocal = stn; clear stn % so that it doesn't persist
+
+mdocshow(scriptname, ['pastes bottle oxygen from oxy_' cruise '_' stn_string '.nc to sam_' cruise '_' stn_string '.nc']);
+
+root_oxy = mgetdir('M_BOT_OXY');
+root_ctd = mgetdir('M_CTD');
+
+prefix1 = ['oxy_' cruise '_'];
+prefix2 = ['sam_' cruise '_'];
+
+infile1 = [root_oxy '/' prefix1 stn_string];
+
+if exist([infile1 '.nc'])
+
+otfile2 = [root_ctd '/' prefix2 stn_string];
+
+% bak on jr302 19 jun 2014 some stations don't have any oxy data; exit
+% gracefully
+
+if exist(m_add_nc(infile1),'file')~=2;
+    mess = ['File ' m_add_nc(infile1) ' not found'];
+    fprintf(MEXEC_A.Mfider,'%s\n',mess)
+    return
+end
+
+    %--------------------------------
+    % 2009-01-26 08:05:14
+    % mpaste
+    % input files
+    % Filename oxy_jr193_016.nc   Data Name :  oxy_jr193_016 <version> 2 <site> bak_macbook
+    % output files
+    % Filename sam_jr193_016.nc   Data Name :  sam_jr193_016 <version> 7 <site> bak_macbook
+    MEXEC_A.MARGS_IN = {
+        otfile2
+        infile1
+        'y'
+        'sampnum'
+        'sampnum'
+        'botoxya botoxyflaga botoxytempa'
+        'botoxy_per_l botoxyflag botoxytemp'
+        };
+    mpaste
+    %--------------------------------
+
+end
