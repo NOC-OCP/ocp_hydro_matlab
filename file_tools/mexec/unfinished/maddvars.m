@@ -7,7 +7,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'maddvars';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 fprintf(MEXEC_A.Mfidterm,'%s','Enter name of input disc file  ')
 fn_in = m_getfilename;

@@ -124,7 +124,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mplotxy';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 % remove the varargin from MEXEC_A.MARGS_IN because it will be passed straight into
 % m_edplot. Normally, arguments are read from varargin or MEXEC_A.MARGS_IN using

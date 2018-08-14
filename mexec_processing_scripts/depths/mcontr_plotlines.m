@@ -42,7 +42,6 @@ while cdim > 0
     cdim = size(posall,2);
 end
 hold on
-% keyboard
 % plot each contour line
 % first switch off lines in base contour plot
 set(hplot,'linestyle','none');
@@ -150,7 +149,6 @@ for kcont = 1:numcontour
     end
 
 end
-% keyboard
 % % % % % % % clabelall = get(hclabel);
 % % % % % % % clall = clabelall;
 % % % % % % % nstring = length(clabelall);

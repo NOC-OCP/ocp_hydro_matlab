@@ -7,7 +7,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'techsas_to_mstar';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 techsas_fn = m_gettechsasfilename;
 mstar_fn = m_getfilename;

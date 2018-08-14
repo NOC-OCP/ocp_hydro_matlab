@@ -116,15 +116,18 @@ function cdfot = mcontr(cdfin,ncfile)
 %                    reset ctabstart/end.
 %   If ctabskip == 0, and ctabstart/end do not exist, then expand/trim the
 %                    cdfin.colortable to fit the clevs, and overwrite the colortable.
-
-% quite a bit of the label handling code is lifted form mplotxy
+%
+% new options during jc159:
+% c.colorbarheight, specified in cm; Default is height of plot;
+%
+% quite a bit of the label handling code is lifted from mplotxy
 
 m_common
 m_margslocal
 m_varargs
 global blocksize % jc032
 MEXEC_A.Mprog = 'mcontr';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 ntickdef = [10 10 10]; % third element is default number of contour intervals
 cdfot = [];
@@ -637,7 +640,6 @@ ca = caxis;
 
 handles = hplot; m_recolor % jc032
 % return
-% keyboard
 ha = gca;
 % set(ha,'position',[.1 .15 .7 .7]);
 axis([0 1 0 1]);
@@ -876,8 +878,7 @@ while 1
     % % % % % set(hh,'HorizontalAlignment','center')
     % % % % % set(hh,'VerticalAlignment','top')
     % % % % % set(hh,'interpreter','none');
-    % keyboard
-    if isfield(cdfin,'xlabelset')
+        if isfield(cdfin,'xlabelset')
         if ~isempty(cdfin.xlabelset)
             cmd = ['set(hh,' cdfin.xlabelset ');']; eval(cmd);
         end
@@ -926,63 +927,76 @@ end
 
 cdfot.mainplot_gca_handle = gca;
 if isfield(cdfin,'colorbarset')
-    if strcmp(cdfin.ylabelset,'none'); return; end
+    if strcmp(cdfin.colorbarset,'none'); return; end
 end
 
-% keyboard
 %plot colorbar as contourf
-pos = get(gca,'position');
+% bak jc159 25 march 2018 - option to not plot colorbar
+% if c.colorbarset = 'none' skip colorbar 
+while 1
+    if isfield(cdfin,'colorbarset')
+        if strcmp(cdfin.colorbarset,'none'); break; end
+    end
+    
+    
+    pos = get(gca,'position');
+    
+    subplot('position',[.99 0 .01 .01])
+    
+    axis([0 1 0 1]);
+    
+    set(gca,'units','centimeters');
+    set(gcf,'defaultaxesfontsize',fontsize)
+    set(gcf,'defaulttextfontsize',fontsize)
+    
+    if isfield(cdfin,'colorbarheight')
+        colorbarheight = cdfin.colorbarheight;
+    else
+        colorbarheight = ph;
+    end
 
-subplot('position',[.99 0 .01 .01])
-
-axis([0 1 0 1]);
-
-set(gca,'units','centimeters');
-set(gcf,'defaultaxesfontsize',fontsize)
-set(gcf,'defaulttextfontsize',fontsize)
-
-posnew = [pos(1)+ pw + 1,pos(2),1,ph];
-posnew = [pos(1)+ pw + 1,pos(2),1,min(ph,length(cdfot.clev)+1)];
-set(gca,'position',posnew);
-
-xc = [0 1];
-dely = (ca(2)-ca(1))/100;
-yc = ca(1):dely:ca(2);
-yc = clev(1)+(clev(end)-clev(1))*[0:.01:1];
-yca = yc(1) - 0.0*(yc(end)-yc(1));
-ycb = yc(end) + 0.0*(yc(end)-yc(1));
-yc = [yca yc ycb];
-
-yc = clev;
-
-[xcg,ycg]= meshgrid(xc,yc);
-zc = ycg;
-
-% keyboard
-[c2,h2] = contourf(xc,1:length(clev),zc,clev,'k-');
-
-handles = h2; m_recolor ; % jc032
-% set(h2,'linestyle','none')
-for k = 1:length(clev)
-    str = sprintf('%20.4f',clev(k));
-    while strcmp(str(end),'0') == 1; str(end) = []; end
-    while strcmp(str(end),'.') == 1; str(end) = []; end
-    while strcmp(str(1),' ') == 1; str(1) = []; end
-    ylab{k} = str;
+    posnew = [pos(1)+ pw + 1,pos(2),1,ph];
+    posnew = [pos(1)+ pw + 1,pos(2),1,min(colorbarheight,length(cdfot.clev)+1)];
+    set(gca,'position',posnew);
+    
+    xc = [0 1];
+    dely = (ca(2)-ca(1))/100;
+    yc = ca(1):dely:ca(2);
+    yc = clev(1)+(clev(end)-clev(1))*[0:.01:1];
+    yca = yc(1) - 0.0*(yc(end)-yc(1));
+    ycb = yc(end) + 0.0*(yc(end)-yc(1));
+    yc = [yca yc ycb];
+    
+    yc = clev;
+    
+    [xcg,ycg]= meshgrid(xc,yc);
+    zc = ycg;
+    
+    [c2,h2] = contourf(xc,1:length(clev),zc,clev,'k-');
+    
+    handles = h2; m_recolor ; % jc032
+    % set(h2,'linestyle','none')
+    for k = 1:length(clev)
+        str = sprintf('%20.4f',clev(k));
+        while strcmp(str(end),'0') == 1; str(end) = []; end
+        while strcmp(str(end),'.') == 1; str(end) = []; end
+        while strcmp(str(1),' ') == 1; str(1) = []; end
+        ylab{k} = str;
+    end
+    set(gca,'ytick',[2:length(clev)-1]);
+    set(gca,'xtick',[]);
+    set(gca,'yticklabel',ylab(2:end-1));
+    set(gca,'yaxislocation','right');
+    
+    
+    colormap(gca,cmap);
+    % caxis
+    caxis(gca,ca)
+    % cdfot.ca = ca; % jc032
+    cdfot.colorbar_gca_handle = gca;
+    break
 end
-set(gca,'ytick',[2:length(clev)-1]);
-set(gca,'xtick',[]);
-set(gca,'yticklabel',ylab(2:end-1));
-set(gca,'yaxislocation','right');
 
-
-colormap(gca,cmap);
-% caxis
-caxis(gca,ca)
-% cdfot.ca = ca; % jc032
-cdfot.colorbar_gca_handle = gca;
-
-% keyboard
 
 return
 

@@ -17,5 +17,6 @@ ii = find(strcmp(M_ABBREV, MEXEC_G.MDIRLIST(:,1)));
 if length(ii)==1
    mpath = [MEXEC_G.MEXEC_DATA_ROOT '/' MEXEC_G.MDIRLIST{ii,2}];
 else
-   error([M_ABBREV ' set ' num2str(length(ii)) ' times in m_setup'])
+   warning([M_ABBREV ' set ' num2str(length(ii)) ' times in m_setup'])
+   mpath = '';
 end

@@ -9,7 +9,7 @@ m_margslocal
 m_varargs
 
 Mprog = 'techsas_to_mstar2';
-if ~exist('vmode','var') | ~strcmp(vmode,'q'); m_proghd; end
+m_proghd
 
 
 instream = m_getinput('Type techsas stream name or mexec short name eg SBE-SBE45.TSG or posmvpos : ','s');

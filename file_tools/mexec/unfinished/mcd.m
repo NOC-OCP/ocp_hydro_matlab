@@ -40,7 +40,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mcd';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 e = 0;
 while e == 0

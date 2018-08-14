@@ -58,7 +58,7 @@ nv = length(vars);
 if ~exist('varlist','var'); varlist = '/'; end
 th.fldnam = vars;
 th.noflds = nv; % create a structure equivalent to the mstar headers to parse for var names
-% keyboard
+
 varnums = m_getvlist(varlist,th);
 % time always seems to be last in the scs list; put it first if it is
 % in the load list.
@@ -75,7 +75,6 @@ end
 dc1 = nan+ones(nf,1); dc2 = dc1; totdc = 0;
 m = 'Counting data cycles';
 if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
-end
 
 for kf = 1:nf
     fn = fnames{kf};

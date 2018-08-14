@@ -38,7 +38,7 @@ function dep = mcarter(lat,lon,uncdep)
 
 m_common
 MEXEC_A.Mprog = 'mcarter';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 % fn = [MCARTER_DIRECTORY '/carter'];
 % d = load(fn); % load mat file.

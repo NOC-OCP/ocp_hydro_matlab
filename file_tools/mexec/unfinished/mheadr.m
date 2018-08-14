@@ -7,7 +7,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mheadr';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 fn = m_getfilename; % this uses the optional argument if there is one
 ncfile.name = fn;
@@ -27,7 +27,6 @@ if ~MEXEC_G.quiet; m_print_header(h); end
 hist = h;
 hist.filename = ncfile.name;
 MEXEC_A.Mhistory_in{1} = hist;
-
 
 % --------------------
 % Now do something with the data

@@ -21,13 +21,14 @@ function pdfot = mplxyed(varargin)
 % An edit file of the form mplxyed_yyyymmdd_HHMMSS_dataname records any
 % edits. The name of this file is included in the history file for the
 % dataname.
+%
 
 m_common
 m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mplxyed';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 global hplot x1 x2 r1 r2 c1 c2 % hplot is a structure used to pass information between the subroutines
 % x1 and x2 are the startdc and stopdc in m_edplot
@@ -83,12 +84,6 @@ eval(['vared = ' varedstr ';']);
 yname = pdfot.ylist;
 xname = pdfot.xlist;
 
-
-% for ky = vared%1:length(hplot)
-%     % save original data in normalised plot coordinates
-%     ydo{ky} = get(hplot(ky),'ydata'); 
-%     xdo{ky} = get(hplot(ky),'xdata');
-% end
 xdo = get(hplot(vared),'xdata');
 ydo = get(hplot(vared),'ydata');
 
@@ -119,16 +114,6 @@ while ok == 0
             m = [sprintf('%d',length(kfind{vared})) ' data cycles selected'];
             fprintf(MEXEC_A.Mfidterm,'%s\n',m,' ');
         case 'w'
-%             for ky = 1:length(hplot)
-%                 xd2 = xd{ky};
-%                 yd2 = yd{ky};
-%                 yd2(kfind{ky}) = nan;
-%                 bad = isnan(xd2+yd2);
-%                 xd2(bad) = [];
-%                 yd2(bad) = [];
-%                 set(hplot(ky),'xdata',xd2);
-%                 set(hplot(ky),'ydata',yd2);
-%             end
             xd2 = xdo;
             yd2 = ydo;
             yd2(kfind{vared}) = nan;
@@ -138,10 +123,6 @@ while ok == 0
             set(hplot(vared),'xdata',xd2);
             set(hplot(vared),'ydata',yd2);
         case 'o'
-%             for ky = 1:length(hplot)
-%                 set(hplot(ky),'xdata',xdo);
-%                 set(hplot(ky),'ydata',ydo);
-%             end
             set(hplot(vared),'xdata',xdo);
             set(hplot(vared),'ydata',ydo);
         case 'e'
@@ -151,10 +132,6 @@ while ok == 0
         case 'z'
             pdfot = m_edzoom(pdfot,'n');
             pdfsave = [pdfsave {pdfot}]; % bak jc032 save this view
-            %             for ky = 1:length(hplot)
-            %                 ydo = get(hplot(ky),'ydata');
-            %                 xdo = get(hplot(ky),'xdata');
-            %             end
             ydo = get(hplot(vared),'ydata');
             xdo = get(hplot(vared),'xdata');
         case 'a'
@@ -207,7 +184,7 @@ if kedit > 0
     motsave = MEXEC_A.MARGS_OT;
     % cludge MEXEC_A.MARGS_OT to use the write_history feature
     nowtime = datestr(now,'yyyymmdd_HHMMSS');
-    editfn = ['mplxyed_' nowtime '_' h.dataname];
+    editfn = [mgetdir('M_CTD') '/mplxyed_' nowtime '_' h.dataname];
     % bak jc069 put more detailed information about source and output files in edit record file
     mess_4 = ['ot_file     : ' hist.filename];
     mess_5 = ['ot_dataname : ' hist.dataname];

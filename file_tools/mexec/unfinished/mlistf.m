@@ -8,7 +8,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mlist';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 
 fn = m_getfilename; % this uses the optional argument if there is one
@@ -16,7 +16,7 @@ ncfile.name = fn;
 ncfile = m_ismstar(ncfile); %check it is an mstar file and that it is not open
 
 h = m_read_header(ncfile);
-if ~MEXEC_G.quiet; m_print_header(h); end
+m_print_header(h);
 
 listold = '/';
 while 1 > 0

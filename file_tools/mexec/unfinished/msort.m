@@ -11,7 +11,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'msort';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 
 if length(MEXEC_A.MARGS_IN_LOCAL)==0

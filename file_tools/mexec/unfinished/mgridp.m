@@ -11,7 +11,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mgridp';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 
 fprintf(MEXEC_A.Mfidterm,'%s','Enter name of output disc file ')
@@ -101,6 +101,7 @@ if strcmp(' ',var) == 1;
     var = '/';
 end
 vlist = m_getvlist(var,h);
+varlist = h.fldnam(vlist); % bak jc159 11 March 2018; keep a cell array of the variable names as well as the numerical index within h, so that we can later read by variable name not by number; previously it was necessary for all files to have the same variable numbers
 m = ['list is ' sprintf('%d ',vlist) ];
 disp(m);
 
@@ -147,6 +148,7 @@ numbins = length(bins);
 lat = nan+zeros(1,numfiles);
 lon = lat;
 distrun = lat;
+fprintf(MEXEC_A.Mfidterm,'%s\n','Reading files to extract lat and lon from headers'); % added BAK jc159 11 March 2018
 for kf = 1:numfiles
     ncfile_in.name = file_list{kf};
     ncfile_in = m_openin(ncfile_in);
@@ -154,6 +156,7 @@ for kf = 1:numfiles
     lat(kf) = h.latitude;
     lon(kf) = h.longitude;
 end
+fprintf(MEXEC_A.Mfidterm,'%s\n','Finished reading files to extract lat and lon from headers'); % added BAK jc159 11 March 2018
 dist = sw_dist(lat,lon,'km');
 % BAK trick on JC032: you never want two gridded profiles in identical
 % places. If lats and lons are all identical, eg -999, then increment
@@ -181,12 +184,15 @@ v.name = h.fldnam{vlist(1)}; v.data = allbins; v.units = h.fldunt{vlist(1)}; m_w
 for k = 2:length(vlist) % don't need to interp for gridding variable
     clear v
     v.data = [];
+    vname = varlist{k}; % bak jc159 11 March 2018 Set name before file loop
+    vnameg = varlist{1}; % bak jc159 11 March 2018
+    
     for kf = 1:numfiles
         ncfile_in.name = file_list{kf};
         ncfile_in = m_openin(ncfile_in);
         h2 = m_read_header(ncfile_in);
-        vname = h2.fldnam{vlist(k)};
-        vnameg = h2.fldnam{vlist(1)};
+%         vname = h2.fldnam{vlist(k)}; % bak jc159 11 March 2018 Set name before file loop
+%         vnameg = h2.fldnam{vlist(1)}; % bak jc159 11 March 2018 Set name before file loop
         % check for 2-D variable
         data2x = nc_varget(ncfile_in.name,vnameg); % read in variable for gridding
         data2 = nc_varget(ncfile_in.name,vname);

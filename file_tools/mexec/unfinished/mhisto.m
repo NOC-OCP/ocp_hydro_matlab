@@ -7,8 +7,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mhisto';
-if ~MEXEC_G.quiet; m_proghd; end
-
+m_proghd
 
 fn = m_getfilename; % this uses the optional argument if there is one
 ncfile.name = fn;

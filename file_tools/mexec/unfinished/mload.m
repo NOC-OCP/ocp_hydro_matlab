@@ -10,8 +10,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mload';
-if ~MEXEC_G.quiet; m_proghd; end
-
+m_proghd
 
 % varg = varargin;nargi
 % 

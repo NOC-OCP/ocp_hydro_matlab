@@ -14,7 +14,7 @@ m_common
 m_margslocal
 m_varargs
 MEXEC_A.Mprog = 'msmoothnav';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 fprintf(MEXEC_A.Mfidterm,'%s','Enter name of input disc file  ')
 fn_in = m_getfilename;
@@ -151,7 +151,7 @@ cvar = nc_varget(ncfile_in.name,h.fldnam{vcontrol});
 if rc == 1
     x = cvar(:,1);
 elseif rc == 2
-    x = cvar(1,:);
+    x = cvar(1,:)';
 end
 
 if trunc == 2 | trunc == 4
@@ -219,7 +219,7 @@ for k = 1:length(kmat)
     % rearrange data according to sort of control variable
     lenav = length(klo);
     if rc == 1; zsort = z(ksort,:); zav = nan+zeros(lenav,ncols(kmat(k))); end
-    if rc == 2; zsort = z(:,ksort); zav = nan+zeros(nrows(kmat(k)),lenav); end
+    if rc == 2; zsort = z(:,ksort)'; zav = nan+zeros(lenav,nrows(kmat(k))); end
 
     if(fullstats == 1)
         zn = zav; zstd = zav;
@@ -227,49 +227,35 @@ for k = 1:length(kmat)
 
     for k2 = 1:lenav
         if ~isnan(klo(k2)) & ~isnan(khi(k2))
-            if rc == 1;
-                m = 'This code branch not operational yet';
-                fprintf(MEXEC_A.Mfider,'%s\n',m);
-                error('exiting');
-                return
-                zsub = zsort(klo(k2):khi(k2),:);
-                zav(k2,:) = m_nanmean(zsub,rc); % average in direction controlled by rc
-                if fullstats == 1
-                    ok = isfinite(zsub);
-                    zn(k2,:) = sum(ok,rc);
-                    zstd(k2,:) = m_nanstd(zsub,rc);
+            
+            zsub = zsort(klo(k2):khi(k2),:);
+            xsub = xsort(klo(k2):khi(k2));
+            for ky = 1:size(zsub,2);
+                y = zsub(:,ky);
+                kok = find(~isnan(xsub+y));
+                if length(kok) > 1
+                    xoff = xsub(kok(1));
+                    p = polyfit(xsub(kok)-xoff,y(kok),1);
+                    zav(k2,:) = polyval(p,xc(k2)-xoff);
                 end
-            else
-                zsub = zsort(:,klo(k2):khi(k2));
-                xsub = xsort(:,klo(k2):khi(k2));
-                xsub = xsub';
-                zsub = zsub';
-                %                 keyboard
-                for ky = 1:size(zsub,2);
-                    y = zsub(:,ky);
-                    kok = find(~isnan(xsub+y));
-%                     keyboard
-                    if length(kok) > 1
-                        xoff = xsub(kok(1));
-                        p = polyfit(xsub(kok)-xoff,y(kok),1);
-                        zav(1,k2) = polyval(p,xc(k2)-xoff);
-                    end
-                end
-                xsub = xsub';
-                zsub = zsub';
-
-%                 zav(1,k2) = interp1(xsub,zsub,xc(k2));
-%                 zav(:,k2) = m_nanmean(zsub,rc); % average in direction controlled by rc
-                if fullstats == 1
-                    ok = isfinite(zsub);
-                    zn(:,k2) = sum(ok,rc);
-                    zstd(:,k2) = m_nanstd(zsub,rc);
-                end
-
             end
+
+            if fullstats == 1
+                ok = isfinite(zsub);
+                zn(k2,:) = sum(ok,rc);
+                zstd(k2,:) = m_nanstd(zsub);
+            end
+
         end
     end
-
+    if rc==2
+        zav = zav';
+        if fullstats
+            zn = zn';
+            zstd = zstd';
+        end
+    end
+    
     vname = h.fldnam{kmat(k)};
     vname1 = vname;
     if kmat(k) == vcontrol; vname1 = [vname1 '_bin_average']; end
