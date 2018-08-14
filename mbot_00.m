@@ -1,4 +1,4 @@
-% mbot_00 : generate niskin closing file
+% mbot_00 : generate csv file of niskin closing flags, based on SBE .bl file
 %
 % Use: mbot_00        and then respond with station number, or for station 16
 %      stn = 16; mbot_00;
@@ -17,22 +17,14 @@
 % is a .bl entry; 3 otherwise. Some code adapted from mfir_00
 
 scriptname = 'mbot_00';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['adds default Niskin bottle numbers and flags to sam_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['adds default Niskin bottle numbers and flags to bot_' mcruise '_' stn_string '.csv']);
 
 root_botraw = mgetdir('M_CTD_BOT');
 root_botcsv = mgetdir('M_CTD_CNV');
     
-prefix1 = ['bot_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
-prefix2 = ['ctd_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+prefix1 = ['bot_' mcruise '_'];
+prefix2 = ['ctd_' mcruise '_'];
 infile = [root_botraw '/' prefix2 stn_string '.bl'];
 otfile = [root_botcsv '/' prefix1 stn_string '.csv'];
 
@@ -62,23 +54,22 @@ end
 if krow < kmax
     position(krow+1:end) = [];
 end
-
 % the 'position' array is now the list of bottles closed.
+oopt = 'fixbl'; get_cropt
 
 kpos = 1:24;
 sampnum = 100*stnlocal + kpos;
 stnarray = stnlocal * ones(24,1);  % default up to here. 24 bottles on each station
 flag = 9*ones(24,1); % default flag of 9 meaning not closed
-flag(position) = 2; % if botle closed, default closure flag is 2.
+flag(position) = 2; % if bottle closed, default closure flag is 2.
 
-get_cropt; %nis, flag
+oopt = 'nispos'; get_cropt; %niskin-position mapping information
 
 out = [sampnum(:) stnarray(:) kpos(:) nis(:) flag(:)];
 
 form = '%5d , %2d , %3d , %2d , %2d \n';
 
-
-
 fid = fopen(otfile,'w');
+fprintf(fid,'%s, %s, %s, %s, %s\n', 'sampnum', 'sta', 'niskin', 'bottle_number', 'bottle_qc_flag');
 fprintf(fid,form,out');
 fclose(fid);

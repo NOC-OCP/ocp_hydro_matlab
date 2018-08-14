@@ -6,6 +6,6 @@ function fluorout = fluor_apply_cal(stn,fluor,press,time,temp)
 
 m_common
 
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 scriptname = 'fluor_apply_cal';
 oopt = ''; get_cropt

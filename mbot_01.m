@@ -12,19 +12,12 @@
 % YLF jr16002 and jc145 modified heavily to use database and cruise-specific options
 
 scriptname = 'mbot_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
+minit
 
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['puts Niskin bottle information from file specified in opt_' cruise ' into bot_' cruise '_' stn_string '.nc']);
+mdocshow(scriptname, ['puts Niskin bottle information from file specified in opt_' mcruise ' (by default, bot_' mcruise '_' stn_string '.csv) into bot_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types
-root_botcnv = mgetdir('M_CTD_CNV'); % the csv bottle file(s) is/are in the ascii files directory
+root_bot = mgetdir('M_CTD_CNV'); % the csv bottle file(s) is/are in the ascii files directory
 root_ctd = mgetdir('M_CTD');
 
 %load the sample information
@@ -44,6 +37,8 @@ ii1 = find(ds_bot.sta==stnlocal);
 %eliminate lines about duplicate samples from the same bottle
 [c, ii2] = unique(ds_bot.sampnum(ii1)); ii = ii1(ii2);
 
+if length(ii)>0
+    
 statnum = ds_bot.sta(ii);
 position = ds_bot.niskin(ii);
 if sum(strcmp('bottle_number', ds_bot.Properties.VarNames))
@@ -53,13 +48,17 @@ else
 end
 if sum(strcmp('bottle_qc_flag', ds_bot.Properties.VarNames))
    bottle_qc_flag = ds_bot.bottle_qc_flag(ii);
-else
-   oopt = 'botflags'; get_cropt
 end
+
+oopt = 'botflags'; get_cropt
 
 sampnum = ds_bot.sampnum(ii);
 
-prefix = ['bot_' cruise '_'];
+else
+    statnum = 0; sampnum = 0; position = 0; bottle_number = 0; bottle_qc_flag = NaN;
+end
+
+prefix = ['bot_' mcruise '_'];
 otfile = [root_ctd '/' prefix stn_string];
 dataname = [prefix stn_string];
 
@@ -78,7 +77,6 @@ for k = 1:length(varnames)
 end
 
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
-
 
 %--------------------------------
 % 2009-03-09 20:49:09
@@ -115,4 +113,3 @@ MEXEC_A.MARGS_IN_5 = {
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
 msave
 %--------------------------------
-

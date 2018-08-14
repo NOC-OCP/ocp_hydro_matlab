@@ -1,0 +1,31 @@
+function [udirs, udcruise] = m_udirs();
+
+udcruise = 'jc159';
+udirs = {
+'gyropmv'    'M_GYROPMV'    'nav/gyropmv'    'gyro-POSMV_GYRO.gyr';
+'gyro_s'    'M_GYRO_S'    'nav/gyros'    'gyro-SGYRO_GYRO.gyr';
+'posmvpos'    'M_POSMVPOS'    'nav/posmvpos'    'position-POSMV_GPS.gps';
+'satinfoposmv'    'M_SATINFOPOSMV'    'nav/posmvpos'    'satelliteinfo-POSMV_GPS.gps';
+'attposmv'    'M_ATTPOSMV'    'nav/posmvatt'    'shipattitude-POSMV_ATT.att';
+'posdps'    'M_POSDPS'    'nav/dps'    'position-DPS-116_GPS.gps';
+'satinfodps'    'M_SATINFODPS'    'nav/dps'    'satelliteinfo-DPS-116_GPS.gps';
+'seapos'    'M_SEAPOS'    'nav/seapos'    'position-Seapath330_GPS.gps';
+'satinfosea'    'M_SATINFOSEA'    'nav/seapos'    'satelliteinfo-Seapath330_GPS.gps';
+'attsea'    'M_ATTSEA'    'nav/seaatt'    'shipattitude-Seapath330_ATT.att';
+'attseaaux'    'M_ATTSEAAUX'    'nav/seaatt'    'shipattitude_aux-Seapath330_ATT.att';
+'posranger'    'M_POSRANGER'    'nav/ranger'    'position-Ranger2_USBL.gps';
+'satinforanger'    'M_SATINFORANGER'    'nav/ranger'    'satelliteinfo-Ranger2_USBL.gps';
+'cnav'    'M_CNAV'    'nav/cnav'    'cnav-CNAV-3050_GPS.GPS';
+'satinfocnav'    'M_SATINFOCNAV'    'nav/cnav'    'satelliteinfo-CNAV-3050_GPS.GPS';
+'gravity'    'M_GRAVITY'    'uother/gravity'    'AirSeaII-AirSeaII-S40_GRAVITY.nc';
+'em120'    'M_EM120'    'bathy/em120'    'sb_depth-EM122_DEPTH.depth';
+'sim'    'M_SIM'    'bathy/sim'    'EA600-EA640_DEPTH.EA600';
+'winch'    'M_WINCH'    'uother/winch'    'CLAM-CLAM_WINCH.CLAM';
+'surflight'    'M_SURFLIGHT'    'met/surflight'    'Light-SURFMET.SURFMETv2';
+'met_light'    'M_MET_LIGHT'    'met/surflight'    'Light-SURFMET.SURFMETv2';
+'surfmet'    'M_SURFMET'    'met/surfmet'    'MET-SURFMET.SURFMETv2';
+'met_tsg'    'M_MET_TSG'    'ocl/tsg'    'Surf-SURFMET.SURFMETv2';
+'tsg'    'M_TSG'    'ocl/tsg'    'SBE45-SBE45.TSG';
+'log_skip'    'M_LOG_SKIP'    'ocl/log'    'logskippervdvbw-SKIP_LOG.nc';
+'log_chf'    'M_LOG_CHF'    'ocl/log'    'vmvbw-CHF_LOG.log';
+};

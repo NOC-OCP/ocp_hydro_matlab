@@ -3,6 +3,7 @@ function sam_listing(stn)
 %
 m_setup
 
+cdir = pwd;
 mcd ctd
 fn = ['sam_di346_' sprintf('%03d',stn)];
 
@@ -13,3 +14,4 @@ MEXEC_A.MARGS_IN = {
     ' '
     };
 mlist
+cd(cdir)

@@ -4,19 +4,12 @@
 %      stn = 16; mfir_02;
 
 scriptname = 'mfir_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['add time from ctd_' cruise '_' stn_string '.nc to fir_' cruise '_' stn_string '.nc based on scan number']);
+minit
+mdocshow(scriptname, ['add time from ctd_' mcruise '_' stn_string '.nc to fir_' mcruise '_' stn_string '.nc based on scan number']);
 
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['fir_' cruise '_'];
-prefix2 = ['ctd_' cruise '_'];
+prefix1 = ['fir_' mcruise '_'];
+prefix2 = ['ctd_' mcruise '_'];
 infile1 = [root_ctd '/' prefix1 stn_string '_bl'];
 infile2 = [root_ctd '/' prefix2 stn_string '_1hz'];
 otfile2 = [root_ctd '/' prefix1 stn_string '_time'];

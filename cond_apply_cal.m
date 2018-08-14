@@ -9,6 +9,6 @@ function condout = cond_apply_cal(sensor,stn,press,time,temp,cond)
 
 m_common
 
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 scriptname = 'cond_apply_cal';
 get_cropt

@@ -1,19 +1,12 @@
 % mbot_02: paste niskin bottle data into sam file
 
 scriptname = 'mbot_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['paste Niskin bottle data into sam_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['paste Niskin bottle data into sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['bot_' cruise '_'];
-prefix2 = ['sam_' cruise '_'];
+prefix1 = ['bot_' mcruise '_'];
+prefix2 = ['sam_' mcruise '_'];
 infile1 = [root_ctd '/' prefix1 stn_string];
 otfile2 = [root_ctd '/' prefix2 stn_string];
 

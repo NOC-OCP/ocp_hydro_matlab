@@ -38,11 +38,8 @@ switch scriptname
    %%%%%%%%% mctd_02b %%%%%%%%%
    case 'mctd_02b'
       switch oopt
-         case 'hyst'
-            hyst_pars = [-0.033 5000 1450]; %sbe default
-            hyst_pars_string = sprintf('%f,%f,%f',hyst_pars(1),hyst_pars(2),hyst_pars(3))
-            hyst_var_string = 'sbeox0Mm_slash_Kg time press';
-            hyst_execute_string = ['y = mcoxyhyst(x1,x2,x3,' hyst_pars_string ')'];
+         case 'oxyhyst'
+            var_strings = {'sbeox0Mm_slash_Kg time press'};
       end
    %%%%%%%%% mctd_02b %%%%%%%%%
 

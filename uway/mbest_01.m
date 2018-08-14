@@ -4,16 +4,16 @@
 %      day = 20; mbest_01;
 
 scriptname = 'mbest_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 clear infile* otfile* wkfile*
 
 %start with the original data in the same directory
 abbrev = MEXEC_G.default_navstream;
 root_dir = mgetdir(['M_' upper(abbrev)])
-prefix = [abbrev '_' cruise '_'];
+prefix = [abbrev '_' mcruise '_'];
 
-mdocshow(scriptname, ['average 1-Hz navigation stream from ' abbrev '_' cruise '_01.nc to 30 s in ' abbrev '_' cruise '_ave.nc']);
+mdocshow(scriptname, ['average 1-Hz navigation stream from ' abbrev '_' mcruise '_01.nc to 30 s in ' abbrev '_' mcruise '_ave.nc']);
 
 infile = [root_dir '/' prefix '01'];
 otfile = [root_dir '/' prefix 'ave'];

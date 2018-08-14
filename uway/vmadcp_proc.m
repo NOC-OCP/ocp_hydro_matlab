@@ -35,7 +35,7 @@ m_common;
 codaspaths;
 
 scriptname = 'vmadcp_proc'
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %% 1. Select type of vmadcp and sequence to process
 if ~exist('os0'); os0 = input('What type of vmadcp? (75 or 150) '); end
@@ -50,7 +50,7 @@ end
 
 % Set path to the raw data directory
 root_vmadcp = mgetdir('M_VMADCP');
-dir1 = [root_vmadcp '/' cruise '_os' num2str(os0)];
+dir1 = [root_vmadcp '/' mcruise '_os' num2str(os0)];
 if ~exist(dir1, 'dir'); mkdir(dir1); end
 rawdir = [dir1 '/rawdata'];
 
@@ -74,10 +74,10 @@ for sq=1:length(seq)
     %% set up processing directory tree for this sequence
     disp('MAKING A TREE DIRECTORY');
     cd(dir1)
-    seqprocdir = [dir1 '/' cruise fl0 nbbstr 'enx'];
+    seqprocdir = [dir1 '/' mcruise fl0 nbbstr 'enx'];
     unix(['adcptree.py ' seqprocdir ' --datatype enx']); %edited 25/4/14 for either nb or bb
     % Creating files
-    seqdbname = [cruise fl0];
+    seqdbname = [mcruise fl0];
 
     %% Make command files: q_py.cnt or q_pyrot.cnt, and q_pyedit.cnt
     cd(seqprocdir)

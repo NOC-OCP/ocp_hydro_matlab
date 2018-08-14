@@ -22,14 +22,14 @@ function mday_01_clean_av(abbrev,day)
 
 m_common
 scriptname = 'mday_01_clean_av';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 root_out = mgetdir(abbrev);
 
 day_string = sprintf('%03d',day);
-mdocshow(scriptname, ['performs any automatic cleaning/editing/averaging from ' abbrev '_' cruise '_d' day_string '_raw.nc to ' abbrev '_' cruise '_d' day_string '_edt.nc']);
+mdocshow(scriptname, ['performs any automatic cleaning/editing/averaging from ' abbrev '_' mcruise '_d' day_string '_raw.nc to ' abbrev '_' mcruise '_d' day_string '_edt.nc']);
 
-prefix = [abbrev '_' cruise '_d' day_string];
+prefix = [abbrev '_' mcruise '_d' day_string];
 infile = [root_out '/' prefix '_raw'];
 otfile = [root_out '/' prefix '_edt'];
 wkfile = [prefix '_wk_' scriptname '_' datestr(now,30)];
@@ -78,7 +78,7 @@ if exist([infile '.nc']) %only if there is a raw file for this day
                mheadr
          end
 	    
-	 case 'met'
+	 case {'met'}%, 'met_tsg'} %asf note: techsas records m/s, however, the SSDS displays values converted to knots. There is no separate record of this since SSDS is live, so all wind records should be in m/s and no conversions are needed.
 	    if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
                MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; 'speed'; ' '; 'm/s'; '-1'; '-1'};
                mheadr
@@ -120,12 +120,12 @@ if exist([infile '.nc']) %only if there is a raw file for this day
       switch abbrev
 
          case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet'}
-            MEXEC_A.MARGS_IN = {infile1; otfile; '/'; '1'; 'y=[1 x1(2:end)-x1(1:end-1)]'; 'deltat'; 'seconds'; ' '};
+            MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'time'; 'y=[1 x1(2:end)-x1(1:end-1)]'; 'deltat'; 'seconds'; ' '};
             mcalc
 
          case {'gys', 'gyr', 'gyro_s', 'gyropmv'}
             wkfile2 = [prefix '_wk2'];
-	    % flag non-monotonic times
+            % flag non-monotonic times
             MEXEC_A.MARGS_IN = {infile1; wkfile2; '/'; 'time'; 'y = m_flag_monotonic(x1);'; 'tflag'; ' '; ' '};
             mcalc
             MEXEC_A.MARGS_IN = {wkfile2; otfile; '2'; 'tflag .5 1.5'; ' '; '1 2'};
@@ -155,9 +155,11 @@ if exist([infile '.nc']) %only if there is a raw file for this day
       end
       switch abbrev
 
-         case 'cnav'
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'lat'; 'y = cnav_fix(x)'; ' '; ' '; 'long'; 'y = cnav_fix(x)'; ' '; ' '; ' '};
-            mcalib
+          case 'cnav'
+	     d = mload(otfile, '/'); if max([d.lat(:)-floor(d.lat(:)); d.long(:)-floor(d.long(:))]*100)<=61
+                MEXEC_A.MARGS_IN = {otfile; 'y'; 'lat'; 'y = cnav_fix(x)'; ' '; ' '; 'long'; 'y = cnav_fix(x)'; ' '; ' '; ' '};
+                mcalib
+             end
 	    
       end
    end
@@ -174,7 +176,7 @@ if exist([infile '.nc']) %only if there is a raw file for this day
       end
 
       navname = MEXEC_G.default_navstream; navdir = mgetdir(navname);
-      navfile = [navdir '/' navname '_' cruise '_d' day_string '_raw.nc'];
+      navfile = [navdir '/' navname '_' mcruise '_d' day_string '_raw.nc'];
       if exist(navfile)
          [dn,hn] = mload(navfile,'/'); lon = nanmean(dn.long); lat = nanmean(dn.lat); clear dn hn
       else
@@ -229,9 +231,9 @@ if exist([infile '.nc']) %only if there is a raw file for this day
             MEXEC_A.MARGS_IN = {otfile; 'y'; 'depth'; '20 10000'; 'y'; 'depth_uncor'; '20 10000'; 'y'; ' '};
             medita
 
-         case {'em120', 'em122'}
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'swath_depth'; '20 10000'; 'y'; ' '};
-            medita
+         %case {'em120', 'em122'}
+         %   MEXEC_A.MARGS_IN = {otfile; 'y'; 'swath_depth'; '20 10000'; 'y'; ' '};
+         %   medita
 
       end
       unix(['/bin/rm ' wkfile '.nc']);

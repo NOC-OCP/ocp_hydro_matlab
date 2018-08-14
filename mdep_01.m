@@ -5,15 +5,8 @@
 %      stn = 16; mdep_01;
 
 scriptname = 'mdep_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['adds water depth from station_depths/station_depths_' cruise '.mat to all the files for station ' stn_string]);
+minit
+mdocshow(scriptname, ['adds water depth from station_depths/station_depths_' mcruise '.mat to all the files for station ' stn_string]);
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
@@ -21,48 +14,48 @@ root_sal = mgetdir('M_BOT_SAL');
 root_ctd = mgetdir('M_CTD');
 root_dep = mgetdir('M_CTD_DEP');
 
-deps_fn = [root_dep '/station_depths_' cruise '.mat'];
+deps_fn = [root_dep '/station_depths_' mcruise '.mat'];
 load(deps_fn);
+iis = find(bestdeps(:,1)==stnlocal);
 
-prefix1 = ['ctd_' cruise '_'];
-prefix2 = ['fir_' cruise '_'];
-prefix3 = ['sal_' cruise '_']; 
-prefix4 = ['sam_' cruise '_'];
-prefix5 = ['dcs_' cruise '_'];
-prefix6 = ['win_' cruise '_'];
-
-clear fn
-
-fn{1} = [root_ctd '/' prefix5 stn_string];
-
-%modified YLF jr15003
-if exist([root_ctd '/' prefix1 stn_string '_raw_original.nc'], 'file');
-   fn{2} = [root_ctd '/' prefix1 stn_string '_raw_original'];
-   fn{18} = [root_ctd '/' prefix1 stn_string '_raw_cleaned'];
+if length(iis)==0
+    warning([deps_fn ' does not contain depth for station ' stn_string '; not adding depth to any .nc files'])
 else
-   fn{2} = [root_ctd '/' prefix1 stn_string '_raw'];
-end
-fn{3} = [root_ctd '/' prefix1 stn_string '_24hz'];
-fn{4} = [root_ctd '/' prefix1 stn_string '_1hz'];
-fn{5} = [root_ctd '/' prefix1 stn_string '_psal'];
-fn{6} = [root_ctd '/' prefix1 stn_string '_surf'];
-fn{7} = [root_ctd '/' prefix1 stn_string '_2db'];
+    if length(iis)>1 & length(unique(bestdeps(iis,2)))>1
+       warning([deps_fn ' contains more than one depth for station ' stn_string '; using first one'])
+    end
+    iis = iis(1);
+    
+   clear fn
+   n = 1;
+   fn{n} = [root_ctd '/dcs_' mcruise '_' stn_string]; n = n+1;
 
-fn{8} = [root_ctd '/' prefix2 stn_string '_bl'];
-fn{9} = [root_ctd '/' prefix2 stn_string '_time'];
-fn{10} = [root_ctd '/' prefix2 stn_string '_winch'];
-fn{11} = [root_ctd '/' prefix2 stn_string '_ctd'];
+   %modified YLF jr15003
+   if exist([root_ctd '/ctd_' mcruise '_' stn_string '_raw_original.nc'], 'file');
+      fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_original']; n = n+1;
+      fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_cleaned']; n = n+1;
+   else
+      fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw']; n = n+1;
+   end
+   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz']; n = n+1;
+   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_1hz']; n = n+1;
+   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_psal']; n = n+1;
+   %fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_surf']; n = n+1;
+   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2db']; n = n+1;
+   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2up']; n = n+1;
 
-fn{12} = [root_sal '/' prefix3 stn_string];
+   fn{n} = [root_win '/win_' mcruise '_' stn_string]; n = n+1;
+   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string '_bl']; n = n+1;
+   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string '_time']; n = n+1;
+   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string '_winch']; n = n+1;
+   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string '_ctd']; n = n+1;
 
-fn{13} = [root_ctd '/' prefix4 stn_string];
-fn{14} = [root_ctd '/' prefix4 stn_string '_resid'];
-fn{15} = [root_ctd '/' prefix5 stn_string '_pos'];
-fn{16} = [root_win '/' prefix6 stn_string];
-fn{17} = [root_ctd '/' prefix1 stn_string '_2up']; % extra file, upcast 2db on jc069, where profile corresponding to upcast tracer data is required
+   fn{n} = [root_sal '/sal_' mcruise '_' stn_string]; n = n+1;
+   fn{n} = [root_ctd '/sam_' mcruise '_' stn_string]; n = n+1;
+   %fn{n} = [root_ctd '/sam_' mcruise '_' stn_string '_resid']; n = n+1;
 
-close all
-
-for kfile = 1:length(fn)
-    mputdep(fn{kfile},bestdeps(stnlocal))
+   for kfile = 1:length(fn)
+       mputdep(fn{kfile},bestdeps(bestdeps(:,1)==stnlocal,2))
+   end
+   
 end

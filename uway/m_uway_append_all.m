@@ -2,7 +2,7 @@
 %  GNU nano 2.0.6                       File: Downloads/m_uway_append_all.m                                                    
 
 m_common
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 uway_streams_proc_exclude = {'posmvtss'}; %exclude these
 uway_pattern_proc_exclude = {'satinfo';'aux';'dps'}; %exclude those with this pattern anywhere
@@ -47,7 +47,7 @@ for daynumber = day0:floor(datenum(now)-datenum(year,1,1));
    for sno = 1:size(udirs, 1)
       if daynumber==day0
          cd(MEXEC_G.MEXEC_DATA_ROOT)
-         unix(['/bin/rm ' udirs{sno,3} '/' udirs{sno,1} '_' cruise '_01.nc'])
+         unix(['/bin/rm ' udirs{sno,3} '/' udirs{sno,1} '_' mcruise '_01.nc'])
       end
       mday_02(udirs{sno,2}, udirs{sno,1}, daynumber);
    end

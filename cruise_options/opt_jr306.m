@@ -29,8 +29,8 @@ switch scriptname
    %%%%%%%%%% end ctd_evaluate_sensors %%%%%%%%%%
 
 
-   %%%%%%%%%% mcchdo_01 %%%%%%%%%%
-   case 'mcchdo_01'
+   %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
+   case 'mout_cchdo_sam'
       switch oopt
          case 'expo'
 	    expocode = '74JC20150110';
@@ -56,11 +56,11 @@ switch scriptname
 	    '#Notes:';...
 	    '#These data should be acknowledged with: "Data were collected and made publicly available by the International Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'};
       end
-   %%%%%%%%%% end mcchdo_01 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
 
 
-   %%%%%%%%%% mcchdo_02 %%%%%%%%%%
-   case 'mcchdo_02'
+   %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
+   case 'mout_cchdo_ctd'
       switch oopt
          case 'expo'
 	    expocode = '74JC20150110';
@@ -82,11 +82,11 @@ switch scriptname
 	    '# DEPTH_TYPE   : COR';...
     	    '#These data should be acknowledged with: "Data were collected and made publicly available by the International Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'};
       end
-   %%%%%%%%%% end mcchdo_02 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
 
 
-   %%%%%%%%%% msal_01 %%%%%%%%%%
-   case 'msal_01'
+   %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
+   case 'msal_standardise_avg'
       switch oopt
          case 'cellT'
 	    ds_sal.cellT = repmat(24, size(ds_sal.station_day,1), 1);
@@ -122,7 +122,7 @@ switch scriptname
             ];
 	    ds_sal.offset = interp1(g_adj(:,1), g_adj(:,2), ds_sal.sampnum);
       end
-   %%%%%%%%%% end msal_01 %%%%%%%%%%
+   %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
 
    %%%%%%%%%% msbe35_01 %%%%%%%%%%
    case 'msbe35_01'
@@ -169,32 +169,6 @@ switch scriptname
             %datenum([2013 01 01 00 00 00]) datenum([2013 03 18 14 51 00]) % start of cruise
             datenum([]) datenum([])
             ];
-	 case 'vout'
-	    switch varinid
-               case 'salinity'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'tstemp'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'sstemp'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'sstemp2'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'sampletemp'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'chlorophyll'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'trans'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               otherwise
-                  vout = vin;
-            end
       end
    %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
 

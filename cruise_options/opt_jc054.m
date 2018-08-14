@@ -43,12 +43,8 @@ switch scriptname
    %%%%%%%%%% mctd_02b %%%%%%%%
    case 'mctd_02b'
       switch oopt
-         case 'hyst'
-            hyst_pars = [-0.033 5000 1450]; %sbe default
-            hyst_pars_string = sprintf('%f,%f,%f',hyst_pars(1),hyst_pars(2),hyst_pars(3));
-            % bak on jr281, include option of not doing oxygen hysteresis, for exmaple
-            % if it was applied in the datcnv, as was the case on jc054.
-            hyst_execute_string = ['y = x1;'];
+         case 'calibs_to_do'
+	    dooxyhyst = 0; %already applied in the datcnv on this cruise
       end
    %%%%%%%%%% end mctd_02b %%%%%%%%
 

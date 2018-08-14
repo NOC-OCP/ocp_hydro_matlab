@@ -27,5 +27,5 @@ lcol2 = [lcol '-'];
 hline = plot([slon slon+delx],[slat slat+dely],lcol2,'linewidth',lwid);
 
 ht = text(slon+delx,slat+dely,ftxt);
-set(ht,'fontsize',fsize,'color',fcol,'HorizontalAlignment',horal,'VerticalAlignment',vertal);
+set(ht,'fontsize',fsize,'color',fcol,'HorizontalAlignment',horal,'VerticalAlignment',vertal,'fontweight','bold');
 

@@ -80,8 +80,8 @@ switch scriptname
    %%%%%%%%%% end mday_01_clean_av %%%%%%%%%%
 
     
-   %%%%%%%%%% mcchdo_01 %%%%%%%%%%
-   case 'mcchdo_01'
+   %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
+   case 'mout_cchdo_sam'
       switch oopt
          case 'headstr'
             headstring = ['# There are 12 instances of the bottle quality flag being set to 10. '];
@@ -91,9 +91,9 @@ switch scriptname
             headstring = [headstring 'appeared to have closed normally. The CFC sampler reported that a dribble '];
             headstring = [headstring 'leaked out of the bottom tap when it was pushed in even though the top vent was still closed. '];
       end
-   %%%%%%%%%% end mcchdo_01 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
 
-
+   
    %%%%%%%%%% mctd_02a %%%%%%%%%%
    case 'mctd_02a'
       switch oopt
@@ -122,30 +122,31 @@ switch scriptname
 
    %%%%%%%%%% mctd_02b %%%%%%%%%%
    case 'mctd_02b'
+      % di346 oxygen hysteresis reworked by GDM.
+      % for stations up to  and including 064, apply sbe_reverse first
+      % Then apply forwards hysteresis adjustment with GDM's preferred parameters
       switch oopt
-         case 'hyst'
-            stn_list = [1:64]; 
-            if ismember(stnlocal, stn_list)
-               % for these stations on this cruise; 
-               infile = [infile '_o2reverse'];
-               hyst_var_string = 'oxygen_sbe_reverse time press';
-            end
-            stn_list = [37:500];% second oxygen sensor
-            stn_list_first = [1:36]; % second oxygen sensor
-            if ismember(stnlocal, stn_list)
-               % for these stations on this cruise; 
-               hyst_pars = [-0.028 5000 2500];
-            end
-            if ismember(stnlocal, stn_list_first)
-               % for these stations on this cruise; 
-               hyst_pars = [-0.037 5000 1450];
+         case 'calibs_to_do'
+	    if ismember(stnlocal, [1:64])
+               dooxyhyst = [-1 1]; %reverse sbe processing correction first, then apply custom correction
+	       %no need to set coefficients because they default to sbe values
+	    else
+	       dooxyhyst = 1; %just custom correction
+	    end
+         case 'oxyhyst'
+            if ismember(stnlocal, 1:64) 
+	       var_strings = {'oxygen_sbe1_rev time press'}; %start from oxygen_sbe1_rev
+	    else
+	       var_strings = {'oxygen_sbe1 time press'}; %original hasn't had oxyhyst applied yet
+	    end
+	    if ismember(stnlocal, 1:36)
+               pars = {[-0.037 5000 1450]}; %custom pars for first oxygen sensor on this cruise
+	    elseif ismember(stnlocal, 37:500)
+               pars = {[-0.028 5000 2500]}; %custom pars for second oxygen sensor on this cruise
             end
             if ismember(stnlocal, 200);
-               % for these stations on this cruise; 
-               hyst_pars = [-0.035 5000 2000];
+               pars = {[-0.035 5000 2000]};
             end
-            hyst_pars_string = sprintf('%f,%f,%f',hyst_pars(1),hyst_pars(2),hyst_pars(3));
-            hyst_execute_string = ['y = mcoxyhyst(x1,x2,x3,' hyst_pars_string ')'];
       end
    %%%%%%%%%% end mctd_02b %%%%%%%%%%
    
@@ -168,6 +169,22 @@ switch scriptname
       end
    %%%%%%%%%% end mctd_04 %%%%%%%%%%
 
+   %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
+   case 'msec_run_mgridp'
+      switch oopt
+         case 'sections'
+            sections = {'fc' '24n'};
+	 case 'gpars'
+            gstart = 10; gstop = 6500; gstep = 20;
+	 case 'kstns'
+	    switch section
+	       case 'fc'
+	          sstring = '2:13';
+	       case '24n'
+	          sstring = '[14:16 18 17 19:135]';
+	    end
+      end
+   %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%
 end

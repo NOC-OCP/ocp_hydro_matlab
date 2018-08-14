@@ -6,16 +6,16 @@
 % gyros for James Cook cruises due its better accuracy. CFL/GDM
 
 scriptname = 'mbest_03';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
 clear infile* otfile* wkfile*
 
 abbrev = MEXEC_G.default_hedstream;
 root_dir = mgetdir(['M_' upper(abbrev)])
-prefix = [abbrev '_' cruise '_'];
+prefix = [abbrev '_' mcruise '_'];
 
-mdocshow(scriptname, ['average 1-Hz navigation stream from ' abbrev '_' cruise '_01.nc to 30 s in ' abbrev '_' cruise '_ave.nc']);
+mdocshow(scriptname, ['average 1-Hz navigation stream from ' abbrev '_' mcruise '_01.nc to 30 s in ' abbrev '_' mcruise '_ave.nc']);
 
 infile = [root_dir '/' prefix '01'];
 otfile = [root_dir '/' prefix 'ave'];
@@ -30,7 +30,7 @@ tav2 = round(tave_period/2);
 
 [d h] = mload(infile, 'time', ' ');
 
-if strncmp(abbrev, 'gyro', 4); headstr = 'head_gyr'; else; headstr = 'head'; end
+if strncmp(abbrev, 'gyro', 4); headstr = 'head_gyr'; elseif strcmp(MEXEC_G.Mship,'jcr'); headstr = 'heading'; else; headstr = 'head'; end
 
 t1 = min(d.time);
 tdays = floor(t1/86400);

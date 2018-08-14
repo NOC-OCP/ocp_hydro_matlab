@@ -1,25 +1,18 @@
 % moxy_02: paste oxy data into sam file
 %
 % modified to input bottle oxygen data to variable 'botoxy_per_l' from
-% station 98 onwards.  moxy_02_oxykg should be run afterwards to calculate
+% station 98 onwards.  msam_oxykg should be run afterwards to calculate
 % bottle oxygen in umol/kg.  CPA 6/2/10
 
 scriptname = 'moxy_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['pastes bottle oxygen from oxy_' cruise '_' stn_string '.nc to sam_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['pastes bottle oxygen from oxy_' mcruise '_' stn_string '.nc to sam_' mcruise '_' stn_string '.nc']);
 
 root_oxy = mgetdir('M_BOT_OXY');
 root_ctd = mgetdir('M_CTD');
 
-prefix1 = ['oxy_' cruise '_'];
-prefix2 = ['sam_' cruise '_'];
+prefix1 = ['oxy_' mcruise '_'];
+prefix2 = ['sam_' mcruise '_'];
 
 infile1 = [root_oxy '/' prefix1 stn_string];
 
@@ -49,8 +42,8 @@ end
         'y'
         'sampnum'
         'sampnum'
-        'botoxya botoxyflaga botoxytempa'
-        'botoxy_per_l botoxyflag botoxytemp'
+        'botoxya_per_l botoxyflaga botoxytempa botoxyb_per_l botoxyflagb botoxytempb'
+        'botoxya_per_l botoxyflaga botoxytempa botoxyb_per_l botoxyflagb botoxytempb'
         };
     mpaste
     %--------------------------------

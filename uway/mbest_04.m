@@ -6,7 +6,7 @@
 % gyros for James Cook cruises due its better accuracy. CFL/GDM
 
 scriptname = 'mbest_04';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 clear infile* otfile* wkfile*
 
@@ -14,25 +14,25 @@ wkfile = ['wk_' scriptname '_' datestr(now,30)];
 
 abbrev = MEXEC_G.default_navstream;
 root_dir = mgetdir(['M_' upper(abbrev)])
-prefix1 = [abbrev '_' cruise '_'];
+prefix1 = [abbrev '_' mcruise '_'];
 infile1 = [root_dir '/' prefix1 'spd'];
 
-prefix3 = ['bst_' cruise '_'];
+prefix3 = ['bst_' mcruise '_'];
 otfile = [root_dir '/' prefix3 '01'];
 
-switch MEXEC_G.Mship
-    case 'cook'
-        abbrev = 'attsea';
-    case 'jcr' % bak on jr281
-        abbrev = 'seatex_hdt';
-    otherwise
+switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
+    case {'jc' 'jr' 'dy'}
+        abbrev = MEXEC_G.default_hedstream;
+    case 'di'
         abbrev = 'gys';
-        root_ash = mgetdir('M_ASH'); infile4 = [root_ash '/ash_' cruise '_01'];
+        root_ash = mgetdir('M_ASH'); infile4 = [root_ash '/ash_' mcruise '_01'];
+    otherwise
+        abbrev = MEXEC_G.default_hedstream;  
 end
 root_head = mgetdir(['M_' upper(abbrev)]);
-infile2 = [root_head '/' abbrev '_' cruise '_ave'];
+infile2 = [root_head '/' abbrev '_' mcruise '_ave'];
 
-mdocshow(scriptname, ['merge vector-averaged heading from ' abbrev '_' cruise '_ave onto 30 s averaged speed, in bst_' cruise '_01.nc']);
+mdocshow(scriptname, ['merge vector-averaged heading from ' abbrev '_' mcruise '_ave onto 30 s averaged speed, in bst_' mcruise '_01.nc']);
 
 MEXEC_A.MARGS_IN = {
     otfile
@@ -47,13 +47,13 @@ MEXEC_A.MARGS_IN = {
 mmerge
 
 %--------------------------------
-switch MEXEC_G.Mship
+switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     % bak on jr281 march 23 2013: bad weather break, adding to edits from jc069
-    case {'cook' 'jcr'} % ashtech broken on jr281 and not needed on cook
+    case {'jc' 'jcr' 'dy'} % ashtech broken on jr281 and not needed on cook
         cmd = ['/bin/cp -p ' m_add_nc(otfile) ' ' m_add_nc(wkfile)]; unix(cmd);
         calcvar = 'heading_av';
         calcstr = ['y = mcrange(x1+0,0,360);']; % no ashtech correction on jr281 yet
-    case 'discovery' % old discovery techsas with ashtech present
+    case 'di' % old discovery techsas with ashtech present
         calcvar = 'heading_av a_minus_g';
         calcstr = ['y = mcrange(x1+x2,0,360);']; % prepare to add a_minus_g on discovery
         

@@ -27,7 +27,7 @@
 %      stn = 5001; mtow_04;
 
 scriptname = 'mtow_04';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if exist('stn','var')
     m = ['Running script ' scriptname ' on station ' sprintf('%03d',stn)];
@@ -41,10 +41,10 @@ clear stn % so that it doesn't persist
 
 root_ctd = mgetdir('M_CTD');
 
-prefix1 = ['ctd_' cruise '_'];
-prefix2 = ['dcs_' cruise '_'];
+prefix1 = ['ctd_' mcruise '_'];
+prefix2 = ['dcs_' mcruise '_'];
 
-lims_fn = ['towyo_limits_' cruise];
+lims_fn = ['towyo_limits_' mcruise];
 tow_lims = load(lims_fn);
 tow_stns = tow_lims(:,1);
 k1 = find(tow_stns == stnlocal);

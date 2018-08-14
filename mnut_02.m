@@ -1,20 +1,13 @@
 % mnut_02: paste nut data into sam file
 
 scriptname = 'mnut_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['pastes bottle nutrient data into sam_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['pastes bottle nutrient data into sam_' mcruise '_' stn_string '.nc']);
 
 root_nut = mgetdir('M_BOT_NUT');
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['nut_' cruise '_'];
-prefix2 = ['sam_' cruise '_'];
+prefix1 = ['nut_' mcruise '_'];
+prefix2 = ['sam_' mcruise '_'];
 infile1 = [root_nut '/' prefix1 stn_string];
 otfile2 = [root_ctd '/' prefix2 stn_string];
 
@@ -41,8 +34,8 @@ infile1
 'y'
 'sampnum'
 'sampnum'
-'no3no2 no3no2_flag TN TN_flag sio4 sio4_flag po4 po4_flag TP TP_flag no2 no2_flag nh4 nh4_flag'
-'totnit totnit_flag tn tn_flag silc silc_flag phos phos_flag tp tp_flag no2 no2_flag nh4 nh4_flag'
+'no3no2 no3no2_flag sio4 sio4_flag po4 po4_flag no2 no2_flag'
+'totnit totnit_flag silc silc_flag phos phos_flag no2 no2_flag'
 };
 mpaste
 %--------------------------------

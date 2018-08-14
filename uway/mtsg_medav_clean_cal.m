@@ -11,24 +11,23 @@
 % modded bak jr302 second SST
 
 scriptname = 'mtsg_medav_clean_cal';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 switch MEXEC_G.Mship
    case 'cook' % used on jc069
       prefix = 'met_tsg';
    case 'jcr'
-      prefix = 'ocl';
+      prefix = 'oceanlogger';
 end
 
-mdocshow(scriptname, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' prefix '_' cruise '_01_medav_clean.nc; calls tsgsal_apply_cal to apply salinity calibration set in opt_' cruise ', writing to ' prefix '_' cruise '_01_medav_clean_cal.nc'])
+mdocshow(scriptname, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' prefix '_' mcruise '_01_medav_clean.nc; calls tsgsal_apply_cal to apply salinity calibration set in opt_' mcruise ', writing to ' prefix '_' mcruise '_01_medav_clean_cal.nc'])
 
 root_dir = mgetdir(prefix);
-infile1 = [root_dir '/' prefix '_' cruise '_01'];
-otfile1 = [root_dir '/' prefix '_' cruise '_01_medav_clean']; % 1-minute median data
-otfile2 = [root_dir '/' prefix '_' cruise '_01_medav_clean_cal']; % 1-minute median data
+infile1 = [root_dir '/' prefix '_' mcruise '_01'];
+otfile1 = [root_dir '/' prefix '_' mcruise '_01_medav_clean']; % 1-minute median data
+otfile2 = [root_dir '/' prefix '_' mcruise '_01_medav_clean_cal']; % 1-minute median data
 
 %average
-    
 MEXEC_A.MARGS_IN = {
     infile1
     otfile1
@@ -55,24 +54,32 @@ end
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
 mcalib2
 
-%apply salinity calibration
+%determine if there is a tsg salinity calibration
+scriptname0 = scriptname; scriptname = 'tsgsal_apply_cal';
+salin = 1; time = 1; oopt = 'saladj'; eval(['opt_' mcruise])
+scriptname = scriptname0;
 
-switch MEXEC_G.Mship
-   case 'cook'
-      salvar = 'psal';
-   case 'jcr'
-      salvar = 'salinity';
+%apply it if there is one
+if exist('salout')
+
+   switch MEXEC_G.Mship
+      case 'cook'
+         salvar = 'psal';
+      case 'jcr'
+         salvar = 'salinity';
+   end
+   salinline = ['y = tsgsal_apply_cal(x1,x2)'];
+
+   MEXEC_A.MARGS_IN = {
+      otfile1
+      otfile2
+      '/'
+      ['time ' salvar]
+      salinline
+      [salvar '_cal']
+      'pss-78'
+      ' '
+      };
+  mcalc
+
 end
-salinline = ['y = tsgsal_apply_cal(x1,x2)'];
-
-MEXEC_A.MARGS_IN = {
-    otfile1
-    otfile2
-    '/'
-    ['time ' salvar]
-    salinline
-    [salvar '_cal']
-    'pss-78'
-    ' '
-    };
-mcalc

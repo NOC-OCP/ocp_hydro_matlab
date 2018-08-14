@@ -4,49 +4,78 @@
 %      stn = 16; mctd_rawedit;
 
 scriptname = 'mctd_rawedit';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['allows interactive selection of bad data cycles, writes cleaned data to ctd_' cruise '_' stn_string '_raw_cleaned.nc']);
+minit
+mdocshow(scriptname, ['applies despiking and other edits if set in opt_cruise; allows interactive selection of bad data cycles; writes cleaned data to ctd_' mcruise '_' stn_string '_raw_cleaned.nc']);
 
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['ctd_' cruise '_'];
-prefix2 = ['dcs_' cruise '_'];
-infile1 = [root_ctd '/' prefix1 stn_string '_raw'];
-infile2 = [root_ctd '/' prefix1 stn_string '_raw_original'];
-infile3 = [root_ctd '/' prefix1 stn_string '_raw_cleaned'];
-infile4 = [root_ctd '/' prefix2 stn_string ]; % dcs file
 
-in1nc = m_add_nc(infile1);
-in2nc = m_add_nc(infile2);
-in3nc = m_add_nc(infile3);
+prefix1 = ['ctd_' mcruise '_'];
+prefix2 = ['dcs_' mcruise '_'];
 
-if exist(in1nc,'file') == 2 & exist(in2nc,'file') ~= 2 & exist(in3nc,'file') ~= 2
-    % raw file only, so no cleaning has been done yet; set up copy file
-    cmd = ['/bin/mv ' in1nc ' ' in2nc]; unix(cmd);
-    cmd = ['/bin/cp -p ' in2nc ' ' in3nc]; unix(cmd);
-    cmd = ['chmod 644 ' in3nc]; unix(cmd);
-    cmd = ['ln -s ' in3nc ' ' in1nc]; unix(cmd);
-elseif exist(in1nc,'file') == 2 & exist(in2nc,'file') == 2 & exist(in3nc,'file') == 2
-    % all files exist; cleaning has already been set up
-    cmd = ['chmod 644 ' in3nc]; unix(cmd);
-else
-    mess = ['Unexpected result about which combination of '];
-    fprintf(MEXEC_A.Mfider,'%s\n',mess,in1nc,in2nc,in3nc,'exist')
-    return
+infile = [root_ctd '/' prefix1 stn_string '_raw_cleaned'];
+if ~exist(m_add_nc(infile), 'file')
+   % raw file only, so no cleaning has been done yet; move raw to raw_original and copy to raw_cleaned, making this writeable (for now) and making a link to raw_cleaned from raw
+   infile1 = [root_ctd '/' prefix1 stn_string '_raw'];
+   unix(['/bin/cp -p ' m_add_nc(infile1) ' ' m_add_nc(infile)]);
+   otfile1 = [root_ctd '/' prefix1 stn_string '_raw_original'];
+   unix(['/bin/mv ' m_add_nc(infile1) ' ' m_add_nc(otfile1)]);
+   unix(['chmod 444 ' m_add_nc(otfile1)]) %write-protected
+   l = length(root_ctd)+2; unix(['ln -s ' m_add_nc(infile(l:end)) ' ' m_add_nc(infile1)]); %link raw to raw_cleaned
 end
+unix(['chmod 644 ' m_add_nc(infile)]); %make raw_cleaned writeable for now
+
+
+%%%%%%%% first do some automatic edits (if indicated in opt_cruise) %%%%%%%%%
 
 % code added by YLF jr16002 to edit bad scans from raw_cleaned file
-oopt = 'badscans'; get_cropt
+% modified jc159 for additional options
+oopt = 'autoeditpars'; get_cropt %set whether to do automatic edits, and what parameters to use if so
+if doscanedit
+   MEXEC_A.MARGS_IN = {infile; 'y'};
+   for no = 1:length(sevars)
+	  MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; sevars{no}; [sevars{no} ' scan']; sestring{no}; ' '; ' '];
+	  disp(['will edit out scans from ' sevars{no} ' with ' sestring{no}])
+   end
+   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+   mcalib2
+end
+if dorangeedit
+   MEXEC_A.MARGS_IN = {infile; 'y'};
+   for no = 1:size(revars,1)
+      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; revars{no,1}; sprintf('%f %f',revars{no,2},revars{no,3}); 'y'];
+	  disp(['will edit values out of range [' sprintf('%f %f',revars{no,2},revars{no,3}) '] from ' revars{no,1}])
+   end
+   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+   medita
+end
+if dodespike
+   MEXEC_A.MARGS_IN = {infile; 'y'};
+   for no = 1:size(dsvars,1)
+      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; dsvars{no,1}; dsvars{no,1}; sprintf('y = m_median_despike(x1, %f);', dsvars{no,2}); ' '; ' '];
+      disp(['will despike ' dsvars{no,1} ' using threshold ' sprintf('%f', dsvars{no,2})])
+   end
+   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+   mcalib2
+end
+if (dorangeedit & sum(strncmp('temp', revars(:,1), 4))) | (dodespike & sum(strncmp('temp', dsvars(:,1), 4)))
+    warning('you have applied rangeedit or despike to temperature; if large spikes were removed,')
+    warning(['you should set redoctm=1 in the mctd_01 case in opt_' mcruise ','])
+    warning(['remove ctd_' mcruise '_' stn_string '*.nc,'])
+    warning('and rerun mexec processing steps from the beginning')
+    warning('(otherwise conductivity will be contaminated)') %***what about oxygen?
+end
 
-[ddcs hdcs]  = mload(infile4,'/');
+%%%%%%%%% now the GUI %%%%%%%%%
+
+%only plot the good part of the cast, chosen in mdcs_03g (not the on-deck or soak periods)
+infiled = [root_ctd '/' prefix2 stn_string ]; % dcs file
+if ~exist(m_add_nc(infiled), 'file')
+   unix(['chmod 444 ' m_add_nc(infile)]);
+   warning('dcs file required for GUI editing; quitting'); return
+else
+    
+[ddcs hdcs]  = mload(infiled,'/');
 dcs_ts = ddcs.time_start(1);
 dcs_te = ddcs.time_end(1);
 dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
@@ -56,15 +85,23 @@ stopdc = datevec(dn_end);
 
 close all
 
-% 1 hz file, so we can see if any small spikes survive into final data for
-% key variables
-clear pshow1
-pshow1.ncfile.name = infile3;
-pshow1.xlist = 'time';
-oopt = 'pshow1'; get_cropt
-pshow1.startdc = startdc;
-pshow1.stopdc = stopdc;
-mplxyed(pshow1);
+%ylf edited jc159 to allow multiple passes through mplxyed (probably for different variables) in a single call to mctd_rawedit
+redo = 1;
+while redo
 
-cmd = ['chmod 444 ' in3nc]; unix(cmd);
+   clear pshow1
+   hraw = m_read_header(infile);
+   pshow1.ncfile.name = infile;
+   pshow1.xlist = 'time';
+   oopt = 'pshow1'; get_cropt %set list of variables to plot
+   pshow1.startdc = startdc;
+   pshow1.stopdc = stopdc;
+   mplxyed(pshow1);
 
+   redo = input('run for another variable? (1 for yes, 0 for no)');
+
+end
+
+unix(['chmod 444 ' m_add_nc(infile)]);
+
+end

@@ -161,8 +161,8 @@ switch scriptname
    %%%%%%%%% end mbot_01 %%%%%%%%%
 
 
-   %%%%%%%%%% mcchdo_01 %%%%%%%%%%
-   case 'mcchdo_01'
+   %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
+   case 'mout_cchdo_ctd'
       switch oopt
          case 'expo'
 	    expocode = 'James_Clark_Ross_20130813';
@@ -172,11 +172,10 @@ switch scriptname
 	 case 'headstr'
             headstring = ['# The CTD PRS;  TMP;  SAL data are all calibrated and good . '];
       end
-   %%%%%%%%%% end mcchdo_01 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
 
-
-   %%%%%%%%%% mcchdo_02 %%%%%%%%%%
-   case 'mcchdo_02'
+   %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
+   case 'mout_cchdo_sam'
       switch oopt
          case 'expo'
 	    expocode = 'James_Clark_Ross_20130813';
@@ -184,8 +183,9 @@ switch scriptname
 	 case 'outfile'
 	    outfile = ['dimes_uk4'];
       end
-   %%%%%%%%%% end mcchdo_02 %%%%%%%%%%
-   
+   %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
+
+
    %%%%%%%%%% mcfc_02 %%%%%%%%%%
    case 'mcfc_02'
       switch oopt
@@ -245,8 +245,8 @@ switch scriptname
    %%%%%%%%% end mctd_03 %%%%%%%%%
 
 
-   %%%%%%%%%% msal_01 %%%%%%%%%%
-   case 'msal_01'
+   %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
+   case 'msal_standardise_avg'
       switch oopt
         case 'indata'
          oklist = [72]; % proceed on these stations. CTD but no salts
@@ -255,7 +255,7 @@ switch scriptname
          end
          indata = {}; % the rest of the code seems to run fine if indata is empty.
       end
-   %%%%%%%%%% end msal_01 %%%%%%%%%%
+   %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
 
 
    %%%%%%%%%% msbe35_01 %%%%%%%%%%
@@ -277,14 +277,8 @@ switch scriptname
          case 'dbbad'
             db.salinity_adj(45) = nan; % bad comparison point on jr281
 	 case 'sdiff'
-	    % try a two=pass filter, removing bad outliers, re-filtering and then refining 
-            sdiffsm = filter_bak(ones(1,21),sdiff); % first filter 
-            res = sdiff - sdiffsm;
-            sdiff(abs(res) > 0.01) = nan;
-            sdiffsm = filter_bak(ones(1,21),sdiff); % harsh filter to determine smooth adjustment
-            res = sdiff - sdiffsm;
-            sdiff(abs(res) > 0.005) = nan;
-            sdiffsm = filter_bak(ones(1,21),sdiff); % harsh filter to determine smooth adjustment
+	    clear sdiffsm
+	    sc1 = 0.01; sc2 = 0.05;
       end
    %%%%%%%%%% end mtsg_bottle_compare %%%%%%%%%%
 
@@ -300,30 +294,6 @@ switch scriptname
                datenum([2013 03 23 05 22 00]) datenum([2013 03 23 12 01 00])
                datenum([2013 04 27 10 44 00]) datenum([2013 04 28 00 00 00]) % end of cruise
                ];
-	 case 'vout'
-	    switch varinid
-               case 'salinity'
-                  vout = vin;
-                  vout(kbadall) = nan;
-                  vout(vout < 30) = nan;
-               case 'tstemp'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'sstemp'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'sampletemp'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'chlorophyll'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'trans'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               otherwise
-                  vout = vin;
-            end
       end
    %%%%%%%%% end mtsg_cleanup %%%%%%%%%
    
@@ -362,6 +332,15 @@ switch scriptname
 	 end
    %%%%%%%%% end tsgsal_apply_cal %%%%%%%%%
 
+
+   %%%%%%%%%% list_bot %%%%%%%%%%
+   case 'list_bot'
+      switch oopt
+         case 'printmsg'
+            fprintf(fidout,'%s\n','CTD data calibrated up to station 91; adjusted after that');
+            %fprintf(fidout,'%s\n','CTD adjusted stns 1 to 66');
+      end
+   %%%%%%%%%% list_bot %%%%%%%%%%
 
    %%%%%%%%%% populate_station_depths %%%%%%%%%%
    case 'populate_station_depths'
@@ -403,6 +382,39 @@ switch scriptname
             %if k == 122; cordep(k) = 6059; minalt(k) = -9; resid(k) = -999; end % only went to 2500 for tracer. cordep from CTD deck unit log
       end
    %%%%%%%%%% end station_summary %%%%%%%%%%
+   
+   %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
+   case 'msec_run_mgridp'
+      switch oopt
+         case 'sections'
+            sections = {'orkney' 'a23' 'srp' 'nsr' 'nsra23' 'abas' 'falk' 'sr1b'};
+	 case 'gpars'
+            gstart = 10; gstop = 5000; gstep = 20;
+	 case 'kstns'
+	    switch section
+	       case 'sr1b'
+	          sstring = '[2:19 22:33]';
+               case 'orkney'
+	          sstring = '[60 53:55 52 56 49 61 48 47 36 66 38 64 39 40 45]';
+               case 'a23'
+	          sstring = '[67:92]';
+	       case 'srp'
+	          sstring = '108:112';
+	       case 'nsr'
+	          sstring = '93:107';
+	       case 'nsra23'
+	          sstring = '[67:107]';
+	       case 'abas'
+	          sstring = '113:122';
+	       case 'falk'
+	          sstring = '123:128';
+	    end
+         case 'varuse'
+            %varuselist.names = {'botoxy' 'totnit' 'phos' 'silc' 'dic' 'alk' 'cfc11'  'cfc12' 'f113' 'sf6' 'ccl4'};
+            varuselist.names = {'botoxy' 'totnit' 'phos' 'silc' 'dic' 'alk'};
+      end
+   %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
+
 
 %%%%%%%%%%%%%%%%%%
 end

@@ -26,7 +26,7 @@
 % ylf jc145 revised to set non-standard sample names and how to count them in opt_cruise
 
 scriptname = 'station_summary';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
 oopt = 'optsams'; get_cropt %set snames, sgrps and sashore, groupings for counting samples of nuts, cfcs, etc.
@@ -39,7 +39,7 @@ root_sum = mgetdir('M_SUM');
 
 % bak at noc 18 aug 2010
 % pick up wireout name from file
-[a b] = unix(['ls ' root_win '/' 'win_' cruise '_???.nc']);
+[a b] = unix(['ls ' root_win '/' 'win_' mcruise '_???.nc']);
 knc = strfind(b,'.nc');
 if isempty(knc)
     m = 'No winch files found';
@@ -79,40 +79,49 @@ end
 
 
 %ylf jc145 find list of processed stations
-d = struct2cell(dir([root_ctd '/ctd_' cruise '_*2db.nc'])); d = cell2mat(d(1,:)');
-stnall = str2num(d(:,length(cruise)+[6:8]));
+d = struct2cell(dir([root_ctd '/ctd_' mcruise '_*psal.nc'])); d = cell2mat(d(1,:)');
+stnall = str2num(d(:,length(mcruise)+[6:8]));
 oopt = 'stnmiss'; get_cropt
-stnset = setdiff(stnall,stnmiss); stnset = stnset(:)';
-
+stnadd = [];
+oopt = 'stnadd'; get_cropt % bak jc159 force some stations into listing, even if there aren't any CTD data, eg wire tests with winch data allocated a station number, or aborted CTD stations
+stnset = setdiff(stnall,stnmiss);  stnset = stnset(:)';
+stnall = unique([stnset(:); stnadd(:)]); stnall = stnall(:)';
 
 %get information from files
 
-a = NaN+ones(length(stnset),1);
+% a = NaN+ones(length(stnset),1);
+a = NaN+ones(max(stnall),1); % bak on jc159 30 March 2018 has to be max (stnset) not size(stnset) so we can address by station number
+a9 = -9 + zeros(size(a)); % bak on jc159 initialise with  -9.
+a999 = -999 + zeros(size(a)); % bak on jc159 initialise with  -9.
 statnum = a; lat = a; lon = a;
-maxp = a; maxd = a;
-maxw = a;
-minalt = a;
+maxp = a999; maxd = a999;
+maxw = a999;
+minalt = a9;
+resid = a999;
 dns = a; dnb = a; dne = a;
-cordep = a;
-ndpths = zeros(length(stnset),1);
-nopt = zeros(length(stnset),size(sgrps,1));
+cordep = a999;
+ndpths = zeros(max(stnset),1);
+nopt = zeros(max(stnset),size(sgrps,1));
 if sum(sashore); nopt_shore = nopt; end
+
+for k = stnall; statnum(k) = k; end
 
 for k = stnset
     stnstr = sprintf('%03d',k);
-    statnum(k) = k;
 
-    fn2db = [root_ctd '/ctd_' cruise '_' stnstr '_2db'];
-    fnsal = [root_ctd '/ctd_' cruise '_' stnstr '_psal'];
-    fndcs = [root_ctd '/dcs_' cruise '_' stnstr ];
-    fnwin = [root_win '/' 'win_' cruise '_' stnstr];
-    fnsam = [root_ctd '/sam_' cruise '_' stnstr];
-
-    [d2db h1] = mload(fn2db,'/');
-    lat(k) = h1.latitude;
-    lon(k) = h1.longitude;
-
+    fn2db = [root_ctd '/ctd_' mcruise '_' stnstr '_2db'];
+    fnsal = [root_ctd '/ctd_' mcruise '_' stnstr '_psal'];
+    fndcs = [root_ctd '/dcs_' mcruise '_' stnstr ];
+    fnwin = [root_win '/' 'win_' mcruise '_' stnstr];
+    fnsam = [root_ctd '/sam_' mcruise '_' stnstr];
+    
+    %     [d2db h1] = mload(fn2db,'/');
+    %     lat(k) = h1.latitude;
+    %     lon(k) = h1.longitude;
+    
     [dpsal h2] = mload(fnsal,'/');
+    lat(k) = h2.latitude;
+    lon(k) = h2.longitude;
     maxp(k) = max(dpsal.press);
     maxd(k) = sw_dpth(maxp(k),lat(k));
     if isfield(dpsal, 'altimeter')
@@ -129,22 +138,24 @@ for k = stnset
     % bak on jc069. On towyo stations there may be no sam file
     if exist(m_add_nc(fnsam),'file') == 2
         [dsam h4] = mload(fnsam,'/');
-
+        
         if isfield(dsam,'wireout'); ndpths(k) = length(unique(dsam.wireout(~isnan(dsam.wireout)))); end
         if isfield(dsam,'botpsal'); nsal(k) = sum(~isnan(dsam.botpsal)); end
-
-	%loop through groups of non-standard samples
-	for sgno = 1:size(sgrps,1)
-	   ii = find(isfield(dsam, sgrps(sgno,2:end)));
-	   log_all = [];
-	   if sashore(sgno); log_all1 = []; end
-	   for fno = 1:length(ii)
-	      log_all = [log_all ~isnan(getfield(dsam, sgrps(sgno,ii(fno)+1)))];
-	      if sashore(sgno); log_all1 = [log_all1 getfield(dsam, [sgrps(sgno,ii(fno)+1) '_flag'])==1]; end
-	   end
-	   nopt(k,sgno) = sum(max(log_all,[],2)); %or just sum(sum) to count total samples?
-	   if sashore(sgno); nopt_shore(k,sgno) = sum(max(log_all1,[],2)); end
-	end
+        
+        %loop through groups of non-standard samples
+        for sgno = 1:size(sgrps,1)
+            sgrp = sgrps{sgno};
+            ii = find(isfield(dsam, sgrp)); %which of the sample var names in sgrps are actually in sam file
+            if length(ii)<size(sgrp,2); warning('not all sample types in sgrps found'); end
+            log_all = [];
+            if sashore(sgno); log_all1 = []; end
+            for fno = 1:length(ii)
+                log_all = [log_all ~isnan(getfield(dsam, sgrp{ii(fno)}))];
+                if sashore(sgno); log_all1 = [log_all1 getfield(dsam, [sgrp{ii(fno)} '_flag'])==1]; end
+            end
+            nopt(k,sgno) = sum(max(log_all,[],2)); %or just sum(sum) to count total samples?
+            if sashore(sgno); nopt_shore(k,sgno) = sum(max(log_all1,[],2)); end
+        end
     end
 
 
@@ -156,31 +167,44 @@ for k = stnset
     dne(k) = datenum(h4.data_time_origin) + ddcs.time_end/86400;
 
 end
+
+for no = 1:size(snames,1)
+   eval([snames{no} ' = nopt(:,no);'])
+end
+if sum(sashore); for no = 1:size(sashore,1)
+   eval([snames_shore{no} ' = nopt_shore(:,no);'])
+end; end
+
+oopt = 'altdep'; get_cropt
+
+
 resid = maxd+minalt-cordep;
-ii = find(cordep-maxd)>99; minalt(ii) = -9; resid(ii) = -999; %can't expect altimeter to detect bottom
+ii = find((cordep-maxd) > 99); minalt(ii) = -9; resid(ii) = -999; %can't expect altimeter to detect bottom
+ii = find(cordep == -999); resid(ii) = -999; % no resid if cordep undefined
+ii = find(maxd == -999); resid(ii) = -999; % no resid if maxd undefined
+ii = find(minalt == -9); resid(ii) = -999; % no resid if minalt undefined
 
 oopt = 'comments'; get_cropt
+oopt = 'alttimes'; get_cropt % impose start and end times not cpatured from CTD dcs files
 
 
 %write to ascii file
-
-stnlistname = [root_sum '/' cruise '_station_list'];
+stnlistname = [root_sum '/station_summary_' mcruise '_all.txt'];
 fid = fopen(stnlistname,'w');
 
 % list headings
-fprintf(fid,'%3s %8s %4s ', 'stn', 'yy/mo/dd', 'hhmm');
-fprintf(fid,'%10s %11s ', 'dg min lat', 'dg min lon');
-fprintf(fid,'%s ', 'cdep  maxd  alt   res  wire  pres  nd');
-fprintf(fid, '%s ', varnames{:});
-fprintf(fid,'%s\n','  Comments')
+fprintf(fid,'%3s %8s %4s', 'stn', 'yy/mo/dd', 'hhmm');
+fprintf(fid,' %10s %11s', 'dg min lat', 'dg min lon');
+fprintf(fid,' %4s', varnames{7:end});
+fprintf(fid,'  %s\n','Comments');
 
-for k = stnset
+for k = stnall
 
     ss = datestr(dns(k),'yy/mm/dd HHMM');
     sb = datestr(dnb(k),'yy/mm/dd HHMM');
     se = datestr(dne(k),'yy/mm/dd HHMM');
-    fprintf(fid,'\n%3s %s \n', '', ss);
-    fprintf(fid,'%03d %s ', k, sb);
+    fprintf(fid,'\n%3s %s\n', '', ss);
+    fprintf(fid,'%03d %s', k, sb);
 
     l1 = 'N'; if lat(k) < 0; l1 = 'S'; end
     l2 = 'E'; if lon(k) < 0; l2 = 'W'; end
@@ -190,27 +214,38 @@ for k = stnset
     lonk = abs(lon(k));
     lond = floor(lonk);
     lonm = 60*(lonk-lond); if lonm >= 59.995; lonm = 0; lond = lond+1; end% prevent write of 60.00 minutes
-    fprintf(fid,'%2d %05.2f %s %3d %05.2f %s ', latd, latm, l1, lond, lonm, l2);
+    fprintf(fid,' %2d %05.2f %s %3d %05.2f %s', latd, latm, l1, lond, lonm, l2);
 
-    oopt = 'altdep'; get_cropt
     for no = 7:length(varnames)
        eval(['data = ' varnames{no} '(k);']);
-       fprintf(fid, '%4.0f  ', data);
+       % jc159 bak30 march 2018; width of field is width of var name,
+       % minimum 4.
+       vn = varnames{no};
+       fwid = length(vn);
+       fwid = max(4,fwid);
+       form = sprintf('%s%d%s',' %',fwid,'.0f');
+       fprintf(fid, form, data);
     end
 
     fprintf(fid,'  %s',comments{k});
     fprintf(fid,'\n');
 
-%    fprintf(fid,'%3s %8s %4s\n','',se1,se2);
+    fprintf(fid,'%3s %s \n', '', se);
 
 end
 
 fclose(fid);
 
+cordep(cordep == -999) = -99999;
+resid(resid == -999) = -99999;
+maxp(maxp == -999) = -99999;
+maxd(maxd == -999) = -99999;
+minalt(minalt == -9) = -99999;
+
 
 %write to mstar .nc file
 
-prefix1 = ['station_summary_' cruise '_'];
+prefix1 = ['station_summary_' mcruise '_'];
 otfile2 = [root_sum '/' prefix1 'all'];
 dataname = [prefix1 'all'];
 
@@ -254,6 +289,5 @@ MEXEC_A.MARGS_IN_5 = {
     '-1'
     };
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
-keyboard
 msave
 

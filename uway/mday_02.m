@@ -19,7 +19,7 @@ m_margslocal
 m_varargs
 
 scriptname = 'mday_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 m1 = 'Type name of output directory abbreviation,       eg; M_GPS   ';
 reply = m_getinput(m1,'s');
@@ -37,7 +37,7 @@ cmd = ['daynum = ' reply ';']; eval(cmd);
 day = daynum;
 
 day_string = sprintf('%03d',daynum);
-mdocshow(scriptname, ['appends ' mstarprefix '_' cruise '_d' day_string '_edt.nc to ' mstarprefix '_' cruise '_01.nc']);
+mdocshow(scriptname, ['appends ' mstarprefix '_' mcruise '_d' day_string '_edt.nc to ' mstarprefix '_' mcruise '_01.nc']);
 
 root_out = mgetdir(M_OUT);
 if exist(root_out,'dir') ~= 7
@@ -47,7 +47,7 @@ if exist(root_out,'dir') ~= 7
     return
 end
 
-prefix1 = [mstarprefix '_' cruise '_'];
+prefix1 = [mstarprefix '_' mcruise '_'];
 infile1 = [root_out '/' prefix1 '01'];
 infile2 = [root_out '/' prefix1 'd' day_string];
 infile3 = [root_out '/' prefix1 'd' day_string '_edt'];
@@ -66,11 +66,16 @@ if ~exist(m_add_nc(apfilename),'file')
             m4 = infile4;
             fprintf(MEXEC_A.Mfider,'%s\n','',m,m2,m3,m4)
             return
-	end
+    
+       end
     end
 end
 
 dataname = [prefix1 '01'];
+
+%YLF added jr17001 to check for row vs column vector
+[d,h] = mload(apfilename,'/'); s = size(d.time);
+if s(1)==1; vdir = 'r'; else; vdir = 'c'; end
 
 MEXEC_A.MARGS_IN_1 = {
    wkfile
@@ -87,7 +92,7 @@ if ~exist(m_add_nc(infile1),'file')
 end
 MEXEC_A.MARGS_IN_3 = {
    '/'
-   'r'
+   vdir
 };
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1 ; MEXEC_A.MARGS_IN_2 ; MEXEC_A.MARGS_IN_3];
 mapend

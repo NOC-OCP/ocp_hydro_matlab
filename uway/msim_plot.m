@@ -58,10 +58,15 @@ switch MEXEC_G.Mshipdatasystem
 end
 
 oopt = 'sbathy'; get_cropt %ssdeps
-load(bfile); [ny,nx] = size(ssdep); ny = min(ny,length(sslat)); nx = min(nx,length(sslon)); %for some reason the n_atlantic file is not the right size but it's only off by 1 point so will fix later***
-if mean(sslons)<0; sslon = sslon-360; end
-ssdeps = -interp2(sslon(1:nx), sslat(1:ny)', ssdep(1:ny,1:nx), sslons, sslats);
+load(bfile); disp(bfile)
+if ~exist('sslon') & exist('top'); sslon = top.lon; sslat = top.lat; ssdep = top.altitude; end
+%[ny,nx] = size(ssdep); ny = min(ny,length(sslat)); nx = min(nx,length(sslon)); %for some reason the n_atlantic file is not the right size but it's only off by 1 point so will fix later***
+if mean(sslons)<0 & mean(sslon)>0; sslon = sslon-360; end
+iix = find(sslon>=min(sslons)-1 & sslon<=max(sslons)+1); iiy = find(sslat>=min(sslats)-1 & sslat<=max(sslats)+1);
+ssdeps = -interp2(sslon(iix), sslat(iiy)', ssdep(iiy,iix), sslons, sslats);
 
+% figure; plot(sslons,'k*'); hold on; plot(sslon,'b*'); grid on
+clear sslon
 % quick plot
 figure(101)
 clf
@@ -105,4 +110,4 @@ pdf.yax = m_autolims([bottom+100 top-100],pdf.ntick(2));
 pdf.yax = [pdf.yax; pdf.yax];
 pdf.yax = fliplr(pdf.yax);
 mplxyed(pdf)
-unix(['/bin/mv mplxyed_*_sim_' cruise '_d' day_string ' ' root_sim '/'])
+

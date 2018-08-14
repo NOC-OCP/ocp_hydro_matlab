@@ -4,19 +4,12 @@
 %      stn = 16; mwin_04;
 
 scriptname = 'mwin_04';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['adds winch data from bottle firing times to sam_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['adds winch data from bottle firing times to sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['fir_' cruise '_'];
-prefix2 = ['sam_' cruise '_'];
+prefix1 = ['fir_' mcruise '_'];
+prefix2 = ['sam_' mcruise '_'];
 
 infile1 = [root_ctd '/' prefix1 stn_string '_winch'];
 otfile2 = [root_ctd '/' prefix2 stn_string];

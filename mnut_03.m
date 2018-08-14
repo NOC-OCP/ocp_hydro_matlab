@@ -3,15 +3,9 @@
 % values in sam file.  Flag is selected based on highest WOCE flag value.
 
 scriptname = 'mnut_03';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['computes organic nutrients from total and inorganic nutrients in sam_' cruise '_' stn_string '_raw.nc']);
+minit
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mdocshow(scriptname, ['computes organic nutrients from total and inorganic nutrients in sam_' mcruise '_' stn_string '_raw.nc']);
 
 if exist('stn','var')
     m = ['Running script ' scriptname ' on station ' sprintf('%03d',stn)];
@@ -23,7 +17,7 @@ stn_string = sprintf('%03d',stn);
 clear stn % so that it doesn't persist
 
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['sam_' cruise '_'];
+prefix1 = ['sam_' mcruise '_'];
 infile1 = [root_ctd '/' prefix1 stn_string];
 
 % phosphate

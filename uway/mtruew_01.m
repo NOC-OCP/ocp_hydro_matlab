@@ -32,8 +32,12 @@ scriptname = 'mtruew_01';
 
 root_pos = mgetdir('M_POS');
 root_met = mgetdir('M_SURFMET');
-
 prefix1 = ['surfmet_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+if length(root_met)==0
+    root_met = mgetdir('M_ANEMOMETER'); 
+    prefix1 = ['anemometer_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+end
+
 prefix2 = ['bst_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
 
 infile1 = [root_met '/' prefix1 '01'];

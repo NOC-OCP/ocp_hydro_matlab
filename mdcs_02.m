@@ -5,20 +5,13 @@
 %      stn = 16; mdcs_02;
 
 scriptname = 'mdcs_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['finds scan number corresponding to bottom of cast, writes to dcs_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['finds scan number corresponding to bottom of cast, writes to dcs_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
 
-prefix1 = ['ctd_' cruise '_'];
-prefix2 = ['dcs_' cruise '_'];
+prefix1 = ['ctd_' mcruise '_'];
+prefix2 = ['dcs_' mcruise '_'];
 
 infile1 = [root_ctd '/' prefix1 stn_string '_psal'];
 %  infile1 = [root_ctd '/' prefix1 stn_string '_1hz'];  This would be a better choice if have issues with hte data
@@ -35,7 +28,7 @@ kbot = min(find(p == max(p)));
 
 % di346, select bottom data cycle by hand for station 81
 
-if strcmp(cruise,'di346')
+if strcmp(mcruise,'di346')
     if stnlocal==81
         kbot = 5574;
     end

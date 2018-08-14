@@ -25,13 +25,13 @@ m_margslocal
 m_varargs
 
 scriptname = 'mday_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 day_string = sprintf('%03d',day);
 daylocal = day;
 clear day % so that it doesn't persist
 
-mdocshow(scriptname, ['loads in underway data stream ' streamname ', writes to ' mstarprefix '_' cruise '_d' sprintf('%03d',daylocal), '_raw.nc']);
+mdocshow(scriptname, ['loads in underway data stream ' streamname ', writes to ' mstarprefix '_' mcruise '_d' sprintf('%03d',daylocal), '_raw.nc']);
 
 root_out = mgetdir(M_OUT);
 if exist(root_out,'dir') ~= 7
@@ -47,7 +47,7 @@ timeend = 235959;
 instream = streamname; % this should be set in m_setup and picked up from a global var so that it doesn't have to be edited for each cruise/ship
 varlist = '-';
 
-prefix1 = [mstarprefix '_' cruise '_'];
+prefix1 = [mstarprefix '_' mcruise '_'];
 fnmstar = [prefix1 'd' day_string '_raw'];
 otfile2 = [root_out '/' fnmstar];
 dataname = [prefix1 'd' day_string];

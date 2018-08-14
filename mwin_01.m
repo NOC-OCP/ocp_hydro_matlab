@@ -7,42 +7,50 @@
 % Further revision by BAK 15 Nov 2009 intended to make it work equally well
 % on SCS (JCR) and Techsas (Discovery/Cook) files
 %
-% Assumes file ctd_cruise_stn_1hz.nc exists. Times taken form this file,
+% Assumes file ctd_cruise_stn_1hz.nc exists. Times taken from this file,
 % with an extra 600 seconds added at each end
 %
 % Script includes mcalc and datpik to ensure data are properly monotonic in
 % time. Presumably BAK found some files sometime that were not monotonic.
+%
+% Additional option introduced by bak on jc159 15 April 2018 in opt_jc159 so that
+% times can be specified to enable winch data to be read in when there are
+% no ctd data, or to override times derived from ctd files. If no cruise and station-specific
+% case is provided, times are taken from ctd file as usual.
 
 scriptname = 'mwin_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['adds winch data to win_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['adds winch data to win_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
 root_ctd = mgetdir('M_CTD');
-infile1 = [root_ctd '/ctd_' cruise '_' stn_string '_1hz'];
-otfile2 = [root_win '/win_' cruise '_' stn_string];
+infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_1hz'];
+otfile2 = [root_win '/win_' mcruise '_' stn_string];
 otfile3 = [root_win '/' 'wk_' scriptname '_' datestr(now,30)];
-dataname = ['win_' cruise '_' stn_string];
+dataname = ['win_' mcruise '_' stn_string];
 
 
 %--------------------------------
 % create rvs starts and end times
 
-get_cropt; %time_window
+get_cropt; %time_window (before/after start/end time range in which to search;
+%winch_time_start, winch_time_end (default NaN--use CTD data file)
 
-h_in=m_read_header(infile1);
-k_time=find(strcmp('time',h_in.fldnam));
-t_start=datenum(h_in.data_time_origin)  + ( h_in.alrlim(k_time)+time_window(1))/86400;
-t_end=datenum(h_in.data_time_origin)+(h_in.uprlim(k_time)+time_window(2))/86400;
+% bak on jc159 15 april 2018: need to be able to read in some winch data 
+% on swivel test stations where there are no ctd files; new cruise opt to set
+% winch_time_start and winch_time_end; example in opt_jc159
+% this option can also be used to set winch start and end times different
+% from ctd times, eg if CTD comms are lost when termination fails.
+if exist('winch_time_start','var') & ~isnan(winch_time_start) & ~isnan(winch_time_end)
+    t_start = datenum(winch_time_start);
+    t_end = datenum(winch_time_end);
+else
+    h_in=m_read_header(infile1);
+    k_time=find(strcmp('time',h_in.fldnam));
+    t_start=datenum(h_in.data_time_origin)  + ( h_in.alrlim(k_time)+time_window(1))/86400;
+    t_end=datenum(h_in.data_time_origin)+(h_in.uprlim(k_time)+time_window(2))/86400;
+end
 
 t_start_vec=datevec(t_start);
 t_end_vec=datevec(t_end);

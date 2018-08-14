@@ -6,6 +6,6 @@ function oxyout = oxy_apply_cal(sensor,stn,press,time,temp,oxyin)
 
 m_common
 
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 scriptname = 'oxy_apply_cal';
 get_cropt

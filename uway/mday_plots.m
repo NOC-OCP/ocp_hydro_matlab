@@ -18,6 +18,7 @@ function mday_plots(day,stream)
 m_setup
 pdfsroot = [MEXEC.mexec_processing_scripts '/pdfs'];
 day_string = sprintf('%03d',day);
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 switch MEXEC_G.Mship
     case 'cook'
@@ -33,9 +34,9 @@ end
 switch stream
     case 'posmvpos'
         root_dir = mgetdir('M_POSMVPOS');
-        prefix1 = ['posmvpos' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix1 = ['posmvpos' '_' mcruise '_'];
         infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
-        prefix2 = ['bst' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix2 = ['bst' '_' mcruise '_'];
         infile2 = [root_dir '/' prefix1 '01'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
@@ -62,7 +63,7 @@ switch stream
         p2 = mplotxy(p2);
     case 'gyro_s'
         root_dir = mgetdir('M_GYRO_S');
-        prefix1 = ['gyro_s' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix1 = ['gyro_s' '_' mcruise '_'];
         infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
@@ -91,7 +92,7 @@ switch stream
                 return
         end
         root_dir = mgetdir('M_LOG_CHF');
-        prefix1 = ['log_chf' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix1 = ['log_chf' '_' mcruise '_'];
         infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
@@ -115,7 +116,7 @@ switch stream
             otherwise
         end
         root_dir = mgetdir('M_ASH');
-        prefix1 = ['ash' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix1 = ['ash' '_' mcruise '_'];
         infile1 = [root_dir '/' prefix1 'd' day_string ''];
         if exist(m_add_nc(infile1),'file') ~= 2;
             % file does not exist
@@ -170,7 +171,7 @@ switch stream
 
         root_dir = mgetdir('M_SURFMET');
         %raw wind 
-        prefix1 = ['surfmet' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix1 = ['surfmet' '_' mcruise '_'];
         infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
@@ -208,7 +209,7 @@ switch stream
 
         root_dir = mgetdir('M_OCL');
         %raw wind 
-        prefix1 = ['ocl' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix1 = ['ocl' '_' mcruise '_'];
         infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
@@ -228,7 +229,7 @@ switch stream
     case 'metpro'
         root_dir = mgetdir('M_SURFMET');
         %processed wind 
-        prefix1 = ['surfmet' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix1 = ['surfmet' '_' mcruise '_'];
         infile1 = [root_dir '/' prefix1 'trueav' ''];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
@@ -253,7 +254,7 @@ switch stream
         switch MEXEC_G.Mship
             case 'jcr'
                 root_dir = mgetdir('M_OCL');
-                prefix1 = ['ocl' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+                prefix1 = ['ocl' '_' mcruise '_'];
                 p_ylist = 'par1 par2 tir1 tir2 baro1 baro2';
                 p_yax = [
                     -1000 1000
@@ -265,7 +266,7 @@ switch stream
                     ];
             case 'cook'
                 root_dir = mgetdir('M_MET_LIGHT');
-                prefix1 = ['met_light' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+                prefix1 = ['met_light' '_' mcruise '_'];
                 p_ylist = 'ppar spar ptir stir pres';
                 p_yax = [
                     -1000 1000
@@ -300,7 +301,7 @@ switch stream
             case 'jcr'
                 % all oceanlogger sea variables
                 root_dir = mgetdir('M_OCL');
-                prefix1 = ['ocl' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+                prefix1 = ['ocl' '_' mcruise '_'];
                 p_ylist = ' sstemp tstemp salinity chlorophyll trans  conductivity';
                 p_yax = [
                     -4 36
@@ -313,7 +314,7 @@ switch stream
             case 'cook'
                 root_dir = mgetdir('M_MET_TSG')
                 % met tsg including fluor & trans
-                prefix1 = ['met_tsg' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+                prefix1 = ['met_tsg' '_' mcruise '_'];
                 p_ylist = ' temp_h temp_m psal fluo trans cond';
                 p_yax = [
                     10 30
@@ -348,7 +349,7 @@ switch stream
         switch MEXEC_G.Mship
             case 'jcr'
                 root_dir = mgetdir('M_OCL');
-                prefix1 = ['ocl' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+                prefix1 = ['ocl' '_' mcruise '_'];
                 p_ylist = ' sstemp tstemp sampletemp salinity sound_velocity conductivity flowrate';
                 p_yax = [
                     -4 36 % sea temp
@@ -361,7 +362,7 @@ switch stream
                     ];
             case 'cook'
                 root_dir = mgetdir('M_TSG');
-                prefix1 = ['tsg' '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+                prefix1 = ['tsg' '_' mcruise '_'];
                 p_ylist = ' temp_h temp_r salin sndspeed cond';
                 p_yax = [
                     -4 36 % housing ?

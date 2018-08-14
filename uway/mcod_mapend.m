@@ -9,7 +9,7 @@ m_margslocal
 m_varargs
 
 scriptname='mcod_mapend';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if exist('os','var')
     m = ['Running script ' scriptname ' for OS ' sprintf('%d',os)];
@@ -23,13 +23,13 @@ if nbb==1; nbbstr='nb';
 else; nbbstr='bb'; end
 
 root_vmadcp = mgetdir('M_VMADCP');
-cd([root_vmadcp '/' cruise '_os' sprintf('%d',os)])
+cd([root_vmadcp '/' mcruise '_os' sprintf('%d',os)])
 unix(['/bin/rm nc_files*']);
 unix(['/bin/rm *_01.nc']);
-unix(['ls -1 ' cruise '*' nbbstr(1) 'benx/*_spd.nc > nc_files']);
+unix(['ls -1 ' mcruise '*' nbbstr(1) 'benx/*_spd.nc > nc_files']);
 
 wkfile = ['wk_' datestr(now,30)];
-otfile = ['os' sprintf('%d',os) '_' cruise nbbstr(1) 'nx_01'];
+otfile = ['os' sprintf('%d',os) '_' mcruise nbbstr(1) 'nx_01'];
 clear os    % To be able to run the script with another OS type right away. CFL
 
 %--------------------------------

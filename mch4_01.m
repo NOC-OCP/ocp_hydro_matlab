@@ -6,16 +6,8 @@
 % first draft bak on jr302 20 jun 2014 to read Ian Brown's CH4/N2O data
 %
 scriptname = 'mch4_01';
-
-if exist('stn','var')
-    m = ['Running script ' scriptname ' on station ' sprintf('%03d',stn)];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m)
-else
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn;
-clear stn % so that it doesn't persist
+minit
+mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 % resolve root directories for various file types
 root_ch4 = mgetdir('M_BOT_CH4');

@@ -62,13 +62,14 @@ s.zlim = 4; % vertical extent of gridding window measured in plev
 testfit = nan+y;
 
 % group stations that can be used together for gridding
-% kstatgroups = {[1:9] [10:22] [23:200]}; % jc032
+% saloups = {[1:9] [10:22] [23:200]}; % jc032
 kstatgroups = {[2:13] [14:200]}; % di346
 kstatgroups = {[3:42]}; % jc069
 kstatgroups = {[60 53 54 55 52 56 49 61 48 47 36 38 39 40 45]}; % jr281
 kstatgroups = {[1:33] [60 53 54 55 52 56 49 61 48 47 36 38 39 40 45] [67:82]}; % jr281
 kstatgroups = {[67:82]}; % jr281
 kstatgroups = {[1:19 21:999]}; % jr302
+kstatgroups = {3 [4:999]}; % jc159
 %now distribute the sample numbers into sets corresponding to the station
 %groups 
 for kount = 1:length(kstatgroups)
@@ -126,6 +127,25 @@ switch action
         %         p = pgrid(:);
         %         yotall = nan+ones(length(p),length(stnlist));
         yotall = nan+pgrid;
+        
+        % bak on jc159 26 march 2018; modify so the horizontal
+        % weighting is based on index in statnumgrid rather than
+        % just statnum; carry statnumgrid and index in grid of all samples into mapping
+        g.statnumgrid = statnumgrid;
+        s.statnumindex = nan + s.statnum;
+        g.statlist = statnumgrid(1,:); % stations in grid
+        % find index of all reference points in statlist
+        for kref = 1:length(s.statnum);
+            ki = find(g.statlist == s.statnum(kref));
+            if isempty(ki); continue; end
+            if length(ki) > 1
+                fprintf(2,'\n%s\n\n','Problem in m_maptracer: the station number of a sample to be used for gridding was not uniquely found in the station set');
+                error('exiting');
+            end
+            s.statnumindex(kref) = ki;
+        end
+        % end of mod 26 march 2018.
+        
         for kx = 1:size(pgrid,1)
             for ky = 1:size(pgrid,2)
 % % % % %             kstn = stnlist(kount);
@@ -177,7 +197,16 @@ function g = bakmap2(g,s)
 
 
     plk = g.pl; % this is the plevel of the test point
-    x = s.statnum-sk;
+    %x = s.statnum-sk;
+    % bak on jc159 26 march 2018; station separation for weight calculated
+    % from index in station grid rather than just station number.
+    skindex = find(g.statlist == sk);
+    if length(skindex) ~= 1
+        fprintf(2,'\n%s\n\n','Problem in m_maptracer: a station to be used for gridding does not occur uniquely in the station set');
+        error('exiting');
+    end
+    x = s.statnumindex-skindex;
+    % end of mod
     z = s.pl-plk;
     kpoints = find(-s.xlim <= x & x <= s.xlim ...
                  & -s.zlim <= z & z <= s.zlim ...
@@ -217,6 +246,14 @@ function g = bakmap2(g,s)
     poly = R\(Q'*yw);
     
     g.fit = poly(1); % mapped data on y points
+    
+    %%%% bak on jc159 24 March 2018
+    % do not allow extrapolation; output is nan if the density of the test
+    % point is not bracketed by density of samples being used.
+    if min(sigu(w~=0))*max(sigu(w~=0)) > 0 % test point is not bracketed by points with non-zero weight; make result be nan.
+        g.fit = nan;
+    end
+    %%%%
     return
 
 %     resid = yu-V*poly;

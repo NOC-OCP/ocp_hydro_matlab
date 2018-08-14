@@ -17,25 +17,20 @@
 % start as a default of 9 instead of nan.
 
 scriptname = 'msam_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['creating empty sam_' cruise '_' stn_string '.nc based on templates/sam_cruise_varlist.csv']);
+minit
+mdocshow(scriptname, ['creating empty sam_' mcruise '_' stn_string '.nc based on templates/sam_varlist.csv']);
 
 % resolve root directories for various file types
 root_templates = mgetdir('M_TEMPLATES');
 root_sam = mgetdir('M_SAM');
 
-prefix1 = ['sam_' cruise '_'];
+prefixt = ['sam_'];
+prefix1 = ['sam_' mcruise '_'];
 
-varfile = [root_templates '/' prefix1 'varlist.csv']; % read list of var names and units for empty sam template
-varfileout = [root_templates '/' prefix1 'varlist_out.csv']; % write list of var names and units for empty sam template
+varfile = [root_templates '/' prefixt 'varlist.csv']; % read list of var names and units for empty sam template
+varfileout = [root_templates '/' prefixt 'varlist_out.csv']; % write list of var names and units for empty sam template
 otfile = [root_sam '/' prefix1 stn_string];
+otfile2 = [root_sam '/' prefix1 'template'];
 
 dataname = [prefix1 stn_string];
 
@@ -131,3 +126,4 @@ MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; 
 msave
 %--------------------------------
 
+unix(['cp ' m_add_nc(otfile) ' ' m_add_nc(otfile2)])

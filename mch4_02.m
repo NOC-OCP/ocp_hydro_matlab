@@ -1,21 +1,13 @@
 % mch4_02: paste ch4 data into sam file
 
 scriptname = 'mch4_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if exist('stn','var')
-    m = ['Running script ' scriptname ' on station ' sprintf('%03d',stn)];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m)
-else
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-clear stn % so that it doesn't persist
+minit
+mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 root_ch4 = mgetdir('M_BOT_CH4');
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['ch4_' cruise '_'];
-prefix2 = ['sam_' cruise '_'];
+prefix1 = ['ch4_' mcruise '_'];
+prefix2 = ['sam_' mcruise '_'];
 infile1 = [root_ch4 '/' prefix1 stn_string];
 otfile2 = [root_ctd '/' prefix2 stn_string];
 

@@ -11,15 +11,8 @@
 % the lats and longs come from the dcs file
 
 scriptname = 'mlad_01';
-
-if exist('stn','var')
-    m = ['Running script ' scriptname ' on station ' sprintf('%03d',stn)];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m)
-else
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-clear stn % so that it doesn't persist
+minit
+mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 % resolve root directories for various file types
 
@@ -27,7 +20,7 @@ root_ladcp = mgetdir('M_LADCP');
 root_ctd = mgetdir('M_CTD');
 
 % getting the location of the cast
-dcs_filename = [root_ctd '/dcs_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stn_string];
+dcs_filename = [root_ctd '/dcs_' mcruise '_' stn_string];
 d=m_read_header(dcs_filename);
 latstr=num2str(d.latitude);lonstr=num2str(d.longitude);
 
@@ -47,7 +40,7 @@ nd=find(d_uh.su_mn_i==0);d_uh.su_mn_i(nd)=d_uh.su_mn_i(nd)+nan;
 nd=find(d_uh.sv_mn_i==0);d_uh.sv_mn_i(nd)=d_uh.sv_mn_i(nd)+nan;
 
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
-prefix = ['ladcp_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+prefix = ['ladcp_' mcruise '_'];
 
 dataname1=[prefix stn_string '_uh'];
 dataname2=[prefix stn_string '_ld'];

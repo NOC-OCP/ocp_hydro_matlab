@@ -10,22 +10,44 @@ function vout = mtsg_cleanup(torg,time,vin,varinid)
 
 m_common
 
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 scriptname = 'mtsg_cleanup';
 oopt = '';
 
 dn = torg+time/86400;
 
-oopt = 'kbadlims'; get_cropt
 MARGS_STORE = MEXEC_A.MARGS_IN_LOCAL; % need to save this because it would otherwise be used by mcsetd
-roottsg = mgetdir('M_MET_TSG');
+switch MEXEC_G.Mship
+   case 'cook' % used on jc069
+      prefix = 'met_tsg';
+   case 'jcr'
+      prefix = 'oceanlogger';
+end
+roottsg = mgetdir(prefix);
 MEXEC_A.MARGS_IN_LOCAL = MARGS_STORE;
 
-kbadall = [];
-for kb = 1:size(kbadlims,1)
-    kbad = find(dn >= kbadlims(kb,1) & dn <= kbadlims(kb,2));
-    kbadall = [kbadall(:)' kbad(:)'];
+vout = vin;
+
+oopt = 'editvars'; get_cropt %which variables to edit based on bad times
+
+oopt = 'kbadlims'; get_cropt
+if iscell(kbadlims)
+   for kb = 1:size(kbadlims,1)
+      if ischar(kbadlims{kb,3}) & sum(strcmp(kbadlims{kb,3},'all'))
+         edvar = editvars;
+      else
+         edvar = kbadlims{kb,3};
+      end
+      if sum(strcmp(varinid, edvar))
+         kbad = find(dn >= kbadlims{kb,1} & dn <= kbadlims{kb,2});
+	 vout(kbad) = NaN;
+      end
+   end
+elseif sum(strcmp(varinid, editvars)) %always the same ones
+   for kb = 1:size(kbadlims,1)
+      kbad = find(dn >= kbadlims(kb,1) & dn <= kbadlims(kb,2));
+      vout(kbad) = NaN;
+   end
 end
 
-oopt = 'vout'; get_cropt
-vout = vin; vout(kbadall) = NaN;
+oopt = 'moreedit'; get_cropt %any other edits

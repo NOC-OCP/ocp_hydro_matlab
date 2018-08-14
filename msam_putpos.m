@@ -8,50 +8,44 @@
 % doesnt exist, taken from header of ctd raw file
 
 scriptname = 'msam_putpos';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['adds positions from dcs or ctd raw file to sam_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['adds positions from dcs pos or ctd raw file to sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['sam_' cruise '_'];
-prefix2 = ['dcs_' cruise '_'];
-prefix3 = ['ctd_' cruise '_'];
 
-clear fn
+otfile = [root_ctd '/sam_'  mcruise '_' stn_string];
+infile1 = [root_ctd '/dcs_' mcruise '_' stn_string '_pos'];
+infile2 = [root_ctd '/ctd_' mcruise '_' stn_string '_raw'];
 
-fn{1} = [root_ctd '/' prefix1 stn_string];
-fn{2} = [root_ctd '/' prefix2 stn_string '_pos'];
-fn{3} = [root_ctd '/' prefix3 stn_string '_raw'];
-
-filename = m_add_nc(fn{1});
+filename = m_add_nc(otfile);
 if ~exist(filename,'file')
     m = ['File ' filename ' does not exist yet'];
     fprintf(MEXEC_A.Mfider,'%s\n',m)
     return
 end
 
-% If the position isnt available from the dcs
-% file, take it from the raw file instead, which should have been set using
-% posinfo at the time that file was created
-if exist(m_add_nc(fn{2}),'file') == 2
-    [d h] = mload(fn{2},'statnum','lat_bot','lon_bot',' ');
-    
-    % allow for the possibility that the dcs file contains many stations
-    
-    kf = find(d.statnum == stnlocal);
-    latbot = d.lat_bot(kf(1));
-    lonbot = d.lon_bot(kf(1));
-elseif exist(m_add_nc(fn{3}),'file') == 2
-    h = m_read_header(fn{3});
+latbot = []; lonbot = [];
+useraw = 0;
+if exist(m_add_nc(infile1),'file') == 2 %default is to get from dcs file
+    h = m_read_header(infile1); 
+    if sum(strcmp('lat_bot',h.fldnam))==0
+        warning(['no cast bottom position in ' fn{iipos}])
+        useraw = 1;
+    else
+       d = mload(infile1,'statnum','lat_bot','lon_bot',' ');
+       % allow for the possibility that the dcs file contains many stations
+       kf = find(d.statnum == stnlocal);
+       latbot = d.lat_bot(kf(1));
+       lonbot = d.lon_bot(kf(1));
+       if isnan(latbot+lonbot); useraw = 1; end
+    end
+elseif exist(m_add_nc(infile2),'file') == 2; useraw = 1; end
+if useraw %if position wasn't found in dcs file, take it from the raw file instead
+    h = m_read_header(infile2);
     latbot = h.latitude;
     lonbot = h.longitude;
-else
+end
+if isempty(latbot)
     msg = ['No source found for position on station ' stn_string];
     fprintf(MEXEC_A.Mfider,'%s\n',msg);
     return
@@ -61,16 +55,8 @@ latstr = ['y = ones(size(x)) * ' sprintf('%12.6f',latbot)];
 lonstr = ['y = ones(size(x)) * ' sprintf('%12.6f',lonbot)]; 
 
 %--------------------------------
-% 2014-06-22 19:43:18
-% mcalib
-% calling history, most recent first
-%    mcalib in file: mcalib.m line: 91
-% input files
-% Filename sam_jr302_001.nc   Data Name :  sam_jr302_001 <version> 38 <site> jr302_atsea
-% output files
-% Filename sam_jr302_001.nc   Data Name :  sam_jr302_001 <version> 39 <site> jr302_atsea
 MEXEC_A.MARGS_IN = {
-fn{1}
+otfile
 'y'
 'lat'
 latstr

@@ -1,7 +1,7 @@
 switch scriptname
 
-   %%%%%%%%%% mcchdo_02 %%%%%%%%%%
-   case 'mcchdo_02'
+   %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
+   case 'mout_cchdo_sam'
       switch oopt
          case 'expo'
 	    expocode = 'jc145';
@@ -9,7 +9,18 @@ switch scriptname
 	 case 'outfile'
 	    outfile = ['RAPID_jc145'];
       end
-   %%%%%%%%%% end mcchdo_02 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
+
+   %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
+   case 'mout_cchdo_ctd'
+      switch oopt
+         case 'expo'
+	    expocode = 'jc145';
+            sect_id = 'RAPID_2017';
+	 case 'outfile'
+	    outfile = ['RAPID_jc145'];
+      end
+   %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
 
    %%%%%%%%%% ctd_evaluate_sensors %%%%%%%%%%
    case 'ctd_evaluate_sensors'
@@ -67,43 +78,47 @@ switch scriptname
 %      oxyout = (oxyin - beta)./alpha; %use this line to undo the one above
    %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
    
-   %%%%%%%%%% numoxy %%%%%%%%%%
-   case 'numoxy'
-      numoxy = 2;
-   %%%%%%%%%% end mctd_oxycal %%%%%%%%%%
-
-
    %%%%%%%%%% mctd_02b %%%%%%%%%%
    case 'mctd_02b'
       switch oopt
-         case 'hyst'
-	        hyst_var_string = 'oxygen_sbe1 time press';
-	        hyst_var_string2 = 'oxygen_sbe2 time press';
-	        hyst_pars  = [-0.0 5000 1450]; %  Std value is -0.033 but put = 0 to not apply
-			hyst_pars_deep = [-0.0 4200 5000];
-	        hyst_pars2 = [-0.0 5000 1450]; %  N
-			hyst_pars_deep2 = [-0.0 4200 5000];
-            hyst_pars_string = sprintf('[%f,%f,%f]',hyst_pars);
-            hyst_pars_string2 = sprintf('[%f,%f,%f]',hyst_pars2);
-            hyst_pars_deep_string = sprintf('[%f,%f,%f]',hyst_pars_deep);
-            hyst_pars_deep_string2 = sprintf('[%f,%f,%f]',hyst_pars_deep2);
-	        hyst_execute_string = ['y = mcoxyhyst_mod(x1,x2,x3,' hyst_pars_string  ',' hyst_pars_deep_string ')'];
-	        hyst_execute_string2 = ['y = mcoxyhyst_mod(x1,x2,x3,' hyst_pars_string2  ',' hyst_pars_deep_string2 ')'];
-	        oxy1name = 'oxygen1';
-	        oxy2name = 'oxygen2';
-%        case 'hyst'
-%            hyst_var_string = 'oxygen_sbe1 time press';
-%            hyst_var_string2 = 'oxygen_sbe2 time press';
-%            hyst_pars = [-0.033 5000 1450]; %sbe default
-%            hyst_pars = [ 0 5000 1450]; % NO CORRECTION
-%               hyst_pars_string = sprintf('%f,%f,%f',hyst_pars(1),hyst_pars(2),hyst_pars(3));
-%            hyst_pars2 = [0 5000 1450]; %  NO CORRECTION
-%               hyst_pars_string2 = sprintf('%f,%f,%f',hyst_pars2(1),hyst_pars2(2),hyst_pars2(3));
-%               hyst_execute_string = ['y = mcoxyhyst(x1,x2,x3,' hyst_pars_string  ')'];
-%            oxy1name = 'oxygen1';
-%            oxy2name = 'oxygen2';
+         case 'oxyhyst'
+	    var_strings = {'oxygen_sbe1 time press'
+	                   'oxygen_sbe2 time press'};
+	    pars = [NaN NaN NaN]; %depth-varying parameters will be set in mcoxyhyst case instead
+	    varnames = {'oxygen1'; 'oxygen2'};
       end
    %%%%%%%%%% end mctd_02b %%%%%%%%%%
+
+   %%%%%%%%%% mcoxyhyst %%%%%%%%%%
+   case 'mcoxyhyst'
+      switch sensor
+         case 1
+	    H1 = zeros(size(D));
+	    h2tab = [-10 5000
+	            2000 5000
+		    2001 4200
+		    7000 4200];
+            H2 = interp1(h2tab(:,1), h2tab(:,2), press);
+	    h3tab = [-10 1450
+	            2000 1450
+		    2001 5000
+		    7000 5000];
+            H3 = interp1(h3tab(:,1), h3tab(:,2), press);
+	 case 2
+	    H1 = zeros(size(D));
+	    h2tab = [-10 5000
+	            2000 5000
+		    2001 4200
+		    7000 4200];
+            H2 = interp1(h2tab(:,1), h2tab(:,2), press);
+	    h3tab = [-10 1450
+	            2000 1450
+		    2001 5000
+		    7000 5000];
+            H3 = interp1(h3tab(:,1), h3tab(:,2), press);
+      end
+   %%%%%%%%%% end mcoxyhyst %%%%%%%%%%
+
 
 
    %%%%%%%%%% mctd_03 %%%%%%%%%%
@@ -135,8 +150,6 @@ switch scriptname
    %%%%%%%%%% mctd_rawshow %%%%%%%%%%
    case 'mctd_rawshow'
       switch oopt
-	 case 'pshow5'
-	    pshow5.ylist = 'temp1 temp2 cond1 cond2 press oxygen1 oxygen2';
 	 case 'pshow2'
 	    pshow2.ylist = 'press oxygen_sbe1 oxygen_sbe2';
 	 case 'pshow4'
@@ -144,14 +157,6 @@ switch scriptname
       end
    %%%%%%%%%% end mctd_rawshow %%%%%%%%%%
 
-
-   %%%%%%%%%% mctd_rawedit %%%%%%%%%%
-   case 'mctd_rawedit'
-      switch oopt
-	 case 'pshow1'
-            pshow1.ylist = 'temp1 temp2 cond1 cond2 press oxygen_sbe1 oxygen_sbe2';
-      end
-   %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
 
    %%%%%%%%%% mdcs_03 %%%%%%%%%%
    case 'mdcs_03'
@@ -175,20 +180,11 @@ switch scriptname
    %%%%%%%%%% msal_01 %%%%%%%%%%
    case 'msal_01'
       switch oopt
-         case 'salcsv'
-	        sal_csv_file = 'sal_jc145_01.csv';
-	     case 'cellT'
-	        ds_sal.cellT = 21+zeros(length(ds_sal.sampnum),1);
          case 'flag'
 %	    if stnlocal==5
 %	       flag(ismember(salbot,[18 20])) = 3; %questionable
 %           end
 	        doplot = 0;
-	 case 'offset'
-	        ds_sal.offset = zeros(length(ds_sal.sampnum),1);
-	        ds_sal.offset(ismember(ds_sal.sampnum,[ 1:224])) = 0;
-	        ds_sal.offset(ismember(ds_sal.sampnum,[ 300:1024])) = 0.000085;
-	        ds_sal.offset(ismember(ds_sal.sampnum,[1100:2524])) = 0.000160;
          case 'sstdagain'
 	        sstdagain = 0;
       end
@@ -198,6 +194,15 @@ switch scriptname
    %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
    case 'msal_standardise_avg'
       switch oopt
+         case 'salcsv'
+	        sal_csv_file = 'sal_jc145_01.csv';
+	     case 'cellT'
+	        ds_sal.cellT = 21+zeros(length(ds_sal.sampnum),1);
+	 case 'offset'
+	        ds_sal.offset = zeros(length(ds_sal.sampnum),1);
+	        ds_sal.offset(ismember(ds_sal.sampnum,[ 1:224])) = 0;
+	        ds_sal.offset(ismember(ds_sal.sampnum,[ 300:1024])) = 0.000085;
+	        ds_sal.offset(ismember(ds_sal.sampnum,[1100:2524])) = 0.000160;
          case 'std2use'
 %	       std2use  = zeros(25,1);
 %	       std2use([1 2 3 10 11 25]) = 1; 
@@ -249,10 +254,6 @@ switch scriptname
    %%%%%%%%%% msal_01 %%%%%%%%%%
    case 'mtsg_01'
       switch oopt
-         case 'salcsv'
-	    sal_csv_file = 'sal_jc145_01.csv';
-	 case 'cellT'
-	    ds_sal.cellT = 21+zeros(length(ds_sal.sampnum),1);
          case 'flag'
 %	    flag(ismember(ds_sal.sampnum, [])) = 3; %questionable
 	    doplot = 0;
@@ -266,11 +267,9 @@ switch scriptname
       switch oopt
          case 'kbadlims'
 	    kbadlims = [datenum([2017 02 09 15 45 00])  datenum([2017 02 21 14 10 00])
-        datenum([2017 02 23 11 24 00])  datenum([2017 02 28 15 39 00])
-        datenum([2017 03 27 11 32 00])  datenum([2017 03 28 07 04 00])
+           datenum([2017 02 23 11 24 00])  datenum([2017 02 28 15 39 00])
+           datenum([2017 03 27 11 32 00])  datenum([2017 03 28 07 04 00])
             ];
-%         case 'vout'
-%            %keep kbadall as-is
       end
    %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
 

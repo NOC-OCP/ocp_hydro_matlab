@@ -57,15 +57,15 @@ switch scriptname
    case 'mbot_01'
       switch oopt
          case 'infile'
-	    infile = [root_botcsv '/log_samp_jr16002_all.txt'];
+	    infile = [root_botcnv '/log_samp_jr16002_all.txt'];
          case 'botflags'
-            bottle_qc_flag(isnan(ds_sample.oxy_bot) & isnan(ds_sample.d18O_bot) & strcmp('NaN',ds_sample.sal_bot)) = 9;
+            %bottle_qc_flag(isnan(ds_sample.oxy_bot) & isnan(ds_sample.d18O_bot) & strcmp('NaN',ds_sample.sal_bot)) = 9;
       end
    %%%%%%%%%% end mbot_01y %%%%%%%%%%
 
 
-   %%%%%%%%%% mcchdo_01 %%%%%%%%%%
-   case 'mcchdo_01'
+   %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
+   case 'mout_cchdo_sam'
       switch oopt
          case 'expo'
 	    expocode = '74JC20161110';
@@ -93,10 +93,10 @@ switch scriptname
 	    '#Notes:';...
 	    '#These data should be acknowledged with: "Data were collected and made publicly available by the International Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'};
       end
-   %%%%%%%%%% end mcchdo_01 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
 
-   %%%%%%%%%% mcchdo_02 %%%%%%%%%%
-   case 'mcchdo_02'
+   %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
+   case 'mout_cchdo_ctd'
       switch oopt
          case 'expo'
 	    expocode = '74JC20161110';
@@ -123,172 +123,21 @@ switch scriptname
 	    '# DEPTH_TYPE   : COR';...
     	    '#These data should be acknowledged with: "Data were collected and made publicly available by the International Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'];
       end
-   %%%%%%%%%% end mcchdo_02 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
 
 
    %%%%%%%%%% mctd_rawedit %%%%%%%%%%
    case 'mctd_rawedit'
       switch oopt
-         case 'badscans'
-            if stnlocal == 22
-	       %remove bad scans on upcast (CTD comms loss led to lost scans, but first to bad data)
-               %just assume all variables are bad for this range of scans
-               MEXEC_A.MARGS_IN = {
-                  infile3
-                  'y'
-	          'press'
-	          'press scan'
-	          'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-   	          ' '
-	          ' '
-                  'temp1'
-                  'temp1 scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'temp2'
-                  'temp2 scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'cond1'
-                  'cond1 scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'cond2'
-                  'cond2 scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'oxygen_sbe'
-                  'oxygen_sbe scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'loxygen_sbe'
-                  'loxygen_sbe scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'sbeoxyV'
-                  'sbeoxyV scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'pressure_temp'
-                  'pressure_temp scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'altimeter'
-                  'altimeter scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'fluor'
-                  'fluor scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'transmittance'
-                  'transmittance scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'par'
-                  'par scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'depSM'
-                  'depSM scan'
-                  'y = x1; kbad = find(x2 >= 179877 & x2 <= 181455); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  ' '
-                  };
-               mcalib2
+         case 'autoeditpars'
+            sevars = {'press' 'temp1' 'temp2' 'cond1' 'cond2' 'oxygen_sbe' 'loxygen_sbe' 'sbeoxyV' 'pressure_temp' 'altimeter' 'fluor' 'transmittance' 'par' 'depSM'}
+            if stnlocal == 22 %CTD comms loss led to lost scans, but first to bad data
+	       doscanedit = 1;
+               sestring = repmat({'y = x1; y(x2>=179877 & x2<=181455) = NaN;'}, length(sevars), 1);
             end
-            if stnlocal== 23
-               %remove bad scans on upcast (CTD comms loss led to lost scans, but first to bad data)
-               %all variables are bad for these scans
-               MEXEC_A.MARGS_IN = {
-                  infile3
-                  'y'
-	          'press'
-                  'press scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-	          ' '
-                  ' '
-                  'temp1'
-                  'temp1 scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'temp2'
-                  'temp2 scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'cond1'
-                  'cond1 scan'
-                  'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'cond2'
-                  'cond2 scan'
-                  'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'oxygen_sbe'
-                  'oxygen_sbe scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'loxygen_sbe'
-                  'loxygen_sbe scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'sbeoxyV'
-                  'sbeoxyV scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'pressure_temp'
-                  'pressure_temp scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'altimeter'
-                  'altimeter scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'fluor'
-                  'fluor scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'transmittance'
-                  'transmittance scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'par'
-                  'par scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  'depSM'
-                  'depSM scan'
-	          'y = x1; kbad = find((x2>=94575 & x2<=96350) | (x2>=102937 & x2<=104600)); y(kbad) = nan; '
-                  ' '
-                  ' '
-                  ' '
-                  };
-               mcalib2
+            if stnlocal== 23 %CTD comms loss led to lost scans, but first to bad data
+	       doscanedit = 1;
+	       sestring = repmat({'y = x1; y((x2>=179877 & x2<=181455) | (x2>=102937 & x2<=104600)) = NaN;'}, length(sevars), 1);
             end
       end
    %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
@@ -350,6 +199,12 @@ switch scriptname
 	 case 'blstd' %these could be station-dependent, but here we use one average value for each (average excluding 1st set, which were erroneous)
 	    vol_blank = 0.0045;     % volume of blank (mL)
             vol_titre_std = 0.5018; % standard titre (mL) (only one sod thio batch to standardise here)
+         case 'botvols'
+            fname_bottle = 'ctd/BOTTLE_OXY/bottle_vols.csv';
+            ds_bottle = dataset('File', fname_bottle, 'Delimiter', ',');
+            mb = max(ds_bottle.bot_num); a = NaN+zeros(mb, 1);
+            a(ds_bottle.bot_num) = ds_bottle.bot_vol;
+            obot_vol = a(ds_oxy.oxy_bot); %mL
       end
    %%%%%%%%%% end moxy_01y %%%%%%%%%%
 
@@ -357,8 +212,6 @@ switch scriptname
    %%%%%%%%%% msal_01 %%%%%%%%%%
    case 'msal_01'
       switch oopt
-         case 'salcsv'
-	    sal_csv_file = 'log_sal_jr16002_all.txt';
          case 'flag'
 	    if stnlocal==5
 	       flag(ismember(salbot,[18 20])) = 3; %questionable
@@ -393,6 +246,8 @@ switch scriptname
    %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
    case 'msal_standardise_avg'
       switch oopt
+         case 'salcsv'
+	    sal_csv_file = 'log_sal_jr16002_all.txt';
          case 'std2use'
 	    std2use(33:34, 1) = 0;
             std2use(35, :) = 0;
@@ -442,10 +297,6 @@ switch scriptname
             datenum([2016 11 27 10 23 57]) datenum([2016 11 28 19 13 00]) % rothera ice
             datenum([2016 11 30 11 35 00]) datenum([2016 11 30 12 11 00]) % ?
             ];
-	 case 'vout'
-	    if sum(strcmp(varinid, {'salinity','tstemp','sstemp','sstemp2','sampletemp','chlorophyll','trans'}))==0
-               kbadall = []; %don't NaN variables other than those above
-            end
       end
    %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
 
@@ -454,8 +305,8 @@ switch scriptname
     case 'tsgsal_apply_cal'
        switch oopt
           case 'saladj'
-             adj = 0.004;
-             vout = salin+adj;
+             off = 0.004;
+             salout = salin+off;
       end
    %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
 
@@ -473,7 +324,7 @@ switch scriptname
    case 'station_summary'
       switch oopt
          case 'optsams'
-	    snames = {'noxy'}; sgrps = {'oxy'}; sashore = 0;
+	    snames = {'nopt'}; sgrps = {'oxy'}; sashore = 0;
       end
    %%%%%%%%%% end station_summary %%%%%%%%%%
 

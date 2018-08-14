@@ -2,6 +2,8 @@
 % bak jc069 5 feb 2012
 
 scriptname = 'mcfc_03';
+minit
+mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 % now edit to do all stations
 

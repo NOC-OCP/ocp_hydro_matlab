@@ -4,21 +4,13 @@
 %      stn = 16; mctd_rawshow;
 
 scriptname = 'mctd_rawshow';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
+minit
 mdocshow(scriptname, ['plots 24 hz and 1 hz CTD data for station ' stn_string]);
 
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['ctd_' cruise '_'];
-prefix2 = ['dcs_' cruise '_'];
+prefix1 = ['ctd_' mcruise '_'];
+prefix2 = ['dcs_' mcruise '_'];
 infile1 = [root_ctd '/' prefix1 stn_string '_raw'];
 infile2 = [root_ctd '/' prefix2 stn_string ];
 infile3 = [root_ctd '/' prefix1 stn_string '_psal'];
@@ -90,4 +82,4 @@ mplotxy(pshow3);
 oopt = 'pshow4'; get_cropt
 if ~isempty(pshow4); mplotxy(pshow4); end
 
-
+sprintf('%s\n', 'To edit out spikes, run mctd_rawedit.', 'If you need to remove a range of scans, set doscanedit in mctd_ rawedit case of opt_ cruise', 'If you want to remove out-of-range values or large spikes before manual despiking, set dorangeedit or dodespike in mctd_ rawedit case of opt_ cruise','However, if there are large spikes in temperature you should instead set redoctm in the mctd_01 case of opt_cruise, and restart the processing from the beginning')

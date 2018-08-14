@@ -5,18 +5,11 @@
 % need to specify station number: stn
 
 scriptname = 'mctd_fluorcal';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['applies fluorescence calibration set in opt_' cruise ' to ctd_' cruise '_' stn_string '_24hz.nc']);
+minit
+mdocshow(scriptname, ['applies fluorescence calibration set in opt_' mcruise ' to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['ctd_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+prefix1 = ['ctd_' mcruise '_'];
 infile = [root_ctd '/' prefix1 stn_string '_24hz'];
 
 % may need to get times of data from ctd or dcs files dcs file sometimes

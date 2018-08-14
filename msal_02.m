@@ -1,7 +1,7 @@
 % msal_02: paste sal data into sam file
 
 scriptname = 'msal_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if ~exist('stn','var')
     stn = input('type stn number ');
@@ -9,12 +9,12 @@ end
 stn_string = sprintf('%03d',stn);
 stnlocal = stn; clear stn % so that it doesn't persist
 
-mdocshow(scriptname, ['pastes bottle salinity data from sal_' cruise '_' stn_string '.nc to sam_' cruise '_' stn_string '.nc']);
+mdocshow(scriptname, ['pastes bottle salinity data from sal_' mcruise '_' stn_string '.nc to sam_' mcruise '_' stn_string '.nc']);
 
 root_sal = mgetdir('M_BOT_SAL');
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['sal_' cruise '_'];
-prefix2 = ['sam_' cruise '_'];
+prefix1 = ['sal_' mcruise '_'];
+prefix2 = ['sam_' mcruise '_'];
 infile1 = [root_sal '/' prefix1 stn_string];
 otfile2 = [root_ctd '/' prefix2 stn_string];
 

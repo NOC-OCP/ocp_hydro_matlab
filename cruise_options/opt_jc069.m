@@ -126,27 +126,10 @@ switch scriptname
                datenum([2012 2 21 12 00 00]) datenum([2012 2 24 12 00 00]) % stanley second time
                datenum([2012 3 31 0 0 0]) 1e10 % placeholder for end of cruise
                ];
-         case 'vout'
-	    switch varinid
-               case 'salin'
-                  vout = vin;
-                  vout(kbadall) = nan;
-                  vout(vout < 33) = nan;
-               case 'temp_m'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'temp_h'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'fluo'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               case 'trans'
-                  vout = vin;
-                  vout(kbadall) = nan;
-               otherwise
-                   vout = vin;
-            end
+         case 'moreedit'
+	    if strcmp('salin', varinind)
+	       vout(vout < 33) = NaN;
+	    end
       end
    %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
 
@@ -205,6 +188,23 @@ switch scriptname
             if k == 73; minalt(k) = 95; resid(k) = maxd(k)+minalt(k)-cordep(k); end % altimeter height off taken from deck unit log sheet
 	 end
    %%%%%%%%%% end station_summary %%%%%%%%%%
+
+   %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
+   case 'msec_run_mgridp'
+      switch oopt
+         case 'sections'
+            sections = {'sr1b'};
+	 case 'gpars'
+            gstart = 10; gstop = 5000; gstep = 20;
+	 case 'kstns'
+	    switch section
+	       case 'sr1b'
+	          sstring = '[80:89 91]';
+	    end
+	 case 'varuse'
+            varuselist.names = {'cfc12' 'cfc13' 'sf6' 'sf5cf3'};
+      end
+   %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
 
 
    %%%%%%%%%% vmadcp_proc %%%%%%%%%%

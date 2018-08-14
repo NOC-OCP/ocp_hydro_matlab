@@ -1,7 +1,7 @@
 % scvript to calculate ships speed
 % and expand 1D arrays into 2D
 scriptname='mcod_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if exist('fl','var')
     m = ['Running script ' scriptname ' on station ' fl];
@@ -23,11 +23,11 @@ if ~exist('nbb'); nbb = input('Enter narrowband (1) or broadband (2) '); end
 if nbb==1; nbbstr='nb';
 else; nbbstr='bb'; end
 
-if ~exist('seqdbname'); seqdbname = [cruise fl]; end
+if ~exist('seqdbname'); seqdbname = [mcruise fl]; end
 sdbname = [seqdbname nbbstr(1) 'nx'];
 
 root_vmadcp = mgetdir('M_VMADCP');
-cd([root_vmadcp '/' cruise '_os' sprintf('%d',os)])
+cd([root_vmadcp '/' mcruise '_os' sprintf('%d',os)])
 enxdir = [seqdbname nbbstr 'enx'];
 if exist(enxdir,'dir') ~= 7; return; end
 cmd=['cd ' enxdir]; eval(cmd);

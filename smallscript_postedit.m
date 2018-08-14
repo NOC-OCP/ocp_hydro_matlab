@@ -1,6 +1,6 @@
 %scripts to rerun after editing using mctd_rawedit
 scriptname = 'smallscript';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
 root_ctd = mgetdir('M_CTD');
@@ -13,12 +13,12 @@ okc = input('OK to continue (y/n)?','s');
 if okc == 'n' | okc == 'N'
 	return
 end
-	
+
 for kloop = klist
     stn = kloop;
     stn_string = sprintf('%03d',stn);
     
-    prefix1 = ['ctd_' cruise '_'];
+    prefix1 = ['ctd_' mcruise '_'];
     infile1 = [root_ctd '/' prefix1 stn_string '_raw'];
     
     if exist(m_add_nc(infile1),'file') ~= 2
@@ -29,9 +29,10 @@ for kloop = klist
 
     stn = kloop; mctd_02b
     stn = kloop; mctd_03;
+    mout_1hzasc(stnlocal);
     stn = kloop; mctd_04;
     
-    prefix2 = ['fir_' cruise '_'];
+    prefix2 = ['fir_' mcruise '_'];
     infile2 = [root_ctd '/' prefix2 stn_string '_time'];
     if exist(m_add_nc(infile2),'file') ~= 2
         mess = ['File ' m_add_nc(infile2) ' not found'];
@@ -41,5 +42,7 @@ for kloop = klist
 
     stn = kloop; mfir_03;
     stn = kloop; mfir_04;
+    
+    stn = kloop; msam_updateall;
 
 end

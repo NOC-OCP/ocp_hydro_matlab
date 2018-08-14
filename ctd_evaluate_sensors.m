@@ -32,21 +32,19 @@
 %could add options for fluor as well but i don't know what its cal function should depend on
 
 scriptname = 'ctd_evaluate_sensors';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
 okf = [2]; %only bother with good samples
-okf = [2 3]; %include good or questionable samples
+%okf = [2 3]; %include good or questionable samples
 
-printdir = ['/local/users/pstar/cruise/data/plots/'];
+printdir = [MEXEC_G.MEXEC_DATA_ROOT '/plots/'];
 prstr = '';
 if ~exist('plotprof','var'); plotprof = 1; end %for cond or oxy, make profile plots to check how good samples are
 
-d = mload(['/local/users/pstar/cruise/data/ctd/sam_' cruise '_all'], '/');
-statrange = [0 max(d.statnum)+1];
-presrange = [-5000 0];
-edges = -10:.2:10;
-
+d = mload([MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_all'], '/');
+presrange = [-max(d.upress(~isnan(d.utemp))) 0];
+pdeep = 1500;
 
 if length(sensnum)>0; sensstr = num2str(sensnum); else; sensstr = ''; sensnum = 1; end
 
@@ -57,6 +55,8 @@ if length(sensnum)>0; sensstr = num2str(sensnum); else; sensstr = ''; sensnum = 
 if exist('precalt','var') & precalt
    fnm = ['utemp' sensstr];
    d = setfield(d, fnm, temp_apply_cal(sensnum, d.statnum, d.upress, d.time, getfield(d, fnm)));
+else
+   precalt = 0;
 end
 
 if exist('precalc','var') & precalc
@@ -64,46 +64,59 @@ if exist('precalc','var') & precalc
    fnmt = ['utemp' sensstr];
    fnm = ['ucond' sensstr];
    d = setfield(d, fnm, cond_apply_cal(sensnum, d.statnum, d.upress, d.time, getfield(d, fnmt), getfield(d, fnm)));
+else
+   precalc = 0;
+   fnm = ['ucond' sensstr];
 end
 
 if exist('precalo','var') & precalo
-   if ~precalt | ~precalc; warning('you may want to calibrate temperature and conductivity before calibrating oxygen'); end
-   fnm = ['uoyxgen' sensstr];
+   if ~exist('precalt') | ~exist('precalc') | ~precalt | ~precalc; warning('you may want to calibrate temperature and conductivity before calibrating oxygen'); end
+   fnm = ['uoxygen' sensstr];
    d = setfield(d, fnm, oxy_apply_cal(sensnum, d.statnum, d.upress, d.time, d.utemp, getfield(d, fnm)));
+else
+   precalo = 0;
 end
-
 
 %get data to compare, and sets of indices corresponding to different sensors
 if strcmp(sensname, 'temp')
    fnm = ['utemp' sensstr]; ctddata = getfield(d, fnm);
    caldata = d.sbe35temp; calflag = d.sbe35flag;
    oopt = 'tsensind'; get_cropt ;
-   res = caldata - ctddata;
+   res = (caldata - ctddata);
+   if isfield(d, 'utemp1') & isfield(d, 'utemp2'); ctdres = (d.utemp2-d.utemp1); else; ctdres = NaN+ctddata; end
    rlabel = 'SBE35 T - CTD T (degC)'; rlim = [-10 10]*1e-3;
-
+   vlim = [-2 32];
+   
 elseif strcmp(sensname, 'cond')
    fnm = ['ucond' sensstr]; ctddata = getfield(d, fnm);
    caldata = [gsw_C_from_SP(d.botpsal,d.utemp1,d.upress) gsw_C_from_SP(d.botpsal,d.utemp2,d.upress)]; calflag = d.botpsalflag;
-   oopt = 'csensind'; get_cropt; keyboard
-   res = (caldata(:,sensnum)./ctddata - 1)*35;
-   rlabel = 'C_{bot}/C_{ctd} (psu)'; rlim = [-10 10]*1e-3;
-
+   caldata = caldata(:,sensnum);
+   oopt = 'csensind'; get_cropt;
+   res = (caldata./ctddata - 1)*35;
+   if isfield(d, 'ucond1') & isfield(d, 'ucond2'); ctdres = (d.ucond2./d.ucond1-1)*35; else; ctdres = NaN+ctddata; end
+   rlabel = 'C_{bot}/C_{ctd} (psu)'; rlim = [-10 10]*2e-3;
+   vlim = [25 60];
+   
 elseif strcmp(sensname, 'oxy')
    fnm = ['uoxygen' sensstr]; ctddata = getfield(d, fnm);
    caldata = d.botoxy; calflag = d.botoxyflag;
    oopt = 'osensind'; get_cropt
    res = (caldata - ctddata);
-   rlabel = 'O_{bot} - O_{ctd} (umol/kg)'; rlim = [-10 10]*4;
-
+   if isfield(d, 'uoxygen1') & isfield(d, 'uoxygen2'); ctdres = (d.uoxygen2-d.uoxygen1); else; ctdres = NaN+ctddata; end
+   rlabel = 'O_{bot} - O_{ctd} (umol/kg)'; rlim = [-10 10];
+   vlim = [50 450];
+   
 else
    error('must set sensname to one of ''temp'', ''cond'', or ''oxy''')
 end
+edges = [-1:.05:1]*rlim(2);
+statrange = [0 max(d.statnum(~isnan(caldata)))+1];
 
 %only compare points with certain flags
-iig = find(ismember(calflag, okf));
+iig = find(ismember(calflag, okf) & d.statnum>=35);
 n = size(sensind,1);
 for no = 1:n
-      sensind{no} = intersect(sensind{no},iig);
+   sensind{no} = intersect(sensind{no},iig);
 end
 
 %model calibration
@@ -111,24 +124,25 @@ if strcmp(sensname, 'temp')
    rmod = [ones(length(d.statnum),1) d.statnum];
    for no = 1:n
       b = regress(res(sensind{no})*1e3, rmod(sensind{no},:));
-      disp(['set' num2str(no) ': temp_{cal} = temp_{ctd} + (' num2str(round(b(1)*10)/10) ' + ' num2str(round(b(2)*10)/10) 'statnum)x10^{-3}'])
+      sprintf('set %d: temp_{cal} = temp_{ctd} + (%4.2f + %4.2fN)x10^{-3}', no, b(1), b(2))
    end
    
 elseif strcmp(sensname, 'cond')
    rmod = [ones(length(d.statnum),1) d.statnum d.upress];
    for no = 1:n
-      b = regress((res(sensind{no})-1)/35*1e3, rmod(sensind{no},:));
-      disp(['set' num2str(no) ': cond_{cal} = cond_{ctd}[1 + (' num2str(round(b(1)*10)/10) ' + ' num2str(round(b(2)*10)/10) 'statnum ' + num2str(round(b(3)*1e3)/1e3) 'press)35x10^{-3}]'])
+      b = regress(res(sensind{no}), rmod(sensind{no},:));
+      sprintf('set %d: cond_{cal} = cond_{ctd}[1 + (%6.5f + %6.5fN + %6.5fP)/35]', no, b(1), b(2), b(3))
    end
    
 elseif strcmp(sensname, 'oxy')
    rmod = [ones(length(d.statnum),1) d.upress ctddata d.statnum.*ctddata];
    for no = 1:n
       b = regress(caldata(sensind{no}), rmod(sensind{no},:));
-      disp(['set' num2str(no) ': oxy_{cal} = ' num2str(round(b(3)*10)/10) ' + ' num2str(round(b(4)*10)/10) 'statnum)oxy_{ctd} + (' num2str(round(b(1)*10)/10) ' + ' num2str(round(b(2)*1e2)/1e2) ')press'])
+      sprintf('set %d: oxy_{cal} = oxy_{ctd}(%5.3f + %4.2fNx10^{-4}) + %4.2f + %4.2fPx10^{-3}', no, b(3), b(4)*1e4, b(1), b(2)*1e3)
    end
 
 end
+pause
 
 
 %plots of the residual/ratio
@@ -137,75 +151,99 @@ for no = 1:n
    figure((no-1)*10+2); clf
    nh = histc(res(sensind{no}), edges);
    bar(edges, nh, 'histc')
-   title([cruise ' ' rlabel])
+   title([mcruise ' ' rlabel])
    md = nanmedian(res(sensind{no})); ms = sqrt(nansum((res(sensind{no}))-md).^2)/(length(sensind{no})-1);
-   iid = intersect(sensind{no}, find(d.upress>100)); mn = nanmean(res(iid)); st = nanstd(res(iid));
+   iid = intersect(sensind{no}, find(d.upress>=pdeep)); mdd = nanmedian(res(iid)); iqrd = iqr(res(iid));
    ax = axis;
-   text(edges(end)*.9, ax(4)*.95, ['median ' num2str(round(md*100)/100)], 'horizontalalignment', 'right')
-   text(edges(end)*.9, ax(4)*.90, ['sqrt(''L2'') ' num2str(round(ms*100)/100)], 'horizontalalignment', 'right')
-   text(edges(end)*.9, ax(4)*.85, ['mean ' num2str(round(mn*100)/100)], 'horizontalalignment', 'right')
-   text(edges(end)*.9, ax(4)*.80, ['\sigma ' num2str(round(st*100)/100)], 'horizontalalignment', 'right')
-   print('-dpdf', ['ctd_eval_' sensname sensstr '_set' num2str(no) '_hist'])
+   text(edges(end)*.9, ax(4)*.95, ['median ' num2str(round(md*1e3)/1e3)], 'horizontalalignment', 'right')
+   text(edges(end)*.9, ax(4)*.90, ['deep median ' num2str(round(mdd*1e3)/1e3)], 'horizontalalignment', 'right')
+   text(edges(end)*.9, ax(4)*.85, ['deep 25-75% ' num2str(round(iqrd*1e3)/1e3)], 'horizontalalignment', 'right')
+   xlim(edges([1 end])); grid
+   print('-dpdf', [printdir 'ctd_eval_' sensname sensstr '_set' num2str(no) '_hist'])
 
    figure((no-1)*10+3); clf
    subplot(3,3,1:2)
-   plot(d.statnum(sensind{no}), res(sensind{no}), '+k'); grid
+   plot(d.statnum, ctdres, 'c.', d.statnum(sensind{no}), res(sensind{no}), '+k', d.statnum(iid), res(iid), 'xb'); grid
    xlabel('statnum'); xlim(statrange); ylim(rlim)
-   title([cruise ' ' rlabel])
+   title([mcruise ' ' rlabel])
    subplot(3,3,[3 6 9])
-   plot(res(sensind{no}), d.upress(sensind{no}), '+k'); grid
+   plot(ctdres, -d.upress, 'c.', res(sensind{no}), -d.upress(sensind{no}), '+k', [0 0], presrange, 'r'); grid
    ylabel('press'); ylim(presrange); xlim(rlim)
    subplot(3,3,[4 5 7 8])
-   plot(caldata, ctddata); axis image; xlabel(['cal ' sensname]); ylabel(['ctd ' sensname])
-   print('-dpdf', ['ctd_eval_' sensname sensstr '_set' num2str(no)])
+   plot(caldata, ctddata, 'o-k', caldata(iig), ctddata(iig), 'sb', caldata, caldata); axis image; xlabel(['cal ' sensname]); ylabel(['ctd ' sensname]); %axis(repmat([min([caldata ctddata]) max([caldata ctddata])],1,2))
+   print('-dpdf', [printdir 'ctd_eval_' sensname sensstr '_set' num2str(no)])
 
    if strcmp(sensname, 'oxy')
       figure((no-1)*10+4); clf
-      %scatter(d.statnum(sensind{no}), d.upress(sensind{no}), 10, res); grid
-      %xlabel('statnum'); xlim(statrange);
-      scatter(d.utemp(sensind{no}), d.upress(sensind{no}), 10, res); grid
-      xlabel('temp'); xlim([min(d.utemp) max(d.utemp)])
+      load cmap_bo2; colormap(cmap_bo2)
+      subplot(1,6,1:2); scatter(d.utemp(sensind{no}), -d.upress(sensind{no}), 16, res(sensind{no}), 'filled'); grid
+      xlabel('temp'); xlim([min(d.utemp(sensind{no})) max(d.utemp(sensind{no}))])
       ylabel('press'); ylim(presrange); caxis(rlim); colorbar
-      title([cruise ' ' rlabel])
-      print('-dpdf', ['ctd_eval' sensname sensstr '_set' num2str(no) '_pt'])
+      subplot(1,6,3:4); scatter(d.statnum(sensind{no}), -d.upress(sensind{no}), 16, res(sensind{no}), 'filled'); grid
+      xlabel('station'); xlim([min(d.statnum(sensind{no})) max(d.statnum(sensind{no}))])
+      ylabel('press'); ylim(presrange); caxis(rlim); colorbar
+      title([mcruise ' ' rlabel])
+      subplot(1,6,5:6); scatter(d.utemp(sensind{no}), d.uoxygen(sensind{no}), 16, res(sensind{no}), 'filled'); grid
+      xlabel('temp'); xlim([min(d.utemp(sensind{no})) max(d.utemp(sensind{no}))])
+      ylabel('oxygen'); ylim([min(d.uoxygen) max(d.uoxygen)]); caxis(rlim); colorbar
+      print('-dpdf', [printdir 'ctd_eval' sensname sensstr '_set' num2str(no) '_pt'])
    end
 
 end
 
-
+if sum(strcmp(sensname, {'cond';'oxy'})) & plotprof
 %profile plots to display off-scale differences profile-by-profile 
 %(to help pick bad or questionable samples and set their flags in opt_cruise msal_01 or moxy_01)
-if sum(strcmp(sensname, {'cond';'oxy'})) & plotprof
 
    %for any of the presently ok flagged samples, over all sets
-   ii = intersect(iig, find(abs(res)>rlim(2)));
+   mres = abs(res)>rlim(2)/2; mres(d.upress>=pdeep) = abs(res(d.upress>=pdeep))>rlim(2)/4;
+   ii = find(mres & ismember(calflag, okf));
    if length(ii)>0
-      disp([sensname sensstr ' difference out of range (station, bottle, press):']);  
-      disp([d.statnum(ii) d.position(ii) round(d.upress(ii)) res(ii)])
-      pause
+      disp([sensname sensstr ' difference out of range (station, bottle, press, res):']);  
+      disp(round([d.statnum(ii) d.position(ii) d.upress(ii) res(ii)]))
+      disp('return to plot profile-by-profile')
+      keyboard
 
       if strcmp(sensname, 'cond')
-         fnm1 = ['psal' sensstr];
+         fnm1 = ['cond' sensstr];
       elseif strcmp(sensname, 'oxy')
          fnm1 = ['oxygen' sensstr];
       end
 
       figure(1); clf
-      s = unique(d.statnum(ii));
-      xl = [33 35];
+      s = unique(d.statnum(ii)); if ~exist('stn0', 'var'); stn0 = 0; end; s = s(s>=stn0);
       for no = 1:length(s);
-         stnstr = ['00' num2str(s(no))]; stnstr = stnstr(end-2:end);
+         stn_string = sprintf('%03d', s(no));
 
-         [d1, h1] = mload(['ctd/ctd_' cruise '_' stnstr '_psal.nc'], '/');
-         iid = find(d1.press==max(d1.press)); iid = iid:length(d1.press);
-         [du, hu] = mload(['ctd/ctd_' cruise '_' stnstr '_2up.nc'], '/');
+         [d1, h1] = mload([MEXEC_G.MEXEC_DATA_ROOT '/ctd/ctd_' mcruise '_' stn_string '_psal.nc'], '/');
+         iidu1 = find(d1.press==max(d1.press)); iidu1 = iidu1:length(d1.press);
+         [du, hu] = mload([MEXEC_G.MEXEC_DATA_ROOT '/ctd/ctd_' mcruise '_' stn_string '_2up.nc'], '/');
 
-         iiq = find(d.statnum==s(no) & abs(res)>rlim(2));
-
-         disp([stnstr ' ' num2str(d.position(iiq))])
-         plot(getfield(d, fnm1), -d1.press, 'c', getfield(du, fnm1), -du.press, 'k--', caldata(iiq), -d.upress(iiq), 'ob', ctddata(iiq), -d.upress(iiq), 'sr'); grid; title(s(no))
-	 ax = get(gca, 'axis');
-         text(repmat(ax(2)+.2,length(iiq),1), -d.upress(iiq), num2str(d.position(iiq)));
+         iiq = find(d.statnum==s(no) & mres & ismember(calflag, okf));
+         iis = find(d.statnum==s(no)); iisbf = find(d.statnum==s(no) & ~ismember(calflag, okf));
+         
+         b = getfield(d1, fnm1); c = getfield(du, fnm1);
+         if strcmp(sensname, 'cond')
+	    if precalc
+	       b = cond_apply_cal(sensnum, s(no), d1.press, d1.time, d1.temp, b);
+	       c = cond_apply_cal(sensnum, s(no), du.press, du.time, du.temp, c);
+	    end
+	 elseif strcmp(sensname, 'temp') & precalt
+	    b = temp_apply_cal(sensnum, s(no), d1.press, d1.time, b);
+	    c = temp_apply_cal(sensnum, s(no), du.press, du.time, c);
+	 elseif strcmp(sensname, 'oxy') & precalo
+	    b = oxy_apply_cal(sensnum, s(no), d1.press, d1.time, d1.temp, b);
+	    c = oxy_apply_cal(sensnum, s(no), du.press, du.time, du.temp, c);
+	 end
+         plot(b(iidu1), -d1.press(iidu1), 'c', c, -du.press, 'k--', ...
+	 caldata(iis), -d.upress(iis), 'r.', caldata(iisbf), -d.upress(iisbf), 'm.', ctddata(iis), -d.upress(iis), 'b.', ...
+	 caldata(iiq), -d.upress(iiq), 'or', ctddata(iiq), -d.upress(iiq), 'sb');
+	 grid; title(s(no))
+	 mn = nanmean(c); st = nanstd(c); xl = [-st st]*5+mn; set(gca, 'xlim', xl);
+         text(repmat(st*4.5+mn,length(iiq),1), -d.upress(iiq), num2str(d.position(iiq)));
+	 for qno = 1:length(iiq)
+            sprintf('%d %d %5.2f', s(no), d.position(iiq(qno)), res(iiq(qno)))
+	 end
          keyboard
 
       end

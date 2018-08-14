@@ -12,7 +12,7 @@
 % then msim_plot and mem120_plot to edit bad data
 
 scriptname = 'mem120_02'; 
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if exist('day','var')
     m = ['Running script ' scriptname ' for day ' sprintf('%03d',day)];
@@ -31,15 +31,15 @@ root_sim = mgetdir('M_SIM');
 switch MEXEC_G.Mship % bak on jr281 march 2013; cook branch couldn't be tested on jr281
     case 'cook'
         root_em120 = mgetdir('M_EM120'); 
-        prefix1 = ['em120_' cruise '_'];
+        prefix1 = ['em120_' mcruise '_'];
     case 'jcr'
         root_em120 = mgetdir('M_EM122'); 
-        prefix1 = ['em122_' cruise '_'];
+        prefix1 = ['em122_' mcruise '_'];
     otherwise
         return
 end
 
-prefix2 = ['sim_' cruise '_'];
+prefix2 = ['sim_' mcruise '_'];
 infile1 = [root_em120 '/' prefix1 'd' day_string '_edt'];
 infile2 = [root_sim '/' prefix2 'd' day_string '_edt'];
 infile1 = m_add_nc(infile1);

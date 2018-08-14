@@ -5,18 +5,11 @@
 % bak on jr302
 
 scriptname = 'msam_apend';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['appends contents of sam_' cruise '_' stn_string '.nc to sam_' cruise '_all.nc']);
+minit
+mdocshow(scriptname, ['appends contents of sam_' mcruise '_' stn_string '.nc to sam_' mcruise '_all.nc']);
 
 root_ctd = mgetdir('M_CTD');
-prefix = ['sam_' cruise '_'];
+prefix = ['sam_' mcruise '_'];
 infile1 = [root_ctd '/' prefix 'all'];
 infile2 = [root_ctd '/' prefix stn_string];
 
@@ -29,7 +22,8 @@ datnam = [prefix 'all'];
 
 cmd = ['mv ' f1 ' ' f2]; unix(cmd);
 
-
+%MEXEC_A.MARGS_IN = {'y'}; mreset(wkfile1)
+%keyboard
 % Filename dcs_jr302_050.nc   Data Name :  dcs_jr302_050 <version> 1 <site> jr302_atsea
 % output files
 % Filename dcsx.nc   Data Name :  dcs_jr302_all <version> 7 <site> jr302_atsea

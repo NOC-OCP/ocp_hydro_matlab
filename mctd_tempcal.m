@@ -11,18 +11,11 @@
 % temp1 and temp2 to close t1-t2 differences.
 
 scriptname = 'mctd_tempcal';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['applies temperature calibration set in opt_' cruise ' to ctd_' cruise '_' stn_string '_24hz.nc']);
+minit
+mdocshow(scriptname, ['applies temperature calibration set in opt_' mcruise ' to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 root_ctd = mgetdir('M_CTD');
-prefix1 = ['ctd_' cruise '_'];
+prefix1 = ['ctd_' mcruise '_'];
 infile = [root_ctd '/' prefix1 stn_string '_24hz'];
 
 if exist('senscal','var')

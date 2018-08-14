@@ -14,24 +14,18 @@
 % _out.csv file is more suitable for editing on unix.
 
 scriptname = 'mdcs_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['creates empty data cycles file dcs_' cruise '_' stn_string '.nc based on templates/dcs_' cruise '_varlist.csv']);
+minit
+mdocshow(scriptname, ['creates empty data cycles file dcs_' mcruise '_' stn_string '.nc based on templates/dcs_varlist.csv']);
 
 % resolve root directories for various file types
 root_templates = mgetdir('M_TEMPLATES');
 root_ctd = mgetdir('M_CTD');
 
-prefix1 = ['dcs_' cruise '_'];
+prefix1 = ['dcs_' mcruise '_'];
+prefixt = ['dcs_'];
 
-varfile = [root_templates '/' prefix1 'varlist.csv']; % read list of var names and units for empty sam template
-varfileout = [root_templates '/' prefix1 'varlist_out.csv']; % write list of var names and units for empty sam template
+varfile = [root_templates '/' prefixt 'varlist.csv']; % read list of var names and units for empty sam template
+varfileout = [root_templates '/' prefixt 'varlist_out.csv']; % write list of var names and units for empty sam template
 otfile = [root_ctd '/' prefix1 stn_string];
 
 dataname = [prefix1 stn_string];

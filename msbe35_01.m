@@ -8,21 +8,13 @@
 % ylf modified jr15003 to deal with (by ignoring) duplicates (in case the recorder wasn't cleared between casts)
 
 scriptname = 'msbe35_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['loads SBE35 ascii files listed in lsbe and writes to sbe35_' cruise '_' stn_string.nc']);
+minit
+mdocshow(scriptname, ['loads SBE35 ascii files listed in lsbe and writes to sbe35_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
 root_sbe35 = mgetdir('M_SBE35');
-prefix1 = ['dcs_' cruise '_'];
-prefix2 = ['sbe35_' cruise '_'];
+prefix1 = ['dcs_' mcruise '_'];
+prefix2 = ['sbe35_' mcruise '_'];
 
 infile1 = [root_ctd '/' prefix1 stn_string];
 otfile1 = [root_sbe35 '/' prefix2 stn_string];
@@ -40,7 +32,7 @@ stn_start = datenum(hd.data_time_origin) + dd.time_start/86400;
 stn_end = datenum(hd.data_time_origin) + dd.time_end/86400;
 
 % load sbe35 data
-d = struct2cell(dir('*.asc')); file_list = d(1,:);
+d = struct2cell(dir([root_sbe35 '/*.asc'])); file_list = d(1,:);
 % load all data then find the data for this station
 
 kount = 0;
@@ -49,7 +41,7 @@ alldata = {};
 % now load the file contents
 for kf = 1:length(file_list);
     
-    fn = file_list{kf};
+    fn = [root_sbe35 '/' file_list{kf}];
     
     fid2 = fopen(fn,'r');
     while 1
@@ -76,11 +68,11 @@ numdata = length(alldata); % number of data lines
 
 datnum = nan+ones(numdata,1);
 bn = datnum;
-diff = datnum;
+tdiff = datnum;
 val = datnum;
 t90 = datnum;
 
-kfields = {'bn' 'diff' 'val' 't90'};
+kfields = {'bn' 'tdiff' 'val' 't90'};
 months = {'Jan' 'Feb' 'Mar' 'Apr' 'May' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec'}; % guess at month names
 
 for kd = 1:numdata
@@ -95,7 +87,7 @@ for kd = 1:numdata
     ss = str2num(hms(7:8));
     datnum(kd) = datenum([yyyy mo dd hh mm ss]);
     bn(kd) = str2num(data(32:33));
-    diff(kd) = str2num(data(41:46));
+    tdiff(kd) = str2num(data(41:46));
     val(kd) = str2num(data(53:61));
     t90(kd) = str2num(data(68:77));
     
@@ -108,7 +100,7 @@ if isempty(kok)
     time = nan+zeros(24,1);
     position = 1:24; position = position(:);
     sampnum = 100*stnlocal+position;
-    diff = time;
+    tdiff = time;
     val = time;
     sbe35temp = time;
     sbe35flag = 9 + zeros(24,1);
@@ -121,7 +113,7 @@ else
     time = 86400*(datnum(kok(ksort))-datenum(hd.data_time_origin));
     position = bn(kok(ksort));
     sampnum = 100*stnlocal+position;
-    diff = diff(kok(ksort));
+    tdiff = tdiff(kok(ksort));
     val = val(kok(ksort));
     sbe35temp = t90(kok(ksort));
     sbe35flag = 2+0*sbe35temp;
@@ -130,7 +122,7 @@ end
 
 % now save the data
 
-varnames = {'time' 'position' 'sampnum' 'diff' 'val' 'sbe35temp' 'sbe35flag'};
+varnames = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35flag'};
 varunits = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9'};
 
 % sorting out units for msave

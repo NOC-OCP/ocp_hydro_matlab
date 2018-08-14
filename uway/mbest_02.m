@@ -4,16 +4,16 @@
 %      day = 20; mbest_02;
 
 scriptname = 'mbest_02';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 clear infile* otfile* wkfile*
 
 %there may be a bst file in this directory but we want the other (original) one
 abbrev = MEXEC_G.default_navstream;
 root_dir = mgetdir(['M_' upper(abbrev)])
-prefix = [abbrev '_' cruise '_'];
+prefix = [abbrev '_' mcruise '_'];
 
-mdocshow(scriptname, ['calculates speed, course, distrun from 30 s averages in ' abbrev '_' cruise '_ave.nc, writes to ' abbrev '_' cruise '_spd.nc']);
+mdocshow(scriptname, ['calculates speed, course, distrun from 30 s averages in ' abbrev '_' mcruise '_ave.nc, writes to ' abbrev '_' mcruise '_spd.nc']);
 
 infile = [root_dir '/' prefix 'ave'];
 otfile = [root_dir '/' prefix 'spd'];
@@ -55,7 +55,7 @@ wkfile2
 otfile
 '/'
 latlonstr
-'y = m_nancumsum([0 sw_dist(x1,x2,''km'')]);'
+'y = m_nancumsum(sw_dist(x1,x2,''km'')); y(2:length(y)+1) = y; y(1) = 0;'
 'distrun'
 'km'
 ' '

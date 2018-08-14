@@ -4,22 +4,15 @@
 %      stn = 16; mfir_01;
 
 scriptname = 'mfir_01';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['reads in .bl file to fir_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['reads in .bl file to fir_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
-infile = [root_botraw '/ctd_' cruise '_' stn_string '.bl'];
+infile = [root_botraw '/ctd_' mcruise '_' stn_string '.bl'];
 m = ['infile = ' infile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
-prefix = ['fir_' cruise '_'];
+prefix = ['fir_' mcruise '_'];
 otfile = [root_ctd '/' prefix stn_string '_bl'];
 dataname = [prefix stn_string];
 
@@ -41,6 +34,8 @@ for kline = 1:length(cellall)
         scan(krow) = str2num(cellrow{4});
     end
 end
+
+oopt = 'fixbl'; get_cropt
 
 if krow < kmax
     position(krow+1:end) = [];

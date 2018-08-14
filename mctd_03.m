@@ -7,20 +7,12 @@
 %      stn = 16; mctd_03;
 
 scriptname = 'mctd_03';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['averages to 1 hz in ctd_' cruise '_' stn_string '_1hz.nc; fills in choice of two sensors; computes SP, Theta, SA, CT in ctd_' cruise '_' stn_string '_psal.nc']);
+minit
+mdocshow(scriptname, ['averages to 1 hz in ctd_' mcruise '_' stn_string '_1hz.nc; fills in choice of two sensors; computes SP, Theta, SA, CT in ctd_' mcruise '_' stn_string '_psal.nc']);
 
 root_ctd = mgetdir('M_CTD');
 
-prefix1 = ['ctd_' cruise '_'];
+prefix1 = ['ctd_' mcruise '_'];
 
 infile1 = [root_ctd '/' prefix1 stn_string '_24hz'];
 otfile1 = [root_ctd '/' prefix1 stn_string '_1hz'];
@@ -42,32 +34,29 @@ if s_choice == 1
 else
     extralist = 'temp2 cond2';
 end
-newnames = {'temp'; 'cond'};
 
 % identify preferred sensor set for oxygen: set o_choice for default, 
 % and alternate as list of stations on which to use the other
-oopt = 'o_choice'; get_cropt %note this defaults to 0 for a single oxygen sensor
-if o_choice>0
-    if ~isempty(find(alternate == stnlocal))
-        o_choice = setdiff([1 2],s_choice);
-    end
-    if o_choice == 1
-        extralist = [extralist ' oxygen1'];
-    else
-        extralist = [extralist ' oxygen2'];
-    end
-    newnames = [newnames; 'oxygen'];    
+oopt = 'o_choice'; get_cropt %note this defaults to 1 for a single oxygen sensor
+if ~isempty(find(alternate == stnlocal))
+   o_choice = setdiff([1 2],o_choice);
 end
+if o_choice == 1
+   extralist = [extralist ' oxygen1'];
+else
+   %check whether sensor 2 exists
+   h = m_read_header(infile1);
+   if sum(strcmp('oxygen2', h.fldnam))
+      extralist = [extralist ' oxygen2'];
+   else
+      error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
+   end
+end
+
+newnames = {'temp'; 'cond'; 'oxygen'};
 
 var_copycell = mcvars_list(1);
 
-%--------------------------------
-% 2009-01-26 07:49:26
-% mavrge
-% input files
-% Filename ctd_jr193_016_24hz.nc   Data Name :  ctd_jr193_016 <version> 12 <site> bak_macbook
-% output files
-% Filename ctd_jr193_016_1hz.nc   Data Name :  ctd_jr193_016 <version> 13 <site> bak_macbook
 MEXEC_A.MARGS_IN = {
 infile1
 otfile1
@@ -77,19 +66,8 @@ otfile1
 'b'
 };
 mavrge
-%--------------------------------
 
     
-%--------------------------------
-% 2010-01-20 18:56:52
-% maddvars
-% calling history, most recent first
-%    maddvars in file: maddvars.m line: 127
-% input files
-% Filename ctd_di346_020_1hz.nc   Data Name :  ctd_di346_020 <version> 23 <site> di346_atsea
-% Filename ctd_di346_020_1hz.nc   Data Name :  ctd_di346_020 <version> 23 <site> di346_atsea
-% output files
-% Filename gash.nc   Data Name :  ctd_di346_020 <version> 29 <site> di346_atsea
 MEXEC_A.MARGS_IN = {
 otfile1
 wkfile2
@@ -98,12 +76,9 @@ otfile1
 extralist
 newnames{1}
 newnames{2}
+newnames{3}
 };
-if length(newnames)==3
-   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; newnames{3}];
-end
 maddvars
-%--------------------------------
 
 
 % remove any vars from copy list that aren't available in the input file
@@ -122,13 +97,6 @@ end
 var_copystr(1) = [];
 var_copystr(end) = [];
 
-%--------------------------------
-% 2009-01-26 07:50:13
-% mcalc
-% input files
-% Filename ctd_jr193_016_1hz.nc   Data Name :  ctd_jr193_016 <version> 13 <site> bak_macbook
-% output files
-% Filename wk_20090126T074850.nc   Data Name :  ctd_jr193_016 <version> 14 <site> bak_macbook
 MEXEC_A.MARGS_IN = {
 wkfile2
 wkfile3
@@ -152,16 +120,8 @@ var_copystr
 ' '
 };
 mcalc
-%--------------------------------
 
     
-%--------------------------------
-% 2009-01-26 07:51:04
-% mcalc
-% input files
-% Filename wk_20090126T074850.nc   Data Name :  ctd_jr193_016 <version> 14 <site> bak_macbook
-% output files
-% Filename ctd_jr193_016_psal.nc   Data Name :  ctd_jr193_016 <version> 15 <site> bak_macbook
 MEXEC_A.MARGS_IN = {
 wkfile3
 wkfile4

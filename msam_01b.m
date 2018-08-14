@@ -13,20 +13,13 @@
 %
 
 scriptname = 'msam_01b';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['copies empty sam_ file to sam_' cruise '_' stn_string '.nc, editing station number']);
+minit
+mdocshow(scriptname, ['copies empty sam_ file to sam_' mcruise '_' stn_string '.nc, editing station number']);
 
 % resolve root directories for various file types
 root_sam = mgetdir('M_SAM');
 
-prefix1 = ['sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+prefix1 = ['sam_' mcruise '_'];
 
 rawfile = [root_sam '/' prefix1 'template'];
 infile = [root_sam '/' prefix1 stn_string];
@@ -58,6 +51,7 @@ mheadr
 
 statstr = ['y = ' stn_string ' + 0 * x1'];
 sampstr = ['y = 100 * x1 + x2'];
+
 %--------------------------------
 % 2014-06-13 14:47:31
 % mcalib2
@@ -84,3 +78,4 @@ sampstr
 };
 mcalib2
 %--------------------------------
+

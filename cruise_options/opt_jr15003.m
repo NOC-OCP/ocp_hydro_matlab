@@ -50,6 +50,11 @@ switch scriptname
    %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
    case 'msal_standardise_avg'
       switch oopt
+         case 'cellT'
+            jr15003_sal_temp_off %script to generate g_adj from digitized logsheets jr15003_log_sal*.m
+            ds_sal.cellT = interp1(g_adj(:,1), g_adj(:,2), ds_sal.sampnum);
+	 case 'offset'
+            ds_sal.offset = interp1(g_adj(:,1), g_adj(:,3), ds_sal.sampnum);
          case 'sam2use'
             sam2use([58 173],2:3) = 0;
 	    sam2use([78 233],3) = 0;
@@ -59,8 +64,8 @@ switch scriptname
    %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
 
 
-   %%%%%%%%%% mcchdo_01 %%%%%%%%%%
-   case 'mcchdo_01'
+   %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
+   case 'mout_cchdo_ctd'
       switch oopt
          case 'expo'
 	    expocode = '74JC20151217';
@@ -70,11 +75,11 @@ switch scriptname
 	 case 'headstr'
             headstring = ['# The CTD PRS;  TMP;  SAL; OXY data are all calibrated and good . '];
       end
-   %%%%%%%%%% end mcchdo_01 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
 
 
-   %%%%%%%%%% mcchdo_02 %%%%%%%%%%
-   case 'mcchdo_02'
+   %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
+   case 'mout_cchdo_sam'
       switch oopt
          case 'expo'
 	    expocode = '74JC20151217';
@@ -82,19 +87,7 @@ switch scriptname
 	 case 'outfile'
 	    outfile = ['sr1b_' expocode'];
       end
-   %%%%%%%%%% end mcchdo_02 %%%%%%%%%%
-
-
-   %%%%%%%%%% msal_01 %%%%%%%%%%
-   case 'msal_01'
-      switch oopt
-         case 'cellT'
-            jr15003_sal_temp_off %script to generate g_adj from digitized logsheets jr15003_log_sal*.m
-            ds_sal.cellT = interp1(g_adj(:,1), g_adj(:,2), ds_sal.sampnum);
-	 case 'offset'
-            ds_sal.offset = interp1(g_adj(:,1), g_adj(:,3), ds_sal.sampnum);
-      end
-   %%%%%%%%%% end msal_01 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
 
 
    %%%%%%%%%% mtsg_cleanup %%%%%%%%%%
@@ -105,12 +98,6 @@ switch scriptname
             datenum([2015 12 14 00 00 00]) datenum([2015 12 18 11 15 22]) % start of cruise
             datenum([2015 12 26 12 00 00]) datenum([2016 01 02 00 00 00]) %rothera and ice
             ];
-	 case 'vout'
-	    if sum(strcmp(varinid, {'salinity','tstemp','sstemp','sstemp2','sampletemp','chlorophyll','trans'}))
-               vout(kbadall) = nan;
-            else
-               vout = vin;
-            end
       end
    %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
 

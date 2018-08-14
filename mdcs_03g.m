@@ -4,28 +4,26 @@
 % Use: mdcs_03        and then respond with station number, or for station 16
 %      stn = 16; mdcs_03;
 % jc069: graphical version by bak
+% jc159 ylf added circle for bottom scan/pressure
+% jc159 3 April2018 bak add option to identify bottom pressure scan if you
+% don't like the one it has chosen
+
 
 scriptname = 'mdcs_03';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('stn','var')
-    stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
-mdocshow(scriptname, ['interactively select start and end of cast, written to dcs_' cruise '_' stn_string '.nc']);
+minit
+mdocshow(scriptname, ['interactively select start and end of cast, written to dcs_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 
-prefix1 = ['ctd_' cruise '_'];
-prefix2 = ['dcs_' cruise '_'];
+prefix1 = ['ctd_' mcruise '_'];
+prefix2 = ['dcs_' mcruise '_'];
 
 infile1 = [root_ctd '/' prefix1 stn_string '_psal'];
-% infile1 = [root_ctd '/' prefix1 stn_string '_1hz']; % A fudge so could edit the pressure
+infile2 = [root_ctd '/' prefix2 stn_string];
 otfile1 = [root_ctd '/' prefix1 stn_string '_surf'];
 otfile2 = [root_ctd '/' prefix2 stn_string ];
 
+db = mload(infile2, 'scan_bot', 'press_bot', ' ');
 
 % pik data near surface for inspection
 hinctd = m_read_header(infile1);
@@ -57,6 +55,7 @@ ph = .13;
 
 %start here
 scan_start = 1;
+scan_bot = nan; kbot = nan;
 scan_end = max(d.scan);
 kfirst = 1;
 plims = [-300 10];
@@ -69,6 +68,7 @@ while 1
         mess = [mess 'q   : quit\n'];
         mess = [mess 'w   : save values and proceed\n'];
         mess = [mess 'ss  : select start scan\n'];
+        mess = [mess 'sb  : select bottom scan\n'];
         mess = [mess 'se  : select end scan\n'];
         mess = [mess 'pp  : plot present selection\n'];
         mess = [mess '  :  '];
@@ -86,8 +86,9 @@ while 1
             if isfield(d, 'pumps'); ii = find(d.pumps<1); else; ii = []; end %overplotting red if pumps not on. bak and ylf jr306, jan2015.
             plot(d.scan,-d.press,'k+-',d.scan(ii),-d.press(ii),'r+');
             hold on ;grid on
+            plot(db.scan_bot,-db.press_bot,'co','markersize',10,'markerfacecolor','c');
             ha(1) = gca;
-            if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('press'); end
+            if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('-press'); end
 %             set(gca,'ylim',plims);
             ht = get(ha(1),'title'); %handle for title
             set(ht,'string',infile1);
@@ -115,9 +116,9 @@ while 1
             ylabel('temp')
 
             subplot('position',[pl pb pw ph])
-            if isfield(d,'oxygen'); plot(d.scan,d.oxygen,'k+-');
-	    else; plot(d.scan,d.oxygen1,'k+-',d.scan,d.oxygen2,'r+-'); end
-            hold on ;grid on
+	    if isfield(d,'oxygen2'); plot(d.scan,d.oxygen1,'k+-',d.scan,d.oxygen2,'r+-');
+	    else; plot(d.scan,d.oxygen1,'k+-'); end
+            hold on; grid on
             ha(5) = gca;
             ylabel('oxygen')
 
@@ -130,6 +131,11 @@ while 1
             % select downcast start scan
             [x y] = ginput(1);
             scan_start = ceil(x)
+
+        case 'sb'
+            % select bottom scan
+            [x y] = ginput(1);
+            scan_bot = round(x)
 
         case 'se'
             % select upcast end scan
@@ -144,6 +150,7 @@ while 1
             if isfield(d, 'pumps'); ii = find(d.pumps(kok)<1); else; ii = []; end %overplotting red if pumps not on. bak and ylf jr306, jan2015.
             plot(d.scan(kok),-d.press(kok),'k+-',d.scan(kok(ii)),-d.press(kok(ii)),'r+');
             hold on ;grid on
+            plot(db.scan_bot,-db.press_bot,'pc');
             ha(1) = gca;
             if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('press'); end
 %             ylabel('press');
@@ -190,16 +197,46 @@ end
 
 % find the data cycle numbers and other parameters
 scan = d.scan;
+
 kstart = min(find(scan >= scan_start - 1));
 scanstart = floor(d.scan(kstart));
 pstart = d.press(kstart);
 tstart = d.time(kstart);
+
 kend = max(find(scan <= scan_end + 1));
 scanend = floor(d.scan(kend));
 pend = d.press(kend);
 tend = d.time(kend);
 
-% set up the data time origin for times start,bottom,end
+response_bot = {};
+if isfinite(scan_bot)
+    
+    kbot = min(find(scan >= scan_bot));
+    scanbot = floor(d.scan(kbot));
+    pbot = d.press(kbot);
+    tbot = d.time(kbot);
+    
+    response_bot = {% prepare response if bottom has been redefined.
+        'time_bot'
+        ['y(1,1) = ' num2str(tbot)]
+        '/'
+        '/'
+        'dc_bot'
+        ['y(1,1) = ' num2str(kbot)]
+        '/'
+        '/'
+        'scan_bot'
+        ['y(1,1) = ' num2str(scanbot)]
+        '/'
+        '/'
+        'press_bot'
+        ['y(1,1) = ' num2str(pbot)]
+        '/'
+        '/'
+        };
+end
+
+% set up the data time origin for times start,bot,end
 
 hinctd = m_read_header(infile1);
 hindcs = m_read_header(otfile2);
@@ -207,6 +244,7 @@ hindcs = m_read_header(otfile2);
 dtoctd = hinctd.data_time_origin;
 dtodcs = hindcs.data_time_origin;
 dtodif = dtoctd-dtodcs;
+
 if max(abs(dtodif)) > 0 % reset time origin if needed
     %--------------------------------
     % 2009-01-28 14:51:48
@@ -231,7 +269,7 @@ end
 % Filename dcs_jr193_016.nc   Data Name :  dcs_jr193_016 <version> 1 <site> bak_macbook
 % output files
 % Filename dcs_jr193_016.nc   Data Name :  dcs_jr193_016 <version> 2 <site> bak_macbook
-MEXEC_A.MARGS_IN = {
+MEXEC_A.MARGS_IN_1 = {
     otfile2
     'y'
     'time_start'
@@ -266,7 +304,11 @@ MEXEC_A.MARGS_IN = {
     ['y(1,1) = ' num2str(pend)]
     '/'
     '/'
+    };
+MEXEC_A.MARGS_IN_2 = response_bot(:); % may be empty
+MEXEC_A.MARGS_IN_3 = {
     ' '
     };
+MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3];
 mcalib
 %--------------------------------

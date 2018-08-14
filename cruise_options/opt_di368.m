@@ -47,8 +47,8 @@ switch scriptname
    %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
 
 
-   %%%%%%%%%% mcchdo_01 %%%%%%%%%%
-   case 'mcchdo_01'
+   %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
+   case 'mout_cchdo_sam'
       switch oopt
          case 'expo'
             expocode = '74DI368_1';
@@ -56,7 +56,18 @@ switch scriptname
 	 case 'outfile'
 	    outfile = 'a16n2011';
       end
-   %%%%%%%%%% end mcchdo_01 %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
+
+   %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
+   case 'mout_cchdo_ctd'
+      switch oopt
+         case 'expo'
+            expocode = '74DI368_1';
+            sect_id = 'A16N2011';
+	 case 'outfile'
+	    outfile = 'a16n2011';
+      end
+   %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
 
 
    %%%%%%%%%% mctd_03 %%%%%%%%%%
@@ -96,6 +107,14 @@ switch scriptname
           end
       end
    %%%%%%%%%% end mctd_04 %%%%%%%%%%
+   
+   %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
+   case 'msec_run_mgridp'
+      switch oopt
+         case 'varuse'
+	    varuselist.names = {'botoxy'};
+      end
+   %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
 
 
 

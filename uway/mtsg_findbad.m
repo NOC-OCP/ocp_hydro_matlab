@@ -17,16 +17,16 @@
 % YLF modified jc145 to use opt_cruise rather than saving to .mat file
 
 scriptname = 'mtsg_findbad';
-cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
     
 switch MEXEC_G.Mship
     case 'cook'
         abbrev = 'met_tsg';
     case 'jcr'
-        abbrev = 'ocl';
+        abbrev = 'oceanlogger';
 end
 roottsg = mgetdir(abbrev);
-infile1 = [roottsg '/' abbrev '_' cruise '_01_medav_clean'];
+infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
 
 %get previous limits
 scriptname0 = scriptname; scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt; scriptname = scriptname0;
@@ -40,6 +40,8 @@ switch MEXEC_G.Mship
       d.temp_h = d.tstemp; % bak on jr302 tstemp is housing; sampletemp is fluorometer
       d.temp_m = d.sstemp;
       d.flowrate = d.flowrate;
+   case 'cook'
+      d.salin = d.psal;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
@@ -55,7 +57,7 @@ np = 0;
 yporg = .2;
 yptop = .2;
 
-clear yporgs  yptops
+clear yporgs yptops
 
 % first count how many plots we will have, so we can get the size
 
@@ -103,7 +105,6 @@ while 1
         mess = [mess 'o   : zoom out: double the x lim range\n'];
         mess = [mess 'ss  : select start time\n'];
         mess = [mess 'se  : select end time\n'];
-        mess = [mess 'pp  : plot present selection\n'];
         mess = [mess '  :  '];
         aplot = input(mess,'s');
     else
@@ -116,20 +117,20 @@ while 1
             clf
             
             kount = 0;
-            y0 = pb;
 
-            iib = []; for no = 1:size(kbadlims,1); iib = [iib find(decday>=kbadlims(no,1) & decday<=kbadlims(no,2))]; end
+            iib = [];
+	    for no = 1:size(kbadlims,1)
+            kbadlims1 = cell2mat(kbadlims(:,1:2)); %asf edit
+	        iib = [iib find(decday>=kbadlims1(no,1) & decday<=kbadlims1(no,2))];
+	    end
 
-            if isfield(d,'salin')   
+            if isfield(d,'salin')
                 kount = kount+1;
-                
-                subplot('position',[pl y0 pw 2*ph])
-                y0 = y0+2*ph;
+                subplot('position',[pl pb+(np-1)*(ph+pb) pw ph*2])
                 plot(decday,d.salin,'k+-',decday(iib),d.salin(iib),'c+');
-                hold on ;grid on
+                hold on; grid on
                 ha(kount) = gca;
                 ylabel('salin');
-                %             set(gca,'ylim',plims);
                 ht = get(ha(kount),'title'); %handle for title
                 set(ht,'string',infile1);
                 set(ht,'interpreter','none');
@@ -137,21 +138,19 @@ while 1
 
             if isfield(d,'cond')
                 kount = kount+1;
-                subplot('position',[pl y0 pw ph])
-                y0 = y0+ph;
+                subplot('position',[pl pb+(np-2)*(ph+pb) pw ph])
                 plot(decday,d.cond,'k+-',decday(iib),d.cond(iib),'c+');
-                hold on ;grid on
+                hold on; grid on
                 ha(kount) = gca;
                 ylabel('cond');
             end
             
             if isfield(d,'temp_m') | isfield(d,'temp_h')
                 kount = kount+1;
-                subplot('position',[pl y0 pw ph])
-                y0 = y0+ph;
+                subplot('position',[pl pb+(np-3)*(ph+pb) pw ph])
                 if isfield(d,'temp_h')
                     plot(decday,d.temp_h,'k+-',decday(iib),d.temp_h(iib),'c+');
-                    hold on ;grid on
+                    hold on; grid on
                 end
                 if isfield(d,'temp_m')
                     plot(decday,d.temp_m,'r+-',decday(iib),d.temp_m(iib),'c+');
@@ -163,10 +162,9 @@ while 1
             
             if isfield(d,'flowrate')
                 kount = kount+1;
-                subplot('position',[pl y0 pw ph])
-                y0 = y0+ph;
+                subplot('position',[pl pb+(np-4)*(ph+pb) pw ph])
                 plot(decday,d.flowrate,'k+-',decday(iib),d.flowrate(iib),'c+');
-                hold on ;grid on
+                hold on; grid on
                 ha(kount) = gca;
                 ylabel('flowrate');
             end
@@ -200,9 +198,13 @@ while 1
             % select  end scan
             [x y] = ginput(1);
             dn_endbad = max(decday(decday<=x));
+            
         case 'n'
             alltimes = [alltimes; [dn_startbad dn_endbad]];
         case 'w'
+	    if ~(alltimes(end,1)==dn_startbad & alltimes(end,2)==dn_endbad)
+               alltimes = [alltimes; [dn_startbad dn_endbad]];
+	    end
             break
         case 'q'
             return
@@ -212,5 +214,19 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% end graphical part
 
-disp(['new bad times: start     end'])
-disp([datestr(alltimes(:,1),'yyyy mm dd HH MM SS') repmat('  ',size(alltimes,1),1) datestr(alltimes(:,2),'yyyy mm dd HH MM SS')])
+disp(['put the lines below into the mtsg_cleanup case of opt_' mcruise])
+disp(['(or add to existing list of kbadlims)'])
+disp(['if you want to remove only some variables for a time range,'])
+disp(['replace ''all'' with a cell array listing the variable names'])
+disp(['see mtsg_cleanup case in get_cropt'])
+disp(['lines to paste:'])
+sprintf('kbadlims = {%s',' ')
+for no = 1:size(alltimes,1)
+   %sprintf('datenum([%s]) datenum([%s]) ''all''\n', alltimes(no,1)+torg, alltimes(no,2)+torg)
+   sprintf('datenum([%g %g %g %g %g %g]) datenum([%g %g %g %g %g %g]) ''all''\n', datevec(alltimes(no,1)+torg), datevec(alltimes(no,2)+torg))
+   disp('hobnobs are for cheesecake')
+end
+
+
+
+
