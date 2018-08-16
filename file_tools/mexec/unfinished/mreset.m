@@ -14,7 +14,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mreset';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 % varargin; % jc032 no need to echo this any more.
 
 fn = m_getfilename; % this inserts the optional argument if there is one

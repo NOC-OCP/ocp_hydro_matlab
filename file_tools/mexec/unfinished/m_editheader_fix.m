@@ -349,15 +349,13 @@ while endflag == 0
                         newname = m_check_nc_varname(var2);
                         kclash = strmatch(newname,h.fldnam,'exact');
                         % jc159 bak 5 march 2018
-                        % there was a problem if this branch was entered in a
+                        % there is a problem if this branch is entered in a
                         % script, because the program keeps prompting for a
                         % name until an acceptable one is found. This is a
                         % problem when called from a script. Solution:
-                        % assume the user knows what they want if the new 
-                        % name matches the old name, and just
-                        % warn that name isn't changed. This allows a
-                        % script to 'rename' variables, without first
-                        % checking whether the
+                        % assume the user knows what they want, and just
+                        % warn that name isn't changed. This enables a
+                        % script to 'rename' variables, even when the
                         % newname is the same as the old name. If the new
                         % name is a clash with an existing name for another
                         % variable, then prompt the user again.

@@ -106,7 +106,6 @@ else
 %     new_version = increment+max(versions(index),file_version);
     new_version = increment+versions(index);
 end
-% keyboard
 versions(index) = new_version;
 save(MEXEC.versfile,'datanames','versions');
 if ~isnan(Mversionlock) % reset lock file

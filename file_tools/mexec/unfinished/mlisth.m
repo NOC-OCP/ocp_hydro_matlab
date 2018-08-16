@@ -8,6 +8,6 @@ fn = m_getfilename; % this uses the optional argument if there is one
 ncfile.name = fn;
 
 h = m_read_header(ncfile);
-if ~MEXEC_G.quiet; m_print_header(h); end
+m_print_header(h)
 
 return

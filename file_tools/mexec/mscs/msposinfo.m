@@ -25,7 +25,7 @@ function [lat lon] = msposinfo(dn1,navstream)
 
 m_common
 
-if ~exist('navstream','var'); navstream = MEXEC_G.uway_default_navstream; end  % use default nav stream name
+if ~exist('navstream','var'); navstream = MEXEC_G.default_navstream; end  % use default nav stream name
 
 instream = navstream; % mexec stream short name
 tstream = msresolve_stream(instream);

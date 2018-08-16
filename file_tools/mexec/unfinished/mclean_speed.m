@@ -28,7 +28,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mclean_speed';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 fprintf(MEXEC_A.Mfidterm,'%s','Input file name     ')
 fn_in = m_getfilename;

@@ -35,7 +35,18 @@ for kn = 1:numf
     %if t1 > dn2; continue; end % t1 not in range
     %if t2 < dn1; continue; end % t2 not in range
     % if we get here file is useful
-    if n>0 & t1<dn2 & t2>dn1
+%     if n>0 & t1<dn2 & t2>dn1 % Bug fix by bak jc159 17 april 2018.
+%     Amazing that this bug has lasted so long. Previously the test in the
+%     next statement did not allow for equality. This crashed mtlast on sim
+%     or em120, when t2 == dn1 == dn2 == the last cycle in the file.
+%     In most cases, eg nav files, with files updating at 1Hz, then dn1=dn2 is
+%     determined as the last time in the file in mtlast, and by the time 
+%     the code arrives here in mtchoosefiles, t2 is greater than dn1. 
+%     For files updating at intervals of a few seconds, the old code would
+%     work sometimes and fail sometimes depending on whetehr the file updated
+%     between mtlast and the sub call to mtchoosefiles. Allowing t2 >= dn1 will select a
+%     file to keep when dn1 is the last time in the file.
+    if n>0 & t1<=dn2 & t2>=dn1
         keep(kn) = 1;
     end
 end

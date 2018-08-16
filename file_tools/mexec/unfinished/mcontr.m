@@ -107,7 +107,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mcontr';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 ntickdef = [10 10 10]; % third element is default number of contour intervals
 cdfot = [];
@@ -524,7 +524,6 @@ caxis(ha,colorbar_limits-1e-5)
 ca = caxis;
 % cdfot.cmap = cmap;
 
-% keyboard
 ha = gca;
 % set(ha,'position',[.1 .15 .7 .7]);
 axis([0 1 0 1]);
@@ -714,7 +713,6 @@ set(hh,'interpreter','none');
 % % % % % set(hh,'HorizontalAlignment','center')
 % % % % % set(hh,'VerticalAlignment','top')
 % % % % % set(hh,'interpreter','none');
-% keyboard
 
 % string for y variable
 xlaby = [-t1-tw]; % put first two ylabels at left of axis; remainder below axis
@@ -745,7 +743,6 @@ set(hh,'interpreter','none');
 % need xtick labels
 
 cdfot.mainplot_gca_handle = gca;
-% keyboard
 %plot colorbar as contourf
 pos = get(gca,'position');
 
@@ -774,7 +771,6 @@ yc = clev;
 [xcg,ycg]= meshgrid(xc,yc);
 zc = ycg;
 
-% keyboard
 [c2,h2] = contourf(xc,1:length(clev),zc,clev,'k-');
 % set(h2,'linestyle','none')
 for k = 1:length(clev)

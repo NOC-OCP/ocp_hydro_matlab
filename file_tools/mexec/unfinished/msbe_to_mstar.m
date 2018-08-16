@@ -7,14 +7,13 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'msbe_to_mstar';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 m = 'Type name of sbe file ';
 sfile = m_getinput(m,'s');
 % sfile = '94ctd12_ctm.cnv';
 
 % mstar_fn = m_getfilename; % file name found later on
-
 
 fid = fopen(sfile,'r');
 shead_all = {};

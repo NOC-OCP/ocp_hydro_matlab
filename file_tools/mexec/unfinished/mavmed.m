@@ -7,7 +7,7 @@ m_common
 m_margslocal
 m_varargs
 MEXEC_A.Mprog = 'mavmed';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 
 fprintf(MEXEC_A.Mfidterm,'%s','Enter name of input disc file  ')
@@ -78,6 +78,7 @@ while copylistok == 0
             fprintf(MEXEC_A.Mfider,'\n%s\n','You must reply r or c : ');
             reply = m_getinput(' ','s');
         end
+        rc0 = rc;
     end
     copylistok = 1;
 end
@@ -149,6 +150,7 @@ step = lims(3);
 % do the truncation first.
 
 cvar = nc_varget(ncfile_in.name,h.fldnam{vcontrol});
+if ~exist('rc0'); [crows, ccols] = size(cvar); if size(cvar,2)==1; rc = 1; elseif size(cvar,1)==1; rc = 2; end; end %YLF added jr17001 because underway nc file header is incorrect about dims
 if rc == 1
     x = cvar(:,1);
 elseif rc == 2
@@ -219,8 +221,8 @@ for k = 1:length(kmat)
     z = nc_varget(ncfile_in.name,h.fldnam{kmat(k)});
     % rearrange data according to sort of control variable
     lenav = length(klo);
-    if rc == 1; zsort = z(ksort,:); zav = nan+zeros(lenav,ncols(kmat(k))); end
-    if rc == 2; zsort = z(:,ksort); zav = nan+zeros(nrows(kmat(k)),lenav); end
+    if rc == 1; zsort = z(ksort,:); zav = nan+zeros(lenav,size(z,2)); end
+    if rc == 2; zsort = z(:,ksort); zav = nan+zeros(size(z,1),lenav); end
 
     if(fullstats == 1)
         zn = zav; zstd = zav;

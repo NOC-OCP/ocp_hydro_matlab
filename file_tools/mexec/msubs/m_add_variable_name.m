@@ -24,7 +24,6 @@ ncfile.metadata = metadata;
 dimnames = m_unpack_dimnames(ncfile);
 varnames = m_unpack_varnames(ncfile);
 
-
 %test to see if a variable already exists with correct dimensions; if not, add it.
 
 kmatch = strmatch(string_var_name,varnames,'exact');
@@ -76,8 +75,7 @@ if ~isempty(kmatch) % It exists; check dimensions match;
     return
 end
 
- % Variable doesn't exist so we will add it; First, check each requested dimension exists in file
-
+% Variable doesn't exist so we will add it; First, check each requested dimension exists in file
 for k = 1:length(dims_array)
 
     kmatch = strmatch(dims_array{k},dimnames,'exact');
@@ -106,6 +104,7 @@ end
 v.Name = string_var_name;
 v.Dimension = dims_array;
 v.Nctype = datatype;
+%keyboard
 nc_addvar(ncfile.name,v);
 
 % % metadata = nc_info(ncfile.name); %refresh metadata

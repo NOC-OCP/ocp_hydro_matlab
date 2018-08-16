@@ -29,7 +29,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mcsetd';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 
 

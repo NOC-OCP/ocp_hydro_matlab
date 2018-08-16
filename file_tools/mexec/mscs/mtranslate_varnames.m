@@ -34,8 +34,8 @@ tunder(strfind(tunder,'-')) = '_';
 tunder(strfind(tunder,'.')) = '_';
 
 root_template = mgetdir('M_TEMPLATES');
-fntemplatein = [root_template '/' MEXEC_G.Mshipdatasystem '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_renamelist_' tunder '.csv'];
-fntemplateot = [root_template '/' MEXEC_G.Mshipdatasystem '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_renamelist_' tunder '_out.csv'];
+fntemplatein = [root_template '/' MEXEC_G.Mshipdatasystem '_renamelist_' tunder '.csv'];
+fntemplateot = [root_template '/' MEXEC_G.Mshipdatasystem '_renamelist_' tunder '_out.csv'];
 
 % clean up the translation table if needed. This code was lifted from
 % another script but should not be needed for this application.
@@ -48,6 +48,7 @@ for kline = 1:length(cellall)
     snamesin{kline} = m_remove_outside_spaces(cellrow{1});
     snamesot{kline} = m_remove_outside_spaces(cellrow{2});
     sunits{kline} = m_remove_outside_spaces(cellrow{3});
+    if length(sunits{kline})==0; sunits{kline} = ' '; end
 end
 snamesin = snamesin(:);
 snamesot = snamesot(:);
@@ -77,6 +78,7 @@ for k = 1:numvar
     end
 end
 snames_units = snames_units(:);
+
 %--------------------------------
 % 2009-01-26 07:48:13
 % mheadr

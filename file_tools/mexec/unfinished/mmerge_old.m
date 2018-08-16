@@ -4,11 +4,6 @@ function mmerge(varargin)
 % if the control var in both files is 1-D, no problem
 % the control var in either one of the files can be 2-D
 % something will surely crash if the control var in both files is 2-D
-%
-% modified on jc159 march 2018 to enable the user to specfy a maximum
-% number of consecutive NaNs to be filled before interpolation. Backwards
-% compatible so 'k' and 'f' are allowable replies, as well as 0,1,...,inf
-% zero is equivalent to 'k'; inf is equivalent to 'f' for fill all.
 
 m_common
 m_margslocal
@@ -259,23 +254,15 @@ else
 end
 
 ok = 0;
-m1 = sprintf('%s','If NaNs are found in the merging variable, do you want them filled first (f, default)');
-m2 = sprintf('%s','or do you want them kept in place (k) so that NaNs may appear in the output ?');
-m4 = sprintf('\n%s\n%s','After 28 March 2018, new option to specify the maximum number of NaNs that will be filled','before the merge takes place.');
-m5 = sprintf('\n%s','This is backwards compatible, so ''k'' is equivalent to zero and ''f'' is equivalent to inf');
-m6 = sprintf('%s','You can reply with characters f or k, or an integer');
-fprintf(MEXEC_A.Mfidterm,'%s\n\n',m1,m2,m4,m5,m6);
+m1 = sprintf('%s',['If NaNs are found in the merging variable, do you want them filled first (f, default)']);
+m2 = sprintf('%s',['or do you want them kept in place (k) so that NaNs may appear in the output ?']);
+fprintf(MEXEC_A.Mfidterm,'%s\n',m1,m2);
 while ok == 0;
-    m3 = sprintf('%s','reply ''f'' or inf or return for fill or ''k'' or 0 for keep, \nor an integer for the maximum number of NaNs to be filled : ');
+    m3 = sprintf('%s','reply ''f'' or return for fill or ''k'' for keep : ');
     reply = m_getinput(m3,'s');
-    if strcmp(reply,' '); absfill = inf; break; end
-    if strcmp(reply,'f'); absfill = inf; break; end
+    if strcmp(reply,' '); absfill = 1; break; end
+    if strcmp(reply,'f'); absfill = 1; break; end
     if strcmp(reply,'k'); absfill = 0; break; end
-    try
-        absfill = str2num(reply);
-        if(~isempty(absfill)); break; end
-    catch
-    end
 end
 
 % find vars with 'matching' dimensions
@@ -350,33 +337,15 @@ for k = 1:length(kmat)
     zsort = z(ksort,:);
     zsort(xbad,:) = [];
     
-if absfill > 0;
-    % fill any nans in z by interpolation
-    for kfill = 1:size(zsort,2);
-        ok = ~isnan(zsort(:,kfill));
-        if sum(ok) < 2 ; continue; end % not enough good data to fill with interp1
-        if sum(ok) == size(zsort,1); continue; end % all data are good; skip interp1
-        % bak on jc159 28 March 2018; To handle the case of not
-        % interpolating more than absfill values, construct a
-        % mask to set back to NaN. absfill = 0 means interpolate max of
-        % zero values, ie no interpolation. absfill NaNs will be filled;
-        % absfill+1 NaNs will not be filled.
-        zs = zsort(:,kfill);
-        kmask = zeros(size(zs));
-        kok = find(ok);
-        gap = diff(kok); % gap size to next OK value
-        kbiggap = find(gap > absfill+1); % when there are absfill values, which is acceptable to fill, the step between good values is absfill+1. Take action if this gap is exceeded.
-        %kok(biggap) are the index in zs of the last good cycles before big
-        %gaps
-        for kl = 1:length(kbiggap)
-            kmask((kok(kbiggap(kl))+1):(kok(kbiggap(kl))+gap(kbiggap(kl))-1)) = nan;
+    if absfill == 1;
+        % fill any nans in z by interpolation
+        for kfill = 1:size(zsort,2);
+            ok = ~isnan(zsort(:,kfill));
+            if sum(ok) < 2 ; continue; end % not enough good data to fill with interp1
+            if sum(ok) == size(zsort,1); continue; end % all data are good; skip interp1
+            zsort(:,kfill) = interp1(xsort(ok),zsort(ok,kfill),xsort);
         end
-        % fill them all, then mask out the ones that should not have been
-        % filled.
-        zsort(:,kfill) = interp1(xsort(ok),zsort(ok,kfill),xsort);
-        zsort(:,kfill) = zsort(:,kfill)+kmask;
     end
-end
     
     [dontcare iuni juni]=unique(xsort);
     zi = interp1(xsort(iuni),zsort(iuni),data_c_1); % zi has same dimensions as  data_c_1

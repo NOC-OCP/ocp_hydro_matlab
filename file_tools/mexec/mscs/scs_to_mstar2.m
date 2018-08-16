@@ -1,8 +1,8 @@
 function scs_to_mstar2
-% function techsas_to_mstar(tstream,dn1,dn2)
-% function ncfile = techsas_to_mstar(techsas_in,ncfile,dataname)
+% function scs_to_mstar2(tstream,dn1,dn2)
+% function ncfile = scs_to_mstar2(scs_in,ncfile,dataname)
 
-% load techsas file into mstar file
+% load scs file into mstar file
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
 % The searched directory is MEXEC_G.uway_root, which for example can be
@@ -10,13 +10,14 @@ function scs_to_mstar2
 % The var names and units are taken from ascii file
 % seatex-gga.TPL
 % for example.
+%
 
 m_common
 m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'scs_to_mstar2';
-m_proghd;
+m_proghd
 
 
 instream = m_getinput('Type scs stream name or mexec short name eg gyro_s or gyro : ','s');
@@ -71,6 +72,7 @@ if isempty(tdata.time) % no data cycles found
 end
 
 ncfile.name = mstar_fn;
+
 ncfile = m_openot(ncfile); %check it is not an open mstar file
 % techsas_in.name = techsas_fn;
 
@@ -127,7 +129,6 @@ m_add_comment(ncfile,tstream);
 m_add_comment(ncfile,['at ' nowstring]);
 m_add_comment(ncfile,['Time converted from matlab day number to seconds after mstar time origin']);
     
-
 m_finis(ncfile);
 
 h = m_read_header(ncfile);
@@ -145,4 +146,5 @@ histin.version = [];
 histin.mstar_site = [];
 MEXEC_A.Mhistory_in{1} = histin;
 m_write_history;
+
 return

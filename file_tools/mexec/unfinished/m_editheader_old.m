@@ -348,35 +348,19 @@ while endflag == 0
                         oldname = h.fldnam{kvar};
                         newname = m_check_nc_varname(var2);
                         kclash = strmatch(newname,h.fldnam,'exact');
-                        % jc159 bak 5 march 2018
-                        % there was a problem if this branch was entered in a
-                        % script, because the program keeps prompting for a
-                        % name until an acceptable one is found. This is a
-                        % problem when called from a script. Solution:
-                        % assume the user knows what they want if the new 
-                        % name matches the old name, and just
-                        % warn that name isn't changed. This allows a
-                        % script to 'rename' variables, without first
-                        % checking whether the
-                        % newname is the same as the old name. If the new
-                        % name is a clash with an existing name for another
-                        % variable, then prompt the user again.
                         if ~isempty(kclash)
                             if (length(kclash) == 1) & (kclash(1) == kvar)
-                                m1 = 'Warning: renaming with the same name';
-                                fprintf(MEXEC_A.Mfider,'%s\n',' ',m1);
-                                %  no call to rename
+                                m1 = 'Attempt to rename with the same name';
+                                m2 = 'Use the slash option to leave name unchanged';
+                                fprintf(MEXEC_A.Mfider,'%s\n',' ',m1,m2);
                             else
                                 m1 = 'That name already exists in the file';
                                 m2 = 'Choose another name';
                                 fprintf(MEXEC_A.Mfider,'%s\n',' ',m1,m2);
-                                % prompt the user again
-                                continue
                             end
-                        else
-                            % no clash, so go ahead and rename
-                            nc_varrename(ncfile.name,oldname,newname);
+                            continue
                         end
+                        nc_varrename(ncfile.name,oldname,newname);
                         h = m_read_header(ncfile);
                     end
 

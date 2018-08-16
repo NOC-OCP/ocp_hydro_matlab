@@ -18,7 +18,7 @@ if strncmp(MEXEC_A.Mprog,'mc',2) == 1
 elseif strncmp(MEXEC_A.Mprog,'m_',2) == 1
     return
 else
-    fprintf(MEXEC_A.Mfider,'\n%s\n\n',display_string);
+    if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfider,'\n%s\n\n',display_string); end
 end
 
 return

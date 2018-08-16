@@ -149,8 +149,15 @@ end
     
 % step forward in intervals of tintd. In each interval, search for
 % data cycles that lie in the period and print the first one
+% bak jc159: there is a nan in the time variable, which interrupts listing.
+% check for nan and issue a warning.
 while tcount < t(end) & endflag == 0; % tcount is the start of the search period
     tcount = tcount+tintd; % this is now the end of the search period
+    while ~isfinite(t(icount))
+        fprintf(2,'%s\n','Non-finite time found in file');
+        icount = icount+1; 
+        if icount > num; endflag = 1; break; end
+    end
     if t(icount) < tcount % the present data cycle [ie t(icount) ] is in the period so print it
         tp = t(icount);
         eval(cmd);
@@ -160,6 +167,8 @@ while tcount < t(end) & endflag == 0; % tcount is the start of the search period
         end
     end
 end
+
+return
 
 
 

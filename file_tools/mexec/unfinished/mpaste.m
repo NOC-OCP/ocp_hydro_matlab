@@ -7,7 +7,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mpaste';
-if ~MEXEC_G.quiet; m_proghd; end
+m_proghd
 
 if length(MEXEC_A.MARGS_IN_LOCAL)==0
    fprintf(MEXEC_A.Mfidterm,'%s\n','Enter name of output disc file')
@@ -135,7 +135,7 @@ while listok == 0
         vlistot = m_getvlist(var,hot);
         if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlistot) ]); end
     end
-    
+
     if  length(vlistin) == length(vlistot)
         listok = 1;
     else

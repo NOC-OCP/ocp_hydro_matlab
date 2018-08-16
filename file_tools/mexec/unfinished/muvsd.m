@@ -9,8 +9,7 @@ m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'muvsd';
-if ~MEXEC_G.quiet; m_proghd; end
-
+m_proghd
 
 
 prog = MEXEC_A.Mprog; % save for later

@@ -41,7 +41,6 @@ for k = 1:length(krmatch)
     collength(k) = metadata.Dimension(kcmatch(k)).Length;
 end
 
-
 if length(krmatch) ~= length(kcmatch)
     error('m_write_variable weird mismatch of dimension names - investigate further')
 end
