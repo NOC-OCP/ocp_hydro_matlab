@@ -159,7 +159,7 @@ if length(which('get_cropt'))==0 % this is in cruise_options
    addpath([MEXEC.mexec_processing_scripts '/summaries/'])
    addpath([MEXEC.mexec_processing_scripts '/utilities/'])
    addpath([MEXEC.mexec_processing_scripts '/uway/'])
-   addpath([MEXEC.mexec_processing_scripts '/ladcp/'])
+   addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/ladcp/'])
 end
 
 %set data directories within MEXEC_G.MEXEC_DATA_ROOT

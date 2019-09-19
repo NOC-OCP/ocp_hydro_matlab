@@ -2,7 +2,7 @@
 
 scriptname = 'miso_02';
 minit
-mdocshow(scriptname, ['pastes bottle isotope data (specified in opt_' cruise ') into sam_' mcruise '_' stn_string '.nc']);
+mdocshow(scriptname, ['pastes bottle isotope data (specified in opt_' mcruise ') into sam_' mcruise '_' stn_string '.nc']);
 
 root_iso = mgetdir('M_BOT_ISO');
 root_ctd = mgetdir('M_CTD');

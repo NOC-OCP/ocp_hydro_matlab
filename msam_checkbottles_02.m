@@ -105,10 +105,11 @@ m_figure
 scrsz = get(0,'ScreenSize');
 set(gcf,'Position',[1 0.4*scrsz(4) 0.9*scrsz(3) 0.5*scrsz(4)])
 
+kbadnisk = find(dsam.bottle_qc_flag==4); kqnisk = find(dsam.bottle_qc_flag==3);
+
 subplot(1,nsubs,1)
 vnam = 'psal';
 kbadpsal = find(dsam.botpsalflag~=2);
-kbadnisk = find(dsam.bottle_qc_flag~=2);
 kbadsbe35 = find(dsam.sbe35temp~=2);
 h1 = plot(dctd.psal(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
@@ -118,14 +119,18 @@ h2 = plot(dctd.psal(kup),-dctd.press(kup),'r-');
 h3 = plot(dsam.botpsal,-dsam.upress,'b+','markersize',m1);
 h4 = plot(dsam.botpsal(kbadpsal),-dsam.upress(kbadpsal),'k^','markersize',m2);
 h5 = plot(dsam.botpsal(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
+h6 = plot(dsam.botpsal(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
 ylim(yl)
 
-if ~isempty(dsam.botpsal(kbadpsal)); legend([h4 h5],'bad sample','bad niskin','location','best'); end
+ls = {};
+if ~isempty(kbadpsal); ls = [ls; 'bad sample']; end
+if ~isempty(kbadnisk); ls = [ls; 'bad niskin']; end
+if ~isempty(kqnisk); ls = [ls; 'questionable nisk']; end
+legend([h4 h5 h6],ls,'location','best');
 
 subplot(1,nsubs,2)
 
 kbadoxy = find(dsam.botoxyflag~=2);
-kbadnisk = find(dsam.bottle_qc_flag~=2);
 
 plot(dctd.oxygen(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
@@ -135,12 +140,11 @@ plot(dctd.oxygen(kup),-dctd.press(kup),'r-');
 plot(dsam.botoxy,-dsam.upress,'b+','markersize',m1);
 plot(dsam.botoxy(kbadoxy),-dsam.upress(kbadoxy),'k^','markersize',m2);
 plot(dsam.botoxy(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
+plot(dsam.botoxy(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
 ylim(yl)
 
 subplot(1,nsubs,3)
 
-kbadoxy = find(dsam.botoxyflag~=2);
-kbadnisk = find(dsam.bottle_qc_flag~=2);
 plot(dctd.potemp(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
 title(['Stn ' sprintf('%03d',stnlocal)]);
@@ -149,11 +153,13 @@ plot(dctd.potemp(kup),-dctd.press(kup),'r-');
 plot(dsam.botoxytemp,-dsam.upress,'b+','markersize',m1);
 plot(dsam.botoxytemp(kbadoxy),-dsam.upress(kbadoxy),'k^','markersize',m2);
 plot(dsam.botoxytemp(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
+plot(dsam.botoxytemp(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
 plot(dsam.sbe35temp,-dsam.upress,'c+','markersize',m1);
 plot(dsam.sbe35temp(kbadsbe35),-dsam.upress(kbadsbe35),'m<','markersize',m2);
 plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag,-dsam.upress,'k+','markersize',m1);
 plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
-ylim(yl)
+plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
+ylim(yl); xlim([-2 max([dsam.botoxytemp+1;0]+1)])
 for klab = 1:24
     text(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(klab),-dsam.upress(klab),...
         sprintf('%d  ',dsam.position(klab)),'fontsize',14,'horizontalalignment','right','verticalalignment','middle')
@@ -186,7 +192,6 @@ for veno = 1:nsubs-3
 
    kmat = find(dgrid.statnum == stnlocal);
    kbad = find(dflag ~= 2);
-   kbadnisk = find(dsam.bottle_qc_flag~=2);
 
    subplot(1,nsubs,veno+3)
 
@@ -201,6 +206,7 @@ for veno = 1:nsubs-3
    plot(d,-dsam.upress,'b+','markersize',m1);
    plot(d(kbad),-dsam.upress(kbad),'k^','markersize',m2);
    plot(d(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
+   plot(d(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
    ylim(yl)
 
 end

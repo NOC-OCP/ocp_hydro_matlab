@@ -70,6 +70,11 @@ fclose(fidmcchdo01);
 
 
 [d h] = mload(infile1,'/',' ');
+ii = find(isnan(d.utemp+d.upsal)); %don't write the rows with no CTD data, they will be all NaN/9 anyway
+for no = 1:length(h.fldnam)
+    a = getfield(d, h.fldnam{no}); a(ii) = [];
+    d = setfield(d, h.fldnam{no}, a);
+end
 d.den20 = sw_dens(d.upsal, repmat(20,size(d.upsal)), repmat(0,size(d.upsal)));
 if isfield(d, 'silc');
    d.silc_per_kg = d.silc./d.den20*1e3;
@@ -87,6 +92,11 @@ if 0%isfield(d, 'sf6')
    d.sf6_per_kg = d.sf6./d.dens*1e3;
    h.fldnam = [h.fldnam 'cfc11_per_kg' 'cfc12_per_kg' 'ccl4_per_kg' 'f113_per_kg' 'sf6_per_kg'];
    h.fldunt = [h.fldunt 'pmol/kg' 'pmol/kg' 'pmol/kg' 'pmol/kg' 'fmol/kg'];
+end
+if ~isfield(d,'ctdflag'); 
+   d.ctdflag = 2+zeros(size(d.upsal)); 
+   d.ctoflag = d.ctdflag; d.ctoflag(isnan(d.uoxygen)) = 4;
+   h.fldnam = [h.fldnam 'ctdflag' 'ctoflag']; h.fldunt = [h.fldunt 'woce_table_4.10' 'woce_table_4.10'];
 end
 [n1,n2] = size(d.sampnum);
 if n2==24 & n1>1
@@ -113,7 +123,6 @@ othernames = {
     'LONGITUDE'
     'DEPTH'
     };
-    
 otherform = {'%s' '%s' '%d' '%s' '%s' '%10.5f' '%10.5f' '%6.0f'};
 
 clear otvarsdata otvars
@@ -143,6 +152,7 @@ lat = nan+ones(1,maxn);
 lon = lat;
 datebot = lat;
 depth = lat;
+ctdflag = 2+zeros(1,maxn);
 
 root_sum = mgetdir('M_SUM');
 sumfn = [root_sum '/station_summary_' mcruise '_all.nc'];

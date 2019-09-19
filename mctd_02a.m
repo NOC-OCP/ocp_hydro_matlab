@@ -162,7 +162,7 @@ if doctm
    end
    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
    medita
-
+   
    %despike
    nds = 2;
    while nds<=size(dsvars,2)

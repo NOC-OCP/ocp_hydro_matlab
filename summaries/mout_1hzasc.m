@@ -86,6 +86,8 @@ lon1(kount+1:end) = [];
 
 sm = [t1 lon1 lat1];
 
-save /local/users/pstar/cruise/data/ladcp/uh/raw/jc1802/gps/sm sm
+pre = mgetdir('ladcp');
+d = dir([pre '/uh/raw/']);
+save([pre '/uh/raw/' d(end).name '/gps/sm'], 'sm')
 
 end

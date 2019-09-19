@@ -140,7 +140,7 @@ for k = stnset
         [dsam h4] = mload(fnsam,'/');
         
         if isfield(dsam,'wireout'); ndpths(k) = length(unique(dsam.wireout(~isnan(dsam.wireout)))); end
-        if isfield(dsam,'botpsal'); nsal(k) = sum(~isnan(dsam.botpsal)); end
+        if isfield(dsam,'botpsal'); nsal(k) = sum(ismember(dsam.botpsalflag, [2 3 5])); end
         
         %loop through groups of non-standard samples
         for sgno = 1:size(sgrps,1)
@@ -150,8 +150,11 @@ for k = stnset
             log_all = [];
             if sashore(sgno); log_all1 = []; end
             for fno = 1:length(ii)
-                log_all = [log_all ~isnan(getfield(dsam, sgrp{ii(fno)}))];
-                if sashore(sgno); log_all1 = [log_all1 getfield(dsam, [sgrp{ii(fno)} '_flag'])==1]; end
+                s = [sgrp{ii(fno)} '_flag']; if ~isfield(dsam, s); s = [sgrp{ii(fno)} 'flag']; end
+                if isfield(dsam, s)
+                    a = ismember(getfield(dsam, s), [2 3 5]); log_all = [log_all a(:)];
+                    if sashore(sgno); a = getfield(dsam, s)==1; log_all1 = [log_all1 a(:)]; end
+                else; a = ~isnan(getfield(dsam, sgrp{ii(fno)})); log_all = [log_all a(:)]; end
             end
             nopt(k,sgno) = sum(max(log_all,[],2)); %or just sum(sum) to count total samples?
             if sashore(sgno); nopt_shore(k,sgno) = sum(max(log_all1,[],2)); end
@@ -217,12 +220,11 @@ for k = stnall
     fprintf(fid,' %2d %05.2f %s %3d %05.2f %s', latd, latm, l1, lond, lonm, l2);
 
     for no = 7:length(varnames)
-       eval(['data = ' varnames{no} '(k);']);
        % jc159 bak30 march 2018; width of field is width of var name,
        % minimum 4.
        vn = varnames{no};
-       fwid = length(vn);
-       fwid = max(4,fwid);
+       eval(['data = ' vn '(k);']);
+       fwid = max(4,length(vn));
        form = sprintf('%s%d%s',' %',fwid,'.0f');
        fprintf(fid, form, data);
     end

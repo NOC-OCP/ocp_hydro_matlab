@@ -21,6 +21,8 @@
 %
 
 %write to ascii file
+root_sum = mgetdir('M_SUM');
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 stnlistname = [root_sum '/station_summary_' mcruise '_ltable.tex'];
 fid = fopen(stnlistname,'w');
 

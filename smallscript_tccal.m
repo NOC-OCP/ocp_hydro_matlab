@@ -10,8 +10,9 @@ root_sbe35 = mgetdir('M_SBE35');
 if exist(root_sbe35, 'dir'); sbe35 = 1; else; sbe35 = 0; end
 
 for kloop = klist
+    tic
 
-    %stn = kloop; mctd_02b %uncomment this line if you modify the calibration
+    stn = kloop; mctd_02b %uncomment this line if you modify the calibration
     %and need to regenerate the 24hz from the raw file before applying the
     %new one to previously-calibrated stations
     
@@ -31,9 +32,11 @@ for kloop = klist
     stn = kloop; mfir_04;
 
     stn = kloop; msam_02b;
+    stn = kloop; msam_oxykg;
     stn = kloop; msam_updateall;
 
     mout_makelists(kloop, '2dbdn')
+    toc
     
 end
 

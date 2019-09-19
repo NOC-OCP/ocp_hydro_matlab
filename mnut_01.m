@@ -40,6 +40,7 @@ ds_nut = ds_nut(iig,:);
 
 oopt = 'vars'; get_cropt %set vars: {varnames varunits origvarnames}
 ds_nut_fn = ds_nut.Properties.VarNames;
+oopt = 'flags'; get_cropt %set default (missing) flag
 
 %assign values to vars, and flags
 nvars = size(vars,1);
@@ -55,7 +56,7 @@ for kvar = 1:nvars
       %if it's a flag field that's not in ds_nut, set flags to 2 when data present, or 5 for missing
       ii = strfind(vars{kvar,1}, '_flag');
       if length(ii)>0
-         eval([vars{kvar,1} ' = 5+zeros(length(iig),1);'])
+         eval([vars{kvar,1} ' = ' num2str(flag0) '+zeros(length(iig),1);'])
 	     eval([vars{kvar,1} '(~isnan(' vars{kvar,1}(1:ii-1) ')) = 2;'])
       else
          warning(['no values found for nut variable ' vars{kvar,1}])

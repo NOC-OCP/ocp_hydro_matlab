@@ -197,6 +197,7 @@ for kvar = 1:ncvars
         data = data(:);
         if ~isempty(strfind(newname,'FLAG'))
             % flag variable; set all real numbers to 2 and nans to 9
+            % (really should keep track of despiking, at least, through processing)
             data = 2+0*data;
             data(isnan(data)) = 9;
             oopt = 'flags'; get_cropt %optionally change flags

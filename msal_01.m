@@ -61,6 +61,7 @@ sal_adj_comment_string = ['Adjustments calculated by msal_standardise_avg'];
 
 %set any different/additional flags (besides those set in sal_standardise_avg)
 oopt = 'flags'; get_cropt
+flag(isnan(salinity_adj) & flag<4) = 4;
 
 dataname = ['sal_' mcruise '_' stn_string];
 

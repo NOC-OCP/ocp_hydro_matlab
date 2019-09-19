@@ -1,4 +1,4 @@
-[%scripts to rerun the steps that make the sam files (starts from scratch)
+%scripts to rerun the steps that make the sam files (starts from scratch)
 %
 %comment out msal_01 or moxy_01 if you don't need to regenerate the sal_ or oxy_ files
 
@@ -17,8 +17,8 @@ end
 
 %start fresh
 root_sam = mgetdir('M_CTD');
-stn = 1; msam_01; % create empty sam file at start of cruise
-eval(['!cp ' root_sam '/sam_' mcruise '_001.nc ' root_sam '/sam_' mcruise '_template.nc']) %copy to template
+%stn = 1; msam_01; % create empty sam file at start of cruise
+%eval(['!cp ' root_sam '/sam_' mcruise '_001.nc ' root_sam '/sam_' mcruise '_template.nc']) %copy to template
 
 for kloop = klist
     stn = kloop; msam_01b %copy from template
@@ -30,7 +30,7 @@ for kloop = klist
     stn = kloop; mbot_02
     stn = kloop; mdcs_05
 
-    stn = kloop; msam_02
+    stn = kloop; msam_02b
     stn = kloop; msam_putpos
     if ~exist([root_sam '/sam_' mcruise '_all.nc'])
         unix(['cp -f ' root_sam '/sam_' mcruise '_001.nc ' root_sam '/sam_' mcruise '_all.nc'])

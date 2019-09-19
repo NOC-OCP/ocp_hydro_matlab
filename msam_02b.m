@@ -51,7 +51,7 @@ if exist(infile2)
          [samps,ia,ic] = unique(sampnums(iisf), 'last');
          if length(samps)<length(iisf)
             warning(['duplicate lines for ' flds{fno} ' station ' stn_string '; applying last'])
-	        keyboard
+	        %keyboard
 	        iisf = iisf(ia);
          end
       

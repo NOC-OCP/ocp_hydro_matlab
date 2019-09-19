@@ -70,6 +70,8 @@ kstatgroups = {[1:33] [60 53 54 55 52 56 49 61 48 47 36 38 39 40 45] [67:82]}; %
 kstatgroups = {[67:82]}; % jr281
 kstatgroups = {[1:19 21:999]}; % jr302
 kstatgroups = {3 [4:999]}; % jc159
+kstatgroups = {[1:71]};%3:10 1 12:22] [45 44 40 36 32 31 27 26 25 23]};
+
 %now distribute the sample numbers into sets corresponding to the station
 %groups 
 for kount = 1:length(kstatgroups)
