@@ -18,7 +18,7 @@ dn = torg+time/86400;
 
 MARGS_STORE = MEXEC_A.MARGS_IN_LOCAL; % need to save this because it would otherwise be used by mcsetd
 switch MEXEC_G.Mship
-   case 'cook' % used on jc069
+   case {'cook' 'discovery'} % used on jc069
       prefix = 'met_tsg';
    case 'jcr'
       prefix = 'oceanlogger';

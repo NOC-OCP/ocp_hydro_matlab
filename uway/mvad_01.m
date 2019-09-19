@@ -43,7 +43,7 @@ if ~exist(fnin, 'file')
     error(['input file ' fnin ' not found'])
 end
 otfile = [root_vmadcp '/mproc/' dataname '.nc'];
-clear allin
+clear allin nbb
 
 allin.decday = nc_varget(fnin,'time');
 tu = nc_attget(fnin,'time','units');

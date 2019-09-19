@@ -11,7 +11,7 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %uway_streams_proc_include %include only these
-uway_streams_proc_exclude = {'posmvtss'}; %exclude these
+%uway_streams_proc_exclude = {'posmvtss'}; %exclude these
 uway_pattern_proc_exclude = {'satinfo';'aux';'dps'}; %exclude those with this pattern anywhere
 
 %get list of underway streams to process

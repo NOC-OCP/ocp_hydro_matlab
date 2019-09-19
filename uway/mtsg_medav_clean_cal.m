@@ -14,8 +14,10 @@ scriptname = 'mtsg_medav_clean_cal';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 switch MEXEC_G.Mship
-   case 'cook' % used on jc069
+   case {'cook'} % used on jc069
       prefix = 'met_tsg';
+    case 'discovery'
+        prefix = 'tsg';
    case 'jcr'
       prefix = 'oceanlogger';
 end

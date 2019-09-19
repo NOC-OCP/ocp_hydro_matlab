@@ -54,11 +54,9 @@ dataname = [prefix1 'd' day_string];
 
 % upgrade by bak at noc aug 2010 so it works on either scs or techsas
 if strncmp(MEXEC_G.Mshipdatasystem,'scs',3)
-    mdatapupscs(yy,daylocal,timestart,yy,daylocal,timeend,...
-    '-',instream,otfile2,varlist);
+    mdatapupscs(yy,daylocal,timestart,yy,daylocal,timeend,'-',instream,otfile2,varlist);
 else % techsas
-    mdatapuptechsas(yy,daylocal,timestart,yy,daylocal,timeend,...
-    '-',instream,otfile2,varlist);
+    mdatapuptechsas(yy,daylocal,timestart,yy,daylocal,timeend,'-',instream,otfile2,varlist);
 end
 
 if ~exist(m_add_nc(otfile2),'file')

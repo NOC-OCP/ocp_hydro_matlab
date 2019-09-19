@@ -19,6 +19,8 @@ function mday_01_clean_av(abbrev,day)
 %
 % The possible edits include checking for out-of-range values, but instrument calibrations,
 % which may vary by ship/cruise, are applied separately
+%
+% revised ylf dy105 to check for various variable names (requiring similar transformations) in the header
 
 m_common
 scriptname = 'mday_01_clean_av';
@@ -38,135 +40,105 @@ wkfile = ['wk_' prefix '_' scriptname '_' datestr(now,30)];
 if exist([infile '.nc']) %only if there is a raw file for this day
 
 
-
    %%%%% change variable names (calling mheadr) %%%%%
+   %abbrev, new name, old name(s, or beginnings of)
+   can = {'ash' 'head_ash' {'head'}
+          'gys' 'head_gyr' {'head'}
+	  'gyro_s' 'head_gyr' {'head'}
+	  'gyro_pmv' 'head_gyr' {'head'}
+	  'gyropmv' 'head_gyr' {'head'}
+          'gpsfugro' 'long' {'lon'}
+	  'sim' 'depth_uncor' {'depthm' 'depth' 'dep' 'snd'}
+	  'ea600' 'depth_uncor' {'depthm' 'depth' 'dep' 'snd'}
+	  'ea600m' 'depth_uncor' {'depthm' 'depth' 'dep' 'snd'}
+	  'em120' 'swath_depth' {'depthm' 'dep' 'snd'}
+	  'em122' 'swath_depth' {'depthm' 'dep' 'snd'}
+         };
 
-   if sum(strcmp(abbrev, {'ash' 'gys' 'gyr' 'gyro_s' 'gpsfugro' 'met' 'sim' 'ea600m' 'ea600' 'em120' 'em122' 'gyropmv'}))
+   ii = find(strcmp(abbrev, can(:,1))); 
+   if length(ii)>0
       %work on the latest file, which may already be an edited version; always output to otfile
       if ~exist([otfile '.nc'])
          unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
       end
-      switch abbrev
 
-         case 'ash'
-            newheadname = 'head_ash';
-	    h = m_read_header(otfile);
-            if ~sum(strcmp(newheadname, h.fldnam))
-	       headvarnum = find(strncmp('head', h.fldnam, 4));
-               headvarnumstr = sprintf('%d', headvarnum);
-               MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; headvarnumstr; newheadname; ' '; '-1'; '-1'; };
+      newname = can{ii,2};
+      h = m_read_header(otfile);
+      if ~sum(strcmp(newname, h.fldnam))
+         for no = 1:length(can{ii,3})
+            name = can{ii,3}{no};
+            varnum = find(strncmp(name, h.fldnam, length(name)));
+            if length(varnum)>0
+               MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; sprintf('%d', varnum); newname; ' '; '-1'; '-1'; };
                mheadr
+               break %only for renaming one variable per file (listed above in order of preference)
             end
-	    
-	 case {'gys', 'gyr', 'gyro_s', 'gyropmv'}
-            newheadname = 'head_gyr';
-            h = m_read_header(otfile);
-            if ~sum(strcmp(newheadname, h.fldnam))
-               headvarnum = find(strncmp('head', h.fldnam, 4));
-               headvarnumstr = sprintf('%d', headvarnum);
-               MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; headvarnumstr; newheadname; ' '; '-1'; '-1'; };
-               mheadr
-            end
-	    
-         case 'gpsfugro'
-            newlongname = 'long';
-            h = m_read_header(otfile);
-            if ~sum(strcmp(newlongname, h.fldnam))
-	           lonvarnum = find(strncmp('lon', h.fldnam, 3));
-	           longvarnumstr = sprintf('%d', lonvarnum);
-               MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; longvarnumstr; newlongname; ' '; '-1'; '-1'};
-               mheadr
          end
-	    
-	 case {'met'}%, 'met_tsg'} %asf note: techsas records m/s, however, the SSDS displays values converted to knots. There is no separate record of this since SSDS is live, so all wind records should be in m/s and no conversions are needed.
-	    if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
-               MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; 'speed'; ' '; 'm/s'; '-1'; '-1'};
-               mheadr
-            end
-	    	
-         case {'sim' 'ea600m' 'ea600'}
-            newdepthname = 'depth_uncor';
-            h = m_read_header(otfile);
-            if ~sum(strcmp(newdepthname, h.fldnam))
-               depvarnum = find(strcmp('depthm', h.fldnam));
-               if length(depvarnum)==0; depvarnum = find(strcmp('depth', h.fldnam)); end
-               if length(depvarnum)==0; depvarnum = find(strncmp('dep', h.fldnam, 3)); end
-               if length(depvarnum)==0; depvarnum = find(strncmp('snd', h.fldnam, 3)); end
-	           depvarnumstr = sprintf('%d', depvarnum);
-                   MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; depvarnumstr; newdepthname; ' '; '-1'; '-1'};
-	           mheadr
-            end
+      end	    
 
-         case {'em120', 'em122'}
-            newdepthname = 'swath_depth';
-            h = m_read_header(otfile);
-            if ~sum(strcmp(newdepthname, h.fldnam))
-               depvarnum = find(strncmp('dep', h.fldnam, 3)); if length(depvarnum)==0; depvarnum = find(strncmp('snd', h.fldnam, 3)); elseif length(depvarnum)>1; depvarnum = find(strcmp('depthm', h.fldnam)); end
-               depvarnumstr = sprintf('%d', depvarnum);
-               MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; depvarnumstr; newdepthname; ' '; '-1'; '-1'};
-	       mheadr
-            end
-
-      end
    end
 
+
+   %%%%% change units labels (calling mheadr) %%%%%
+   switch abbrev
+      case 'met' %asf note: techsas records m/s, however, the SSDS displays values converted to knots. There is no separate record of this since SSDS is live, so all wind records should be in m/s and no conversions are needed.
+         if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
+            MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; 'speed'; ' '; 'm/s'; '-1'; '-1'};
+            mheadr
+         end
+   end
 
 
    %%%%% check for repeated times and backward time jumps %%%%%
-   if sum(strcmp(abbrev, {'ash' 'cnav' 'gp4' 'pos' 'met' 'met_light' 'met_tsg' 'tsg' 'gys' 'gyr' 'gyro_s' 'posmvpos' 'gyropmv' 'surfmet'}))
-      %work on the latest file, which already be an edited version; always output to otfile
-      if exist([otfile '.nc'])
-         unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
-      else
-         infile1 = infile;
-      end
-      switch abbrev
+   switch abbrev
 
-         case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet'}
-            MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'time'; 'y=[1 x1(2:end)-x1(1:end-1)]'; 'deltat'; 'seconds'; ' '};
-            mcalc
+      case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet'}
+         %work on the latest file, which already be an edited version; always output to otfile
+         if exist([otfile '.nc'])
+            unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
+         else
+            infile1 = infile;
+         end
+         MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'time'; 'y=[1 x1(2:end)-x1(1:end-1)]'; 'deltat'; 'seconds'; ' '};
+         mcalc
+         unix(['/bin/rm ' m_add_nc(wkfile)]);
 
-         case {'gys', 'gyr', 'gyro_s', 'gyropmv'}
-            wkfile2 = [prefix '_wk2'];
-            % flag non-monotonic times
-            MEXEC_A.MARGS_IN = {infile1; wkfile2; '/'; 'time'; 'y = m_flag_monotonic(x1);'; 'tflag'; ' '; ' '};
-            mcalc
-            MEXEC_A.MARGS_IN = {wkfile2; otfile; '2'; 'tflag .5 1.5'; ' '; '1 2'};
-            mdatpik
-            unix(['/bin/rm ' m_add_nc(wkfile2)]);
+      case {'gys', 'gyr', 'gyro_s', 'gyropmv' 'posmvpos'}
+         %work on the latest file, which already be an edited version; always output to otfile
+         if exist([otfile '.nc'])
+            unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
+         else
+            infile1 = infile;
+         end
+         wkfile2 = [prefix '_wk2'];
+         % flag non-monotonic times
+         MEXEC_A.MARGS_IN = {infile1; wkfile2; '/'; 'time'; 'y = m_flag_monotonic(x1);'; 'tflag'; ' '; ' '};
+         mcalc
+         if strcmp(abbrev, 'posmvpos')
+	        varlist = '1 2 3 4 5 6 7 8 9';
+         else
+	        varlist = '1 2';
+         end
+         MEXEC_A.MARGS_IN = {wkfile2; otfile; '2'; 'tflag .5 1.5'; ' '; varlist};
+         mdatpik
+         unix(['/bin/rm ' m_add_nc(wkfile2)])
+         unix(['/bin/rm ' m_add_nc(wkfile)]);
 
-         case 'posmvpos'
-            wkfile2 = [prefix '_wk2'];
-            % flag non-monotonic times
-            MEXEC_A.MARGS_IN = {infile1; wkfile2; '/'; 'time'; 'y = m_flag_monotonic(x1);'; 'tflag'; ' '; ' '};
-            mcalc
-            MEXEC_A.MARGS_IN = {wkfile2; otfile; '2'; 'tflag .5 1.5'; ' '; '1 2 3 4 5 6 7 8 9'};
-            mdatpik
-            unix(['/bin/rm ' m_add_nc(wkfile2)]);
-	    
-      end
-      unix(['/bin/rm ' wkfile '.nc']);
    end
 
 
-
-   %%%%% other corrections for bad data or data labelling %%%%%
-   if sum(strcmp(abbrev, {'cnav'}))
+   %%%%% apply other corrections for bad data or data labelling %%%%%
+   if strcmp(abbrev, 'cnav')
       %work on the latest file, which already is an edited version; always output to otfile
       if ~exist([otfile '.nc'])
          unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
       end
-      switch abbrev
-
-          case 'cnav'
-	     d = mload(otfile, '/'); if max([d.lat(:)-floor(d.lat(:)); d.long(:)-floor(d.long(:))]*100)<=61
-                MEXEC_A.MARGS_IN = {otfile; 'y'; 'lat'; 'y = cnav_fix(x)'; ' '; ' '; 'long'; 'y = cnav_fix(x)'; ' '; ' '; ' '};
-                mcalib
-             end
-	    
+	  d = mload(otfile, '/'); 
+      if max([d.lat(:)-floor(d.lat(:)); d.long(:)-floor(d.long(:))]*100)<=61
+         MEXEC_A.MARGS_IN = {otfile; 'y'; 'lat'; 'y = cnav_fix(x)'; ' '; ' '; 'long'; 'y = cnav_fix(x)'; ' '; ' '; ' '};
+         mcalib
       end
    end
-
 
 
    %%%%% apply carter table soundspeed correction to single-beam bathymetry %%%%%
@@ -185,64 +157,57 @@ if exist([infile '.nc']) %only if there is a raw file for this day
          lon = nanmean(dn.lon); lat = nanmean(dn.lat); clear dn hn
       else
          warning(['no pos file for day ' day_string ' found, using current position to select carter area for echosounder correction'])
- 	 if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
-	    pos = mtlast(navname); lon = pos.long; lat = pos.lat; clear pos
-	 elseif strcmp(MEXEC_G.Mshipdatasystem, 'scs')
-	    pos = mslast(navname); lon = pos.long; lat = pos.lat; clear pos
-        end
-     end
+ 	     if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
+	        pos = mtlast(navname); lon = pos.long; lat = pos.lat; clear pos
+	     elseif strcmp(MEXEC_G.Mshipdatasystem, 'scs')
+	        pos = mslast(navname); lon = pos.long; lat = pos.lat; clear pos
+         end
+      end
+keyboard
 	
       calcstr = ['y = mcarter(' num2str(lat) ', ' num2str(lon) ', x1); y = y.cordep;'];
       MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'depth_uncor'; calcstr; 'depth'; 'metres'; '0'};
       mcalc
    end
 
-
     
    %%%%% set data to absent outside ranges %%%%%
-   if sum(strcmp(abbrev, {'ash' 'gp4' 'pos' 'met' 'met_light' 'tsg' 'met_tsg' 'sim' 'ea600m' 'ea600' 'em120' 'em122' 'surfmet'}))
+   car = {'ash' {'head_ash' 'pitch' 'roll' 'mrms' 'brms'} {'0 360' '-5 5' '-7 7' '0.00001 0.01' '0.00001 0.1'}
+	  'gp4' {'long' 'lat'} {'-181 181' '-91 91'}
+	  'pos' {'long' 'lat'} {'-181 181' '-91 91'}
+	  'met' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
+	  'surfmet' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
+	  'met_light' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
+	  'tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50'}
+	  'met_tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50'}
+	  'ocl' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50'}
+	  'sim' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
+	  'ea600m' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
+	  'ea600' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
+	  'em120' {'swath_depth'} {'20 10000'}
+	  'em122' {'swath_depth'} {'20 10000'}
+      };
+
+   ii = find(strcmp(abbrev, car(:,1))); 
+   if length(ii)>0
       %work on the latest file, which may already be an edited version; always output to otfile
       if ~exist([otfile '.nc'])
          unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
       end
-      switch abbrev
 
-         case 'ash'
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'head_ash'; '0 360'; 'y'; 'pitch'; '-5 5'; 'y'; 'roll' '-7 7'; 'y'; 'mrms'; '0.00001 0.01'; 'y'; 'brms'; '0.00001 0.1'; 'y'; ' '};
-            medita
-
-         case {'gp4', 'pos'}
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'long'; '-181 181'; 'y'; 'lat'; '-91 91'; 'y'; ' '};
-            medita
-
-         case {'met', 'surfmet'}
-          MEXEC_A.MARGS_IN = {otfile; 'y'; 'airtemp'; '-50 50'; 'y'; 'humid'; '0.1 110'; 'y'; 'direct'; '-0.1 360.1'; 'y'; 'speed'; '-0.001 200'; 'y'; ' '};
-          medita
-
-         case 'met_light'
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'pres'; '0.01 1500'; 'y'; 'ppar'; '-10 1500'; ;'y'; 'spar'; '-10 1500'; 'y'; 'ptir'; '-10 1500'; 'y'; 'stir'; '-10 1500'; 'y'; ' '};
-            medita
-	
-         case 'tsg'
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'temp_h'; '0 50'; 'y'; 'cond'; '0 10'; 'y'; ' '};
-            medita
-
-         case 'met_tsg'
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'temp_h'; '0 50'; 'y'; 'temp_m'; '0 50'; 'y'; 'cond'; '0 10'; 'y'; 'fluo'; '0 10'; 'y'; 'trans'; '0 50'; 'y'; ' '};
-            medita
-
-         case {'sim' 'ea600m' 'ea600'}
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'depth'; '20 10000'; 'y'; 'depth_uncor'; '20 10000'; 'y'; ' '};
-            medita
-
-         %case {'em120', 'em122'}
-         %   MEXEC_A.MARGS_IN = {otfile; 'y'; 'swath_depth'; '20 10000'; 'y'; ' '};
-         %   medita
-
+      MEXEC_A.MARGS_IN = {otfile; 'y'};
+      h = m_read_header(infile);
+      for no = 1:length(car{ii,2})
+         if sum(strcmp(car{ii,2}{no}, h))
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; car{ii,2}{no}; car{ii,3}{no}];
+         end
       end
-      unix(['/bin/rm ' wkfile '.nc']);
-   end
+      if length(MEXEC_A.MARGS_IN)>2
+         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'y'; ' '];
+         medita
+      end
 
+   end
 
 
    %%%%% median average %%%%%
@@ -254,19 +219,16 @@ if exist([infile '.nc']) %only if there is a raw file for this day
          infile1 = infile;
       end
       switch abbrev
-
          case {'sim', 'ea600m' 'ea600' 'em120', 'em122'}
             MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'time'; '-150,1e10,300'; '/'};
             mavmed
-	    
       end
       unix(['/bin/rm ' wkfile '.nc']);
    end
 
 
-
    %%%%% compute salinity and add to tsg file %%%%%
-   if sum(strcmp(abbrev, {'met_tsg'}))
+   if sum(strcmp(abbrev, {'met_tsg' 'tsg' 'ocl'}))
       %work on the latest file, which already be an edited version; always output to otfile
       if exist([otfile '.nc'])
          unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
@@ -274,17 +236,30 @@ if exist([infile '.nc']) %only if there is a raw file for this day
          infile1 = infile;
       end
       switch abbrev
-   
-         case 'met_tsg' %***or check all the tsg types to see if it is already a field and if not add?***
-            MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'cond temp_h'; 'y = gsw_SP_from_C(10*x1,x2,0)'; 'psal'; 'pss-78'; ' '};
-            mcalc
-	    
+         case {'met_tsg' 'tsg' 'ocl'}
+            h = m_read_header(infile1);
+            if sum(strcmp('cond', h.fldnam))
+	           if sum(strcmp('tstemp', h.fldnam))
+                  tvar = 'tstemp';
+	          elseif sum(strcmp('temp_h', h.fldnam))
+                  tvar = 'temp_h';
+	          elseif sum(strcmp('temp_m', h.fldnam))
+                  tvar = 'temp_m';
+	          else
+                  warning('no housing/pumped seawater supply temperature set')
+	             tvar = [];
+               end
+               if length(tvar)>0
+                  MEXEC_A.MARGS_IN = {infile1; otfile; '/'; ['cond ' tvar]; 'y = gsw_SP_from_C(10*x1,x2,0)'; 'psal'; 'pss-78'; ' '};
+                  mcalc
+               end
+            end
       end	 
-      unix(['/bin/rm ' wkfile '.nc']);
+      unix(['/bin/rm ' m_add_nc(wkfile)]);
    end
 
 
-    
+    %%%%% anything else specified in cruise options file %%%%%    
     get_cropt
 
     

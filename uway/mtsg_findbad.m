@@ -22,8 +22,17 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 switch MEXEC_G.Mship
     case 'cook'
         abbrev = 'met_tsg';
+        d.salin = d.psal;
+        d.sstemp = d.temp_m;
+    case 'discovery'
+        abbrev = 'tsg';
+        d.salin = d.psal;
+        d.sstemp = d.temp_r;
     case 'jcr'
         abbrev = 'oceanlogger';
+        d.salin = d.salinity;
+        d.cond = d.conductivity;
+        d.temp_h = d.tstemp;
 end
 roottsg = mgetdir(abbrev);
 infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
@@ -32,17 +41,6 @@ infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
 scriptname0 = scriptname; scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt; scriptname = scriptname0;
 
 [d h] = mload(infile1,'/');
-
-switch MEXEC_G.Mship
-   case 'jcr'
-      d.salin = d.salinity;
-      d.cond = d.conductivity;
-      d.temp_h = d.tstemp; % bak on jr302 tstemp is housing; sampletemp is fluorometer
-      d.temp_m = d.sstemp;
-      d.flowrate = d.flowrate;
-   case 'cook'
-      d.salin = d.psal;
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
 
@@ -67,7 +65,7 @@ end
 if isfield(d,'cond')
     np = np+1;
 end
-if isfield(d,'temp_m') | isfield(d,'temp_h')
+if isfield(d,'sstemp') | isfield(d,'temp_h')
     np = np+1;
 end
 if isfield(d,'flowrate')
@@ -78,7 +76,7 @@ end
 pl = .1;
 pb = .1;
 pw = .8;
-ph = .8/(np+1); % allow salin plot to be double height
+ph = .6/(np+1); % allow salin plot to be double height
 
 %start here
 
@@ -145,15 +143,15 @@ while 1
                 ylabel('cond');
             end
             
-            if isfield(d,'temp_m') | isfield(d,'temp_h')
+            if isfield(d,'sstemp') | isfield(d,'temp_h')
                 kount = kount+1;
                 subplot('position',[pl pb+(np-3)*(ph+pb) pw ph])
                 if isfield(d,'temp_h')
                     plot(decday,d.temp_h,'k+-',decday(iib),d.temp_h(iib),'c+');
                     hold on; grid on
                 end
-                if isfield(d,'temp_m')
-                    plot(decday,d.temp_m,'r+-',decday(iib),d.temp_m(iib),'c+');
+                if isfield(d,'sstemp')
+                    plot(decday,d.sstemp,'r+-',decday(iib),d.sstemp(iib),'c+');
                     hold on ;grid on
                 end
                 ha(kount) = gca;

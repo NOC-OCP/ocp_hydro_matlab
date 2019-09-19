@@ -19,6 +19,9 @@
 % several short names may correspond to the same data directories, but it is not likely that
 % more than 1-2 (besides quality message streams) will be in use on a given ship/cruise
 
+
+%%%%%% list streams with directories %%%%%%%
+
 %nav streams
 udirsn = {
      'adupos'              'nav/adu'
@@ -66,7 +69,7 @@ udirsn = {
 	 'tsshrp'	       'nav/tsshrp'
         };
 
-%and add others
+    %others
 udirso = {
      'surflight'       'met/surflight'
 	 'surflight_regen' 'met/surflight_regen'
@@ -89,9 +92,7 @@ udirso = {
 	 'emlog_vhw'       'ocl/log'
 	 'log_chf'         'ocl/log'
 	 'log_skip'        'ocl/log'
-%	 'ea600m'          'bathy/sim'
-	 'ea600'          'bathy/sim'
-%	 'sim'             'bathy/sim'
+	 'sim'             'bathy/sim'
 	 'em120'           'bathy/em120'
 	 'em122'           'bathy/em120'
 	 'gravity'	       'uother/gravity'
@@ -111,36 +112,67 @@ for no = 1:size(udirs,1)
 end
 udirs = udirs(:, [1 3 2]); %mexec short name, M_ABBREV, directory
 
-%start writing m_udirs function
+
+%%%%%%% test that underway streams present match what's expected %%%%%%%
+%%%%%%% and keep list of the expected streams that are found %%%%%%%
+%%%%%%% and which directories they go with %%%%%%%
+
+switch(MEXEC_G.Mshipdatasystem)
+    case 'techsas'
+        % based on m_check_mtnames by bak on jc184 4 july 2019 uhdas trials
+        matlist = mtnames; am = matlist(:,3); % mtnames list
+        as = mtgetstreams; % list of all streams found
+        f = 'mtnames';
+    case 'scs'
+        matlist = msnames; am = matlist(:,3); %msnames list
+        as = msgetstreams; %list of all streams found
+        f = 'msnames';
+end
+
+fprintf(1,'\n\n%s\n\n',['The following ' MEXEC_G.Mshipdatasystem ' stream names are not identified in ' f])
+for kl = 1:length(as)
+    if sum(strcmp(as{kl},am))==0
+        fprintf(1,'%s\n',as{kl}); 
+    end
+end
+fprintf(1,'\n%s\n\n\n\n','End of list')
+
+fprintf(1,'%s\n\n',['The following ' f ' stream names are not found in ' MEXEC_G.Mshipdatasystem])
+iim = zeros(length(am),1);
+for kl = 1:length(am)
+    if sum(strcmp(am{kl},as))==0
+        fprintf(1,'%s\n',am{kl}); 
+    else
+        iid = find(strcmp(matlist{kl,1}, udirs(:,1)));
+        if length(iid)>0; iim(kl) = iid; end
+    end
+end
+fprintf(1,'\n%s\n\n','End of list')
+matlist(iim==0,:) = []; iim(iim==0) = [];
+
+
+
+%%%%%%% write m_udirs function using available underway streams %%%%%%%
+%%%%%%% and make directories as necessary %%%%%%%
+
 fid = fopen([MEXEC.mexec_processing_scripts '/uway/m_udirs.m'], 'w');
-fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs();');%        'anemometer'                  ' '                             'anemometer'
+fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs();');
 fprintf(fid, 'udcruise = ''%s'';\n', MEXEC_G.MSCRIPT_CRUISE_STRING);
 fprintf(fid, '%s\n', 'udirs = {');
 
-%now determine which techsas/scs streams are available, and connect them to the
-%udirs lines, writing these to m_udirs and making directories as necessary
-
 switch MEXEC_G.Mshipdatasystem
    case 'techsas'
-      matlist = mtnames;
       fn1 = '*'; fn2 = '';
    case 'scs'
-      matlist = msnames;
       fn1 = ''; fn2 = '.ACO';
 end
 
-ii = [];
 for sno = 1:size(matlist,1)
-   if length(dir([MEXEC_G.uway_root '/' fn1 matlist{sno,3} fn2]))>0
-      iid = find(strcmp(matlist{sno,1}, udirs(:,1)));
-      if length(iid)==1
-         ii = [ii; sno];
-         fprintf(fid, '''%s''    ''%s''    ''%s''    ''%s'';\n', udirs{iid,1}, udirs{iid,2}, udirs{iid,3}, matlist{sno,3});
-         if ~exist([MEXEC_G.MEXEC_DATA_ROOT '/' udirs{iid,2}], 'dir')
-            unix(['mkdir -p ' MEXEC_G.MEXEC_DATA_ROOT '/' udirs{iid,3}]);
-         end
-      end
-   end
+    iid = iim(sno);
+    fprintf(fid, '''%s''    ''%s''    ''%s''    ''%s'';\n', udirs{iid,1}, udirs{iid,2}, udirs{iid,3}, matlist{sno,3});
+    if ~exist([MEXEC_G.MEXEC_DATA_ROOT '/' udirs{iid,2}], 'dir')
+        unix(['mkdir -p ' MEXEC_G.MEXEC_DATA_ROOT '/' udirs{iid,3}]);
+    end
 end
 
 %wrap up
