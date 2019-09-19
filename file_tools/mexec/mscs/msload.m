@@ -88,6 +88,7 @@ if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
 
 % now load data
 
+vdata = struct; vunits = struct;
 for kv = varnums
     % make empty space so file doesn't grow in loop
     vuse = nan+ones(1,totdc);
@@ -121,9 +122,6 @@ for kv = varnums
     loadvarname = vars{kv};
     loadvarname(strfind(loadvarname,'-')) = '_'; % remove minus in var name
     loadvarname(strfind(loadvarname,'/')) = '_'; % remove slash in var name
-%     cmd = ['vdata.' vars{kv} ' =  vuse(:)'';']; eval(cmd);
-%     cmd = ['vunits.' vars{kv} ' =  units{kv};']; eval(cmd);
-    cmd = ['vdata.' loadvarname ' =  vuse(:)'';']; eval(cmd);
-    cmd = ['vunits.' loadvarname ' =  units{kv};']; eval(cmd);
+    vdata = setfield(vdata, loadvarname, vuse(:)');
+    vunits = setfield(vunits, loadvarname, units{kv});
 end
-

@@ -67,8 +67,12 @@ instrument = ' '; % null for the time being
 % bak for jr195 2009-sep-17
 % load data before creating mstar file in case no data cycles found
 [tdata tunits] = msload(tstream,dn1,dn2,loadvlist);
-if isempty(tdata.time) % no data cycles found
-    return
+if isempty(tdata.time) 
+%    if isfield(MEXEC_G, 'uway_writeempty') & MEXEC_G.uway_writeempty % no data cycles found
+%        warning(['no data for ' tstream ' between ' dn1 ' and ' dn2])
+%    else
+        return
+%    end
 end
 
 ncfile.name = mstar_fn;
@@ -85,7 +89,7 @@ nc_attput(ncfile.name,nc_global,'platform_number',MEXEC_G.PLATFORM_NUMBER); %eg 
 
 % [tdata tunits] = msload(tstream,dn1,dn2,loadvlist);
 
-% techsas_names = m_unpack_varnames(techsas_in);
+%/local/users/pstar/jr18002/mcruise/data/nav/seatex/seatex_gll_jr18002_d322_raw.nc techsas_names = m_unpack_varnames(techsas_in);
 techsas_names =fieldnames(tdata);
 
 % techsas_time_dim = nc_getdiminfo(techsas_in.name,'time'); % bak jc032 need to know present number of records in growing techsas file
@@ -102,8 +106,8 @@ for k = 1:length(techsas_names)
     clear techsas_data techsas_units v
 %     techsas_data = nc_varget(techsas_in.name,techsas_names{k},0,techsas_time_length);
 %     techsas_units = nc_attget(techsas_in.name,techsas_names{k},'units');
-    cmd = ['techsas_data = tdata.' techsas_names{k} ';']; eval(cmd);
-    cmd = ['techsas_units = tunits.' techsas_names{k} ';']; eval(cmd);
+    techsas_data = getfield(tdata, techsas_names{k});
+    techsas_units = getfield(tunits, techsas_names{k});
     
     % adjust time to a more conventional mstar time
     if strcmp(techsas_names{k},'time')
@@ -111,6 +115,11 @@ for k = 1:length(techsas_names)
         techsas_units = 'seconds';
     end
     v.name = techsas_names{k}; v.data = techsas_data; v.units = techsas_units;
+    %if length(v.data)==0
+    %    if strcmp(v.name, 'time'); v.data = [dn1 dn2];
+    %    else; v.data = [NaN NaN]; end
+    %    warning('filling with NaNs')
+    %end
     m_write_variable(ncfile,v);
 end
 

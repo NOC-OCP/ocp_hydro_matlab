@@ -36,8 +36,10 @@ matlist = {
             'tsshrp'                  ' '                                 'tsshrp'
         'netmonitor'                  ' '                             'netmonitor'
         'anemometer'                  ' '                             'anemometer'
+%        'surfmet'                  ' '                             'anemometer'
         'dopplerlog'                  ' '                             'dopplerlog'
-            'ea600m'                  ' '                                  'ea600'
+%            'ea600m'                  ' '                                  'ea600'
+            'ea600'                  ' '                                  'ea600'
 %              'em120'                  ' '                                  'em120'
              'em122'                  ' '                                  'em122'  % bak on jr281, em122 instead of em120
          'emlog_vhw'                  ' '                              'emlog-vhw'
