@@ -10,7 +10,7 @@ root_out = mgetdir('M_SUM');
 
 d.dep = sw_dpth(d.upress, d.lat);
 d.dens = sw_dens(d.upsal, d.utemp, d.upress);
-d.den20 = sw_dens(d.upsal, 20+zeros(length(d.upsal),1), zeros(length(d.upsal),1));
+d.den20 = sw_dens(d.upsal, 20+zeros(size(d.upsal)), zeros(size(d.upsal)));
 d.uoxygen_per_l = d.uoxygen.*d.dens/1e3;
 d.silc_per_kg = d.silc./d.dens*1e3;
 d.phos_per_kg = d.phos./d.dens*1e3;
@@ -22,8 +22,7 @@ d.ccl4_per_kg = d.ccl4./d.dens*1e3;
 d.f113_per_kg = d.f113./d.dens*1e3;
 d.sf6_per_kg = d.sf6./d.dens*1e3;
 
-if ~exist('nnisk'); nnisk = 1; end
-if nnisk
+if 1
    %reverse niskins, or rather, sort them in surface-to-bottom order
    %(mostly)
    stns = unique(d.statnum(~isnan(d.utemp)));
@@ -44,8 +43,6 @@ if nnisk
       iig = [iig; iis(iip)];
    end
    nostr = '_nisk_surf_to_deep';
-else
-   nostr = '';
 end
 
 fields = {'statnum',        'station',          ' ',         '%d';...
@@ -90,12 +87,13 @@ fields = {'statnum',        'station',          ' ',         '%d';...
 formstr = []; data = [];
 for fno = 1:size(fields, 1)
    formstr = [formstr fields{fno,4} ', '];
-   data = [data getfield(d, fields{fno,1})];
+   a = getfield(d, fields{fno,1});
+   data = [data a(:)];
 end
 formstr = [formstr(1:end-2) '\n'];
 data = data(iig,:)';
 
-fid = fopen([MEXEC_G.MEXEC_DATA_ROOT '/samlists/sam_' mcruise '_csv_list' nostr '.csv'], 'w');
+fid = fopen([root_out '/samlists/sam_' mcruise '_csv_list' nostr '.csv'], 'w');
 
 for fno = 1:size(fields,1)-1; fprintf(fid, '%s, ', fields{fno,2}); end
 fno = fno+1; fprintf(fid, '%s\n', fields{fno,2});

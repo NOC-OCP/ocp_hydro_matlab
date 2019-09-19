@@ -339,7 +339,6 @@ switch scriptname
             case 'section'
                 %set section name corresponding to the gridded file to plot
                 %anomalies from
-                stnlist = [-2:2]+stnlocal;
             case 'docals'
                 dotcal = 0; doccal = 0; doocal = 0; %default is not to apply calibrations
         end
@@ -390,7 +389,7 @@ switch scriptname
             case 'infile'
                 infile = [root_bot '/bot_' mcruise '_' stn_string '.csv'];
             case 'botflags'
-                if ~exist('bottle_qc_flag'); bottle_qc_flag = 2+zeros(size(statnum)); end
+                bottle_qc_flag = 2+zeros(size(statnum));
         end
         %%%%%%%%%% end mbot_01 %%%%%%%%%%
         
@@ -516,6 +515,8 @@ switch scriptname
             case 'expo'
                 expocode = 'unknown';
                 sect_id = 'unknown';
+            case 'nocfc'
+                nocfc = 0;
             case 'outfile'
                 outfile = expocode;
             case 'headstr'
@@ -547,8 +548,6 @@ switch scriptname
                 varlist  = ['press temp psal potemp oxygen'];
             case 'kstns'
             case 'varuse'
-            case 'regridctd'
-                regridctd = 1;
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
 

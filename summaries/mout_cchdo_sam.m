@@ -88,6 +88,14 @@ if 0%isfield(d, 'sf6')
    h.fldnam = [h.fldnam 'cfc11_per_kg' 'cfc12_per_kg' 'ccl4_per_kg' 'f113_per_kg' 'sf6_per_kg'];
    h.fldunt = [h.fldunt 'pmol/kg' 'pmol/kg' 'pmol/kg' 'pmol/kg' 'fmol/kg'];
 end
+[n1,n2] = size(d.sampnum);
+if n2==24 & n1>1
+    fn = fieldnames(d);
+    for n = 1:length(fn)
+        d = setfield(d, fn{n}, reshape(getfield(d, fn{n})', n1*n2, 1));
+    end
+end
+oopt = 'nocfc'; get_cropt
 
 nsamp = length(d.sampnum); % number of samples
 nmvars = length(h.fldnam);
@@ -196,7 +204,6 @@ for kvar = 1:ncvars
         otform = [otform newform];
         mstarname = mstarnamesin{kvar};
         cmd = ['data = d.' mstarname ';']; eval(cmd);
-        data = data(:);
         for ks = 1:nsamp
             maincells(ks,length(otnames)) = {data(ks)};
         end

@@ -57,17 +57,21 @@ if exist('klistcfc', 'var') & ~isempty(klistcfc)
    pause(1)
    klist = [klist klistcfc];
 else; klistcfc = []; end
+if exist('klistc13', 'var') & ~isempty(klistc13)
+   disp('Will process tracers from stations in klistc13: ')
+   disp(klistc13)
+   pause(1)
+   klist = [klist klistc13];
+else; klistc13 = []; end
 klist = unique(klist);
 
 if ~exist('docsv'); docsv = 0; end
 
 %first do steps that create concatenated (rather than per-station) mstar files
 
-if length(klistsal)>0; msal_standardise_avg; end %loads bottle salts into .mat file (and optionally
-%displays individual readings and standards offsets for evaluation)
-
+if length(klistsal)>0; msal_standardise_avg; end %checks standardisations for salinity
 if length(klistco2)>0; mco2_01; end %loads alk and dic into concatenated co2 file
-
+if length(klistiso)>0; miso_01; end %loads c13, c14, o18 into concatenated isotope file
 if length(klistcfc)>0; mcfc_01; end %loads cfcs into concatenated cfc file
 
 %now loop through stations
@@ -100,7 +104,6 @@ for kloop = klist
     
     %carbon
     if ismember(kloop, klistco2)
-        stn = kloop; mco2_01 %puts carbon in co2 file
         stn = kloop; mco2_02 %puts carbon in sam file
     end
     
@@ -109,11 +112,16 @@ for kloop = klist
         stn = kloop; mcfc_02 %puts cfcs in sam file
     end
 
+    %c14, c13, o18
+    if ismember(kloop, klistiso)
+        stn = kloop; mciso_02 %puts iso in sam file
+    end
+
     
-    %stn = kloop; msam_02b %updates sample flags to match niskin flags
+    stn = kloop; msam_02b %updates sample flags to match niskin flags
     stn = kloop; msam_updateall %puts sam data into sam_all file
 
-    if 0%docsv
+    if docsv
        %csv files
        mout_makelists(kloop, 'nutsodv');
        mout_makelists(kloop, 'allpsal');
@@ -121,8 +129,12 @@ for kloop = klist
 
 end
 
-%nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order
-%nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order
-%unix(['cp /local/users/pstar/cruise/data/samlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csv_ctd_sam/']);
-%   mout_cchdo_sam
+if docsv
+%   mout_sam_csv % end of jc159 no need for sam lists
+   mout_cchdo_sam
 
+   %sync csv files to public drive, by way of mac mini since there's no write
+   %permission from eriu
+% end of jc159 mac mini no longer is there
+% % % %    unix(['rsync -auv --delete /local/users/pstar/cruise/data/collected_files/ 10.cook.local:/Volumes/Public/JC159/collected_files/']);
+end

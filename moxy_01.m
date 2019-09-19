@@ -29,7 +29,6 @@ root_oxy = mgetdir('M_BOT_OXY');
 oopt = 'oxycsv'; get_cropt %filename
 if ~exist(infile, 'file'); warning(['file ' infile ' not found']); return; end
 
-
 %%%%%%%%% first try loading as dataset; check for required fields %%%%%%%%%
 try %first try treating as dataset with required fields
 

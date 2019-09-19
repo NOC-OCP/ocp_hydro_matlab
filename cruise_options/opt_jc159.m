@@ -4,7 +4,7 @@ switch scriptname
     case 'smallscript'
         switch oopt
             case 'klist'
-                klist = [3:26 29:41]; %stations 1 and 2 were swivel tests; 27 and 28 aborted
+                klist = [3:26 29:58 60:124]; %stations 1 and 2 were swivel tests; 27 and 28 aborted; 59 no samples
         end
         %%%%%%%%%% end smallscript %%%%%%%%%%
         
@@ -437,6 +437,39 @@ switch scriptname
                 no2_flag(ismember(sampnum, flags4)) = 4;
         end
         %%%%%%%%%% end mnut_01 %%%%%%%%%%
+
+    %%%%%%%%%% miso_01 %%%%%%%%%%
+    case 'miso_01'
+        switch oopt
+            case 'files'
+                files{1} = [root_iso '/c13_' mcruise '_bgs.csv'];
+                files{2} = [root_iso '/SampleResults_2018112_withStationNumbersCorrected.csv'];
+            case 'vars'
+                vars{1} = {
+                    'position'     'number'     'Niskin'
+                    'statnum'      'number'     'Station'
+                    'sampnum'      'number'     'sampnum'
+                    'del13c_bgs' 'per_mil' 'd13C_DIC_PDB';
+                    'del13c_bgs_flag' 'woceflag' ''};
+                vars{2} = {
+                    'statnum'      'number'  'Station'
+                    'position'     'number'  'Niskin'
+                    'del13c_whoi'  'per_mil' 'd13C'
+                    'del14c_whoi'  'per_mil' 'D14C'
+                    %'dic_whoi' 'mmol_per_kg' 'DIC Conc (mmol/kg)'
+                    'del14c_whoi_flag' 'woceflag' 'flag'
+                    'del13c_whoi_flag' 'woceflag' 'flag'};
+            case 'sampnum_parse'
+        end
+        %%%%%%%%%% end miso_01 %%%%%%%%%%
+
+        %%%%%%%%%% miso_02 %%%%%%%%%%
+    case 'miso_02'
+        switch oopt
+            case 'vars'
+                cvars = 'del13c_bgs del13c_bgs_flag del13c_whoi del13c_whoi_flag del14c_whoi del14c_whoi_flag'
+        end
+        %%%%%%%%%% end miso_02 %%%%%%%%%%
         
         %%%%%%%%%% mco2_01 %%%%%%%%%%
     case 'mco2_01'
@@ -529,8 +562,8 @@ switch scriptname
         %%%%%%%%%% end msam_checkbottles_01 %%%%%%%%%%
         
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
-    case 'msam_ashore_flag'
-        switch samtype
+        case 'msam_ashore_flag'
+          switch samtype
             case 'chl'
                 fnin = [mgetdir('M_BOT_CHL') '/Sample_log_Phyto_Chibo_sampnum.csv'];
                 d_chl = load(fnin); %this is just three columns of numbers
@@ -566,7 +599,22 @@ switch scriptname
                 end
                 sampnums(2,:) = sampnums(1,:);
                 stations = floor(ds_iso.sampnum/100);
-        end
+            case 'cfc' %for these, change flags of 9 to 1 where cfc11 and cfc12 flag is 2, 3, or 4 (all quantities analysed for all cfc vars, but not all calibrated/analyses received yet)
+                flagnames = {'sf6_flag'; 'ccl4_flag'; 'f113_flag'};
+                flagvals = [1];
+                a = {[root_sam '/sam_' mcruise '_all']
+                     'sampnum'
+                     'cfc11_flag'
+                     'cfc12_flag'};
+                a = [a; flagnames; '0'];
+                MEXEC_A.MARGS_IN = a; [d,h] = mload;
+                stations = [];
+                for no = 1:length(flagnames)
+                    ii = find(d.cfc11_flag<=4 & d.cfc12_flag<=4 & getfield(d,flagnames{no})==9);
+                    sampnums(no,:) = {d.sampnum(ii)};
+                    stations = [stations; floor(d.sampnum(ii)/100)];
+                end
+          end
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
         
         
@@ -667,8 +715,14 @@ switch scriptname
             case 'expo'
                 expocode = '740H20180228';
                 sect_id = 'A09.5_24S';
+            case 'nocfc'
+                nocfc = 1;
+                d.cfc11(:) = NaN; d.cfc12(:) = NaN; d.f113(:) = NaN; d.ccl4(:) = NaN; d.sf6(:) = NaN; d.sf5cf3(:) = NaN;
             case 'outfile'
                 outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/A095_' expocode];
+                if nocfc
+                   outfile = [outfile '_no_cfc_values'];
+                end
             case 'headstr'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCBAK'];...
                     '#SHIP: James Cook';...
@@ -677,7 +731,7 @@ switch scriptname
                     ['#EXPOCODE: ' expocode];...
                     '#DATES: 20180228 - 20180410';...
                     '#Chief Scientist: B. King, NOC';...
-                    '#Supported by NERC NE/N018095/1 (ORCHESTRA) and NERC *** (TICTOC)';...
+                    '#Supported by NERC NE/N018095/1 (ORCHESTRA) and NERC NE/P019064/1 (TICTOC)';...
                     '#121 stations with 24-place rosette';...
                     '#CTD: Who - Y. Firing; Status - final';...
                     '#Notes: Includes CTDSAL, CTDOXY';...
@@ -687,11 +741,14 @@ switch scriptname
                     '#Oxygen and Nutrients: Who - E. Mawji; Status - final';...
                     '#Notes: bottle oxygen from stations 35-123 used for CTD calibration';...
                     %        '#DIC and Talk: Who - P. Brown; Status - final';...
-                    '#DIC and Talk: Who - P. Brown; Status ';...
+                    '#DIC and Talk: Who - P. Brown; Status - uncalibrated ';...
                     %        '#CFCs and SF6: Who - M.J. Messias; Status - final';...
-                    '#CFCs and SF6: Who - M.J. Messias; Status ';...
+                    '#CFCs and SF6: Who - M.J. Messias; Status - uncalibrated, proprietary ';...
+                    'C14/13: Who: A. McNichol; Status - final (data rcd 2019/03/11 from J. Lester)';...
+                    %'C13: Who: M. Leng; Status - preliminary';...
+                    %'C13, O18: Who: M. Leng; Status - preliminary';...
                     '#Notes:';...
-                    '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'};
+                    '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with funding from the UK Natural Environment Research Council to the National Oceanography Centre and the University of Exeter."'};
         end
         %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
         
