@@ -28,13 +28,15 @@ end
 %enable (or not) SADCP and/or bottom tracking constraints,
 %and set up output directories accordingly
 subdir = cfgstr.orient;
+ps.botfac = 0; ps.sadcpfac = 0;
 for no = 1:length(cfgstr.constraints)
    subdir = [subdir '_' cfgstr.constraints{no}];
-   if strcmp(cfgstr.constraints{no}, 'BT'); ps.botfac = 1; else; ps.botfac = 0; end
-   if strcmp(cfgstr.constraints{no}, 'SADCP'); ps.sadcpfac = 1; else; ps.sadcpfac = 0; end
 end
 if length(cfgstr.constraints)==0
    subdir = [subdir 'SHR']; %***not sure this will work--what happens if f.ctd is not set?
+else
+   if sum(strcmp(cfgstr.constraints, 'BT')); ps.botfac = 1; end
+   if sum(strcmp(cfgstr.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
 pdir = [subdir '/processed/' stnstr '/'];
 if ~exist(pdir, 'dir')

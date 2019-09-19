@@ -32,7 +32,7 @@ mdocshow(scriptname, ['performs any automatic cleaning/editing/averaging from ' 
 prefix = [abbrev '_' mcruise '_d' day_string];
 infile = [root_out '/' prefix '_raw'];
 otfile = [root_out '/' prefix '_edt'];
-wkfile = [prefix '_wk_' scriptname '_' datestr(now,30)];
+wkfile = ['wk_' prefix '_' scriptname '_' datestr(now,30)];
 
 
 if exist([infile '.nc']) %only if there is a raw file for this day
@@ -88,7 +88,10 @@ if exist([infile '.nc']) %only if there is a raw file for this day
             newdepthname = 'depth_uncor';
             h = m_read_header(otfile);
             if ~sum(strcmp(newdepthname, h.fldnam))
-	           depvarnum = find(strncmp('dep', h.fldnam, 3)); if length(depvarnum)==0; depvarnum = find(strncmp('snd', h.fldnam, 3)); elseif length(depvarnum)>1; depvarnum = find(strcmp('depthm', h.fldnam)); end
+               depvarnum = find(strcmp('depthm', h.fldnam));
+               if length(depvarnum)==0; depvarnum = find(strcmp('depth', h.fldnam)); end
+               if length(depvarnum)==0; depvarnum = find(strncmp('dep', h.fldnam, 3)); end
+               if length(depvarnum)==0; depvarnum = find(strncmp('snd', h.fldnam, 3)); end
 	           depvarnumstr = sprintf('%d', depvarnum);
                    MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; depvarnumstr; newdepthname; ' '; '-1'; '-1'};
 	           mheadr
@@ -178,7 +181,8 @@ if exist([infile '.nc']) %only if there is a raw file for this day
       navname = MEXEC_G.default_navstream; navdir = mgetdir(navname);
       navfile = [navdir '/' navname '_' mcruise '_d' day_string '_raw.nc'];
       if exist(navfile)
-         [dn,hn] = mload(navfile,'/'); lon = nanmean(dn.long); lat = nanmean(dn.lat); clear dn hn
+         [dn,hn] = mload(navfile,'/'); if ~isfield(dn, 'lon'); dn.lon = dn.long; end
+         lon = nanmean(dn.lon); lat = nanmean(dn.lat); clear dn hn
       else
          warning(['no pos file for day ' day_string ' found, using current position to select carter area for echosounder correction'])
  	 if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')

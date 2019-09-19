@@ -68,11 +68,12 @@ udirsn = {
 
 %and add others
 udirso = {
-     'anemometer'      'met/anemom'
      'surflight'       'met/surflight'
 	 'surflight_regen' 'met/surflight_regen'
      'met_light'       'met/surflight'
 	 'surfmet'         'met/surfmet'
+%	 'surfmet'         'met/anemom'
+	 'anemometer'         'met/anemom'
 	 'surfmet_regen'   'met/surfmet'
 	 'met_tsg'         'ocl/tsg'
 	 'surftsg'         'ocl/tsg'
@@ -89,7 +90,8 @@ udirso = {
 	 'log_chf'         'ocl/log'
 	 'log_skip'        'ocl/log'
 %	 'ea600m'          'bathy/sim'
-	 'sim'             'bathy/sim'
+	 'ea600'          'bathy/sim'
+%	 'sim'             'bathy/sim'
 	 'em120'           'bathy/em120'
 	 'em122'           'bathy/em120'
 	 'gravity'	       'uother/gravity'
@@ -111,7 +113,7 @@ udirs = udirs(:, [1 3 2]); %mexec short name, M_ABBREV, directory
 
 %start writing m_udirs function
 fid = fopen([MEXEC.mexec_processing_scripts '/uway/m_udirs.m'], 'w');
-fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs();');
+fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs();');%        'anemometer'                  ' '                             'anemometer'
 fprintf(fid, 'udcruise = ''%s'';\n', MEXEC_G.MSCRIPT_CRUISE_STRING);
 fprintf(fid, '%s\n', 'udirs = {');
 
@@ -140,7 +142,7 @@ for sno = 1:size(matlist,1)
       end
    end
 end
-      
+
 %wrap up
 fprintf(fid, '%s\n', '};');
 fclose(fid);

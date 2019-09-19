@@ -136,11 +136,11 @@ switch scriptname
             if stnlocal == 1
 	       doscanedit = 1;
 	       sevars = {'cond2'};
-               sestr = {'y = x1; y(x2 >= 6070 & x2 <=8500) = NaN;'};
+               sestring = {'y = x1; y(x2 >= 6070 & x2 <=8500) = NaN;'};
             elseif stnlocal == 13
 	       doscanedit = 1;
                sevars = {'cond2'};
-               sestr = {'y = x1; y(x2 >= 3e4 & x2 <= 5.9e4) = NaN;'};
+               sestring = {'y = x1; y(x2 >= 3e4 & x2 <= 5.9e4) = NaN;'};
            end
       end
    %%%%%%%%%% end mctd_rawedit %%%%%%%%%%

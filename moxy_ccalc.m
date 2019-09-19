@@ -63,7 +63,8 @@ if exist('conc_O2_orig')
    oopt = 'compcalc'; get_cropt
    if compcalc; disp('compare loaded and calculated O2 concentrations');
    plot(conc_O2, conc_O2-conc_O2_orig, 'o'); title(stnlocal)
-   keyboard; end
+   keyboard
+   end
    %conc_O2 = conc_O2_orig;
 end
 

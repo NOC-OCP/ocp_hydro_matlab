@@ -37,7 +37,7 @@ try %first try treating as dataset with required fields
 
    %test for required fields
    ds_oxy_fn = ds_oxy.Properties.VarNames;
-   if sum(strcmp(mcruise, ds_oxy_fn)) %***perhaps this should be more general
+   if sum(strcmp(mcruise, ds_oxy_fn))
       me = MException('myfile:notdataset:obeexcel', '%s is obe excel file', infile);
       throw(me)
    elseif ~(sum(strcmpi('sampnum', ds_oxy_fn))+sum(strcmpi('station', ds_oxy_fn))+sum(strcmpi('cast', ds_oxy_fn)))

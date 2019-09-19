@@ -1,4 +1,4 @@
- % msam_02b: adjust sample flags in sam_cruise_nnn files
+% msam_02b: adjust sample flags in sam_cruise_nnn files
 % 1) as specified in file ctd/ASCII_FILES/bottle_data_flags.m
 % 2) to be consistent with niskin flags
 %
@@ -115,7 +115,8 @@ end
 flaginds = setdiff(flaginds, bflagind);
 
 %set sample flags to be consistent with niskin flags
-nflagstr = 'y = x2; y((x1==4 | x1==3) & (x2==2 | x2==3 | x2==6)) = 4; y(x1==9) = 9;';
+%nflagstr = 'y = x2; y((x1==4 | x1==3) & (x2==2 | x2==3 | x2==6)) = 4; y(x1==9) = 9;';
+nflagstr = 'y = x2; y((x1==4) & (x2==2 | x2==3 | x2==6)) = 4; y((x1==3) & (x2==2 | x2==3 | x2==6)) = 3; y(x1==9) = 9;'; %ylf on jr18002, to facilitate checking for importance of niskin leaks first
 
 MEXEC_A.MARGS_IN = {infile1; 'y'};
 if 0

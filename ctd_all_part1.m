@@ -1,13 +1,14 @@
 returnscriptname = 'ctd_all_part1';
 minit
 
-if 0 %jc159 all done at the start
+if 1 %jc159 all done at the start
    % make empty sam file
    % notes added bak and ylf at start of jr306 jan 2015
    % if/else added ylf jr15003
    if ~exist([MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_template.nc'], 'file')
       stn = stnlocal; msam_01; % create empty sam file at start of cruise
       eval(['!cp ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_' stn_string '.nc ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_template.nc']) %copy to template
+      eval(['!cp ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_' stn_string '.nc ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_all.nc']) %copy to template
    else
        stn = stnlocal; msam_01b; % copy template for this station number (empty at present)
    end
@@ -32,11 +33,6 @@ if min(d.press)<=-10
 end
 stn = stnlocal; mctd_02b; %apply corrections (e.g. oxygen hysteresis)
 
-%next two lines were added starting from station 102, so smallscript_tccal
-%doesn't need to be run for these stations
-stn = stnlocal; senscal = 1; mctd_condcal
-stn = stnlocal; senscal = 2; mctd_condcal
-
 stn = stnlocal; mctd_03; %average to 1 hz, compute salinity
 
 stn = stnlocal; msam_putpos; % jr302 populate lat and lon vars in sam file
@@ -45,3 +41,4 @@ stn = stnlocal; mdcs_01; % on jr306 make all these files at start of cruise
 stn = stnlocal; mdcs_02;
 
 mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
+

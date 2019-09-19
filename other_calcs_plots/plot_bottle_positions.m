@@ -1,5 +1,6 @@
-d = mload('sam_jc159_all','/');
-dp.in = load('BOTTLE_SHORE/jc159_niskins_microplastics_noheader.csv');
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; 
+d = mload(['sam_' mcruise '_all'],'/');
+%dp.in = load('BOTTLE_SHORE/jc159_niskins_microplastics_noheader.csv');
 dp.sampnum = 100*dp.in(:,1)+dp.in(:,2);
 
 
@@ -13,13 +14,13 @@ set(gcf,'defaulttextfontsize',16)
 
 
 plot(d.lon,-d.upress,'k+');
-title('JC159 bottle positions');
+title([upper(mcruise) ' bottle positions']);
 xlabel('Longitude (degrees)');
 ylabel('Pressure (dbar)');
 grid on;
 
-print -dpsc jc159_bottle_positions_all.ps
-print -dpng jc159_bottle_positions_all.png
+print('-dpdf', [mcruise '_bottle_positions_all.pdf'])
+print('-dpng', [mcruise '_bottle_positions_all.png'])
 
 
 figure(106); clf
@@ -33,13 +34,13 @@ set(gcf,'defaulttextfontsize',16)
 kok = find(d.upress < 600);
 
 plot(d.lon(kok),-d.upress(kok),'k+');
-title({'JC159 bottle positions';'(upper 600 metres)'});
+title({[upper(mcruise) ' bottle positions'];'(upper 600 metres)'});
 xlabel('Longitude (degrees)');
 ylabel('Pressure (dbar)');
 grid on;
 
-print -dpsc jc159_bottle_positions_all_upper600.ps
-print -dpng jc159_bottle_positions_all_upper600.png
+print('-dpdf', [mcruise '_bottle_positions_upper600.pdf'])
+print('-dpng', [mcruise '_bottle_positions_upper600.png'])
 
 
 figure(102); clf

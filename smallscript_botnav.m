@@ -39,17 +39,15 @@ for kloop = klist
     stn = kloop; msam_updateall;
         
     %csv files
-    if docsv
-       mout_makelists(kloop, 'nutsodv');
-       mout_makelists(kloop, 'allpsal');
-       stn = kloop; mout_cchdo_ctd
+    if 1
+       mout_makelists(kloop, '2dbdn');
     end
     
 end
 
-mout_sam_csv %this makes a list in reverse niskin order
-mout_cchdo_sam
+nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order (useful for nutrient analysts, else can comment out)
+nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order
 
-%sync csv files to public drive, by way of mac mini since there's no write
-%permission from eriu
-unix(['rsync -auv --delete /local/users/pstar/cruise/data/collected_files/ 10.cook.local:/Volumes/Public/JC159/collected_files/']);
+%copy files to public drive
+unix(['cp /local/users/pstar/cruise/data/samlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);
+unix(['cp /local/users/pstar/cruise/data/collected_files/ctdlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);

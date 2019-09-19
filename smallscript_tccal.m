@@ -32,5 +32,10 @@ for kloop = klist
 
     stn = kloop; msam_02b;
     stn = kloop; msam_updateall;
-     
+
+    mout_makelists(kloop, '2dbdn')
+    
 end
+
+nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order
+nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order

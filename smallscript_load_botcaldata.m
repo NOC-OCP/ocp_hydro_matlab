@@ -100,6 +100,7 @@ for kloop = klist
     
     %carbon
     if ismember(kloop, klistco2)
+        stn = kloop; mco2_01 %puts carbon in co2 file
         stn = kloop; mco2_02 %puts carbon in sam file
     end
     
@@ -109,10 +110,10 @@ for kloop = klist
     end
 
     
-    stn = kloop; msam_02b %updates sample flags to match niskin flags
-%    stn = kloop; msam_updateall %puts sam data into sam_all file
+    %stn = kloop; msam_02b %updates sample flags to match niskin flags
+    stn = kloop; msam_updateall %puts sam data into sam_all file
 
-    if docsv
+    if 0%docsv
        %csv files
        mout_makelists(kloop, 'nutsodv');
        mout_makelists(kloop, 'allpsal');
@@ -120,12 +121,8 @@ for kloop = klist
 
 end
 
-if docsv
-%   mout_sam_csv % end of jc159 no need for sam lists
-   mout_cchdo_sam
+%nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order
+%nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order
+%unix(['cp /local/users/pstar/cruise/data/samlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csv_ctd_sam/']);
+%   mout_cchdo_sam
 
-   %sync csv files to public drive, by way of mac mini since there's no write
-   %permission from eriu
-% end of jc159 mac mini no longer is there
-% % % %    unix(['rsync -auv --delete /local/users/pstar/cruise/data/collected_files/ 10.cook.local:/Volumes/Public/JC159/collected_files/']);
-end

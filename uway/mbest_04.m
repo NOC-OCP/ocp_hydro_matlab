@@ -49,7 +49,7 @@ mmerge
 %--------------------------------
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     % bak on jr281 march 23 2013: bad weather break, adding to edits from jc069
-    case {'jc' 'jcr' 'dy'} % ashtech broken on jr281 and not needed on cook
+    case {'jc' 'jcr' 'dy' 'jr'} % ashtech broken on jr281 and not needed on cook
         cmd = ['/bin/cp -p ' m_add_nc(otfile) ' ' m_add_nc(wkfile)]; unix(cmd);
         calcvar = 'heading_av';
         calcstr = ['y = mcrange(x1+0,0,360);']; % no ashtech correction on jr281 yet

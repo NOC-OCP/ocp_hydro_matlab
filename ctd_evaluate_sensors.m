@@ -36,7 +36,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
 okf = [2]; %only bother with good samples
-%okf = [2 3]; %include good or questionable samples
+okf = [2 3]; %include good or questionable samples (useful for checking flags due to niskins)
 
 printdir = [MEXEC_G.MEXEC_DATA_ROOT '/plots/'];
 prstr = '';
@@ -113,7 +113,7 @@ edges = [-1:.05:1]*rlim(2);
 statrange = [0 max(d.statnum(~isnan(caldata)))+1];
 
 %only compare points with certain flags
-iig = find(ismember(calflag, okf) & d.statnum>=35);
+iig = find(ismember(calflag, okf));
 n = size(sensind,1);
 for no = 1:n
    sensind{no} = intersect(sensind{no},iig);
@@ -142,7 +142,6 @@ elseif strcmp(sensname, 'oxy')
    end
 
 end
-pause
 
 
 %plots of the residual/ratio
@@ -164,6 +163,7 @@ for no = 1:n
    figure((no-1)*10+3); clf
    subplot(3,3,1:2)
    plot(d.statnum, ctdres, 'c.', d.statnum(sensind{no}), res(sensind{no}), '+k', d.statnum(iid), res(iid), 'xb'); grid
+   legend('ctd diff','ctd-cal diff',['ctd-cal diff, p>' num2str(pdeep)])
    xlabel('statnum'); xlim(statrange); ylim(rlim)
    title([mcruise ' ' rlabel])
    subplot(3,3,[3 6 9])
@@ -191,7 +191,7 @@ for no = 1:n
 
 end
 
-if sum(strcmp(sensname, {'cond';'oxy'})) & plotprof
+if sum(strcmp(sensname, {'temp';'cond';'oxy'})) & plotprof
 %profile plots to display off-scale differences profile-by-profile 
 %(to help pick bad or questionable samples and set their flags in opt_cruise msal_01 or moxy_01)
 
@@ -208,6 +208,8 @@ if sum(strcmp(sensname, {'cond';'oxy'})) & plotprof
          fnm1 = ['cond' sensstr];
       elseif strcmp(sensname, 'oxy')
          fnm1 = ['oxygen' sensstr];
+      elseif strcmp(sensname, 'temp')
+          fnm1 = ['temp' sensstr];
       end
 
       figure(1); clf
@@ -242,7 +244,7 @@ if sum(strcmp(sensname, {'cond';'oxy'})) & plotprof
 	 mn = nanmean(c); st = nanstd(c); xl = [-st st]*5+mn; set(gca, 'xlim', xl);
          text(repmat(st*4.5+mn,length(iiq),1), -d.upress(iiq), num2str(d.position(iiq)));
 	 for qno = 1:length(iiq)
-            sprintf('%d %d %5.2f', s(no), d.position(iiq(qno)), res(iiq(qno)))
+            sprintf('%d %d %5.2f %d', s(no), d.position(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)))
 	 end
          keyboard
 

@@ -26,7 +26,7 @@ for ksec = 1:length(sections)
     
     if isempty(gstart) %parameters differ by section
         switch section
-            case {'sr1b' 'orkney' 'a23' 'srp' 'nsr' 'nsra23'}
+            case {'sr1b' 'sr1bb' 'orkney' 'a23' 'srp' 'nsr' 'nsra23'}
                 gstart = 10; gstop = 5000; gstep = 20;
             case {'abas' 'falk'}
                 gstart = 10; gstop = 6000; gstep = 20;
@@ -64,28 +64,30 @@ for ksec = 1:length(sections)
     
     dataname = [prefix section];
     
-% % % % % %         
-% % % % % %     %--------------------------------
-% % % % % %     MEXEC_A.MARGS_IN = {
-% % % % % %         otfile
-% % % % % %         dataname
-% % % % % %         't'
-% % % % % %         };
-% % % % % %     for kstn = kstns
-% % % % % %         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-% % % % % %             sprintf('%s/%s%03d_2db', root_ctd, prefix, kstn)
-% % % % % %             ];
-% % % % % %     end
-% % % % % %     l = length(MEXEC_A.MARGS_IN);
-% % % % % %     MEXEC_A.MARGS_IN{l+2} = varlist;
-% % % % % %     MEXEC_A.MARGS_IN{l+3} = pgrid;
-% % % % % %     mgridp
-% % % % % %     %--------------------------------
-    %return
+    oopt = 'regridctd'; get_cropt
+    
+    if regridctd
+       %put ctd data onto grid
+       MEXEC_A.MARGS_IN = {
+           otfile
+           dataname
+           't'
+           };
+       for kstn = kstns
+          MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
+             sprintf('%s/%s%03d_2db', root_ctd, prefix, kstn)
+             ];
+       end
+       l = length(MEXEC_A.MARGS_IN);
+       MEXEC_A.MARGS_IN{l+2} = varlist;
+       MEXEC_A.MARGS_IN{l+3} = pgrid;
+       mgridp
+    end
+    
+    %now work on sample data
     
     wkfile = ['gridwk_' datestr(now,30)];
     stnline = sprintf('y = repmat(%s, %d, 1);', sstring, numlev);
-    %--------------------------------
     MEXEC_A.MARGS_IN = {
         otfile
         wkfile
@@ -97,9 +99,7 @@ for ksec = 1:length(sections)
         ' '
         };
     mcalc
-    %--------------------------------
     
-    %--------------------------------
     varlist = { % list of possible names, flags and units that might be mapped on a cruise
         'botoxy'   'botoxyflag'   'umol/kg'
         'silc_per_kg'     'silc_flag'    'umol/kg'
@@ -134,7 +134,6 @@ for ksec = 1:length(sections)
     end
     
     MEXEC_A.MARGS_IN_2 = {};
-    
     for klist = 1:length(varuselist.names)
         MEXEC_A.MARGS_IN_2 = [MEXEC_A.MARGS_IN_2; 'statnum psal temp press'];
         yline = ['y = m_maptracer(x1,x2,x3,x4,''' varuselist.names{klist} ''',''' varuselist.flags{klist} ''')'];
@@ -142,7 +141,6 @@ for ksec = 1:length(sections)
         MEXEC_A.MARGS_IN_2 = [MEXEC_A.MARGS_IN_2; varuselist.names{klist}];
         MEXEC_A.MARGS_IN_2 = [MEXEC_A.MARGS_IN_2; varuselist.units{klist}];
     end
-    
     
     
     MEXEC_A.MARGS_IN_1 = {
@@ -158,7 +156,6 @@ for ksec = 1:length(sections)
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3];
     
     mcalc
-    %--------------------------------
     
     unix(['/bin/rm ' m_add_nc(wkfile)])
 end

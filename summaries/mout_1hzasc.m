@@ -4,8 +4,7 @@ function mout_1hzasc(stn)
 % prints out ctd and gps data to ascii files
 % used by LADCP processing
 %
-% replaces m***
-% and make_sm
+% replaces make_sm
 
 m_common
 
@@ -44,7 +43,8 @@ if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
    lonname = 'long'; latname = 'lat';
 else
    data = msload(MEXEC_G.default_navstream);
-   lonname = 'lon'; latname = 'lat';
+   %lonname = 'lon'; latname = 'lat'; %***Y
+   lonname = 'seatex_gll_lon'; latname = 'seatex_gll_lat'; %***Y
 end
 
 lon = getfield(data, lonname);

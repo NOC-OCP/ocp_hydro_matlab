@@ -53,9 +53,7 @@ end
 ii0 = find(isnan(bestdeps(:,2))); 
 
 %try preferred method, then cruise options, then method 3
-
 bestdeps = get_deps(bestdeps, depmeth, fnin);
-
 oopt = 'bestdeps'; get_cropt %modify any of the depths
 
 ii = find(isnan(bestdeps(:,2))); 

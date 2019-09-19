@@ -78,11 +78,10 @@ hl = plot(dt.time, tsal, db.time, db.salinity, '.y', db.time, db.salinity_adj, '
 legend(hl([1 3 4]), 'TSG','bottle','TSG')
 ylabel('salinity (psu)'); xlabel('yearday')
 title([cal ' TSG'])
-axis([308,319,33.7,34.4])
 subplot(212)
 plot(db.time, sdiffall, 'r+-',db.time, sdiffsm,' kx-'); grid
+%plot(db.time, sdiffall, 'r+-',db.time, sdiffsm,' kx-',db.time,0.001071*db.time-0.334783,'c'); grid
 ylabel('bottle salinity - TSG salinity (psu)'); xlabel('yearday')
-axis([308,319,-0.15,0.15])
 
 disp('mean diff, median diff')
 [nanmean(sdiff) nanmedian(sdiff)]

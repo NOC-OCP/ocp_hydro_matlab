@@ -489,7 +489,9 @@ if pcs.begin_step <= pcs.cur_step
   %  take advantage of presolve if it existed
   %  call the main inversion routine
   %
+  %save(['/local/users/pstar/cruise/data/ladcp_' f.res(1:end-18) '_preinv'],'f','di','p','ps','dr');
   [p,dr,ps,de]=getinv(di,p,ps,dr,1);
+  %save(['/local/users/pstar/cruise/data/ladcp_' f.res(1:end-18) '_postinv'],'f','di','p','ps','dr','de');
 
   %
   % check inversion constraints

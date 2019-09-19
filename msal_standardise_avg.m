@@ -104,7 +104,7 @@ catch me
    ds_sal = dataset;
    lsal = 0;
    %put into dataset
-   iih = [find(ltype==1); nrows];
+   iih = [find(ltype==1); nrows+1];
    for cno = 1:length(iih)-1
       %find the relevant columns for this block
       isn = strncmpi('sampnum', indata{iih(cno)}, 7);

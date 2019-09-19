@@ -34,25 +34,47 @@
 %     more automation of underway data directory setting
 
 MEXEC.mexec_version = 'v3';
-MEXEC.MSCRIPT_CRUISE_STRING='jc159';
+MEXEC.MSCRIPT_CRUISE_STRING='jr18002';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2018 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 1; %if true, print short documentation line to screen at beginning of scripts
+MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
+MEXEC_G.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_atsea']; % default is to use suffix '_atsea', else '_atnoc', '_athome', '', etc. 
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
 disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec_' MEXEC.mexec_version])
 
-MEXEC.mstar_root = ['/noc/mpoc/drake/jc159/working_atnoc'];
-
+if exist(['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'])==7
+   MEXEC.mstar_root = ['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+else
+   d = pwd;
+   ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING);
+   if length(ii)>0
+      MEXEC.mstar_root = [d(1:ii-1) MEXEC.MSCRIPT_CRUISE_STRING];
+   else
+      disp('enter full path of cruise directory')
+      disp('e.g. /local/users/pstar/cruise')
+      MEXEC.mstar_root = input('  ', 's');
+      disp('you may want to modify m_setup.m to hard-code this directory for future calls')
+   end
+end
+disp(['working in ' MEXEC.mstar_root])
+     
 % add path for Moorings work
-% % % addpath(genpath(['/noc/users/pstar/rpdmoc/rapid/data/exec/' MEXEC.MSCRIPT_CRUISE_STRING]));
+if 0
+mpath = ['/noc/users/pstar/rpdmoc/rapid/data/exec/' MEXEC.MSCRIPT_CRUISE_STRING];
+if exist(mpath)==7
+   addpath(genpath(mpath))
+end
+clear mpath
+end
 
 % Set root path for NetCDF stuff on this system: must contain subdirectories mexnc and snctools
 MEXEC.netcdf_root = [MEXEC.mstar_root '/sw/netcdf']; 
 
 % Set path for mexec source
-MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec_' MEXEC.mexec_version];  
+MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec'];%_' MEXEC.mexec_version];  
 if length(which('m_common'))==0 % this is in msubs
    disp('adding mexec source to path')
    addpath(MEXEC.mexec_source_root) 
@@ -67,8 +89,8 @@ if length(which('m_common'))==0 % this is in msubs
    addpath([MEXEC.mexec_source_root '/source/unfinished'])
 
    % paths to other useful libraries
-   addpath([MEXEC.mstar_root '/sw/ladcp/ix_ladcp_software/LDEO_IX/'])
-   addpath([MEXEC.mstar_root '/sw/ladcp/ix_ladcp_software/LDEO_IX/geomag/'])
+   addpath([MEXEC.mstar_root '/sw/LDEO_IX_12/'])
+   addpath([MEXEC.mstar_root '/sw/LDEO_IX_12/geomag/'])
    addpath([MEXEC.mstar_root '/sw/m_map/'])
    addpath([MEXEC.mstar_root '/sw/gamma_n/'])
    addpath([MEXEC.mstar_root '/sw/seawater_ver3_2/'])
@@ -88,9 +110,9 @@ MEXEC_G.MSCRIPT_CRUISE_STRING = MEXEC.MSCRIPT_CRUISE_STRING; % this variable set
 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = MEXEC.MDEFAULT_DATA_TIME_ORIGIN; % set global value from local value
 MEXEC_G.quiet = MEXEC.quiet;
 MEXEC_G.ssd = MEXEC.ssd;
+MEXEC_G.uway_writeempty = MEXEC.uway_writeempty;
 
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' MEXEC_G.MSCRIPT_CRUISE_STRING(3:end)];
-MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING]; % default is to use suffix '_atsea'
 MEXEC.version_file_name = ['mstar_versionfile_' MEXEC_G.SITE '.mat'];  % This setting should not normally be changed
 
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
@@ -148,7 +170,7 @@ MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normall
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 
 MEXEC_G.MEXEC_DATA_ROOT = [MEXEC.mstar_root '/data']; 
-MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scripts_' MEXEC.mexec_version];
+MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scripts'];
 
 if length(which('get_cropt'))==0 % this is in cruise_options
    disp('adding mexec scripts to path')
@@ -217,9 +239,14 @@ if ~strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
    [udirs, udcruise] = m_udirs;
 end
 clear udcruise
-MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,2:3)];
-a = mgetdir(MEXEC_G.default_navstream); l = length(MEXEC_G.MEXEC_DATA_ROOT);
-MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
+if length(udirs)>0
+   MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,2:3)];
+   a = mgetdir(MEXEC_G.default_navstream); l = length(MEXEC_G.MEXEC_DATA_ROOT);
+   MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
+else
+   unix(['/bin/rm ' MEXEC.mexec_processing_scripts '/uway/m_udirs.m']);
+   disp('no underway directories yet, rerun m_setudir when they are available/linked')
+end
 
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 

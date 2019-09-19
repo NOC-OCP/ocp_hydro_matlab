@@ -22,7 +22,8 @@ d.ccl4_per_kg = d.ccl4./d.dens*1e3;
 d.f113_per_kg = d.f113./d.dens*1e3;
 d.sf6_per_kg = d.sf6./d.dens*1e3;
 
-if 1
+if ~exist('nnisk'); nnisk = 1; end
+if nnisk
    %reverse niskins, or rather, sort them in surface-to-bottom order
    %(mostly)
    stns = unique(d.statnum(~isnan(d.utemp)));
@@ -43,6 +44,8 @@ if 1
       iig = [iig; iis(iip)];
    end
    nostr = '_nisk_surf_to_deep';
+else
+   nostr = '';
 end
 
 fields = {'statnum',        'station',          ' ',         '%d';...
@@ -92,7 +95,7 @@ end
 formstr = [formstr(1:end-2) '\n'];
 data = data(iig,:)';
 
-fid = fopen([root_out '/samlists/sam_' mcruise '_csv_list' nostr '.csv'], 'w');
+fid = fopen([MEXEC_G.MEXEC_DATA_ROOT '/samlists/sam_' mcruise '_csv_list' nostr '.csv'], 'w');
 
 for fno = 1:size(fields,1)-1; fprintf(fid, '%s, ', fields{fno,2}); end
 fno = fno+1; fprintf(fid, '%s\n', fields{fno,2});

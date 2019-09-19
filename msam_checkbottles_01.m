@@ -145,7 +145,7 @@ kother = setdiff(kall,[k2; k3; k4; k5; k9]);
 iib2 = find(isnan(v(k2)));
 if ~isempty(iib2)
    warning('these NaNs have flags of 2!')
-   sprintf('%8.0f\n', vsnampnum(k2(iib2)));
+   sprintf('%8.0f\n', vsampnum(k2(iib2)));
 end
 
 x1 = v;

@@ -10,13 +10,11 @@
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-restart_uway_append = 0; %if 1, will clobber _01 files and start them from days(1)
 %uway_streams_proc_include %include only these
 uway_streams_proc_exclude = {'posmvtss'}; %exclude these
 uway_pattern_proc_exclude = {'satinfo';'aux';'dps'}; %exclude those with this pattern anywhere
 
 %get list of underway streams to process
-
 [udirs, udcruise] = m_udirs;
 if exist('uway_streams_proc_list', 'var')
    iik = [];
@@ -25,16 +23,14 @@ if exist('uway_streams_proc_list', 'var')
    end
    udirs = udirs(iik, :);
 end
-ex1 = 0; ex2 = 0;
-if exist('uway_streams_proc_exclude', 'var'); ex1 = 1; end
-if exist('uway_pattern_proc_exclude', 'var'); ex2 = 1; end
 
+%remove the ones to exclude
 iie = [];
 for sno = 1:size(udirs,1)
-   if ex1 & sum(strcmp(udirs{sno,1}, uway_streams_proc_exclude))
+   if exist('uway_streams_proc_exclude', 'var') & sum(strcmp(udirs{sno,1}, uway_streams_proc_exclude))
       iie = [iie; sno];
    end
-   if ex2
+   if exist('uway_pattern_proc_exclude', 'var')
       for no = 1:size(uway_pattern_proc_exclude,1)
          if length(strfind(udirs{sno,1}, uway_pattern_proc_exclude{no}))>0; iie = [iie; sno]; end
       end
@@ -42,20 +38,24 @@ for sno = 1:size(udirs,1)
 end
 udirs(iie, :) = [];
 
+
 year = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
-if ~exist('days'); days = floor(datenum(now)-datenum(year,1,1)); end
+if ~exist('days'); days = floor(datenum(now)-datenum(year,1,1)); end %default: yesterday
 if ~exist('restart_uway_append'); restart_uway_append = 0; end
 if restart_uway_append; warning(['will delete appended file and start from ' num2str(days(1))]); end
 
-%loop through processing steps for set of days up to yesterday
+%loop through processing steps for list of days
 cd(MEXEC_G.MEXEC_DATA_ROOT)
 for daynumber = days
 
    daystr = ['00' num2str(daynumber)]; daystr = daystr(end-2:end);
   
-   for sno = 19:size(udirs, 1)
+   for sno = 1:size(udirs, 1)
 
       %load
+      if strcmp(MEXEC_G.Mshipdatasystem, 'scs') & daynumber==days(1) & restart_uway_append
+          unix(['rm -f ' MEXEC_G.MEXEC_DATA_ROOT '/scs_mat/' udirs{sno,4}])
+      end
       mday_01(udirs{sno,2}, udirs{sno,4}, udirs{sno,1}, daynumber, year);
 
       %apply additional processing and cleaning for some streams
@@ -64,8 +64,9 @@ for daynumber = days
       mday_01_clean_av(udirs{sno,1}, daynumber);
       
    end
+   
    %cross-merge bathy streams for later editing
-   if 0
+   if 1
    iis = find(strcmp('sim', udirs(:,1))); iie = find(strncmp('em12', udirs(:,1), 4));
    if length(iis)>0 & exist([udirs{iis,3} '/' udirs{iis,1} '_' mcruise '_d' daystr '_raw.nc'])
       day = daynumber; msim_02;
@@ -76,13 +77,13 @@ for daynumber = days
    end
    cd(MEXEC_G.MEXEC_DATA_ROOT)
    end
-   
+  
    %update appended files
-   for sno = 19:size(udirs, 1)
+   for sno = 1:size(udirs, 1)
       if daynumber==days(1) & restart_uway_append
          warning(['clobbering ' udirs{sno,1} '_' mcruise '_01.nc'])
          cd(MEXEC_G.MEXEC_DATA_ROOT)
-         unix(['/bin/rm ' udirs{sno,3} '/' udirs{sno,1} '_' mcruise '_01.nc'])
+         unix(['/bin/rm ' udirs{sno,3} '/' udirs{sno,1} '_' mcruise '_01.nc']);
       end
       mday_02(udirs{sno,2}, udirs{sno,1}, daynumber);
    end
@@ -93,8 +94,7 @@ end
 mbest_all
 mtruew_01
 mtsg_medav_clean_cal
-%switch MEXEC_G.Mship
-%   case 'jcr'
-%      update_allmat
-%   otherwise
-%end
+switch MEXEC_G.Mship
+   case 'jcr'
+      %update_allmat
+end

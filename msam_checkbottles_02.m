@@ -15,7 +15,7 @@ m_common
 scriptname = 'msam_checkbottles_02';
 minit
 
-%subplots will be psal (and botpsal), oxygen (and botoxygen), and potemp (and botoxytemp***),
+%subplots will be psal (and botpsal), oxygen (and botoxygen), and potemp (and botoxytemp and sbe35temp [if avail]),
 %as well as the variable input names
 nsubs = nargin+2; % = length(varargin)+3
 for no = 1:length(varargin)
@@ -49,11 +49,11 @@ kup = find(ctdtime > dcstime2 & ctdtime < dcstime3);
 
 
 %distribute all sam data back into separate stations
-ksam1 = find(dsamall.statnum == stnlocal-2);
-ksam2 = find(dsamall.statnum == stnlocal-1);
-ksam = find(dsamall.statnum == stnlocal);
-ksam3 = find(dsamall.statnum == stnlocal+1);
-ksam4 = find(dsamall.statnum == stnlocal+2);
+ksam1 = find(dsamall.statnum == stnlist(1));
+ksam2 = find(dsamall.statnum == stnlist(2));
+ksam = find(dsamall.statnum == stnlist(3));
+ksam3 = find(dsamall.statnum == stnlist(4));
+ksam4 = find(dsamall.statnum == stnlist(5));
 
 sams = {'1' '2' '' '3' '4'}; % repopulate dsam1 to dsam4
 for ks = 1:5
@@ -67,7 +67,8 @@ for ks = 1:5
     end
 end
 
-if ~isfield(dsam, 'botoxytemp'); dsam.botoxytemp = dsam.botoxytempa; end % jc159 cludge
+if ~isfield(dsam, 'botoxytemp') & isfield(dsam, 'botoxytempa'); dsam.botoxytemp = dsam.botoxytempa; end % jc159 cludge
+if ~isfield(dsam, 'sbe35temp'); dsam.sbe35temp = NaN+dsam.utemp; dsam.sbe35temp_flag = dsam.sbe35temp; end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
 oopt = 'docals'; get_cropt
@@ -102,12 +103,13 @@ yl = [-ceil(max(dctd.press(~isnan(dctd.potemp)))) 0];
 
 m_figure
 scrsz = get(0,'ScreenSize');
-set(gcf,'Position',[1 0.3*scrsz(4) 1.0*scrsz(3) 0.68*scrsz(4)])
+set(gcf,'Position',[1 0.4*scrsz(4) 0.9*scrsz(3) 0.5*scrsz(4)])
 
 subplot(1,nsubs,1)
 vnam = 'psal';
 kbadpsal = find(dsam.botpsalflag~=2);
 kbadnisk = find(dsam.bottle_qc_flag~=2);
+kbadsbe35 = find(dsam.sbe35temp~=2);
 h1 = plot(dctd.psal(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
 title(['Stn ' sprintf('%03d',stnlocal)]);
@@ -118,7 +120,7 @@ h4 = plot(dsam.botpsal(kbadpsal),-dsam.upress(kbadpsal),'k^','markersize',m2);
 h5 = plot(dsam.botpsal(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
 ylim(yl)
 
-if ~isempty(dsam.botpsal(kbadpsal)); legend([h4 h5],'bad bottle','bad niskin','location','best'); end
+if ~isempty(dsam.botpsal(kbadpsal)); legend([h4 h5],'bad sample','bad niskin','location','best'); end
 
 subplot(1,nsubs,2)
 
@@ -147,11 +149,13 @@ plot(dctd.potemp(kup),-dctd.press(kup),'r-');
 plot(dsam.botoxytemp,-dsam.upress,'b+','markersize',m1);
 plot(dsam.botoxytemp(kbadoxy),-dsam.upress(kbadoxy),'k^','markersize',m2);
 plot(dsam.botoxytemp(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
-plot(30+dsam.bottle_qc_flag,-dsam.upress,'k+','markersize',m1);
-plot(30+dsam.bottle_qc_flag(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
+plot(dsam.sbe35temp,-dsam.upress,'c+','markersize',m1);
+plot(dsam.sbe35temp(kbadsbe35),-dsam.upress(kbadsbe35),'m<','markersize',m2);
+plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag,-dsam.upress,'k+','markersize',m1);
+plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
 ylim(yl)
 for klab = 1:24
-    text(30+dsam.bottle_qc_flag(klab),-dsam.upress(klab),...
+    text(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(klab),-dsam.upress(klab),...
         sprintf('%d  ',dsam.position(klab)),'fontsize',14,'horizontalalignment','right','verticalalignment','middle')
 end
 
