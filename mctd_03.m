@@ -21,6 +21,10 @@ wkfile3 = ['wk2_' scriptname '_' datestr(now,30)];
 wkfile4 = ['wk3_' scriptname '_' datestr(now,30)];
 otfile5 = [root_ctd '/' prefix1 stn_string '_psal'];
 
+% DAS add post jc174 because need h for latitude and longitude
+% but only worked previously if o_choice = 2
+h = m_read_header(infile1);
+
 oopt = '24hz'; get_cropt; oopt = ''; %optionally edit bad data in 24hz file
 
 % identify preferred sensor set for temperature and conductivity: set s_choice for default,
@@ -45,7 +49,8 @@ if o_choice == 1
    extralist = [extralist ' oxygen1'];
 else
    %check whether sensor 2 exists
-   h = m_read_header(infile1);
+% DAS see above always need h
+%   h = m_read_header(infile1);
    if sum(strcmp('oxygen2', h.fldnam))
       extralist = [extralist ' oxygen2'];
    else
@@ -121,6 +126,8 @@ var_copystr
 };
 mcalc
 
+disp(h.longitude)
+disp(h.latitude)
     
 MEXEC_A.MARGS_IN = {
 wkfile3
