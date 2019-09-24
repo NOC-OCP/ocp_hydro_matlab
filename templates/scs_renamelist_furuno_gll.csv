@@ -1,0 +1,4 @@
+furuno_gll_lat,lat,degrees
+furuno_gll_lon,lon,degrees
+furuno_gll_time,inst_time,HHMMSS
+furuno_gll_status,status,number

@@ -1,0 +1,6 @@
+furuno_zda_time,inst_time,HHMMSS
+furuno_zda_day,day,number
+furuno_zda_month,month,number
+furuno_zda_year,year,number
+furuno_zda_zone_hours,zone_hours,number
+furuno_zda_zone_minutes,zone_minutes,number

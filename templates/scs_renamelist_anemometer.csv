@@ -1,0 +1,3 @@
+anemometer_wind_dir,wind_dir,degrees
+anemometer_wind_speed_ms,wind_speed_ms,m/s
+anemometer_wind_speed,wind_speed,knots

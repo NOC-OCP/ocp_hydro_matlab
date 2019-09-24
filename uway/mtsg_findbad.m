@@ -19,17 +19,15 @@
 scriptname = 'mtsg_findbad';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
     
+oopt = 'shiptsg'; get_cropt
 switch MEXEC_G.Mship
     case 'cook'
-        abbrev = 'met_tsg';
         d.salin = d.psal;
         d.sstemp = d.temp_m;
     case 'discovery'
-        abbrev = 'tsg';
         d.salin = d.psal;
         d.sstemp = d.temp_r;
     case 'jcr'
-        abbrev = 'oceanlogger';
         d.salin = d.salinity;
         d.cond = d.conductivity;
         d.temp_h = d.tstemp;

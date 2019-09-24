@@ -1,0 +1,4 @@
+seatex_zda_time,inst_time,HHMMSS
+seatex_zda_day,day,number
+seatex_zda_month,month,number
+seatex_zda_year,year,number

@@ -33,48 +33,64 @@
 %     quiet and ssd options
 %     more automation of underway data directory setting
 
-MEXEC.mexec_version = 'v3';
+MEXEC.mexec_version = 'v3'; %%%***add something to display git branch too?
 MEXEC.MSCRIPT_CRUISE_STRING='dy105';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2019 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 1; %if true, print short documentation line to screen at beginning of scripts
 MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
-MEXEC_G.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_atsea']; % default is to use suffix '_atsea', else '_atnoc', '_athome', '', etc. 
+MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_atnoc', '_athome', '', etc. 
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
 disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec_' MEXEC.mexec_version])
 
-if exist(['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'])==7
-   MEXEC.mstar_root = ['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-else
-   d = pwd;
-   ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING);
-   if length(ii)>0
-      MEXEC.mstar_root = [d(1:ii-1) MEXEC.MSCRIPT_CRUISE_STRING];
-   else
-      disp('enter full path of cruise directory')
-      disp('e.g. /local/users/pstar/cruise')
-      MEXEC.mstar_root = input('  ', 's');
-      disp('you may want to modify m_setup.m to hard-code this directory for future calls')
-   end
+%look for mexec base directory
+%%%***might need to be added to depending on how the /noc/mpoc/rpdmoc/CRUISE directories are structured
+d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if length(ii)>0; d = d(1:ii-1); else; d = []; end
+mpath = {['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+         [d MEXEC.MSCRIPT_CRUISE_STRING];
+	 ['/local/users/pstar/cruise']};
+fp = 0; n=1;
+while fp==0 & n<length(mpath)
+    if exist(mpath{n})==7
+        MEXEC.mstar_root = mpath{n};
+	fp = 1;
+    end
+    n=n+1; 
 end
+if fp==0 %none found; query
+   disp('enter full path of cruise directory')
+   disp('e.g. /local/users/pstar/cruise')
+   MEXEC.mstar_root = input('  ', 's');
+   disp('you may want to modify m_setup.m to hard-code this directory for future calls')
+end
+clear mpath d fp n
 disp(['working in ' MEXEC.mstar_root])
 
 % add path for Moorings work
-mpath = {[MEXEC.mstar_root(1:end-8) '/rpdmoc/rapid/data/exec/']; ['/noc/users/pstar/rpdmoc/rapid/data/exec/']; [MEXEC.mstar_root '/rpdmoc/rapid/data/exec/']};
-rp = 0; n=1; while rp==0 & n<length(mpath)
+mpath = {[MEXEC.mstar_root(1:end-8) '/rpdmoc/rapid/data/exec/'];
+         [MEXEC.mstar_root(1:end-8) '/rapid/data/exec/'];
+         ['/noc/users/pstar/rpdmoc/rapid/data/exec/'];
+	 [MEXEC.mstar_root '/rpdmoc/rapid/data/exec/']};
+	 [MEXEC.mstar_root '/rapid/data/exec/']};
+fp = 0; n=1;
+while fp==0 & n<length(mpath)
     if exist([mpath{n} MEXEC.MSCRIPT_CRUISE_STRING])==7
-        addpath(genpath([mpath{n} MEXEC.MSCRIPT_CRUISE_STRING])); disp('rapid moorings exec added to path'); rp = 1;
-    end;
+        addpath(genpath([mpath{n} MEXEC.MSCRIPT_CRUISE_STRING]));
+	add_rapid_paths %%%***rapid: this was commented out in athome but not in atsea, is that general? maybe rapid paths don't need to be part of mexec setup?  
+	disp('rapid moorings exec added to path');
+	fp = 1;
+    end
     n=n+1; 
-end; clear mpath
+end
+clear mpath fp n
 
 % Set root path for NetCDF stuff on this system: must contain subdirectories mexnc and snctools
 MEXEC.netcdf_root = [MEXEC.mstar_root '/sw/general_sw/netcdf']; 
 
 % Set path for mexec source
-MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec'];
+MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec']; %%%***for rapid: move from mexec_v3 to mexec
 if length(which('m_common'))==0 % this is in msubs
    disp('adding mexec source to path')
    addpath(MEXEC.mexec_source_root) 
@@ -88,14 +104,17 @@ if length(which('m_common'))==0 % this is in msubs
    addpath([MEXEC.mexec_source_root '/source/mtechsas'])
    addpath([MEXEC.mexec_source_root '/source/unfinished'])
 
-   % paths to other useful libraries
-   addpath([MEXEC.mstar_root '/sw/general_sw/LDEO_IX_12/'])
-   addpath([MEXEC.mstar_root '/sw/general_sw/LDEO_IX_12/geomag/'])
-   addpath([MEXEC.mstar_root '/sw/general_sw/m_map/'])
-   addpath([MEXEC.mstar_root '/sw/general_sw/gamma_n/'])
-   addpath([MEXEC.mstar_root '/sw/general_sw/seawater_ver3_2/'])
-   addpath([MEXEC.mstar_root '/sw/general_sw/gsw_matlab_v3_01/'])
-   addpath([MEXEC.mstar_root '/sw/general_sw/gsw_matlab_v3_01/library/'])
+   % paths to other useful libraries %%%***could make this search for whatever version is there? 
+   mpath = [MEXEC.mstar_root '/sw/general_sw/LDEO_IX_12'];
+   if exist(mpath)==7; addpath(mpath); addpath([mpath '/geomag']); end
+   mpath = [MEXEC.mstar_root '/sw/general_sw/m_map_v1_4']; %%%***for drake: move from m_map to m_map_v1_4
+   if exist(mpath)==7; addpath(mpath); end
+   mpath = [MEXEC.mstar_root '/sw/general_sw/gamma_n_v3_05_10']; %%%***for drake: get v3_05_10
+   if exist(mpath)==7; addpath(mpath); else; warning('could not add gamma_n to path'); end %%%***maybe this one is not required though
+   mpath = [MEXEC.mstar_root '/sw/general_sw/seawater_ver3_2']; %%%***for rapid: get ver3_2
+   if exist(mpath)==7; addpath(mpath); end %%%***is this one required now?
+   mpath = [MEXEC.mstar_root '/sw/general_sw/gsw_matlab_v3_03']; %%%***for drake: get v3_03
+   if exist(mpath)==7; addpath(mpath); addpath([mpath '/library']); addpath([mpath '/thermodynamics_from_t']); else; warning('could not add gsw to path'); end
 end
 
 % Set path for directory with housekeeping files (in subdirectories version and history)
@@ -108,6 +127,7 @@ m_common
 MEXEC_G.mexec_version = MEXEC.mexec_version;
 MEXEC_G.MSCRIPT_CRUISE_STRING = MEXEC.MSCRIPT_CRUISE_STRING; % this variable set earlier in code
 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = MEXEC.MDEFAULT_DATA_TIME_ORIGIN; % set global value from local value
+MEXEC_G.SITE = MEXEC.SITE;
 MEXEC_G.quiet = MEXEC.quiet;
 MEXEC_G.ssd = MEXEC.ssd;
 MEXEC_G.uway_writeempty = MEXEC.uway_writeempty;
@@ -146,7 +166,7 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         MEXEC_G.default_navstream = 'posmvpos';
         MEXEC_G.default_hedstream = 'attposmv'; %or gyropmv
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
-        MEXEC_G.Mrsh_machine = 'cook3'; % remote machine for rvs datapup command
+        MEXEC_G.Mrsh_machine = 'cook3'; % remote machine for rvs datapup command %%%***is this still used?
     case 'jr'
         MEXEC_G.default_navstream = 'seatex_gll'; %'seapos';
         MEXEC_G.default_hedstream = 'seatex_hdt'; %'seahead';
@@ -170,19 +190,20 @@ MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normall
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 
 MEXEC_G.MEXEC_DATA_ROOT = [MEXEC.mstar_root '/data']; 
-MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scripts'];
+MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scripts']; %%%***rapid: move from mexec_processing_scripts_v3 to mexec_processing_scripts
 
-if length(which('get_cropt'))==0 % this is in cruise_options
-   disp('adding mexec scripts to path')
-   %addpath(MEXEC.mexec_processing_scripts) % as the location of m_setup, this must already be in the path!
+if length(which('get_cropt'))==0 % this function is in mexec_processing_scripts/cruise_options
+   disp('adding mexec subdirectories to path')
    addpath([MEXEC.mexec_processing_scripts '/cruise_options/'])
    addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/'])
-   addpath([MEXEC.mexec_processing_scripts '/old/'])
+   addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/ladcp'])
+   addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/gridsec'])
+   addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/planning'])
    addpath([MEXEC.mexec_processing_scripts '/summaries/'])
    addpath([MEXEC.mexec_processing_scripts '/utilities/'])
    addpath([MEXEC.mexec_processing_scripts '/uway/'])
-   addpath([MEXEC.mexec_processing_scripts '/ladcp/'])
 end
+%%%***also test for this being the m_setup in MEXEC.mexec_processing_scripts (and therefore for MEXEC.mexec_processing_scripts being in the path)?
 
 %set data directories within MEXEC_G.MEXEC_DATA_ROOT
 MEXEC_G.MDIRLIST = {
@@ -191,18 +212,16 @@ MEXEC_G.MDIRLIST = {
     'M_CTD_BOT' 'ctd/ASCII_FILES'
     'M_CTD_WIN' 'ctd/WINCH'
     'M_CTD_DEP' 'station_depths'
-    'M_BOT_SAL' 'ctd/BOTTLE_SAL' % changed from BOTTLE_SALTS jr302
+    'M_BOT_SAL' 'ctd/BOTTLE_SAL'
     'M_BOT_OXY' 'ctd/BOTTLE_OXY'
     'M_BOT_NUT' 'ctd/BOTTLE_NUT'
     'M_BOT_CO2' 'ctd/BOTTLE_CO2'
     'M_BOT_CFC' 'ctd/BOTTLE_CFC'
-    'M_BOT_CH4' 'ctd/BOTTLE_CH4' % added bak jr302 jun 2014
-    'M_BOT_CHL' 'ctd/BOTTLE_SHORE' % added bak jc159 apr 2018
-    'M_BOT_ISO' 'ctd/BOTTLE_SHORE' % added bak jc159 apr 2018
+    'M_BOT_CH4' 'ctd/BOTTLE_CH4'
+    'M_BOT_CHL' 'ctd/BOTTLE_SHORE'
+    'M_BOT_ISO' 'ctd/BOTTLE_SHORE'
     'M_SAM' 'ctd'
-    'M_TEMPLATES' 'templates'
-    'M_WORKING' 'working'
-    'M_SCRIPTS' ['mexec_processing_scripts_' MEXEC.mexec_version]
+    'M_TEMPLATES' 'mexec_processing_scripts/templates'
     'M_VMADCP' 'vmadcp'
     'M_LADCP' 'ladcp'
     'M_IX' 'ladcp/ix'
@@ -266,6 +285,7 @@ MEXEC.nl = strfind(MEXEC.uname,sprintf('\n')); %strip newlines out of unix respo
 if ~isempty(MEXEC.nl); MEXEC.uname(MEXEC.nl) = []; end
 MEXEC_G.MUSER = [MEXEC.uuser ' on ' MEXEC.uname];
 
+%%%***hopefully all this can be simplified (not sure we really need 3 versions?) or even made irrelevant by fully implementing matlab's netcdf capabilities?
 % determine matlab version and whether there is native netcdf support (>=2008b)
 [mver,mvdate] = version; mvdate = datevec(mvdate); mvdate = mvdate(1);
 MEXEC.matnet = 0;
@@ -280,8 +300,8 @@ else
     setpref('MEXNC','USE_TMW',true);
     setpref('SNCTOOLS','USE_TMW',true);
     if mvdate==2011 %this is a temporary fix: this version seems to work on 2011a on fola, although maybe it should be used for more than just 2011
-        MEXEC.path_mexnc = [MEXEC.netcdf_root '/mexcdf_r2011a_jcr/mexnc']; % matlab 2009-2013?
-        MEXEC.path_snctools = [MEXEC.netcdf_root '/mexcdf_r2011a_jcr/snctools']; %matlab 2009-2013?
+        MEXEC.path_mexnc = [MEXEC.netcdf_root '/mexcdf_old/mexnc']; % matlab 2009-2013? %%%***for drake, might need to move mexecdf_r2011a_jcr directory to mexcdf_old
+        MEXEC.path_snctools = [MEXEC.netcdf_root '/mexcdf_old/snctools']; %matlab 2009-2013?
     else
         MEXEC.path_mexnc = [MEXEC.netcdf_root '/mexcdf_new/mexnc']; % matlab 2009-2013?
         MEXEC.path_snctools = [MEXEC.netcdf_root '/mexcdf_new/snctools']; %matlab 2009-2013?
@@ -295,10 +315,6 @@ if length(which('nc_global'))==0 | length(which('nc_varget'))==0
    addpath(MEXEC.path_snctools)
 end
 
-%MEXEC.mexec_main = [MEXEC.mexec_source_root '/source/main'];
-%MEXEC.mexec_subs = [MEXEC.mexec_source_root '/source/subs'];
-%MEXEC.mexec_unfinished = [MEXEC.mexec_source_root '/source/unfinished'];
-
 MEXEC.housekeeping_version = [MEXEC.housekeeping_root '/version'];
 MEXEC_G.Mhousekeeping_version = MEXEC.housekeeping_version;
 MEXEC.housekeeping_history = [MEXEC.housekeeping_root '/history'];
@@ -308,7 +324,6 @@ MEXEC.housekeeping_history = [MEXEC.housekeeping_root '/history'];
 MEXEC_G.VERSION_FILE = [MEXEC.housekeeping_version '/' MEXEC.version_file_name];
 MEXEC.versfile = MEXEC_G.VERSION_FILE;
 MEXEC.simplelockfile = [MEXEC.versfile(1:end-4) '_lock'];
-
 if exist(MEXEC_G.VERSION_FILE,'file') ~= 2
     disp('Version file does not seem to exist; will create version file and version lock file')
     datanames = {};

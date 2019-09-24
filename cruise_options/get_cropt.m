@@ -3,6 +3,7 @@
 % and warns if expected options have not been set
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+shiptsg = {'cook' 'tsg'; 'discovery' 'tsg'; 'jcr' 'oceanlogger'};
 
 %%%%%%%%%% defaults, by script %%%%%%%%%%
 switch scriptname
@@ -332,7 +333,14 @@ switch scriptname
         end
         %%%%%%%%%% end mcfc_02 %%%%%%%%%%
         
-        
+       %%%%%%%%%% msam_02b %%%%%%%%%%
+case 'msam_02b'
+switch oopt
+case 'nflags'
+   nflagstr = 'y = x2; y((x1==4 | x1==3) & ismember(x2, [2 3 6])) = 4; y(x1==9) = 9;';
+end
+    %%%%%%%%%% end msam_02b %%%%%%%%%%
+ 
         %%%%%%%%%% msam_checkbottles_02 %%%%%%%%%%
     case 'msam_checkbottles_02'
         switch oopt
@@ -393,7 +401,18 @@ switch scriptname
         end
         %%%%%%%%%% end mbot_01 %%%%%%%%%%
         
-        
+        %%%%%%%%%% m_daily_proc %%%%%%%%%%
+           case 'm_daily_proc'
+switch oopt
+case 'exclude'
+        if ~exist('uway_streams_proc_exclude'); uway_streams_proc_exclude = {'posmvtss'}; end
+        if ~exist('uway_pattern_proc_exclude'); uway_pattern_proc_exclude = {'satinfo';'aux';'dps'}; end
+case 'bathycomb'
+bathycomb = 1;
+case 'allmat'
+allmat = 0;
+end
+        %%%%%%%%%% end m_daily_proc %%%%%%%%%% 
         %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
     case 'mday_01_clean_av'
         %set cruise-specific calibration or editing actions
@@ -428,6 +447,15 @@ switch scriptname
         %%%%%%%%%% mtsg_bottle_compare %%%%%%%%%%
     case 'mtsg_bottle_compare'
         switch oopt
+            case 'usecal'
+               if ~exist('usecal'); usecal = 0; end
+case 'shiptsg'
+ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
+if length(ii)==1
+prefix = shiptsg(ii,2);
+else
+error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
+end
             case 'dbbad'
                 %optionally NaN some of the db.salinity_adj points
             case 'sdiff'
@@ -448,7 +476,33 @@ switch scriptname
                 %can specify non-time-range based edits (see e.g. opt_jc069)
         end
         %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
-        
+       
+%%%%%%%%%% mtsg_findbad %%%%%%%%%%
+case 'mtsg_findbad'
+switch oopt
+case 'shiptsg'
+ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
+if length(ii)==1
+abbrev = shiptsg(ii,2);
+else
+error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
+end
+end
+%%%%%%%%%% end mtsg_findbad %%%%%%%%%%
+
+%%%%%%%%%% mtsg_medav_clean_cal %%%%%%%%%
+case 'mtsg_medav_clean_cal'
+switch oopt
+case 'shiptsg'
+ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
+if length(ii)==1
+prefix = shiptsg(ii,2);
+else
+error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
+end
+end
+%%%%%%%%%% end mtsg_medav_clean_cal %%%%%%%%%%
+ 
         %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
     case 'tsgsal_apply_cal'
         switch oopt;

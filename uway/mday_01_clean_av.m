@@ -172,14 +172,18 @@ keyboard
 
     
    %%%%% set data to absent outside ranges %%%%%
+   %list of possible streams and fields; this should generally only be added to because extras will just be ignored
    car = {'ash' {'head_ash' 'pitch' 'roll' 'mrms' 'brms'} {'0 360' '-5 5' '-7 7' '0.00001 0.01' '0.00001 0.1'}
 	  'gp4' {'long' 'lat'} {'-181 181' '-91 91'}
 	  'pos' {'long' 'lat'} {'-181 181' '-91 91'}
+	  'seapos' {'long' 'lat'} {'-181 181' '-91 91'}
+	  'posdps' {'long' 'lat'} {'-181 181' '-91 91'}
 	  'met' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
 	  'surfmet' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
 	  'met_light' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
+	  'surflight' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
 	  'tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50'}
-	  'met_tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50'}
+	  'met_tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans' 'fluo'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50' '0 10'}
 	  'ocl' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50'}
 	  'sim' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
 	  'ea600m' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}

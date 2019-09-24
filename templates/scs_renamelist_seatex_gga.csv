@@ -1,0 +1,9 @@
+seatex_gga_time,inst_time,HHMMSS.SS
+seatex_gga_lat,lat,degrees
+seatex_gga_lon,lon,degrees
+seatex_gga_gq,gq,number
+seatex_gga_svc,svc,number
+seatex_gga_hdop,hdop,number
+seatex_gga_altitude,altitude,m
+seatex_gga_dage,dage,s
+seatex_gga_dbase,dbase,number

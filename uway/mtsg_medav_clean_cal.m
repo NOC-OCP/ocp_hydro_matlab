@@ -13,14 +13,7 @@
 scriptname = 'mtsg_medav_clean_cal';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-switch MEXEC_G.Mship
-   case {'cook'} % used on jc069
-      prefix = 'met_tsg';
-    case 'discovery'
-        prefix = 'tsg';
-   case 'jcr'
-      prefix = 'oceanlogger';
-end
+oopt = 'shiptsg'; get_cropt
 
 mdocshow(scriptname, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' prefix '_' mcruise '_01_medav_clean.nc; calls tsgsal_apply_cal to apply salinity calibration set in opt_' mcruise ', writing to ' prefix '_' mcruise '_01_medav_clean_cal.nc'])
 

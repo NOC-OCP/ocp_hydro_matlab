@@ -1,0 +1,14 @@
+glonass_gq,gq,number
+glonass_svc,svc,number
+glonass_time,inst_time,HHMMSS.SS
+glonass_lat,lat,degrees
+glonass_lon,lon,degrees
+glonass_altitude,altitude,m
+glonass_cog,cog,degrees
+glonass_sog,sog,knots
+glonass_vvel,vvel,m/s
+glonass_pdop,pdop,number
+glonass_hdop,hdop,number
+glonass_vdop,vdop,number
+glonass_tdop,tdop,number
+glonass_version,version,number

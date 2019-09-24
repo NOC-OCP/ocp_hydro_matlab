@@ -29,13 +29,6 @@ if exist(m_add_nc(infile1),'file')~=2;
     return
 end
 
-    %--------------------------------
-    % 2009-01-26 08:05:14
-    % mpaste
-    % input files
-    % Filename oxy_jr193_016.nc   Data Name :  oxy_jr193_016 <version> 2 <site> bak_macbook
-    % output files
-    % Filename sam_jr193_016.nc   Data Name :  sam_jr193_016 <version> 7 <site> bak_macbook
     MEXEC_A.MARGS_IN = {
         otfile2
         infile1
@@ -46,6 +39,5 @@ end
         'botoxya_per_l botoxyflaga botoxytempa botoxyb_per_l botoxyflagb botoxytempb'
         };
     mpaste
-    %--------------------------------
 
 end

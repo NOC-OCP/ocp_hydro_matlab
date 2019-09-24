@@ -353,6 +353,14 @@ switch scriptname
         end
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
 
+       %%%%%%%%%% msam_02b %%%%%%%%%%
+case 'msam_02b'
+switch oopt
+case 'nflags'
+   nflagstr = 'y = x2; y(x1==4 & ismember(x2, [2 3 6])) = 4; y(x1==3 & ismember(x2, [2 3 6])) = 3; y(x1==9) = 9;'; %facilitate checking for importance of visually detected niskin leaks first
+end
+    %%%%%%%%%% end msam_02b %%%%%%%%%%
+
         %%%%%%%%%% msam_checkbottles_02 %%%%%%%%%%
     case 'msam_checkbottles_02'
         switch oopt

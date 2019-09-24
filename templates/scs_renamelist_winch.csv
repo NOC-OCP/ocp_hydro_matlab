@@ -1,0 +1,10 @@
+winch_year,year,number
+winch_jday,jday,number
+winch_time,inst_time,HH:MM:SS
+winch_cable_type,cable_type,number
+winch_cable_out,cable_out,number
+winch_rate,rate,number
+winch_pktension,pktension,number
+winch_back_tension,back_tension,number
+winch_cmp_status,cmp_status,number
+winch_angle,angle,degrees

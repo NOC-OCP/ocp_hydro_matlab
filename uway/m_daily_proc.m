@@ -10,9 +10,7 @@
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-%uway_streams_proc_include %include only these
-%uway_streams_proc_exclude = {'posmvtss'}; %exclude these
-uway_pattern_proc_exclude = {'satinfo';'aux';'dps'}; %exclude those with this pattern anywhere
+oopt = 'exclude'; get_cropt %%%***opt_jc174 should maybe set uway_pattern_proc_exclude = {'satinfo';'aux'}; only
 
 %get list of underway streams to process
 [udirs, udcruise] = m_udirs;
@@ -36,6 +34,7 @@ for sno = 1:size(udirs,1)
       end
    end
 end
+clear uway_streams_proc_exclude uway_pattern_proc_exclude
 udirs(iie, :) = [];
 
 
@@ -46,6 +45,7 @@ if restart_uway_append; warning(['will delete appended file and start from ' num
 
 %loop through processing steps for list of days
 cd(MEXEC_G.MEXEC_DATA_ROOT)
+oopt = 'bathycomb'; get_cropt
 for daynumber = days
 
    daystr = ['00' num2str(daynumber)]; daystr = daystr(end-2:end);
@@ -66,7 +66,7 @@ for daynumber = days
    end
    
    %cross-merge bathy streams for later editing
-   if 1
+   if bathycomb
    iis = find(strcmp('sim', udirs(:,1))); iie = find(strncmp('em12', udirs(:,1), 4));
    if length(iis)>0 & exist([udirs{iis,3} '/' udirs{iis,1} '_' mcruise '_d' daystr '_raw.nc'])
       day = daynumber; msim_02;
@@ -96,5 +96,6 @@ mtruew_01
 mtsg_medav_clean_cal
 switch MEXEC_G.Mship
    case 'jcr'
-      %update_allmat
+      oopt = 'allmat'; get_cropt
+      if allmat; update_allmat; end
 end
