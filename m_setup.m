@@ -34,7 +34,7 @@
 %     more automation of underway data directory setting
 
 MEXEC.mexec_version = 'v3'; %%%***add something to display git branch too?
-MEXEC.MSCRIPT_CRUISE_STRING='dy105';
+MEXEC.MSCRIPT_CRUISE_STRING='dy111';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2019 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 1; %if true, print short documentation line to screen at beginning of scripts
@@ -68,6 +68,7 @@ end
 clear mpath d fp n
 disp(['working in ' MEXEC.mstar_root])
 
+if 0
 % add path for Moorings work
 mpath = {[MEXEC.mstar_root(1:end-8) '/rpdmoc/rapid/data/exec/'];
          [MEXEC.mstar_root(1:end-8) '/rapid/data/exec/'];
@@ -85,12 +86,13 @@ while fp==0 & n<length(mpath)
     n=n+1; 
 end
 clear mpath fp n
+end
 
 % Set root path for NetCDF stuff on this system: must contain subdirectories mexnc and snctools
 MEXEC.netcdf_root = [MEXEC.mstar_root '/sw/general_sw/netcdf']; 
 
 % Set path for mexec source
-MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec']; %%%***for rapid: move from mexec_v3 to mexec
+MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec'];
 if length(which('m_common'))==0 % this is in msubs
    disp('adding mexec source to path')
    addpath(MEXEC.mexec_source_root) 
@@ -107,13 +109,13 @@ if length(which('m_common'))==0 % this is in msubs
    % paths to other useful libraries %%%***could make this search for whatever version is there? 
    mpath = [MEXEC.mstar_root '/sw/general_sw/LDEO_IX_12'];
    if exist(mpath)==7; addpath(mpath); addpath([mpath '/geomag']); end
-   mpath = [MEXEC.mstar_root '/sw/general_sw/m_map_v1_4']; %%%***for drake: move from m_map to m_map_v1_4
+   mpath = [MEXEC.mstar_root '/sw/general_sw/m_map_v1_4'];
    if exist(mpath)==7; addpath(mpath); end
-   mpath = [MEXEC.mstar_root '/sw/general_sw/gamma_n_v3_05_10']; %%%***for drake: get v3_05_10
+   mpath = [MEXEC.mstar_root '/sw/general_sw/gamma_n_v3_05_10'];
    if exist(mpath)==7; addpath(mpath); else; warning('could not add gamma_n to path'); end %%%***maybe this one is not required though
-   mpath = [MEXEC.mstar_root '/sw/general_sw/seawater_ver3_2']; %%%***for rapid: get ver3_2
+   mpath = [MEXEC.mstar_root '/sw/general_sw/seawater_ver3_2'];
    if exist(mpath)==7; addpath(mpath); end %%%***is this one required now?
-   mpath = [MEXEC.mstar_root '/sw/general_sw/gsw_matlab_v3_03']; %%%***for drake: get v3_03
+   mpath = [MEXEC.mstar_root '/sw/general_sw/gsw_matlab_v3_03'];
    if exist(mpath)==7; addpath(mpath); addpath([mpath '/library']); addpath([mpath '/thermodynamics_from_t']); else; warning('could not add gsw to path'); end
 end
 
@@ -190,7 +192,7 @@ MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normall
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 
 MEXEC_G.MEXEC_DATA_ROOT = [MEXEC.mstar_root '/data']; 
-MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scripts']; %%%***rapid: move from mexec_processing_scripts_v3 to mexec_processing_scripts
+MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scripts']; 
 
 if length(which('get_cropt'))==0 % this function is in mexec_processing_scripts/cruise_options
    disp('adding mexec subdirectories to path')
