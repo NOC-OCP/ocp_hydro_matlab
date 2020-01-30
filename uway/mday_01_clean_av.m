@@ -163,8 +163,7 @@ if exist([infile '.nc']) %only if there is a raw file for this day
 	        pos = mslast(navname); lon = pos.long; lat = pos.lat; clear pos
          end
       end
-%keyboard
-	
+
       calcstr = ['y = mcarter(' num2str(lat) ', ' num2str(lon) ', x1); y = y.cordep;'];
       MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'depth_uncor'; calcstr; 'depth'; 'metres'; '0'};
       mcalc

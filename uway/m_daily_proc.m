@@ -10,6 +10,7 @@
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 scriptname='m_daily_proc'
+
 oopt = 'exclude'; get_cropt %%%***opt_jc174 should maybe set uway_pattern_proc_exclude = {'satinfo';'aux'}; only
 
 %get list of underway streams to process

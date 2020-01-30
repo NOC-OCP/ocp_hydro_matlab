@@ -14,27 +14,9 @@
 % EXAMPLES:
 %   m_setup
 %
-%
-% UPDATED:
-%   Initial version BAK 2008-10-17 at NOC
-%   Help updated by BAK 2009-08-11 on macbook
-%   Handling of version lock file added by BAK 2009-08-11 on macbook
-%   SCS options for JCR added by BAK 2009-09-14 on macbook
-%   Added paths for RAPID moorings work (GDM 2011-09-04)
-%   Converted to mexec_v2 by putting all mexec variables created by m_setup
-%     in structures, MEXEC, MEXEC_G, MEXEC_A. (bak on jr281 2013-04-05)
-%   Cleaned up a lot of old paths that are never changed because of the
-%     path roots. (bak on jr281 2013-04-05)
-%   More mods by bak at start of jr302, may/jun 2014, to reduce number of things that
-%     need to be edited
-%   And by bak and ylf jr306 to bring options requiring editing on every cruise to the top
-%   Updated by YLF jr16002 and jr17001 to v3:
-%     lots of simplification
-%     quiet and ssd options
-%     more automation of underway data directory setting
 
-MEXEC.mexec_version = 'v3'; %%%***add something to display git branch too?
-MEXEC.MSCRIPT_CRUISE_STRING='dy112';
+MEXEC.mexec_version = 'v3';
+MEXEC.MSCRIPT_CRUISE_STRING='dy113';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2020 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 1; %if true, print short documentation line to screen at beginning of scripts
@@ -43,10 +25,9 @@ MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea',
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
-disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec_' MEXEC.mexec_version])
+disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec']) %%%***add something to display git branch too/instead?
 
 %look for mexec base directory
-%%%***might need to be added to depending on how the /noc/mpoc/rpdmoc/CRUISE directories are structured
 d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if length(ii)>0; d = d(1:ii-1); else; d = []; end
 mpath = {['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
          [d MEXEC.MSCRIPT_CRUISE_STRING];

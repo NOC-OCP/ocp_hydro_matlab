@@ -11,6 +11,11 @@ shiptsg = {'cook' 'tsg'; 'discovery' 'tsg'; 'jcr' 'oceanlogger'};
 switch scriptname
     
     
+    %%%%%%%%%% minit %%%%%%%%%%
+    case 'minit'
+        stn_string = sprintf('%03d',stn);
+    %%%%%%%%%% end minit %%%%%%%%%%
+
     %%%%%%%%%% smallscript %%%%%%%%%%
     case 'smallscript' %this is just used to set the list of stations to run (in, for instance, smallscript_*)
         switch oopt
