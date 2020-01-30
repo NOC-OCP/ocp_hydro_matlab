@@ -6,6 +6,8 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 shiptsg = {'cook' 'tsg'; 'discovery' 'tsg'; 'jcr' 'oceanlogger'};
 
 %%%%%%%%%% defaults, by script %%%%%%%%%%
+
+
 switch scriptname
     
     
@@ -452,7 +454,7 @@ end
 case 'shiptsg'
 ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
 if length(ii)==1
-prefix = shiptsg(ii,2);
+prefix = (shiptsg{ii,2})
 else
 error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
 end
@@ -483,7 +485,7 @@ switch oopt
 case 'shiptsg'
 ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
 if length(ii)==1
-abbrev = shiptsg(ii,2);
+abbrev = shiptsg{ii,2};
 else
 error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
 end
@@ -496,7 +498,7 @@ switch oopt
 case 'shiptsg'
 ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
 if length(ii)==1
-prefix = shiptsg(ii,2);
+prefix = shiptsg{ii,2};
 else
 error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
 end
