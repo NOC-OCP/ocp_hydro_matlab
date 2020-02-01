@@ -1,6 +1,6 @@
 function [udirs, udcruise] = m_udirs();
 
-udcruise = 'dy112';
+udcruise = 'dy113';
 udirs = {
 'cnav'    'M_CNAV'    'nav/cnav'    'cnav-CNAV.GPS';
 'gpsfugro'    'M_GPSFUGRO'    'nav/gps'    'cnav-FUGRO.GPS';

@@ -249,7 +249,6 @@ else
    unix(['/bin/rm ' MEXEC.mexec_processing_scripts '/uway/m_udirs.m']);
    disp('no underway directories yet, rerun m_setudir when they are available/linked')
 end
-
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 
 

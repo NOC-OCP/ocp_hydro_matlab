@@ -15,7 +15,7 @@ prefix = ['ctd_' mcruise '_'];
 
 oopt = 'redoctm'; get_cropt
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
-   infile = [root_cnv '/' prefixin stn_string '_align_ctm.cnv'];
+   infile = [root_cnv '/' prefix stn_string '_align_ctm.cnv'];
    otfile = [root_ctd '/' prefix stn_string '_raw'];
 else %in some cases, operate on pre-CTM file (to remove large spikes), then apply CTM in mexec
    infile = [root_cnv '/' prefix stn_string '_align_noctm.cnv'];
