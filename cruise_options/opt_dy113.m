@@ -12,4 +12,13 @@ switch scriptname
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
 
+        %%%%%%%%%% mctd_03 %%%%%%%%%%
+    case 'mctd_03'
+        switch oopt
+            case 's_choice' %this applies to both t and c
+                s_choice = 2; %sensor on fin?***
+        end
+        %%%%%%%%%% end mctd_03 %%%%%%%%%%
+
+
 end
