@@ -1,4 +1,3 @@
-scriptname = 'ctd_all_part2';
 minit
 
 stn = stnlocal; mctd_04;

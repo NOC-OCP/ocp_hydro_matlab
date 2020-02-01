@@ -10,8 +10,7 @@
 %    of lines of sample data
 % The above line seems to have survived from some sort of cut and paste. bak on jr302.
 
-scriptname = 'mnut_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['reads bottle nutrient data from .csv file into nut_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types

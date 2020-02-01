@@ -3,8 +3,7 @@
 % Use: mctd_rawedit        and then respond with station number, or for station 16
 %      stn = 16; mctd_rawedit;
 
-scriptname = 'mctd_rawedit';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['applies despiking and other edits if set in opt_cruise; allows interactive selection of bad data cycles; writes cleaned data to ctd_' mcruise '_' stn_string '_raw_cleaned.nc']);
 
 % resolve root directories for various file types

@@ -13,8 +13,7 @@
 % mac this generates csv files with c/r instead of n/l. Thus the
 % _out.csv file is more suitable for editing on unix.
 
-scriptname = 'mdcs_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['creates empty data cycles file dcs_' mcruise '_' stn_string '.nc based on templates/dcs_varlist.csv']);
 
 % resolve root directories for various file types

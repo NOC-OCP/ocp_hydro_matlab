@@ -18,8 +18,7 @@
 % no ctd data, or to override times derived from ctd files. If no cruise and station-specific
 % case is provided, times are taken from ctd file as usual.
 
-scriptname = 'mwin_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['adds winch data to win_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types

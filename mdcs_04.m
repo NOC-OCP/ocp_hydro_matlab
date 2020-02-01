@@ -3,8 +3,7 @@
 % Use: mdcs_04        and then respond with station number, or for station 16
 %      stn = 16; mdcs_04;
 
-scriptname = 'mdcs_04';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['adds positions from concatenated best ship navigation file bst_' mcruise '_01.nc to dcs_' mcruise '_' stn_string '.nc (if not found in bst file, draws from ctd raw file)']);
 
 % resolve root directories for various file types

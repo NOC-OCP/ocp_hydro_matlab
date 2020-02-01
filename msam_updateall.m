@@ -6,8 +6,7 @@
 %
 % first edits the station sam file to make all analysis value flags bad where niskin flag is bad***
 
-scriptname = 'msam_updateall';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['updates sam_' mcruise '_' stn_string '.nc rows in sam_' mcruise '_all.nc']);
 
 root_ctd = mgetdir('M_CTD');

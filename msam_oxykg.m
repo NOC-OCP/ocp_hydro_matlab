@@ -3,8 +3,7 @@
 % Use: msam_oxykg        and then respond with station number, or for station 16
 %      stn = 16; msam_oxykg;
 
-scriptname = 'msam_oxykg';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['converts bottle oxygen from umol/L to umol/kg in sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');

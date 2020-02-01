@@ -3,8 +3,7 @@
 % Use: mfir_01        and then respond with station number, or for station 16
 %      stn = 16; mfir_01;
 
-scriptname = 'mfir_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['reads in .bl file to fir_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types

@@ -16,8 +16,7 @@
 % bak on jr302: add a default value to the template, so water sample flags
 % start as a default of 9 instead of nan.
 
-scriptname = 'msam_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['creating empty sam_' mcruise '_' stn_string '.nc based on templates/sam_varlist.csv']);
 
 % resolve root directories for various file types
@@ -123,7 +122,7 @@ MEXEC_A.MARGS_IN_5 = {
 '-1'
 };
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
-msave
+msave;
 %--------------------------------
 
-unix(['cp ' m_add_nc(otfile) ' ' m_add_nc(otfile2)])
+unix(['cp ' m_add_nc(otfile) ' ' m_add_nc(otfile2)]);

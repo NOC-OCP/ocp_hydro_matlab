@@ -16,8 +16,7 @@
 % further revision on jr302: inspect .bl file; default flag is 2 if there
 % is a .bl entry; 3 otherwise. Some code adapted from mfir_00
 
-scriptname = 'mbot_00';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['adds default Niskin bottle numbers and flags to bot_' mcruise '_' stn_string '.csv']);
 
 root_botraw = mgetdir('M_CTD_BOT');

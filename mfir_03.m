@@ -3,8 +3,7 @@
 % Use: mfir_03        and then respond with station number, or for station 16
 %      stn = 16; mfir_03;
 
-scriptname = 'mfir_03';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['adds CTD upcast data at bottle firing times to fir_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');

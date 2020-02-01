@@ -3,8 +3,7 @@
 % Use: mctd_01        and then respond with station number, or for station 16
 %      stn = 16; mctd_01;
 
-scriptname = 'mctd_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['converts from .cnv to ctd_' mcruise '_' stn_string '_raw.nc']);
 
 % resolve root directories for various file types

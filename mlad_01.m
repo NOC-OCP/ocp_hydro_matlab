@@ -10,8 +10,7 @@
 %
 % the lats and longs come from the dcs file
 
-scriptname = 'mlad_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 % resolve root directories for various file types

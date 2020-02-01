@@ -3,8 +3,7 @@
 % Use: mctd_rawshow        and then respond with station number, or for station 16
 %      stn = 16; mctd_rawshow;
 
-scriptname = 'mctd_rawshow';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['plots 24 hz and 1 hz CTD data for station ' stn_string]);
 
 % resolve root directories for various file types

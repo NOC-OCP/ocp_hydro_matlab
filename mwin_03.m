@@ -3,8 +3,7 @@
 % Use: mwin_03        and then respond with station number, or for station 16
 %      stn = 16; mwin_03;
 
-scriptname = 'mwin_03';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['adds winch data from bottle firing times to fir_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types

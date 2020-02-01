@@ -1,4 +1,3 @@
-returnscriptname = 'ctd_all_part1';
 minit
 
 if 1 %jc159 all done at the start
@@ -7,7 +6,6 @@ if 1 %jc159 all done at the start
    % if/else added ylf jr15003
    if ~exist([MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_template.nc'], 'file')
       stn = stnlocal; msam_01; % create empty sam file at start of cruise
-      eval(['!cp ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_' stn_string '.nc ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_template.nc']) %copy to template
       eval(['!cp ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_' stn_string '.nc ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_all.nc']) %copy to template
    else
        stn = stnlocal; msam_01b; % copy template for this station number (empty at present)

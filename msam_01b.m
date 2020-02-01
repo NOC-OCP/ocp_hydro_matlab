@@ -12,8 +12,7 @@
 % to edit the dataname, station number and sample number.
 %
 
-scriptname = 'msam_01b';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['copies empty sam_ file to sam_' mcruise '_' stn_string '.nc, editing station number']);
 
 % resolve root directories for various file types

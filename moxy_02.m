@@ -4,8 +4,7 @@
 % station 98 onwards.  msam_oxykg should be run afterwards to calculate
 % bottle oxygen in umol/kg.  CPA 6/2/10
 
-scriptname = 'moxy_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes bottle oxygen from oxy_' mcruise '_' stn_string '.nc to sam_' mcruise '_' stn_string '.nc']);
 
 root_oxy = mgetdir('M_BOT_OXY');

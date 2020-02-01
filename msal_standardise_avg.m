@@ -46,9 +46,8 @@ function msal_standardise_avg
 %  saves ds_sal to a .mat file specified in opt_cruise
 
 m_common
-scriptname = 'msal_standardise_avg';
 stn = 0;
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 %root directory and filenames

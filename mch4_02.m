@@ -1,7 +1,6 @@
 % mch4_02: paste ch4 data into sam file
 
-scriptname = 'mch4_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 root_ch4 = mgetdir('M_BOT_CH4');

@@ -1,7 +1,6 @@
 % miso_02: paste iso data into sam file
 
-scriptname = 'miso_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes bottle isotope data (specified in opt_' mcruise ') into sam_' mcruise '_' stn_string '.nc']);
 
 root_iso = mgetdir('M_BOT_ISO');

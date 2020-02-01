@@ -2,8 +2,7 @@
 % Calculate organic nutrient values from total and inorganic nutrient
 % values in sam file.  Flag is selected based on highest WOCE flag value.
 
-scriptname = 'mnut_03';
-minit
+minit; scriptname = mfilename;
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 mdocshow(scriptname, ['computes organic nutrients from total and inorganic nutrients in sam_' mcruise '_' stn_string '_raw.nc']);
 

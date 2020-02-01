@@ -3,8 +3,7 @@
 % Use: mwin_04        and then respond with station number, or for station 16
 %      stn = 16; mwin_04;
 
-scriptname = 'mwin_04';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['adds winch data from bottle firing times to sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');

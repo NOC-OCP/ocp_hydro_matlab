@@ -4,8 +4,7 @@
 %
 % need to specify station number: stn
 
-scriptname = 'mctd_fluorcal';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['applies fluorescence calibration set in opt_' mcruise ' to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 root_ctd = mgetdir('M_CTD');

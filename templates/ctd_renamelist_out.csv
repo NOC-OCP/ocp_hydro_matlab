@@ -16,11 +16,13 @@ c0mS_slash_cm,cond1,mS/cm
 c1mS_slash_cm,cond2,mS/cm
 oxsatML_slash_L,oxsat,ml/l
 sbeox0V,sbeoxyV1,volts
+sbox0Mm_slash_Kg,oxygen_sbe1,umol/kg
 sbeox0Mm_slash_Kg,oxygen_sbe1,umol/kg
 T2_minus_T190C,t2_minus_t1,degc90
 C2_minus_C1mS_slash_cm,c2_minus_c1,mS/cm
 xmiss,transmittance,percent
 CStarTr0,transmittance,percent
+transmittance,transmittance,percent
 turbWETbb0,turbidity,m^1/sr
 v2,turbidityV,volts
 v4,STS,V

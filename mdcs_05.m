@@ -3,8 +3,7 @@
 % Use: mdcs_05        and then respond with station number, or for station 16
 %      stn = 16; mdcs_05;
 
-scriptname = 'mdcs_05';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes lat and lon into header of ctd_' mcruise '_' stn_string '*.nc']);
 
 root_win = mgetdir('M_CTD_WIN');

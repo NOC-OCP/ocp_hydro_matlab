@@ -4,8 +4,7 @@
 %
 % bak on jr302
 
-scriptname = 'msam_apend';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['appends contents of sam_' mcruise '_' stn_string '.nc to sam_' mcruise '_all.nc']);
 
 root_ctd = mgetdir('M_CTD');

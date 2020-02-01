@@ -15,8 +15,7 @@
 %            using parameters set in opt_cruise, to and match up botoxya and botoxyb
 %            flags will also be set in opt_cruise
 
-scriptname = 'moxy_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['loads bottle oxygens from file specified in opt_' mcruise ', optionally calls moxy_ccalc to compute concentration from titration, and writes to oxy_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types

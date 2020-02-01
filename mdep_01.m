@@ -4,8 +4,7 @@
 % Use: mdep_01        and then respond with station number, or for station 16
 %      stn = 16; mdep_01;
 
-scriptname = 'mdep_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['adds water depth from station_depths/station_depths_' mcruise '.mat to all the files for station ' stn_string]);
 
 % resolve root directories for various file types

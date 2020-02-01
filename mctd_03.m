@@ -6,8 +6,7 @@
 % Use: mctd_03        and then respond with station number, or for station 16
 %      stn = 16; mctd_03;
 
-scriptname = 'mctd_03';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['averages to 1 hz in ctd_' mcruise '_' stn_string '_1hz.nc; fills in choice of two sensors; computes SP, Theta, SA, CT in ctd_' mcruise '_' stn_string '_psal.nc']);
 
 root_ctd = mgetdir('M_CTD');

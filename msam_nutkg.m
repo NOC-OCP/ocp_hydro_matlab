@@ -1,8 +1,7 @@
 %script to run on the final sample file to produce a version
 %with nutrients in umol/kg rather than umol/L
 
-scriptname = 'msam_nutkg';
-stn = 0; minit
+stn = 0; minit; scriptname = mfilename;
 mdocshow(scriptname, ['converts nutrients from /L in sam_' mcruise '_all.nc to /kg in sam_' mcruise '_all_nutkg.nc'])
 
 root_ctd = mgetdir('M_CTD');

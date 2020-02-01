@@ -4,8 +4,7 @@
 % Use: mdcs_02        and then respond with station number, or for station 16
 %      stn = 16; mdcs_02;
 
-scriptname = 'mdcs_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['finds scan number corresponding to bottom of cast, writes to dcs_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');

@@ -3,8 +3,7 @@
 % Use: mfir_04        and then respond with station number, or for station 16
 %      stn = 16; mfir_04;
 
-scriptname = 'mfir_04';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes CTD data at bottle firing times from fir_' mcruise '_' stn_string '.nc to sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD'); % change working directory

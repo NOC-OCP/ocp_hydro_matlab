@@ -8,8 +8,7 @@
 % Use: msam_02b        and then respond with station number, or for station 16
 %      stn = 16; msam_02b;
 
-scriptname = 'msam_02b';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['changes (where necessary) sample value flags in sam_' mcruise '_' stn_string '.nc, 1) as specified in bottle_data_flags.txt; 2) so they are consistent with Niskin flags']);
 
 root_ctd = mgetdir('M_CTD');

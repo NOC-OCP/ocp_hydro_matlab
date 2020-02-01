@@ -10,8 +10,7 @@
 % bak on jr302 1 july 2014: adapt condcal into tempcal, so we can adjust
 % temp1 and temp2 to close t1-t2 differences.
 
-scriptname = 'mctd_tempcal';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['applies temperature calibration set in opt_' mcruise ' to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 root_ctd = mgetdir('M_CTD');

@@ -1,7 +1,6 @@
 % mnut_02: paste nut data into sam file
 
-scriptname = 'mnut_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes bottle nutrient data into sam_' mcruise '_' stn_string '.nc']);
 
 root_nut = mgetdir('M_BOT_NUT');

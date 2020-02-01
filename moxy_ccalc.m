@@ -12,8 +12,7 @@ stn = ds_oxy.statnum(1);
 if length(unique(ds_oxy.statnum))>1
    error('moxy_ccalc is meant to operate on data from a single station')
 end
-minit
-scriptname = 'moxy_ccalc';
+minit; scriptname = mfilename;
 
 ds_oxy_fn = ds_oxy.Properties.VarNames;
 

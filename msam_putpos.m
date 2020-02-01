@@ -7,8 +7,7 @@
 % lat and lon vars in sam file. position taken from dcs pos file, or if that
 % doesnt exist, taken from header of ctd raw file
 
-scriptname = 'msam_putpos';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['adds positions from dcs pos or ctd raw file to sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');

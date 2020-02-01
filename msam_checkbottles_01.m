@@ -8,7 +8,7 @@ function msam_checkbottles_01(stations, varname, section)
 % plot full values or anomalies against CTD (S,O) or gridded data if available
 %
 % use:
-% identfy_bottles(stations, var, section)
+% msam_checkbottles_01(stations, var, section)
 %
 % stations is a numeric array with a list of station numbers to display; If
 % 'stations' is empty, use all.
@@ -29,14 +29,13 @@ function msam_checkbottles_01(stations, varname, section)
 
 % check for at least two arguments: stations and variable
 if nargin < 2
-    fprintf(2,'\n%s\n\n','Must supply at least two arguments; see help identify_bottles ');
+    fprintf(2,'\n%s\n\n','Must supply at least two arguments; see help msam_checkbottles_01 ');
     return
 end
 
 m_common
-scriptname = 'identify_bottles';
 stn = 0;
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['plots bottle sample residuals (from ctd, or from gridded fields), allowing selection of outliers and identification of where flags need to be changed']);
 
 root_ctd = mgetdir('M_CTD'); % identify CTD directory
@@ -331,7 +330,7 @@ return
 
 function h = plot4(x1,x2,y1,y2,k2,k3,k4,k5,k9,kother)
 
-% called by identify_bottles.m
+% called by msam_checkbottles_01.m
 
 clf
 

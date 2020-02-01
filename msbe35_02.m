@@ -1,7 +1,6 @@
 % msbe35_02: paste sbe35 data into sam file
 
-scriptname = 'msbe35_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes SBE35 data into sam_' mcruise '_' stn_string '.nc']);
 
 root_sbe35 = mgetdir('M_SBE35');

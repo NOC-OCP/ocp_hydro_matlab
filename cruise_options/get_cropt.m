@@ -13,7 +13,7 @@ switch scriptname
     
     %%%%%%%%%% minit %%%%%%%%%%
     case 'minit'
-        stn_string = sprintf('%03d',stnlocal);
+        stn_string = sprintf('%03d',stn);
     %%%%%%%%%% end minit %%%%%%%%%%
 
     %%%%%%%%%% smallscript %%%%%%%%%%

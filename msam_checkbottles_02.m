@@ -12,8 +12,7 @@ function msam_checkbottles_02(stn, varargin)
 %
 
 m_common
-scriptname = 'msam_checkbottles_02';
-minit
+minit; scriptname = mfilename;
 
 %subplots will be psal (and botpsal), oxygen (and botoxygen), and potemp (and botoxytemp and sbe35temp [if avail]),
 %as well as the variable input names

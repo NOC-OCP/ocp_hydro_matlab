@@ -1,7 +1,6 @@
 % mbot_02: paste niskin bottle data into sam file
 
-scriptname = 'mbot_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['paste Niskin bottle data into sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');

@@ -7,8 +7,7 @@
 %
 % ylf modified jr15003 to deal with (by ignoring) duplicates (in case the recorder wasn't cleared between casts)
 
-scriptname = 'msbe35_01';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['loads SBE35 ascii files listed in lsbe and writes to sbe35_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');

@@ -5,8 +5,8 @@
 % 
 % first draft bak on jr302 20 jun 2014 to read Ian Brown's CH4/N2O data
 %
-scriptname = 'mch4_01';
-minit
+
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 % resolve root directories for various file types

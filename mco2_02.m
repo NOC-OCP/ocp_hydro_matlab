@@ -1,7 +1,6 @@
 % mco2_02: paste co2 data into sam file
 
-scriptname = 'mco2_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 root_co2 = mgetdir('M_BOT_CO2');

@@ -6,8 +6,7 @@
 % some input parsing moved to opt_cruise file to facilitate setting
 % multiple different sample flags
 
-scriptname = 'msam_ashore_flag';
-stn = 0; minit
+stn = 0; minit; scriptname = mfilename;
 
 if ~exist('samtype', 'var')
    samtype = input('sample type? ');

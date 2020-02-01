@@ -1,7 +1,6 @@
 % mcfc_02: paste cfc data into sam file
 
-scriptname = 'mcfc_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 root_cfc = mgetdir('M_BOT_CFC');

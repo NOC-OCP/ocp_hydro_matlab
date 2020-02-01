@@ -57,8 +57,7 @@
 % will produce plot 6 last and in the front figure window.
 %
 
-scriptname = 'mctd_checkplots';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['plots CTD data from station ' stn_string ' along with data from interactively-chosen previous stations']);
 
 msg1 = 'Type number of previous stations to view, or return to quit';

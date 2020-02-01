@@ -7,8 +7,7 @@
 % sensor to calibrate: senscal
 % these will be prompted for if unset.
 
-scriptname = 'mctd_condcal';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['applies conductivity calibration set in opt_' mcruise ' to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 clear stn % so that it doesn't persist

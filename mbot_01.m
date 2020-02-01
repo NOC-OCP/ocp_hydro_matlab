@@ -11,8 +11,7 @@
 %
 % YLF jr16002 and jc145 modified heavily to use database and cruise-specific options
 
-scriptname = 'mbot_01';
-minit
+minit; scriptname = mfilename;
 
 mdocshow(scriptname, ['puts Niskin bottle information from file specified in opt_' mcruise ' (by default, bot_' mcruise '_' stn_string '.csv) into bot_' mcruise '_' stn_string '.nc']);
 

@@ -2,8 +2,7 @@
 % overhaul of oxy calibration function by bak and gre on di368
 % need to specify station number: stn
 
-scriptname = 'mctd_oxycal';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['applies oxygen calibration set in opt_' mcruise ' to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 root_ctd = mgetdir('M_CTD');

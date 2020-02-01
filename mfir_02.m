@@ -3,8 +3,7 @@
 % Use: mfir_02        and then respond with station number, or for station 16
 %      stn = 16; mfir_02;
 
-scriptname = 'mfir_02';
-minit
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['add time from ctd_' mcruise '_' stn_string '.nc to fir_' mcruise '_' stn_string '.nc based on scan number']);
 
 root_ctd = mgetdir('M_CTD');
