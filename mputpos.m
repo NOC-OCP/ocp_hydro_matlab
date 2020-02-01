@@ -19,7 +19,25 @@ end
 ncfile = m_ismstar(ncfile); % check it is an mstar file
 filename = ncfile.name;
 
-metadata = nc_info(ncfile.name); %refresh metadata
+if exist('ncinfo','file') == 2 % jc191 use matlab netcdf if available
+    % make metadata look the same as the old snctools nc_info
+    % dm is the matlab data structure; dr is the reconstructed one.
+    clear dm dr
+    dm = ncinfo(ncfile.name);
+    
+    dr.Filename = ncfile.name;
+    dr.Attribute = dm.Attributes; % don't need in add_variable_name
+    dr.Dimension = dm.Dimensions(:);
+    for kl = 1:length(dm.Variables);
+        dr.Dataset(kl).Name = dm.Variables(kl).Name;
+        dr.Dataset(kl).Dimension = dm.Variables(kl).Dimensions.Name;
+        dr.Dataset(kl).Nctype = find(strcmp(dm.Variables(kl).Datatype,{'' 'char' '' '' '' 'double' ''}));
+    end
+    if isfield(dr,'Dataset'); dr.Dataset = dr.Dataset(:); end
+    metadata = dr;
+else
+    metadata = nc_info(ncfile.name); % command before jc191
+end
 
 globatt = metadata.Attribute;
 
