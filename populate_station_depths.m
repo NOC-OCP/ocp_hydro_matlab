@@ -105,10 +105,10 @@ switch depmeth
 
       ii = find(isnan(bestdeps(:,2))); 
       for no = 1:length(ii) % try to fill these in from 1hz files
-         fn = [fnin sprintf('%03d', bestdeps(ii(no),1)) '_1hz.nc'];
+         fn = [fnin sprintf('%03d', bestdeps(ii(no),1)) '_psal.nc'];
          if exist(fn)
             [d, h] = mload(fn, '/');
-            if ~isfield(d, 'depSM'); d.depSM = filter_bak(ones(1,21), sw_dpth(d.press, d.latitude)); end
+            if ~isfield(d, 'depSM'); d.depSM = filter_bak(ones(1,21), sw_dpth(d.press, h.latitude)); end
             [max_dep,bot_ind] = max(d.depSM); % Find cast max depth
             % Average altimeter and CTD depth for 30 seconds around max depth
             ctd_bot = nanmean(d.depSM(bot_ind-15:bot_ind+15));

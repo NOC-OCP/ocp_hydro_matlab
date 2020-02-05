@@ -17,8 +17,28 @@ switch scriptname
         switch oopt
             case 's_choice' %this applies to both t and c
                 s_choice = 2; %sensor on fin?***
+            case 'o_choice'
+                o_choice = 1;
         end
         %%%%%%%%%% end mctd_03 %%%%%%%%%%
+        
+        
+                %%%%%%%%%% populate_station_depths %%%%%%%%%%
+    case 'populate_station_depths'
+        switch oopt
+            case 'fnin'
+                fnin = [root_ctddep '/station_depths_' mcruise '.txt'];
+                depmeth = 3; %calculate from ctd data ***change this to ladcp***
+            case 'bestdeps'
+        end
+        %%%%%%%%%% end populate_station_depths %%%%%%%%%%
+
+          %%%%%%%%%% mout_sam_csv %%%%%%%%%%
+  case 'mout_sam_csv'
+      switch oopt
+          case 'morefields'
+      fields = fields0;
+      end
 
 
 end

@@ -168,6 +168,13 @@ switch scriptname
 	   end
       end
    %%%%%%%%%% end mctd_04 %%%%%%%%%%
+   
+   %%%%%%%%%% mdcs_02 %%%%%%%%
+          case 'mdcs_02'
+    if stnlocal==81
+        kbot = 5574;
+    end
+
 
    %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
    case 'msec_run_mgridp'

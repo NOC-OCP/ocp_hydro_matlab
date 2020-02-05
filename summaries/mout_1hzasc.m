@@ -14,12 +14,17 @@ minit; scriptname = mfilename; mdocshow(scriptname, ['saves 1 hz t,P,T,S,lat,lon
 
 root_ctd = mgetdir('M_CTD');
 root_out = [mgetdir('M_LADCP')];
-infile = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
+infile = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
 
 if exist(m_add_nc(infile),'file') ~= 2
     return
 end
 
+dh = m_read_header(infile);
+if ~sum(strcmp(dh.fldnam, 'latitude'))
+    disp('not writing 1 hz ascii file for ladcp processing because no lat/lon series')
+    return
+end
 [dd dh] = mload(infile,'time press temp psal latitude longitude','0');
 
 dd.decday = datenum(dh.data_time_origin) + dd.time/86400 - datenum([dh.data_time_origin(1) 1 0 0 0 0]); % decimal day of year; noon on 1 jan = 1.5

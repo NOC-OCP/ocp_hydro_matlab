@@ -37,15 +37,10 @@ for kloop = klist
     
     stn = kloop; msam_02b;
     stn = kloop; msam_updateall;
-        
-    %csv files
-    if 1
-       mout_makelists(kloop, '2dbdn');
-    end
-    
+            
 end
 
-nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order (useful for nutrient analysts, else can comment out)
+%nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order (useful for nutrient analysts, else can comment out)
 nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order
 
 %copy files to public drive

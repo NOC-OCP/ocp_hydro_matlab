@@ -14,13 +14,10 @@ mdocshow(scriptname, ['interactively select start and end of cast, written to dc
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 
-prefix1 = ['ctd_' mcruise '_'];
-prefix2 = ['dcs_' mcruise '_'];
-
-infile1 = [root_ctd '/' prefix1 stn_string '_psal'];
-infile2 = [root_ctd '/' prefix2 stn_string];
-otfile1 = [root_ctd '/' prefix1 stn_string '_surf'];
-otfile2 = [root_ctd '/' prefix2 stn_string ];
+infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
+infile0 = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz'];
+infile2 = [root_ctd '/dcs_' mcruise '_' stn_string];
+otfile2 = [root_ctd '/dcs_' mcruise '_' stn_string ];
 
 db = mload(infile2, 'scan_bot', 'press_bot', ' ');
 
@@ -34,6 +31,7 @@ if isempty (vnum)
 end
 
 [d h] = mload(infile1,'/');
+d24 = mload(infile0, 'scan', 'time', 'press', ' ');
 %  d.psal1 = d.cond1;  % A temporary fudge so coudl edit pressure
 %  d.psal2 = d.cond2;
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
@@ -207,6 +205,16 @@ scanend = floor(d.scan(kend));
 pend = d.press(kend);
 tend = d.time(kend);
 
+k24start = min(find(d24.scan >= scan_start - 1));
+scan24start = floor(d24.scan(k24start));
+p24start = d24.press(k24start);
+t24start = d24.time(k24start);
+
+k24end = max(find(d24.scan <= scan_end + 1));
+scan24end = floor(d24.scan(k24end));
+p24end = d24.press(k24end);
+t24end = d24.time(k24end);
+
 response_bot = {};
 if isfinite(scan_bot)
     
@@ -214,6 +222,11 @@ if isfinite(scan_bot)
     scanbot = floor(d.scan(kbot));
     pbot = d.press(kbot);
     tbot = d.time(kbot);
+    
+    k24bot = min(find(d24.scan >= scan_bot));
+    scan24bot = floor(d24.scan(k24bot));
+    p24bot = d24.press(k24bot);
+    t24bot = d24.time(k24bot);
     
     response_bot = {% prepare response if bottom has been redefined.
         'time_bot'
@@ -230,6 +243,10 @@ if isfinite(scan_bot)
         '/'
         'press_bot'
         ['y(1,1) = ' num2str(pbot)]
+        '/'
+        '/'
+        'dc24_bot'
+        ['y(1,1) = ' num2str(k24bot)]
         '/'
         '/'
         };
@@ -301,6 +318,14 @@ MEXEC_A.MARGS_IN_1 = {
     '/'
     'press_end'
     ['y(1,1) = ' num2str(pend)]
+    '/'
+    '/'
+    'dc24_start'
+    ['y(1,1) = ' num2str(k24start)]
+    '/'
+    '/'
+    'dc24_end'
+    ['y(1,1) = ' num2str(k24end)]
     '/'
     '/'
     };

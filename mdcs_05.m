@@ -24,7 +24,6 @@ else
 end
 iiraw = n-1;
 fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz']; n = n+1;
-fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_1hz']; n = n+1;
 fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_psal']; n = n+1;
 %fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_surf']; n = n+1;
 fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2db']; n = n+1;

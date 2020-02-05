@@ -4,13 +4,13 @@
 %      stn = 16; mfir_02;
 
 minit; scriptname = mfilename;
-mdocshow(scriptname, ['add time from ctd_' mcruise '_' stn_string '.nc to fir_' mcruise '_' stn_string '.nc based on scan number']);
+mdocshow(scriptname, ['add time from ctd_' mcruise '_' stn_string '_psal.nc to fir_' mcruise '_' stn_string '.nc based on scan number']);
 
 root_ctd = mgetdir('M_CTD');
 prefix1 = ['fir_' mcruise '_'];
 prefix2 = ['ctd_' mcruise '_'];
 infile1 = [root_ctd '/' prefix1 stn_string '_bl'];
-infile2 = [root_ctd '/' prefix2 stn_string '_1hz'];
+infile2 = [root_ctd '/' prefix2 stn_string '_psal'];
 otfile2 = [root_ctd '/' prefix1 stn_string '_time'];
 
 

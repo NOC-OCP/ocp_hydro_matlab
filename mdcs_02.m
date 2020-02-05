@@ -9,14 +9,12 @@ mdocshow(scriptname, ['finds scan number corresponding to bottom of cast, writes
 
 root_ctd = mgetdir('M_CTD');
 
-prefix1 = ['ctd_' mcruise '_'];
-prefix2 = ['dcs_' mcruise '_'];
-
-infile1 = [root_ctd '/' prefix1 stn_string '_psal'];
-%  infile1 = [root_ctd '/' prefix1 stn_string '_1hz'];  This would be a better choice if have issues with hte data
-otfile2 = [root_ctd '/' prefix2 stn_string ];
+infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
+otfile2 = [root_ctd '/dcs_' mcruise '_' stn_string ];
+infile0 = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz'];
 
 [d h] = mload(infile1,'time','scan','press',' ');
+d24 = mload(infile0,'scan',' ');
 
 p = d.press;
 % scanmax = min(floor(d.scan((p == max(p)))));
@@ -25,18 +23,12 @@ kbot = min(find(p == max(p)));
 
 %--------------------------------
 
-% di346, select bottom data cycle by hand for station 81
-
-if strcmp(mcruise,'di346')
-    if stnlocal==81
-        kbot = 5574;
-    end
-end
-%--------------------------------
+get_cropt
 
 scanbot = floor(d.scan(kbot));
 pbot = d.press(kbot);
 tbot = d.time(kbot);
+k24bot = min(find(d24.scan >= scanbot));
 
 % set up the data time origin for times start,bottom,end
 
@@ -87,6 +79,10 @@ otfile2
 '/'
 'press_bot'
 ['y(1,1) = ' num2str(pbot)]
+'/'
+'/'
+'dc24_bot'
+['y(1,1) = ' num2str(k24bot)]
 '/'
 '/'
 ' '
