@@ -146,14 +146,6 @@ switch scriptname
    %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
 
 
-   %%%%%%%%%% mctd_04 %%%%%%%%%%
-   case 'mctd_04'
-     switch oopt
-        case 'pretreat'
-      end
-   %%%%%%%%%% end mctd_04 %%%%%%%%%%
-
-
    %%%%%%%%%% moxy_01 %%%%%%%%%%
    case 'moxy_01'
       switch oopt

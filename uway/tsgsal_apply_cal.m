@@ -9,7 +9,7 @@ m_common
 scriptname = 'tsgsal_apply_cal';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 switch MEXEC_G.Mship
-   case 'cook' % used on jc069
+   case {'cook','discovery'} % used on jc069
       prefix = 'met_tsg';
    case 'jcr'
       prefix = 'oceanlogger';

@@ -70,7 +70,7 @@ clear mpath fp n
 end
 
 % Set root path for NetCDF stuff on this system: must contain subdirectories mexnc and snctools
-MEXEC.netcdf_root = [MEXEC.mstar_root '/sw/general_sw/netcdf']; 
+%MEXEC.netcdf_root = [MEXEC.mstar_root '/sw/general_sw/netcdf']; 
 
 % Set path for mexec source
 MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec'];
@@ -80,6 +80,7 @@ if length(which('m_common'))==0 % this is in msubs
    % add paths below source
    addpath([MEXEC.mexec_source_root '/pstar/subs'])
    addpath([MEXEC.mexec_source_root '/pstar/progs'])
+   addpath([MEXEC.mexec_source_root '/source/mexec_snctools'])
    addpath([MEXEC.mexec_source_root '/source/mextras'])
    addpath([MEXEC.mexec_source_root '/source/mscs'])
    addpath([MEXEC.mexec_source_root '/source/mstats'])
@@ -88,7 +89,7 @@ if length(which('m_common'))==0 % this is in msubs
    addpath([MEXEC.mexec_source_root '/source/unfinished'])
 
    % paths to other useful libraries %%%***could make this search for whatever version is there? 
-   mpath = [MEXEC.mstar_root '/sw/general_sw/LDEO_IX_12'];
+   mpath = [MEXEC.mstar_root '/sw/general_sw/LDEO_IX_13'];
    if exist(mpath)==7; addpath(mpath); addpath([mpath '/geomag']); end
    mpath = [MEXEC.mstar_root '/sw/general_sw/m_map_v1_4'];
    if exist(mpath)==7; addpath(mpath); end
@@ -176,7 +177,7 @@ MEXEC_G.MEXEC_DATA_ROOT = [MEXEC.mstar_root '/data'];
 MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scripts']; 
 
 if length(which('get_cropt'))==0 % this function is in mexec_processing_scripts/cruise_options
-   disp('adding mexec subdirectories to path')
+   disp('adding mexec_processing_scripts subdirectories to path')
    addpath([MEXEC.mexec_processing_scripts '/cruise_options/'])
    addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/'])
    addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/ladcp'])
@@ -232,22 +233,41 @@ switch MEXEC_G.Mshipdatasystem
 end
 
 %underway data directories
-if ~exist([MEXEC.mexec_processing_scripts '/uway/m_udirs.m'], 'file')
-   m_setudir %create it
+ud_is_current = 0; ud_runs = 0; sud_runs = 0; ufail = 0;
+while ud_is_current == 0 & ud_runs == 0 & ufail == 0
+    try
+        [udirs, udcruise] = m_udirs;
+        if strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
+            ud_is_current = 1;
+        else
+            error()
+        end
+    catch
+        try
+            unix(['/bin/rm ' MEXEC.mexec_processing_scripts '/uway/m_udirs.m']);
+            m_setudir
+            sud_runs = 1;
+            try
+                [udirs, udcruise] = m_udirs;
+                ud_runs = 1;
+            catch
+                ufail = 1;
+            end
+        catch
+            ufail = 1;
+        end
+    end
 end
-[udirs, udcruise] = m_udirs;
-if ~strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
-   m_setudir %there was one but it was an old version; recreate
-   [udirs, udcruise] = m_udirs;
-end
-clear udcruise
-if length(udirs)>0
-   MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,2:3)];
-   a = mgetdir(MEXEC_G.default_navstream); l = length(MEXEC_G.MEXEC_DATA_ROOT);
-   MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
-else
-   unix(['/bin/rm ' MEXEC.mexec_processing_scripts '/uway/m_udirs.m']);
-   disp('no underway directories yet, rerun m_setudir when they are available/linked')
+if ufail
+    if ~sud_runs
+        warning('no underway directories yet, m_setudir failed, rerun when they are available/linked')
+    elseif ~ud_runs
+        warning('no underway directories yet, m_udirs failed, rerun m_setudir when they are available/linked')
+    end
+elseif length(udirs)>0
+    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,2:3)];
+    a = mgetdir(MEXEC_G.default_navstream); l = length(MEXEC_G.MEXEC_DATA_ROOT);
+    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
 end
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 
@@ -267,6 +287,7 @@ MEXEC.nl = strfind(MEXEC.uname,sprintf('\n')); %strip newlines out of unix respo
 if ~isempty(MEXEC.nl); MEXEC.uname(MEXEC.nl) = []; end
 MEXEC_G.MUSER = [MEXEC.uuser ' on ' MEXEC.uname];
 
+if 0
 %%%***hopefully all this can be simplified (not sure we really need 3 versions?) or even made irrelevant by fully implementing matlab's netcdf capabilities?
 % determine matlab version and whether there is native netcdf support (>=2008b)
 [mver,mvdate] = version; mvdate = datevec(mvdate); mvdate = mvdate(1);
@@ -295,6 +316,7 @@ if length(which('nc_global'))==0 | length(which('nc_varget'))==0
    disp('adding mexnc and snctools to path')
    addpath(MEXEC.path_mexnc)
    addpath(MEXEC.path_snctools)
+end
 end
 
 MEXEC.housekeeping_version = [MEXEC.housekeeping_root '/version'];

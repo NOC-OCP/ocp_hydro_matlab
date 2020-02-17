@@ -43,6 +43,7 @@ upotemp1,degc90
 upotemp2,degc90
 uoxygen,umol/kg
 uoxygen1,umol/kg
+uoxygen2,umol/kg
 ufluor,ug/l
 udepth,metres
 utransmittance,percent

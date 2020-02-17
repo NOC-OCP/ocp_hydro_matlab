@@ -9,7 +9,7 @@ mday_plots(day,'surfmet')
 mday_plots(day,'metpro')
 mday_plots(day,'met_light')
 mday_plots(day,'met_tsg')
-%mday_plots(day,'tsg')
+mday_plots(day,'tsg')
 
 
 

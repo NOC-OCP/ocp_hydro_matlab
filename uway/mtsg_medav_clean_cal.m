@@ -22,6 +22,11 @@ infile1 = [root_dir '/' prefix '_' mcruise '_01'];
 otfile1 = [root_dir '/' prefix '_' mcruise '_01_medav_clean']; % 1-minute median data
 otfile2 = [root_dir '/' prefix '_' mcruise '_01_medav_clean_cal']; % 1-minute median data
 
+if ~exist(m_add_nc(infile1),'file')
+    error(['no tsg file ' infile1])
+    return
+end
+
 %average
 MEXEC_A.MARGS_IN = {
     infile1
@@ -58,7 +63,7 @@ scriptname = scriptname0;
 if exist('salout')
 
    switch MEXEC_G.Mship
-      case 'cook'
+      case {'cook','discovery'}
          salvar = 'psal';
       case 'jcr'
          salvar = 'salinity';

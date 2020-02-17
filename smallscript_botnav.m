@@ -36,7 +36,7 @@ for kloop = klist
     stn = kloop; mdcs_05
     
     stn = kloop; msam_02b;
-    stn = kloop; msam_updateall;
+    %stn = kloop; msam_updateall;
             
 end
 
@@ -44,5 +44,5 @@ end
 nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order
 
 %copy files to public drive
-unix(['cp /local/users/pstar/cruise/data/samlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);
-unix(['cp /local/users/pstar/cruise/data/collected_files/ctdlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);
+%unix(['cp /local/users/pstar/cruise/data/samlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);
+%unix(['cp /local/users/pstar/cruise/data/collected_files/ctdlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);

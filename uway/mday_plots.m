@@ -16,12 +16,12 @@ function mday_plots(day,stream)
 %bak on jc069
 % revised for ship options on jr281 bak march 2013
 m_setup
-pdfsroot = [MEXEC.mexec_processing_scripts '/pdfs'];
+pdfsroot = [MEXEC_G.MEXEC_DATA_ROOT '/plots/uway'];
 day_string = sprintf('%03d',day);
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 switch MEXEC_G.Mship
-    case 'cook'
+    case {'cook','discovery'}
         lon_name = 'long'; % name for longitude variable
     case 'jcr'
         lon_name = 'lon';
@@ -61,6 +61,38 @@ switch stream
         p2.startdc = [day 0 0 0];
         p2.stopdc = [day+1 0 0 0];
         p2 = mplotxy(p2);
+    case 'attposmv'
+        root_dir = mgetdir('M_ATTPOSMV');
+        prefix1 = ['attposmv' '_' mcruise '_'];
+        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
+        if exist(m_add_nc(infile1),'file') ~= 2;
+            % file does not exist
+            m_figure
+            axes
+            mess = ['file ' infile1 ' does not exist'];
+            ht = text(.5,.5,mess);
+            set(ht,'color','r','interpreter','none','horizontalalignment','center')
+            return
+        end
+            
+        clear p
+        p.xlist = 'time';
+        p.ylist = 'head pitch roll heave';
+        p.ncfile.name = infile1;
+        p.startdc = [day 0 0 0];
+        p.stopdc = [day+1 0 0 0];
+        p.time_scale = 3;
+        p.xax = [0 24];
+        p.yax = [
+            -90 810
+            -18 12
+            -18 12
+            -30 10
+            ];
+        p.ntick = [6 10];
+
+        p = mplotxy(p); % plot daily file
+        hold on; grid on;
     case 'gyro_s'
         root_dir = mgetdir('M_GYRO_S');
         prefix1 = ['gyro_s' '_' mcruise '_'];
@@ -83,16 +115,22 @@ switch stream
     case 'log_chf'
         switch MEXEC_G.Mship
             case 'jcr'
+                root_dir = mgetdir('M_LOG_CHF');
+                prefix1 = ['log_chf' '_' mcruise '_'];
                 p_ylist = 'velocity_f_a';
             case 'cook'
+                root_dir = mgetdir('M_LOG_CHF');
+                prefix1 = ['log_chf' '_' mcruise '_'];
                 p_ylist = 'speedfa';
+            case 'discovery'
+                root_dir = mgetdir('M_LOG_SKIP');
+                prefix1 = ['log_skip' '_' mcruise '_'];
+                p_ylist = 'forewaterspeed';                
             otherwise
                 msg = ['edit em log details as new case in mday_plots.m'];
                 fprintf(2,'\n\n%s\n\n\n',msg);
                 return
         end
-        root_dir = mgetdir('M_LOG_CHF');
-        prefix1 = ['log_chf' '_' mcruise '_'];
         infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
@@ -149,7 +187,7 @@ switch stream
         hold on; grid on;
     case 'surfmet'
         switch MEXEC_G.Mship
-            case 'cook'
+            case {'cook','discovery'}
                 p_ylist = 'speed direct airtemp humid';
                 p_yax = [
                     0 60 % wind speed
@@ -192,7 +230,7 @@ switch stream
         hold on; grid on;
     case 'airraw'
         switch MEXEC_G.Mship
-            case 'cook' % not used; air data are in metraw -> surfmet
+            case {'cook','discovery'} % not used; air data are in metraw -> surfmet
             case 'jcr'
                 p_ylist = 'airtemp1 airtemp2 humidity1 humidity2';
                 p_yax = [
@@ -275,6 +313,17 @@ switch stream
                     -200 1800
                     950 1050
                     ];
+            case 'discovery'
+                root_dir = mgetdir('M_SURFLIGHT');
+                prefix1 = ['met_light' '_' mcruise '_'];
+                p_ylist = 'ppar spar ptir stir pres';
+                p_yax = [
+                    -1000 1000
+                    -1000 1000
+                    -200 1800
+                    -200 1800
+                    950 1050
+                    ];
             otherwise
                 msg = ['edit tsg details as new case in mday_plots.m'];
                 fprintf(2,'\n\n%s\n\n\n',msg);
@@ -324,6 +373,16 @@ switch stream
                     2 5 % trans
                     2 6 % cond
                     ];
+            case 'discovery'
+                root_dir = mgetdir('M_MET_TSG')
+                % met tsg including fluor & trans
+                prefix1 = ['met_tsg' '_' mcruise '_'];
+                p_ylist = ' flow1 fluo trans ';
+                p_yax = [
+                    0 5
+                    0 2 % fluor
+                    2 5 % trans
+                    ];
             otherwise
                 msg = ['edit tsg details as new case in mday_plots.m'];
                 fprintf(2,'\n\n%s\n\n\n',msg);
@@ -360,7 +419,7 @@ switch stream
                     2 5 % cond
                     -8 2 % flow
                     ];
-            case 'cook'
+            case {'cook','discovery'}
                 root_dir = mgetdir('M_TSG');
                 prefix1 = ['tsg' '_' mcruise '_'];
                 p_ylist = ' temp_h temp_r salin sndspeed cond';
@@ -397,6 +456,11 @@ switch stream
         return
 end
 
+if ~exist(pdfsroot,'dir')
+    mkdir(pdfsroot);
+end
+print ('-dpng','-r150',[pdfsroot,'/',mcruise,'_',stream,'_',day_string,'.png']);
+print ('-dpdf',[pdfsroot,'/',mcruise,'_',stream,'_',day_string,'.pdf']);
 
 %
 %     case 'sim'

@@ -92,7 +92,6 @@ if exist(f.ctd,'file')
 	f.ctd_salinity_field	= 4;
 	f.ctd_time_field	= 1;
 	f.ctd_time_base 	= 0;		% elapsed
-%	f.ctd_time_base 	= 1;		% 
 	
 	f.nav                   = f.ctd;
 	f.nav_header_lines	= f.ctd_header_lines;
@@ -113,8 +112,8 @@ p.cruise_id	= mcruise;
 p.ladcp_station = stnlocal;
 p.name		= sprintf('%s cast #%d (processing version %s)',p.cruise_id,p.ladcp_station,subdir);
 
-p.saveplot = [];
-p.saveplot_pdf	= [1:14];
+p.saveplot	= [1:14];
+p.saveplot_png	= [1:14];
 p.orig = 0; % save original data or not
 
 p.ladcp_station = stnlocal;
@@ -131,11 +130,6 @@ p.edit_mask_dn_bins = [1];
 p.edit_mask_up_bins = [1];
 
 p.checkpoints = [1];
-
-if strcmp(mcruise,'dy113') & stnlocal>=5
-    p.ambiguity = 3.3;
-    p.vlim = 3.3;
-end
 
 %======================================================================
 % Diagnostic paramters

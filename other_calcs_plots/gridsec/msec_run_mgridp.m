@@ -5,8 +5,7 @@
 % you can specify gstart, gstop, gstep, or use the defaults (per cruise/section)
 
 %m_common %maybe this should be done as a function...
-scriptname = 'msec_run_mgridp';
-stn = 0; minit
+stn = 0; minit; scriptname = mfilename;
 root_ctd = mgetdir('M_CTD');
 
 % grid = '10 6000 20'; % jc032

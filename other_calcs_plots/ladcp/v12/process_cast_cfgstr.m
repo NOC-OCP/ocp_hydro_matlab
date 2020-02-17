@@ -1,12 +1,13 @@
-function [] = process_cast_cfgstr(stn,varargin)
-% function [] = process_cast_cfgstr(stn[,cfgstr])
+function [] = process_cast_cfgstr(stn, varargin)
+% function [] = process_cast(stn, cfgstr)
 %
-% Process LADCP cast, including GPS, SADCP, and BT data.
+% Process LADCP cast, including (if specified) GPS, SADCP, and BT data.
 %
-% Before a cast is processed, [set_cast_params_cfgstr.m] is called, and sets
-% cruise and/or cast-specific parameters based on inputs in structure cfgstr. 
-% After a cast is processed, [post_process_cast.m] is called (if it exists)
-% cruise- and/or cast-specific post-processing should be carried out there.
+% Before a cast is processed, [set_cast_params_cfgstr.m] is called, 
+% and sets cast-specific parameters based on inputs in structure cfgstr
+% After a cast
+% is processed, [post_process_cast.m] is called (if it exists) --- cruise-
+% and/or cast-specific post-processing should be carried out there.
 %
 % possible fields of cfgstr: 
 %
@@ -14,12 +15,12 @@ function [] = process_cast_cfgstr(stn,varargin)
 %
 %    stop:  0 don't stop (default)
 %           -1 stop before begin_step
-%           1 stop after begin_step
-%           2 stop after all steps
+%	    1 stop after begin_step
+%	    2 stop after all steps
 %
 %    eval_expr is evaluated after loading the checkpoint, just before
-%           processing starts; it can be used to override variables
-%           saved in the checkpoint.
+% 	    processing starts; it can be used to override variables
+%	    saved in the checkpoint.
 %
 %  plus the fields of f and p listed in default.m
 %
@@ -40,15 +41,16 @@ function [] = process_cast_cfgstr(stn,varargin)
 % 13: (RE-)LOAD SADCP DATA
 % 14: CALCULATE INVERSE SOLUTION
 % 15: CALCULATE SHEAR SOLUTION
-% 16: PLOT RESULTS & SHOW WARNINGS
-% 17: SAVE OUTPUT
+% 16: CALCULATE DIFFUSIVITY PROFILE
+% 17: PLOT RESULTS & SHOW WARNINGS
+% 18: SAVE OUTPUT
 
 %======================================================================
 %                    P R O C E S S _ C A S T . M 
 %                    doc: Thu Jun 24 16:54:23 2004
-%                    dlm: Wed Mar 29 12:57:24 2017
+%                    dlm: Thu Apr 26 11:02:01 2012
 %                    (c) 2004 A.M. Thurnherr
-%                    uE-Info: 90 39 NIL 0 0 72 0 2 8 NIL ofnI
+%                    uE-Info: 82 56 NIL 0 0 72 2 2 8 NIL ofnI
 %======================================================================
 
 % NOTES:
@@ -85,24 +87,14 @@ function [] = process_cast_cfgstr(stn,varargin)
 %  Sep 18, 2008: - BUG: p.navdata was non-existent field when no nav
 %			data were loaded
 %  Apr 26, 2012: - finally removed finestructure kz code
-%  Sep 26, 2014: - added support for p.orig in [saveres.m] (patch by Dan Torres)
-%  May 12, 2015: - finally removed entire step 16 (diffusivity)
-%  Jul 27, 2016: - added explicit .mat to checkpoints file to allow more
-%		   complex filenames
-%  Oct 14, 2016: - BUG: ctd_t, ctd_s were set after first pass, sometimes
-%			causing inconsistent vector lengths
-%  Mar 29, 2017: - added att and da to saveres
-%	 	 - added saveplot_pdf
-%		 - made fignums 2-digit
 %
-% Jun 01, 2017: ylf add optional input parameter-value pairs to be passed to 
+% Jun 01, 2017: add optional input parameter-value pairs to be passed to 
 %               set_cast_params to specify different settings to use:
 %               'orient' specifies downlooker ('DL', default), uplooker 
 %                  ('UL'), or both ('DL_UL')
 %               'constraints' is a cell array specifying whether to use 
 %                  bottom tracking ({'BT'}), SADCP ({'SADCP'}), or both
 %                  ({'BT', 'SADCP'})
-
 
 %----------------------------------------------------------------------
 % STEP 0: EXECUTE ALWAYS
@@ -130,15 +122,16 @@ if ~isfield(cfgstr, 'constraints')
 end
 
 %defaults of f and p
-clear f d dr p ps;                      % blank slate
+clear f d dr p ps;			% blank slate
 
-f.ladcpdo = ' ';                        % required by [m/default.m]
-default;                                % load default parameters
+f.ladcpdo = ' ';			% required by [m/default.m]
+default;				% load default parameters
 
-p = setdefv(p,'checkpoints',[]);        % disable checkpointing by default
+p = setdefv(p,'checkpoints',[]);	% disable checkpointing by default
 
 %call set_cast_params_cfgstr to set fields of f and p as specified, and create directories if needed
 set_cast_params_cfgstr
+
 
 %openwindows;				% open all windows
 
@@ -155,7 +148,7 @@ disp(p.software);			% show version
 if length(f.checkpoints) <= 1		% setup checkpointing
  error('Need to set f.checkpoints to write checkpoint files');
 end
-eval(sprintf('save %s_0.mat stn',f.checkpoints)); % sentinel
+eval(sprintf('save %s_0 stn',f.checkpoints)); % sentinel
 
 last_checkpoint = pcs.begin_step - 1;	% find last valid checkpoint
 while ~exist(sprintf('%s_%d.mat',f.checkpoints,last_checkpoint),'file')
@@ -193,10 +186,50 @@ if pcs.begin_step <= pcs.cur_step
   % LOAD RDI BB-raw data
   %  this is a rather complex set of functions
   %  1) load raw data
-  %     apply magnetic deviation if given
+  %     apply magentic deviation if given
   %  2) merge down-up data
   %  3) do some fist order error checks
-  [d,p]=loadrdi(f,p); 
+  if iscell(f.ladcpdo) & ~isempty(f.ladcpdo)
+      %load multiple files
+      for no = 1:length(f.ladcpdo)
+          f1 = f; f1.ladcpdo = f1.ladcpdo{no};
+          [d1(no), p1(no)] = loadrdi(f1, p);
+          l(no) = length(d1(no).time_jul);
+      end
+      ii = find(l==max(l)); ii = ii(1); %start with the longest
+      iia = setdiff(1:length(f.ladcpdo), ii);
+      d = d1(ii); p = p1(ii); f.ladcpdo = f.ladcpdo{no};
+      %append
+      fldnms = fieldnames(d);
+      for no = iia
+          for fno = 1:length(fldnms)
+              dat = getfield(d1(no), fldnms{fno});
+              if isnumeric(dat)
+                  s = size(dat);
+                  if s(2)==l(no)
+                      d = setfield(d, fldnms{fno}, [getfield(d,fldnms{fno}) getfield(d1(no),fldnms{fno})]);
+                  elseif s(1)==l(no)
+                      d = setfield(d, fldnms{fno}, [getfield(d,fldnms{fno}); getfield(d1(no),fldnms{fno})]);
+                  end
+              end
+          end
+      end
+      %sort
+      [t, iit] = sort(d.time_jul);
+      for fno = 1:length(fldnms)
+          dat = getfield(d, fldnms{fno});
+          if isnumeric(dat)
+              s = size(dat);
+              if s(2)==length(d.time_jul)
+                  d = setfield(d, fldnms{fno}, dat(:,iit));
+              elseif s(1)==length(d.time_jul)
+                  d = setfield(d, fldnms{fno}, dat(iit,:));
+              end
+          end
+      end
+  else
+      [d,p]=loadrdi(f,p); 
+  end
 
   % get instrument serial number
   p=getserial(f,p);
@@ -456,7 +489,9 @@ if pcs.begin_step <= pcs.cur_step
   %  take advantage of presolve if it existed
   %  call the main inversion routine
   %
+  %save(['/local/users/pstar/cruise/data/ladcp_' f.res(1:end-18) '_preinv'],'f','di','p','ps','dr');
   [p,dr,ps,de]=getinv(di,p,ps,dr,1);
+  %save(['/local/users/pstar/cruise/data/ladcp_' f.res(1:end-18) '_postinv'],'f','di','p','ps','dr','de');
 
   %
   % check inversion constraints
@@ -492,7 +527,30 @@ if pcs.begin_step <= pcs.cur_step
 end % OF STEP 15: CALCULATE SHEAR SOLUTION
 
 %----------------------------------------------------------------------
-% STEP 16: PLOT RESULTS & SHOW WARNINGS
+% STEP 16: CALCULATE DIFFUSIVITY PROFILE
+%----------------------------------------------------------------------
+
+pcs.cur_step = pcs.cur_step + 1;
+if pcs.begin_step <= pcs.cur_step
+  pcs.step_name = 'CALCULATE DIFFUSIVITY PROFILE'; begin_processing_step_cfgstr;
+
+  % 
+  %  prepare ctd data for output
+  %
+  if existf(d,'ctdprof_p')
+   % first save CTD data with profile
+   dr.ctd_t=interp1q(d.ctdprof_z,d.ctdprof_t,dr.z);
+   dr.ctd_s=interp1q(d.ctdprof_z,d.ctdprof_s,dr.z);
+  end
+  if existf(d,'ctdprof_ss')
+   dr.ctd_ss=interp1q(d.ctdprof_z,d.ctdprof_ss,dr.z);
+  end
+  
+  end_processing_step;
+end % OF STEP 16: CALCULATE DIFFUSIVITY PROFILE
+
+%----------------------------------------------------------------------
+% STEP 17: PLOT RESULTS & SHOW WARNINGS
 %----------------------------------------------------------------------
 
 pcs.cur_step = pcs.cur_step + 1;
@@ -539,23 +597,15 @@ if pcs.begin_step <= pcs.cur_step
   pause(0.01)
 
   end_processing_step;
-end % OF STEP 16: PLOT RESULTS & SHOW WARNINGS
+end % OF STEP 17: PLOT RESULTS & SHOW WARNINGS
 
 %----------------------------------------------------------------------
-% STEP 17: SAVE OUTPUT
+% STEP 18: SAVE OUTPUT
 %----------------------------------------------------------------------
 
 pcs.cur_step = pcs.cur_step + 1;
 if pcs.begin_step <= pcs.cur_step
   pcs.step_name = 'SAVE OUTPUT'; begin_processing_step_cfgstr;
-
-  if existf(d,'ctdprof_p')
-    dr.ctd_t=interp1q(d.ctdprof_z,d.ctdprof_t,dr.z);
-    dr.ctd_s=interp1q(d.ctdprof_z,d.ctdprof_s,dr.z);
-  end
-  if existf(d,'ctdprof_ss')
-    dr.ctd_ss=interp1q(d.ctdprof_z,d.ctdprof_ss,dr.z);
-  end
 
   if length(f.res)>1
   
@@ -563,8 +613,8 @@ if pcs.begin_step <= pcs.cur_step
     % save results to ASCII, MATLAB and NETCD files
     %
     disp(' save results ')
+    saveres(dr,p,ps,f,d)
     da=savearch(dr,d,p,ps,f,att);
-    saveres(dr,p,ps,f,d,att,da)
   
     %
     % save plots
@@ -577,7 +627,7 @@ if pcs.begin_step <= pcs.cur_step
          ok = 1; eval(sprintf('h = get(%d);',j),'ok = 0;');
          if ok
            figure(j);
-           eval(sprintf('print -dpsc %s_%02d.ps',f.res,j))
+           eval(['print -dpsc ',f.res,'_' int2str(j) '.ps ']);
          end
        end
     end
@@ -587,17 +637,7 @@ if pcs.begin_step <= pcs.cur_step
          ok = 1; eval(sprintf('h = get(%d);',j),'ok = 0;');
          if ok
            figure(j)
-           eval(sprintf('print -dpng %s_%02d.png',f.res,j))
-         end
-       end
-    end
-    for i = 1:length(p.saveplot_pdf)
-       j = p.saveplot_pdf(i);
-       if any(ismember(j,pcs.update_figures))
-         ok = 1; eval(sprintf('h = get(%d);',j),'ok = 0;');
-         if ok
-           figure(j)
-           eval(sprintf('print -dpdf %s_%02d.pdf',f.res,j))
+           eval(['print -dpng ',f.res,'_' int2str(j) '.png '])
          end
        end
     end
@@ -612,7 +652,7 @@ if pcs.begin_step <= pcs.cur_step
   end
     
   end_processing_step;
-end % OF STEP 17: SAVE OUTPUT
+end % OF STEP 18: SAVE OUTPUT
 
 %----------------------------------------------------------------------
 % FINAL STEP: CLEAN UP

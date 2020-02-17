@@ -35,6 +35,7 @@
 %   Jan 22, 2010: - adapted to Eric Firing's much simplified magdec utility
 %   Jan  3, 2011: - changed IGRF11 validity to end of 2015 (from 2010)
 %   Jan  6, 2016: - changed IGRF11 validity to end of 2016 (from 2015)
+%   Feb  7, 2020: EPAB changed IGRF13 validity to end of 2025.
 
 function [d,p]=loadnav(f,d,p)
 % function [d,p]=loadnav(f,d,p)
@@ -250,7 +251,7 @@ function  dev=geomag(f,date,lat,lon);
 
 dstr = gregoria(date);					% convert date (approx)
 year = dstr(1); month = dstr(2); day = dstr(3);
-if (year < 1900 || year > 2018)
+if (year < 1900 || year > 2025)
 	error(sprintf('year = %d out of range',year));
 end
 							% execute external program

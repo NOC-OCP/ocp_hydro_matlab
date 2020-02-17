@@ -19,12 +19,12 @@ stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.c
 %in mctd_03
 root_ctd = mgetdir('M_CTD');
 [d, h] = mload([root_ctd '/ctd_' mcruise '_' stn_string '_raw'], '/');
-if min(d.press)<=-10
+if min(d.press)<=-1.495
     disp(['negative pressures in ctd_' mcruise '_' stn_string '_raw'])
     disp(['check ctd_' mcruise '_' stn_string '_raw; if there are large'])
     disp(['spikes, edit opt_' mcruise ' mctd_01 case and reprocess this station'])
-    disp(['if not too large, edit mctd_rawedit case so that out-of-range'])
-    disp(['values will be removed; run mctd_rawedit here and return to continue'])
+    disp(['if not too large, check/edit revars in mctd_rawedit case so that'])
+    disp([' values<-1.495 will be removed; run mctd_rawedit here and dbcont to continue'])
     disp(['(note this will only apply automatic edits; you will still need to'])
     disp(['run mctd_rawedit again after ctd_all_part2 to go through the GUI editor)'])
     keyboard

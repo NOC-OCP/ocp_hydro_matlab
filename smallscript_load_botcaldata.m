@@ -57,12 +57,12 @@ if exist('klistcfc', 'var') & ~isempty(klistcfc)
    pause(1)
    klist = [klist klistcfc];
 else; klistcfc = []; end
-if exist('klistc13', 'var') & ~isempty(klistc13)
-   disp('Will process tracers from stations in klistc13: ')
-   disp(klistc13)
+if exist('klistiso', 'var') & ~isempty(klistiso)
+   disp('Will process tracers from stations in klistiso: ')
+   disp(klistiso)
    pause(1)
-   klist = [klist klistc13];
-else; klistc13 = []; end
+   klist = [klist klistiso];
+else; klistiso = []; end
 klist = unique(klist);
 
 if ~exist('docsv'); docsv = 0; end

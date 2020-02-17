@@ -53,6 +53,8 @@ if exist([infile '.nc']) %only if there is a raw file for this day
 	  'ea600m' 'depth_uncor' {'depthm' 'depth' 'dep' 'snd'}
 	  'em120' 'swath_depth' {'depthm' 'dep' 'snd'}
 	  'em122' 'swath_depth' {'depthm' 'dep' 'snd'}
+      'tsg' 'psal' {'salinity' 'salin'}
+      'met_tsg' 'psal' {'salinity' 'salin'}
          };
 
    ii = find(strcmp(abbrev, can(:,1))); 
@@ -181,9 +183,9 @@ if exist([infile '.nc']) %only if there is a raw file for this day
 	  'surfmet' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
 	  'met_light' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
 	  'surflight' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
-	  'tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50'}
-	  'met_tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans' 'fluo'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50' '0 10'}
-	  'ocl' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'0 50' '0 50' '0 50' '0 50' '0 50' '0 10' '0 50'}
+	  'tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105'}
+	  'met_tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans' 'fluo' 'flow1'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105' '0 10' '0 10'}
+	  'ocl' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105'}
 	  'sim' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
 	  'ea600m' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
 	  'ea600' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
@@ -234,31 +236,37 @@ if exist([infile '.nc']) %only if there is a raw file for this day
    if sum(strcmp(abbrev, {'met_tsg' 'tsg' 'ocl'}))
       %work on the latest file, which already be an edited version; always output to otfile
       if exist([otfile '.nc'])
-         unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
+         unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']);
       else
-         infile1 = infile;
+         unix(['/bin/cp ' infile '.nc ' wkfile '.nc']);
       end
-      switch abbrev
-         case {'met_tsg' 'tsg' 'ocl'}
-            h = m_read_header(infile1);
-            if sum(strcmp('cond', h.fldnam))
-	           if sum(strcmp('tstemp', h.fldnam))
-                  tvar = 'tstemp';
-	          elseif sum(strcmp('temp_h', h.fldnam))
-                  tvar = 'temp_h';
-	          elseif sum(strcmp('temp_m', h.fldnam))
-                  tvar = 'temp_m';
-	          else
-                  warning('no housing/pumped seawater supply temperature set')
-	             tvar = [];
-               end
-               if length(tvar)>0
-                  MEXEC_A.MARGS_IN = {infile1; otfile; '/'; ['cond ' tvar]; 'y = gsw_SP_from_C(10*x1,x2,0)'; 'psal'; 'pss-78'; ' '};
-                  mcalc
-               end
-            end
-      end	 
-      unix(['/bin/rm ' m_add_nc(wkfile)]);
+      infile1 = wkfile;
+      h = m_read_header(infile1);
+      if sum(strcmp('cond', h.fldnam))
+         if sum(strcmp('tstemp', h.fldnam))
+            tvar = 'tstemp';
+         elseif sum(strcmp('temp_h', h.fldnam))
+            tvar = 'temp_h';
+         elseif sum(strcmp('temp_m', h.fldnam))
+            tvar = 'temp_m';
+         else
+            warning('no housing/pumped seawater supply temperature set')
+            tvar = [];
+         end
+         if sum(strcmp('psal', h.fldnam))==0 & length(tvar)>0
+            MEXEC_A.MARGS_IN = {infile1; otfile; '/'; ['cond ' tvar]; 'y = gsw_SP_from_C(10*x1,x2,0)'; 'psal'; 'pss-78'; ' '};
+            mcalc
+            unix(['/bin/rm ' m_add_nc(wkfile)]);
+         elseif length(tvar)>0
+            unix(['/bin/mv ' wkfile '.nc ' otfile '.nc']);
+            MEXEC_A.MARGS_IN = {otfile; 'y'; 'psal'; ['cond ' tvar]; 'y = gsw_SP_from_C(10*x1,x2,0)'; '/'; 'pss-78'; ' '};
+            mcalib2
+         else
+            unix(['/bin/rm ' m_add_nc(wkfile)]);
+         end
+      else %if exist(m_add_nc(wkfile),'file') % if we don't have conductivity, e.g. on Discovery, where it's in tsg but not met_tsg, don't delete the file!
+         unix(['/bin/mv ' wkfile '.nc ' otfile '.nc']);
+      end
    end
 
 

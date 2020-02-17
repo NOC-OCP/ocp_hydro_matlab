@@ -12,15 +12,15 @@ usecallocal = usecal; clear usecal
 
 oopt = 'shiptsg'; get_cropt
 switch MEXEC_G.Mship
-    case 'cook'
+    case {'cook','discovery'}
         salvar = 'psal'; % salinity var in tsg data stream
         tempvar = 'temp_h'; % housing temp
-        tempsst = 'temp_r'; % housing temp
+        tempsst = 'temp_r'; % hull (remote) temp
         condvar = 'cond'; % conductivity
-    case 'discovery'
-	salvar = 'salin';
-	tempvar = 'temp_h'; %%%***add tempsst for discovery
-	condvar = 'cond';
+%     case 'discovery'
+% 	salvar = 'salin';
+% 	tempvar = 'temp_h'; %%%***add tempsst for discovery
+% 	condvar = 'cond';
     case 'jcr'
         salvar = 'salinity'; % salinity var in tsg data stream
         tempvar = 'tstemp'; % housing temp
@@ -84,11 +84,11 @@ hl = plot(dt.time, tsal, db.time, db.salinity, '.y', db.time, db.salinity_adj, '
 legend(hl([1 3 4]), 'TSG','bottle','TSG')
 ylabel('Salinity (psu)'); xlabel('yearday')
 title([calstr ' TSG'])
-xlim(dt.time([1 end])
+xlim(dt.time([1 end]))
 subplot(nsp,1,2)
 plot(db.time, sdiffall, 'r+-',db.time, sdiffsm,' kx-'); grid
 ylabel([calstr ' TSG salinity - bottle salinity (psu)']); xlabel('yearday')
-xlim(dt.time([1 end])
+xlim(dt.time([1 end]))
 if nsp==4
    subplot(nsp,1,3)
    plot(tssts, sdiffall, 'r+', tssts, sdiffsm, 'kx'); grid
@@ -97,7 +97,7 @@ if nsp==4
    legend('Total Difference', 'Smoothed Difference');
    subplot(nsp,1,4)
    plot(tsals, sdiffall, 'r+', tsals, sdiffsm, 'kx'); grid
-   xlabel([calstr ' TSG salinity (psu)')
+   xlabel([calstr ' TSG salinity (psu)'])
    ylabel([calstr ' TSG salinity - bottle salinity (psu)'])
 end
    

@@ -14,9 +14,11 @@ minit; scriptname = mfilename; mdocshow(scriptname, ['saves 1 hz t,P,T,S,lat,lon
 
 root_ctd = mgetdir('M_CTD');
 root_out = [mgetdir('M_LADCP')];
-infile = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
+%infile = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
+infile = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
 
 if exist(m_add_nc(infile),'file') ~= 2
+    disp(['file not found: ' infile ', not writing 1 hz ascii file'])
     return
 end
 
@@ -36,11 +38,12 @@ fnot = [root_out '/ctd/ctd.' stn_string '.02.asc'];
 fid = fopen(fnot,'w');
 for kl = 1:length(kok)
    fprintf(fid,'%10.2f %8.2f %8.4f %8.4f %11.6f %10.6f %12.7f\n', dd.time(kok(kl)), dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)), dd.decday(kok(kl))); 
+ %  fprintf(fid,'%10.2f %8.2f %8.4f %8.4f %11.6f %10.6f %12.7f\n', dd.decday(kok(kl))+1, dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)), dd.decday(kok(kl))); 
 end
 fclose(fid);
 
 
-if 1
+if 0 %***should this be a cruise-specific option whether uh processing is used?
     %%%%%%%%% write nav data only %%%%%%%%%
 
 if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')

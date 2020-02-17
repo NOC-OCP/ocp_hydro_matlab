@@ -43,6 +43,7 @@ upotemp1,degc90,nan
 upotemp2,degc90,nan
 uoxygen,umol/kg,nan
 uoxygen1,umol/kg,nan
+uoxygen2,umol/kg,nan
 ufluor,ug/l,nan
 udepth,metres,nan
 utransmittance,percent,nan

@@ -775,7 +775,7 @@ for plotlist = cklist
             end
             title ('oxy diff');
             xlabel('minutes away from bottom');
-            ax = axis; ax(3:4) = [-30 30]; axis(ax);
+            ax = axis; ax(3:4) = [-5 5]; axis(ax);
 
             
         otherwise

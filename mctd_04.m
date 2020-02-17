@@ -10,7 +10,7 @@ mdocshow(scriptname, ['averages from 24 hz to 2 dbar in ctd_' mcruise '_' stn_st
 
 root_ctd = mgetdir('M_CTD');
 
-wkfile_dvars = ['wk_dvars_' mcruise '_' stn_string];
+wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
 infile2 = [root_ctd '/dcs_' mcruise '_' stn_string];
 otfile1d = [root_ctd '/ctd_' mcruise '_' stn_string '_2db'];
 otfile1u = [root_ctd '/ctd_' mcruise '_' stn_string '_2up'];
@@ -47,10 +47,10 @@ copystrup = {[sprintf('%d',round(dcbot)) ' ' sprintf('%d',round(dcend))]};
 var_copycell = mcvars_list(1);
 % remove any vars from copy list that aren't available in the input file
 numcopy = length(var_copycell);
-h_input = m_read_header(infile1);
+h_input = m_read_header(wkfile_dvars);
 var_copystr = ' ';
 for kloop_scr = 1:numcopy
-    if sum(strncmp(var_copycell{kloop_scr},h_input.fldnam,length(var_copycell{kloop_scr})))
+    if length(strmatch(var_copycell{kloop_scr},h_input.fldnam,'exact'))>0
         var_copystr = [var_copystr var_copycell{kloop_scr} ' '];
     end
 end
@@ -129,25 +129,29 @@ mavrge
 
 %%%%%interpolate to fill in gaps %%%%%
 
-MEXEC_A.MARGS_IN = {
-wkfile3d
-'y'
-'/'
-'press'
-'0'
-'0'
-};
-mintrp
+oopt = 'interp2db'; get_cropt
 
-MEXEC_A.MARGS_IN = {
-wkfile3u
-'y'
-'/'
-'press'
-'0'
-'0'
-};
-mintrp
+if interp2db
+    MEXEC_A.MARGS_IN = {
+    wkfile3d
+    'y'
+    '/'
+    'press'
+    '0'
+    '0'
+    };
+    mintrp
+
+    MEXEC_A.MARGS_IN = {
+    wkfile3u
+    'y'
+    '/'
+    'press'
+    '0'
+    '0'
+    };
+    mintrp
+end
 
 %%%%% add potemp and contemp %%%%%
 
@@ -173,6 +177,7 @@ var_copystr
 'degc90'
 ' '
 };
+margsin = MEXEC_A.MARGS_IN;
 mcalc
 
 MEXEC_A.MARGS_IN = {

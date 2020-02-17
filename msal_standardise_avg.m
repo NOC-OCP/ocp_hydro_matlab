@@ -48,7 +48,7 @@ function msal_standardise_avg
 m_common
 stn = 0;
 minit; scriptname = mfilename;
-mdocshow(scriptname, ['add documentation string for ' scriptname])
+mdocshow(scriptname, ['load salinity sample and standard data, plot standards and samples over time, flag bad values, average'])
 
 %root directory and filenames
 root_sal = mgetdir('M_BOT_SAL');
@@ -58,8 +58,8 @@ if ~exist('sal_csv_files'); sal_csv_files{1} = sal_csv_file; end
 ds_all = dataset; 
 ds_all.sampnum = NaN; ds_all.station_day = NaN; ds_all.cast_hour = NaN; ds_all.niskin_minute = NaN;
 ds_all.r1 = NaN; ds_all.r2 = NaN; ds_all.r3 = NaN;
-ds_all.cellT = NaN; ds_all.offset = NaN; ds_all.runtime = NaN;
-ds_all_fn = ds_all.Properties.VarNames;
+ds_all.cellT = NaN; ds_all.offset = NaN; ds_all.runtime = NaN; ds_all.flag = NaN;
+ds_all_fn = ds_all.Properties.VarNames; 
 for fno = 1:length(sal_csv_files)
     
    fname_sal = [root_sal '/' sal_csv_files{fno}];
@@ -72,7 +72,7 @@ for fno = 1:length(sal_csv_files)
 
       %test for required fields
       ds_sal_fn = ds_sal.Properties.VarNames;
-      if sum(strcmp('SALINITYDATAFILE', ds_sal_fn)) %***perhaps this should be less strict
+      if sum(strcmp('SALINITYDATAFILE', ds_sal_fn)) | sum(strcmp('SALINITY DATA FILE', ds_sal_fn)) %***perhaps this should be less strict
          me = MException('myfile:notdataset:autosalexcel', '%s is autosal excel file', fname_sal);
          throw(me)
       elseif ~(sum(strcmp('sampnum', ds_sal_fn))+sum(strcmp('station_day', ds_sal_fn)))
@@ -115,14 +115,15 @@ for fno = 1:length(sal_csv_files)
       iih = [find(ltype==1); nrows];
       for cno = 1:length(iih)-1
          %find the relevant columns for this block
-         isn = strncmpi('sampnum', indata{iih(cno)}, 7);
-         is1 = strcmpi('sample 1', indata{iih(cno)});
-         is2 = strcmpi('sample 2', indata{iih(cno)});
-         is3 = strcmpi('sample 3', indata{iih(cno)});
-         iso = strcmpi('offset', indata{iih(cno)});
-         isd = strcmpi('date', indata{iih(cno)});
-         ist = strcmpi('time', indata{iih(cno)});
-         isa = strcmpi('average', indata{iih(cno)});
+         isn = strncmpi('sampnum', lower(indata{iih(cno)}), 7);
+         is1 = strcmpi('sample 1', lower(indata{iih(cno)}));
+         is2 = strcmpi('sample 2', lower(indata{iih(cno)}));
+         is3 = strcmpi('sample 3', lower(indata{iih(cno)}));
+         iso = strcmpi('offset', lower(indata{iih(cno)}));
+         isd = strcmpi('date', lower(indata{iih(cno)}));
+         ist = strcmpi('time', lower(indata{iih(cno)}));
+         isa = strcmpi('average', lower(indata{iih(cno)}));
+         isf = strcmpi('flag', lower(indata{iih(cno)}));
          %find the sample (including standard sample) lines for this block
          iis = find(ltype==2); iis = iis(iis>iih(cno) & iis<iih(cno+1));
          %append sample rows %***possibly this could be done faster with
@@ -134,6 +135,11 @@ for fno = 1:length(sal_csv_files)
             ds_sal.sample2(lsal,1) = str2num(indata{iis(sno)}{is2});
             ds_sal.sample3(lsal,1) = str2num(indata{iis(sno)}{is3});
             ds_sal.average(lsal,1) = str2num(indata{iis(sno)}{isa});
+            if sum(isf)>0
+               try; ds_sal.flag(lsal,1) = str2num(indata{iis(sno)}{isf}); catch; keyboard; end
+            else
+                ds_sal.flag(lsal,1) = NaN;
+            end
             if sum(iso)>0
                ds_sal.offset(lsal,1) = str2num(indata{iis(sno)}{iso});
             else
@@ -206,6 +212,10 @@ for fno = 1:length(sal_csv_files)
          ds_sal.r1 = ds_sal.reading1;
          ds_sal.r2 = ds_sal.reading2;
          ds_sal.r3 = ds_sal.reading3;
+      elseif sum(strcmp('Sample_1',ds_sal_fn))
+          ds_sal.r1 = ds_sal.Sample_1;
+          ds_sal.r2 = ds_sal.Sample_2;
+          ds_sal.r3 = ds_sal.Sample_3;
       end
    end
    
@@ -220,7 +230,7 @@ for fno = 1:length(sal_csv_files)
 
 end
 if sum(~isnan(ds_all.offset))==0; ds_all.offset = zeros(size(ds_all.offset)); end %filler
-ds_sal = ds_all; clear ds_all
+ds_sal = ds_all(2:end,:); clear ds_all
 ds_sal_fn = ds_sal.Properties.VarNames;
 
 ds_sal.r1(ds_sal.r1<=-999) = NaN;
@@ -234,15 +244,14 @@ iistd = find(ds_sal.sampnum==0 | (ds_sal.sampnum>=999000 & ds_sal.sampnum<100000
 if sum(strcmp('offset',ds_sal_fn))==0 | calc_offset
 
    oopt = 'k15'; get_cropt
-   offs0 = ds_sal.offset(iistd);
    ds_sal.offset = NaN+zeros(length(ds_sal.K15),1);
    offs = repmat(2*ds_sal.K15(iistd), 1, 3) - [ds_sal.r1(iistd) ds_sal.r2(iistd) ds_sal.r3(iistd)];
+   ssns = ds_sal.sampnum(iistd)-999000;
 
    oopt = 'std2use'; get_cropt %if not set to 0, a plot is made and a keyboard prompt appears
    if check_sal_runs
       diffs = offs*1e5; diffm = sum(diffs.*std2use,2)./sum(std2use,2);
       %diff_filt = filter_bak(ones(1,21),diffm);
-      x = 1:length(iistd); 
       x = ds_sal.sampnum(iistd)-999000;
       x3 = repmat(x',1,3);
       clf
@@ -258,6 +267,7 @@ if sum(strcmp('offset',ds_sal_fn))==0 | calc_offset
 
    %best standards offsets
    std2use(isnan(offs)) = 0; offs(isnan(offs)) = 0;
+   
    ds_sal.offset(iistd) = sum(offs.*std2use, 2)./sum(std2use, 2);
    ds_sal.offset(~isfinite(ds_sal.offset)) = NaN;
 
@@ -273,7 +283,7 @@ if sum(strcmp('offset',ds_sal_fn))==0 | calc_offset
 
    %interpolate best offsets to samples
    iistd = find(ds_sal.sampnum>=999000 & ds_sal.sampnum<1e6);
-   iisam = setdiff([1:length(ds_sal.station_day)]', iistd);
+   iisam = find(ds_sal.sampnum<998000 | ds_sal.sampnum>=1e6);
    [x0,ii] = sort(xoff(iistd)); iistd = iistd(ii); 
    ds_sal.offset(iisam) = interp1(xoff(iistd), ds_sal.offset(iistd), xoff(iisam));
    iib = find(isnan(ds_sal.cellT(iisam)));
@@ -284,7 +294,7 @@ if sum(strcmp('offset',ds_sal_fn))==0 | calc_offset
        plot(interp1(xoff(iistd), ds_sal.sampnum(iistd), xoff(iisam))-999000, ds_sal.offset(iisam)*1e5, '.'); grid; xlim(x([1 end]))
        ylabel('offset (10^-5)')
        xlabel('standard number')
-      disp('return when finished')
+      disp('dbcont when finished')
       keyboard
    end
    
@@ -307,15 +317,17 @@ if check_sal_runs
    x = 1:length(iisam); x3 = repmat(x',1,3);
    res = sams - repmat(sum(sams.*sam2use, 2)./sum(sam2use, 2),1,3);
    resg = res; resg(find(sam2use==0)) = NaN;
+   samsg = sams; samsg(find(sam2use==0)) = NaN;
    xs = ds_sal.sampnum(iisam);
    
    subplot(3,1,1)
-   plot(x, res(:,1), 'o', x, res(:,2), 's', x, res(:,3), '<', x3(sam2use==1), res(sam2use==1), '.c'); grid
+   plot(x, res(:,1), 'o', x, res(:,2), 's', x, res(:,3), '<', x3(sam2use==1), res(sam2use==1), '.c', x([1 end]), [-1 1; -1 1]*2e-5, 'k'); grid
+   ylim([-1 1]*max(max(abs(res(sam2use==1))))*1.1)
    xlabel('sample index')
    
    %TSG samplessalbotqf
    ii = find(xs>1e6);
-   subplot(3,3,[4 7])
+   subplot(3,3,[4])
    plot(xs(ii), res(ii,1), 'o', xs(ii), res(ii,2), 's', xs(ii), res(ii,3), '<', xs(ii), resg(ii,:), '.c'); title('tsg'); grid
 
    disp('if necessary, set sam2use in opt_cruise to change which readings to use');
@@ -326,8 +338,13 @@ if check_sal_runs
       for no = 1:length(stnos)
          ii = find(floor(ds_sal.sampnum(iisam)/100)==stnos(no));
          subplot(3,3,[5 6 8 9]);
-         plot(xs(ii), res(ii,1), 'o', xs(ii), res(ii,2), 's', xs(ii), res(ii,3), '<', xs(ii), resg(ii,:), '.c'); grid
-         title(['ctd ' num2str(stnos(no))]); disp('return to go on to next station'); keyboard
+         plot(xs(ii), res(ii,1), 'o', xs(ii), res(ii,2), 's', xs(ii), res(ii,3), '<', xs(ii), resg(ii,:), '.c', [min(xs(ii)) max(xs(ii))], [-1 1; -1 1]*2e-5, 'k'); grid
+         yl = get(gca, 'ylim'); yl(1) = min(-3e-5, yl(1)); yl(2) = max(3e-5, yl(2)); ylim(yl)
+         title(['ctd ' num2str(stnos(no))]); 
+         subplot(3,3,7)
+         plot(xs(ii), sams(ii,1), 'o', xs(ii), sams(ii,2), 's', xs(ii), sams(ii,3), '<', xs(ii), samsg(ii,:), '.c'); grid
+         yl = [min(min(samsg(ii,:)))*.99 max(max(samsg(ii,:)))*1.01]; ylim(yl)
+         disp('dbcont to go on to next station'); keyboard
       end
    else; keyboard; end
    

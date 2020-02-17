@@ -129,7 +129,7 @@ switch(MEXEC_G.Mshipdatasystem)
         f = 'msnames';
 end
 
-fprintf(1,'\n\n%s\n\n',['The following ' MEXEC_G.Mshipdatasystem ' stream names are not identified in ' f])
+fprintf(2,'\n\n%s\n\n',['The following ' MEXEC_G.Mshipdatasystem ' stream names are not identified in ' f])
 for kl = 1:length(as)
     if sum(strcmp(as{kl},am))==0
         fprintf(1,'%s\n',as{kl}); 

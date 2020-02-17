@@ -73,6 +73,14 @@ else
     os = input('Enter OS type: 75 or 150: ');
 end
 oslocal = os; clear os; % so it doesnt persist
+if ~exist('nbb'); 
+    nbb = input('Enter narrowband (1) or broadband (2): '); 
+end
+if nbb==1; 
+    nbbstr='nb';
+else 
+    nbbstr='bb'; 
+end
 
 root_ctd = mgetdir('M_CTD');
 root_vmadcp = mgetdir('M_VMADCP');
@@ -80,7 +88,7 @@ root_vmadcp = mgetdir('M_VMADCP');
 inst = ['os' sprintf('%d',oslocal)];
 
 root_vmad = mgetdir('M_VMADCP');
-infile = [root_vmad '/mproc/' inst '_' mcruise '_01.nc'];
+infile = [root_vmad '/mproc/' inst nbbstr '_' mcruise '_01.nc'];
 
 
 % construct output filename; 

@@ -16,8 +16,8 @@ switch ship
         % set up by bak on dy040 17 dec 2015; guessing will work on jc
         mcd M_MET_TSG
         prefix1 = ['met_tsg_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
-        salvar_raw = 'salin'; % salinity vars in tsg data stream
-        salvar_cal = 'salin_cal';
+        salvar_raw = 'psal'; % salinity vars in tsg data stream
+        salvar_cal = 'psal_cal';
         tempvar = 'temp_h'; % housing temp
         condvar = 'cond'; % conductivity
         switch cal
@@ -27,7 +27,7 @@ switch ship
                 tsgfn = [prefix1 '01_medav_clean_cal']; % median averaged file
         end
         
-        tsgall_root = []; % tsg sample files were in surftsg on dy040; no need to go elsewhere for them
+        tsgall_root = [mgetdir('M_BOT_SAL') '/']; % tsg sample files were in surftsg on dy040; no need to go elsewhere for them
     case 'jcr'
         % eg jr281
         mcd M_OCL

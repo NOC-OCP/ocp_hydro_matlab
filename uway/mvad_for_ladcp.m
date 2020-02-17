@@ -1,4 +1,5 @@
-function mvad_for_ladcp(cast,statnum,os)
+function mvad_for_ladcp(cast,statnum,os,varargin)
+%function mvad_for_ladcp(cast,statnum,os,nbb)
 
 % bak jc069
 
@@ -18,10 +19,17 @@ if ischar(statnum);
     statnum = str2num(statnum); % variables come in as char if simply typed on the command line
 end 
 
+if length(varargin)>0
+    nbb = varargin{1}; 
+else
+    nbb = 1;
+end
+if nbb==1; nbbstr = 'nb'; elseif nbb == 2; nbbstr = 'bb'; end
+
 kstn = statnum;
 stn_string = sprintf('%03d',kstn);
 oslocal = os;
-osstr = sprintf('%d',oslocal);
+osstr = sprintf('%d%s',oslocal,nbbstr);
 
 root_vmadcp = mgetdir('M_VMADCP');
 
@@ -57,4 +65,4 @@ z_sadcp   = da.depth(:,1);
 % END ------- CV 2018/11/17 
 
 %save([root_vmadcp '/mproc/os' osstr '_' mcruise '_' cast '_' stn_string], 'time', 'depth', 'uabs*', 'vabs*', 'lon', 'lat')
-save([root_vmadcp '/mproc/os' osstr '_' mcruise '_' cast '_' stn_string], 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');
+save([root_vmadcp '/mproc/os' osstr '_' mcruise '_' cast '_' stn_string '_forladcp'], 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');

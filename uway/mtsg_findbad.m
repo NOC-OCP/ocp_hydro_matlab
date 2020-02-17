@@ -18,20 +18,8 @@
 
 scriptname = 'mtsg_findbad';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-    
+
 oopt = 'shiptsg'; get_cropt
-switch MEXEC_G.Mship
-    case 'cook'
-        d.salin = d.psal;
-        d.sstemp = d.temp_m;
-    case 'discovery'
-        d.salin = d.psal;
-        d.sstemp = d.temp_r;
-    case 'jcr'
-        d.salin = d.salinity;
-        d.cond = d.conductivity;
-        d.temp_h = d.tstemp;
-end
 roottsg = mgetdir(abbrev);
 infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
 
@@ -39,6 +27,19 @@ infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
 scriptname0 = scriptname; scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt; scriptname = scriptname0;
 
 [d h] = mload(infile1,'/');
+switch MEXEC_G.Mship
+    case 'cook'
+        d.salin = d.psal;
+        d.sstemp = d.temp_m;
+    case 'discovery'
+        d.salin = d.psal;
+        d.sstemp = d.temp_r;
+        d.flowrate=d.flow1;
+    case 'jcr'
+        d.salin = d.salinity;
+        d.cond = d.conductivity;
+        d.temp_h = d.tstemp;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
 

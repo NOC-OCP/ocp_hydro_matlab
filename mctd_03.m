@@ -24,11 +24,14 @@ otfile2u = [root_ctd '/' prefix1 stn_string '_2up'];
 wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
 wkfile2 = ['wk2_' scriptname '_' datestr(now,30)];
 wkfile3 = ['wk3_' scriptname '_' datestr(now,30)];
-wkfile_dvars = ['wk_dvars_' mcruise '_' stn_string];
+wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
 
 h = m_read_header(infile1);
 
-oopt = '24hz'; get_cropt; oopt = ''; %optionally edit bad data in 24hz file
+
+%%%%% optionally edit bad data (e.g. by scan range) and decide whether to interpolate over gaps %%%%%
+oopt = '24hz'; get_cropt
+
 
 %%%%% add variables to contain copy of data from preferred sensors %%%%%
 
@@ -53,16 +56,6 @@ end
 
 newnames = {'temp'; 'cond'; 'oxygen'};
 
-%MEXEC_A.MARGS_IN = {
-%infile1
-%otfile1
-%var_copystr
-%copystr
-%' '
-%' '
-%};
-%mcopya
-
 MEXEC_A.MARGS_IN = {
 infile1
 wkfile1
@@ -73,7 +66,23 @@ newnames{1}
 newnames{2}
 newnames{3}
 };
+margsin = MEXEC_A.MARGS_IN;
 maddvars
+
+
+%%%%% interpolate over gaps %%%%%
+if interp24 %set above in oopt = '24hz'
+    MEXEC_A.MARGS_IN = {
+    wkfile1
+    'y'
+    '/'
+    'scan'
+    num2str(maxgap)
+    '0'
+    '0'
+    };
+    mintrp2
+end
 
 
 %%%%% determine what variables will go into _psal 1 hz file, %%%%%
@@ -86,7 +95,7 @@ numcopy = length(var_copycell);
 h_input = m_read_header(wkfile1);
 var_copystr = ' ';
 for kloop_scr = 1:numcopy
-    if sum(strncmp(var_copycell{kloop_scr},h_input.fldnam,length(var_copycell{kloop_scr})))
+    if length(strmatch(var_copycell{kloop_scr},h_input.fldnam,'exact'))>0
         var_copystr = [var_copystr var_copycell{kloop_scr} ' '];
     end
 end
@@ -96,10 +105,6 @@ MEXEC_A.MARGS_IN = {
 wkfile1
 wkfile2
 var_copystr
-'press'
-'y = -gsw_z_from_p(x1,h.latitude)'
-'depth'
-'metres'
 'cond temp press'
 'y = gsw_SP_from_C(x1,x2,x3)'
 'psal'

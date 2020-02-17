@@ -187,7 +187,7 @@ muvsd
 %--------------------------------
 % change some input var names for later clarity
 switch MEXEC_G.Mship
-    case {'discovery'}
+    case {' '}%'discovery'} %***why not query for which variable is which?
         MEXEC_A.MARGS_IN = {
             wkfile2
             'y'
@@ -208,7 +208,7 @@ switch MEXEC_G.Mship
             '-1'
             };
         mheadr
-    case {'cook'}
+    case {'cook', 'discovery'}
         MEXEC_A.MARGS_IN = {
             wkfile2
             'y'

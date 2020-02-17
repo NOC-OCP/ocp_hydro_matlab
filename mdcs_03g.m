@@ -62,7 +62,7 @@ while 1
         mess = ['choose : \n'];
         mess = [mess 'p   : plot all\n'];
         mess = [mess 'z   : zoom all panels to current x lims\n'];
-        mess = [mess 'q   : quit\n'];
+        mess = [mess 'q   : quit without saving new values\n'];
         mess = [mess 'w   : save values and proceed\n'];
         mess = [mess 'ss  : select start scan\n'];
         mess = [mess 'sb  : select bottom scan\n'];
@@ -178,8 +178,8 @@ while 1
             ylabel('temp')
 
             subplot('position',[pl pb pw ph])
-            if isfield(d, 'oxygen'); plot(d.scan(kok),d.oxygen(kok),'k+-');
-	    else; plot(d.scan(kok),d.oxygen1(kok),'k+-',d.scan(kok),d.oxygen2(kok),'r+-'); end
+	    if isfield(d,'oxygen2'); plot(d.scan(kok),d.oxygen1(kok),'k+-',d.scan(kok),d.oxygen2(kok),'r+-');
+	    else; plot(d.scan(kok),d.oxygen1(kok),'k+-'); end
             hold on ;grid on
             ha(5) = gca;
             ylabel('oxygen')

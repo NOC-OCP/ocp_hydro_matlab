@@ -70,7 +70,7 @@ save(fnot, 'bestdeps')
 if ~isempty(ii0)
    disp('new depths:')
    disp(round(bestdeps(ii0,:)))
-   disp('ok?'); pause
+   pause
 end
 
 
@@ -131,6 +131,12 @@ switch depmeth
          if exist(lf)
 	        load(lf, 'p');
             bestdeps(bestdeps(:,1)==stns(no),2) = round(p.zbottom);
+         else
+         lf = [root_ladcp '/DLUL_GPS/processed/' stn_string '/' stn_string '.mat'];
+            if exist(lf)
+         	        load(lf, 'p');
+            bestdeps(bestdeps(:,1)==stns(no),2) = round(p.zbottom);
+            end
          end
       end
 

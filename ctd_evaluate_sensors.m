@@ -173,17 +173,17 @@ for no = 1:n
 
    figure((no-1)*10+3); clf; orient portrait
    load cmap_bo2; colormap(cmap_bo2)
-   subplot(1,8,1:2); scatter(d.utemp(sensind{no}), -d.upress(sensind{no}), 16, res(sensind{no}), 'filled'); grid
+   subplot(1,8,1:2); scatter(d.utemp(sensind{no}), -d.upress(sensind{no}), 16, res(sensind{no}), 'filled'); grid; set(gca,'color',[.8 .8 .8])
    xlabel('temp'); xlim([min(d.utemp(sensind{no})) max(d.utemp(sensind{no}))])
    ylabel('press'); ylim(presrange); caxis(rlim); colorbar
-   subplot(1,8,3:4); scatter(d.statnum(sensind{no}), -d.upress(sensind{no}), 16, res(sensind{no}), 'filled'); grid
+   subplot(1,8,3:4); scatter(d.statnum(sensind{no}), -d.upress(sensind{no}), 16, res(sensind{no}), 'filled'); grid; set(gca,'color',[.8 .8 .8])
    xlabel('station'); xlim([min(d.statnum(sensind{no})) max(d.statnum(sensind{no}))])
    ylabel('press'); ylim(presrange); caxis(rlim); colorbar
    title([mcruise ' ' rlabel])
-   subplot(1,8,5:6); scatter(d.utemp(sensind{no}), d.uoxygen(sensind{no}), 16, res(sensind{no}), 'filled'); grid
+   subplot(1,8,5:6); scatter(d.utemp(sensind{no}), d.uoxygen(sensind{no}), 16, res(sensind{no}), 'filled'); grid; set(gca,'color',[.8 .8 .8])
    xlabel('temp'); xlim([min(d.utemp(sensind{no})) max(d.utemp(sensind{no}))])
    ylabel('oxygen'); ylim([min(d.uoxygen) max(d.uoxygen)]); caxis(rlim); colorbar
-   subplot(1,8,7:8); scatter(d.uoxygen(sensind{no}), -d.upress(sensind{no}), 16, res(sensind{no}), 'filled'); grid
+   subplot(1,8,7:8); scatter(d.uoxygen(sensind{no}), -d.upress(sensind{no}), 16, res(sensind{no}), 'filled'); grid; set(gca,'color',[.8 .8 .8])
    xlabel('oxygen'); xlim([min(d.uoxygen(sensind{no})) max(d.uoxygen(sensind{no}))])
    ylabel('press'); ylim(presrange); caxis(rlim); colorbar
    print('-dpdf', [printdir 'ctd_eval_' sensname sensstr '_set' num2str(no) '_pt'])
@@ -201,7 +201,7 @@ if sum(strcmp(sensname, {'temp';'cond';'oxy'})) & plotprof
       disp([sensname sensstr ' difference out of range (station, bottle, press, res):']);  
       a = d.statnum(ii); b = d.position(ii); c = d.upress(ii);
       disp(round([a(:) b(:) c(:) res(ii)]))
-      disp('return to plot profile-by-profile')
+      disp('dbcont to plot profile-by-profile')
       keyboard
 
       if strcmp(sensname, 'cond')
@@ -238,9 +238,10 @@ if sum(strcmp(sensname, {'temp';'cond';'oxy'})) & plotprof
 	    c = oxy_apply_cal(sensnum, s(no), du.press, du.time, du.temp, c);
 	 end
          plot(b(iidu1), -d1.press(iidu1), 'c', c, -du.press, 'k--', ...
-	 caldata(iis), -d.upress(iis), 'r.', caldata(iisbf), -d.upress(iisbf), 'm.', ctddata(iis), -d.upress(iis), 'b.', ...
+	 caldata(iis), -d.upress(iis), 'r.', ...
+     caldata(iisbf), -d.upress(iisbf), 'm.', ctddata(iis), -d.upress(iis), 'b.', ...
 	 caldata(iiq), -d.upress(iiq), 'or', ctddata(iiq), -d.upress(iiq), 'sb');
-	 grid; title(s(no))
+	 grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',s(no)));
 	 mn = nanmean(c); st = nanstd(c); xl = [-st st]*5+mn; set(gca, 'xlim', xl);
          text(repmat(st*4.5+mn,length(iiq),1), -d.upress(iiq), num2str(d.position(iiq)));
 	 for qno = 1:length(iiq)

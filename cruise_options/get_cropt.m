@@ -3,7 +3,7 @@
 % and warns if expected options have not been set
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-shiptsg = {'cook' 'tsg'; 'discovery' 'tsg'; 'jcr' 'oceanlogger'};
+shiptsg = {'cook' 'met_tsg'; 'discovery' 'met_tsg'; 'jcr' 'oceanlogger'};
 
 %%%%%%%%%% defaults, by script %%%%%%%%%%
 
@@ -79,7 +79,11 @@ switch scriptname
             %variable oopt specifies which file ('24hz', '1hz', 'psal')
             %default: no edits
             case '24hz'
-            case '1hz'
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 | strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,'jc191')
+                    interp24 = 0; 
+                else
+                    interp24 = 1; maxgap = 12; %***
+                end
             case 'psal'
             case 's_choice' %this applies to both t and c
                 s_choice = 1;
@@ -94,6 +98,12 @@ switch scriptname
     case 'mctd_04'
         switch oopt
             case 'pretreat'
+            case 'interp2db'
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 | strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,'jc191')
+                    interp2db = 1; %filling gaps in 2dbar data used to be standard
+                else
+                    interp2db = 0; %don't think it should be anymore; instead fill gaps (of limited length) in 24 hz data before averaging
+                end
         end
         %%%%%%%%%% end mctd_04 %%%%%%%%%%
         
@@ -487,13 +497,13 @@ end
         switch oopt
             case 'usecal'
                if ~exist('usecal'); usecal = 0; end
-case 'shiptsg'
-ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
-if length(ii)==1
-prefix = (shiptsg{ii,2})
-else
-error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
-end
+            case 'shiptsg'
+                ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
+                if length(ii)==1
+                    prefix = (shiptsg{ii,2})
+                else
+                    error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
+                end
             case 'dbbad'
                 %optionally NaN some of the db.salinity_adj points
             case 'sdiff'
@@ -515,31 +525,31 @@ end
         end
         %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
        
-%%%%%%%%%% mtsg_findbad %%%%%%%%%%
-case 'mtsg_findbad'
-switch oopt
-case 'shiptsg'
-ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
-if length(ii)==1
-abbrev = shiptsg{ii,2};
-else
-error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
-end
-end
-%%%%%%%%%% end mtsg_findbad %%%%%%%%%%
-
-%%%%%%%%%% mtsg_medav_clean_cal %%%%%%%%%
-case 'mtsg_medav_clean_cal'
-switch oopt
-case 'shiptsg'
-ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
-if length(ii)==1
-prefix = shiptsg{ii,2};
-else
-error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
-end
-end
-%%%%%%%%%% end mtsg_medav_clean_cal %%%%%%%%%%
+        %%%%%%%%%% mtsg_findbad %%%%%%%%%%
+    case 'mtsg_findbad'
+        switch oopt
+            case 'shiptsg'
+                ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
+                if length(ii)==1
+                    abbrev = shiptsg{ii,2};
+                else
+                    error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
+                end
+        end
+        %%%%%%%%%% end mtsg_findbad %%%%%%%%%%
+        
+        %%%%%%%%%% mtsg_medav_clean_cal %%%%%%%%%
+    case 'mtsg_medav_clean_cal'
+        switch oopt
+            case 'shiptsg'
+                ii = find(strcmp(shiptsg(:,1),MEXEC_G.Mship));
+                if length(ii)==1
+                    prefix = shiptsg{ii,2};
+                else
+                    error(['set tsg stream name for ' MEXEC_G.Mship ' at top of get_cropt.m to run ' scriptname])
+                end
+        end
+        %%%%%%%%%% end mtsg_medav_clean_cal %%%%%%%%%%
  
         %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
     case 'tsgsal_apply_cal'
@@ -656,10 +666,14 @@ end
     case 'mvad_01'
         switch oopt
             case 'files'
-                pre1 = [mcruise '_' inst '/adcp_pyproc/' mcruise '_enrproc/' inst nbbstr];
-                datadir = [root_vmadcp '/' pre1 '/contour'];
+                datadir = [root_vmadcp '/mproc/dy113/' inst nbbstr '/contour'];
                 fnin = [datadir '/' inst nbbstr '.nc'];
-                dataname = [inst '_' mcruise '_01'];
+                dataname = [inst nbbstr '_' mcruise '_01'];
+                %vmdas defaults
+%                pre1 = [mcruise '_' inst '/adcp_pyproc/' mcruise '_enrproc/' inst nbbstr];
+%                datadir = [root_vmadcp '/' pre1 '/contour'];
+%                fnin = [datadir '/' inst nbbstr '.nc'];
+%                dataname = [inst '_' mcruise '_01'];
         end
     %%%%%%%%%% end mvad_01 %%%%%%%%%%
 
@@ -710,7 +724,7 @@ switch scriptname
         
         %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
     case 'tsgsal_apply_cal'
-        if ~exist('off'); warning(['no salinity cal set for TSG']); end
+        if ~exist('salout'); warning(['no salinity cal set for TSG']); end
         %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
         
         %%%%%%%%%% temp_apply_cal %%%%%%%%%%

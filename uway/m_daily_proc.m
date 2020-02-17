@@ -78,6 +78,50 @@ for daynumber = days
    end
    cd(MEXEC_G.MEXEC_DATA_ROOT)
    end
+   
+   % on Discovery, we have temperature and salinity in tsg, other variables 
+   % in met_tsg so we need to combine these streams into met_tsg. Originally, 
+   % we tried to do this at the end, but this doesn't work when appending
+   % additional days, as some variables will be missing from files being
+   % appended...
+   if strcmp(MEXEC_G.Mship,'discovery') 
+     if exist([MEXEC_G.MEXEC_DATA_ROOT '/ocl/tsg/tsg_' mcruise '_d' daystr '_edt.nc'])
+
+      scriptname='m_daily_proc';
+
+      mdocshow(scriptname, ['merge tsg data from from tsg_' mcruise '_d' daystr '_edt.nc into met_tsg_' mcruise '_d' daystr '_edt.nc']);
+
+      wkfile = ['wk_' scriptname '_' datestr(now,30)];
+      cd([MEXEC_G.MEXEC_DATA_ROOT '/ocl/tsg']);
+      cmd = ['/bin/cp -p ' 'met_tsg_' mcruise '_d' daystr '_edt.nc ' m_add_nc(wkfile)]; unix(cmd);
+
+      MEXEC_A.MARGS_IN = {
+         ['met_tsg_' mcruise '_d' daystr '_edt.nc']
+         m_add_nc(wkfile)
+         '/'
+         'time'
+         ['tsg_' mcruise '_d' daystr '_edt.nc']
+         'time'
+         'psal temp_r temp_h cond sndspeed' % not deltat
+         'k'
+         };
+      mmerge
+      unix(['/bin/rm ' wkfile '.nc']);
+      cd(MEXEC_G.MEXEC_DATA_ROOT)
+     else % no TSG file for this day - so we need to add blank variables 
+          % to MET_TSG so the files can be merged when data become available
+      cd([MEXEC_G.MEXEC_DATA_ROOT '/ocl/tsg']);
+      otfilestruct=struct('name',['met_tsg_' mcruise '_d' daystr '_edt.nc']);
+      h=m_read_header(otfilestruct.name);
+      blankdata=repmat(-99999,h.rowlength,h.collength);
+      m_write_variable(otfilestruct,struct('name','psal','units','pss-78','data',blankdata));
+      m_write_variable(otfilestruct,struct('name','temp_r','units','degree_Celsius','data',blankdata));
+      m_write_variable(otfilestruct,struct('name','temp_h','units','degree_Celsius','data',blankdata));
+      m_write_variable(otfilestruct,struct('name','cond','units','S/m','data',blankdata));
+      m_write_variable(otfilestruct,struct('name','sndspeed','units','m/s','data',blankdata));
+      cd(MEXEC_G.MEXEC_DATA_ROOT)
+     end
+   end
   
    %update appended files
    for sno = 1:size(udirs, 1)
@@ -93,8 +137,14 @@ end
 
 %what about wamos (on techsas)? 
 mbest_all
+
+
 mtruew_01
-mtsg_medav_clean_cal
+try
+    mtsg_medav_clean_cal
+catch
+    warning('no tsg file, not running mtsg_medav_clean_cal')
+end
 switch MEXEC_G.Mship
    case 'jcr'
       oopt = 'allmat'; get_cropt
