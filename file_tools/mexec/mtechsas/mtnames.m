@@ -78,14 +78,18 @@ switch MEXEC_G.Mship
 %         'winch'                   'winch'                 'CLAM-CLAM_JC1.CLAM'
          'winch'                   'winch'                 'CLAM-CLAM_WINCH.CLAM'
 %         'surflight'             'surfmet'              'Light-JC-SM_JC1.SURFMETv2'
- 'surflight'    'surfmet'             'Light-SURFMET.SURFMETv2'
+%  'surflight'    'surfmet'             'Light-SURFMET.SURFMETv2'
+ 'surflight'    'surfmet'             'Light-SURFMETv3.SURFMETv3' % bak; new on jc191
 %         'met_light'             'surfmet'              'Light-JC-SM_JC1.SURFMETv2'
-         'met_light'             'surfmet'              'Light-SURFMET.SURFMETv2'
+%          'met_light'             'surfmet'              'Light-SURFMET.SURFMETv2'
+         'met_light'             'surfmet'              'Light-SURFMETv3.SURFMETv3' % bak; new on jc191
 %         'surfmet'               'surfmet'                'MET-JC-SM_JC1.SURFMETv2'
- 'surfmet'      'surfmet'             'MET-SURFMET.SURFMETv2'
+%  'surfmet'      'surfmet'             'MET-SURFMET.SURFMETv2'
+ 'surfmet'      'surfmet'             'MET-SURFMETv3.SURFMETv3' % bak new on jc191
 %         'surftsg'               'surfmet'               'Surf-JC-SM_JC1.SURFMETv2'
 %         'met_tsg'               'surfmet'               'Surf-JC-SM_JC1.SURFMETv2'
- 'met_tsg'      'surfmet'             'Surf-SURFMET.SURFMETv2'
+%  'met_tsg'      'surfmet'             'Surf-SURFMET.SURFMETv2'
+ 'met_tsg'      'surfmet'             'Surf-SURFMETv3.SURFMETv3' % bak new on jc191
 %         'SBE45'                   'SBE45'                          'SBE45-SBE45_JC1.TSG'
          'tsg'                   'tsg'                          'SBE45-SBE45.TSG'
          'mag'                        ' '              'scalar_mag-SeaSpy_JC1.mag'

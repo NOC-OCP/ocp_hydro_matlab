@@ -88,9 +88,7 @@ for k = vlist
     m = ['Copying ' sprintf('%8d',numdc) ' datacycles for variable '  vname ];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m);
     end
-    % bak jc191 remove tic and toc from next line
-%     tic; m_copy_variable(ncfile_in,vname,ncfile_ot,vname); if ~MEXEC_G.quiet; disp(toc); end
-    m_copy_variable(ncfile_in,vname,ncfile_ot,vname);
+    tic; m_copy_variable(ncfile_in,vname,ncfile_ot,vname); if ~MEXEC_G.quiet; disp(toc); end
 end
 
 % now prompt for details of new calculations

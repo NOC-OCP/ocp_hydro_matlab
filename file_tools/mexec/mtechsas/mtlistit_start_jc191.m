@@ -151,21 +151,17 @@ end
 % data cycles that lie in the period and print the first one
 % bak jc159: there is a nan in the time variable, which interrupts listing.
 % check for nan and issue a warning.
-% bak jc191: nan times in sim stream; jc159 fix didn't catch them all.
 while tcount < t(end) & endflag == 0; % tcount is the start of the search period
     tcount = tcount+tintd; % this is now the end of the search period
     while ~isfinite(t(icount))
-        fprintf(2,'%s %d\n','Non-finite time found in file at data cycle ',icount);
+        fprintf(2,'%s\n','Non-finite time found in file');
         icount = icount+1; 
         if icount > num; endflag = 1; break; end
     end
     if t(icount) < tcount % the present data cycle [ie t(icount) ] is in the period so print it
         tp = t(icount);
         eval(cmd);
-        while t(icount) < tcount || ~isfinite(t(icount)); % skip the other data cycles in this search period
-            if ~isfinite(t(icount))
-                fprintf(2,'%s %d\n','Non-finite time found in file at data cycle ',icount);
-            end
+        while t(icount) < tcount; % skip the other data cycles in this search period
             icount = icount+1; % when we exit this loop, t(icount) is in the next search period
             if icount > num; endflag = 1; break; end % set an end flag when we reach the end of the data
         end

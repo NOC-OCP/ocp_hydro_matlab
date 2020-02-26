@@ -130,7 +130,22 @@ for kf = 1:numfiles
     if mod(kf,10) == 0; fprintf(MEXEC_A.Mfidterm,'%d %s %d %s\n',kf,' out of ',numfiles,' files processed'); end 
     ncfile_in.name = file_list{kf};
     ncfile_in = m_openin(ncfile_in);
+    
+    % bak jc191 try to fix this so we get a proper history output;
+    % the old version got mload history output instead of mapend output
+    margs = MEXEC_A.MARGS_OT; % keep a record of input arguments for this prog
+    history_in = MEXEC_A.Mhistory_in;
+    prog = MEXEC_A.Mprog;
+    MEXEC_A.Mhistory_skip = 1;
+    
     [d2 h2] = mload(ncfile_in.name,'/');
+   
+    MEXEC_A.Mhistory_skip = 0;
+    MEXEC_A.Mprog = prog;
+    MEXEC_A.Mhistory_in = history_in; % retrieve value for this prog
+    MEXEC_A.MARGS_OT = margs;
+    % end of jc191 modification; it seems to have worked.
+    
     file_headers{kf} = h2;
     file_data{kf} = d2;
 end
