@@ -315,7 +315,7 @@ switch stream
                     ];
             case 'discovery'
                 root_dir = mgetdir('M_SURFLIGHT');
-                prefix1 = ['met_light' '_' mcruise '_'];
+                prefix1 = ['surflight' '_' mcruise '_'];
                 p_ylist = 'ppar spar ptir stir pres';
                 p_yax = [
                     -1000 1000
@@ -329,9 +329,11 @@ switch stream
                 fprintf(2,'\n\n%s\n\n\n',msg);
                 return
         end
-        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
-        if exist(m_add_nc(infile1),'file') ~= 2; return; end
-
+        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
+        if exist(m_add_nc(infile1),'file') ~= 2;
+            infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
+            if exist(m_add_nc(infile1),'file') ~= 2; return; end
+        end
         clear p
         p.xlist = 'time';
         p.ylist = p_ylist;
@@ -380,8 +382,8 @@ switch stream
                 p_ylist = ' flow1 fluo trans ';
                 p_yax = [
                     0 5
-                    0 2 % fluor
-                    2 5 % trans
+                    0 12 % fluor in percent
+                    40 100 % trans in percent
                     ];
             otherwise
                 msg = ['edit tsg details as new case in mday_plots.m'];
@@ -422,7 +424,7 @@ switch stream
             case {'cook','discovery'}
                 root_dir = mgetdir('M_TSG');
                 prefix1 = ['tsg' '_' mcruise '_'];
-                p_ylist = ' temp_h temp_r salin sndspeed cond';
+                p_ylist = ' temp_h temp_r psal sndspeed cond';
                 p_yax = [
                     -4 36 % housing ?
                     -4 36 % remote ?
@@ -436,7 +438,7 @@ switch stream
                 return
         end
         % met tsg including fluor & trans
-        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
+        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p

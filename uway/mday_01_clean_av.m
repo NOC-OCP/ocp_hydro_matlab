@@ -21,6 +21,10 @@ function mday_01_clean_av(abbrev,day)
 % which may vary by ship/cruise, are applied separately
 %
 % revised ylf dy105 to check for various variable names (requiring similar transformations) in the header
+%
+% revised epa dy113 to apply factory calibrations to uncalibrated underway
+% variables, as specified in the option file. On Discovery, this applies to
+% fluorometer and transmissometer in met_tsg, and all radiometers in surflight
 
 m_common
 scriptname = 'mday_01_clean_av';
@@ -127,21 +131,41 @@ if exist([infile '.nc']) %only if there is a raw file for this day
          unix(['/bin/rm ' m_add_nc(wkfile)]);
 
    end
-
-
-   %%%%% apply other corrections for bad data or data labelling %%%%%
-   if strcmp(abbrev, 'cnav')
-      %work on the latest file, which already is an edited version; always output to otfile
-      if ~exist([otfile '.nc'])
-         unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
-      end
-	  d = mload(otfile, '/'); 
-      if max([d.lat(:)-floor(d.lat(:)); d.long(:)-floor(d.long(:))]*100)<=61
-         MEXEC_A.MARGS_IN = {otfile; 'y'; 'lat'; 'y = cnav_fix(x)'; ' '; ' '; 'long'; 'y = cnav_fix(x)'; ' '; ' '; ' '};
-         mcalib
-      end
+   
+   %%%%% apply calibrations to uncalibrated underway sensors - from cruise option file %%%%%
+   oopt='uway_apply_cal'; get_cropt;
+   for m=1:length(sensors_to_cal)
+       if ~exist([otfile '.nc'])
+          unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+       end
+       h = m_read_header(otfile);
+       varnum = find(strcmp(sensors_to_cal{m}, h.fldnam));
+       
+       % rename variable to raw
+       MEXEC_A.MARGS_IN = {
+           otfile
+           'y' % yes, overwrite file
+           '8' % rename vars
+           int2str(varnum) % variable number to rename
+           [sensors_to_cal{m},'_raw'] % new name
+           '/' % keep existing unit (volt?)
+           '-1' % done
+           '/' % quit
+           };
+       mheadr
+       % apply calibration and rename units
+       MEXEC_A.MARGS_IN = {
+           otfile
+           'y' % yes, overwrite file
+           [sensors_to_cal{m},'_raw'] % variable to calibrate
+           [sensors_to_cal{m},'_raw'] % input variables for calibration
+           sensorcals{m} % function for calibration
+           sensors_to_cal{m} % new name for output variable
+           sensorunits{m} % new unit for output variable (or '/' to retain existing)
+           ' ' % quit
+           };
+       mcalib2
    end
-
 
    %%%%% apply carter table soundspeed correction to single-beam bathymetry %%%%%
    if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600'}))

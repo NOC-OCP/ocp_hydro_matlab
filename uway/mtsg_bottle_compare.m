@@ -25,6 +25,7 @@ switch MEXEC_G.Mship
         salvar = 'salinity'; % salinity var in tsg data stream
         tempvar = 'tstemp'; % housing temp
         condvar = 'conductivity'; % conductivity
+        tempsst = 'sstemp'; % "sea surface" temperature?
 end
 root_tsg = mgetdir(prefix);
 root_bot = mgetdir('M_BOT_SAL');

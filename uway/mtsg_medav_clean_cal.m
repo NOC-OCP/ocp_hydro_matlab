@@ -60,7 +60,7 @@ salin = 1; time = 1; oopt = 'saladj'; eval(['opt_' mcruise])
 scriptname = scriptname0;
 
 %apply it if there is one
-if exist('salout')
+if exist('salout','var')
 
    switch MEXEC_G.Mship
       case {'cook','discovery'}
@@ -81,5 +81,33 @@ if exist('salout')
       ' '
       };
   mcalc
+end
 
+%determine if there is a tsg temperature adjustment
+scriptname0 = scriptname; scriptname = 'tsgsal_apply_cal';
+tempin = 1; time = 1; oopt = 'tempadj'; eval(['opt_' mcruise])
+scriptname = scriptname0;
+
+%apply it if there is one
+if exist('tempout','var')
+
+   switch MEXEC_G.Mship
+      case {'cook','discovery'}
+         tempvar = 'temp_r';
+      case 'jcr'
+         tempvar = 'sstemp';
+   end
+   tempinline = ['y = tsgsal_apply_temp_cal(x1,x2)'];
+
+   MEXEC_A.MARGS_IN = {
+      otfile1
+      otfile2
+      '/'
+      ['time ' tempvar]
+      tempinline
+      [tempvar '_adj']
+      'degree_Celsius'
+      ' '
+      };
+  mcalc
 end

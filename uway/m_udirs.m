@@ -9,6 +9,7 @@ udirs = {
 'satinfocnav'    'M_SATINFOCNAV'    'nav/cnav'    'satelliteinfo-CNAV.GPS';
 'satinfofugro'    'M_SATINFOFUGRO'    'nav/gps'    'satelliteinfo-FUGRO.GPS';
 'attposmv'    'M_ATTPOSMV'    'nav/posmvatt'    'shipattitude-Applanix_TSS_DY1.att';
+'attphins'    'M_ATTPHINS'    'nav/phinsatt'    'shipattitude-Phins_TSS_DY1.att';
 'attsea'    'M_ATTSEA'    'nav/seaatt'    'shipattitude-Seapath_TSS_DY1.att';
 'attseaaux'    'M_ATTSEAAUX'    'nav/seaatt'    'shipattitude_aux-Seapath_TSS_DY1.att';
 'gyro_s'    'M_GYRO_S'    'nav/gyros'    'gyro-SGYRO_DY1.gyr';

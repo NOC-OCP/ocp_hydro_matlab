@@ -29,6 +29,7 @@ udirsn = {
 	 'ashtech'             'nav/ash'
 	 'attsea'              'nav/seaatt'
 	 'attseaaux'           'nav/seaatt'
+     'attphins'            'nav/phinsatt'
      'attposmv'            'nav/posmvatt'
 	 'cnav'                'nav/cnav'
 	 'satinfocnav'         'nav/cnav'

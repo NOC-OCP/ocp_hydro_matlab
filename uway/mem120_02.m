@@ -29,7 +29,7 @@ dstring = datestr(now,30);
 root_sim = mgetdir('M_SIM');
 
 switch MEXEC_G.Mship % bak on jr281 march 2013; cook branch couldn't be tested on jr281
-    case 'cook'
+    case {'cook','discovery'} % even though Discovery's is actually an EM122...
         root_em120 = mgetdir('M_EM120'); 
         prefix1 = ['em120_' mcruise '_'];
     case 'jcr'
@@ -48,18 +48,20 @@ wkfile = ['wk_' scriptname '_' datestr(now,30)];
 wkfile = m_add_nc(wkfile);
 
 if exist(infile2,'file') ~= 2
-    msg = [infile2 ' not found'];
-    fprintf(2,'\n\n%s\n\n\n',msg)
+   msg = [infile2 ' not found'];
+   fprintf(2,'\n\n%s\n\n\n',msg)
    MEXEC_A.MARGS_IN = {
       infile1
-      'y'
+      wkfile
+      '/'
       'swath_depth'
-      'y = nan+x;'
+      'y = nan+x1;'
       'depth'
-      'm'
+      'metres'
       ' '
    };
-   mcalib
+   mcalc
+   unix(['/bin/mv ' wkfile ' ' infile1]);
 
 else
    MEXEC_A.MARGS_IN = {

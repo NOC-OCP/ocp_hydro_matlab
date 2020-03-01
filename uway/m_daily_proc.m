@@ -135,6 +135,8 @@ for daynumber = days
 
 end
 
+clear restart_uway_append
+
 %what about wamos (on techsas)? 
 mbest_all
 
