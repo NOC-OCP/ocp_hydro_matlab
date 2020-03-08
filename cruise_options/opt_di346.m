@@ -193,5 +193,15 @@ switch scriptname
       end
    %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%
+
+                %%%%%%%%%% m_maptracer %%%%%%%%%%
+    case 'm_maptracer'
+        switch oopt
+            case 'kstatgroups'
+                kstatgroups = {[2:13] [14:200]};
+        end
+        %%%%%%%%%% end m_maptracer %%%%%%%%%%
+
+
+        %%%%%%%%%%%%%%%%%%
 end

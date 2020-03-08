@@ -52,14 +52,26 @@ switch scriptname
             case 'calibs_to_do'
                 dooxyhyst = 1;
                 doturbV = 0;
-            case 'oxyrev' %reverse oxy hyst correction. this only comes up if ismember(dohyst,-1)
+            case 'oxyrev' %reverse oxy hyst correction. this only comes up if ismember(dooxyhyst,-1)
                 var_strings = {'oxygen_sbe1 time press'};
                 pars = {[-0.033 5000 1450]}; %sbe default parameters
                 varnames = {'oxygen_sbe1_rev'};
-            case 'oxyhyst' %this only comes up if ismember(dohyst,1)
+                h = m_read_header(infile);
+                if sum(strcmp('oxygen_sbe2',h.fldnam))
+                    var_strings = [var_strings; 'oxygen_sbe2_rev time press'];
+                    pars(2) = pars(1);
+                    varnames = [varnames; 'oxygen2'];
+                end
+            case 'oxyhyst' %this only comes up if ismember(dooxyhyst,1)
                 var_strings = {'oxygen_sbe1 time press'};
                 pars = {[-0.033 5000 1450]}; %sbe default
                 varnames = {'oxygen1'};
+                h = m_read_header(infile);
+                if sum(strcmp('oxygen_sbe2',h.fldnam))
+                    var_strings = [var_strings; 'oxygen_sbe2 time press'];
+                    pars(2) = pars(1);
+                    varnames = [varnames; 'oxygen2'];
+                end
             case 'turbV' %this only comes up if doturbV=1
                 var_string = 'turbidityV';
                 pars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
@@ -450,20 +462,43 @@ end
         %%%%%%%%%% end mbot_01 %%%%%%%%%%
         
         %%%%%%%%%% m_daily_proc %%%%%%%%%%
-           case 'm_daily_proc'
-switch oopt
-case 'exclude'
-        if ~exist('uway_streams_proc_exclude'); uway_streams_proc_exclude = {'posmvtss'}; end
-        if ~exist('uway_pattern_proc_exclude'); uway_pattern_proc_exclude = {'satinfo';'aux';'dps'}; end
-case 'bathycomb'
-bathycomb = 1;
-case 'allmat'
-allmat = 0;
-end
+    case 'm_daily_proc'
+        switch oopt
+           case 'exclude'
+              if ~exist('uway_streams_proc_exclude'); uway_streams_proc_exclude = {'posmvtss'}; end
+              if ~exist('uway_pattern_proc_exclude'); uway_pattern_proc_exclude = {'satinfo';'aux';'dps'}; end
+           case 'bathycomb'
+              bathycomb = 1;
+           case 'allmat'
+              allmat = 0;
+           end
         %%%%%%%%%% end m_daily_proc %%%%%%%%%% 
         %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
     case 'mday_01_clean_av'
-        %set cruise-specific calibration or editing actions
+        % set non-cruise-specific calibration or editing actions
+        switch oopt
+          case 'uway_apply_cal'
+          switch abbrev
+            case 'cnav'
+                d = mload(infile, 'lat long');
+                if max(mod(abs([d.lat(:);d.long(:)])*100,100))<=61
+                    if std(d.lat)<.1 & std(d.lon)<.1 % ship hasn't moved much
+                        warning('Cannot determine whether or not to apply cnav fix. Not applying.');
+                        sensors_to_cal={};
+                    else
+                        mdocshow(scriptname, ['applying cnav fix to cnav_' mcruise '_d' day_string '_edt.nc']);
+                        sensors_to_cal={'lat','long'};
+                        sensorcals={'y=cnav_fix(x1)' 'y=cnav_fix(x1)'};
+                        sensorunits={'/','/'}; % keep existing units
+                    end
+                else
+                    mdocshow(scriptname, ['cnav fix not required for cnav_' mcruise '_d' day_string '_edt.nc']);
+                    sensors_to_cal={};
+                end
+            otherwise
+                sensors_to_cal={};
+            end
+          end
         %%%%%%%%%% end mday_01_clean_av %%%%%%%%%%
         
         %%%%%%%%%% msim_plot %%%%%%%%%%
@@ -653,6 +688,14 @@ end
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
 
+                %%%%%%%%%% m_maptracer %%%%%%%%%%
+    case 'm_maptracer'
+        switch oopt
+            case 'kstatgroups'
+                kstatgroups = {[1:999]};
+        end
+        %%%%%%%%%% end m_maptracer %%%%%%%%%%
+
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
     case 'msam_ashore_flag'
         switch samtype
@@ -695,7 +738,7 @@ end
 
 
 
-%%%%%%%%%% warnings for unset options %%%%%%%%%
+%%%%%%%%%% set unset options or warnings for unset options %%%%%%%%%
 switch scriptname
     
     
@@ -710,6 +753,8 @@ switch scriptname
         %%%%%%%%%% sal_standardise_avg %%%%%%%%%%
     case 'msal_standardise_avg'
         switch oopt
+            case 'check_sal_runs'
+                if ~exist('iistno'); iistno = [1:length(stnos)]; end
             case 'std2use'
                 if ~exist('std2use'); disp('set autosal standards readings to use for this cruise'); keyboard; end
             case 'sam2use'
@@ -724,7 +769,12 @@ switch scriptname
         
         %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
     case 'tsgsal_apply_cal'
-        if ~exist('salout'); warning(['no salinity cal set for TSG']); end
+        switch oopt
+            case 'saladj'
+                if ~exist('salout'); warning(['no salinity cal set for TSG']); end
+            case 'tempadj'
+                if ~exist('tempout'); warning(['no temperature adjustment set for TSG']); end
+        end
         %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
         
         %%%%%%%%%% temp_apply_cal %%%%%%%%%%

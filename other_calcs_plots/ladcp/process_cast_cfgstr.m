@@ -300,7 +300,7 @@ if pcs.begin_step <= pcs.cur_step
     pcs.update_figures = [pcs.update_figures 4];
     [d,p]=loadctd(f,d,p);
   end
-
+ 
   end_processing_step;
 end % OF STEP 6: LOAD CTD TIME SERIES
 
@@ -327,7 +327,9 @@ if pcs.begin_step <= pcs.cur_step
   figure(2), clf
   p=plotraw(d,p);
   pause(.01)
-
+  fno = 2; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  fno = 4; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  
   end_processing_step;
 end % OF STEP 7: FIND SURFACE & SEA BED
 
@@ -365,6 +367,8 @@ if pcs.begin_step <= pcs.cur_step
 
    d = edit_data(d,p);
 
+   %fno = 14; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+
   end_processing_step;
 end % OF STEP 9: EDIT DATA
 
@@ -378,6 +382,10 @@ if pcs.begin_step <= pcs.cur_step
    pcs.update_figures = [pcs.update_figures 5 6 10];
 
    [di,p,d]=prepinv(d,p);
+
+   %fno = 5; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+   %fno = 6; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+   %fno = 10; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
 
   end_processing_step;
 end % OF STEP 10: FORM SUPER ENSEMBLES
@@ -423,7 +431,11 @@ if pcs.begin_step <= pcs.cur_step
    [di,p,d]=prepinv(d,p,dr);
    diary on
   end
- 
+  
+  fno = 5; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  fno = 6; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  fno = 10; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  
   end_processing_step;
 end % OF STEP 12: RE-FORM SUPER ENSEMBLES
 
@@ -435,11 +447,12 @@ pcs.cur_step = pcs.cur_step + 1;
 if pcs.begin_step <= pcs.cur_step
   pcs.step_name = '(RE-)LOAD SADCP DATA'; begin_processing_step_cfgstr;
 
-  if exist('loadsadcp')==exist('loadrdi') 
+  if exist('loadsadcp')==exist('loadrdi') & isfield(ps, 'sadcpfac') & ps.sadcpfac>0
     pcs.update_figures = [pcs.update_figures 9];
     di=loadsadcp(f,di,p);
+    fno = 9; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
   end
-
+  
   end_processing_step;
 end % OF STEP 13: (RE-)LOAD SADCP DATA
 
@@ -463,6 +476,12 @@ if pcs.begin_step <= pcs.cur_step
   % 
   p=checkinv(dr,di,de,der,p,ps);
   if existf(de,'bvel'), p=checkbtrk(d,di,de,dr,p); end
+
+  fno = 3; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  fno = 7; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  fno = 12; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  fno = 13; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  fno = 14; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
 
   end_processing_step;
 end % OF STEP 14: CALCULATE INVERSE SOLUTION
@@ -538,6 +557,9 @@ if pcs.begin_step <= pcs.cur_step
   streamer([p.name,' Figure 11']);
   pause(0.01)
 
+  fno = 1; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+  fno = 11; figure(fno); print('-dpdf', sprintf('%s_%02d.pdf',f.res,fno))
+
   end_processing_step;
 end % OF STEP 16: PLOT RESULTS & SHOW WARNINGS
 
@@ -569,6 +591,7 @@ if pcs.begin_step <= pcs.cur_step
     %
     % save plots
     %
+    if 0 %instead save them earlier
     disp(' save plots ')
     for i = 1:length(p.saveplot)
        j = p.saveplot(i);
@@ -601,6 +624,7 @@ if pcs.begin_step <= pcs.cur_step
          end
        end
     end
+    end
 
     disp(' save protocol ')
     % diary off
@@ -626,4 +650,7 @@ fclose('all');				%  close all files just to make sure
 
 disp(' ')				% final message
 disp(['==> The whole task took ',int2str(toc),' seconds'])
+cd([MEXEC_G.MEXEC_DATA_ROOT])
+
+
 

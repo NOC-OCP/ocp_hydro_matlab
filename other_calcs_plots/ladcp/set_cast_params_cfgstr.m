@@ -38,13 +38,16 @@ else
    if sum(strcmp(cfgstr.constraints, 'BT')); ps.botfac = 1; end
    if sum(strcmp(cfgstr.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
+if ps.sadcpfac & isfield(cfgstr, 'SADCP_inst')
+    subdir = [subdir cfgstr.SADCP_inst];
+end
 pdir = [subdir '/processed/' stnstr '/'];
 if ~exist(pdir, 'dir')
    unix(['mkdir -p ' pdir])
 end
 
-close all;
-more off;
+%close all;
+more off;subplot(222)
 
 %find files and set f.ladcpdo and f.ladcpup (if applicable)
 %this code allows for the possiblity of multiple files
@@ -81,7 +84,11 @@ end
 
 f.res = [pdir stnstr];
 f.checkpoints = sprintf('checkpoints/%03d',stnlocal);
-f.sadcp	= ['SADCP/os75_' mcruise '_ctd_' stnstr '.mat'];
+if isfield(cfgstr, 'SADCP_inst')
+    f.sadcp	= ['SADCP/os' cfgstr.SADCP_inst '_' mcruise '_ctd_' stnstr '_forladcp.mat'];
+else
+    f.sadcp	= ['SADCP/os75nb_' mcruise '_ctd_' stnstr '_forladcp.mat'];
+end
 
 f.ctd = ['CTD/ctd.' stnstr '.02.asc'];
 if exist(f.ctd,'file')
@@ -103,7 +110,6 @@ if exist(f.ctd,'file')
 	f.nav_time_base         = f.ctd_time_base;
 else
 	f.ctd = ' ';
-%	p.drot = 6.3;						%%% nominal
 end
 
 %======================================================================
@@ -119,29 +125,12 @@ p.orig = 0; % save original data or not
 
 p.ladcp_station = stnlocal;
 
-p.btrk_ts = 30;		% with 10 default, false bottom detected on stnlocal 002
-					% with 20, false bottom detected on stnlocals 22 & 23
-
-p.avdz = 5;		% for compatibility with UH & new shearmethod output
-ps.dz = 5;
-
-p.btrk_mode = 2;
+%p.btrk_ts = 30;
+%p.btrk_mode = 2;
 
 p.edit_mask_dn_bins = [1];
 p.edit_mask_up_bins = [1];
 
 p.checkpoints = [1];
 
-if strcmp(mcruise,'dy113') & stnlocal>=5
-    p.ambiguity = 3.3;
-    p.vlim = 3.3;
-end
-
-%======================================================================
-% Diagnostic paramters
-%======================================================================
-% ps.sadcpfac = 0;
-% p.ignore_beam = [4 2];    % for DL/UL profiles
-% p.ignore_beam = [4 nan];  % for DL only
-% p.ignore_beam = [2 nan];  % for UL only
-
+scriptname = mfilename; oopt = 'ladcpopts'; get_cropt

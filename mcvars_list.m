@@ -37,9 +37,16 @@ elseif typ==2 % this is for comparing with bottle samples
    'EH' 'LSS' 'BBRTD'... % light variables added on JC044
     }; 
 
+elseif typ==3 %variables for which to calculate the background gradient to inform sample comparison for calibration
+    
+    var_copycell = {...
+        'temp' 'cond' 'oxygen' ...
+        %'fluor' ...
+        };
+
 else
 
-   error('pick variable list type 1 or 2')
+   error('pick variable list type 1, 2, or 3')
 
 end
 

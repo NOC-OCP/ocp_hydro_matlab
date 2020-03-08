@@ -78,6 +78,7 @@ flag(isnan(flag) & ~isnan(conc_O2)) = 2; flag(isnan(flag) & isnan(conc_O2)) = 5;
 flag(isnan(obot_vol) | isnan(ds_oxy.oxy_temp)) = 9; %not meaningfully sampled if there's no volume listed***
 ii = find(isnan(ds_oxy.oxy_titre) & ~isnan(obot_vol)); %sampled but not titrated
 flag(ii) = min(5, flag(ii));
+conc_O2(flag==5 | flag==9) = NaN;
 
 
 %fill in to 24 places

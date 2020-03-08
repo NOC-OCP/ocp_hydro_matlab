@@ -5,9 +5,11 @@ udirs = {
 'cnav'    'M_CNAV'    'nav/cnav'    'cnav-CNAV.GPS';
 'gpsfugro'    'M_GPSFUGRO'    'nav/gps'    'cnav-FUGRO.GPS';
 'posmvpos'    'M_POSMVPOS'    'nav/posmvpos'    'position-Applanix_GPS_DY1.gps';
+'seapos'    'M_SEAPOS'    'nav/seapos'    'position-Seapath330_DY1.gps';
 'satinfoposmv'    'M_SATINFOPOSMV'    'nav/posmvpos'    'satelliteinfo-Applanix_GPS_DY1.gps';
 'satinfocnav'    'M_SATINFOCNAV'    'nav/cnav'    'satelliteinfo-CNAV.GPS';
 'satinfofugro'    'M_SATINFOFUGRO'    'nav/gps'    'satelliteinfo-FUGRO.GPS';
+'satinfosea'    'M_SATINFOSEA'    'nav/seapos'    'satelliteinfo-Seapath330_DY1.gps';
 'attposmv'    'M_ATTPOSMV'    'nav/posmvatt'    'shipattitude-Applanix_TSS_DY1.att';
 'attphins'    'M_ATTPHINS'    'nav/phinsatt'    'shipattitude-Phins_TSS_DY1.att';
 'attsea'    'M_ATTSEA'    'nav/seaatt'    'shipattitude-Seapath_TSS_DY1.att';

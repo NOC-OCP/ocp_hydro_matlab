@@ -806,6 +806,14 @@ switch scriptname
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
         
+                %%%%%%%%%% m_maptracer %%%%%%%%%%
+    case 'm_maptracer'
+        switch oopt
+            case 'kstatgroups'
+kstatgroups = {3 [4:999]};
+        end
+        %%%%%%%%%% end m_maptracer %%%%%%%%%%
+
         
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'

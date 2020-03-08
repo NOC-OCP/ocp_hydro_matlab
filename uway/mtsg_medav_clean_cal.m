@@ -21,6 +21,7 @@ root_dir = mgetdir(prefix);
 infile1 = [root_dir '/' prefix '_' mcruise '_01'];
 otfile1 = [root_dir '/' prefix '_' mcruise '_01_medav_clean']; % 1-minute median data
 otfile2 = [root_dir '/' prefix '_' mcruise '_01_medav_clean_cal']; % 1-minute median data
+wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
 
 if ~exist(m_add_nc(infile1),'file')
     error(['no tsg file ' infile1])
@@ -91,6 +92,12 @@ scriptname = scriptname0;
 %apply it if there is one
 if exist('tempout','var')
 
+   if exist(m_add_nc(otfile2),'file')
+      unix(['/bin/mv ' m_add_nc(otfile2) ' ' m_add_nc(wkfile1)]);
+   else
+      wkfile1=otfile1;
+   end
+
    switch MEXEC_G.Mship
       case {'cook','discovery'}
          tempvar = 'temp_r';
@@ -100,7 +107,7 @@ if exist('tempout','var')
    tempinline = ['y = tsgsal_apply_temp_cal(x1,x2)'];
 
    MEXEC_A.MARGS_IN = {
-      otfile1
+      wkfile1
       otfile2
       '/'
       ['time ' tempvar]
@@ -110,4 +117,10 @@ if exist('tempout','var')
       ' '
       };
   mcalc
+  
+  if ~strcmp(otfile1,wkfile1)
+     unix(['/bin/rm ' m_add_nc(wkfile1)]);
+  end
+
 end
+

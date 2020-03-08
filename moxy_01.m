@@ -63,10 +63,9 @@ catch me
    nrows = length(indata);
    ltype = zeros(nrows,1); iiss = []; iiss0 = 1;
    kskip = [];
-   for k = 1:nrows
+   for k = 1:nrows-1
       if ~ismember(k,kskip)
-         %iiss = find(strncmp('Cast', indata{k}, 4) & strncmp('Number', indata{k+1}, 6));
-         iiss = find(strncmp('Cast', indata{k}, 4));
+         iiss = find(strncmp('Cast', indata{k}, 4) & strncmp('Number', indata{k+1}, 6));
          if ~isempty(iiss)
             ltype(k) = 1; %column header
             iiss0 = iiss;
@@ -91,8 +90,8 @@ catch me
       %find the relevant columns for this block
       issta = strncmpi('Cast', indata{iih(cno)}, 4);
       isnis = strncmpi('Niskin', indata{iih(cno)}, 6);
-      isbot = strncmpi('Bottle', indata{iih(cno)}, 6);% & strncmpi('no', indata{iih(cno)+2}, 2);
-      isvol = strcmpi('Bottle vol.', indata{iih(cno)});% & strncmpi('mls', indata{iih(cno)+2}, 2);
+      isbot = strncmpi('Bottle', indata{iih(cno)}, 6);
+      isvol = strncmpi('Bottle', indata{iih(cno)}, 6) & strncmpi('mls', indata{iih(cno)+2}, 2);
       isbot = isbot & ~isvol;
       isblk = strncmpi('Blank', indata{iih(cno)}, 5);
       isstv = strncmpi('Std', indata{iih(cno)}, 3);% & strncmpi('vol', indata{iih(cno)+1}, 3);
@@ -102,7 +101,7 @@ catch me
       isiod = strncmpi('Iodate', indata{iih(cno)}, 6);
       isno2 = strncmpi('n(O2)', indata{iih(cno)}, 5);% & strncmpi('mol', indata{iih(cno)+2}, 3);
       isco2 = strncmpi('C(O2)', indata{iih(cno)}, 5);% & strncmpi('umol', indata{iih(cno)+2}, 4);
-      isflg = strncmpi('flag', indata{iih(cno)}, 4);
+      isflg = strncmpi('flag', lower(indata{iih(cno)}), 4);
 
       %find the sample lines for this block
       iis = find(ltype==2); iis = iis(iis>iih(cno) & iis<iih(cno+1));

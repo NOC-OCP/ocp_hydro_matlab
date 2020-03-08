@@ -7,29 +7,30 @@ minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes CTD data at bottle firing times from fir_' mcruise '_' stn_string '.nc to sam_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD'); % change working directory
-prefix1 = ['fir_' mcruise '_'];
-prefix2 = ['sam_' mcruise '_'];
-infile1 = [root_ctd '/' prefix1 stn_string '_ctd'];
-otfile2 = [root_ctd '/' prefix2 stn_string];
+infile1 = [root_ctd '/fir_' mcruise '_' stn_string '_ctd'];
+otfile2 = [root_ctd '/sam_' mcruise '_' stn_string];
 
 var_copycell = mcvars_list(2);
+gvar_copycell = mcvars_list(3);
 
 % remove any vars from copy list that aren't available in both input files
-numcopy = length(var_copycell);
-% add initial 'u' to variable name to signify upcast
-for kloop_scr = numcopy:-1:1
-    var_copycell{kloop_scr} = ['u' var_copycell{kloop_scr}];
-end
-var_copycell = [{'time'} var_copycell];
-
+% also add initial 'u' to variable name to signify upcast
 numcopy = length(var_copycell);
 h1 = m_read_header(infile1);
 h2 = m_read_header(otfile2);
 for kls = numcopy:-1:1
+    var_copycell{kls} = ['u' var_copycell{kls}];
     if ~sum(strcmp(var_copycell(kls),h1.fldnam)) | ~sum(strcmp(var_copycell(kls),h2.fldnam))
         var_copycell(kls) = [];
     end
 end
+for kls = length(gvar_copycell):-1:1
+    gvar_copycell{kls} = [gvar_copycell{kls} 'grad'];
+    if sum(strcmp(var_copycell(kls),h1.fldnam)) & sum(strcmp(var_copycell(kls),h2.fldnam))
+        var_copycell = [var_copycell gvar_copycell{kls}];
+    end
+end
+var_copycell = [{'time'} var_copycell];
 
 % now construct string with list of vars to be copied
 var_copystr = ' ';

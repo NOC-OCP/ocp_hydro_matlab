@@ -11,8 +11,8 @@ stn = 0; minit; scriptname = mfilename;
 if ~exist('samtype', 'var')
    samtype = input('sample type? ');
 end
-get_cropt %load input data, get list of sample numbers and flags to set to 1
-
+get_cropt
+    
 root_sam = mgetdir('M_CTD');
 
 stns = unique(stations);
@@ -48,5 +48,5 @@ for kstn = stns(:)'
     
 end
 
-
+clear samtype
 

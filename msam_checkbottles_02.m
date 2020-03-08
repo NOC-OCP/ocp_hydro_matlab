@@ -51,6 +51,7 @@ kup = find(ctdtime > dcstime2 & ctdtime < dcstime3);
 ksam1 = find(dsamall.statnum == stnlist(1));
 ksam2 = find(dsamall.statnum == stnlist(2));
 ksam = find(dsamall.statnum == stnlist(3));
+if length(ksam)==0; warning(sprintf('no sample data for station %03d', stnlist(3))); return; end
 ksam3 = find(dsamall.statnum == stnlist(4));
 ksam4 = find(dsamall.statnum == stnlist(5));
 

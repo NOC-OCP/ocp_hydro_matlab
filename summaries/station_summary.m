@@ -139,9 +139,13 @@ for k = stnset
     if exist(m_add_nc(fnsam),'file') == 2
         [dsam h4] = mload(fnsam,'/');
         
-        if isfield(dsam,'wireout'); ndpths(k) = length(unique(dsam.wireout(~isnan(dsam.wireout)))); end
-        if isfield(dsam,'botpsal'); nsal(k) = sum(ismember(dsam.botpsalflag, [2 3 5])); end
-        
+        %         if isfield(dsam,'wireout'); ndpths(k) = length(unique(dsam.wireout(~isnan(dsam.wireout)))); end
+        % bak on jc191: heave compensator means wireout is no longer fixed for
+        % multiple bottles at the same nominal depth; new function to get number of
+        % unique levels.
+        if isfield(dsam,'wireout'); ndpths(k) = mctd_count_depths(dsam,1); end
+%         if isfield(dsam,'botpsal'); nsal(k) = sum(ismember(dsam.botpsalflag, [2 3 5])); nsal = nsal(:); end % bak jc191 make nsal a column;
+        if isfield(dsam,'botpsal'); nsal(k) = sum(ismember(dsam.botpsalflag, [2 3 6])); nsal = nsal(:); end % bak jc191  count flag of 2, 3 or 6; 6 == mean of replicate; 5 == not reported.
         %loop through groups of non-standard samples
         for sgno = 1:size(sgrps,1)
             sgrp = sgrps{sgno};
@@ -152,9 +156,15 @@ for k = stnset
             for fno = 1:length(ii)
                 s = [sgrp{ii(fno)} '_flag']; if ~isfield(dsam, s); s = [sgrp{ii(fno)} 'flag']; end
                 if isfield(dsam, s)
-                    a = ismember(getfield(dsam, s), [2 3 5]); log_all = [log_all a(:)];
-                    if sashore(sgno); a = getfield(dsam, s)==1; log_all1 = [log_all1 a(:)]; end
-                else; a = ~isnan(getfield(dsam, sgrp{ii(fno)})); log_all = [log_all a(:)]; end
+%                     a = ismember(getfield(dsam, s), [2 3 5]); log_all = [log_all a(:)];
+                    a = ismember(getfield(dsam, s), [2 3 6]); log_all = [log_all a(:)]; % bak jc191  count flag of 2, 3 or 6; 6 == mean of replicate
+                    if sashore(sgno); 
+                        a = getfield(dsam, s)==1; 
+                        log_all1 = [log_all1 a(:)]; 
+                    end
+                else
+                    a = ~isnan(getfield(dsam, sgrp{ii(fno)})); log_all = [log_all a(:)]; 
+                end
             end
             nopt(k,sgno) = sum(max(log_all,[],2)); %or just sum(sum) to count total samples?
             if sashore(sgno); nopt_shore(k,sgno) = sum(max(log_all1,[],2)); end

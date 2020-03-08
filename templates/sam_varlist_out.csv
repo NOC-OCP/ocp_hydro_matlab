@@ -57,3 +57,6 @@ no2,umol/l
 no2_flag,woce_table_4.9
 del18o,per_mil
 del18o_flag,woce_table_4.9
+tempgrad,degc90/10dbar
+condgrad,mS/cm/10dbar
+oxygengrad,umol/kg/10dbar

@@ -17,8 +17,7 @@ end
 
 %start fresh
 root_sam = mgetdir('M_CTD');
-%stn = 1; msam_01; % create empty sam file at start of cruise
-%eval(['!cp ' root_sam '/sam_' mcruise '_001.nc ' root_sam '/sam_' mcruise '_template.nc']) %copy to template
+stn = 1; msam_01; % create empty sam file at start of cruise
 
 for kloop = klist
     stn = kloop; msam_01b %copy from template
@@ -42,5 +41,5 @@ end
 
 %msam_ashore_flag
 
-nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order
-nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order
+%nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order
+%nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order

@@ -35,7 +35,7 @@ scriptname = 'ctd_evaluate_sensors';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
-okf = [2]; %only bother with good samples
+okf = [2 2.3]; %only bother with good samples
 %okf = [2 3]; %include good or questionable samples (useful for checking flags due to niskins)
 
 printdir = [MEXEC_G.MEXEC_DATA_ROOT '/plots/'];
@@ -53,7 +53,7 @@ if length(sensnum)>0; sensstr = num2str(sensnum); else; sensstr = ''; sensnum = 
 % subsequent conversions, even if the calibrations haven't yet been applied to files)
 
 if exist('precalt','var') & precalt
-   fnm = ['utemp' sensstr];
+   fnm = ['utemp' sensstr]; 
    d = setfield(d, fnm, temp_apply_cal(sensnum, d.statnum, d.upress, d.time, getfield(d, fnm)));
 else
    precalt = 0;

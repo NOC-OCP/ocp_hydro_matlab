@@ -239,7 +239,7 @@ ds_sal.r3(ds_sal.r3<=-999) = NaN;
 
 
 % if required/set in opt_cruise, get offsets, and plot over sequential standard number
-oopt = 'check_sal_runs'; get_cropt
+oopt = 'check_sal_runs'; get_cropt %check_sal_runs, plot_all_stations, iistno
 iistd = find(ds_sal.sampnum==0 | (ds_sal.sampnum>=999000 & ds_sal.sampnum<1000000)); iistd = iistd(:);
 if sum(strcmp('offset',ds_sal_fn))==0 | calc_offset
 
@@ -323,7 +323,7 @@ if check_sal_runs
    subplot(3,1,1)
    plot(x, res(:,1), 'o', x, res(:,2), 's', x, res(:,3), '<', x3(sam2use==1), res(sam2use==1), '.c', x([1 end]), [-1 1; -1 1]*2e-5, 'k'); grid
    ylim([-1 1]*max(max(abs(res(sam2use==1))))*1.1)
-   xlabel('sample index')
+   xlabel('sample index, o 1st square 2nd < 3rd run')
    
    %TSG samplessalbotqf
    ii = find(xs>1e6);
@@ -335,7 +335,7 @@ if check_sal_runs
    %CTD samples
    stnos = unique(ds_sal.station_day(ds_sal.sampnum>0 & ds_sal.sampnum<90000)); %plot for all CTDs
    if plot_all_stations
-      for no = 1:length(stnos)
+      for no = iistno
          ii = find(floor(ds_sal.sampnum(iisam)/100)==stnos(no));
          subplot(3,3,[5 6 8 9]);
          plot(xs(ii), res(ii,1), 'o', xs(ii), res(ii,2), 's', xs(ii), res(ii,3), '<', xs(ii), resg(ii,:), '.c', [min(xs(ii)) max(xs(ii))], [-1 1; -1 1]*2e-5, 'k'); grid
@@ -343,7 +343,12 @@ if check_sal_runs
          title(['ctd ' num2str(stnos(no))]); 
          subplot(3,3,7)
          plot(xs(ii), sams(ii,1), 'o', xs(ii), sams(ii,2), 's', xs(ii), sams(ii,3), '<', xs(ii), samsg(ii,:), '.c'); grid
-         yl = [min(min(samsg(ii,:)))*.99 max(max(samsg(ii,:)))*1.01]; ylim(yl)
+         yl = [min(min(samsg(ii,:)))*.99 max(max(samsg(ii,:)))*1.01]; 
+         try
+             ylim(yl); 
+         catch
+             if isnan(sum(yl)); warning('all NaN station, maybe NaN offset, was final standard read in?'); end
+         end
          disp('dbcont to go on to next station'); keyboard
       end
    else; keyboard; end

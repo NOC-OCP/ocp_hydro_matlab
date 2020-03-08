@@ -17,8 +17,7 @@ function mday_01_clean_av(abbrev,day)
 % The function now checks for a case for the stream for types of transformations in succession
 % abbrev_day_edt is the final output with all applicable corrections made
 %
-% The possible edits include checking for out-of-range values, but instrument calibrations,
-% which may vary by ship/cruise, are applied separately
+% The possible edits include checking for out-of-range values
 %
 % revised ylf dy105 to check for various variable names (requiring similar transformations) in the header
 %
@@ -132,7 +131,7 @@ if exist([infile '.nc']) %only if there is a raw file for this day
 
    end
    
-   %%%%% apply calibrations to uncalibrated underway sensors - from cruise option file %%%%%
+   %%%%% apply factory calibrations to uncalibrated (still in voltage units) underway sensors - from cruise option file %%%%%
    oopt='uway_apply_cal'; get_cropt;
    for m=1:length(sensors_to_cal)
        if ~exist([otfile '.nc'])

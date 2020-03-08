@@ -416,5 +416,16 @@ switch scriptname
    %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
 
 
+                %%%%%%%%%% m_maptracer %%%%%%%%%%
+    case 'm_maptracer'
+        switch oopt
+            case 'kstatgroups'
+kstatgroups = {[60 53 54 55 52 56 49 61 48 47 36 38 39 40 45]}; % jr281
+kstatgroups = {[1:33] [60 53 54 55 52 56 49 61 48 47 36 38 39 40 45] [67:82]}; % jr281
+kstatgroups = {[67:82]}; % jr281
+        end
+        %%%%%%%%%% end m_maptracer %%%%%%%%%%
+
+
 %%%%%%%%%%%%%%%%%%
 end

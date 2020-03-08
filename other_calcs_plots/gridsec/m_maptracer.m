@@ -8,7 +8,7 @@ function ygrid = m_maptracer(statnumgrid,sgrid,tgrid,pgrid,yname,yfname)
 % function ygrid = m_maptracer(statnumgrid,sgrid,tgrid,pgrid,yname,yfname)
 %
 m_common
-
+scriptname = mfilename;
 root_ctd = mgetdir('M_CTD');
 samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
 
@@ -62,15 +62,7 @@ s.zlim = 4; % vertical extent of gridding window measured in plev
 testfit = nan+y;
 
 % group stations that can be used together for gridding
-% saloups = {[1:9] [10:22] [23:200]}; % jc032
-kstatgroups = {[2:13] [14:200]}; % di346
-kstatgroups = {[3:42]}; % jc069
-kstatgroups = {[60 53 54 55 52 56 49 61 48 47 36 38 39 40 45]}; % jr281
-kstatgroups = {[1:33] [60 53 54 55 52 56 49 61 48 47 36 38 39 40 45] [67:82]}; % jr281
-kstatgroups = {[67:82]}; % jr281
-kstatgroups = {[1:19 21:999]}; % jr302
-kstatgroups = {3 [4:999]}; % jc159
-kstatgroups = {[1:71]};%3:10 1 12:22] [45 44 40 36 32 31 27 26 25 23]};
+oopt = 'kstatgroups'; get_cropt
 
 %now distribute the sample numbers into sets corresponding to the station
 %groups 
