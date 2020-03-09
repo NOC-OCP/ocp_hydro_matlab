@@ -110,6 +110,9 @@ switch scriptname
     case 'mctd_04'
         switch oopt
             case 'pretreat'
+            case 'doloopedit'
+                doloopedit = 0;
+                ptol = 0.08; %default is not to apply, but this would be the default value if you did
             case 'interp2db'
                 if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 | strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,'jc191')
                     interp2db = 1; %filling gaps in 2dbar data used to be standard
@@ -753,7 +756,7 @@ switch scriptname
         %%%%%%%%%% sal_standardise_avg %%%%%%%%%%
     case 'msal_standardise_avg'
         switch oopt
-            case 'check_sal_runs'
+            case 'plot_stations'
                 if ~exist('iistno'); iistno = [1:length(stnos)]; end
             case 'std2use'
                 if ~exist('std2use'); disp('set autosal standards readings to use for this cruise'); keyboard; end

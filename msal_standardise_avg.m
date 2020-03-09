@@ -239,7 +239,7 @@ ds_sal.r3(ds_sal.r3<=-999) = NaN;
 
 
 % if required/set in opt_cruise, get offsets, and plot over sequential standard number
-oopt = 'check_sal_runs'; get_cropt %check_sal_runs, plot_all_stations, iistno
+oopt = 'check_sal_runs'; get_cropt %check_sal_runs
 iistd = find(ds_sal.sampnum==0 | (ds_sal.sampnum>=999000 & ds_sal.sampnum<1000000)); iistd = iistd(:);
 if sum(strcmp('offset',ds_sal_fn))==0 | calc_offset
 
@@ -334,6 +334,7 @@ if check_sal_runs
 
    %CTD samples
    stnos = unique(ds_sal.station_day(ds_sal.sampnum>0 & ds_sal.sampnum<90000)); %plot for all CTDs
+   oopt = 'plot_stations'; get_cropt
    if plot_all_stations
       for no = iistno
          ii = find(floor(ds_sal.sampnum(iisam)/100)==stnos(no));

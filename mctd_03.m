@@ -29,7 +29,7 @@ wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
 h = m_read_header(infile1);
 
 
-%%%%% optionally edit bad data (e.g. by scan range) and decide whether to interpolate over gaps %%%%%
+%%%%% optionally edit bad data (e.g. by scan range), decide whether to interpolate over gaps %%%%%
 oopt = '24hz'; get_cropt
 
 
@@ -69,8 +69,7 @@ newnames{3}
 margsin = MEXEC_A.MARGS_IN;
 maddvars
 
-
-%%%%% interpolate over gaps %%%%%
+%%%%% optionally interpolate over gaps %%%%%
 if interp24 %set above in oopt = '24hz'
     MEXEC_A.MARGS_IN = {
     wkfile1

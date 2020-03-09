@@ -49,15 +49,19 @@ var_copycell = mcvars_list(1);
 numcopy = length(var_copycell);
 h_input = m_read_header(wkfile_dvars);
 var_copystr = ' ';
-for kloop_scr = 1:numcopy
+for kloop_scr = numcopy:-1:1
     if length(strmatch(var_copycell{kloop_scr},h_input.fldnam,'exact'))>0
         var_copystr = [var_copystr var_copycell{kloop_scr} ' '];
+    else
+        var_copycell(kloop_scr) = [];
     end
 end
 var_copystr([1 end]) = [];
 
 %might have to remove some contaminated data or substitute upcast data before averaging
 oopt = 'pretreat'; get_cropt
+
+%%%%%% copy downcast and upcast ranges to new files %%%%%%
 
 MEXEC_A.MARGS_IN = {
 wkfile_dvars
@@ -87,6 +91,37 @@ MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
 ' '
 ];
 mcopya
+
+
+%%%%% optionally loopedit downcast %%%%%
+oopt = 'doloopedit'; get_cropt
+if doloopedit
+   disp(['applying loopediting for ' otfile1d])
+   %loopedit involves a big matrix so to save time, NaN pressure first,
+   %then use to NaN other fields
+   MEXEC_A.MARGS_IN = {wkfile1d
+       'y'
+       'press'
+       'press'
+       sprintf('y = m_loopedit(x1, %f);', ptol);
+       ' '
+       ' '
+       ' '};
+   mcalib2
+   MEXEC_A.MARGS_IN = {wkfile1d; 'y'};
+   for kloop_scr = 1:length(var_copycell)
+       if ~strcmp(var_copycell{kloop_scr},'press')
+           MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
+               var_copycell{kloop_scr}
+               [var_copycell{kloop_scr} ' press']
+               'y = x1; y(isnan(x2)) = NaN;'
+               ' '
+               ' '];
+       end
+   end
+   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+   mcalib2
+end
 
 
 %%%%% sort by pressure %%%%%

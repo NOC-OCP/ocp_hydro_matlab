@@ -68,6 +68,12 @@ udirsn = {
 	 'seatex_vtg'          'nav/seatex'
 	 'seatex_zda'          'nav/seatex'
 	 'tsshrp'	       'nav/tsshrp'
+   	 'dopplerlog'      'nav/log'
+	 'chf'             'nav/log'
+	 'emlog_vlw'       'nav/log'
+	 'emlog_vhw'       'nav/log'
+	 'log_chf'         'nav/log'
+	 'log_skip'        'nav/log'
         };
 
     %others
@@ -87,12 +93,6 @@ udirso = {
 	 'tsg'             'ocl/tsg'
 %	 'surftsg'         'ocl/tsg'
 	 'surftsg_regen'   'ocl/tsg'
-	 'chf'             'ocl/log'
-	 'dopplerlog'      'ocl/log'
-	 'emlog_vlw'       'ocl/log'
-	 'emlog_vhw'       'ocl/log'
-	 'log_chf'         'ocl/log'
-	 'log_skip'        'ocl/log'
 	 'sim'             'bathy/sim'
 	 'em120'           'bathy/em120'
 	 'em122'           'bathy/em120'

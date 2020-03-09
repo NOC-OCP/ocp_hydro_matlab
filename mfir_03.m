@@ -71,7 +71,8 @@ MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3];
 mheadr
 %--------------------------------
 
-%ylf added dy113: add info about local gradients (and wiggliness)
+%ylf added dy113: add info about local gradients (and
+%wiggliness)***incomplete, doesn't propagate through to sam
 gvar_copycell = mcvars_list(3);
 otfilestruct=struct('name',[otfile2 '.nc']);
 d=mload(otfilestruct.name,'upress',' ');

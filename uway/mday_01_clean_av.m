@@ -294,7 +294,7 @@ if exist([infile '.nc']) %only if there is a raw file for this day
 
 
     %%%%% anything else specified in cruise options file %%%%%    
-    get_cropt
+%     get_cropt
 
     
 end

@@ -22,7 +22,20 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_03 %%%%%%%%%%
 
-        %%%%%%%%%% mbot_00 %%%%%%%%%%
+        %%%%%%%%%% mctd_04 %%%%%%%%%%
+    case 'mctd_04'
+        switch oopt
+            case 'pretreat'
+            case 'doloopedit'
+                doloopedit = 1;
+                ptol = 0.08; %default is not to apply, but this would be the default value if you did
+            case 'interp2db'
+                %if doloopedit; interp2db = 1; end
+        end
+        %%%%%%%%%% end mctd_04 %%%%%%%%%%
+
+        
+                %%%%%%%%%% mbot_00 %%%%%%%%%%
     case 'mbot_00' %information about niskin bottle numbers
         switch oopt
             case 'nispos'
@@ -138,8 +151,9 @@ switch scriptname
                 %salinity readings (do this when you first read in a
                 %station or set of stations)
                 check_sal_runs = 0; %plot standards and sample runs to compare before averaging
+            case 'plot_stations'
                 plot_all_stations = 0; 
-                iistno = 1:length(stno); 
+                iistno = 1:length(stnos);
             case 'std2use'
                 std2use(ismember(ssns, [8 16 18 19 26 27 27.5 31 33 47 57 61]),1) = 0;
                 std2use(ssns==4, 2) = 0;
@@ -353,6 +367,65 @@ switch scriptname
                     };
                 sensorunits={'ug/l','percent'};
             case 'surflight'
+                % fix radiometers on DY113 - before normal calibration
+                if ~exist([otfile '.nc'])
+                   unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+                end
+                h = m_read_header(otfile);
+                MEXEC_A.MARGS_IN = {
+                   otfile
+                   'y' % yes, overwrite file
+                   '8' % rename vars
+                   '3 4 5 6' % variable number to rename - ppar, ptir, spar, stir
+                   'ppar_orig' % new name
+                   '/' % keep existing unit (volt*10^-5?)
+                   'ptir_orig' % new name
+                   '/' % keep existing unit (volt*10^-5?)
+                   'spar_orig' % new name
+                   '/' % keep existing unit (volt*10^-5?)
+                   'stir_orig' % new name
+                   '/' % keep existing unit (volt*10^-5?)
+                   '-1' % done
+                   '/' % quit
+                };
+                mheadr
+                MEXEC_A.MARGS_IN = {
+                   otfile
+                   'y' % yes, overwrite file
+                   'ppar_orig' % variable to calibrate
+                   'ppar_orig ptir_orig spar_orig stir_orig' % input variables for calibration
+                   ['plateaus=find(diff(x1)==0 & diff(x2)==0 & diff(x3)==0 & diff(x4)==0);',...
+                    'plateau_end=[plateaus(find(diff(plateaus)~=1)),plateaus(end)];',...
+                    'plateau_start=[plateaus(1),plateaus(find(diff(plateaus)~=1)+1)];',...
+                    'plateau_length=plateau_end-plateau_start+1;',... % only remove plateaus longer than two points
+                    'plateau_mask=zeros(size(x1));plateau_mask(plateaus+1)=1;',... % set plateaus to 1 in mask
+                    'plateau_mask(plateau_start)=0;',... % keep first point of each plateau
+                    'ind_to_keep=find(plateau_length<=2);',... % only remove plateaus longer than two points
+                    'for q=1:length(ind_to_keep),',...
+                       'plateau_mask(plateau_start(ind_to_keep(q)):plateau_end(ind_to_keep(q)))=0;',...
+                    'end,',...
+                    'y=x1;y(plateau_mask==1)=nan;'] % function for calibration
+                   'ppar' % new name for output variable
+                   '/' % new unit for output variable (or '/' to retain existing)
+                   'ptir_orig' % variable to calibrate
+                   'ptir_orig ppar' % input variables for calibration
+                   'y=x1;y(isnan(x2))=nan;' % function for calibration
+                   'ptir' % new name for output variable
+                   '/' % new unit for output variable (or '/' to retain existing)
+                   'spar_orig' % variable to calibrate
+                   'spar_orig ppar' % input variables for calibration
+                   'y=x1;y(isnan(x2))=nan;' % function for calibration
+                   'spar' % new name for output variable
+                   '/' % new unit for output variable (or '/' to retain existing)
+                   'stir_orig' % variable to calibrate
+                   'stir_orig ppar' % input variables for calibration
+                   'y=x1;y(isnan(x2))=nan;' % function for calibration
+                   'stir' % new name for output variable
+                   '/' % new unit for output variable (or '/' to retain existing)
+                   ' ' % quit
+                   };
+                mcalib2
+                
                 sensors_to_cal={'ppar','ptir','spar','stir'}; 
                 sensorcals={'y=x1*1.061' % port PAR: s/n 28562
                     'y=x1*1.100' % port TIR: 973134
@@ -366,7 +439,8 @@ switch scriptname
                 % the phins is incorrectly applying a -1 to its pashr
                 % messages, which is ok for pitch because the instrument
                 % is installed the reverse of the convention in techsas
-                % comments
+                % comments. However, roll is now opposite to Phins convention
+                % and specs for PASHR message in the Phins manual
                 sensorunits = {'/'}; % keep "degree" as unit
           end
         end
@@ -382,8 +456,11 @@ switch scriptname
 %                 adj=interp1([38 49] [5e-3 8e-3]); % preliminary cal on 21 Feb 2020.
 %                 salout = salin + 0.005; % preliminary cal on 14 Feb 2020.
             case 'tempadj'
-                adj=polyval([-0.0307 -0.2352],log(8.5-tempin));
-                tempout=tempin+adj; % preliminary cal on 1 Mar 2020.
+                jday=time./86400+1;
+                adj=zeros(size(jday))-0.266;
+                adj(jday>=64.50833333)=-0.387; % final cal on 8 Mar 2020.
+                % polyval([-0.0307 -0.2352],log(8.5-tempin)); % preliminary cal on 1 Mar 2020.
+                tempout=tempin+adj; 
         end
         %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
 
@@ -455,12 +532,6 @@ switch scriptname
               datenum([2020 3 1 14 24 3]) datenum([2020 3 1 14 28 4])
               datenum([2020 3 2 2 23 25]) datenum([2020 3 2 2 27 27])
               datenum([2020 3 2 14 23 6]) datenum([2020 3 2 14 27 8])
-%               datenum([2020 3 3 2 15 39]) datenum([2020 3 3 2 19 41])
-%               datenum([2020 3 3 14 15 54]) datenum([2020 3 3 14 19 56])
-%               datenum([2020 3 4 2 14 55]) datenum([2020 3 4 2 18 57])
-%               datenum([2020 3 4 14 28 30]) datenum([2020 3 4 14 32 32])
-%               datenum([2020 3 5 2 13 59]) datenum([2020 3 5 2 18 1])
-%               datenum([2020 3 5 14 13 15]) datenum([2020 3 5 14 17 17])
               datenum([2020 3 6 2 30 37]) datenum([2020 3 6 2 34 39])
               datenum([2020 3 6 14 29 43]) datenum([2020 3 6 14 33 45])
               datenum([2020 3 7 2 29 39]) datenum([2020 3 7 2 33 41])
@@ -472,7 +543,7 @@ switch scriptname
 %           % They were generated by running the following lines:
 %           [d,h]=mload('met_tsg_dy113_01.nc','/');
 %           d.jday=d.time./24./3600+1;
-%           centerpoints=[38.1165:.49966:66,66.1048:.49966:max(d.jday)];
+%           centerpoints=[38.1165:.49966:63,66.1048:.49966:max(d.jday)];
 %           for n=1:length(centerpoints)
 %              ind=find(abs(d.jday-centerpoints(n))<.005);
 %              [~,ind2]=max(d.temp_h(ind));
