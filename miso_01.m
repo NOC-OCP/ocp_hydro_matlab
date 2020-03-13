@@ -20,7 +20,7 @@ otfile2 = [root_iso '/' dataname];
 oopt = 'files'; get_cropt
 
 % load and put into fields with standard names
-sampnum = repmat(1:999,24,1)*100+repmat([1:24]',999,1);
+sampnum = repmat(1:999,24,1)*100+repmat([1:24]',1,999);
 varnames = {'sampnum';'statnum';'position'};
 varnames_units = {'sampnum';'/';'number';'statnum';'/';'number';'/';'position';'/';'number'};
 for fno = 1:length(files)

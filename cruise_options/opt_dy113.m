@@ -64,6 +64,11 @@ switch scriptname
                 %depth if damaged by slack wire but probably ok
         end
    %%%%%%%%%% end mbot_01 %%%%%%%%%%
+   
+           %%%%%%%%%% mfir_03 %%%%%%%%%%
+    case 'mfir_03'
+        avi_opt = [0 121/24]-1/24; %default is to linearly interpolate, not average
+        %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
         %%%%%%%%%% mctd_checkplots %%%%%%%%%%
     case 'mctd_checkplots'
@@ -98,6 +103,16 @@ switch scriptname
                     'fluor' 0 0.5
                     'turbidity' 0 0.002
                     };
+              if stnlocal == 20
+                doscanedit = 1;
+	            sevars = {'temp2'
+                    'cond2' 
+                    'oxygen_sbe2'};
+                sestring = {'y = x1; y(x2 >= 23658) = NaN;'
+                    'y = x1; y(x2 >= 23658) = NaN;'
+                    'y = x1; y(x2 >= 23658) = NaN;'};
+              end
+
         end
         %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
 
@@ -128,6 +143,42 @@ switch scriptname
         end
         %%%%%%%%%% end populate_station_depths %%%%%%%%%%
 
+                %%%%%%%%%% station_summary %%%%%%%%%%
+    case 'station_summary'
+        switch oopt
+            case 'optsams'
+                snames = {'noxy'; 'nnuts'; 'no18s'; 'nnisos'}; % Use s suffix for variable to count number on ship for o18 c13 chl, which will be zero
+                snames_shore = {'noxy_shore'; 'nnut'; 'no18'; 'nniso'}; % can use name without _shore, because all samples are analysed ashore
+                sgrps = { {'botoxy'} %list of oxy variables
+                    {'silc' 'phos' 'totnit'} %list of nuts variables
+                    {'del18o'} % BGS del O 18
+                    {'del15n' 'del30si'}
+                    };
+                sashore = [0; 1; 1; 1]; %count samples to be analysed ashore? % can't presently count botoxy_flag == 1
+            case 'comments' % set comments
+                comments{1} = 'Test station (SR1b_08)';
+                comments{2} = 'Start of SR1b';
+                comments{31} = 'End of SR1b';
+                comments{32} = 'Start of A23';
+                comments{43} = 'moved for iceberg';
+                comments{62} = 'End of A23';
+                comments{63} = 'Start of Cumberland Bay';
+                comments{79} = 'End of Cumberland Bay';
+                comments{80} = 'Start of NSR';
+                comments{92} = 'Break after NSR_16 for FI call';
+                comments{93} = 'Resume NSR near FI';
+                comments{104} = 'Repeat of NSR_16';
+            case 'parlist'
+                parlist = [' sal'; ' oxy'; ' nut'; 'd18o'; 'nniso'];
+            case 'varnames'
+                varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'ndpths' 'nsal' 'noxy' 'nnut' 'no18' 'nniso'};
+                varunits={'number' 'seconds' 'seconds' 'seconds' 'degrees' 'degrees' 'metres' 'metres' 'number' 'number' 'number' 'number' 'number' 'number'};
+            case 'stnadd'
+                stnadd = [73 74 75 77 79]; % force add of these stations to station list
+        end
+        %%%%%%%%%% end station_summary %%%%%%%%%%
+        
+        
           %%%%%%%%%% mout_sam_csv %%%%%%%%%%
   case 'mout_sam_csv'
       switch oopt
@@ -163,13 +214,13 @@ switch scriptname
             case 'sam2use'
                 sb1 = [115 123 201 208 301 303 403 413 415 505 510 605 703 817 914];
                 sb1 = [sb1 1315 1409 1913 2209 2613 2701 2802 2813 2905 2913 3101];
-                sb1 = [sb1 3201 3302 3304 3706 3717 4021 4113 4523 4914 5312 6202 7001 8001];
+                sb1 = [sb1 3201 3302 3304 3706 3717 4021 4113 4523 4914 5312 6202 7001 8001 9701 10016 10101 10418];
                 sam2use(ismember(ds_sal.sampnum(iisam),sb1),1) = 0; %1017 1023
                 sb2 = [315 514 815 1003 1101 1514 2101 2214 2514 2815 3218 3221];
                 sb2 = [sb2 3223 3606 3712 4217 4403 4709 5710 5915 8208];
                 sam2use(ismember(ds_sal.sampnum(iisam),sb2),2) = 0;
                 sb3 = [114 121 219 511 611 1809 1907 2421 3503 3711 3905];
-                sb3 = [sb3 4221 4805 5105 5109 5411 5815 5921 5923 8107 8117 8503 8910];
+                sb3 = [sb3 4221 4805 5105 5109 5411 5815 5921 5923 8107 8117 8503 8910 10206];
                 sam2use(ismember(ds_sal.sampnum(iisam),sb3),3) = 0;
                 sam2use(ismember(ds_sal.sampnum(iisam),[1017 1023 1103]),2:3) = 0;
                 ii1 = find(sum(sam2use,2)==1); 
@@ -186,12 +237,12 @@ switch scriptname
             case 'sampnum_parse'
                 ds_oxy.sampnum = ds_oxy.statnum*100+ds_oxy.niskin;
             case 'flags'
-                %botoxyflaga(botoxyflaga==2.3) = 2; %these are mostly 'tiny bubbles'
-                %botoxyflagb(botoxyflagb==2.3) = 2;
-                botoxyflaga(ismember(ds_oxy.statnum, [1:15 20:24])) = 4; 
-                botoxyflagb(ismember(ds_oxy.statnum, [1:15 20:24])) = 4; 
-                botoxyflaga(ismember(ds_oxy.statnum, [16:19])) = 3; 
-                botoxyflagb(ismember(ds_oxy.statnum, [16:19])) = 3; 
+                botoxyflaga(botoxyflaga==2.3) = 2; %these are mostly 'tiny bubbles'
+                botoxyflagb(botoxyflagb==2.3) = 2; %and replicates show they don't make a difference
+                %botoxyflaga(ismember(ds_oxy.statnum, [1:15 20:24])) = 4; 
+                %botoxyflagb(ismember(ds_oxy.statnum, [1:15 20:24])) = 4; 
+                %botoxyflaga(ismember(ds_oxy.statnum, [16:19])) = 3; 
+                %botoxyflagb(ismember(ds_oxy.statnum, [16:19])) = 3; 
         end
         %%%%%%%%%% end moxy_01 %%%%%%%%%%
 
@@ -202,11 +253,17 @@ switch scriptname
                 vol_reag1 = 0.99; %?
                 vol_reag2 = 0.99; %?seems coincidental they're all labelled 0.99g
             case 'blstd'
-                vol_std = ds_oxy.vol_std;
-                vol_titre_std = ds_oxy.vol_titre_std;
-                vol_blank = ds_oxy.vol_blank;
-                %vol_titre_std = 4.1;
-                %vol_blank = 0.002; 
+                %vol_std = ds_oxy.vol_std;
+                %vol_titre_std = ds_oxy.vol_titre_std;
+                %vol_blank = ds_oxy.vol_blank;
+                vol_std = 5;
+                if stnlocal<40
+                   vol_titre_std = 0.4438;
+                   vol_blank = -0.0053; 
+                else %new sodthio batch
+                    vol_titre_std = 0.4491;
+                    vol_blank = -0.0043;
+                end
             case 'botvols'
                 obot_vol = ds_oxy.bot_vol;
         end
@@ -216,7 +273,7 @@ switch scriptname
     case 'msam_ashore_flag'
         switch samtype
             case 'all'
-                flagnames = {'del18o_flag','silc_flag','phos_flag','totnit_flag','no2_flag'}; %what about n and si isotopes?
+                flagnames = {'del18o_flag','silc_flag','phos_flag','totnit_flag','no2_flag','del15n_flag','del30si_flag'};
                 fnin = [mgetdir('M_BOT_ISO') '/dy113_ashore_samples_log.csv'];
                 ds_iso = dataset('File',fnin,'Delimiter',','); %csv file including text comments
                 ds_iso.sampnum = ds_iso.cast*100+ds_iso.niskin;
@@ -227,6 +284,10 @@ switch scriptname
                 ii = find(ds_iso.nuts_nsamp>0); sampnums(2,1) = {ds_iso.sampnum(ii)};
                 stations = [stations; floor(ds_iso.sampnum(ii)/100)];
                 sampnums(3,:) = sampnums(2,:); sampnums(4,:) = sampnums(2,:); sampnums(5,:) = sampnums(2,:);
+                ii = find(ds_iso.niso_nsamp>0); sampnums(6,1) = {ds_iso.sampnum(ii)};
+                stations = [stations; floor(ds_iso.sampnum(ii)/100)];
+                ii = find(ds_iso.siiso_nsamp>0); sampnums(7,1) = {ds_iso.sampnum(ii)};
+                stations = [stations; floor(ds_iso.sampnum(ii)/100)];
         end
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
 
@@ -311,11 +372,9 @@ switch scriptname
    case 'temp_apply_cal'
       switch sensor
          case 1
-	    %tempout = temp + interp1([0 400 2000 5000],[-.2 -2 -1.6 -2.8],press)*1e-3 + 4.3e-4;
-        tempout = temp - interp1([0 5000],[.75 2],press)*1e-3; 
+	    tempout = temp - 1.5e-5*stn + interp1([0 5000],[0 -1.5]*1e-3, press) - 1.1e-4; %interp1([0 5000],[.75 2],press)*1e-3; 
         case 2
-	    %tempout = temp + interp1([0 800 5000],[-.5 -1 -0.5],press)*1e-3;
-        tempout = temp - 0.65e-3;
+        tempout = temp - 1e-5*stn - 3.8e-4;
       end
    %%%%%%%%%% end temp_apply_cal %%%%%%%%%%
        
@@ -324,10 +383,10 @@ switch scriptname
         switch sensor
             case 1
                 %off = interp1([0 300 2000 3500 5000], [-.6 -3 -4.2 -6 -7], press)*1e-3;
-                off = interp1([0 5000], [-2 -6.5], press)*1e-3 - 4e-4;
+                off = interp1([0 5000], [-1.8 -6.5], press)*1e-3 - 7.2e-4;
             case 2
                 %off = interp1([0 100 1600 5000], [1.2 0.5 -.8 -2.7], press)*1e-3 + 1.5e-4;
-                off = interp1([0 5000], [1 -2], press)*1e-3 - 6e-4;
+                off = interp1([0 5000], [1.4 -2], press)*1e-3 - 7e-4;
         end
         fac = 1 + off/35; 
         condadj = 0;
@@ -338,11 +397,11 @@ switch scriptname
     case 'oxy_apply_cal'
         switch sensor
             case 1
-                alpha = 1.08;% - 11e-4*stn;
-        beta = 0;%-18 + 2.6e-3*press;
+                alpha = 1.025;
+        beta = interp1([0 5000],[1.5 12.5],press) - 2e-2*stn - 0.1;
             case 2
-                alpha = 1.024;%interp1([0 5000]',[1.035 1.062]',press) + 0.3*1e-4*stn;
-        beta = interp1([0 5000],[2 10],press);
+                alpha = 1.029;%interp1([0 5000]',[1.035 1.062]',press) + 0.3*1e-4*stn;
+        beta = interp1([0 500 5000],[1.5 1.8 10],press) -1.5;
         end
         oxyout = alpha.*oxyin + beta;
         %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
@@ -451,14 +510,23 @@ switch scriptname
         switch oopt
             case 'saladj'
                 jday=time./86400+1;
-                adj=interp1([38 51.666 51.667 55.605 55.606 60],[5e-3 8.7e-3 -2e-3 -2e-3 3e-3 7e-3],jday,'linear','extrap');
-                salout=salin+adj; % preliminary cal on 1 Mar 2020.
-%                 adj=interp1([38 49] [5e-3 8e-3]); % preliminary cal on 21 Feb 2020.
-%                 salout = salin + 0.005; % preliminary cal on 14 Feb 2020.
+                adj=interp1([38 51.666 51.667 64 65 75],...
+                    [0.0040 0.0114 -0.0034 0.0100 -0.0034 0.0045],jday,'linear','extrap');
+                salout=salin+adj; % final cal on 10 Mar 2020.
+                % calculated as follows (after running mtsg_bottle_compare):
+%                 segment1=polyfit(db.time(db.time<51.666&~isnan(sdiff)),sdiff(db.time<51.666&~isnan(sdiff)),1)
+%                 segment2=polyfit(db.time(db.time>51.666&db.time<64&~isnan(sdiff)),sdiff(db.time>51.666&db.time<64&~isnan(sdiff)),1)
+%                 segment3=polyfit(db.time(db.time>64&~isnan(sdiff)),sdiff(db.time>64&~isnan(sdiff)),1)
+%                 adj1=polyval(segment1,[38 51.666]);
+%                 adj2=polyval(segment2, [51.667 64]);
+%                 adj3=polyval(segment3, [65 75]);
+%                 -[adj1 adj2 adj3]
+%                 adj=interp1([38 51.666 51.667 64 65 75],...
+%                     -[adj1 adj2 adj3],jday,'linear','extrap');
             case 'tempadj'
                 jday=time./86400+1;
-                adj=zeros(size(jday))-0.266;
-                adj(jday>=64.50833333)=-0.387; % final cal on 8 Mar 2020.
+                adj=zeros(size(jday))-0.267;
+                adj(jday>=64.50833333)=-0.391; % final cal on 10 Mar 2020.
                 % polyval([-0.0307 -0.2352],log(8.5-tempin)); % preliminary cal on 1 Mar 2020.
                 tempout=tempin+adj; 
         end
@@ -482,6 +550,7 @@ switch scriptname
               datenum([2020 2 20 15 48 30]) datenum([2020 2 20 16 09 0])  % tsg being cleaned, flow off
               datenum([2020 2 24 14 42 07]) datenum([2020 2 24 14 50 38])  % tsg being cleaned, flow off
               datenum([2020 3 2 16 12 15]) datenum([2020 3 5 14 59 35])  % in Stanley, flow off
+              datenum([2020 3 11 16 16 52]) datenum([2020 3 31 23 59 59]) % tsg flow off at end of cruise
               datenum([2020 2 7 2 47 1]) datenum([2020 2 7 2 51 3])
               datenum([2020 2 7 14 46 47]) datenum([2020 2 7 14 50 49])
               datenum([2020 2 8 2 45 49]) datenum([2020 2 8 2 49 51])
@@ -536,6 +605,14 @@ switch scriptname
               datenum([2020 3 6 14 29 43]) datenum([2020 3 6 14 33 45])
               datenum([2020 3 7 2 29 39]) datenum([2020 3 7 2 33 41])
               datenum([2020 3 7 14 28 46]) datenum([2020 3 7 14 32 48])
+              datenum([2020 3 8 2 28 41]) datenum([2020 3 8 2 32 43])
+              datenum([2020 3 8 14 27 49]) datenum([2020 3 8 14 31 51])
+              datenum([2020 3 9 2 27 44]) datenum([2020 3 9 2 31 45])
+              datenum([2020 3 9 14 26 54]) datenum([2020 3 9 14 30 56])
+              datenum([2020 3 10 2 26 50]) datenum([2020 3 10 2 30 52])
+              datenum([2020 3 10 14 25 57]) datenum([2020 3 10 14 29 59])
+              datenum([2020 3 11 2 18 41]) datenum([2020 3 11 2 22 43])
+              datenum([2020 3 11 14 24 55]) datenum([2020 3 11 14 28 57])
               ];
 
 %           % The non-cleaning lines are to remove the "Discovery quasi-semidiurnal 
@@ -559,7 +636,7 @@ switch scriptname
    case 'mout_cchdo_sam'
       switch oopt
          case 'expo'
-	    expocode = '';%74JC20181103';
+	    expocode = '74EQ20200203';
             sect_id = 'SR1b, A23';
 	 case 'outfile'
 	    outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode];
@@ -569,21 +646,21 @@ switch scriptname
 	    '#Cruise DY113; SR1B and A23';...
 	    '#Region: Drake Passage, Weddell Sea, Scotia Sea';...
 	    ['#EXPOCODE: ' expocode];...
-	    '#DATES: 20200204 - 20200313';...
+	    '#DATES: 20200203 - 20200313';...
 	    '#Chief Scientist: Y. Firing, NOC';...
 	    '#Supported by NERC National Capability NE/N018095/1 (ORCHESTRA)';...
-	    '#62 stations with 24-place rosette';...
+	    '#104 stations with 24-place rosette';...
+	    '#Notes: PI for SR1B section (1-31): Y. Firing; PI for A23 section (32-62): E.P. Abrahamsen';...
 	    '#CTD: Who - Y. Firing; Status - final';...
 	    '#Notes: Includes CTDSAL, CTDOXY, SBE35';...
 	    '#The CTD PRS;  TMP;  SAL; OXY data are all calibrated and good.';...
-	    '#Flags in bottle file set to good for all existing values';...
 	    '#CTD files also contain CTDXMISS, CTDFLUOR';...
 	    '#Salinity: Who - Y. Firing; Status - final';...
-	    '#Notes:';...
         '#Oxygen: Who - N. Ensor; Status - final';...
-        '#DEL18O: Who - M. Leng; Status - not yet analysed';...
-        '#Notes:';...
-        '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'}; %and funding to BGS, and Exeter...
+        '#Nutrients: Who - E. Mawji; Status - not yet analysed';...
+        '#DELO18: Who - M. Leng; Status - not yet analysed';...
+        '#Nutrient isotopes: Who - R. Tuerena; Status - not yet analysed';...
+        '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'}; 
       end
    %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
 
@@ -591,26 +668,26 @@ switch scriptname
    case 'mout_cchdo_ctd'
       switch oopt
          case 'expo'
-	        expocode = '';%74JC20181103';
+	        expocode = '74EQ20200203';
             sect_id = 'SR1b, A23';
 	 case 'outfile'
-%	    outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode '_ct1/sr1b_a23_' expocode];
-	    outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode];
+	    outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode '_ct1/sr1b_a23_' expocode];
 	 case 'headstr'
 	    headstring = {['CTD,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];...
 	    '#SHIP: Discovery';...
 	    '#Cruise DY113; SR1B and A23';...
 	    '#Region: Drake Passage, Weddell Sea, Scotia Sea';...
 	    ['#EXPOCODE: ' expocode];...
-	    '#DATES: 20200204 - 20200313';...
+	    '#DATES: 20200203 - 20200313';...
 	    '#Chief Scientist: Y. Firing, NOC';...
 	    '#Supported by NERC National Capability NE/N018095/1 (ORCHESTRA)';...
-	    '#61 stations with 24-place rosette';...
-	    '#CTD: Who - Y. Firing; Status - final';...
+	    '#104 stations with 24-place rosette';...
+	    '#Notes: PI for SR1B section (1-31): Y. Firing; PI for A23 section (32-62): E.P. Abrahamsen';...
+        '#CTD: Who - Y. Firing; Status - final';...
 	    '#Notes: Includes CTDSAL, CTDOXY, SBE35';...
 	    '#The CTD PRS;  TMP;  SAL; OXY data are all calibrated and good.';...
 	    '# DEPTH_TYPE   : COR';...
-   	    '#These data should be acknowledged with: "Data were collected and made publicly available by the International Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'};
+        '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'}; 
       end
    %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
  

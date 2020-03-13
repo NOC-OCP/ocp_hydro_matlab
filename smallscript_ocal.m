@@ -13,6 +13,8 @@ if okc == 'n' | okc == 'N'
 	return
 end
 
+disp('have you uncommented bottle_data_flags.txt?'); pause
+
 if ~exist('docsv'); docsv = 0; end
 
 for kloop = klist

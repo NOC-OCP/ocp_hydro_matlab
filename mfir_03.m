@@ -10,7 +10,8 @@ root_ctd = mgetdir('M_CTD');
 prefix1 = ['fir_' mcruise '_'];
 prefix2 = ['ctd_' mcruise '_'];
 infile1 = [root_ctd '/' prefix1 stn_string '_time'];
-infile2 = [root_ctd '/' prefix2 stn_string '_psal'];
+infile2 = [root_ctd '/' prefix2 stn_string '_psal']; %***or use 24hz?
+%infile2 = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
 otfile2 = [root_ctd '/' prefix1 stn_string '_ctd'];
 wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
 dcsfile = [root_ctd '/dcs_' mcruise '_' stn_string];
@@ -40,7 +41,7 @@ for kloop_scr = 1:length(var_copycell)
     snames_units = [snames_units; {'/'}];
 end
 
-get_cropt; %fillstr
+get_cropt; 
 
 %--------------------------------
 MEXEC_A.MARGS_IN = {
@@ -52,8 +53,9 @@ infile2
 'time'
 var_copystr
 fillstr
+avi_opt
 };
-mmerge
+mmerge_avmed
 %--------------------------------
 
 %--------------------------------
@@ -73,6 +75,7 @@ mheadr
 
 %ylf added dy113: add info about local gradients (and
 %wiggliness)***incomplete, doesn't propagate through to sam
+%***instead use stdev over 5 s? 
 gvar_copycell = mcvars_list(3);
 otfilestruct=struct('name',[otfile2 '.nc']);
 d=mload(otfilestruct.name,'upress',' ');

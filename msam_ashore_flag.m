@@ -20,10 +20,10 @@ for kstn = stns(:)'
     
     stn_string = sprintf('%03d',kstn);
     otfile = [root_sam '/sam_' mcruise '_' stn_string];
-    
+
     iistn = find(stations==kstn);
     
-    %--------------------------------
+    %now change flag values
     MEXEC_A.MARGS_IN = {otfile; 'y'};
     for nno = 1:length(flagnames)
         for fno = 1:length(flagvals)
@@ -42,7 +42,6 @@ for kstn = stns(:)'
     end
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
     mcalib2
-    %--------------------------------
     
     stn = kstn; msam_updateall;
     

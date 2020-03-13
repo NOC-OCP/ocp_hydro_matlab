@@ -152,14 +152,14 @@ for no = 1:n
    figure((no-1)*10+2); clf
    subplot(5,5,[1:5])
    plot(d.statnum, ctdres, 'c.', d.statnum(sensind{no}), res(sensind{no}), '+k', d.statnum(iid), res(iid), 'xb'); grid
-   legend('ctd diff','ctd-cal diff',['ctd-cal diff, p>' num2str(pdeep)])
+   %legend('ctd diff','ctd-cal diff',['ctd-cal diff, p>' num2str(pdeep)])
    xlabel('statnum'); xlim(statrange); ylim(rlim)
    title([mcruise ' ' rlabel])
    subplot(5,5,[9:10 14:15 19:20 24:25])
    plot(ctdres, -d.upress, 'c.', res(sensind{no}), -d.upress(sensind{no}), '+k', [0 0], presrange, 'r'); grid
    ylabel('press'); ylim(presrange); xlim(rlim)
    subplot(5,5,[6:8 11:13])
-   plot(caldata, ctddata, 'o-k', caldata(iig), ctddata(iig), 'sb', caldata, caldata); axis image; xlabel(['cal ' sensname]); ylabel(['ctd ' sensname]); %axis(repmat([min([caldata ctddata]) max([caldata ctddata])],1,2))
+   plot(caldata, ctddata, 'o-k', caldata(iig), ctddata(iig), 'sb', caldata, caldata); axis image; xlabel(['cal ' sensname]); ylabel(['ctd ' sensname]); grid %axis(repmat([min([caldata ctddata]) max([caldata ctddata])],1,2))
    subplot(5,5,[16:18 21:23])
    nh = histc(res(sensind{no}), edges);
    bar(edges, nh, 'histc')
@@ -170,6 +170,7 @@ for no = 1:n
    text(edges(end)*.9, ax(4)*.85, ['deep 25-75% ' num2str(round(iqrd*1e5)/1e5)], 'horizontalalignment', 'right')
    xlim(edges([1 end])); grid
    orient tall; print('-dpdf', [printdir 'ctd_eval_' sensname sensstr '_set' num2str(no)])
+   orient tall; print('-djpeg', [printdir 'ctd_eval_' sensname sensstr '_set' num2str(no)])
 
    figure((no-1)*10+3); clf; orient portrait
    load cmap_bo2; colormap(cmap_bo2)
@@ -187,6 +188,7 @@ for no = 1:n
    xlabel('oxygen'); xlim([min(d.uoxygen(sensind{no})) max(d.uoxygen(sensind{no}))])
    ylabel('press'); ylim(presrange); caxis(rlim); colorbar
    print('-dpdf', [printdir 'ctd_eval_' sensname sensstr '_set' num2str(no) '_pt'])
+   print('-djpeg', [printdir 'ctd_eval_' sensname sensstr '_set' num2str(no) '_pt'])
 
 end
 

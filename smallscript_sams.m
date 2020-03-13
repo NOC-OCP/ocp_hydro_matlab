@@ -39,7 +39,7 @@ for kloop = klist
     
 end
 
-%msam_ashore_flag
+msam_ashore_flag
 
 %nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order
 %nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order

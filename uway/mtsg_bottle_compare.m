@@ -15,7 +15,7 @@ switch MEXEC_G.Mship
     case {'cook','discovery'}
         salvar = 'psal'; % salinity var in tsg data stream
         tempvar = 'temp_h'; % housing temp
-        tempsst = 'temp_r'; % hull (remote) temp
+        tempsst = 'temp_r'; % remote temp
         condvar = 'cond'; % conductivity
 %     case 'discovery'
 % 	salvar = 'salin';

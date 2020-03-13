@@ -152,6 +152,7 @@ switch scriptname
         %%%%%%%%%% mfir_03 %%%%%%%%%%
     case 'mfir_03'
         fillstr = 'f'; %default is to fill in NaNs
+        avi_opt = 0; %default is to linearly interpolate, not average
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
         %%%%%%%%%% mwin_01 %%%%%%%%%%
