@@ -442,14 +442,14 @@ switch scriptname
     case 'miso_01'
         switch oopt
             case 'files'
-                files{1} = [root_iso '/c13_' mcruise '_bgs.csv'];
+                files{1} = [root_iso '/jc159_13c_dic_whcorrected.csv'];
                 files{2} = [root_iso '/SampleResults_2018112_withStationNumbersCorrected.csv'];
             case 'vars'
                 vars{1} = {
                     'position'     'number'     'Niskin'
-                    'statnum'      'number'     'Station'
-                    'sampnum'      'number'     'sampnum'
-                    'del13c_bgs' 'per_mil' 'd13C_DIC_PDB';
+                    'statnum'      'number'     'x___Station'
+                    'del13c_bgs' 'per_mil' 'd13C_DICPDB_WH_WSWCorrected_';
+                    'del13c_bgs_rpt'  'per_mil' 'rpt';
                     'del13c_bgs_flag' 'woceflag' ''};
                 vars{2} = {
                     'statnum'      'number'  'Station'

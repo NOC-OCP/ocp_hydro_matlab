@@ -22,11 +22,11 @@ for kloop = klist
     stn = kloop;
     stn_string = sprintf('%03d',stn);
 
-    senscal = 1; stn = kloop; mctd_oxycal;
-    h24 = m_read_header(['ctd/ctd_' mcruise '_' stn_string '_24hz']);
-    if sum(strcmp('oxygen2', h24.fldnam))
+    %senscal = 1; stn = kloop; mctd_oxycal;
+    %h24 = m_read_header(['ctd/ctd_' mcruise '_' stn_string '_24hz']);
+    %if sum(strcmp('oxygen2', h24.fldnam))
         senscal = 2; stn = kloop; mctd_oxycal; 
-    end
+    %end
     
     stn = kloop; mctd_03;
     stn = kloop; mctd_04;
@@ -56,6 +56,8 @@ for kloop = klist
        mout_makelists(kloop, '2dbdn')
     end
     
+    stn = kloop; mout_cchdo_ctd
+    
    toc
 end
 
@@ -63,7 +65,7 @@ if docsv
     nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order
     nnisk = 0; mout_sam_csv 
 end
-%mout_cchdo_sam
+mout_cchdo_sam
 
 %sync csv files to public drive, by way of mac mini since there's no write
 %permission from eriu

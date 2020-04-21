@@ -30,6 +30,7 @@ disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec']) %%%***add something 
 %look for mexec base directory
 d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if length(ii)>0; d = d(1:ii-1); else; d = []; end
 mpath = {['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+         [d MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
          [d MEXEC.MSCRIPT_CRUISE_STRING];
 	 ['/local/users/pstar/cruise']};
 fp = 0; n=1;

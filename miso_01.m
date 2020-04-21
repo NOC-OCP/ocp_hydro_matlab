@@ -43,16 +43,22 @@ for fno = 1:length(files)
 
    %assign values to vars, and flags
    nvars = size(vars{fno},1);
-   for kvar = 2:nvars
+   for kvar = 1:nvars %***2:nvars?***
       if sum(strcmp(vars{fno}{kvar,3}, ds_iso_fn))
-         eval([vars{fno}{kvar,1} '(ib) = ds_iso.' vars{fno}{kvar,3} ';']);
+         d = getfield(ds_iso, vars{fno}{kvar,3});
+         if sum(strcmp([vars{vno}{kvar,3} '_rpt'], ds_iso_fn)) %there are replicates
+	    dr = getfield(ds_iso, [vars{vno}{kvar,3} '_rpt']);
+	    eval([vars{vno}{kvar,1} '(ib) = nanmean([d dr], 2);'])
+	    eval([vars{vno}{kvar,1} '_repl(ib) = isnan(dr);'])
+	 else
+            eval([vars{fno}{kvar,1} '(ib) = d;']);%ds_iso.' vars{fno}{kvar,3} ';']);
+	 end
       else
          %if it's a flag field that's not in ds_iso, set flags to 2 when data present, or 9 for missing
          ii = strfind(vars{fno}{kvar,1}, '_flag');
          if length(ii)>0
             eval([vars{fno}{kvar,1} ' = 9+zeros(length(sampnum),1);'])
             eval([vars{fno}{kvar,1} '(ib(~isnan(' vars{fno}{kvar,1}(1:ii-1) '))) = 2;'])
-
          else
             warning(['no values found for iso variable ' vars{fno}{kvar,1}])
 	    eval([vars{fno}{kvar,1} ' = NaN+zeros(length(sampnum),1);'])
@@ -63,11 +69,23 @@ for fno = 1:length(files)
          varnames_units = [varnames_units; vars{fno}(kvar,1); {'/'}; vars{fno}(kvar,2)];
       end
    end
+   %adjust flags for repeats, and make sure NaNs have flag 9 not 2
+   for kvar = 1:nvars
+      ii = strfind(vars{fno}{kvar,1}, '_flag');
+      if length(ii)>0
+         eval(['f = ' vars{vno}{kvar,1} ';'])
+         if exist([vars{vno}{kvar,1}(1:ii-1) '_repl'], 'var')
+            eval(['fr = ' vars{vno}{kvar,1}(1:ii-1) '_repl;'])
+	    f(f==2 & fr==1) = 6; %***
+	 end
+	 eval(['d = ' vars{vno}{kvar,1}(1:ii-1) ';'])
+	 f(isnan(d) & f==2) = 9;
+	 eval([vars{vno}{kvar,1} ' = f;'])
+      end
+   end
 end
 
 oopt = 'flags'; get_cropt %modify flags if required
-%***flag 9 --> NaN
-%ii = find(isnan(all))***
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
 
 %--------------------------------

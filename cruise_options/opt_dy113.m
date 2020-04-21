@@ -260,9 +260,9 @@ switch scriptname
                 if stnlocal<40
                    vol_titre_std = 0.4438;
                    vol_blank = -0.0053; 
-                else %new sodthio batch
+                else %new sodthio batch. why does this affect the blank though? 
                     vol_titre_std = 0.4491;
-                    vol_blank = -0.0043;
+                    vol_blank = -0.0006; %***
                 end
             case 'botvols'
                 obot_vol = ds_oxy.bot_vol;
@@ -398,10 +398,10 @@ switch scriptname
         switch sensor
             case 1
                 alpha = 1.025;
-        beta = interp1([0 5000],[1.5 12.5],press) - 2e-2*stn - 0.1;
+        beta = interp1([0 5000],[1.8 12.8],press) - 1.5e-2*stn;
             case 2
-                alpha = 1.029;%interp1([0 5000]',[1.035 1.062]',press) + 0.3*1e-4*stn;
-        beta = interp1([0 500 5000],[1.5 1.8 10],press) -1.5;
+               alpha = 1.029;%interp1([0 5000]',[1.035 1.062]',press) + 0.3*1e-4*stn;
+        beta = interp1([0 500 5000],[.5 .8 9],press) + 1e-2*stn;
         end
         oxyout = alpha.*oxyin + beta;
         %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
