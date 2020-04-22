@@ -46,10 +46,10 @@ for fno = 1:length(files)
    for kvar = 1:nvars %***2:nvars?***
       if sum(strcmp(vars{fno}{kvar,3}, ds_iso_fn))
          d = getfield(ds_iso, vars{fno}{kvar,3});
-         if sum(strcmp([vars{vno}{kvar,3} '_rpt'], ds_iso_fn)) %there are replicates
-	    dr = getfield(ds_iso, [vars{vno}{kvar,3} '_rpt']);
-	    eval([vars{vno}{kvar,1} '(ib) = nanmean([d dr], 2);'])
-	    eval([vars{vno}{kvar,1} '_repl(ib) = isnan(dr);'])
+         if sum(strcmp([vars{fno}{kvar,3} '_rpt'], ds_iso_fn)) %there are replicates
+	    dr = getfield(ds_iso, [vars{fno}{kvar,3} '_rpt']);
+	    eval([vars{fno}{kvar,1} '(ib) = nanmean([d dr], 2);'])
+	    eval([vars{fno}{kvar,1} '_repl(ib) = isnan(dr);'])
 	 else
             eval([vars{fno}{kvar,1} '(ib) = d;']);%ds_iso.' vars{fno}{kvar,3} ';']);
 	 end
@@ -69,23 +69,29 @@ for fno = 1:length(files)
          varnames_units = [varnames_units; vars{fno}(kvar,1); {'/'}; vars{fno}(kvar,2)];
       end
    end
-   %adjust flags for repeats, and make sure NaNs have flag 9 not 2
+   %adjust flags for repeats, make sure NaNs have flag 9 not 2, remove _rpt from varnames
+   iir = [];
    for kvar = 1:nvars
       ii = strfind(vars{fno}{kvar,1}, '_flag');
       if length(ii)>0
-         eval(['f = ' vars{vno}{kvar,1} ';'])
-         if exist([vars{vno}{kvar,1}(1:ii-1) '_repl'], 'var')
-            eval(['fr = ' vars{vno}{kvar,1}(1:ii-1) '_repl;'])
+         eval(['f = ' vars{fno}{kvar,1} ';'])
+         if exist([vars{fno}{kvar,1}(1:ii-1) '_repl'], 'var')
+            eval(['fr = ' vars{fno}{kvar,1}(1:ii-1) '_repl;'])
 	    f(f==2 & fr==1) = 6; %***
 	 end
-	 eval(['d = ' vars{vno}{kvar,1}(1:ii-1) ';'])
-	 f(isnan(d) & f==2) = 9;
-	 eval([vars{vno}{kvar,1} ' = f;'])
+	 eval(['d = ' vars{fno}{kvar,1}(1:ii-1) ';'])
+	 f(isnan(d(:)) & f==2) = 9;
+	 eval([vars{fno}{kvar,1} ' = f;'])
+      else
+         if length(strfind(vars{fno}{kvar,1}, '_rpt'))>0
+	    iir = [iir kvar];
+	 end
       end
    end
+   vars{fno}(iir,:) = [];
 end
 
-oopt = 'flags'; get_cropt %modify flags if required
+oopt = 'flags'; get_cropt %further modify flags if required
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
 
 %--------------------------------

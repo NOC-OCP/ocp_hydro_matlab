@@ -442,8 +442,9 @@ switch scriptname
     case 'miso_01'
         switch oopt
             case 'files'
-                files{1} = [root_iso '/jc159_13c_dic_whcorrected.csv'];
+                files{1} = [root_iso '/jc159_c13_dic_whcorrected.csv'];
                 files{2} = [root_iso '/SampleResults_2018112_withStationNumbersCorrected.csv'];
+                files{3} = [root_iso '/A095_740H20180228_no_cfc_values_hy_with_d18o.csv'];
             case 'vars'
                 vars{1} = {
                     'position'     'number'     'Niskin'
@@ -452,14 +453,17 @@ switch scriptname
                     'del13c_bgs_rpt'  'per_mil' 'rpt';
                     'del13c_bgs_flag' 'woceflag' ''};
                 vars{2} = {
-                    'statnum'      'number'  'Station'
-                    'position'     'number'  'Niskin'
                     'del13c_whoi'  'per_mil' 'd13C'
                     'del14c_whoi'  'per_mil' 'D14C'
                     %'dic_whoi' 'mmol_per_kg' 'DIC Conc (mmol/kg)'
                     'del14c_whoi_flag' 'woceflag' 'flag'
                     'del13c_whoi_flag' 'woceflag' 'flag'};
-            case 'sampnum_parse'
+                vars{3} = {
+                    'del18o_bgs'      'per_mil' 'BOT_O_18'
+                    'del18o_bgs_flag' 'per_mil' 'BOT_O_18_FLAG'};
+            case 'flags'
+                del18o_bgs(del18o_bgs<-990) = NaN;
+                del18o_bgs_flag(isnan(del18o_bgs) & ismember(del18o_bgs_flag, [2 3])) = 4;
         end
         %%%%%%%%%% end miso_01 %%%%%%%%%%
 
