@@ -114,7 +114,7 @@ for kloop = klist
 
     %c14, c13, o18
     if ismember(kloop, klistiso)
-        stn = kloop; mciso_02 %puts iso in sam file
+        stn = kloop; miso_02 %puts iso in sam file
     end
 
     

@@ -450,8 +450,7 @@ switch scriptname
                     'statnum'      'number'     'x0xEF0xBB0xBFStation'
                     'position'     'number'     'Niskin'
                     'del13c_bgs' 'per_mil' 'd13C';
-                    'del13c_bgs_rpt'  'per_mil' 'rpt';
-                    'del13c_bgs_flag' 'woceflag' ''};
+                    'del13c_bgs_flag' 'woceflag' 'junk'};
                 vars{2} = {
 		    'statnum'      'number'    'Station'
 		    'position'     'number'    'Niskin'
@@ -463,8 +462,8 @@ switch scriptname
                 vars{3} = {
 		    'statnum'    'number'    'STNNBR'
 		    'position'   'number'    'SAMPNO'
-                    'del18o_bgs'      'per_mil' 'BOT_O_18'
-                    'del18o_bgs_flag' 'per_mil' 'BOT_O_18_FLAG'};
+                    'del18o_bgs'      'per_mil' 'BOT_O0x2D18'
+                    'del18o_bgs_flag' 'per_mil' 'BOT_O0x2D18_FLAG'};
             case 'flags'
                 del18o_bgs(del18o_bgs<-990) = NaN;
                 del18o_bgs_flag(isnan(del18o_bgs) & ismember(del18o_bgs_flag, [2 3])) = 4;

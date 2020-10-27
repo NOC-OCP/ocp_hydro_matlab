@@ -91,6 +91,16 @@ switch scriptname
                 s_choice = 2; %need to use sensor 2 for 36:39, but also, oxygen was plumbed into ctd2
         end
         %%%%%%%%%% end mctd_03 %%%%%%%%%%
+
+        %%%%%%%%%% mctd_04 %%%%%%%%%%
+    case 'mctd_04'
+        switch oopt
+            case 'doloopedit'
+                doloopedit = 1;
+            case 'interp_2db' %this applies to both t and c
+                interp_2db = 0; %reprocess as on dy113
+        end
+        %%%%%%%%%% end mctd_04 %%%%%%%%%%
         
         %%%%%%%%%% mbot_00 %%%%%%%%%%
     case 'mbot_00' %information about niskin bottle numbers
@@ -134,6 +144,12 @@ switch scriptname
                 iif = find(flag9(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag9(iif,2)) = 9; end
         end
    %%%%%%%%%% end mbot_01 %%%%%%%%%%
+
+   %%%%%%%%%% mfir_03 %%%%%%%%%%
+    case 'mfir_03'
+        avi_opt = [0 121/24]-1/24; %average just like in sbe .ros file (reprocess as on dy113)
+        %%%%%%%%%% end mfir_03 %%%%%%%%%%
+
         
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'
@@ -264,20 +280,20 @@ switch scriptname
     case 'mnut_01'
         switch oopt
             case 'nutcsv'
-                infile = [root_nut '/' upper(mcruise) '_nuts.csv'];
+                %infile = [root_nut '/' upper(mcruise) '_nuts.csv'];
+infile = [root_nut '/74JC20181103.csv'];
             case 'vars'
                 vars = {
-                    'position'     'number'     'niskin'
-                    'statnum'      'number'     'station'
-                    'sampnum'      'number'     'sampnum'
-                    'sio4'          'umol/kg'    'Si'
-                    'sio4_flag'    'woceflag'   ''
-                    'po4'           'umol/kg'    'P'
-                    'po4_flag'     'woceflag'   ''
-                    'no3no2'        'umol/kg'    'NO30x2BNO2'
-                    'no3no2_flag'   'woceflag'    ''
-                    'no2'           'umol/kg'    'NO2'
-                    'no2_flag'           'woceflag'    ''
+                    'position'     'number'     'BTLNBR'%'niskin'
+                    'statnum'      'number'     'STNNBR'%'station'
+                    'sio4'          'umol/kg'    'SILCAT'%'Si'
+                    'sio4_flag'    'woceflag'   'SILCAT_FLAG_W'
+                    'po4'           'umol/kg'    'PHSPHT'
+                    'po4_flag'     'woceflag'   'PHSPHT_FLAG_W'
+                    'no3'        'umol/kg'    'NITRAT'
+                    'no3_flag'   'woceflag'    'NITRAT_FLAG_W'
+                    'no2'           'umol/kg'    'NITRITE'
+                    'no2_flag'           'woceflag'    'NITRITE_FLAG_W'
                     };
             case 'flags'
                 flag0 = 9;
@@ -582,4 +598,16 @@ end
                 dataname = [inst '_' mcruise '_01'];
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
+
+        
+                    %%%%%%%%%% smallscript_sams %%%%%%%%%%
+    case 'smallscript_sams' 
+            dodcs24 = 1; 
+            doucav = 1; 
+            rmvars = {'totnit';'totnit_flag'}; 
+            addvars = {'no3';'no3_flag'}; 
+            addunts = {'umol/kg';'number'};
+            chunts = {'no2' 'umol/kg';'phos' 'umol/kg';'silc' 'umol/kg'};
+        %%%%%%%%%% end smallscript %%%%%%%%%%
+
 end

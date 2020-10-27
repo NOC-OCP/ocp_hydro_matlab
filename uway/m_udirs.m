@@ -1,5 +1,5 @@
 function [udirs, udcruise] = m_udirs();
 
-udcruise = 'jc159';
+udcruise = 'dy113';
 udirs = {
 };

@@ -26,7 +26,7 @@ for kls = numcopy:-1:1
 end
 for kls = length(gvar_copycell):-1:1
     gvar_copycell{kls} = [gvar_copycell{kls} 'grad'];
-    if sum(strcmp(var_copycell(kls),h1.fldnam)) & sum(strcmp(var_copycell(kls),h2.fldnam))
+    if sum(strcmp(gvar_copycell(kls),h1.fldnam)) & sum(strcmp(gvar_copycell(kls),h2.fldnam))
         var_copycell = [var_copycell gvar_copycell{kls}];
     end
 end

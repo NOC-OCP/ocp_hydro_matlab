@@ -23,7 +23,11 @@ switch scriptname
         end
         %%%%%%%%%% end smallscript %%%%%%%%%%
         
-        
+            %%%%%%%%%% smallscript_sams %%%%%%%%%%
+    case 'smallscript_sams' 
+            dodcs24 = 0; doucav = 0; rmvars = {}; addvars = {}; %default is not to rerun
+        %%%%%%%%%% end smallscript %%%%%%%%%%
+
         %%%%%%%%%% mctd_01 %%%%%%%%%%
     case 'mctd_01'
         switch oopt

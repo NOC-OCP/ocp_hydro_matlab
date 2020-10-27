@@ -23,6 +23,7 @@ oopt = 'files'; get_cropt
 sampnum = repmat(1:999,24,1)*100+repmat([1:24]',1,999); sampnum = sampnum(:);
 varnames = {'sampnum';'statnum';'position'};
 varnames_units = {'sampnum';'/';'number';'statnum';'/';'number';'/';'position';'/';'number'};
+oopt = 'vars'; get_cropt %set vars: {varnames varunits origvarnames}
 for fno = 1:length(files)
    infile = files{fno};
    if ~exist(infile, 'file'); warning(['file ' infile ' not found']); continue; end
@@ -36,7 +37,7 @@ for fno = 1:length(files)
          iis = find(strcmp('statnum', vars{fno}(:,1)));
          iin = find(strcmp('position', vars{fno}(:,1)));
 	 if length(iis)>0 & length(iin)>0
-	    ds_iso.sampnum = getfield(ds_iso, vars{fno}{iis,3})*100 + getfield(ds_iso, vars{vno}{iin,3});
+	    ds_iso.sampnum = getfield(ds_iso, vars{fno}{iis,3})*100 + getfield(ds_iso, vars{fno}{iin,3});
 	 end
       end
    end
@@ -45,18 +46,18 @@ for fno = 1:length(files)
    [c,ia,ib] = intersect(sampnum, ds_iso.sampnum);
    ds_iso = ds_iso(ib,:);
 
-   oopt = 'vars'; get_cropt %set vars: {varnames varunits origvarnames}
    ds_iso_fn = ds_iso.Properties.VarNames;
 
    %assign values to vars, and flags
    nvars = size(vars{fno},1);
    for kvar = 1:nvars %***2:nvars?***
       if sum(strcmp(vars{fno}{kvar,3}, ds_iso_fn))
+         eval([vars{fno}{kvar,1} ' = NaN+sampnum;'])
          d = getfield(ds_iso, vars{fno}{kvar,3});
          if sum(strcmp([vars{fno}{kvar,3} '_rpt'], ds_iso_fn)) %there are replicates
-	    dr = getfield(ds_iso, [vars{fno}{kvar,3} '_rpt']);
+	    dr = getfield(ds_iso, [vars{fno}{kvar,1} '_rpt']);
 	    eval([vars{fno}{kvar,1} '(ia) = nanmean([d dr], 2);'])
-	    eval([vars{fno}{kvar,1} '_repl(ia) = isnan(dr);'])
+	    eval([vars{fno}{kvar,1} '_repl = NaN+' vars{fno}{kvar,1} '; ' vars{fno}{kvar,1} '_repl(ia) = ~isnan(dr);'])
 	 else
             eval([vars{fno}{kvar,1} '(ia) = d;']);%ds_iso.' vars{fno}{kvar,3} ';']);
 	 end
@@ -65,13 +66,13 @@ for fno = 1:length(files)
          ii = strfind(vars{fno}{kvar,1}, '_flag');
          if length(ii)>0
             eval([vars{fno}{kvar,1} ' = 9+zeros(length(sampnum),1);'])
-            eval([vars{fno}{kvar,1} '(ia(~isnan(' vars{fno}{kvar,1}(1:ii-1) '))) = 2;'])
+            eval([vars{fno}{kvar,1} '(~isnan(' vars{fno}{kvar,1}(1:ii-1) ')) = 2;'])
          else
             warning(['no values found for iso variable ' vars{fno}{kvar,1}])
 	    eval([vars{fno}{kvar,1} ' = NaN+zeros(length(sampnum),1);'])
          end
       end
-      if ~sum(strcmp(vars{fno}{kvar,1},{'sampnum';'statnum';'position'}))
+      if ~sum(strcmp(vars{fno}{kvar,1},{'sampnum';'statnum';'position'})) & length(strfind(vars{fno}{kvar,1}, '_rpt'))==0
          varnames = [varnames; vars{fno}(kvar,1)];
          varnames_units = [varnames_units; vars{fno}(kvar,1); {'/'}; vars{fno}(kvar,2)];
       end
@@ -84,7 +85,7 @@ for fno = 1:length(files)
          eval(['f = ' vars{fno}{kvar,1} ';'])
          if exist([vars{fno}{kvar,1}(1:ii-1) '_repl'], 'var')
             eval(['fr = ' vars{fno}{kvar,1}(1:ii-1) '_repl;'])
-	    f(f==2 & fr==1) = 6; %***
+	    f(f==2 & fr==1) = 6;
 	 end
 	 eval(['d = ' vars{fno}{kvar,1}(1:ii-1) ';'])
 	 f(isnan(d) & f==2) = 9;
@@ -99,8 +100,27 @@ for fno = 1:length(files)
 end
 
 oopt = 'flags'; get_cropt %further modify flags if required
-timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
 
+%get rid of station numbers with no data
+m = zeros(size(sampnum));
+for kvar = 4:length(varnames)
+   eval(['d = ' varnames{kvar} ';'])
+   if length(strfind(varnames{kvar}, '_flag'))==0
+      m = m + ~isnan(d);
+   else
+      m = m + d<9;
+   end
+end
+s = unique(statnum(find(m>0)));
+iis = ismember(statnum, s);
+for kvar = 1:length(varnames)
+   eval(['d = ' varnames{kvar} ';']);
+   d = d(iis);
+   eval([varnames{kvar} ' = d;'])
+end
+
+
+timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
 %--------------------------------
 MEXEC_A.MARGS_IN_1 = {
    otfile2
