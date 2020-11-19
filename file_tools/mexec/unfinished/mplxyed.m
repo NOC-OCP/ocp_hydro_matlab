@@ -79,6 +79,7 @@ for k = 1:length(hplot)
 end
 m = sprintf('%s',': ');
 varedstr = m_getinput(m,'s');
+if length(str2num(varedstr))==0; varedstr = m_getinput('try again (number): ', 's'); end
 eval(['vared = ' varedstr ';']);
 % yname = h.fldnam{ynumlist(vared)};
 yname = pdfot.ylist;

@@ -131,5 +131,9 @@ m_proghd
 % m_getinput. If we don't remove varargin here it will 'accumulate'
 MEXEC_A.MARGS_IN_LOCAL(1:length(varargin)) = [];
 MEXEC_A.MARGS_IN = MEXEC_A.MARGS_IN_LOCAL;
+try
 pdfot = m_edplot(varargin{:});
+catch
+warning('m_edplot failed')
+end
 
