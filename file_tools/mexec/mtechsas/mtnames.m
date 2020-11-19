@@ -108,7 +108,6 @@ switch MEXEC_G.Mship
       };		     
 
    case 'discovery'
-      % before di 368 13 jul 2011
       matlist = {           
         'adupos'              ' '  'ADUPOS-PAPOS.gps'
         'adupos' ' '   'PASHRPOS-PAPOS.PASHR'
