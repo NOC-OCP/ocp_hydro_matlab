@@ -20,15 +20,11 @@ function [oxygen_out C D]=mcoxyhyst(oxygen_sbe,time,press,H1in,H2in,H3in,sensor)
 % H1 H2 H3 are now arrays. Default is single, passed-in
 % value, uniform with pressure. Option is now to vary with depth. Should be
 % fully backwards compatible.
+% input argument sensor is not used but kept to be backwards compatible
 
 m_common % on and after dy040, identify cruise from m_setup
 scriptname = 'mcoxyhyst';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if nargin == 6
-   % sensor not defined in call, assume sensor = 1, which is backwards compatible
-   sensor = 1;
-end
 
 oxygen_out=oxygen_sbe;
 
@@ -67,7 +63,7 @@ for k=kfirst+1:length(time)
         D(k)=1+H1(k)*(exp(press(k)/H2(k))-1);
         C(k)=exp(-1*(time(k)-time(klastgood))/H3(k));
 
-        oxygen_out(k)=((oxygen_sbe(k)+(oxygen_out(klastgood)*C(k)*D(k)))-(oxygen_sbe(klastgood)*C(k)))/D(k);
+        oxygen_out(k)=(oxygen_sbe(k) + oxygen_out(klastgood)*C(k)*D(k) - oxygen_sbe(klastgood)*C(k))/D(k);
         klastgood = k;
         
     end
