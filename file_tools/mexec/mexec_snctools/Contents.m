@@ -30,24 +30,28 @@
 % avoided, since they are often slower. Useful commands for investigating
 % NetCDF files include ncinfo, ncdisp.
 %
-% The code was written with mexec NetCDF files in mind. 
-% For example _FillValue is recognised on both
-% input and output, but "missing_value" is not given special treatment.
-% One view is that 'missing value' is for information for the user, and
-% should not necessarily be changed to NaN.
-% Handling of unlimited dimensions may fail in some places,
+% The code was written with mexecNetCDF files in mind, so some standard
+% NetCDF features are ignored. For example _FillValue is recognised on both
+% input and output, but "missing_value" is not, and nor are scaling and
+% offset, although these could easily be included in the relevant parts of
+% the code. Handling of unlimited dimensions may fail in some places,
 % because it has not been extensively tested. mexec netcdf does not use
 % unlimited dimensions.
 %
-% When this library started to be used for routine mecxec processing, it broke when
-% reading a CODAS netcdf file. This is because it tried to read a _FillValue
-% attribute, which did not exist. This glitch was fixed, but there could be
+% When it started to be used for routine mecxec processing, it broke when
+% reading a CODAS netcdf file. This is because it expected a _FillValue
+% attribute, which did not exist. This glitch was fixed, but their could be
 % others if reading non-mexec NetCDF files.
 %
-% 8 Feb: added handling of scale_factor and add_offset in nc_varget and
-% nc_varput. If there is scaling or offset, then the _FillValue is handled in the
-% normalisation of the scaled/offset file variable not the real world variable.
-% This convention agrees with the matlab ncread and ncwrite commands.
+% SJones on DY120
+% Removed alias files:
+% nc_infoqatt.m (alias for nc_info)
+% nc_infoqdim.m (alias for nc_info)
+% nc_infoq.m    (alias for nc_info)
+% nc_attputq.m (alias for nc_attput)
+% and replaced with the functions they point to.  Somewhere in the Git process the links broke down and 
+% were replaced with unreadable text.
+%
 %
 % Files in this library, each of which has some help comments
 %
@@ -56,15 +60,11 @@
 % nc_addvar.m
 % nc_attget.m
 % nc_attput.m
-% nc_attputq.m (alias for nc_attput)
 % nc_create_empty.m
 % nc_getdiminfo.m
 % nc_getvarinfo.m
 % nc_global.m
 % nc_info.m
-% nc_infoqatt.m (alias for nc_info)
-% nc_infoqdim.m (alias for nc_info)
-% nc_infoq.m    (alias for nc_info)
 % nc_padheader.m
 % nc_varget.m
 % nc_varput.m

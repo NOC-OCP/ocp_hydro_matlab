@@ -17,8 +17,8 @@ if nargin < 3
     dims_array = {'nrows' 'ncols'}; %default dimensions of a variable
 end
 
-
-metadata = nc_infoqdim(ncfile.name); %refresh metadata
+%metadata = nc_infoqdim(ncfile.name); %refresh metadata
+metadata = nc_info(ncfile.name); %refresh metadata
 ncfile.metadata = metadata;
 
 dimnames = m_unpack_dimnames(ncfile);
