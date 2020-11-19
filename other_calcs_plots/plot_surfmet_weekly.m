@@ -1,25 +1,25 @@
 function plot_surfmet_weekly
 
-% HP DI346
+% HP dy
 
 m_setup
 m_common
 m_margslocal
 m_varargs
-data_route = '/noc/users/pstar/di346/data';
+data_route = '/local/users/pstar/jc191/Jess';
 
 surfmet_dir = '/met/surfmet'
 surflight_dir = '/met/surflight'
 cd([data_route surfmet_dir])
-infile_humid = [data_route surfmet_dir '/' 'met_' MEXEC_G.MSCRIPT_CRUISE_STRING '_01.nc'];
-infile_press = [data_route surflight_dir '/' 'press_correct_' MEXEC_G.MSCRIPT_CRUISE_STRING '_01.nc'];
-infile_wind = [data_route surfmet_dir '/' 'met_' MEXEC_G.MSCRIPT_CRUISE_STRING '_truewind.nc']
+infile_humid = [data_route surfmet_dir '/' 'wind_' MEXEC_G.MSCRIPT_CRUISE_STRING '_.nc'];
+infile_press = [data_route surflight_dir '/' 'surflight_' MEXEC_G.MSCRIPT_CRUISE_STRING '_edt.nc'];
+infile_wind = [data_route surfmet_dir '/' 'wind_' MEXEC_G.MSCRIPT_CRUISE_STRING '_.nc']
 
 % ------------------------------------
 % load airtemp, humidity and wind data
 % ------------------------------------
 dmet = mload(infile_humid,'/',' ');
-time_met = dmet.time_bin_average;
+time_met = dmet.time;
 humid = dmet.humid; 
 airtemp = dmet.airtemp;
 speed_shiprel = dmet.speed;
@@ -29,9 +29,8 @@ dir_shiprel = dmet.direct;
 % load calibrated, z-corrected pressure
 % -------------------------------------
 dpress = mload(infile_press,'/',' ');
-time_press = dpress.time_bin_average;
-press = dpress.press_zcorrected;
-
+time_press = dpress.time;
+press = dpress.pres;
 % ------------------------
 % load corrected wind data
 % ------------------------
