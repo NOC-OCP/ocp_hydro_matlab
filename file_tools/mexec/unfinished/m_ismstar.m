@@ -49,7 +49,6 @@ end
 % Now read the global attributes
 
 metadata = nc_info(ncfile.name); %refresh metadata
-%metadata = nc_infoqatt(ncfile.name); %refresh metadata
 % ncfile.metadata = metadata;
 globatt = metadata.Attribute;
 for k = 1:length(globatt);

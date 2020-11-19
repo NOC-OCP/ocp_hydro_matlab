@@ -26,7 +26,6 @@ end
 d1 = s(1);
 d2 = s(2);
 
-%metadata = nc_infoqdim(ncfile.name); %refresh metadata
 metadata = nc_info(ncfile.name); %refresh metadata
 ncfile.metadata = metadata;
 

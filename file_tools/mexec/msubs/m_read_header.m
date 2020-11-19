@@ -11,7 +11,6 @@ ncfile = m_resolve_filename(ncfile);
 
 ncfile = m_ismstar(ncfile); % check it is an mstar file
 
-%metadata = nc_infoqatt(ncfile.name); %refresh metadata
 metadata = nc_info(ncfile.name); %refresh metadata
 ncfile.metadata = metadata;
 var_names = m_unpack_varnames(ncfile);
