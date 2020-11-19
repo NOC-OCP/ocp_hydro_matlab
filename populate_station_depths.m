@@ -67,10 +67,11 @@ ii = find(isnan(bestdeps(:,1))); bestdeps(ii,:) = [];
 
 save(fnot, 'bestdeps')
 
+ii0 = find(isnan(bestdeps(:,2));
 if ~isempty(ii0)
    disp('new depths:')
    disp(round(bestdeps(ii0,:)))
-   pause
+   disp('ok?'); pause
 end
 
 

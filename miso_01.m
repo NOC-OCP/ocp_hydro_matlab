@@ -7,6 +7,11 @@
 %    containing fields 
 %    Station, Niskin, d13C DIC PDB
 %    or otherwise as specified in opt_cruise file
+%
+% A given data/flag variable cannot be in more than one file or it will
+% be overwritten (so this does not support separating by station)
+%
+% Variable names are specified in the opt_cruise file
 
 scriptname = 'miso_01';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;

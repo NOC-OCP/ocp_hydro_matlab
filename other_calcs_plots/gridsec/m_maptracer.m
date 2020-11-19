@@ -21,12 +21,7 @@ samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
 stdpres = [0 5 25 50 75 100 175 250 375 500 ...
     625 750 875 1000 1250 1500 1750 2000 2250 2500 ...
     2750 3000 3250 3500 3750 4000 4250 4500 4750 ...
-    5000 5250 5500 5750 6000];
-% stdpres = [0 50 100 175 250 375 500 ...
-%     625 750 875 1000 1250 1500 1750 2000 2250 2500 ...
-%     2750 3000 3250 3500 3750 4000 4250 4500 4750 ...
-%     5000 5250 5500 5750 6000 6250 6500]; % add 6250 and 6500 di346
-% stdpres = [0:100:1000 1000:20:2000]; % jc069
+    5000 5250 5500 5750 6000 6250 6500];
 stdpres = unique(stdpres);
 plev = 1:length(stdpres);
 
@@ -50,13 +45,7 @@ else
     cmd = ['yflag = d.' yfname ';']; eval(cmd);
 end
 flaglim = 2; % highest flag to be used for gridding
-s.xlim = 1; % width of gridding window, measured in statnum
-s.zlim = 4; % vertical extent of gridding window measured in plev
-% pgrid = 10:20:4000;
-% stnlist = 23:44;
-% 
-% ktest = find(statnum == 30 & 4000 > p & p > 1500); % test points
-% ktest = find(statnum >= 1 ); % test points
+oopt = 'xzlim'; get_cropt
 
 
 testfit = nan+y;
@@ -174,6 +163,7 @@ end
 
 
 function g = bakmap2(g,s)
+  m_common; scriptname = 'm_maptracer'; oopt = 'scales_xz'; get_cropt
     g.fit = nan;
     pref = g.p;
     sig = sw_pden(s.s,s.t,s.p,pref)-1000; % recalculate sigma for the reference pressure of the test point
@@ -217,6 +207,8 @@ function g = bakmap2(g,s)
     yu = s.y(kuse); yu = yu(:);
     xu = x(kuse); xu = xu(:);
     zu = z(kuse); zu = zu(:);
+    xu = xu*scale_x; 
+    zu = zu*scale_z;
     
     %weights
     w = ones(nu,1);

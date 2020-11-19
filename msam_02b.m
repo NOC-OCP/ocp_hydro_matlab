@@ -88,7 +88,7 @@ if exist(infile2)
       fid = fopen(infile2, 'w');
       for no = 1:length(flines)
          if ismember(no, iis)
-            fprintf(fid, '%%%s\n', flines{no}); %comment out
+            fprintf(fid, '%%%s\n', flines{no}); %comment out %***or don't so they don't have to be re-instated when bottle data read in again? make cruise option?***
          else
 	        fprintf(fid, '%s\n', flines{no}); %unchanged
 	     end

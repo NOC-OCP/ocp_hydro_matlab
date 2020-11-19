@@ -29,8 +29,6 @@ switch scriptname
             case 'absentvars' % introduced new on jc191
                 if sum(ismember(stnlocal,[67:70])) == 1 % deep stations on jc191
                     absentvars = {'fluor' 'transmittance'};
-                else
-                    absentvars = {};
                 end
             case 'corraw'
                 %pvars is a list of variables to NaN when pumps are off, with the
@@ -894,32 +892,11 @@ switch scriptname
     case 'ctd_all_part1'
         switch oopt
             case 'apply_cals_choice'
-            % select which cals get applied 
-            % default at start of cruise is all switched off
-            
-            stations_temp = [];
-            stations_cond = [];
-            stations_oxy = [];
-            stations_trans = [];
-            stations_fluor = [];
-            
-            stations_temp = [1:999];
-            stations_cond = [1:999];
-            stations_oxy = [1:999];
-            stations_trans = [1:999];
-            stations_fluor = [1:999];
-            
-            apply_cals_temp = 0;
-            apply_cals_cond = 0;
-            apply_cals_oxy = 0;
-            apply_cals_trans = 0;
-            apply_cals_fluor = 0;
-            
-            if ismember(stnlocal,stations_temp); apply_cals_temp = 1; end
-            if ismember(stnlocal,stations_cond); apply_cals_cond = 1; end
-            if ismember(stnlocal,stations_oxy); apply_cals_oxy = 1; end
-            if ismember(stnlocal,stations_trans); apply_cals_trans = 1; end
-            if ismember(stnlocal,stations_fluor); apply_cals_fluor = 1; end
+            cal_stations_temp = [1:999];
+            cal_stations_cond = [1:999];
+            cal_stations_oxy = [1:999];
+            cal_stations_trans = [1:999];
+            cal_stations_fluor = [1:999];
             
         end
 
@@ -1290,29 +1267,10 @@ switch scriptname
             case 'kstatgroups'
                 % jc191 Florida St and main section; each array is a set of stations that can be used for mapping
                 kstatgroups = {[2:13] [14:20 22:24 26:27 29:94 96:130 132:135]};
-            case 'xlim'
-                flaglim = 2; % default 2; highest flag to be used for gridding
-                s.xlim = 2; % default 1; width of gridding window, +/- xlim, measured in statnum
-                s.zlim = 4; % default 4; vertical extent of gridding window measured in plev
-                % bak jc191 reset s.xlim and s.zlim in a cruise option.
-                % s.xlim and s.zlim are the half-width of the number of points used in the
-                % local fit. ie s.xlim = 1 means three stations used. This one and one
-                % either side.
-                %
-            case 'scales_xz'
-                % bak jc191 feb 2020 . scale_x and scale_z are scalings on the distances xu and zu.
-                % xu and zu measure the distance away in counts of stations for x and
-                % levels for z. s.xlim and s.zlim control the number of stations/levels
-                % included. scale_x and scale_z control the relative importance of
-                % those distances in the weight. So low values of scale_x and scale_z
-                % make the map smoother by not reducing the weight of more distant points.
-                % High values of scale_x and scale_z give high weight to nearby points
-                % and low weight to distant points. Default for scale_x and scale_z is
-                % unity, unless changed in opt_cruise.
-                scale_x = 0.5; % choose value < 1 for smoother
-                scale_z = 1;
-                % %     xu = xu*scale_x; % appears in m_maptracer
-                % %     zu = zu*scale_z;
+            case 'xzlim'
+%defaults
+case 'scales_xz'
+%defaults
             case 'samfn'
 %                 samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
                 samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all_nutkg' ];

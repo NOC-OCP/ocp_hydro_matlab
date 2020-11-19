@@ -1,5 +1,5 @@
-function msam_checkbottles_02(stn, varargin)
-% function msam_checkbottles_02(stn,varargin)
+function nsubs = msam_checkbottles_02(stn, varargin)
+% function nsubs = msam_checkbottles_02(stn,varargin)
 % function msam_checkbottles_02(stn,vnam1,vnam2,vnam3,vnam4,vnam5)
 %
 % (formerly bottle_inspectionall)
@@ -110,7 +110,7 @@ kbadnisk = find(dsam.bottle_qc_flag==4); kqnisk = find(dsam.bottle_qc_flag==3);
 subplot(1,nsubs,1)
 vnam = 'psal';
 kbadpsal = find(dsam.botpsalflag~=2);
-kbadsbe35 = find(dsam.sbe35temp~=2);
+kbadsbe35 = find(dsam.sbe35flag~=2);
 h1 = plot(dctd.psal(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
 title(['Stn ' sprintf('%03d',stnlocal)]);
@@ -126,11 +126,11 @@ ls = {};
 if ~isempty(kbadpsal); ls = [ls; 'bad sample']; end
 if ~isempty(kbadnisk); ls = [ls; 'bad niskin']; end
 if ~isempty(kqnisk); ls = [ls; 'questionable nisk']; end
-legend([h4 h5 h6],ls,'location','best');
+try; legend([h4 h5 h6],ls,'location','best'); end
 
 subplot(1,nsubs,2)
 
-kbadoxy = find(dsam.botoxyflag~=2);
+kbadoxy = find(dsam.botoxyflag~=2 & dsam.botoxyflag~=6);
 
 plot(dctd.oxygen(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
@@ -159,9 +159,9 @@ plot(dsam.sbe35temp(kbadsbe35),-dsam.upress(kbadsbe35),'m<','markersize',m2);
 plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag,-dsam.upress,'k+','markersize',m1);
 plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
 plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
-ylim(yl); xlim([-2 max([dsam.botoxytemp+1;0]+1)])
+ylim(yl); xlim([-2 2+(max([dsam.upotemp;0; dsam.botoxytemp])+max(dsam.bottle_qc_flag))]); % bak on jc191 bug fix. scale needs to be based on potemp if there are no botoxytemps
 for klab = 1:24
-    text(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(klab),-dsam.upress(klab),...
+	     text(max([dsam.botoxytemp+1;0;dsam.upotemp])+dsam.bottle_qc_flag(klab),-dsam.upress(klab),...
         sprintf('%d  ',dsam.position(klab)),'fontsize',14,'horizontalalignment','right','verticalalignment','middle')
 end
 
@@ -178,6 +178,7 @@ for veno = 1:nsubs-3
    if exist('dsam3','var') == 1; d3 = getfield(dsam3, vnam); else; d3 = d+nan; end
    if exist('dsam4','var') == 1; d4 = getfield(dsam4, vnam); else; d4 = d+nan; end
    dg = getfield(dgrid, vnam);
+   clear und flagname
    if isfield(dsam,[vnam '_flag']); und = '_'; end
    if isfield(dsam,[vnam 'flag']); und = ''; end
    dflag = getfield(dsam, [vnam und 'flag']);
@@ -185,24 +186,42 @@ for veno = 1:nsubs-3
    if exist('dsam2','var') == 1; dflag2 = getfield(dsam2, [vnam und 'flag']); else; dflag2 = d+nan; end
    if exist('dsam3','var') == 1; dflag3 = getfield(dsam3, [vnam und 'flag']); else; dflag3 = d+nan; end
    if exist('dsam4','var') == 1; dflag4 = getfield(dsam4, [vnam und 'flag']); else; dflag4 = d+nan; end
+   if exist('und','var') == 1
+       flagname = [vnam und 'flag']; % we managed to match the flag var
+   end
+   % Now handle some other special cases
+   if strcmp(vnam,'silc_per_kg'); flagname = 'silc_flag'; end
+   if strcmp(vnam,'phos_per_kg'); flagname = 'phos_flag'; end
+   if strcmp(vnam,'totnit_per_kg'); flagname = 'totnit_flag'; end
+   
+   if exist('flagname','var') ~= 1
+       fprintf(2,'\n\n %s %s %s \n\n\n','No flagname found for variable ',vnam,' remove it from the list and try again');
+       error();
+   end
+   
+   dflag = getfield(dsam, flagname); 
+   if exist('dsam1','var') == 1; dflag1 = getfield(dsam1, flagname); else; dflag1 = d+nan; end
+   if exist('dsam2','var') == 1; dflag2 = getfield(dsam2, flagname); else; dflag2 = d+nan; end
+   if exist('dsam3','var') == 1; dflag3 = getfield(dsam3, flagname); else; dflag3 = d+nan; end
+   if exist('dsam4','var') == 1; dflag4 = getfield(dsam4, flagname); else; dflag4 = d+nan; end
    kok1 = find(dflag1 == 2);
    kok2 = find(dflag2 == 2);
    kok3 = find(dflag3 == 2);
    kok4 = find(dflag4 == 2);
 
    kmat = find(dgrid.statnum == stnlocal);
-   kbad = find(dflag ~= 2);
+   kbad = find(dflag ~= 2 & dflag~=6);
 
    subplot(1,nsubs,veno+3)
 
    plot(dg(kmat),-dgrid.press(kmat),'r-'); 
    hold on; grid on;
    if ~isempty(kok1); plot(d1(kok1),-dsam1.upress(kok1),'ko','markersize',m0); end
-   if ~isempty(kok2); plot(d2(kok2),-dsam2.upress(kok2),'ko','markersize',m0); end %2 stations before
-   if ~isempty(kok3); plot(d3(kok3),-dsam3.upress(kok3),'co','markersize',m0); end
-   if ~isempty(kok4); plot(d4(kok4),-dsam4.upress(kok4),'co','markersize',m0); end %2 stations after
+   if ~isempty(kok2); plot(d2(kok2),-dsam2.upress(kok2),'cs','markersize',m0); end %2 stations before % jc191 k and m are earlier, c and r are later
+   if ~isempty(kok3); plot(d3(kok3),-dsam3.upress(kok3),'ms','markersize',m0); end
+   if ~isempty(kok4); plot(d4(kok4),-dsam4.upress(kok4),'ro','markersize',m0); end %2 stations after
    title(['Stn ' sprintf('%03d',stnlocal)]);
-   xlabel(vnam);
+   xlabel([vnam ' kcbmr'],'interpreter','none');
    plot(d,-dsam.upress,'b+','markersize',m1);
    plot(d(kbad),-dsam.upress(kbad),'k^','markersize',m2);
    plot(d(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);

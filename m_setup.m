@@ -22,6 +22,7 @@ MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 1; %if true, print short documentation line to screen at beginning of scripts
 MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
 MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_atnoc', '_athome', '', etc. 
+MEXEC.ix_ladcp = 1; %set to 1 if processing LADCP data with LDEO IX
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
@@ -30,6 +31,7 @@ disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec']) %%%***add something 
 %look for mexec base directory
 d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if length(ii)>0; d = d(1:ii-1); else; d = []; end
 mpath = {['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+         ['/noc/mpoc/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
          [d MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
          [d MEXEC.MSCRIPT_CRUISE_STRING];
 	 ['/local/users/pstar/cruise']};
@@ -48,27 +50,7 @@ if fp==0 %none found; query
    disp('you may want to modify m_setup.m to hard-code this directory for future calls')
 end
 clear mpath d fp n
-disp(['working in ' MEXEC.mstar_root])
-
-if 0
-% add path for Moorings work
-mpath = {[MEXEC.mstar_root(1:end-8) '/rpdmoc/rapid/data/exec/'];
-         [MEXEC.mstar_root(1:end-8) '/rapid/data/exec/'];
-         ['/noc/users/pstar/rpdmoc/rapid/data/exec/'];
-	 [MEXEC.mstar_root '/rpdmoc/rapid/data/exec/'];
-	 [MEXEC.mstar_root '/rapid/data/exec/']};
-fp = 0; n=1;
-while fp==0 & n<length(mpath)
-    if exist([mpath{n} MEXEC.MSCRIPT_CRUISE_STRING])==7
-        addpath(genpath([mpath{n} MEXEC.MSCRIPT_CRUISE_STRING]));
-	add_rapid_paths %%%***rapid: this was commented out in athome but not in atsea, is that general? maybe rapid paths don't need to be part of mexec setup?  
-	disp('rapid moorings exec added to path');
-	fp = 1;
-    end
-    n=n+1; 
-end
-clear mpath fp n
-end
+disp(['MEXEC root: ' MEXEC.mstar_root])
 
 % Set root path for NetCDF stuff on this system: must contain subdirectories mexnc and snctools
 %MEXEC.netcdf_root = [MEXEC.mstar_root '/sw/general_sw/netcdf']; 
@@ -115,6 +97,7 @@ MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = MEXEC.MDEFAULT_DATA_TIME_ORIGIN; % set globa
 MEXEC_G.SITE = MEXEC.SITE;
 MEXEC_G.quiet = MEXEC.quiet;
 MEXEC_G.ssd = MEXEC.ssd;
+MEXEC_G.ix_ladcp = MEXEC.ix_ladcp;
 MEXEC_G.uway_writeempty = MEXEC.uway_writeempty;
 
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' MEXEC_G.MSCRIPT_CRUISE_STRING(3:end)];
@@ -188,7 +171,10 @@ if length(which('get_cropt'))==0 % this function is in mexec_processing_scripts/
    addpath([MEXEC.mexec_processing_scripts '/utilities/'])
    addpath([MEXEC.mexec_processing_scripts '/uway/'])
 end
-%%%***also test for this being the m_setup in MEXEC.mexec_processing_scripts (and therefore for MEXEC.mexec_processing_scripts being in the path)?
+if MEXEC.ix_ladcp == 1;
+    addpath([MEXEC.mstar_root '/sw/ladcp/ix_ladcp_software/LDEO_IX/']) % bak at start of jc191: IX sw not loaded at all; IX_12 copied from jc159
+    addpath([MEXEC.mstar_root '/sw/ladcp/ix_ladcp_software/LDEO_IX/geomag/'])
+end
 
 %set data directories within MEXEC_G.MEXEC_DATA_ROOT
 MEXEC_G.MDIRLIST = {
@@ -200,6 +186,7 @@ MEXEC_G.MDIRLIST = {
     'M_BOT_SAL' 'ctd/BOTTLE_SAL'
     'M_BOT_OXY' 'ctd/BOTTLE_OXY'
     'M_BOT_NUT' 'ctd/BOTTLE_NUT'
+    'M_BOT_PIG' 'ctd/BOTTLE_PIG'
     'M_BOT_CO2' 'ctd/BOTTLE_CO2'
     'M_BOT_CFC' 'ctd/BOTTLE_CFC'
     'M_BOT_CH4' 'ctd/BOTTLE_CH4'
@@ -287,38 +274,6 @@ if ~isempty(MEXEC.nl); MEXEC.uuser(MEXEC.nl) = []; end
 MEXEC.nl = strfind(MEXEC.uname,sprintf('\n')); %strip newlines out of unix response
 if ~isempty(MEXEC.nl); MEXEC.uname(MEXEC.nl) = []; end
 MEXEC_G.MUSER = [MEXEC.uuser ' on ' MEXEC.uname];
-
-if 0
-%%%***hopefully all this can be simplified (not sure we really need 3 versions?) or even made irrelevant by fully implementing matlab's netcdf capabilities?
-% determine matlab version and whether there is native netcdf support (>=2008b)
-[mver,mvdate] = version; mvdate = datevec(mvdate); mvdate = mvdate(1);
-MEXEC.matnet = 0;
-if mvdate>2008 | (mvdate==2008 & strcmp(mver(end-1),'b'))
-   MEXEC.matnet = 1;
-end
-if MEXEC.matnet == 0
-    MEXEC.path_mexnc = [MEXEC.netcdf_root '/mexcdf_oldest/mexnc'];
-    MEXEC.path_snctools = [MEXEC.netcdf_root '/mexcdf_oldest/snctools'];
-else
-    % extra setup for matlab native netcdf support
-    setpref('MEXNC','USE_TMW',true);
-    setpref('SNCTOOLS','USE_TMW',true);
-    if mvdate==2011 %this is a temporary fix: this version seems to work on 2011a on fola, although maybe it should be used for more than just 2011
-        MEXEC.path_mexnc = [MEXEC.netcdf_root '/mexcdf_old/mexnc']; % matlab 2009-2013? %%%***for drake, might need to move mexecdf_r2011a_jcr directory to mexcdf_old
-        MEXEC.path_snctools = [MEXEC.netcdf_root '/mexcdf_old/snctools']; %matlab 2009-2013?
-    else
-        MEXEC.path_mexnc = [MEXEC.netcdf_root '/mexcdf_new/mexnc']; % matlab 2009-2013?
-        MEXEC.path_snctools = [MEXEC.netcdf_root '/mexcdf_new/snctools']; %matlab 2009-2013?
-    end        
-    disp('matlab native netcdf; use_tmw')
-end
-
-if length(which('nc_global'))==0 | length(which('nc_varget'))==0
-   disp('adding mexnc and snctools to path')
-   addpath(MEXEC.path_mexnc)
-   addpath(MEXEC.path_snctools)
-end
-end
 
 MEXEC.housekeeping_version = [MEXEC.housekeeping_root '/version'];
 MEXEC_G.Mhousekeeping_version = MEXEC.housekeeping_version;

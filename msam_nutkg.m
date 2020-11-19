@@ -24,13 +24,14 @@ for no = 1:length(nutvars)
 end
 nutvars = nutvars(logical(isn));
 
+oopt = 'labtemp'; get_cropt
 
 %--------------------------------
 MEXEC_A.MARGS_IN = {infile; otfile; '/'};
 for no = 1:length(nutvars)
    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
    [nutvars{no} ' uasal utemp']
-   'y = x1./(gsw_rho_t_exact(x2, x3, 0)/1000);'
+   'y = x1./(gsw_rho_t_exact(x2, ' num2str(labtemp) '+zeros(size(x2)) , 0)/1000);'
    [nutvars{no} '_per_kg']
    'umol/kg'];
 end

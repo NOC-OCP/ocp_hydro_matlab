@@ -9,9 +9,9 @@
 stn = 0; minit; scriptname = mfilename;
 
 if ~exist('samtype', 'var')
-   samtype = input('sample type? ');
+    samtype = input('sample type? ','s');
 end
-get_cropt
+get_cropt %oopt not needed because this one switches on samtype
     
 root_sam = mgetdir('M_CTD');
 
@@ -33,7 +33,7 @@ for kstn = stns(:)'
               MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
               flagnames{nno}
               sprintf('sampnum %s bottle_qc_flag', flagnames{nno})
-              sprintf('y = x2; y(x3~=9 & ismember(x1, [%s])) = %d;', num2str(snum(iifl)'), flagvals(fno));
+              sprintf('y = x2; y(x3~=9 & x3~=4 & ismember(x1, [%s])) = %d;', num2str(snum(iifl)'), flagvals(fno));
               ' '
               ' '
               ];

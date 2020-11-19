@@ -36,7 +36,7 @@ for kloop = klist
     stn = kloop; mdcs_05
     
     stn = kloop; msam_02b;
-    %stn = kloop; msam_updateall;
+    stn = kloop; msam_updateall;
             
 end
 

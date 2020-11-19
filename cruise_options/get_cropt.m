@@ -3,7 +3,7 @@
 % and warns if expected options have not been set
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-shiptsg = {'cook' 'met_tsg'; 'discovery' 'met_tsg'; 'jcr' 'oceanlogger'};
+shiptsg = {'cook' 'tsg'; 'discovery' 'tsg'; 'jcr' 'oceanlogger'};
 
 %%%%%%%%%% defaults, by script %%%%%%%%%%
 
@@ -28,6 +28,19 @@ switch scriptname
             dodcs24 = 0; doucav = 0; rmvars = {}; addvars = {}; %default is not to rerun
         %%%%%%%%%% end smallscript %%%%%%%%%%
 
+        %%%%%%%%%% ctd_all_part1 %%%%%%%%%%
+    case 'ctd_all_part1'
+        switch oopt
+            case 'apply_cals_choice'
+            % select which cals get applied to which stations
+            % default at start of cruise is all switched off
+	    cal_stations_temp = [];
+	    cal_stations_cond = [];
+	    cal_stations_oxy = [];
+	    cal_stations_fluor = [];
+	    cal_stations_trans = [];
+        %%%%%%%%%% end ctd_all_part1 %%%%%%%%%%
+
         %%%%%%%%%% mctd_01 %%%%%%%%%%
     case 'mctd_01'
         switch oopt
@@ -39,6 +52,8 @@ switch scriptname
         %%%%%%%%%% mctd_02a %%%%%%%%%%
     case 'mctd_02a'
         switch oopt
+            case 'absentvars' % introduced new on jc191
+	    absentvars = {};
             case 'corraw'
                 %edits to be applied to raw file (see di346)
                 %and, if celltm is to be run, parameters for edits to apply first, and
@@ -189,7 +204,7 @@ switch scriptname
     case 'mctd_rawshow'
         switch oopt
             case 'pshow5'
-                pshow5.ylist = 'temp1 temp2 cond1 cond2 press oxygen1';
+                pshow5.ylist = 'temp1 temp2 cond1 cond2 press oxygen1 oxygen2';
             case 'pshow2'
                 pshow2.ylist = 'pressure_temp press oxygen_sbe1 sbeoxyV1';
             case 'pshow4'
@@ -210,7 +225,7 @@ switch scriptname
                 dorangeedit = 0; %optionally set good data ranges to edit out-of-range values (see opt_jc159)
                 dodespike = 0; %optionally despike using median despiker
             case 'pshow1'
-                pshow1.ylist = 'temp1 temp2 cond1 cond2 press oxygen_sbe1';
+                pshow1.ylist = 'temp1 temp2 cond1 cond2 press oxygen_sbe1 oxygen_sbe2';
         end
         %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
         
@@ -331,6 +346,32 @@ switch scriptname
         end
         %%%%%%%%%% end mnut_01 %%%%%%%%%%
         
+        %%%%%%%%%% msam_nutkg %%%%%%%%%%
+    case 'msam_nutkg'
+        switch oopt
+            case 'labtemp'
+                labtemp = 21;
+        end
+        %%%%%%%%%% end msam_nutkg %%%%%%%%%%
+
+        %%%%%%%%%% mpig_01 %%%%%%%%%%
+    case 'mpig_01'
+        switch oopt
+            case 'pigcsv'
+                infile = [root_pig '/pig_' mcruise '_all.csv'];
+            case 'sampnum_parse'
+                %default is not to get into this branch, but some cruises may require cases to parse station and niskin numbers out of strings (see opt_jc159 mpig_01 for example)
+            case 'vars'
+                vars = {
+                    'position'     'number'
+                    'statnum'      'number'
+                    'sampnum'      'number'
+                    };
+                vars(:,3) = vars(:,1);
+            case 'flags'
+        end
+        %%%%%%%%%% end mpig_01 %%%%%%%%%%
+
         %%%%%%%%%% mco2_01 %%%%%%%%%%
     case 'mco2_01'
         switch oopt
@@ -701,6 +742,27 @@ end
         switch oopt
             case 'kstatgroups'
                 kstatgroups = {[1:999]};
+            case 'xzlim'
+                flaglim = 2; % default 2; highest flag to be used for gridding
+                s.xlim = 2; % default 1; width of gridding window, +/- xlim, measured in statnum
+                s.zlim = 4; % default 4; vertical extent of gridding window measured in plev
+                % bak jc191 reset s.xlim and s.zlim in a cruise option.
+                % s.xlim and s.zlim are the half-width of the number of points used in the
+                % local fit. ie s.xlim = 1 means three stations used. This one and one
+                % either side.
+            case 'scales_xz'
+                % bak jc191 feb 2020 . scale_x and scale_z are scalings on the distances xu and zu.
+                % xu and zu measure the distance away in counts of stations for x and
+                % levels for z. s.xlim and s.zlim control the number of stations/levels
+                % included. scale_x and scale_z control the relative importance of
+                % those distances in the weight. So low values of scale_x and scale_z
+                % make the map smoother by not reducing the weight of more distant points.
+                % High values of scale_x and scale_z give high weight to nearby points
+                % and low weight to distant points. Default for scale_x and scale_z is
+                % unity, unless changed in opt_cruise.
+                scale_x = 0.5; % choose value < 1 for smoother
+                scale_z = 1;
+
         end
         %%%%%%%%%% end m_maptracer %%%%%%%%%%
 

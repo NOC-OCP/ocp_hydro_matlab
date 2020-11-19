@@ -126,6 +126,24 @@ lonstr
 mheadr
 %--------------------------------
 
+%%%%%%%%% stations deeper than 6000m have fluor and trans removed %%%%%%%%%
+% bak on jc191
+oopt = 'absentvars'; get_cropt % set a list of absentvars by station
+for kabs = 1:length(absentvars)
+    absvarname = absentvars{kabs};
+    % set absentvar to nan
+    MEXEC_A.MARGS_IN = {
+        infile
+        'y'
+        absvarname
+        'y = x+nan'
+        ' '
+        ' '
+        ' '
+        };
+    mcalib
+end
+
 
 %%%%%%%%% corrections %%%%%%%%%
 

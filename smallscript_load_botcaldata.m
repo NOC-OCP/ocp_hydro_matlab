@@ -19,24 +19,28 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 klist = [];
 if exist('klisttem', 'var') & ~isempty(klisttem)
+klisttem = klisttem(:)';
    disp('Will process sbe35 temperature from stations in klisttem: ')
    disp(klisttem)
    pause(1)
    klist = [klist klisttem];
 else; klisttem = []; end
 if exist('klistsal', 'var') & ~isempty(klistsal)
+klistsal = klistsal(:)';
    disp('Will process salinity from stations in klistsal: ')
    disp(klistsal)
    pause(1)
    klist = [klist klistsal];
 else; klistsal = []; end
 if exist('klistoxy', 'var') & ~isempty(klistoxy)
+klistoxy = klistoxy(:)';
    disp('Will process oxygen from stations in klistoxy: ')
    disp(klistoxy)
    pause(1)
    klist = [klist klistoxy];
 else; klistoxy = []; end
 if exist('klistnut', 'var') & ~isempty(klistnut)
+klistnut = klistnut(:)';
    disp('Will process nutrients from stations in klistnut: ')
    disp(klistnut)
    pause(1)
@@ -46,18 +50,21 @@ if exist('klistnut', 'var') & ~isempty(klistnut)
    warning('fix it now'); pause
 else; klistnut = []; end
 if exist('klistco2', 'var') & ~isempty(klistco2)
+klistco2 = klistco2(:)';
    disp('Will process carbon from stations in klistco2: ')
    disp(klistco2)
    pause(1)
    klist = [klist klistco2];
 else; klistco2 = []; end
 if exist('klistcfc', 'var') & ~isempty(klistcfc)
+klistcfc = klistcfc(:)';
    disp('Will process tracers from stations in klistcfc: ')
    disp(klistcfc)
    pause(1)
    klist = [klist klistcfc];
 else; klistcfc = []; end
 if exist('klistiso', 'var') & ~isempty(klistiso)
+klistiso = klistiso(:)';
    disp('Will process tracers from stations in klistiso: ')
    disp(klistiso)
    pause(1)

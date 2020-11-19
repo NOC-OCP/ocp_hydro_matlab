@@ -151,10 +151,12 @@ oopt = 'flags'; get_cropt
 % Some simple QC
 kbad = find(dic < 1);
 dic(kbad) = nan; dic_flag(kbad) = 9;
-kbad = find(alk < 1);
+kbad = find(alk < 1 | alk > 5000);
 alk(kbad) = nan; alk_flag(kbad) = 9;
 dic_flag(dic < 1000 | dic > 3000) = 4;
 alk_flag(alk < 1000 | alk > 3000) = 4;
+dic_flag(isnan(dic) & isnan(dic_flag)) = 9;
+alk_flag(isnan(alk) & isnan(alk_flag)) = 9;
 
 % Set some basic metadata
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];

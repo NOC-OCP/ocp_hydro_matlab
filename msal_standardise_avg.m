@@ -239,7 +239,7 @@ ds_sal.r3(ds_sal.r3<=-999) = NaN;
 
 
 % if required/set in opt_cruise, get offsets, and plot over sequential standard number
-oopt = 'check_sal_runs'; get_cropt %check_sal_runs
+oopt = 'check_sal_runs'; get_cropt
 iistd = find(ds_sal.sampnum==0 | (ds_sal.sampnum>=999000 & ds_sal.sampnum<1000000)); iistd = iistd(:);
 if sum(strcmp('offset',ds_sal_fn))==0 | calc_offset
 

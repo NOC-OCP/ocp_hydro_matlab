@@ -31,6 +31,26 @@ if min(d.press)<=-1.495
 end
 stn = stnlocal; mctd_02b; %apply corrections (e.g. oxygen hysteresis)
 
+oopt = 'apply_cals_choice'; get_cropt % jc191 use cropt to select which stations get cals applied in first-pass processing
+if ismember(stnlocal,cal_stations_temp)
+    stn = stnlocal; senscal = 1; mctd_tempcal % temp1 sensor
+    stn = stnlocal; senscal = 2; mctd_tempcal % temp2 sensor
+end
+if ismember(stnlocal,cal_stations_cond)
+    stn = stnlocal; senscal = 1; mctd_condcal % cond1 sensor
+    stn = stnlocal; senscal = 2; mctd_condcal % cond2 sensor
+end
+if ismember(stnlocal,cal_stations_oxy)
+    stn = stnlocal; senscal = 1; mctd_oxycal % oxygen1 sensor
+    stn = stnlocal; senscal = 2; mctd_oxycal % oxygen2 sensor
+end
+if ismember(stnlocal,cal_stations_trans)
+    stn = stnlocal; mctd_transmisscal % transmittance
+end
+if ismember(stnlocal,cal_stations_fluor)
+    stn = stnlocal; mctd_fluorcal % fluor
+end
+
 stn = stnlocal; mctd_03; %average to 1 hz, compute salinity
 
 stn = stnlocal; msam_putpos; % jr302 populate lat and lon vars in sam file
@@ -38,5 +58,7 @@ stn = stnlocal; msam_putpos; % jr302 populate lat and lon vars in sam file
 stn = stnlocal; mdcs_01; % on jr306 make all these files at start of cruise
 stn = stnlocal; mdcs_02;
 
-mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
+if MEXEC_G.ix_ladcp == 1
+    mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
+end
 
