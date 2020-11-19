@@ -93,7 +93,7 @@ stnall = unique([stnset(:); stnadd(:)]); stnall = stnall(:)';
 a = NaN+ones(max(stnall),1); % bak on jc159 30 March 2018 has to be max (stnset) not size(stnset) so we can address by station number
 a9 = -9 + zeros(size(a)); % bak on jc159 initialise with  -9.
 a999 = -999 + zeros(size(a)); % bak on jc159 initialise with  -9.
-statnum = a; lat = a; lon = a; lats = a; late = a; lons = a; lone = a;
+statnum = a; lat = a; lon = a;
 maxp = a999; maxd = a999;
 maxw = a999;
 minalt = a9;
@@ -111,7 +111,7 @@ for k = stnset
 
     fn2db = [root_ctd '/ctd_' mcruise '_' stnstr '_2db'];
     fnsal = [root_ctd '/ctd_' mcruise '_' stnstr '_psal'];
-    fndcs = [root_ctd '/dcs_' mcruise '_' stnstr '_pos'];
+    fndcs = [root_ctd '/dcs_' mcruise '_' stnstr ];
     fnwin = [root_win '/' 'win_' mcruise '_' stnstr];
     fnsam = [root_ctd '/sam_' mcruise '_' stnstr];
     
@@ -120,7 +120,7 @@ for k = stnset
     %     lon(k) = h1.longitude;
     
     [dpsal h2] = mload(fnsal,'/');
-    lat(k) = h2.latitude; 
+    lat(k) = h2.latitude;
     lon(k) = h2.longitude;
     maxp(k) = max(dpsal.press);
     maxd(k) = sw_dpth(maxp(k),lat(k));
@@ -144,24 +144,26 @@ for k = stnset
         % multiple bottles at the same nominal depth; new function to get number of
         % unique levels.
         if isfield(dsam,'wireout'); ndpths(k) = mctd_count_depths(dsam,1); end
+%         if isfield(dsam,'botpsal'); nsal(k) = sum(ismember(dsam.botpsalflag, [2 3 5])); nsal = nsal(:); end % bak jc191 make nsal a column;
         if isfield(dsam,'botpsal'); nsal(k) = sum(ismember(dsam.botpsalflag, [2 3 6])); nsal = nsal(:); end % bak jc191  count flag of 2, 3 or 6; 6 == mean of replicate; 5 == not reported.
         %loop through groups of non-standard samples
         for sgno = 1:size(sgrps,1)
             sgrp = sgrps{sgno};
+            ii = find(isfield(dsam, sgrp)); %which of the sample var names in sgrps are actually in sam file
+            if length(ii)<size(sgrp,2); warning('not all sample types in sgrps found'); end
             log_all = [];
             if sashore(sgno); log_all1 = []; end
-            for fno = 1:length(sgrp)
-                s = [sgrp{fno} '_flag']; if ~isfield(dsam, s); s = [sgrp{fno} 'flag']; end
+            for fno = 1:length(ii)
+                s = [sgrp{ii(fno)} '_flag']; if ~isfield(dsam, s); s = [sgrp{ii(fno)} 'flag']; end
                 if isfield(dsam, s)
+%                     a = ismember(getfield(dsam, s), [2 3 5]); log_all = [log_all a(:)];
                     a = ismember(getfield(dsam, s), [2 3 6]); log_all = [log_all a(:)]; % bak jc191  count flag of 2, 3 or 6; 6 == mean of replicate
                     if sashore(sgno); 
                         a = getfield(dsam, s)==1; 
                         log_all1 = [log_all1 a(:)]; 
                     end
                 else
-                    if isfield(dsam, sgrp{fno})
-                        a = ~isnan(getfield(dsam, sgrp{fno})); log_all = [log_all a(:)]; 
-                    end
+                    a = ~isnan(getfield(dsam, sgrp{ii(fno)})); log_all = [log_all a(:)]; 
                 end
             end
             nopt(k,sgno) = sum(max(log_all,[],2)); %or just sum(sum) to count total samples?
@@ -176,8 +178,6 @@ for k = stnset
     dns(k) = datenum(h4.data_time_origin) + ddcs.time_start/86400;
     dnb(k) = datenum(h4.data_time_origin) + ddcs.time_bot/86400;
     dne(k) = datenum(h4.data_time_origin) + ddcs.time_end/86400;
-    lats(k) = ddcs.lat_start; late(k) = ddcs.lat_end;
-    lons(k) = ddcs.lon_start; lone(k) = ddcs.lon_end;
 
 end
 
@@ -216,16 +216,8 @@ for k = stnall
     ss = datestr(dns(k),'yy/mm/dd HHMM');
     sb = datestr(dnb(k),'yy/mm/dd HHMM');
     se = datestr(dne(k),'yy/mm/dd HHMM');
-
-    latk = abs(lats(k));
-    latd = floor(latk);
-    latm = 60*(latk-latd); if latm >= 59.995; latm = 0; latd = latd+1; end% prevent write of 60.00 minutes
-    lonk = abs(lons(k));
-    lond = floor(lonk);
-    lonm = 60*(lonk-lond); if lonm >= 59.995; lonm = 0; lond = lond+1; end% prevent write of 60.00 minutes
-    l1 = 'N'; if lats(k) < 0; l1 = 'S'; end
-    l2 = 'E'; if lons(k) < 0; l2 = 'W'; end
-    fprintf(fid,'\n%3s %s %2d %05.2f %s %3d %05.2f %s\n', '', ss, latd, latm, l1, lond, lonm, l2);
+    fprintf(fid,'\n%3s %s\n', '', ss);
+    fprintf(fid,'%03d %s', k, sb);
 
     l1 = 'N'; if lat(k) < 0; l1 = 'S'; end
     l2 = 'E'; if lon(k) < 0; l2 = 'W'; end
@@ -235,7 +227,7 @@ for k = stnall
     lonk = abs(lon(k));
     lond = floor(lonk);
     lonm = 60*(lonk-lond); if lonm >= 59.995; lonm = 0; lond = lond+1; end% prevent write of 60.00 minutes
-    fprintf(fid,'%03d %s %2d %05.2f %s %3d %05.2f %s', k, sb, latd, latm, l1, lond, lonm, l2);
+    fprintf(fid,' %2d %05.2f %s %3d %05.2f %s', latd, latm, l1, lond, lonm, l2);
 
     for no = 7:length(varnames)
        % jc159 bak30 march 2018; width of field is width of var name,
@@ -248,16 +240,9 @@ for k = stnall
     end
 
     fprintf(fid,'  %s',comments{k});
+    fprintf(fid,'\n');
 
-    latk = abs(late(k));
-    latd = floor(latk);
-    latm = 60*(latk-latd); if latm >= 59.995; latm = 0; latd = latd+1; end% prevent write of 60.00 minutes
-    lonk = abs(lone(k));
-    lond = floor(lonk);
-    lonm = 60*(lonk-lond); if lonm >= 59.995; lonm = 0; lond = lond+1; end% prevent write of 60.00 minutes
-    l1 = 'N'; if late(k) < 0; l1 = 'S'; end
-    l2 = 'E'; if lone(k) < 0; l2 = 'W'; end
-    fprintf(fid,'\n%3s %s %2d %05.2f %s %3d %05.2f %s\n', '', se, latd, latm, l1, lond, lonm, l2);
+    fprintf(fid,'%3s %s \n', '', se);
 
 end
 

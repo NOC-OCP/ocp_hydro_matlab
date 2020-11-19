@@ -56,12 +56,13 @@ cchdounits = cchdounits(:);
 exformat = exformat(:);
 numvar = length(cchdonamesin);
 
+
 fluor_trans = 0; % by default exclude fluor and trans from the list if they are present
 oopt = 'fluor_trans'; get_cropt % fluor_trans = 1 if we want these output.
 % fluor_trans option added by bak jc191
 % this was the quickest was to get trans and fluor out: add them in the
 % template and remove them if not required
-if ~exist('fluor_trans') | fluor_trans == 0 % we have to remove them from the names lists
+if fluor_trans == 0 % we have to remove them from the names lists
     km = strcmp('CTDFLUOR',cchdonamesin);
     cchdonamesin(km) = [];
     mstarnamesin(km) = [];
@@ -105,13 +106,13 @@ for no = 1:length(h.fldnam)
     a = getfield(d, h.fldnam{no}); a(ii) = [];
     d = setfield(d, h.fldnam{no}, a);
 end
-labtemp = 25; %*** make this a cruise option***
-d.denlab = sw_dens(d.upsal, repmat(labtemp,size(d.upsal)), repmat(0,size(d.upsal)));
+d.den20 = sw_dens(d.upsal, repmat(20,size(d.upsal)), repmat(0,size(d.upsal)));
+d.den25 = sw_dens(d.upsal, repmat(25,size(d.upsal)), repmat(0,size(d.upsal)));
 if isfield(d, 'silc');
-   d.silc_per_kg = d.silc./d.denlab*1e3;
-   d.phos_per_kg = d.phos./d.denlab*1e3;
-   d.totnit_per_kg = d.totnit./d.denlab*1e3;
-   d.no2_per_kg = d.no2./d.denlab*1e3;
+   d.silc_per_kg = d.silc./d.den25*1e3;
+   d.phos_per_kg = d.phos./d.den25*1e3;
+   d.totnit_per_kg = d.totnit./d.den25*1e3;
+   d.no2_per_kg = d.no2./d.den25*1e3;
    h.fldnam = [h.fldnam 'silc_per_kg' 'phos_per_kg' 'totnit_per_kg' 'no2_per_kg'];
    h.fldunt = [h.fldunt 'umol/kg' 'umol/kg' 'umol/kg' 'umol/kg'];
 end
@@ -137,13 +138,11 @@ if n2==24 & n1>1
     end
 end
 oopt = 'nocfc'; get_cropt
-
 nsamp = length(d.sampnum); % number of samples
 nmvars = length(h.fldnam);
 ncvars = length(cchdonamesin);
 
 % determine which data to write
-
 othernames = {
     'EXPOCODE'
     'SECT_ID'
@@ -262,15 +261,10 @@ for kvar = 1:ncvars
     end
 end
 
-oopt = 'outfile'; get_cropt
-fid = fopen([outfile '_hy.csv'], 'w');
 oopt = 'printorder'; get_cropt
 
-% write header
-oopt = 'headstr'; get_cropt
-for no = 1:size(headstring, 1)
-   fprintf(fid,'%s\n',headstring{no});
-end
+% later in jc191: use a loop over all case of printorder; printoder can now
+% be a cell array of strings.
 
 if ischar(printorder) % only one char string; make it a cell, so can now deal with cell arrays
     printorders = {printorder};
@@ -280,22 +274,71 @@ end
 
 n_orders = length(printorders); % number of different orders
 
-for ks = 1:nsamp
-    if ~isempty(botflagindex)
-        if maincells{ks,botflagindex} == 9; continue; end % don't write a line if the bottle flag was 9, ie no bottle closed
-%         if maincells{ks,botflagindex} == 999; continue; end % di346 temporary, ennsure all bottles written out for CFC team
+for korder = 1:n_orders
+    printorder = printorders{korder};
+    
+    oopt = 'outfile'; get_cropt
+    fid = fopen([outfile '_hy.csv'], 'w');
+    
+    % write header
+    oopt = 'headstr'; get_cropt
+    for no = 1:size(headstring, 1)
+        fprintf(fid,'%s\n',headstring{no});
     end
+    
+    ncols = size(maincells,2);
     for kcol = 1:ncols-1
-        form = [otform{kcol} ','];
-        val = maincells{ks,kcol}; if isnan(val); val = -999; end
+        fprintf(fid,'%s,',otnames{kcol});
+    end
+    fprintf(fid,'%s\n',otnames{end});
+    for kcol = 1:ncols-1
+        fprintf(fid,'%s,',otunits{kcol});
+    end
+    fprintf(fid,'%s\n',otunits{end});
+    
+    botflagindex = strmatch('BTLNBR_FLAG_W',otnames,'exact');
+    
+    % printorder = 'first_bottle_first';
+    % printorder = 'first_bottle_last';
+    
+    % bak jc191 Ed wants output to be shallowest bottle first, because that's
+    % the order they do nutrients in.
+    % Main cchdo listing should be deepest bottle first. Present sam file is
+    % order of sampnum, so if bottle order is 11, 12... 24, 1, 2, 3...10, sam
+    % file is not in depth order.
+    
+    
+    switch printorder
+        case 'first_bottle_first'
+            sortvec = [d.statnum d.time];
+            [sv ksort] = sortrows(sortvec,[1 2]);
+            list_nums = ksort(:)';
+        case 'first_bottle_last'
+            sortvec = [d.statnum d.time];
+            [sv ksort] = sortrows(sortvec,[1 -2]);
+            list_nums = ksort(:)';
+        otherwise % order in which rows occur in sam file
+            list_nums = [1:nsamp];
+    end
+    list_nums = list_nums(:)';
+    
+    for ks = list_nums
+        if ~isempty(botflagindex)
+            %         if maincells{ks,botflagindex} == 9; continue; end % don't write a line if the bottle flag was 9, ie no bottle closed
+            if maincells{ks,botflagindex} == 999; continue; end % jc191 temporary, ennsure all bottles written out while debugging
+        end
+        for kcol = 1:ncols-1
+            form = [otform{kcol} ','];
+            val = maincells{ks,kcol}; if isnan(val); val = -999; end
+            fprintf(fid,form,val);
+        end
+        form = [otform{end} '\n'];
+        val = maincells{ks,end}; if isnan(val); val = -999; end
         fprintf(fid,form,val);
     end
-    form = [otform{end} '\n'];
-            val = maincells{ks,end}; if isnan(val); val = -999; end
-    fprintf(fid,form,val);
+    
+    fprintf(fid,'%s\n','END_DATA');
+    fclose(fid);
+    
 end
-
-fprintf(fid,'%s\n','END_DATA');
-fclose(fid);
-
 
