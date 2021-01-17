@@ -406,6 +406,39 @@ switch scriptname
         oxyout = alpha.*oxyin + beta;
         %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
         
+            %%%%%%%%%% miso_01 %%%%%%%%%%
+    case 'miso_01'
+        switch oopt
+            case 'files'
+                files{1} = [root_iso '/DY113_d18o.csv'];
+            case 'sampnum_parse' %handle station and niskin/position here
+                ds_iso.sampnum = ds_iso.x___Station*100 + ds_iso.Niskin;
+            case 'vars' 
+                %list of data vars (other than station and
+                %niskin/position): mstar name, units, column name in csv file
+                %note flag fields should come after their corresponding
+                %data fields in this list
+                %so should replicate/repeat fields
+                vars{1} = {
+                    'del18o'      'per_mil' 'DELO18'
+                    'del18o_repl' 'per_mil' 'DELO18_replicate'
+                    'del18o_flag', 'woceflag', 'missing' %will be filled with 2 where data present, 9 otherwise
+                    'del18o_repl_flag', 'woceflag', 'missing'};
+            case 'flags'
+                iso.del18o(iso.del18o<-990) = NaN;
+                iso.del18o_flag(isnan(iso.del18o) & ismember(iso.del18o_flag, [2 3])) = 4; %put this into main code?
+        end
+        %%%%%%%%%% end miso_01 %%%%%%%%%%
+
+        %%%%%%%%%% miso_02 %%%%%%%%%%
+    case 'miso_02'
+        switch oopt
+            case 'vars'
+                cvars = 'del18o del18o_flag'
+        end
+        %%%%%%%%%% end miso_02 %%%%%%%%%%
+
+        
         %%%%%%%%%% mtsg_01 %%%%%%%%%%
 %     case 'mtsg_01'
 %         switch oopt
@@ -637,7 +670,7 @@ switch scriptname
       switch oopt
          case 'expo'
 	    expocode = '74EQ20200203';
-            sect_id = 'SR1b, A23';
+            sect_id = 'SR1b_A23';
 	 case 'outfile'
 	    outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode];
 	 case 'headstr'
@@ -658,7 +691,7 @@ switch scriptname
 	    '#Salinity: Who - Y. Firing; Status - final';...
         '#Oxygen: Who - N. Ensor; Status - final';...
         '#Nutrients: Who - E. Mawji; Status - not yet analysed';...
-        '#DELO18: Who - M. Leng; Status - not yet analysed';...
+        '#DELO18: Who - M. Leng; Status - preliminary';...
         '#Nutrient isotopes: Who - R. Tuerena; Status - not yet analysed';...
         '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'}; 
       end
