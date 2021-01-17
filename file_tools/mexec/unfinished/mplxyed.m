@@ -185,7 +185,11 @@ if kedit > 0
     motsave = MEXEC_A.MARGS_OT;
     % cludge MEXEC_A.MARGS_OT to use the write_history feature
     nowtime = datestr(now,'yyyymmdd_HHMMSS');
-    editfn = [mgetdir('M_CTD') '/mplxyed_' nowtime '_' h.dataname];
+    % This function is used when processing underway stream and don't always want to write in the CTD diectory (DAS)
+    % change so that write in the same directory as the datafile
+    %editfn = [mgetdir('M_CTD') '/mplxyed_' nowtime '_' h.dataname];
+    [flpath,flname,flext] = fileparts(pdfin.ncfile.name);
+    editfn = [flpath '/mplxyed_' nowtime '_' h.dataname];
     % bak jc069 put more detailed information about source and output files in edit record file
     mess_4 = ['ot_file     : ' hist.filename];
     mess_5 = ['ot_dataname : ' hist.dataname];

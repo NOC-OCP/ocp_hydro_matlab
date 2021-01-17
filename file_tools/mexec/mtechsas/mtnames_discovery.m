@@ -52,6 +52,7 @@ matlist = {
 %        'winch'       ' '   'DWINCH-CLAM.DWINCH'
 %        'winch' ' '   'CLAM-CLAM.CLAM'
         'winch' 'winch'   'CLAM-CLAM_WINCH.CLAM'
+        'usbl'        ' '   'position-Ranger2_USBL.gps'
         'usbl'        ' '   'USBL-USBL01.usbl'
         'usbl'        ' '   'position-usbl_DY1.gps'
 %        'wamos' ' ' 'wamos-WaMoS.nc'
