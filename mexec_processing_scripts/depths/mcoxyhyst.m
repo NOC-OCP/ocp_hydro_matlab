@@ -20,11 +20,10 @@ function [oxygen_out C D]=mcoxyhyst(oxygen_sbe,time,press,H1in,H2in,H3in,sensor)
 % H1 H2 H3 are now arrays. Default is single, passed-in
 % value, uniform with pressure. Option is now to vary with depth. Should be
 % fully backwards compatible.
-% input argument sensor is not used but kept to be backwards compatible
+% input argument sensor may be used in opt_cruise called by get_cropt
 
 m_common % on and after dy040, identify cruise from m_setup
-scriptname = 'mcoxyhyst';
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; scriptname = mfilename;
 
 oxygen_out=oxygen_sbe;
 
