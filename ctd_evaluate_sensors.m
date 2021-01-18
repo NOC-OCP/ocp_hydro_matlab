@@ -159,7 +159,7 @@ for no = 1:n
    plot(ctdres, -d.upress, 'c.', res(sensind{no}), -d.upress(sensind{no}), '+k', [0 0], presrange, 'r'); grid
    ylabel('press'); ylim(presrange); xlim(rlim)
    subplot(5,5,[6:8 11:13])
-   plot(caldata, ctddata, 'o-k', caldata(iig), ctddata(iig), 'sb', caldata, caldata); axis image; xlabel(['cal ' sensname]); ylabel(['ctd ' sensname]); grid %axis(repmat([min([caldata ctddata]) max([caldata ctddata])],1,2))
+   plot(caldata, ctddata, 'o-k', caldata(iig), ctddata(iig), 'sb', caldata, caldata); grid; axis image; xlabel(['cal ' sensname]); ylabel(['ctd ' sensname]); grid %axis(repmat([min([caldata ctddata]) max([caldata ctddata])],1,2))
    subplot(5,5,[16:18 21:23])
    nh = histc(res(sensind{no}), edges);
    bar(edges, nh, 'histc')

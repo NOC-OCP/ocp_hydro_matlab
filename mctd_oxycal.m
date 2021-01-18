@@ -1,6 +1,8 @@
 % mctd_oxycal
 % overhaul of oxy calibration function by bak and gre on di368
 % need to specify station number: stn
+% bak on jc191: edited to have same promts for senscal as mctd_tempcal and
+% mctd_condcal
 
 minit; scriptname = mfilename;
 mdocshow(scriptname, ['applies oxygen calibration set in opt_' mcruise ' to ctd_' mcruise '_' stn_string '_24hz.nc']);
@@ -32,6 +34,7 @@ invarnames = ['press time ' tempname ' ' oxyname]; % bak jc191 should use temp1 
 
 % Apply oxygen correction in 24 hz file
 mcalib_str=['y = oxy_apply_cal(' num2str(senslocal) ',' num2str(stnlocal) ',x1,x2,x3,x4)']
+fprintf(1,'\n%s\n\n',mcalib_str);
 MEXEC_A.MARGS_IN = {
 infile
 'y'

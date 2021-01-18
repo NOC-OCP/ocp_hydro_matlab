@@ -12,14 +12,15 @@ root_ctd = mgetdir('M_CTD'); % change working directory
 
 prefix = ['ctd_' mcruise '_'];
 
-oopt = 'redoctm'; get_cropt
+oopt = 'redoctm'; scriptname = mfilename; get_cropt
+oopt = 'file_suffix'; scriptname = mfilename; get_cropt
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
-   infile = [root_cnv '/' prefix stn_string '_align_ctm.cnv'];
-   otfile = [root_ctd '/' prefix stn_string '_raw'];
+    infile = [root_cnv '/' prefix stn_string suf '.cnv']; %default _align_ctm
+    otfile = [root_ctd '/' prefix stn_string '_raw'];
 else %in some cases, operate on pre-CTM file (to remove large spikes), then apply CTM in mexec
-   infile = [root_cnv '/' prefix stn_string '_align_noctm.cnv'];
-   otfile = [root_ctd '/' prefix stn_string '_raw_noctm'];
-   disp('starting from noctm file')
+    infile = [root_cnv '/' prefix stn_string suf '.cnv']; %default _align_noctm
+    otfile = [root_ctd '/' prefix stn_string '_raw_noctm'];
+    disp('starting from noctm file')
 end
 
 
@@ -37,29 +38,29 @@ end
 
 %--------------------------------
 MEXEC_A.MARGS_IN = {
-infile
-'y'
-'y'
-otfile
-};
+    infile
+    'y'
+    'y'
+    otfile
+    };
 msbe_to_mstar;
 %--------------------------------
 
 %--------------------------------
 MEXEC_A.MARGS_IN = {
-otfile
-'y'
-'1'
-dataname
-' '
-'2'
-MEXEC_G.PLATFORM_TYPE
-MEXEC_G.PLATFORM_IDENTIFIER
-MEXEC_G.PLATFORM_NUMBER
-'/'
-'8'
-'-1'
-'-1'
-};
+    otfile
+    'y'
+    '1'
+    dataname
+    ' '
+    '2'
+    MEXEC_G.PLATFORM_TYPE
+    MEXEC_G.PLATFORM_IDENTIFIER
+    MEXEC_G.PLATFORM_NUMBER
+    '/'
+    '8'
+    '-1'
+    '-1'
+    };
 mheadr
 %--------------------------------

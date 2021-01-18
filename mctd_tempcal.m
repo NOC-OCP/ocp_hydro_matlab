@@ -40,17 +40,18 @@ invarnames = ['press time ' tempname];
 % arguments as for cond cal, even though only temp is needed
 
 mcalib_str=['y = temp_apply_cal(' num2str(senslocal) ',' num2str(stnlocal) ',x1,x2,x3)'];
+fprintf(1,'\n%s\n\n',mcalib_str);
 
 MEXEC_A.MARGS_IN = {
-infile
-'y'
-tempname
-invarnames
-mcalib_str
-' '
-' '
-' '
-};
+    infile
+    'y'
+    tempname
+    invarnames
+    mcalib_str
+    ' '
+    ' '
+    ' '
+    };
 mcalib2
 
 %add comments

@@ -1,16 +1,11 @@
 minit
 
-if 1 %jc159 all done at the start
-   % make empty sam file
-   % notes added bak and ylf at start of jr306 jan 2015
-   % if/else added ylf jr15003
-   if ~exist([MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_template.nc'], 'file')
-      stn = stnlocal; msam_01; % create empty sam file at start of cruise
-      eval(['!cp ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_' stn_string '.nc ' MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_all.nc']) %copy to template
-   else
-       stn = stnlocal; msam_01b; % copy template for this station number (empty at present)
-   end
+%if necessary/specified, make blank sample file for this station
+oopt = 'remakesam'; scriptname = mfilename; get_cropt
+if remakesam | ~exist([mgetdir('M_SAM') '/sam_' mcruise '_' sprintf('%03d',stnlocal)], 'file')
+    stn = stnlocal; msam_01 %jc211: combined msam_01b (to copy template) and msam_01 (to make new sample file)
 end
+
 
 stn = stnlocal; mctd_01; %read in sbe .cnv data to mstar
 stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.csv
@@ -23,7 +18,7 @@ if min(d.press)<=-1.495
     disp(['negative pressures in ctd_' mcruise '_' stn_string '_raw'])
     disp(['check ctd_' mcruise '_' stn_string '_raw; if there are large'])
     disp(['spikes, edit opt_' mcruise ' mctd_01 case and reprocess this station'])
-    disp(['if not too large, check/edit revars in mctd_rawedit case so that'])
+    disp(['if not too large, check/edit revars in mctd_rawedit case in opt_cruise so that'])
     disp([' values<-1.495 will be removed; run mctd_rawedit here and dbcont to continue'])
     disp(['(note this will only apply automatic edits; you will still need to'])
     disp(['run mctd_rawedit again after ctd_all_part2 to go through the GUI editor)'])
@@ -31,7 +26,7 @@ if min(d.press)<=-1.495
 end
 stn = stnlocal; mctd_02b; %apply corrections (e.g. oxygen hysteresis)
 
-oopt = 'apply_cals_choice'; get_cropt % jc191 use cropt to select which stations get cals applied in first-pass processing
+oopt = 'apply_cals_choice'; scriptname = mfilename; get_cropt % jc191 use cropt to select which stations get cals applied in first-pass processing
 if ismember(stnlocal,cal_stations_temp)
     stn = stnlocal; senscal = 1; mctd_tempcal % temp1 sensor
     stn = stnlocal; senscal = 2; mctd_tempcal % temp2 sensor

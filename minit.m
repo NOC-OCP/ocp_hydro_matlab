@@ -7,5 +7,7 @@ scriptname = mfilename;
 if ~exist('stn', 'var')
    stn = input('type stn number ');
 end
-get_cropt
-stnlocal = stn; clear stn % so that it doesn't persist
+stnlocal = stn; 
+stn_string = sprintf('%03d', stnlocal);
+get_cropt %do something special if necessary (e.g. dy111)
+clear stn

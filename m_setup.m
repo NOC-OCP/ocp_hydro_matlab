@@ -16,8 +16,8 @@
 %
 
 MEXEC.mexec_version = 'v3';
-MEXEC.MSCRIPT_CRUISE_STRING='dy113';
-MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2020 1 1 0 0 0];
+MEXEC.MSCRIPT_CRUISE_STRING='jc211';
+MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2021 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 1; %if true, print short documentation line to screen at beginning of scripts
 MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
@@ -51,9 +51,6 @@ if fp==0 %none found; query
 end
 clear mpath d fp n
 disp(['MEXEC root: ' MEXEC.mstar_root])
-
-% Set root path for NetCDF stuff on this system: must contain subdirectories mexnc and snctools
-%MEXEC.netcdf_root = [MEXEC.mstar_root '/sw/general_sw/netcdf']; 
 
 % Set path for mexec source
 MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec'];

@@ -57,7 +57,8 @@
 % will produce plot 6 last and in the front figure window.
 %
 
-minit; scriptname = mfilename;
+scriptname = 'mctd_checkplots';
+minit
 mdocshow(scriptname, ['plots CTD data from station ' stn_string ' along with data from interactively-chosen previous stations']);
 
 msg1 = 'Type number of previous stations to view, or return to quit';
@@ -103,7 +104,6 @@ ddcs = {};
 hdcs = {};
 infiles = {};
 sused = [];
-
 for ks = [slist(:)' stnlocal];
     sstring = sprintf('%03d',ks);
     infile1 = m_add_nc([root_ctd '/' prefix1 sstring '_2db']);
@@ -115,10 +115,16 @@ for ks = [slist(:)' stnlocal];
     if exist(infile2,'file') ~= 2; continue; end
     if exist(infile3,'file') ~= 2; continue; end
     if exist(infile4,'file') ~= 2; continue; end
-    infiles{1,ks} = infile1;
-    infiles{2,ks} = infile2;
-    infiles{3,ks} = infile3;
-    infiles{4,ks} = infile4;
+	% If there is a station 0 this is a test stations and 
+	if ks == 0
+		ks1 = 1
+	else
+		ks1 = ks
+	end
+    infiles{1,ks1} = infile1;
+    infiles{2,ks1} = infile2;
+    infiles{3,ks1} = infile3;
+    infiles{4,ks1} = infile4;
     [d h] = mload(infile1,'/');
     d2db = [d2db d];
     h2db = [h2db h];
@@ -775,7 +781,7 @@ for plotlist = cklist
             end
             title ('oxy diff');
             xlabel('minutes away from bottom');
-            ax = axis; ax(3:4) = [-5 5]; axis(ax);
+            ax = axis; ax(3:4) = [-30 30]; axis(ax);
 
             
         otherwise

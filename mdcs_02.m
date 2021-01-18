@@ -23,7 +23,7 @@ kbot = min(find(p == max(p)));
 
 %--------------------------------
 
-get_cropt
+scriptname = mfilename; get_cropt
 
 scanbot = floor(d.scan(kbot));
 pbot = d.press(kbot);
@@ -63,30 +63,30 @@ end
 % output files
 % Filename dcs_jr193_016.nc   Data Name :  dcs_jr193_016 <version> 2 <site> bak_macbook
 MEXEC_A.MARGS_IN = {
-otfile2
-'y'
-'time_bot'
-['y(1,1) = ' num2str(tbot)]
-'/'
-'/'
-'dc_bot'
-['y(1,1) = ' num2str(kbot)]
-'/'
-'/'
-'scan_bot'
-['y(1,1) = ' num2str(scanbot)]
-'/'
-'/'
-'press_bot'
-['y(1,1) = ' num2str(pbot)]
-'/'
-'/'
-'dc24_bot'
-['y(1,1) = ' num2str(k24bot)]
-'/'
-'/'
-' '
-};
+    otfile2
+    'y'
+    'time_bot'
+    ['y(1,1) = ' num2str(tbot)]
+    '/'
+    '/'
+    'dc_bot'
+    ['y(1,1) = ' num2str(kbot)]
+    '/'
+    '/'
+    'scan_bot'
+    ['y(1,1) = ' num2str(scanbot)]
+    '/'
+    '/'
+    'press_bot'
+    ['y(1,1) = ' num2str(pbot)]
+    '/'
+    '/'
+    'dc24_bot'
+    ['y(1,1) = ' num2str(k24bot)]
+    '/'
+    '/'
+    ' '
+    };
 mcalib
 %--------------------------------
 

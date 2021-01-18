@@ -5,16 +5,7 @@
 %
 % uses parameters set in mexec_processing_scripts/cruise_options/opt_${cruise}
 
-scriptname = 'mctd_02b';
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
-
-if ~exist('stn','var')
-   stn = input('type stn number ');
-end
-stn_string = sprintf('%03d',stn);
-stnlocal = stn; clear stn % so that it doesn't persist
-
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['makes corrections/conversions (for instance for oxygen hysteresis), as set in get_cropt and opt_' mcruise '.m) and writes to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 % resolve root directories for various file types
@@ -75,7 +66,7 @@ if ismember(dooxyhyst, 1)
    for vno = 1:size(varnames,1)
       MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
       var_strings{vno}
-      sprintf('y = mcoxyhyst(x1,x2,x3,%f,%f,%f);',pars{vno}(1),pars{vno}(2),pars{vno}(3))
+      sprintf('y = mcoxyhyst(x1,x2,x3,%f,%f,%f,%i);',pars{vno}(1),pars{vno}(2),pars{vno}(3),vno)
       varnames{vno}
       ' '
       ];
@@ -83,10 +74,9 @@ if ismember(dooxyhyst, 1)
    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
    ' '
    ];
-   mcalc
-   unix(['/bin/mv ' m_add_nc(wkfile2) ' ' m_add_nc(wkfile1)])
+   mcalc;
+   unix(['/bin/mv ' m_add_nc(wkfile2) ' ' m_add_nc(wkfile1)]);
 end
-
 
 if doturbV
    disp(['computing turbidity from turbidity volts for ' stn_string])
@@ -101,8 +91,8 @@ if doturbV
    'm^-1/sr'
    ' '
    };
-   mcalib2
+   mcalib2;
 end    
 
 unix(['chmod a-w ' m_add_nc(infile)]);
-unix(['/bin/mv ' m_add_nc(wkfile1) ' ' m_add_nc(otfile2)])
+unix(['/bin/mv ' m_add_nc(wkfile1) ' ' m_add_nc(otfile2)]);

@@ -32,11 +32,11 @@ prefix = ['ctd_' mcruise '_'];
 infile1 = [root_ctd '/' prefix stn_string '_raw_noctm'];
 infile = [root_ctd '/' prefix stn_string '_raw'];
 if ~exist(m_add_nc(infile1), 'file');
-   doctm = 0;
+    doctm = 0;
 else
-   doctm = 1;
-   unix(['/bin/cp -p ' m_add_nc(infile1) ' ' m_add_nc(infile)]);
-   unix(['chmod 644 ' m_add_nc(infile1)]); % write protect raw_noctm file
+    doctm = 1;
+    unix(['/bin/cp -p ' m_add_nc(infile1) ' ' m_add_nc(infile)]);
+    unix(['chmod 644 ' m_add_nc(infile1)]); % write protect raw_noctm file
 end
 
 %***this path doesn't really allow for manual removal of large spikes before celltm***
@@ -115,112 +115,109 @@ lonstr = sprintf('%14.8f',botlon);
 
 %--------------------------------
 MEXEC_A.MARGS_IN = {
-infile
-'y'
-'5'
-latstr
-lonstr
-' '
-' '
-};
+    infile
+    'y'
+    '5'
+    latstr
+    lonstr
+    ' '
+    ' '
+    };
 mheadr
 %--------------------------------
 
-%%%%%%%%% stations deeper than 6000m have fluor and trans removed %%%%%%%%%
-% bak on jc191
-oopt = 'absentvars'; get_cropt % set a list of absentvars by station
-for kabs = 1:length(absentvars)
-    absvarname = absentvars{kabs};
-    % set absentvar to nan
-    MEXEC_A.MARGS_IN = {
-        infile
-        'y'
-        absvarname
-        'y = x+nan'
-        ' '
-        ' '
-        ' '
-        };
+%%%%%%%%% NaN variables that are in mcvars_list but not present for this station %%%%%%%%%
+oopt = 'absentvars'; scriptname = mfilename; get_cropt
+if length(absentvars)>0
+    MEXEC_A.MARGS_IN = {infile; 'y'};
+    for kabs = 1:length(absentvars)
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
+            absentvars{kabs}
+            'y = x+nan'
+            ' '
+            ' '];
+    end
+    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
     mcalib
 end
 
 
 %%%%%%%%% corrections %%%%%%%%%
 
-oopt = 'corraw'; get_cropt
+oopt = 'corraw'; scriptname = mfilename; get_cropt
 if doctm
-  
-  %edit out scans when pumps are off, plus expected recovery times
-  MEXEC_A.MARGS_IN = {infile; 'y'};
-  for no = 1:size(pvars,1)
-      pmstring = sprintf('y = x1; pmsk = repmat([1:length(x2)], %d+1, 1)+repmat([-%d:0]'', 1, length(x2)); pmsk(pmsk<1) = 1; pmsk = sum(1-x2(pmsk),1); y(find(pmsk)) = NaN;', pvars{no,2}, pvars{no,2});
-      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; pvars{no,1}; [pvars{no,1} ' pumps']; pmstring; ' '; ' '];
-      disp(['will edit out pumps off times plus ' num2str(pvars{no,2}) ' scans from ' pvars{no}])
-  end
-  MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-  mcalib2
-  
-  %scanedit (for additional bad scans)
-  if length(sevars)>0
-     MEXEC_A.MARGS_IN = {infile; 'y'};
-      for no = 1:length(sevars)
-         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; sevars{no}; [sevars{no} ' scan']; sestring{no}; ' '; ' '];
-	     disp(['will edit out scans from ' sevars{no} ' with ' sestring{no}])
-      end
-      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-      mcalib2
-   end
-
-   %remove out of range values
-   MEXEC_A.MARGS_IN = {infile; 'y'};
-   for no = 1:size(revars,1)
-      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; revars{no,1}; sprintf('%f %f',revars{no,2},revars{no,3}); 'y'];
-	  disp(['will edit values out of range [' sprintf('%f %f',revars{no,2},revars{no,3}) '] from ' revars{no,1}])
-   end
-   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-   medita
-   
-   %despike
-   nds = 2;
-   while nds<=size(dsvars,2)
-      MEXEC_A.MARGS_IN = {infile; 'y'};
-      for no = 1:size(dsvars,1)
-         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; dsvars{no,1}; dsvars{no,1}; sprintf('y = m_median_despike(x1, %f);', dsvars{no,nds}); ' '; ' '];
-         disp(['will despike ' dsvars{no,1} ' using threshold ' sprintf('%f', dsvars{no,nds})])
-      end
-      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-      mcalib2
-      nds = nds+1;
-   end
-
-
-   %apply align and celltm corrections
-   MEXEC_A.MARGS_IN = {
-      infile
-      'y'
-      'cond1'
-      'time temp1 cond1'
-      'y = ctd_apply_celltm(x1,x2,x3);'
-      ' '
-      ' '
-      'cond2'
-      'time temp2 cond2'
-      'y = ctd_apply_celltm(x1,x2,x3);'
-      ' '
-      ' '
-      };
-   for no = 1:length(ovars)
-      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-        ovars{no}
-	    ['time ' ovars{no}]
-	    'y = interp1(x1,x2,x1+5);'
-	    ' '
-	    ' '
-	    ];
-   end
-   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-   mcalib2
-   
+    
+    %edit out scans when pumps are off, plus expected recovery times
+    MEXEC_A.MARGS_IN = {infile; 'y'};
+    for no = 1:size(pvars,1)
+        pmstring = sprintf('y = x1; pmsk = repmat([1:length(x2)], %d+1, 1)+repmat([-%d:0]'', 1, length(x2)); pmsk(pmsk<1) = 1; pmsk = sum(1-x2(pmsk),1); y(find(pmsk)) = NaN;', pvars{no,2}, pvars{no,2});
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; pvars{no,1}; [pvars{no,1} ' pumps']; pmstring; ' '; ' '];
+        disp(['will edit out pumps off times plus ' num2str(pvars{no,2}) ' scans from ' pvars{no}])
+    end
+    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+    mcalib2
+    
+    %scanedit (for additional bad scans)
+    if length(sevars)>0
+        MEXEC_A.MARGS_IN = {infile; 'y'};
+        for no = 1:length(sevars)
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; sevars{no}; [sevars{no} ' scan']; sestring{no}; ' '; ' '];
+            disp(['will edit out scans from ' sevars{no} ' with ' sestring{no}])
+        end
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+        mcalib2
+    end
+    
+    %remove out of range values
+    MEXEC_A.MARGS_IN = {infile; 'y'};
+    for no = 1:size(revars,1)
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; revars{no,1}; sprintf('%f %f',revars{no,2},revars{no,3}); 'y'];
+        disp(['will edit values out of range [' sprintf('%f %f',revars{no,2},revars{no,3}) '] from ' revars{no,1}])
+    end
+    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+    medita
+    
+    %despike
+    nds = 2;
+    while nds<=size(dsvars,2)
+        MEXEC_A.MARGS_IN = {infile; 'y'};
+        for no = 1:size(dsvars,1)
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; dsvars{no,1}; dsvars{no,1}; sprintf('y = m_median_despike(x1, %f);', dsvars{no,nds}); ' '; ' '];
+            disp(['will despike ' dsvars{no,1} ' using threshold ' sprintf('%f', dsvars{no,nds})])
+        end
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+        mcalib2
+        nds = nds+1;
+    end
+    
+    
+    %apply align and celltm corrections
+    MEXEC_A.MARGS_IN = {
+        infile
+        'y'
+        'cond1'
+        'time temp1 cond1'
+        'y = ctd_apply_celltm(x1,x2,x3);'
+        ' '
+        ' '
+        'cond2'
+        'time temp2 cond2'
+        'y = ctd_apply_celltm(x1,x2,x3);'
+        ' '
+        ' '
+        };
+    for no = 1:length(ovars)
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
+            ovars{no}
+            ['time ' ovars{no}]
+            'y = interp1(x1,x2,x1+5);'
+            ' '
+            ' '
+            ];
+    end
+    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+    mcalib2
+    
 end
 
 

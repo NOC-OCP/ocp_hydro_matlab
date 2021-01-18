@@ -38,6 +38,7 @@ invarnames = ['press time ' tempname ' ' condname];
 % Apply bottle/ctd conductivity ratio correction in 24 hz file
 
 mcalib_str=['y = cond_apply_cal(' num2str(senslocal) ',' num2str(stnlocal) ',x1,x2,x3,x4)'];
+fprintf(1,'\n%s\n\n',mcalib_str);
 
 MEXEC_A.MARGS_IN = {
 infile

@@ -2,6 +2,10 @@
 %
 % Use: mdcs_05        and then respond with station number, or for station 16
 %      stn = 16; mdcs_05;
+%
+% from jc191 and jc211, maintain station summary file up to date and use
+% as (editable) master file for positions as first choice
+% if not available, from jc211, warn and use position from dcs file
 
 minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes lat and lon into header of ctd_' mcruise '_' stn_string '*.nc']);
@@ -9,20 +13,62 @@ mdocshow(scriptname, ['pastes lat and lon into header of ctd_' mcruise '_' stn_s
 root_win = mgetdir('M_CTD_WIN');
 root_sal = mgetdir('M_BOT_SAL');
 root_ctd = mgetdir('M_CTD'); % change working directory
+root_sum = mgetdir('M_SUM');
 
+%get position
+latbot = []; lonbot = [];
+writepos = 0;
+try
+    %first choice: station summary file
+    d = mload([root_sum '/station_summary_' mcruise '_all.nc'],'statnum','lat','lon');
+    ks = find(d.statnum == stnlocal);
+    latbot = d.lat(ks);
+    lonbot = d.lon(ks);
+    if ~isfinite(latbot+lonbot); error; end
+    writepos = 1;
+catch
+    warning(['no position in station_summary_ ' mcruise '_all.nc for station ' stn_string])
+    try
+        %second choice: dcs pos file position at bottom of cast (from
+        %underway stream)
+        d = mload([root_ctd '/dcs_' mcruise '_' stn_string '_pos.nc'],'statnum','lat_bot','lon_bot');
+        ks = find(d.statnum == stnlocal);
+        latbot = d.lat_bot(ks);
+        lonbot = d.lon_bot(ks);
+        if ~isfinite(latbot+lonbot); error; end
+    catch
+        %third choice: raw file header position (entered by CTD
+        %operator)***keep this option or not?
+        warning(['nor in dcs_' mcruise '_' stn_string '_pos; using header position from ctd_' mcruise '_' stn_sring '_raw.nc'])
+        filer = [root_ctd '/ctd_' mcruise '_' stn_string '_raw'];
+        if exist(filer, 'file')
+            h = m_read_header(filer);
+        elseif exist([filer '_cleaned'], 'file')
+            h = m_read_header([filer '_cleaned']);
+        else
+            h.latitude = NaN; h.longitude = NaN;
+        end
+        latbot = h.latitude;
+        lonbot = h.longitude;
+        if ~isfinite(latbot+lonbot); error(['no position in any of the files in mdcs_05 for station ' stn_string]); end
+    end
+end
+
+%files to which to add this position
 clear fn
 n = 1;
-fn{n} = [root_ctd '/dcs_' mcruise '_' stn_string '_pos']; n = n+1; iipos = n-1;
-fn{n} = [root_ctd '/dcs_' mcruise '_' stn_string]; n = n+1; 
-
-%modified YLF jr15003
-if exist([root_ctd '/ctd_' mcruise '_' stn_string '_raw_original.nc'], 'file');
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_original']; n = n+1;
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_cleaned']; n = n+1;
-else
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw']; n = n+1;
+if writepos
+    %only write to dcs pos file with "better" data from station summary
+    fn{n} = [root_ctd '/dcs_' mcruise '_' stn_string '_pos']; n = n+1;
 end
-iiraw = n-1;
+fn{n} = [root_ctd '/dcs_' mcruise '_' stn_string]; n = n+1;
+
+if exist([root_ctd '/ctd_' mcruise '_' stn_string '_raw_original.nc'], 'file');
+    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_original']; n = n+1;
+    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_cleaned']; n = n+1;
+else
+    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw']; n = n+1;
+end
 fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz']; n = n+1;
 fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_psal']; n = n+1;
 %fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_surf']; n = n+1;
@@ -39,41 +85,8 @@ fn{n} = [root_sal '/sal_' mcruise '_' stn_string]; n = n+1;
 fn{n} = [root_ctd '/sam_' mcruise '_' stn_string]; n = n+1;
 %fn{n} = [root_ctd '/sam_' mcruise '_' stn_string '_resid']; n = n+1;
 
-
-filename = m_add_nc(fn{1});
-if ~exist(filename,'file')
-   m = ['File ' filename ' does not exist yet'];
-   fprintf(MEXEC_A.Mfider,'%s\n',m)
-   return
-end
-
-latbot = [];
-useraw = 0;
-if exist(m_add_nc(fn{iipos}),'file') == 2 %default is to get from dcs file
-   h = m_read_header(fn{iipos}); 
-   if sum(strcmp('lat_bot',h.fldnam))==0
-       warning(['no cast bottom position in ' fn{iipos}])
-       useraw = 1;
-   else
-      d = mload(fn{iipos},'statnum','lat_bot','lon_bot',' ');
-      % allow for the possibility that the dcs file contains many stations
-      kf = find(d.statnum == stnlocal);
-      latbot = d.lat_bot(kf(1));
-      lonbot = d.lon_bot(kf(1));
-      if isnan(latbot+lonbot); useraw = 1; end
-   end
-elseif exist(m_add_nc(fn{iiraw}),'file') == 2; useraw = 1; end
-if useraw %if position wasn't found in dcs file, take it from the raw file instead
-   h = m_read_header(fn{iiraw});
-   latbot = h.latitude;
-   lonbot = h.longitude;
-end
-if isempty(latbot) | isnan(latbot)
-   msg = ['No source found for position on station ' stn_string];
-   fprintf(MEXEC_A.Mfider,'%s\n',msg);
-   return
-end
-
 for kfile = 1:length(fn)
-   mputpos(fn{kfile},latbot,lonbot)
+    if exist(fn{kfile}, 'file')
+        mputpos(fn{kfile},latbot,lonbot)
+    end
 end
