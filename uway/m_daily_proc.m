@@ -40,8 +40,8 @@ udirs(iie, :) = [];
 
 
 year = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
-if ~exist('days'); days = floor(datenum(now)-datenum(year,1,1)); end %default: yesterday
-if ~exist('restart_uway_append'); restart_uway_append = 0; end
+if ~exist('days','var'); days = floor(datenum(now)-datenum(year,1,1)); end %default: yesterday
+if ~exist('restart_uway_append','var'); restart_uway_append = 0; end
 if restart_uway_append; warning(['will delete appended file and start from ' num2str(days(1))]); end
 
 %loop through processing steps for list of days
@@ -69,11 +69,11 @@ for daynumber = days
    %cross-merge bathy streams for later editing
    if bathycomb
    iis = find(strcmp('sim', udirs(:,1))); iie = find(strncmp('em12', udirs(:,1), 4));
-   if length(iis)>0 & exist([udirs{iis,3} '/' udirs{iis,1} '_' mcruise '_d' daystr '_raw.nc'])
+   if length(iis)>0 & exist([udirs{iis,3} '/' udirs{iis,1} '_' mcruise '_d' daystr '_raw.nc'],'file')
       day = daynumber; msim_02;
    end
    cd(MEXEC_G.MEXEC_DATA_ROOT)
-   if length(iie)>0 & exist([udirs{iie,3} '/' udirs{iie,1} '_' mcruise '_d' daystr '_raw.nc'])
+   if length(iie)>0 & exist([udirs{iie,3} '/' udirs{iie,1} '_' mcruise '_d' daystr '_raw.nc'],'file')
       day = daynumber; mem120_02;
    end
    cd(MEXEC_G.MEXEC_DATA_ROOT)
@@ -85,10 +85,9 @@ for daynumber = days
    % additional days, as some variables will be missing from files being
    % appended...
    if strcmp(MEXEC_G.Mship,'discovery') 
-     if exist([MEXEC_G.MEXEC_DATA_ROOT '/ocl/tsg/tsg_' mcruise '_d' daystr '_edt.nc'])
+     if exist([MEXEC_G.MEXEC_DATA_ROOT '/ocl/tsg/tsg_' mcruise '_d' daystr '_edt.nc'],'file') & exist([MEXEC_G.MEXEC_DATA_ROOT '/ocl/tsg/met_tsg_' mcruise '_d' daystr '_edt.nc'],'file')
 
-      scriptname='m_daily_proc';
-
+      scriptname=mfilename;
       mdocshow(scriptname, ['merge tsg data from from tsg_' mcruise '_d' daystr '_edt.nc into met_tsg_' mcruise '_d' daystr '_edt.nc']);
 
       wkfile = ['wk_' scriptname '_' datestr(now,30)];

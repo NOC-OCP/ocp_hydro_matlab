@@ -1,4 +1,4 @@
-%script to add 24 Hz indices to dcs_cruise_stn file, 
+%script to add 24 Hz indices to dcs_cruise_stn file,
 %rerun mfir_03 and mfir_04 (so they can average if specified in opt_cruise)
 %and modify variables in sam_* files
 %
@@ -11,7 +11,7 @@
 scriptname = 'smallscript';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
-    
+
 if ~exist('klist'); oopt = 'klist'; get_cropt; end
 
 
@@ -31,18 +31,18 @@ else
     disp(klist)
     okc = input('OK to continue (y/n)?','s');
     if okc == 'n' | okc == 'N'
-	    return
+        return
     end
 end
 
 %dcs
 if dodcs24
     for kloop = klist
-    
+        
         infile = sprintf('%s/dcs_%s_%03d.nc',root_ctd,mcruise,kloop);
         h = m_read_header(infile);
         if sum(strcmp('dc24_bot',h.fldnam))==0
-            MEXEC_A.MARGS_IN = {infile; wkfile; '/'; ... 
+            MEXEC_A.MARGS_IN = {infile; wkfile; '/'; ...
                 'dc_bot'; 'y = x1*24;'; 'dc24_bot'; 'number'; ...
                 'dc_start'; 'y = x1*24;'; 'dc24_start'; 'number'; ...
                 'dc_end'; 'y = x1*24;'; 'dc24_end'; 'number';...
@@ -58,11 +58,11 @@ end
 if doucav
     
     for kloop = klist
-
+        
         stn = kloop; mfir_03
-
+        
         stn = kloop; mfir_04
-    
+        
     end
 end
 
@@ -85,7 +85,7 @@ if length(addvars)>0 | length(rmvars)>0 | length(chunts)>0
         MEXEC_A.MARGS_IN = {infile; wkfile; var_copystr};
         for no = 1:length(addvars)
             if sum(strcmp(h.fldnam, addvars{no}))==0
-               MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'upress'; 'y = NaN+x1;'; addvars{no}; addunts{no}];
+                MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'upress'; 'y = NaN+x1;'; addvars{no}; addunts{no}];
             end
         end
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
@@ -107,13 +107,13 @@ if length(addvars)>0 | length(rmvars)>0 | length(chunts)>0
         end
         
         stn = kloop; msam_02b
-
+        
     end
-
+    
 end
 
 %sam_all
 unix(sprintf('/bin/cp %s/sam_%s_%03d.nc %s/sam_%s_all.nc',root_ctd,mcruise,klist(1),root_ctd_mcruise));
 for kloop = klist(2:end)
     stn = kloop; msam_apend
-end    
+end

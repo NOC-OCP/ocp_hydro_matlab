@@ -188,11 +188,13 @@ for fno = 1:length(sal_csv_files)
       ds_sal.niskin_minute = ds_sal.sampnum-ds_sal.station_day*100;
       %TSG
       ii = find(ds_sal.sampnum<0);
-      ds_sal.sampnum(ii) = -ds_sal.sampnum(ii)*1e2; %convert to spreadsheet convention
+      ds_sal.sampnum(ii) = -ds_sal.sampnum(ii)*1e2; %convert to spreadsheet convention*** or should there not be *1e2? maybe this should be a cruise option
       ii = find(ds_sal.sampnum>=1e6);
       ds_sal.station_day(ii) = floor(ds_sal.sampnum(ii)/1e6);
       ds_sal.cast_hour(ii) = floor((ds_sal.sampnum(ii)-ds_sal.station_day(ii)*1e6)/1e4);
       ds_sal.niskin_minute(ii) = ds_sal.sampnum(ii)/1e2-ds_sal.station_day(ii)*1e4-ds_sal.cast_hour(ii)*1e2;
+      %mmss = ds_sal.sampnum(ii)-ds_sal.station_day(ii)*1e6-ds_sal.cast_hour(ii)*1e4;
+      %ds_sal.niskin_minute(ii) = floor(mmss/100) + (mmss-100*floor(mmss/100))/60; %***put in cruise options
    elseif sum(strcmp('sampnum',ds_sal_fn))==0
       %CTD
       ds_sal.sampnum = ds_sal.station_day*100 + ds_sal.niskin_minute;
@@ -230,7 +232,7 @@ for fno = 1:length(sal_csv_files)
 
 end
 if sum(~isnan(ds_all.offset))==0; ds_all.offset = zeros(size(ds_all.offset)); end %filler
-ds_sal = ds_all(2:end,:); clear ds_all
+ds_sal = ds_all(2:end,:); clear ds_all %***is the first row definitely not wanted?
 ds_sal_fn = ds_sal.Properties.VarNames;
 
 ds_sal.r1(ds_sal.r1<=-999) = NaN;

@@ -1,36 +1,35 @@
 % mtsg_findbad: find times of bad tsg data
 %
-% Use: mtsg_findbad        
+% Use: mtsg_findbad
 % jc069: graphical version by bak
-% Data are displayed in several panels. Salinity in the upper panel. 
-% Use Matlab zoom in the upper panel. 
-% When you have displayed a segment of data that you wish to examine further, 
+% Data are displayed in several panels. Salinity in the upper panel.
+% Use Matlab zoom in the upper panel.
+% When you have displayed a segment of data that you wish to examine further,
 % type ‘z’ in the command window. Other panels will then zoom to the same time axis
 % Use ss and se to define time limits enclosing data to be identified as bad
 % When you are satisfied with the ss ans se values, type 'n'. THIS IS CRITICAL,
 % because it is 'n' that stores the bad limits and moves to the next case.
 % 'r' and 'l' should move half a panel left or right
-% 'w' adds your new limits of bad data to the accumulating file 
+% 'w' adds your new limits of bad data to the accumulating file
 %
 % YLF modified 12/2015 (JR15003) to plot previously selected bad times in a
 % different color
 % YLF modified jc145 to use opt_cruise rather than saving to .mat file
 
-scriptname = 'mtsg_findbad';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-oopt = 'shiptsg'; get_cropt
+oopt = 'shiptsg'; scriptname = mfilename; get_cropt
 roottsg = mgetdir(abbrev);
 infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
 
 %get previous limits
-scriptname0 = scriptname; scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt; scriptname = scriptname0;
+scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt
 
 [d h] = mload(infile1,'/');
 switch MEXEC_G.Mship
     case 'cook'
         d.salin = d.psal;
-        d.sstemp = d.temp_m;
+        d.sstemp = d.temp_r; %***
     case 'discovery'
         d.salin = d.psal;
         d.sstemp = d.temp_r;
@@ -114,13 +113,13 @@ while 1
             clf
             
             kount = 0;
-
+            
             iib = [];
-	    for no = 1:size(kbadlims,1)
-            kbadlims1 = cell2mat(kbadlims(:,1:2)); %asf edit
-	        iib = [iib find(decday>=kbadlims1(no,1) & decday<=kbadlims1(no,2))];
-	    end
-
+            for no = 1:size(kbadlims,1)
+                kbadlims1 = cell2mat(kbadlims(:,1:2)); %asf edit
+                iib = [iib find(decday>=kbadlims1(no,1) & decday<=kbadlims1(no,2))];
+            end
+            
             if isfield(d,'salin')
                 kount = kount+1;
                 subplot('position',[pl pb+(np-1)*(ph+pb) pw ph*2])
@@ -132,7 +131,7 @@ while 1
                 set(ht,'string',infile1);
                 set(ht,'interpreter','none');
             end
-
+            
             if isfield(d,'cond')
                 kount = kount+1;
                 subplot('position',[pl pb+(np-2)*(ph+pb) pw ph])
@@ -165,7 +164,7 @@ while 1
                 ha(kount) = gca;
                 ylabel('flowrate');
             end
-
+            
         case 'z'
             xl = get(gca,'xlim');
             for kp = 1:np
@@ -190,7 +189,7 @@ while 1
             % select  start scan
             [x y] = ginput(1);
             dn_startbad = min(decday(decday>=x));
-
+            
         case 'se'
             % select  end scan
             [x y] = ginput(1);
@@ -199,9 +198,9 @@ while 1
         case 'n'
             alltimes = [alltimes; [dn_startbad dn_endbad]];
         case 'w'
-	    if ~(alltimes(end,1)==dn_startbad & alltimes(end,2)==dn_endbad)
-               alltimes = [alltimes; [dn_startbad dn_endbad]];
-	    end
+            if ~(alltimes(end,1)==dn_startbad & alltimes(end,2)==dn_endbad)
+                alltimes = [alltimes; [dn_startbad dn_endbad]];
+            end
             break
         case 'q'
             return
@@ -219,9 +218,8 @@ disp(['see mtsg_cleanup case in get_cropt'])
 disp(['lines to paste:'])
 sprintf('kbadlims = {%s',' ')
 for no = 1:size(alltimes,1)
-   %sprintf('datenum([%s]) datenum([%s]) ''all''\n', alltimes(no,1)+torg, alltimes(no,2)+torg)
-   sprintf('datenum([%g %g %g %g %g %g]) datenum([%g %g %g %g %g %g]) ''all''\n', datevec(alltimes(no,1)+torg), datevec(alltimes(no,2)+torg))
-   disp('hobnobs are for cheesecake')
+    %sprintf('datenum([%s]) datenum([%s]) ''all''\n', alltimes(no,1)+torg, alltimes(no,2)+torg)
+    sprintf('datenum([%g %g %g %g %g %g]) datenum([%g %g %g %g %g %g]) ''all''\n', datevec(alltimes(no,1)+torg), datevec(alltimes(no,2)+torg))
 end
 
 

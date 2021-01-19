@@ -6,7 +6,7 @@
 % high level script to split out on station data
 % overhaul by bak on jc069 to make direct use of ctd dcs files for station
 % start and end times
-% further mod on jc069 by bak: 
+% further mod on jc069 by bak:
 % allow three input arguments
 % if the first argument is 'ctd', then pick up station number from ctd dcs
 % file
@@ -26,7 +26,7 @@
 %
 % The work takes place in data/vmadcp/mproc
 %
-% selection of times controlled by data/vmadcp/mproc/mvad_03_jc159_times.txt; 
+% selection of times controlled by data/vmadcp/mproc/mvad_03_jc159_times.txt;
 % format of times file as before, eg
 % wait 04 [2018 03 02 01 14 31] [2018 03 02 03 14 31]
 % wait 05 [2018 03 02 03 44 33] [2018 03 02 05 34 33]
@@ -42,6 +42,9 @@
 % Then run
 % cast = 'wait'; stn = 4; os = 150; mvad_03
 %
+% bak jc191: update for uhdas. Now enter os as full string eg os150nb,
+% since in uhdas there could be 75 or 150 and nb or bb;
+% assume uhdas output file is eg vmadcp/mproc/os150nb_jc191_01.nc
 
 
 scriptname = 'mvad_03';
@@ -70,28 +73,20 @@ if exist('os','var')
     m = ['Running script ' scriptname ' for OS ' sprintf('%d',os)];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m)
 else
-    os = input('Enter OS type: 75 or 150: ');
+    os = input('Enter OS type: e.g. os150nb, os75nb, os150bb : ', 's');
 end
 oslocal = os; clear os; % so it doesnt persist
-if ~exist('nbb'); 
-    nbb = input('Enter narrowband (1) or broadband (2): '); 
-end
-if nbb==1; 
-    nbbstr='nb';
-else 
-    nbbstr='bb'; 
-end
 
 root_ctd = mgetdir('M_CTD');
 root_vmadcp = mgetdir('M_VMADCP');
 
-inst = ['os' sprintf('%d',oslocal)];
+inst = [sprintf('%s',oslocal)]; % bak jc191, now entered as the full string
 
 root_vmad = mgetdir('M_VMADCP');
-infile = [root_vmad '/mproc/' inst nbbstr '_' mcruise '_01.nc'];
+infile = [root_vmad '/mproc/' inst '_' mcruise '_01.nc'];
 
 
-% construct output filename; 
+% construct output filename;
 % previous code did some fancy stuff using strtok; this does the same.
 klastus = max(strfind(infile,'_'));
 prefix = infile(1:klastus);
@@ -104,12 +99,12 @@ dataname = otfile1((max(kslash)+1):end);
 switch castlocal
     case 'ctd'
         % collect ctd times from dcs file in ctd directory
-
+        
         prefix1 = [root_ctd '/dcs_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
         dcsfile = [prefix1 stn_string];
         if exist(m_add_nc(dcsfile),'file') ~= 2; return; end % quit if the ctd station doesn't exist
         [ddcs hdcs] = mload(dcsfile,'/');
-
+        
         torgd = datenum(hdcs.data_time_origin);
         tstart = torgd+ddcs.time_start(1)/86400;
         tend = torgd+ddcs.time_end(1)/86400;
@@ -154,7 +149,7 @@ switch castlocal
                 tline(k) = [];
                 k = strfind(tline,'  ');
             end
-
+            
             % now we can parse tline
             k = strfind(tline,' ');
             thiscast = tline(1:k-1);
@@ -219,21 +214,21 @@ colrange = [min(kok) max(kok)];
 %--------------------------------
 
 MEXEC_A.MARGS_IN = {
-infile
-otfile1
-'/'
-' '
-' '
-colrange
-' '
-' '
-};
+    infile
+    otfile1
+    '/'
+    ' '
+    ' '
+    colrange
+    ' '
+    ' '
+    };
 mcopya
 
 
 % fix dataname
 %--------------------------------
-% gdm on di346 edited to fix up the dataname for the new variable 
+% gdm on di346 edited to fix up the dataname for the new variable
 %--------------------------------
 % 2010-01-17 06:20:25
 % mheadr
@@ -245,13 +240,13 @@ mcopya
 % Filename os75_di346nnx_007.nc   Data Name :  os75_di346nnx_007 <version> 1 <site> di346_atsea
 
 MEXEC_A.MARGS_IN = {
-otfile1
-'y'
-'1'
-dataname
-' '
-' '
-};
+    otfile1
+    'y'
+    '1'
+    dataname
+    ' '
+    ' '
+    };
 mheadr
 %--------------------------------
 
@@ -267,14 +262,14 @@ mheadr
 % output files
 % Filename gash.nc   Data Name :  os150_jc069nnx_01 <version> 13 <site> jc069_atsea
 MEXEC_A.MARGS_IN = {
-otfile1
-otfile2
-'f'
-'time'
-'c'
-'-1e10 1e10 2e10'
-'b'
-};
+    otfile1
+    otfile2
+    'f'
+    'time'
+    'c'
+    '-1e10 1e10 2e10'
+    'b'
+    };
 mavrge
 %--------------------------------
 

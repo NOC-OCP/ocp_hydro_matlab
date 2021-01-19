@@ -1,4 +1,4 @@
-% script mvad_01 to replace mcod_01 an mcod_02 using outout from 
+% script mvad_01 to replace mcod_01 an mcod_02 using outout from
 % python version of codas for vmadcp
 %
 % first draft bak jc159 1 April 2018
@@ -27,13 +27,13 @@ end
 inst=['os' sprintf('%d',os)];
 oslocal = os; clear os
 
-if ~exist('nbb'); 
-    nbb = input('Enter narrowband (1) or broadband (2): '); 
+if ~exist('nbb');
+    nbb = input('Enter narrowband (1) or broadband (2): ');
 end
-if nbb==1; 
+if nbb==1;
     nbbstr='nb';
-else 
-    nbbstr='bb'; 
+else
+    nbbstr='bb';
 end
 
 root_vmadcp = mgetdir('M_VMADCP');
@@ -47,13 +47,18 @@ clear allin nbb
 
 allin.decday = nc_varget(fnin,'time');
 tu = nc_attget(fnin,'time','units');
-allin.lon = nc_varget(fnin,'lon'); 
-allin.lat = nc_varget(fnin,'lat'); 
-allin.depth = nc_varget(fnin,'depth'); 
+allin.lon = nc_varget(fnin,'lon');
+allin.lat = nc_varget(fnin,'lat');
+allin.depth = nc_varget(fnin,'depth');
 allin.uabs = 100*nc_varget(fnin,'u'); % we have used cm/s in the past; codas netcdf uses m/s
-allin.vabs = 100*nc_varget(fnin,'v'); 
-allin.uship = nc_varget(fnin,'uship'); 
-allin.vship = nc_varget(fnin,'vship'); 
+allin.vabs = 100*nc_varget(fnin,'v');
+allin.uship = nc_varget(fnin,'uship');
+allin.vship = nc_varget(fnin,'vship');
+% CODAS uses missing_value = 1.0e38 turn these into NaN now.
+allin.uabs(allin.uabs > 1e10) = nan;
+allin.vabs(allin.vabs > 1e10) = nan;
+allin.uship(allin.uship > 1e10) = nan;
+allin.vship(allin.vship > 1e10) = nan;
 kf = strfind(tu,'since');
 torgstr = tu(kf+5:end);
 cotorg = datenum(torgstr);
@@ -89,67 +94,67 @@ end
 timestring = torgstr;
 
 MEXEC_A.MARGS_IN = {
-otfile
-'time'
-'lon'
-'lat'
-'depth'
-'uabs'
-'vabs'
-'uship'
-'vship'
-'decday'
-'speed'
-'shipspd'
-' '
-' '
-'1'
-dataname
-'/'
-'2'
-MEXEC_G.PLATFORM_TYPE
-MEXEC_G.PLATFORM_IDENTIFIER
-MEXEC_G.PLATFORM_NUMBER
-'/'
-'4'
-timestring
-'/'
-'8'
-'time'
-'/'
-'seconds'
-'lon'
-'/'
-'degrees'
-'lat'
-'/'
-'degrees'
-'depth'
-'/'
-'metres'
-'uabs'
-'/'
-'cm/s'
-'vabs'
-'/'
-'cm/s'
-'uship'
-'/'
-'m/s'
-'vship'
-'/'
-'m/s'
-'decday'
-'/'
-'days'
-'speed'
-'/'
-'cm/s'
-'shipspd'
-'/'
-'m/s'
-'-1'
-'-1'
-};
+    otfile
+    'time'
+    'lon'
+    'lat'
+    'depth'
+    'uabs'
+    'vabs'
+    'uship'
+    'vship'
+    'decday'
+    'speed'
+    'shipspd'
+    ' '
+    ' '
+    '1'
+    dataname
+    '/'
+    '2'
+    MEXEC_G.PLATFORM_TYPE
+    MEXEC_G.PLATFORM_IDENTIFIER
+    MEXEC_G.PLATFORM_NUMBER
+    '/'
+    '4'
+    timestring
+    '/'
+    '8'
+    'time'
+    '/'
+    'seconds'
+    'lon'
+    '/'
+    'degrees'
+    'lat'
+    '/'
+    'degrees'
+    'depth'
+    '/'
+    'metres'
+    'uabs'
+    '/'
+    'cm/s'
+    'vabs'
+    '/'
+    'cm/s'
+    'uship'
+    '/'
+    'm/s'
+    'vship'
+    '/'
+    'm/s'
+    'decday'
+    '/'
+    'days'
+    'speed'
+    '/'
+    'cm/s'
+    'shipspd'
+    '/'
+    'm/s'
+    '-1'
+    '-1'
+    };
 msave
 

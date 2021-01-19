@@ -1,9 +1,9 @@
-function mvad_for_ladcp(cast,statnum,os,varargin)
-%function mvad_for_ladcp(cast,statnum,os,nbb)
+function mvad_for_ladcp(cast,statnum,os)
+%function mvad_for_ladcp(cast,statnum,os)
 
 % bak jc069
 
-% os is numeric 75 or 150
+% os is string '75nb', '150bb', etc.
 % cast could be 'ctd' (text string so includes quotes, or on jc069 could be
 % hrp02, eg
 % mcod_stn_out('hrp02',kstn,thisos)
@@ -15,28 +15,19 @@ m_common
 scriptname = 'mvad_for_ladcp';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-if ischar(statnum); 
+if ischar(statnum);
     statnum = str2num(statnum); % variables come in as char if simply typed on the command line
-end 
-
-if length(varargin)>0
-    nbb = varargin{1}; 
-else
-    nbb = 1;
 end
-if nbb==1; nbbstr = 'nb'; elseif nbb == 2; nbbstr = 'bb'; end
 
 kstn = statnum;
 stn_string = sprintf('%03d',kstn);
-oslocal = os;
-osstr = sprintf('%d%s',oslocal,nbbstr);
 
 root_vmadcp = mgetdir('M_VMADCP');
 
-% construct input filename; 
-prefix = ['os' osstr '_' mcruise];
+% construct input filename;
+prefix = ['os' os '_' mcruise];
 %infile = [root_vmadcp '/mproc/' prefix '_' cast '_' stn_string '_ave'];
-infile = [root_vmadcp '/mproc/' prefix '_' cast '_' stn_string]; % CV 
+infile = [root_vmadcp '/mproc/' prefix '_' cast '_' stn_string]; % CV
 
 if exist(m_add_nc(infile)) ~= 2; return; end
 
@@ -57,12 +48,11 @@ if exist(m_add_nc(infile)) ~= 2; return; end
 % BEGIN ----- CV 2018/11/17 : edit to get the right variable names and time
 % for LDEO_IX_12
 tim_sadcp = da.decday(1,:) + julian(ha.data_time_origin(1),ha.data_time_origin(2),ha.data_time_origin(3));
-lat_sadcp = da.lat(1,:); 
+lat_sadcp = da.lat(1,:);
 lon_sadcp = da.lon(1,:);
-u_sadcp   = da.uabs*1e-2; % cm/s to m/s 
+u_sadcp   = da.uabs*1e-2; % cm/s to m/s
 v_sadcp   = da.vabs*1e-2; % cm/s to m/s
-z_sadcp   = da.depth(:,1); 
-% END ------- CV 2018/11/17 
+z_sadcp   = da.depth(:,1);
+% END ------- CV 2018/11/17
 
-%save([root_vmadcp '/mproc/os' osstr '_' mcruise '_' cast '_' stn_string], 'time', 'depth', 'uabs*', 'vabs*', 'lon', 'lat')
-save([root_vmadcp '/mproc/os' osstr '_' mcruise '_' cast '_' stn_string '_forladcp'], 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');
+save([root_vmadcp '/mproc/os' os '_' mcruise '_' cast '_' stn_string '_forladcp'], 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');

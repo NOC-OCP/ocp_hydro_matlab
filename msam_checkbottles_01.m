@@ -105,7 +105,7 @@ switch varname
       vanom = v - dsam.upsal;
    case {'botoxy', 'botoxya', 'botoxyb'}
       %%%%% temporary fix, pending good CTD oxygen in sam file
-      dsam.uoxygen = oxy_apply_cal(1,dsam.statnum,dsam.upress,0*dsam.statnum,dsam.utemp,dsam.uoxygen);
+      dsam.uoxygen = oxy_apply_cal(1,dsam.statnum,dsam.upress,0*dsam.statnum,dsam.utemp,dsam.uoxygen); %***make this a cruise option, normally shouldn't need this line at all (is it from dy113 originally?). maybe only comes up at all if there isn't good oxygen (non-nan)?
       vanom = v - dsam.uoxygen;
    otherwise % expect to find the variable in both sam and grid
       if exist('dg','var') ~= 1;

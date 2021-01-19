@@ -761,6 +761,8 @@ switch scriptname
                 %%%%%%%%%% m_maptracer %%%%%%%%%%
             case 'm_maptracer'
                 switch oopt
+                    case 'samfn'
+                        samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
                     case 'kstatgroups'
                         kstatgroups = {[1:999]};
                     case 'xzlim'
