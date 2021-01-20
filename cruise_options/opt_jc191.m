@@ -27,7 +27,7 @@ switch scriptname
     case 'mctd_02a'
         switch oopt
             case 'absentvars' % introduced new on jc191
-                if sum(ismember(stnlocal,[67:70])) == 1 % deep stations on jc191
+                if ismember(stnlocal,[67:70]) == 1 % deep stations on jc191
                     absentvars = {'fluor' 'transmittance'};
                 end
             case 'corraw'

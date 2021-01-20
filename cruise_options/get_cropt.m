@@ -11,7 +11,7 @@ shiptsg = {'cook' 'tsg'; 'discovery' 'tsg'; 'jcr' 'oceanlogger'};
 switch scriptname
     
     
-        %%%%%%%%%% minit %%%%%%%%%%
+    %%%%%%%%%% minit %%%%%%%%%%
     case 'minit'
         stn_string = sprintf('%03d',stn); %sometimes this is customised (e.g. dy111)
         %%%%%%%%%% end minit %%%%%%%%%%
@@ -72,7 +72,7 @@ switch scriptname
             case 'mctd_02a'
                 switch oopt
                     case 'absentvars' % introduced new on jc191
-                        absentvars = {};
+                        absentvars = {}; %default: don't skip any variables
                     case 'corraw'
                         %edits to be applied to raw file (see di346)
                         %and, if celltm is to be run, parameters for edits to apply first, and
@@ -813,81 +813,91 @@ switch scriptname
                 end
                 %%%%%%%%%% end mvad_01 %%%%%%%%%%
                 
-                
-        end % End of first "switch scriptname" to set defaults
-        
-        
-        
-        
-        %%%%%%%%%% set options specific to this cruise %%%%%%%%%%
-        if exist(['opt_' mcruise])==2
-            eval(['opt_' mcruise]);
-        else
-            disp(['opt_' mcruise ' not found; may need to be created to set cruise-specific options'])
+                %%%%%%%%%% vel_compare %%%%%%%%%%
+            case 'vel_compare'
+                switch oopt
+                    case 'lpre'
+                        %directory for uhladcp files, e.g.
+                        %lpre = '/local/users/pstar/cruise/data/ladcp/uh/pro/jc1802/ladcp/proc/matprof/h/';
+                end
         end
-        %%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%% end vel_compare %%%%%%%%%%
         
         
+end % End of first "switch scriptname" to set defaults
+
+
+
+
+%%%%%%%%%% set options specific to this cruise %%%%%%%%%%
+if exist(['opt_' mcruise])==2
+    eval(['opt_' mcruise]);
+else
+    disp(['opt_' mcruise ' not found; may need to be created to set cruise-specific options'])
+end
+%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%%%%%%%%%% Warnings for unset options %%%%%%%%%
+switch scriptname
+    
+    
+    %%%%%%%%%% mcoxyhyst %%%%%%%%%%
+    case 'mcoxyhyst'
+        if length(H1in)==0 | length(H2in)==0 | length(H3in)==0
+            warning('oxygen hysteresis parameters have not been set or supplied to mcoxyhyst; no correction will be applied')
+        end
+        %%%%%%%%%% end mcoxyhyst %%%%%%%%%%
         
         
+        %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
+    case 'msal_standardise_avg'
+        switch oopt
+            case 'plot_stations'
+                if ~exist('iistno'); iistno = [1:length(stnos)]; end
+            case 'std2use'
+                if ~exist('std2use'); disp('set autosal standards readings to use for this cruise'); keyboard; end
+            case 'sam2use'
+                if ~exist('sam2use'); disp('set salinity sample readings to use for this cruise'); keyboard; end
+        end
+        %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
         
-        %%%%%%%%%% Warnings for unset options %%%%%%%%%
-        switch scriptname
-            
-            
-            %%%%%%%%%% mcoxyhyst %%%%%%%%%%
-            case 'mcoxyhyst'
-                if length(H1in)==0 | length(H2in)==0 | length(H3in)==0
-                    warning('oxygen hysteresis parameters have not been set or supplied to mcoxyhyst; no correction will be applied')
-                end
-                %%%%%%%%%% end mcoxyhyst %%%%%%%%%%
-                
-                
-                %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
-            case 'msal_standardise_avg'
-                switch oopt
-                    case 'plot_stations'
-                        if ~exist('iistno'); iistno = [1:length(stnos)]; end
-                    case 'std2use'
-                        if ~exist('std2use'); disp('set autosal standards readings to use for this cruise'); keyboard; end
-                    case 'sam2use'
-                        if ~exist('sam2use'); disp('set salinity sample readings to use for this cruise'); keyboard; end
-                end
-                %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
-                
-                %%%%%%%%%% cond_apply_cal %%%%%%%%%%
-            case 'cond_apply_cal'
-                if ~exist('off') & ~exist('fac'); warning(['no cond cal set for sensor ' sensor]); end
-                %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
-                
-                %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
-            case 'tsgsal_apply_cal'
-                switch oopt
-                    case 'saladj'
-                        if ~exist('salout'); warning(['no salinity cal set for TSG']); end
-                    case 'tempadj'
-                        if ~exist('tempout'); warning(['no temperature adjustment set for TSG']); end
-                end
-                %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
-                
-                %%%%%%%%%% temp_apply_cal %%%%%%%%%%
-            case 'temp_apply_cal'
-                if ~exist('tempadj'); warning(['no temp cal set for sensor ' sensor]); end
-                %%%%%%%%%% end temp_apply_cal %%%%%%%%%%
-                
-                %%%%%%%%%% oxy_apply_cal %%%%%%%%%%
-            case 'oxy_apply_cal'
-                if ~exist('alpha') & ~exist('beta'); warning(['no oxy cal set for sensor ' sensor]); end
-                %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
-                
-                %%%%%%%%%% fluor_apply_cal %%%%%%%%%%
-            case 'fluor_apply_cal'
-                if ~exist('fac') & ~exist('expco'); warning(['no fluor cal set']); end
-                %%%%%%%%%% end fluor_apply_cal %%%%%%%%%%
-                
-                %%%%%%%%%% miso_02 %%%%%%%%%%
-            case 'miso_02'
-                if ~exist('cvars'); warning(['must set cvars, list of isotope variable names to write, in miso_02 options']); end
-                %%%%%%%%%% end miso_02 %%%%%%%%%%
-                
-        end % End of second "switch scriptname" to check for unset options
+        %%%%%%%%%% cond_apply_cal %%%%%%%%%%
+    case 'cond_apply_cal'
+        if ~exist('off') & ~exist('fac'); warning(['no cond cal set for sensor ' sensor]); end
+        %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
+        
+        %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
+    case 'tsgsal_apply_cal'
+        switch oopt
+            case 'saladj'
+                if ~exist('salout'); warning(['no salinity cal set for TSG']); end
+            case 'tempadj'
+                if ~exist('tempout'); warning(['no temperature adjustment set for TSG']); end
+        end
+        %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
+        
+        %%%%%%%%%% temp_apply_cal %%%%%%%%%%
+    case 'temp_apply_cal'
+        if ~exist('tempadj'); warning(['no temp cal set for sensor ' sensor]); end
+        %%%%%%%%%% end temp_apply_cal %%%%%%%%%%
+        
+        %%%%%%%%%% oxy_apply_cal %%%%%%%%%%
+    case 'oxy_apply_cal'
+        if ~exist('alpha') & ~exist('beta'); warning(['no oxy cal set for sensor ' sensor]); end
+        %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
+        
+        %%%%%%%%%% fluor_apply_cal %%%%%%%%%%
+    case 'fluor_apply_cal'
+        if ~exist('fac') & ~exist('expco'); warning(['no fluor cal set']); end
+        %%%%%%%%%% end fluor_apply_cal %%%%%%%%%%
+        
+        %%%%%%%%%% miso_02 %%%%%%%%%%
+    case 'miso_02'
+        if ~exist('cvars'); warning(['must set cvars, list of isotope variable names to write, in miso_02 options']); end
+        %%%%%%%%%% end miso_02 %%%%%%%%%%
+        
+end % End of second "switch scriptname" to check for unset options
