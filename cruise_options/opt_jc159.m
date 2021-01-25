@@ -22,7 +22,7 @@ switch scriptname
         %%%%%%%%%% mctd_02a %%%%%%%%%%
     case 'mctd_02a'
         switch oopt
-            case 'corraw'
+            case 'prectm_rawedit'
                 %pvars is a list of variables to NaN when pumps are off, with the
                 %second column setting the number of additional scans after the
                 %pumps come back on to also NaN
@@ -60,22 +60,10 @@ switch scriptname
         %%%%%%%%%% mctd_02b %%%%%%%%%%
     case 'mctd_02b'
         switch oopt
-            case 'calibs_to_do'
-                dooxyhyst = 1;
+            case 'raw_corrs'
                 doturbV = 1;
-            case 'oxyhyst'
-                h = m_read_header(infile);
-                if sum(strcmp('oxygen_sbe2',h.fldnam))
-                    var_strings = [var_strings; 'oxygen_sbe2 time press'];
-                    pars(2) = pars(1);
-                    varnames = [varnames; 'oxygen2'];
-                end
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
-        
-        %%%%%%%%%% mcoxyhyst %%%%%%%%%%
-    case 'mcoxyhyst'
-        %%%%%%%%%% end mcoxyhyst %%%%%%%%%%
         
         %%%%%%%%%% mctd_03 %%%%%%%%%%
     case 'mctd_03'
@@ -99,7 +87,10 @@ switch scriptname
         
         %%%%%%%%%% mfir_03 %%%%%%%%%%
     case 'mfir_03'
-        fillstr = '10'; %max gap length to fill is 10 s
+        switch oopt
+            case 'fir_fill'
+                fillstr = '10'; %max gap length to fill is 10 s
+        end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
         %%%%%%%%%% mbot_00 %%%%%%%%%%
@@ -127,7 +118,7 @@ switch scriptname
         
         %%%%%%%%%% mwin_01 %%%%%%%%%%
     case 'mwin_01'
-        % jc159 - stations 1, 2, 27, 28 have winch data for swivel tests but no ctd files
+        % stations 1, 2, 27, 28 have winch data for swivel tests but no ctd files
         switch stnlocal
             case 1
                 winch_time_start = [2018 3 1 12 30 0]; % first swivel test
@@ -141,31 +132,30 @@ switch scriptname
             case 28
                 winch_time_start = [2018 3 7 22 12 0]; % aborted CTD
                 winch_time_end = [2018 3 7 22 34 0];
-            otherwise
-                winch_time_start = nan;
-                winch_time_end = nan;
         end
         
         %%%%%%%%%% end mwin_01 %%%%%%%%%%
         
         %%%%%%%%%% mwin_03 %%%%%%%%%%
     case 'mwin_03'
-        fix_string = [];
-        % jc159: when winch is switched from auto control to manual control
-        % for recovery, usually around 100 metres, the winch telemetry is
-        % off for a few seconds and techsas records a zero, which sometimes
-        % shows up as zero wireout at the bottle closure time. This option
-        % first introduced on jr302
-        switch stnlocal
-            case 5
-                fix_string = 'y(14:15) = y(13);'; % use existing bottle wireout to ensure they match exactly
-            case 6
-                fix_string = 'y(18) = y(17);';
-            case 15
-                fix_string = 'y(18) = y(19);';
-            case 16
-                fix_string = 'y(20) = [100];'; % nominal
-            otherwise
+        switch oopt
+            case 'winch_fix_string'
+                % jc159: when winch is switched from auto control to manual control
+                % for recovery, usually around 100 metres, the winch telemetry is
+                % off for a few seconds and techsas records a zero, which sometimes
+                % shows up as zero wireout at the bottle closure time. This option
+                % first introduced on jr302
+                switch stnlocal
+                    case 5
+                        winch_fix_string = 'y(14:15) = y(13);'; % use existing bottle wireout to ensure they match exactly
+                    case 6
+                        winch_fix_string = 'y(18) = y(17);';
+                    case 15
+                        winch_fix_string = 'y(18) = y(19);';
+                    case 16
+                        winch_fix_string = 'y(20) = [100];'; % nominal
+                    otherwise
+                end
         end
         %%%%%%%%%% end mwin_03 %%%%%%%%%%
         
@@ -173,29 +163,16 @@ switch scriptname
         %%%%%%%%%% mctd_checkplots %%%%%%%%%%
     case 'mctd_checkplots'
         switch oopt
-            case 'pf1'
-                pf1.ylist = 'press temp asal oxygen';
-            case 'sdata'
-                sdata1 = d{ks}.asal1; sdata2 = d{ks}.asal2; tis = 'asal'; sdata = d{ks}.asal;
-            case 'odata'
-                odata1 = d{ks}.oxygen1; if isfield(d{ks}, 'oxygen2'); odata2 = d{ks}.oxygen2; end
+            case 'plot_saltype'
+                saltype = 'asal';
         end
         %%%%%%%%%% end mctd_checkplots %%%%%%%%%%
-        
-        %%%%%%%%%% mctd_rawshow %%%%%%%%%%
-    case 'mctd_rawshow'
-        switch oopt
-            case 'pshow2'
-                h = m_read_header(pshow2.ncfile.name); if sum(strcmp('oxygen_sbe2', h.fldnam)); pshow2.ylist = 'pressure_temp press oxygen_sbe1 oxygen_sbe2'; end
-        end
-        %%%%%%%%%% end mctd_rawshow %%%%%%%%%%
         
         %%%%%%%%%% mctd_rawedit %%%%%%%%%%
     case 'mctd_rawedit'
         switch oopt
-            case 'autoeditpars'
+            case 'rawedit_auto'
                 if stnlocal==90
-                    dodespike = 1;
                     dsvars = {'oxygen_sbe1' 2
                         'transmittance' 0.2
                         'fluor' 0.2
@@ -224,20 +201,21 @@ switch scriptname
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'
         switch oopt
-            case 'fnin'
+            case 'depth_source'
                 depmeth = 1; %get from text file generated by LADCP basic proc
                 fnin = '/local/users/pstar/cruise/data/ladcp/ix/bdeps.txt';
             case 'bestdeps'
-                ii = find(bestdeps(:,1)==9); bestdeps(ii,2) = 2522;
-                ii = find(bestdeps(:,1)==27 | bestdeps(:,1)==28); bestdeps(ii,2) = 5063; %two aborted casts at this station
-                ii = find(bestdeps(:,1)==33); bestdeps(ii,2) = 5300;
-                ii = find(bestdeps(:,1)==41); bestdeps(ii,2) = 5708;
-                ii = find(bestdeps(:,1)==89); bestdeps(ii,2) = 5200; %***check
-                ii = find(bestdeps(:,1)==63); bestdeps(ii,2) = 4419;
-                ii = find(bestdeps(:,1)==77); bestdeps(ii,2) = 4972;
-                ii = find(bestdeps(:,1)==78); bestdeps(ii,2) = 5244;
-                ii = find(bestdeps(:,1)==124); bestdeps(ii,2) = 3624;
-                ii = find(bestdeps(:,1)==125); bestdeps(ii,2) = 204;
+                replacedeps = [9 2522;
+                    27 5063; %aborted cast
+                    28 5063; %aborted cast (same station)
+                    33 5300;
+                    41 5708;
+                    63 4419;
+                    77 4972;
+                    78 5244;
+                    89 5200;
+                    124 3624;
+                    125 204];
         end
         %%%%%%%%%% end populate_station_depths %%%%%%%%%%
         
@@ -267,17 +245,16 @@ switch scriptname
         %%%%%%%%%% msal_01 %%%%%%%%%%
     case 'msal_01'
         switch oopt
-            case 'flags'
-                flags3 = [3123 5620 8122 9209];
-                flags4 = [0308 1916 3513 3716 ...
+            case 'salflags'
+                flagval = [3; 4; 5];
+                flagsamps = {[3123 5620 8122 9209];
+                    [0308 1916 3513 3716 ...
                     4002 4117 4513 5117 5118 5222 5415 5416 5417 6101 6522 ...
                     7101 7118 7204 7308 7309 7320 7802 7811 7813 7902 ...
                     8007 8008 8102 8523 8816 8701];
-                flags5 = [10823];
-                flag(ismember(ds_sal.sampnum, flags3)) = 3;
-                flag(ismember(ds_sal.sampnum, flags4)) = 4;
-                flag(ismember(ds_sal.sampnum, flags5)) = 5;
-                flags(ismember(ds_sal.station_day, 12)) = 3; %questionable standardisation
+                    [10823]};
+                flag = flags_set(flag, sampnum, flagval, flagsampnums);
+                
         end
         %%%%%%%%%% end msal_01 %%%%%%%%%%
         
@@ -330,21 +307,19 @@ switch scriptname
             case 'oxycsv'
                 %infile = [root_oxy '/oxy_jc159_all.csv'];
                 infile = [root_oxy '/' upper(mcruise) '_oxy_' num2str(stnlocal) '.csv'];
-            case 'sampnum_parse'
-                ds_oxy.statnum = ds_oxy.Cast;
-                ds_oxy.niskin = ds_oxy.Niskin;
-                ds_oxy.sampnum = ds_oxy.statnum*100+ds_oxy.niskin;
-                ds_oxy.oxy_bot = ds_oxy.Bottle;
-                ds_oxy.bot_vol = ds_oxy.Bottle_vol0x2E;
-                ds_oxy.vol_blank = ds_oxy.Blank;
-                ds_oxy.vol_std = ds_oxy.Std;
-                ds_oxy.vol_titre_std = ds_oxy.Standard;
-                ds_oxy.oxy_temp = ds_oxy.Fixing_temp0x2E;
-                ds_oxy.oxy_titre = ds_oxy.Sample;
-                ds_oxy.mol_std = ds_oxy.Iodate_M;
+            case 'oxysampnum'
+                ds_oxy.statnum = ds_oxy.cast;
+                ds_oxy.oxy_bot = ds_oxy.bottle;
+                ds_oxy.bot_vol = ds_oxy.bottle_vol0x2e;
+                ds_oxy.vol_blank = ds_oxy.blank;
+                ds_oxy.vol_std = ds_oxy.std;
+                ds_oxy.vol_titre_std = ds_oxy.standard;
+                ds_oxy.oxy_temp = ds_oxy.fixing_temp0x2e;
+                ds_oxy.oxy_titre = ds_oxy.sample;
+                ds_oxy.mol_std = ds_oxy.iodate_m;
                 ds_oxy.nO2 = ds_oxy.n0x28O20x29;
-                ds_oxy.concO2 = ds_oxy.C0x28O20x29;
-            case 'flags'
+                ds_oxy.concO2 = ds_oxy.c0x28O20x29;
+            case 'oxyflags'
                 flags3 = [0308 1405 1415 2101 2103 3222 4201 4513 4804 ...
                     5110 5614 5716 5717 5718 5816 6316 6612 6910 ...
                     7103 7321 7322 8513];
@@ -352,12 +327,11 @@ switch scriptname
                     3217 3506 3915 4115 4121 4203 4707 4720 4724 4810 4811 ...
                     5023 5123 5222 5313 5402 5605 5616 5712 6005 6011 6014 6101 6124 ...
                     8124 10917 10904 11022 11023 11213 12020];
-                botoxyflaga(ismember(sampnum, flags3)) = 3;
-                botoxyflaga(ismember(sampnum, flags4)) = 4;
+                ds_oxy.flag(ismember(ds_oxy.sampnum, flags3)) = 3;
+                ds_oxy.flag(ismember(ds_oxy.sampnum, flags4)) = 4;
                 if ismember(stnlocal, [9:11 24 34 44]) %standardisation probably wrong
                     %due to bubbles in line; earlier set flags to 3 but now say 4
-                    botoxyflaga(botoxyflaga<=4) = 4;
-                    botoxyflagb(botoxyflagb<=4) = 4;
+                    ds_oxy.flag(ds_oxy.flag<=4) = 4;
                 end
         end
         %%%%%%%%%% end moxy_01 %%%%%%%%%%
@@ -437,8 +411,8 @@ switch scriptname
                 no2_flag(ismember(sampnum, flags4)) = 4;
         end
         %%%%%%%%%% end mnut_01 %%%%%%%%%%
-
-    %%%%%%%%%% miso_01 %%%%%%%%%%
+        
+        %%%%%%%%%% miso_01 %%%%%%%%%%
     case 'miso_01'
         switch oopt
             case 'files'
@@ -452,16 +426,16 @@ switch scriptname
                     'del13c_bgs' 'per_mil' 'd13C';
                     'del13c_bgs_flag' 'woceflag' 'junk'};
                 vars{2} = {
-		    'statnum'      'number'    'Station'
-		    'position'     'number'    'Niskin'
+                    'statnum'      'number'    'Station'
+                    'position'     'number'    'Niskin'
                     'del13c_whoi'  'per_mil' 'd13C'
                     'del14c_whoi'  'per_mil' 'D14C'
                     %'dic_whoi' 'mmol_per_kg' 'DIC Conc (mmol/kg)'
                     'del14c_whoi_flag' 'woceflag' 'flag'
                     'del13c_whoi_flag' 'woceflag' 'flag'};
                 vars{3} = {
-		    'statnum'    'number'    'STNNBR'
-		    'position'   'number'    'SAMPNO'
+                    'statnum'    'number'    'STNNBR'
+                    'position'   'number'    'SAMPNO'
                     'del18o_bgs'      'per_mil' 'BOT_O0x2D18'
                     'del18o_bgs_flag' 'per_mil' 'BOT_O0x2D18_FLAG'};
             case 'flags'
@@ -469,7 +443,7 @@ switch scriptname
                 del18o_bgs_flag(isnan(del18o_bgs) & ismember(del18o_bgs_flag, [2 3])) = 4;
         end
         %%%%%%%%%% end miso_01 %%%%%%%%%%
-
+        
         %%%%%%%%%% miso_02 %%%%%%%%%%
     case 'miso_02'
         switch oopt
@@ -535,7 +509,7 @@ switch scriptname
                 % bak post jc159 on bakmac; new file from M-J passed over
                 % at LHR
                 infile = [root_cfc '/cfc_' mcruise '_all.txt'];
-
+                
         end
         %%%%%%%%%% end mcfc_01 %%%%%%%%%%
         
@@ -569,8 +543,8 @@ switch scriptname
         %%%%%%%%%% end msam_checkbottles_01 %%%%%%%%%%
         
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
-        case 'msam_ashore_flag'
-          switch samtype
+    case 'msam_ashore_flag'
+        switch samtype
             case 'chl'
                 fnin = [mgetdir('M_BOT_CHL') '/Sample_log_Phyto_Chibo_sampnum.csv'];
                 d_chl = load(fnin); %this is just three columns of numbers
@@ -610,9 +584,9 @@ switch scriptname
                 flagnames = {'sf6_flag'; 'ccl4_flag'; 'f113_flag'};
                 flagvals = [1];
                 a = {[root_sam '/sam_' mcruise '_all']
-                     'sampnum'
-                     'cfc11_flag'
-                     'cfc12_flag'};
+                    'sampnum'
+                    'cfc11_flag'
+                    'cfc12_flag'};
                 a = [a; flagnames; '0'];
                 MEXEC_A.MARGS_IN = a; [d,h] = mload;
                 stations = [];
@@ -621,7 +595,7 @@ switch scriptname
                     sampnums(no,:) = {d.sampnum(ii)};
                     stations = [stations; floor(d.sampnum(ii)/100)];
                 end
-          end
+        end
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
         
         
@@ -728,7 +702,7 @@ switch scriptname
             case 'outfile'
                 outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/A095_' expocode];
                 if nocfc
-                   outfile = [outfile '_no_cfc_values'];
+                    outfile = [outfile '_no_cfc_values'];
                 end
             case 'headstr'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCBAK'];...
@@ -813,14 +787,14 @@ switch scriptname
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
         
-                %%%%%%%%%% m_maptracer %%%%%%%%%%
+        %%%%%%%%%% m_maptracer %%%%%%%%%%
     case 'm_maptracer'
         switch oopt
             case 'kstatgroups'
-kstatgroups = {3 [4:999]};
+                kstatgroups = {3 [4:999]};
         end
         %%%%%%%%%% end m_maptracer %%%%%%%%%%
-
+        
         
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'

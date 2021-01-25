@@ -26,7 +26,7 @@ root_sam = mgetdir('M_SAM');
 prefixt = ['sam_'];
 prefix1 = ['sam_' mcruise '_'];
 
-oopt = 'nbot'; get_cropt %number of niskins (may be station-dependent)
+oopt = 'nnisk'; scriptname = 'general'; get_cropt %number of niskins (may be station-dependent)
 
 otfile = [root_sam '/' prefix1 stn_string];
 otfile2 = [root_sam '/' prefix1 'template_' num2str(num_bottles)];
@@ -90,7 +90,7 @@ if ~exist(otfile2, 'file')
     end
 
     %set values of the not-blank variables
-    position = [1:num_bottles]';
+    position = [1:nnisk]';
     sampnum = stnlocal*100+data.position;
     statnum = stnlocal+0*data.position;
 

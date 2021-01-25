@@ -36,6 +36,11 @@ end
 [dsam hsam] = mload(infile1,'/');
 [dctd hctd] = mload(infile2,'/');
 
+                dsam.lon = hctd.longitude + zeros(size(dsam.sampnum));
+                dsam.lat = hctd.latitude + zeros(size(dsam.sampnum));
+                dsam.bottom_dep = hctd.water_depth_metres + zeros(size(dsam.sampnum));
+                dsam.udepth = sw_dpth(dsam.upress,dsam.lat);
+                dsam.usig0 = sw_pden(dsam.upsal,dsam.utemp,dsam.upress,0);
 oopt = 'samadj'; get_cropt
 
 sig0 = sw_pden(dsam.upsal,dsam.utemp,dsam.upress,0)-1000;

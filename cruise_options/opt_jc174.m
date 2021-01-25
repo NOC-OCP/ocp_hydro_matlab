@@ -1,9 +1,17 @@
 switch scriptname
+    
+        %%%%%%%%%% castpars (not a script) %%%%%%%%%%
+    case 'castpars'
+        %parameters used by multiple scripts, related to CTD/LADCP casts
+        switch oopt
+            case 'oxyvars'
+                oxyvars = {'oxygen_sbe1' 'oxygen1'; 'oxygen_sbe2' 'oxygen2'};
+        end
+        %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
+
         %%%%%%%%%% mctd_03 %%%%%%%%%%
     case 'mctd_03'
         switch oopt
-           case 's_choice'
-             s_choice = 1;
            case 'o_choice'
              o_choice = 2;
         end
@@ -31,28 +39,12 @@ switch scriptname
       fac = 1 + off;
       condout = cond.*fac + condadj;
    %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
-
-        %%%%%%%%%% mctd_02b %%%%%%%%%%
-    case 'mctd_02b'
-        switch oopt
-            case 'calibs_to_do'
-                dooxyhyst = 1;
-            case 'oxyhyst' %this only comes up if ismember(dohyst,1)
-                var_strings = {'oxygen_sbe1 time press','oxygen_sbe2 time press'};
-                pars = {[-0.033 5000 1450],[-0.033 5000 1450]}; %sbe default
-                varnames = {'oxygen1','oxygen2'};
-        end
-        %%%%%%%%%% end mctd_02b %%%%%%%%%%
  
         %%%%%%%%%% mctd_checkplots %%%%%%%%%%
     case 'mctd_checkplots'
         switch oopt
-            case 'pf1'
-                pf1.ylist = 'press temp psal oxygen';
-            case 'sdata'
-                sdata1 = d{ks}.psal1; sdata2 = d{ks}.psal2; tis = 'psal'; sdata = d{ks}.psal;
-            case 'odata'
-                odata1 = d{ks}.oxygen1; odata2 = d{ks}.oxygen2; odata = d{ks}.oxygen;
+            case 'plot_saltype'
+                saltype = 'asal';
         end
         %%%%%%%%%% end mctd_checkplots %%%%%%%%%%
  
@@ -62,10 +54,7 @@ switch scriptname
             case 'oxycsv'
                 %infile = [root_oxy '/oxy_jc159_all.csv'];
                 infile = [root_oxy '/' 'oxy_' mcruise '_' sprintf('%3.3i',stnlocal) '.csv'];
-            case 'oxybotnisk'
-                %ds_oxy.niskin = ds_oxy.botnum; 
-				ds_oxy.niskin = ds_oxy.sampnum-100*ds_oxy.statnum;
-            case 'sampnum_parse'
+            case 'oxysampnum'
                 %ds_oxy.niskin        = ds_oxy.botnum;
                 ds_oxy.botoxya_per_l = ds_oxy.botoxya; 
                 ds_oxy.botoxyb_per_l = ds_oxy.botoxyb;
@@ -99,6 +88,7 @@ switch scriptname
         salout = salin + off;
    %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
 
+   %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
 case 'msal_standardise_avg'
         switch oopt
             case 'check_sal_runs'
@@ -112,32 +102,6 @@ case 'msal_standardise_avg'
                 ds_sal.K15(iistd) = ssw_batches(ssw_batches(:,1)==sswb,2)/2;
             case 'cellT'
                 ds_sal.cellT = 24+zeros(length(ds_sal.sampnum),1);
-            case 'std2use'
-%                std2use([47 68 121],1) = 0;
-%                std2use([50],2) = 0;
-%                std2use([61],3) = 0;
-            case 'sam2use'
-%                sam2use(51,2) = 0;
-%                sam2use([2587 2896],3) = 0;
-            case 'fillstd'
-                %add the start standard--can add it at the end because we'll
-                %use time to interpolate
-%                ds_sal.sampnum = [ds_sal.sampnum; 999000];
-%                ds_sal.offset(end) = 0;
-%                ds_sal.runtime(end) = ds_sal.runtime(1)-1/60/24; %put it 1 minute before sample 1
-                %%machine was re-standardised before running stn 68
-                %ds_sal.sampnum = [ds_sal.sampnum; 999097.5];
-                %ds_sal.offset(end) = 4e-6;
-                %ds_sal.runtime(end) = ds_sal.runtime(ds_sal.sampnum==6801)-1/60/24;
-                %this half-crate had no standard at the end so use the one
-                %from the beginning
-%                if sum(ds_sal.sampnum==999111)
-%                    ds_sal.sampnum = [ds_sal.sampnum; 999111.5];
-%                    ds_sal.offset(end) = ds_sal.offset(ds_sal.sampnum==999111);
-%                    ds_sal.runtime(end) = ds_sal.runtime(ds_sal.sampnum==7611)+1/60/24;
-%                    %interpolate based on runtime
-%                    xoff = ds_sal.runtime;
-%                end
         end
         %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
 

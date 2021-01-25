@@ -7,8 +7,8 @@
 %
 % ylf modified jr15003 to deal with (by ignoring) duplicates (in case the recorder wasn't cleared between casts)
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['loads SBE35 ascii files listed in lsbe and writes to sbe35_' mcruise '_' stn_string '.nc']);
+minit;
+mdocshow(mfilename, ['loads SBE35 ascii files listed in lsbe and writes to sbe35_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
 root_sbe35 = mgetdir('M_SBE35');
@@ -116,7 +116,7 @@ else
     val = val(kok(ksort));
     sbe35temp = t90(kok(ksort));
     sbe35flag = 2+0*sbe35temp;
-    oopt = 'flag'; get_cropt
+    scriptname = mfilename; oopt = 'sbe35flag'; get_cropt
 end
 
 % now save the data

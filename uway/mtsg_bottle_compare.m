@@ -1,40 +1,26 @@
-% bak jc069 compare bottles and tsg data
-% overhauled on jr281, based on jr069 version, to be suitable for any ship
-%
+% compare bottle salinity and tsg data
+% 
 % choose calibrated or uncalibrated data for comparison
 
-minit
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-oopt = 'usecal'; scriptname = mfilename; get_cropt;
+scriptname = mfilename; oopt = 'usecal'; get_cropt;
 usecallocal = usecal; clear usecal
 
-oopt = 'shiptsg'; scriptname = mfilename; get_cropt
-switch MEXEC_G.Mship
-    case {'cook','discovery'}
-        salvar = 'psal'; % salinity var in tsg data stream
-        tempvar = 'temp_h'; % housing temp
-        tempsst = 'temp_r'; % remote temp
-        condvar = 'cond'; % conductivity
-    case 'jcr'
-        salvar = 'salinity'; % salinity var in tsg data stream
-        tempvar = 'tstemp'; % housing temp
-        condvar = 'conductivity'; % conductivity
-        tempsst = 'sstemp'; % "sea surface" temperature?
-end
-root_tsg = mgetdir(prefix);
+scriptname = 'ship'; oopt = 'shiptsg'; get_cropt
+root_tsg = mgetdir(tsgprefix);
 root_bot = mgetdir('M_BOT_SAL');
-prefix1 = [prefix '_' mcruise '_'];
 
 if usecallocal
-    tsgfn = [root_tsg '/' prefix1 '01_medav_clean_cal']; % median averaged file
+    tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean_cal']; % median averaged file
     salvar = [salvar '_cal'];
     calstr = 'cal';
 else
-    tsgfn = [root_tsg '/' prefix1 '01_medav_clean']; % median averaged file
+    tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean']; % median averaged file
     calstr = 'uncal';
 end
 
-botfn = [root_bot '/' 'tsg_' mcruise '_all'];
+botfn = [root_bot '/tsg_' mcruise '_all'];
 
 [dt, ht] = mload(tsgfn, '/');
 [db, hb] = mload(botfn, '/');
@@ -56,7 +42,7 @@ if exist('tempsst')
     nsp = 4;
 end
 
-oopt = 'dbbad'; scriptname = mfilename; get_cropt %NaN some of the db.salinity_adj points
+scriptname = mfilename; oopt = 'dbbad'; get_cropt %NaN some of the db.salinity_adj points
 
 sdiff = db.salinity_adj-tsals; %offset is bottle minus tsg, so that it is correction to be added to tsg
 stdiff_std = nanstd(sdiff); sdiff_mean = nanmean(sdiff);
@@ -77,7 +63,7 @@ sdiffall = sdiff;
 
 %smoothed difference--default is a two-pass filter on the whole time series
 clear sdiffsm
-oopt = 'sdiff'; scriptname = mfilename; get_cropt
+scriptname = mfilename; oopt = 'sdiff'; get_cropt
 if exist('sc1') & exist('sc2') & ~exist('sdiffsm')
     sdiffsm = filter_bak(ones(1,21),sdiff); % first filter
     sdiff(abs(sdiff-sdiffsm) > sc1) = NaN;

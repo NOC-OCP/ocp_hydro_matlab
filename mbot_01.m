@@ -11,24 +11,23 @@
 %
 % YLF jr16002 and jc145 modified heavily to use database and cruise-specific options
 
-minit; scriptname = mfilename;
-
-mdocshow(scriptname, ['puts Niskin bottle information from file specified in opt_' mcruise ' (by default, bot_' mcruise '_' stn_string '.csv) into bot_' mcruise '_' stn_string '.nc']);
+minit;
+mdocshow(mfilename, ['puts Niskin bottle information from file specified in opt_' mcruise ' (by default, bot_' mcruise '_' stn_string '.csv) into bot_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types
 root_bot = mgetdir('M_CTD_CNV'); % the csv bottle file(s) is/are in the ascii files directory
 root_ctd = mgetdir('M_CTD');
 
 %load the sample information
-oopt = 'infile'; get_cropt
+scriptname = mfilename; oopt = 'nbotfile1'; get_cropt %should be the same file produced by mbot_00 always?***
 ds_bot = dataset('File', infile, 'Delimiter', ',');
 
 if ~sum(strcmp('sampnum', ds_bot.Properties.VarNames))
-   ds_bot.sampnum = ds_bot.sta*100 + ds_bot.niskin;
+    ds_bot.sampnum = ds_bot.sta*100 + ds_bot.niskin;
 end
 if ~sum(strcmp('sta', ds_bot.Properties.VarNames))
-   ds_bot.sta = floor(ds_bot.sampnum/100);
-   ds_bot.niskin = ds_bot.sampnum - 100*ds_bot.sta;
+    ds_bot.sta = floor(ds_bot.sampnum/100);
+    ds_bot.niskin = ds_bot.sampnum - 100*ds_bot.sta;
 end
 
 %extract info for this station
@@ -38,21 +37,21 @@ ii1 = find(ds_bot.sta==stnlocal);
 
 if length(ii)>0
     
-statnum = ds_bot.sta(ii);
-position = ds_bot.niskin(ii);
-if sum(strcmp('bottle_number', ds_bot.Properties.VarNames))
-   bottle_number = ds_bot.bottle_number(ii);
-else
-   bottle_number = ds_bot.niskin(ii);
-end
-if sum(strcmp('bottle_qc_flag', ds_bot.Properties.VarNames))
-   bottle_qc_flag = ds_bot.bottle_qc_flag(ii);
-end
-
-oopt = 'botflags'; get_cropt
-
-sampnum = ds_bot.sampnum(ii);
-
+    statnum = ds_bot.sta(ii);
+    position = ds_bot.niskin(ii);
+    if sum(strcmp('bottle_number', ds_bot.Properties.VarNames))
+        bottle_number = ds_bot.bottle_number(ii);
+    else
+        bottle_number = ds_bot.niskin(ii);
+    end
+    if sum(strcmp('bottle_qc_flag', ds_bot.Properties.VarNames))
+        bottle_qc_flag = ds_bot.bottle_qc_flag(ii);
+    else
+        bottle_qc_flag = 2+zeros(size(statnum));
+    end
+    scriptname = mfilename; oopt = 'botflags'; get_cropt
+    sampnum = ds_bot.sampnum(ii);
+    
 else
     statnum = 0; sampnum = 0; position = 0; bottle_number = 0; bottle_qc_flag = NaN;
 end
@@ -81,34 +80,34 @@ timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)
 % 2009-03-09 20:49:09
 % msave
 % input files
-% Filename    Data Name :   <version>  <site> 
+% Filename    Data Name :   <version>  <site>
 % output files
 % Filename bot_jc032_001.nc   Data Name :  oxy_jc032_001 <version> 1 <site> jc032MEXEC_A.MARGS_IN_1 = {
 MEXEC_A.MARGS_IN_1 = {
     otfile
-};
+    };
 MEXEC_A.MARGS_IN_2 = varnames(:);
 MEXEC_A.MARGS_IN_3 = {
-' '
-' '
-'1'
-dataname
-'/'
-'2'
-MEXEC_G.PLATFORM_TYPE
-MEXEC_G.PLATFORM_IDENTIFIER
-MEXEC_G.PLATFORM_NUMBER
-'/'
-'4'
-timestring
-'/'
-'8'
-};
+    ' '
+    ' '
+    '1'
+    dataname
+    '/'
+    '2'
+    MEXEC_G.PLATFORM_TYPE
+    MEXEC_G.PLATFORM_IDENTIFIER
+    MEXEC_G.PLATFORM_NUMBER
+    '/'
+    '4'
+    timestring
+    '/'
+    '8'
+    };
 MEXEC_A.MARGS_IN_4 = varnames_units(:);
 MEXEC_A.MARGS_IN_5 = {
-'-1'
-'-1'
-};
+    '-1'
+    '-1'
+    };
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
 msave
 %--------------------------------

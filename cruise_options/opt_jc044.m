@@ -4,8 +4,7 @@ switch scriptname
    case 'mctd_03'
       switch oopt
          case 's_choice'
-	    s_choice = 1; % default, 1 = primary
-            alternate = [1:49]; % list of station numbers for which secondary is preferred
+            stns_alternate_s = [1:49]; % list of station numbers for which secondary is preferred
       end
    %%%%%%%%%% end mctd_03 %%%%%%%%%%
 

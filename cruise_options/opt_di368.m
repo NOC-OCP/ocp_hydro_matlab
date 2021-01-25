@@ -73,31 +73,24 @@ switch scriptname
    %%%%%%%%%% mctd_03 %%%%%%%%%%
    case 'mctd_03'
       switch oopt
-        case 'psal'
+                   case 's_choice'
+            stns_alternate_s = [5]; % psal fouled on station 5 upcast. temp bad on station 2; plumbing disconnected
+          case '24hz_edit'
+              if stnlocal==2
+                              % chop some bad scans from oxygen downcast 
+                  badscans24 = {'oxygen' 179124 179316}; %previously these were cut out at _psal stage
+              end
+        case '1hz_interp'
          if stnlocal==2
-            % chop some bad scans from oxygen downcast in psal file and interpolate
-            MEXEC_A.MARGS_IN = {
-               otfile4
-               'y'
-               'oxygen'
-               'scan oxygen'
-               'kbad = find(x1>=179124&x1<=179316);kb1 = kbad(1); kb2 = kbad(end);y=x2; y(kbad)=interp1([kb1 kb2],[x2(kb1) x2(kb2)],kbad);'
-               ' '
-               ' '
-               ' '
-               };
-            mcalib2
+             interp1hz = 1; maxgap1 = floor((179316-179124)/24)+1;
          end
-         case 's_choice'
-	    s_choice = 1; % default, 1 = primary
-            alternate = [5]; % psal fouled on station 5 upcast. temp bad on station 2; plumbing disconnected
       end
    %%%%%%%%%% end mctd_03 %%%%%%%%%%
    
    %%%%%%%%%% mctd_04 %%%%%%%%%%
    case 'mctd_04'
      switch oopt
-        case 'pretreat'
+        case 'pre_2_treat'
            if stnlocal==7
               % use upcast; downcast has bad data in oxygen and psal; probably ingested grolly
               kf = find(d.statnum == stnlocal);

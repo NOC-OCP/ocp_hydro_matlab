@@ -18,7 +18,7 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-oopt = 'shiptsg'; scriptname = mfilename; get_cropt
+scriptname = 'ship'; oopt = 'shiptsg'; get_cropt
 roottsg = mgetdir(abbrev);
 infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
 
@@ -33,7 +33,7 @@ switch MEXEC_G.Mship
     case 'discovery'
         d.salin = d.psal;
         d.sstemp = d.temp_r;
-        d.flowrate=d.flow1;
+        d.flowrate = d.flow1;
     case 'jcr'
         d.salin = d.salinity;
         d.cond = d.conductivity;

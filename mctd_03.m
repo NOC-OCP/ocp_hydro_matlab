@@ -9,8 +9,8 @@
 % input: _24hz
 % output: _psal
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['fills in choice of sensors, computes salinity, and averages to 1 hz in ctd_' mcruise '_' stn_string '_psal.nc']);
+minit; 
+mdocshow(mfilename, ['fills in choice of sensors, computes salinity, and averages to 1 hz in ctd_' mcruise '_' stn_string '_psal.nc']);
 
 root_ctd = mgetdir('M_CTD');
 
@@ -24,53 +24,70 @@ otfile2u = [root_ctd '/' prefix1 stn_string '_2up'];
 wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
 wkfile2 = ['wk2_' scriptname '_' datestr(now,30)];
 wkfile3 = ['wk3_' scriptname '_' datestr(now,30)];
-wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
-
-h = m_read_header(infile1);
+wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string]; %this one persists through a later processing stage
 
 
-%%%%% optionally edit bad data (e.g. by scan range), decide whether to interpolate over gaps %%%%%
-oopt = '24hz'; get_cropt
-
-
-%%%%% add variables to contain copy of data from preferred sensors %%%%%
-
-% identify preferred sensor set for temperature and conductivity: set s_choice for default,
-% and alternate as list of stations on which to use the other
-oopt = 's_choice'; get_cropt
-if ismember(stnlocal, alternate);
+%identify preferred sensors for (T,C) and O on this station
+scriptname = mfilename; oopt = 's_choice'; get_cropt 
+if ismember(stnlocal, stns_alternate_s);
     s_choice = setdiff([1 2], s_choice);
 end
-extralist = sprintf('temp%d cond%d', s_choice, s_choice);
-
-% identify preferred sensor set for oxygen: set o_choice for default, 
-% and alternate as list of stations on which to use the other
-oopt = 'o_choice'; get_cropt %note this defaults to 1 for a single oxygen sensor
-if ismember(stnlocal, alternate)
+scriptname = mfilename; oopt = 'o_choice'; get_cropt 
+if ismember(stnlocal, stns_alternate_o)
    o_choice = setdiff([1 2],o_choice);
 end
-extralist = sprintf('%s oxygen%d', extralist, o_choice);
+h = m_read_header(infile1);
 if o_choice == 2 & ~sum(strcmp('oxygen2', h.fldnam))
    error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
 end
 
-newnames = {'temp'; 'cond'; 'oxygen'};
 
+%optional: edit out bad scans, or replace data from specified sensor with data from the other
+scriptname = mfilename; oopt = '24hz_edit'; get_cropt
+if length(badscans24)+length(switchscans24)>0
+    MEXEC_A.MARGS_IN = {infile1; 'y'};
+    for no = 1:size(badscans24,1)
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
+            badscans24{no,1};
+            sprintf('%s scan', badscans24{no,1});
+            sprintf('y = x1; kbad = find(x2 >= %d & x2 <= %d); y(kbad) = NaN;', badscans24{no,2}, badscans24{no,3});
+            ' ';
+            ' '];
+    end
+    if sum(strcmp(switchscans24{no,1},{'cond','temp'}))
+        sens1 = s_choice;
+    elseif strncmp(switchscans24{no,1},'oxy',3)
+        sens1 = o_choice;
+    end
+    sens2 = setdiff([1 2],sens1);
+    for no = 1:size(switchscans24)
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
+            switchscans24{no,1};
+            sprintf('%s%d %s%d scan', switchscans24{no,1}, sens1, switchscans24{no,1}, sens2)
+            sprintf('y = x1; kbad = find(x3 >= %d & x3 <= %d); y(kbad) = x2(kbad);', switchscans24{no,2}, switchscans24{no,3});
+            ' '
+            ' '];
+    end
+    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+    mcalib2
+end
+
+%copy selected sensor to new names without sensor number
 MEXEC_A.MARGS_IN = {
 infile1
 wkfile1
 '/'
 infile1
-extralist
-newnames{1}
-newnames{2}
-newnames{3}
+sprintf('temp%d cond%d oxygen%d', s_choice, s_choice, o_choice);
+'temp'
+'cond'
+'oxygen'
 };
-margsin = MEXEC_A.MARGS_IN;
 maddvars
 
-%%%%% optionally interpolate over gaps %%%%%
-if interp24 %set above in oopt = '24hz'
+%optional: interpolate over gaps 
+scriptname = mfilename; oopt = '24hz_interp'; get_cropt 
+if interp24 
     MEXEC_A.MARGS_IN = {
     wkfile1
     'y'
@@ -84,30 +101,22 @@ if interp24 %set above in oopt = '24hz'
 end
 
 
-%%%%% determine what variables will go into _psal 1 hz file, %%%%%
-%%%%% copy those to working file and add newly calculated variables %%%%%
-%%%%% does this in multiple steps because some calculations rely on others %%%%%
+%calculate derived variables and make 1 hz averaged file, _psal.nc
+%this happens in multiple steps, and involves a persisting working file, 
+%because some calculations here and subsequently rely on others
 
+%find variables to copy, that are in both mcvars_list and the input file
 var_copycell = mcvars_list(1);
-% remove any vars from copy list that aren't available in the input file
-numcopy = length(var_copycell);
-h_input = m_read_header(wkfile1);
-var_copystr = ' ';
-for kloop_scr = 1:numcopy
-    if length(strmatch(var_copycell{kloop_scr},h_input.fldnam,'exact'))>0
-        var_copystr = [var_copystr var_copycell{kloop_scr} ' '];
-    end
-end
-var_copystr([1 end]) = [];
+[var_copycell, var_copystr] = mvars_in_file(var_copycell, wkfile1);
 
 MEXEC_A.MARGS_IN = {
 wkfile1
 wkfile2
-var_copystr
-'cond temp press'
-'y = gsw_SP_from_C(x1,x2,x3)'
-'psal'
-'pss-78'
+var_copystr %copy these
+'cond temp press' %use these
+'y = gsw_SP_from_C(x1,x2,x3)' %in this equation
+'psal' %to calculate this
+'pss-78' %with these units
 'cond1 temp1 press'
 'y = gsw_SP_from_C(x1,x2,x3)'
 'psal1'
@@ -142,7 +151,7 @@ mcalc
 
 MEXEC_A.MARGS_IN = {
 wkfile3
-wkfile_dvars
+wkfile_dvars %this one persists
 '/'
 'asal temp press'
 'y = gsw_pt0_from_t(x1,x2,x3)'
@@ -172,9 +181,7 @@ wkfile_dvars
 };
 mcalc
 
-
-%%%%% average to 1hz %%%%%
-
+% average to 1hz, output to _psal file
 MEXEC_A.MARGS_IN = {
 wkfile_dvars
 otfile1
@@ -185,6 +192,21 @@ otfile1
 };
 mavrge
 
-oopt = 'psal'; get_cropt; oopt = ''; %optionally edit psal file
+%optional: interpolate over gaps in 1hz file
+%optional: interpolate over gaps 
+scriptname = mfilename; oopt = '1hz_interp'; get_cropt 
+if interp1hz 
+    MEXEC_A.MARGS_IN = {
+    otfile1
+    'y'
+    '/'
+    'scan'
+    num2str(maxgap1)
+    '0'
+    '0'
+    };
+    mintrp2
+end
 
+%tidy up
 unix(['/bin/rm ' wkfile1 '.nc ' wkfile2 '.nc ' wkfile3 '.nc']);

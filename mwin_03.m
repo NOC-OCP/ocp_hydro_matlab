@@ -3,8 +3,8 @@
 % Use: mwin_03        and then respond with station number, or for station 16
 %      stn = 16; mwin_03;
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['adds winch data from bottle firing times to fir_' mcruise '_' stn_string '.nc']);
+minit;
+mdocshow(mfilename, ['adds winch data from bottle firing times to fir_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
@@ -57,7 +57,7 @@ end
 % output files
 % Filename fir_jr193_016_winch.nc   Data Name :  fir_jr193_016 <version> 18 <site> bak_macbook
 MEXEC_A.MARGS_IN = {
-
+    
 otfile2
 infile1
 '/'
@@ -78,19 +78,19 @@ mmerge
 % output files
 % Filename fir_jr193_016_winch.nc   Data Name :  fir_jr193_016 <version> 19 <site> bak_macbook
 MEXEC_A.MARGS_IN = {
-otfile2
-'y'
-'8'
-cabname
-'wireout'
-'metres'
-'-1'
-'-1'
-};
+    otfile2
+    'y'
+    '8'
+    cabname
+    'wireout'
+    'metres'
+    '-1'
+    '-1'
+    };
 mheadr
 %--------------------------------
 
-get_cropt; %fix_string
+scriptname = mfilename; oopt = 'winch_fix_string'; get_cropt;
 
 if isempty(fix_string); return; end
 
@@ -105,14 +105,14 @@ if isempty(fix_string); return; end
 % output files
 % Filename fir_jr302_065_winch.nc   Data Name :  fir_jr302_065_bl <version> 11 <site> jr302_atsea
 MEXEC_A.MARGS_IN = {
-otfile2
-'y'
-'wireout'
-fix_string
-' '
-' '
-' '
-};
+    otfile2
+    'y'
+    'wireout'
+    winch_fix_string
+    ' '
+    ' '
+    ' '
+    };
 mcalib
 %--------------------------------
 

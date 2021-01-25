@@ -6,16 +6,16 @@
 % rewrite of mplotxy_ctdck on jr281 by bak march 2013. We need some
 % different diagnostics than the ones available previously
 %
-% There are 10 plots available. 
+% There are 10 plots available.
 %
 % There are a selection of 1hz and 2 dbar plots. 1 hz plots are trimmed to
 % start and end good scan numbers. 1 hz plots commonly have upcast as
 % dashed lines.
 %
-% Some plots are for the input station only. 
+% Some plots are for the input station only.
 %
-% Others include a user-controllable selection of previous stations. 
-% You can select 'The previous X stations', 
+% Others include a user-controllable selection of previous stations.
+% You can select 'The previous X stations',
 % where X can be any number, including zero.
 % Or if you choose '-1' for the number of previous stations, you can offer
 % a list of station numbers as an array eg [33 36 39], or 33:39.
@@ -35,7 +35,7 @@
 % 4 and 5: 1hz profiles and theta-S for primary (4) and secondary (5), for this and all
 % previous requested stations
 %
-% 6: theta-S for primary (left panel) and secondary (right panel), for this and all 
+% 6: theta-S for primary (left panel) and secondary (right panel), for this and all
 % previous requested stations. This is useful for looking at sensor drift.
 %
 % 7: 2db profiles and theta-S, primary and secondary overplotted. This station only
@@ -46,7 +46,7 @@
 %
 % 10: primary_minus_secondary, using 1hz file, for this and all
 % previous requested stations
-% 
+%
 % The selection and order of plots can be controlled by the variable named
 % ctd_cklist. ctd_cklist is an array that will control which
 % plots are produced and the order they appear in.
@@ -57,9 +57,8 @@
 % will produce plot 6 last and in the front figure window.
 %
 
-scriptname = 'mctd_checkplots';
 minit
-mdocshow(scriptname, ['plots CTD data from station ' stn_string ' along with data from interactively-chosen previous stations']);
+mdocshow(mfilename, ['plots CTD data from station ' stn_string ' along with data from interactively-chosen previous stations']);
 
 msg1 = 'Type number of previous stations to view, or return to quit';
 msg2 = 'Enter -1 if you want to enter a list of station numbers: ';
@@ -115,12 +114,12 @@ for ks = [slist(:)' stnlocal];
     if exist(infile2,'file') ~= 2; continue; end
     if exist(infile3,'file') ~= 2; continue; end
     if exist(infile4,'file') ~= 2; continue; end
-	% If there is a station 0 this is a test stations and 
-	if ks == 0
-		ks1 = 1
-	else
-		ks1 = ks
-	end
+    % If there is a station 0 this is a test stations and
+    if ks == 0
+        ks1 = 1
+    else
+        ks1 = ks
+    end
     infiles{1,ks1} = infile1;
     infiles{2,ks1} = infile2;
     infiles{3,ks1} = infile3;
@@ -174,6 +173,9 @@ end
 
 cklist = cklist(:)'; % force to row
 
+scriptname = mfilename; oopt = 'plot_saltype'; get_cropt
+scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt; nox = size(oxyvars,1);
+
 for plotlist = cklist
     
     switch plotlist
@@ -184,7 +186,7 @@ for plotlist = cklist
             
             clear pf1;
             pf1.xlist = 'time';
-	        oopt = 'pf1'; get_cropt
+            pf1.ylist = ['press temp ' saltype ' oxygen'];
             first = min(find(dpsal{end}.scan > ddcs{end}.scan_start));
             last = max(find(dpsal{end}.scan < ddcs{end}.scan_end));
             pf1.startdc = first; % good data only
@@ -220,27 +222,24 @@ for plotlist = cklist
             
             subplot(222)
             for ks = 1:numused
-                oopt = 'sdata'; d = d2db; get_cropt
-		        plot(d2db{ks}.press,sdata1,[cols(ks) '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,getfield(d2db{ks},[saltype '1']),[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
-            title(tis)
+            title(saltype)
             
             subplot(223)
             for ks = 1:numused
-	            oopt = 'odata'; d = d2db; get_cropt
-                plot(d2db{ks}.press,odata1,[cols(ks) '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,getfield(d{ks},oxyvars{1,2}),[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
             title ('oxygen')
             
             subplot(224)
             for ks = 1:numused
-	            oopt = 'sdata'; d = d2db; get_cropt
-                plot(sdata1,d2db{ks}.potemp1,[cols(ks) '-'],'linewidth',lwid);
+                plot(getfield(d2db{ks},[saltype '1']),d2db{ks}.potemp1,[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
-            title (['potemp-' tis])
+            title (['potemp-' saltype])
             
         case 3
             
@@ -269,24 +268,23 @@ for plotlist = cklist
             
             subplot(222)
             for ks = 1:numused
-	            oopt = 'sdata'; d = d2db; get_cropt
-                plot(d2db{ks}.press,sdata2,[cols(ks) '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,getfield(d2db{ks},[saltype '2']),[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
-            title(tis)
+            title(saltype)
             
             subplot(223)
-            for ks = 1:numused
-                oopt = 'odata'; d = d2db; get_cropt
-		        plot(d2db{ks}.press,odata2,[cols(ks) '-'],'linewidth',lwid);
-                hold on
-            end; grid on
-            title ('oxygen')
+            if nox>1
+                for ks = 1:numused
+                    plot(d2db{ks}.press,getfield(d2db{ks},oxyvars{2,2}),[cols(ks) '-'],'linewidth',lwid);
+                    hold on
+                end; grid on
+                title ('oxygen')
+            end
             
             subplot(224)
             for ks = 1:numused
-	            oopt = 'sdata'; d = d2db; get_cropt
-                plot(sdata2,d2db{ks}.potemp2,[cols(ks) '-'],'linewidth',lwid);
+                plot(getfield(d2db{ks},[saltype '2']),d2db{ks}.potemp2,[cols(ks) '-'],'linewidth',lwid);
                 hold on; grid on;
             end
             title (['potemp-' tis])
@@ -323,21 +321,21 @@ for plotlist = cklist
             for ks = 1:numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-		        oopt = 'sdata'; d = dpsal; get_cropt
-                plot(dpsal{ks}.press(kokd),sdata1(kokd),[cols(ks) '-'],'linewidth',lwid);
+                sd = getfield(dpsal{ks},[saltype '1']);
+                plot(dpsal{ks}.press(kokd),sd(kokd),[cols(ks) '-'],'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(koku),sdata1(koku),[cols(ks) '--'],'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),sd(koku),[cols(ks) '--'],'linewidth',lwid);
             end; grid on
-            title ([tis ': dash for upcast'])
+            title ([saltype ': dash for upcast'])
             
             subplot(223)
             for ks = 1:numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-	            oopt = 'odata'; d = dpsal; get_cropt
-                plot(dpsal{ks}.press(kokd),odata1(kokd),[cols(ks) '-'],'linewidth',lwid);
+                od = getfield(dpsal{ks},oxyvars{1,2});
+                plot(dpsal{ks}.press(kokd),od(kokd),[cols(ks) '-'],'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(koku),odata1(koku),[cols(ks) '--'],'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),od(koku),[cols(ks) '--'],'linewidth',lwid);
             end; grid on
             title ('oxygen: dash for upcast')
             
@@ -345,15 +343,15 @@ for plotlist = cklist
             for ks = 1:numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-		        oopt = 'sdata'; d = dpsal; get_cropt
-                plot(sdata1(kokd),dpsal{ks}.potemp1(kokd),[cols(ks) '-'],'linewidth',lwid);
+                sd = getfield(dpsal{ks},[saltype '1']);
+                plot(sd(kokd),dpsal{ks}.potemp1(kokd),[cols(ks) '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(sdata1(koku),dpsal{ks}.potemp1(koku),[cols(ks) '--'],'linewidth',lwid);
+                plot(sd(koku),dpsal{ks}.potemp1(koku),[cols(ks) '--'],'linewidth',lwid);
             end
-            title (['potemp-' tis ': dash for upcast'])
+            title (['potemp-' saltype ': dash for upcast'])
             
         case 5
-    
+            
             % figure 105
             % 1hz secondary, all stations, test station last
             
@@ -384,37 +382,39 @@ for plotlist = cklist
             for ks = 1:numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-		        oopt = 'sdata'; d = dpsal; get_cropt
-                plot(dpsal{ks}.press(kokd),sdata2(kokd),[cols(ks) '-'],'linewidth',lwid);
+                sd = getfield(dpsal{ks}, [saltype '2']);
+                plot(dpsal{ks}.press(kokd),sd(kokd),[cols(ks) '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(dpsal{ks}.press(koku),sdata2(koku),[cols(ks) '--'],'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),sd(koku),[cols(ks) '--'],'linewidth',lwid);
             end
             title ([tis ': dash for upcast'])
             
             subplot(223)
-            for ks = 1:numused
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-		        oopt = 'odata'; d = dpsal; get_cropt
-                plot(dpsal{ks}.press(kokd),odata2(kokd),[cols(ks) '-'],'linewidth',lwid);
-                hold on; grid on;
-                plot(dpsal{ks}.press(koku),odata2(koku),[cols(ks) '--'],'linewidth',lwid);
+            if nox>1
+                for ks = 1:numused
+                    kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
+                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    od = getfield(dpsal{ks}, oxyvars{2,2});
+                    plot(dpsal{ks}.press(kokd),od(kokd),[cols(ks) '-'],'linewidth',lwid);
+                    hold on; grid on;
+                    plot(dpsal{ks}.press(koku),od(koku),[cols(ks) '--'],'linewidth',lwid);
+                end
+                title ('oxygen: dash for upcast')
             end
-            title ('oxygen: dash for upcast')
             
             subplot(224)
             for ks = 1:numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-		        oopt = 'sdata'; d = dpsal; get_cropt
-                plot(sdata2(kokd),dpsal{ks}.potemp2(kokd),[cols(ks) '-'],'linewidth',lwid);
+                sd = getfield(dpsal{ks}, [saltype '2']);
+                plot(sd(kokd),dpsal{ks}.potemp2(kokd),[cols(ks) '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(sdata2(koku),dpsal{ks}.potemp2(koku),[cols(ks) '--'],'linewidth',lwid);
+                plot(sd(koku),dpsal{ks}.potemp2(koku),[cols(ks) '--'],'linewidth',lwid);
             end
-            title (['potemp-' tis ': dash for upcast'])
+            title (['potemp-' saltype ': dash for upcast'])
             
         case 6
-                        
+            
             % figure 106
             % 2db primary and secondary theta-S, all stations, test station last
             % bak on jr302; july 2014; theta-O as well
@@ -434,35 +434,33 @@ for plotlist = cklist
             
             subplot(221)
             for ks = 1:numused
-	            oopt = 'sdata'; d = d2db; get_cropt
-                plot(sdata1,d2db{ks}.potemp1,[cols(ks) '-'],'linewidth',lwid);
+                plot(getfield(d2db{ks},[saltype '1']),d2db{ks}.potemp1,[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
-            title (['theta-' tis ' primary'])
+            title (['theta-' saltype ' primary'])
             
             subplot(222)
             for ks = 1:numused
-	            oopt = 'sdata'; d = d2db; get_cropt
-                plot(sdata2,d2db{ks}.potemp2,[cols(ks) '-'],'linewidth',lwid);
+                plot(getfield(d2db{ks},[saltype '2']),d2db{ks}.potemp2,[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
-            title (['theta-' tis ' secondary'])
+            title (['theta-' saltype ' secondary'])
             
             subplot(223)
             for ks = 1:numused
-	            oopt = 'odata'; d = d2db; get_cropt
-                plot(odata1,d2db{ks}.potemp1,[cols(ks) '-'],'linewidth',lwid);
+                plot(getfield(d2db{ks},oxyvars{1,2}),d2db{ks}.potemp1,[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
             title ('theta-O primary')
             
             subplot(224)
-            for ks = 1:numused
-	            oopt = 'odata'; d = d2db; get_cropt
-                plot(odata2,d2db{ks}.potemp2,[cols(ks) '-'],'linewidth',lwid);
-                hold on; grid on;
+            if nox>1
+                for ks = 1:numused
+                    plot(getfield(d2db{ks},oxyvars{2,2}),d2db{ks}.potemp2,[cols(ks) '-'],'linewidth',lwid);
+                    hold on; grid on;
+                end
+                title ('theta-O secondary')
             end
-            title ('theta-O secondary')
             
             
         case 7
@@ -494,30 +492,29 @@ for plotlist = cklist
             
             subplot(222)
             for ks = numused
-	            oopt = 'sdata'; d = d2db; get_cropt
-                plot(d2db{ks}.press,sdata1,['k' '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,getfield(d2db{ks},[saltype '1']),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(d2db{ks}.press,sdata2,['r' '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,getfield(d2db{ks},[saltype '2']),['r' '-'],'linewidth',lwid);
             end
             title (tis)
             
             subplot(223)
             for ks = numused
-	            oopt = 'odata'; d = d2db; get_cropt
-                plot(d2db{ks}.press,odata1,['k' '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,getfield(d2db{ks},oxyvars{1,2}),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(d2db{ks}.press,odata2,['r' '-'],'linewidth',lwid); % no secondary oxygen
+                if nox>1
+                    plot(d2db{ks}.press,getfield(d2db{ks},oxyvars{2,2}),['r' '-'],'linewidth',lwid);
+                end
             end
             title ('oxygen')
             
             subplot(224)
             for ks = numused
-	            oopt = 'sdata'; d = d2db; get_cropt
-                plot(sdata1,d2db{ks}.potemp1,['k' '-'],'linewidth',lwid);
+                plot(getfield(d2db{ks},[saltype '1']),d2db{ks}.potemp1,['k' '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(sdata2,d2db{ks}.potemp2,['r' '-'],'linewidth',lwid);
+                plot(getfield(d2db{ks},[saltype '2']),d2db{ks}.potemp2,['r' '-'],'linewidth',lwid);
             end
-            title (['theta-' tis])
+            title (['theta-' saltype])
             
             
         case 8
@@ -554,27 +551,31 @@ for plotlist = cklist
             for ks = numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-		        oopt = 'sdata'; d = dpsal; get_cropt
-                plot(dpsal{ks}.press(kokd),sdata1(kokd),['k' '-'],'linewidth',lwid);
+                sd = getfield(dpsal{ks},[saltype '1']);
+                plot(dpsal{ks}.press(kokd),sd(kokd),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(dpsal{ks}.press(koku),sdata1(koku),['k' '--'],'linewidth',lwid);
-                plot(dpsal{ks}.press(kokd),sdata2(kokd),['r' '-'],'linewidth',lwid);
-                plot(dpsal{ks}.press(koku),sdata2(koku),['r' '--'],'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),sd(koku),['k' '--'],'linewidth',lwid);
+                sd = getfield(dpsal{ks},[saltype '2']);
+                plot(dpsal{ks}.press(kokd),sd(kokd),['r' '-'],'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),sd(koku),['r' '--'],'linewidth',lwid);
             end
-            title ([tis ': dash for upcast'])
+            title ([saltype ': dash for upcast'])
             
             
             subplot(223)
             for ks = numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-	        	oopt = 'odata'; d = dpsal; get_cropt
-                plot(dpsal{ks}.press(kokd),odata1(kokd),['k' '-'],'linewidth',lwid);
+                od = getfield(dpsal{ks},oxyvars{1,2});
+                plot(dpsal{ks}.press(kokd),od(kokd),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(dpsal{ks}.press(koku),odata1(koku),['k' '--'],'linewidth',lwid);
-                plot(dpsal{ks}.press(kokd),odata2(kokd),['r' '-'],'linewidth',lwid);
-                plot(dpsal{ks}.press(koku),odata2(koku),['r' '--'],'linewidth',lwid);
-		end
+                plot(dpsal{ks}.press(koku),od(koku),['k' '--'],'linewidth',lwid);
+                if nox>1
+                    od = getfield(dpsal{ks},oxyvars{2,2});
+                    plot(dpsal{ks}.press(kokd),od(kokd),['r' '-'],'linewidth',lwid);
+                    plot(dpsal{ks}.press(koku),od(koku),['r' '--'],'linewidth',lwid);
+                end
+            end
             title ('oxygen: dash for upcast')
             
             
@@ -582,17 +583,18 @@ for plotlist = cklist
             for ks = numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-		        oopt = 'sdata'; d = dpsal; get_cropt
-                plot(sdata1(kokd),dpsal{ks}.temp1(kokd),['k' '-'],'linewidth',lwid);
+                sd = getfield(dpsal{ks},[saltype '1']);
+                plot(sd(kokd),dpsal{ks}.temp1(kokd),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(sdata1(koku),dpsal{ks}.temp1(koku),['k' '--'],'linewidth',lwid);
-                plot(sdata2(kokd),dpsal{ks}.temp2(kokd),['r' '-'],'linewidth',lwid);
-                plot(sdata2(koku),dpsal{ks}.temp2(koku),['r' '--'],'linewidth',lwid);
+                plot(sd(koku),dpsal{ks}.temp1(koku),['k' '--'],'linewidth',lwid);
+                sd = getfield(dpsal{ks},[saltype '2']);
+                plot(sd(kokd),dpsal{ks}.temp2(kokd),['r' '-'],'linewidth',lwid);
+                plot(sd(koku),dpsal{ks}.temp2(koku),['r' '--'],'linewidth',lwid);
             end
-            title (['theta-' tis ': dash for upcast'])
+            title (['theta-' saltype ': dash for upcast'])
             
-         case 9
-           
+        case 9
+            
             % figure 109
             % 1hz primary and secondary up-down difference
             
@@ -631,48 +633,42 @@ for plotlist = cklist
             
             subplot(323)
             for ks = numused
-	            oopt = 'sdata'; d = d2up; get_cropt
-                upintrp = interp1(d2up{ks}.press,sdata1,d2db{ks}.press);
-                oopt = 'sdata'; d = d2db; get_cropt
-                plot(d2db{ks}.press, upintrp-sdata1,['k' '-'],'linewidth',lwid);
+                upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},[saltype '1']),d2db{ks}.press);
+                plot(d2db{ks}.press, upintrp-getfield(d2db{ks},[saltype '1']),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
             end
-            title ([tis '1 up minus down diff']);
+            title ([saltype '1 up minus down diff']);
             
             
             subplot(324)
             for ks = numused
-	            oopt = 'sdata'; d = d2up; get_cropt
-                upintrp = interp1(d2up{ks}.press,sdata2,d2db{ks}.press);
-                oopt = 'sdata'; d = d2db; get_cropt
-                plot(d2db{ks}.press, upintrp-sdata2,['k' '-'],'linewidth',lwid);
+                upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},[saltype '2']),d2db{ks}.press);
+                plot(d2db{ks}.press, upintrp-getfield(d2db{ks},[saltype '2']),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
             end
-            title ([tis '2 up minus down diff']);
+            title ([saltype '2 up minus down diff']);
             
             
             subplot(325)
             for ks = numused
-	            oopt = 'odata'; d = d2up; get_cropt
-                upintrp = interp1(d2up{ks}.press,odata1,d2db{ks}.press);
-		        oopt = 'odata'; d = d2db; get_cropt
-                plot(d2db{ks}.press, upintrp-odata1,['k' '-'],'linewidth',lwid);
+                upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},oxyvars{1,2}),d2db{ks}.press);
+                plot(d2db{ks}.press, upintrp-getfield(d2db{ks},oxyvars{1,2}),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
             end
             title ('oxygen 1 up minus down diff');
-
-            subplot(326)
-            for ks = numused
-	            oopt = 'odata'; d = d2up; get_cropt
-                upintrp = interp1(d2up{ks}.press,odata2,d2db{ks}.press);
-                oopt = 'odata'; d = d2db; get_cropt
-                plot(d2db{ks}.press, upintrp-odata2,['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-            end
-            title ('oxygen 2 up minus down diff');
             
-         case 10
-           
+            subplot(326)
+            if nox>1
+                for ks = numused
+                    upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},oxyvars{2,2}),d2db{ks}.press);
+                    plot(d2db{ks}.press, upintrp-getfield(d2db{ks},oxyvars{2,2}),['k' '-'],'linewidth',lwid);
+                    hold on; grid on;
+                end
+                title ('oxygen 2 up minus down diff');
+            end
+            
+        case 10
+            
             
             % figure 110
             % 1hz primary and secondary difference
@@ -728,23 +724,23 @@ for plotlist = cklist
             for ks = 1:numused
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
-	            oopt = 'sdata'; d = dpsal; get_cropt
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sdata1(kok)-sdata2(kok),[cols(ks) '-'],'linewidth',lwid);
+                sd1 = getfield(dpsal{ks},[saltype '1']); sd2 = getfield(dpsal{ks},[saltype '2']);
+                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
-            title ([tis ' diff']);
+            title ([saltype ' diff']);
             xlabel('minutes away from bottom');
             
             
-            subplot(324)
+            subplot(324) %zoomed version of above
             for ks = 1:numused
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
-		        oopt = 'sdata'; d = dpsal; get_cropt
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sdata1(kok)-sdata2(kok),[cols(ks) '-'],'linewidth',lwid);
+                sd1 = getfield(dpsal{ks},[saltype '1']); sd2 = getfield(dpsal{ks},[saltype '2']);
+                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
-            title ('psal diff');
+            title ([saltype ' diff']);
             xlabel('minutes away from bottom');
             axoff = m_nanmedian(sdata1(kok)-sdata2(kok)); % bak on jr302 17 jun 2014; centre axes on data if out of range
             if abs(axoff) < 0.004; axoff = 0; end
@@ -760,31 +756,34 @@ for plotlist = cklist
             ax = axis; ax(3:4) = [-0.005 0.005]+axoff; axis(ax);
             
             subplot(325)
-            for ks = 1:numused
-                kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
-		        oopt = 'odata'; d = dpsal; get_cropt
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,odata1(kok)-odata2(kok),[cols(ks) '-'],'linewidth',lwid);
-                hold on; grid on;
+            if nox>1
+                for ks = 1:numused
+                    kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
+                    od1 = getfield(dpsal{ks},oxyvars{1,2}); od2 = getfield(dpsal{ks},oxyvars{2,2});
+                    plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),[cols(ks) '-'],'linewidth',lwid);
+                    hold on; grid on;
+                end
+                title ('oxy diff');
+                xlabel('minutes away from bottom');
             end
-            title ('oxy diff');
-            xlabel('minutes away from bottom');
             
             
-            subplot(326)
-            for ks = 1:numused
-                kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
-		        oopt = 'odata'; d = dpsal; get_cropt
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,odata1(kok)-odata2(kok),[cols(ks) '-'],'linewidth',lwid);
-                hold on; grid on;
+            subplot(326) %zoomed version of above
+            if nox>1
+                for ks = 1:numused
+                    kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
+                    od1 = getfield(dpsal{ks},oxyvars{1,2}); od2 = getfield(dpsal{ks},oxyvars{2,2});
+                    plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),[cols(ks) '-'],'linewidth',lwid);
+                    hold on; grid on;
+                end
+                title ('oxy diff');
+                xlabel('minutes away from bottom');
+                ax = axis; ax(3:4) = [-30 30]; axis(ax);
             end
-            title ('oxy diff');
-            xlabel('minutes away from bottom');
-            ax = axis; ax(3:4) = [-30 30]; axis(ax);
-
             
-        otherwise
+            
     end
 end
 

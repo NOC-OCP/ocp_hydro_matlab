@@ -17,8 +17,8 @@
 %
 % After mheadr, the _raw.nc file is write protected
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['renames variables in ctd_' mcruise '_' stn_string '_raw.nc (or _raw_noctm.nc) based on templates/ctd_renamelist.csv, adds position from underway stream (if available), applies automatic edits and cellTM (if relevant)']);
+minit;
+mdocshow(mfilename, ['renames variables in ctd_' mcruise '_' stn_string '_raw.nc (or _raw_noctm.nc) based on templates/ctd_renamelist.csv, adds position from underway stream (if available), applies automatic edits and cellTM (if selected)']);
 
 % resolve root directories for various file types
 root_templates = mgetdir('M_TEMPLATES');
@@ -28,20 +28,17 @@ prefixt = ['ctd_'];
 prefix = ['ctd_' mcruise '_'];
 
 %if the noctm file exists, assume we should start there
-%(and apply automatic edits to remove large spikes, and then apply align/ctm and save as _raw)
+%(and apply automatic edits to remove large spikes, and then apply
+%align/ctm and save as _raw)***reapplying align necessary???***
 infile1 = [root_ctd '/' prefix stn_string '_raw_noctm'];
 infile = [root_ctd '/' prefix stn_string '_raw'];
 if ~exist(m_add_nc(infile1), 'file');
-    doctm = 0;
+    redoctm = 0;
 else
-    doctm = 1;
+    redoctm = 1;
     unix(['/bin/cp -p ' m_add_nc(infile1) ' ' m_add_nc(infile)]);
     unix(['chmod 644 ' m_add_nc(infile1)]); % write protect raw_noctm file
 end
-
-%***this path doesn't really allow for manual removal of large spikes before celltm***
-%***but that shouldn't be necessary since if they're large enough to make a difference
-%the median despiker shoud get them***
 
 renamefile = [root_templates '/' prefixt 'renamelist.csv']; % read list of var names and units
 renamefileout = [root_templates '/' prefixt 'renamelist_out.csv']; % write list of var names and units
@@ -97,9 +94,8 @@ MEXEC_A.MARGS_IN_3 = {
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3];
 mheadr
 
-% JC032: Now fix position in header; assigned position is from when press was
-% equal to deepest value on cast. Use the new mtposinfo.
-% find time of bottom of cast
+% Use the mtposinfo/msposinfo to find position at bottom of cast time and
+% update header
 [d h] = mload(infile,'time','press',' ');
 p = d.press;
 kbot = min(find(p == max(p)));
@@ -107,27 +103,28 @@ tbot = d.time(kbot);
 tbotmat = datenum(h.data_time_origin) + tbot/86400; % bottom time as matlab datenum
 if strncmp(MEXEC_G.Mshipdatasystem,'scs',3)
     [botlat botlon] = msposinfo(tbotmat);
-else % techsas
+elseif strcmp(MEXEC_G.Mshipdatasystem,'techsas')
     [botlat botlon] = mtposinfo(tbotmat);
+else
+    botlat = []; botlon = [];
 end
-latstr = sprintf('%14.8f',botlat);
-lonstr = sprintf('%14.8f',botlon);
-
-%--------------------------------
-MEXEC_A.MARGS_IN = {
-    infile
-    'y'
-    '5'
-    latstr
-    lonstr
-    ' '
-    ' '
-    };
-mheadr
-%--------------------------------
+if length(botlat>0)
+    latstr = sprintf('%14.8f',botlat);
+    lonstr = sprintf('%14.8f',botlon);
+    MEXEC_A.MARGS_IN = {
+        infile
+        'y'
+        '5'
+        latstr
+        lonstr
+        ' '
+        ' '
+        };
+    mheadr
+end
 
 %%%%%%%%% NaN variables that are in mcvars_list but not present for this station %%%%%%%%%
-oopt = 'absentvars'; scriptname = mfilename; get_cropt
+scriptname = mfilename; oopt = 'absentvars'; get_cropt
 if length(absentvars)>0
     MEXEC_A.MARGS_IN = {infile; 'y'};
     for kabs = 1:length(absentvars)
@@ -142,54 +139,59 @@ if length(absentvars)>0
 end
 
 
-%%%%%%%%% corrections %%%%%%%%%
-
-oopt = 'corraw'; scriptname = mfilename; get_cropt
-if doctm
+%%%%%%%%% automatic edits %%%%%%%%%
+if redoctm
+    
+    scriptname = mfilename; oopt = 'prectm_rawedit'; get_cropt
     
     %edit out scans when pumps are off, plus expected recovery times
-    MEXEC_A.MARGS_IN = {infile; 'y'};
-    for no = 1:size(pvars,1)
-        pmstring = sprintf('y = x1; pmsk = repmat([1:length(x2)], %d+1, 1)+repmat([-%d:0]'', 1, length(x2)); pmsk(pmsk<1) = 1; pmsk = sum(1-x2(pmsk),1); y(find(pmsk)) = NaN;', pvars{no,2}, pvars{no,2});
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; pvars{no,1}; [pvars{no,1} ' pumps']; pmstring; ' '; ' '];
-        disp(['will edit out pumps off times plus ' num2str(pvars{no,2}) ' scans from ' pvars{no}])
-    end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    mcalib2
+    if length(pvars)>0
+        MEXEC_A.MARGS_IN = {infile; 'y'};
+        for no = 1:size(pvars,1)
+            pmstring = sprintf('y = x1; pmsk = repmat([1:length(x2)], %d+1, 1)+repmat([-%d:0]'', 1, length(x2)); pmsk(pmsk<1) = 1; pmsk = sum(1-x2(pmsk),1); y(find(pmsk)) = NaN;', pvars{no,2}, pvars{no,2});
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; pvars{no,1}; [pvars{no,1} ' pumps']; pmstring; ' '; ' '];
+            disp(['will edit out pumps off times plus ' num2str(pvars{no,2}) ' scans from ' pvars{no}])
+        end
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+        mcalib2; end
     
     %scanedit (for additional bad scans)
     if length(sevars)>0
         MEXEC_A.MARGS_IN = {infile; 'y'};
         for no = 1:length(sevars)
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; sevars{no}; [sevars{no} ' scan']; sestring{no}; ' '; ' '];
-            disp(['will edit out scans from ' sevars{no} ' with ' sestring{no}])
+            sestring = sprintf('y = x1; y(x2>=%d & x2<=%d);', sevars{no,2}, sevars{no,3});
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; sevars{no,1}; [sevars{no,1} ' scan']; sestring; ' '; ' '];
+            disp(['will edit out scans from ' sevars{no,1} ' with ' sestring])
         end
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
         mcalib2
     end
     
     %remove out of range values
-    MEXEC_A.MARGS_IN = {infile; 'y'};
-    for no = 1:size(revars,1)
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; revars{no,1}; sprintf('%f %f',revars{no,2},revars{no,3}); 'y'];
-        disp(['will edit values out of range [' sprintf('%f %f',revars{no,2},revars{no,3}) '] from ' revars{no,1}])
-    end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    medita
-    
-    %despike
-    nds = 2;
-    while nds<=size(dsvars,2)
+    if length(revars)>0
         MEXEC_A.MARGS_IN = {infile; 'y'};
-        for no = 1:size(dsvars,1)
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; dsvars{no,1}; dsvars{no,1}; sprintf('y = m_median_despike(x1, %f);', dsvars{no,nds}); ' '; ' '];
-            disp(['will despike ' dsvars{no,1} ' using threshold ' sprintf('%f', dsvars{no,nds})])
+        for no = 1:size(revars,1)
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; revars{no,1}; sprintf('%f %f',revars{no,2},revars{no,3}); 'y'];
+            disp(['will edit values out of range [' sprintf('%f %f',revars{no,2},revars{no,3}) '] from ' revars{no,1}])
         end
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-        mcalib2
-        nds = nds+1;
+        medita
     end
     
+    %despike
+    if length(dsvars)>0
+        nds = 2;
+        while nds<=size(dsvars,2)
+            MEXEC_A.MARGS_IN = {infile; 'y'};
+            for no = 1:size(dsvars,1)
+                MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; dsvars{no,1}; dsvars{no,1}; sprintf('y = m_median_despike(x1, %f);', dsvars{no,nds}); ' '; ' '];
+                disp(['will despike ' dsvars{no,1} ' using threshold ' sprintf('%f', dsvars{no,nds})])
+            end
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+            mcalib2
+            nds = nds+1;
+        end
+    end
     
     %apply align and celltm corrections
     MEXEC_A.MARGS_IN = {

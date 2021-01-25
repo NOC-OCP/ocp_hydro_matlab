@@ -127,7 +127,7 @@ switch scriptname
    %%%%%%%%%% msbe35_01 %%%%%%%%%%
    case 'msbe35_01'
       switch oopt
-         case 'flag'
+         case 'sbe35flag'
             % bottles not used for salinity samples closed on the fly in
             % quick succession
             if stnlocal == 3
@@ -180,13 +180,6 @@ switch scriptname
              vout = salin+adj;
       end
    %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
-
-
-   %%%%%%%%%% station_summary %%%%%%%%%%
-   case 'station_summary'
-      switch oopt
-      end
-   %%%%%%%%%% end station_summary %%%%%%%%%%
 
 
 end

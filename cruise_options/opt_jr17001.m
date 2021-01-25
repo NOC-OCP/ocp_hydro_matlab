@@ -48,27 +48,17 @@ switch scriptname
    %%%%%%%%%% populate_station_depths %%%%%%%%%%
    case 'populate_station_depths'
       switch oopt
-        case 'fnin'
+        case 'depth_source'
            depmeth = 3;
 	 case 'bestdeps'
-         bestdeps(13,2) = 3707;
-         bestdeps(14,2) = 3763;
-         bestdeps(15,2) = 3719;
-         bestdeps(16,2) = 3706;
-         bestdeps(17,2) = 3548;
-         bestdeps(18,2) = 3194;
+         replacedeps = [13 3707;
+             14 3763;
+             15 3719;
+             16 3706;
+             17 3548;
+             18 3194];
       end
    %%%%%%%%%% end populate_station_depths %%%%%%%%%%
-
-   %%%%%%%%%% mbot_01 %%%%%%%%%%
-   case 'mbot_01'
-      switch oopt
-         case 'infile'
-	  %  infile = [root_botcnv '/log_samp_jr16002_all.txt'];
-         case 'botflags'
-      %      bottle_qc_flag(isnan(ds_sample.oxy_bot) & isnan(ds_sample.d18O_bot) & strcmp('NaN',ds_sample.sal_bot)) = 9;
-      end
-   %%%%%%%%%% end mbot_01 %%%%%%%%%%
 
 
    %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
@@ -132,15 +122,11 @@ switch scriptname
    %%%%%%%%%% mctd_rawedit %%%%%%%%%%
    case 'mctd_rawedit'
       switch oopt
-         case 'autoeditpars'
+         case 'rawedit_auto'
             if stnlocal == 1
-	       doscanedit = 1;
-	       sevars = {'cond2'};
-               sestring = {'y = x1; y(x2 >= 6070 & x2 <=8500) = NaN;'};
+	       sevars = {'cond2' 6070 8500};
             elseif stnlocal == 13
-	       doscanedit = 1;
-               sevars = {'cond2'};
-               sestring = {'y = x1; y(x2 >= 3e4 & x2 <= 5.9e4) = NaN;'};
+               sevars = {'cond2' 3e4 5.9e4};
            end
       end
    %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
@@ -151,21 +137,13 @@ switch scriptname
       switch oopt
          case 'oxycsv'
 	    infile = 'ctd/BOTTLE_OXY/log_oxy_jr17001_all.txt';
-	  case 'flags'
-          if stnlocal==14; botoxyflaga(2) = 3; botoxyflagb(2) = 3; %duplicate values very close but also very much larger than ctd value; suspect bad niskin
-          elseif stnlocal==29; botoxyflaga(1) = 3;
-          elseif stnlocal==31; botoxyflaga(4) = 3;
-          elseif stnlocal==10; botoxyflaga(14) = 3;
-          elseif stnlocal==19; botoxyflaga(6) = 3;
-          %below bottles had possible miniscule bubble, but readings look fine
-          %elseif stnlocal==7; botoxyflaga(14) = 3; 
-          %elseif stnlocal==29; botoxyflaga([5 11]) = 3; 
-          %elseif stnlocal==33; botoxyflagb(9) = 3;
-          %elseif stnlocal==34; botoxyflaga(24) = 3;
-          %elseif stnlocal==38; botoxyflaga(21) = 3;
-          %elseif stnlocal==39; botoxyflaga(14) = 3;
-          %elseif stnlocal==42; botoxyflaga(2) = 3;
-          end
+	  case 'oxyflags'
+          flags3 = [1402; %duplicate values very close but also very much larger than ctd value; suspect bad niskin (should have been flagged on niskin then)
+              2901;
+              3104;
+              1014;
+              1906];
+          flags4 = [];
       end
    %%%%%%%%%% end moxy_01 %%%%%%%%%%
 
@@ -207,7 +185,7 @@ switch scriptname
    %%%%%%%%%% msal_01 %%%%%%%%%%
    case 'msal_01'
       switch oopt
-          case 'flag'
+          case 'salflags'
               if stnlocal==14
                   flag(position==2) = 3;
               elseif stnlocal==17
@@ -240,22 +218,6 @@ switch scriptname
       end
    %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
 
-
-   %%%%%%%%%% msbe35_01 %%%%%%%%%%
-   case 'msbe35_01'
-      switch oopt
-  %       case 'flag'
-  %          % these might have been closed too quickly for a good reading
-   %         sbe35flag(isnan(sbe35temp)) = 9;
-    %        if stnlocal==22
-     %           sbe35flag(position == 9) = 4;
-      %      end
-       %     if stnlocal == 24
-        %        sbe35flag(position == 6 | position ==9) = 4;
-         %   end
-      end
-   %%%%%%%%%% end msbe35_01 %%%%%%%%%%
-   
 
    %%%%%%%%%% mtsg_cleanup %%%%%%%%%%
    case 'mtsg_cleanup'

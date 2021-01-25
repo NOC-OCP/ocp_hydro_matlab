@@ -6,8 +6,8 @@
 % NOTE: No need to respond with the station number because this script will
 % operate on all stations at once based on a single input file.
 %
-% This script assumes that the input file will be a .mat file (currently
-% named "co2_for_Brian_dd-mm-yyyy.mat" and residing in the default
+% This script assumes that the input file will be a .mat file (name 
+% specified as cruise option and residing in the default
 % directory defined by M_BOT_CO2) that has five variables, all
 % vectors of length equal to the number of CO2 observations:
 % TA      - measured values for total alkalinity
@@ -31,7 +31,7 @@
 %
 % EXTENSIONS:
 % Is there any way to pass the name of the data source file into the
-% comments of the netcdf file that is output by this script?
+% comments of the netcdf file that is output by this script?***
 %==========================================================================
 
 scriptname = 'mco2_01';

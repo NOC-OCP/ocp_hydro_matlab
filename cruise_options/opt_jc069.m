@@ -103,7 +103,6 @@ switch scriptname
             % replacement sensor SBE cal is almost spot on
             % sensor 2 stable before and after swapping.
             s_choice = 2; % default, 1 = primary
-            alternate = []; % list of station numbers for which alternate is preferred
       end
    %%%%%%%%%% end mctd_03 %%%%%%%%%%
 

@@ -3,8 +3,8 @@
 % Use: mctd_01        and then respond with station number, or for station 16
 %      stn = 16; mctd_01;
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['converts from .cnv to ctd_' mcruise '_' stn_string '_raw.nc']);
+minit; 
+mdocshow(mfilename, ['converts from .cnv to ctd_' mcruise '_' stn_string '_raw.nc']);
 
 % resolve root directories for various file types
 root_cnv = mgetdir('M_CTD_CNV');
@@ -13,7 +13,6 @@ root_ctd = mgetdir('M_CTD'); % change working directory
 prefix = ['ctd_' mcruise '_'];
 
 oopt = 'redoctm'; scriptname = mfilename; get_cropt
-oopt = 'file_suffix'; scriptname = mfilename; get_cropt
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
     infile = [root_cnv '/' prefix stn_string suf '.cnv']; %default _align_ctm
     otfile = [root_ctd '/' prefix stn_string '_raw'];

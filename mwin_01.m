@@ -18,8 +18,8 @@
 % no ctd data, or to override times derived from ctd files. If no cruise and station-specific
 % case is provided, times are taken from ctd file as usual.
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['adds winch data to win_' mcruise '_' stn_string '.nc']);
+minit; 
+mdocshow(mfilename, ['adds winch data to win_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
@@ -33,8 +33,7 @@ dataname = ['win_' mcruise '_' stn_string];
 %--------------------------------
 % create rvs starts and end times
 
-get_cropt; %time_window (before/after start/end time range in which to search;
-%winch_time_start, winch_time_end (default NaN--use CTD data file)
+scriptname = mfilename; oopt = 'winchtime'; get_cropt; 
 
 % bak on jc159 15 april 2018: need to be able to read in some winch data 
 % on swivel test stations where there are no ctd files; new cruise opt to set
@@ -47,7 +46,7 @@ if exist('winch_time_start','var') & ~isnan(winch_time_start) & ~isnan(winch_tim
 else
     h_in=m_read_header(infile1);
     k_time=find(strcmp('time',h_in.fldnam));
-    t_start=datenum(h_in.data_time_origin)  + ( h_in.alrlim(k_time)+time_window(1))/86400;
+    t_start=datenum(h_in.data_time_origin)  + (h_in.alrlim(k_time)+time_window(1))/86400;
     t_end=datenum(h_in.data_time_origin)+(h_in.uprlim(k_time)+time_window(2))/86400;
 end
 

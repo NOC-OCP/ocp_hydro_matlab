@@ -10,47 +10,32 @@ root_ctd = mgetdir('M_CTD'); % change working directory
 infile1 = [root_ctd '/fir_' mcruise '_' stn_string '_ctd'];
 otfile2 = [root_ctd '/sam_' mcruise '_' stn_string];
 
+% get list of sample variables that are in both input files, with initial
+% 'u' added to variable name to signify upcast
 var_copycell = mcvars_list(2);
+[var_copycell, junk] = mvars_in_file(var_copycell, infile1);
+[var_copycell, var_copystr] = mvars_in_file(var_copycell, otfile2, 'u');
+
+% get list of gradient variables that can be computed from
+% variables  in both input files
 gvar_copycell = mcvars_list(3);
+[gvar_copycell, junk] = mvars_in_file(var_copycell, infile1);
+[gvar_copycell, gvar_copystr] = mvars_in_file(var_copycell, otfile2, '', 'grad');
 
-% remove any vars from copy list that aren't available in both input files
-% also add initial 'u' to variable name to signify upcast
-numcopy = length(var_copycell);
-h1 = m_read_header(infile1);
-h2 = m_read_header(otfile2);
-for kls = numcopy:-1:1
-    var_copycell{kls} = ['u' var_copycell{kls}];
-    if ~sum(strcmp(var_copycell(kls),h1.fldnam)) | ~sum(strcmp(var_copycell(kls),h2.fldnam))
-        var_copycell(kls) = [];
-    end
-end
-for kls = length(gvar_copycell):-1:1
-    gvar_copycell{kls} = [gvar_copycell{kls} 'grad'];
-    if sum(strcmp(gvar_copycell(kls),h1.fldnam)) & sum(strcmp(gvar_copycell(kls),h2.fldnam))
-        var_copycell = [var_copycell gvar_copycell{kls}];
-    end
-end
-var_copycell = [{'time'} var_copycell];
-
-% now construct string with list of vars to be copied
-var_copystr = ' ';
-for kloop_scr = 1:length(var_copycell)
-    var_copystr = [var_copystr var_copycell{kloop_scr} ' '];
-end
-var_copystr(1) = [];
-var_copystr(end) = [];
-
+%combine and add time
+var_copycell = [{'time'} var_copycell gvar_copycell];
+var_copystr = ['time ' var_copystr ' ' gvar_copystr];
 
 
 %--------------------------------
 MEXEC_A.MARGS_IN = {
-otfile2
-infile1
-'y'
-'position'
-'position'
-var_copystr
-var_copystr
-};
+    otfile2
+    infile1
+    'y'
+    'position'
+    'position'
+    var_copystr
+    var_copystr
+    };
 mpaste
 %--------------------------------

@@ -80,25 +80,5 @@ ii = find(isnan(ds_oxy.oxy_titre) & ~isnan(obot_vol)); %sampled but not titrated
 flag(ii) = min(5, flag(ii));
 conc_O2(flag==5 | flag==9) = NaN;
 
-
-%fill in to 24 places
-statnum = repmat(stnlocal, 24, 1);
-position = [1:24]';
-botoxya_per_l = NaN+zeros(24,1); botoxytempa = botoxya_per_l; botoxyflaga = 9+zeros(24,1); %flags default to no data
-botoxyb_per_l = botoxya_per_l; botoxyflagb = botoxyflaga; botoxytempb = botoxytempa;
-
-%first set of values
-[c, ia, ib] = intersect(position, ds_oxy.Niskin);
-botoxya_per_l(ia) = conc_O2(ib);
-botoxytempa(ia) = ds_oxy.oxy_temp(ib);
-botoxyflaga(ia) = flag(ib);
-
-%now find duplicates
-ds_oxy.Niskin(ib) = NaN; [c, ia, ib] = intersect(position, ds_oxy.Niskin);
-botoxyb_per_l(ia) = conc_O2(ib);
-botoxytempb(ia) = ds_oxy.oxy_temp(ib);
-botoxyflagb(ia) = flag(ib);
-
-ds_oxy.botoxytempa = botoxytempa; ds_oxy.botoxya_per_l = botoxya_per_l; ds_oxy.botoxyflaga = botoxyflaga;
-ds_oxy.botoxytempb = botoxytempb; ds_oxy.botoxyb_per_l = botoxyb_per_l; ds_oxy.botoxyflagb = botoxyflagb;
-ds_oxy.niskin = position; ds_oxy.statnum = statnum;
+%output
+ds_oxy.conc_o2 = conc_O2; ds_oxy.flag = flag;

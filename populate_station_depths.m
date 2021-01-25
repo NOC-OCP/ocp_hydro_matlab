@@ -28,7 +28,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; scriptname = mfilename;
 root_ctddep = mgetdir('M_CTD_DEP');
 root_ctd = mgetdir('M_CTD');
 
-oopt = 'fnin'; get_cropt %depmeth, and fnin if depmeth is 1 or 2
+scriptname = mfilename; oopt = 'depths_source'; get_cropt
 if depmeth==3
    fnin = [root_ctd '/ctd_' mcruise '_'];
 elseif depmeth==4
@@ -54,14 +54,24 @@ ii0 = find(isnan(bestdeps(:,2)));
 
 %try preferred method, then cruise options, then method 3
 bestdeps = get_deps(bestdeps, depmeth, fnin);
-oopt = 'bestdeps'; get_cropt %modify any of the depths
+scriptname = mfilename; oopt = 'bestdeps'; get_cropt %modify any of the depths
+if length(replacedeps)>0
+    [c,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
+    if length(ia)<size(replacedeps(:,1)); error(['replacedeps repeats stations; check opt_' mcruise]); end
+    bestdeps(ib,2) = replacedeps(ia,2);
+end
 
 ii = find(isnan(bestdeps(:,2))); 
 if ~isempty(ii)
    fnin = [root_ctd '/ctd_' mcruise '_'];
    bestdeps = get_deps(bestdeps, 3, fnin);
 end
-oopt = 'bestdeps'; get_cropt % modify any of the depths
+scriptname = mfilename; oopt = 'bestdeps'; get_cropt % modify any of the depths
+if length(replacedeps)>0
+    [c,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
+    if length(ia)<size(replacedeps(:,1)); error(['replacedeps repeats stations; check opt_' mcruise]); end
+    bestdeps(ib,2) = replacedeps(ia,2);
+end
 
 ii = find(isnan(bestdeps(:,1))); bestdeps(ii,:) = [];
 

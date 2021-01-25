@@ -4,8 +4,8 @@
 % Use: mdcs_02        and then respond with station number, or for station 16
 %      stn = 16; mdcs_02;
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['finds scan number corresponding to bottom of cast, writes to dcs_' mcruise '_' stn_string '.nc']);
+minit; 
+mdocshow(mfilename, ['finds scan number corresponding to bottom of cast, writes to dcs_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
 
@@ -13,21 +13,14 @@ infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
 otfile2 = [root_ctd '/dcs_' mcruise '_' stn_string ];
 infile0 = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz'];
 
-[d h] = mload(infile1,'time','scan','press',' ');
+[d1, h1] = mload(infile1,'time','scan','press',' ');
 d24 = mload(infile0,'scan',' ');
 
-p = d.press;
-% scanmax = min(floor(d.scan((p == max(p)))));
-kbot = min(find(p == max(p)));
+scriptname = mfilename; oopt = 'kbot'; get_cropt
 
-
-%--------------------------------
-
-scriptname = mfilename; get_cropt
-
-scanbot = floor(d.scan(kbot));
-pbot = d.press(kbot);
-tbot = d.time(kbot);
+scanbot = floor(d1.scan(kbot));
+pbot = d1.press(kbot);
+tbot = d1.time(kbot);
 k24bot = min(find(d24.scan >= scanbot));
 
 % set up the data time origin for times start,bottom,end

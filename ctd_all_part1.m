@@ -26,23 +26,23 @@ if min(d.press)<=-1.495
 end
 stn = stnlocal; mctd_02b; %apply corrections (e.g. oxygen hysteresis)
 
-oopt = 'apply_cals_choice'; scriptname = mfilename; get_cropt % jc191 use cropt to select which stations get cals applied in first-pass processing
-if ismember(stnlocal,cal_stations_temp)
+scriptname = mfilename; oopt = 'cal_stations1'; get_cropt % jc191 use cropt to select which stations get cals applied in first-pass processing
+if ismember(stnlocal,cal_stations1.temp)
     stn = stnlocal; senscal = 1; mctd_tempcal % temp1 sensor
     stn = stnlocal; senscal = 2; mctd_tempcal % temp2 sensor
 end
-if ismember(stnlocal,cal_stations_cond)
+if ismember(stnlocal,cal_stations1.cond)
     stn = stnlocal; senscal = 1; mctd_condcal % cond1 sensor
     stn = stnlocal; senscal = 2; mctd_condcal % cond2 sensor
 end
-if ismember(stnlocal,cal_stations_oxy)
+if ismember(stnlocal,cal_stations1.oxy)
     stn = stnlocal; senscal = 1; mctd_oxycal % oxygen1 sensor
     stn = stnlocal; senscal = 2; mctd_oxycal % oxygen2 sensor
 end
-if ismember(stnlocal,cal_stations_trans)
+if ismember(stnlocal,cal_stations1.trans)
     stn = stnlocal; mctd_transmisscal % transmittance
 end
-if ismember(stnlocal,cal_stations_fluor)
+if ismember(stnlocal,cal_stations1.fluor)
     stn = stnlocal; mctd_fluorcal % fluor
 end
 

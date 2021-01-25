@@ -1,12 +1,12 @@
-% mctd_04b: extract downcast and upcast data from 24hz file with derived vars
-%          (psal etc.) using index information in dcs file; 
+% mctd_04: extract downcast and upcast data from 24hz file with derived vars
+%          (psal etc.) using index information in dcs file;
 %          sort, average to 2dbar, interpolate gaps and recalculate potemp.
 %
-% Use: mctd_04b        and then respond with station number, or for station 16
-%      stn = 16; mctd_04b;
+% Use: mctd_04        and then respond with station number, or for station 16
+%      stn = 16; mctd_04;
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['averages from 24 hz to 2 dbar in ctd_' mcruise '_' stn_string '_2db.nc (downcast) and _2up.nc (upcast)']);
+minit;
+mdocshow(mfilename, ['averages from 24 hz to 2 dbar in ctd_' mcruise '_' stn_string '_2db.nc (downcast) and _2up.nc (upcast)']);
 
 root_ctd = mgetdir('M_CTD');
 
@@ -59,184 +59,185 @@ end
 var_copystr([1 end]) = [];
 
 %might have to remove some contaminated data or substitute upcast data before averaging
-oopt = 'pretreat'; get_cropt
+%although the former you should probably do in mctd_03 (case 'interp24') instead
+scriptname = mfilename; oopt = 'pre_2_treat'; get_cropt
 
 %%%%%% copy downcast and upcast ranges to new files %%%%%%
 
 MEXEC_A.MARGS_IN = {
-wkfile_dvars
-wkfile1d
-var_copystr
-};
+    wkfile_dvars
+    wkfile1d
+    var_copystr
+    };
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-copystr
-];
+    copystr
+    ];
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-' '
-' '
-];
+    ' '
+    ' '
+    ];
 margsin = MEXEC_A.MARGS_IN;
 mcopya
 
 MEXEC_A.MARGS_IN = {
-wkfile_dvars
-wkfile1u
-var_copystr
-};
+    wkfile_dvars
+    wkfile1u
+    var_copystr
+    };
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-copystrup
-];
+    copystrup
+    ];
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-' '
-' '
-];
+    ' '
+    ' '
+    ];
 mcopya
 
 
 %%%%% optionally loopedit downcast %%%%%
-oopt = 'doloopedit'; get_cropt
+scriptname = mfilename; oopt = 'doloopedit'; get_cropt
 if doloopedit
-   disp(['applying loopediting for ' otfile1d])
-   %loopedit involves a big matrix so to save time, NaN pressure first,
-   %then use to NaN other fields
-   MEXEC_A.MARGS_IN = {wkfile1d
-       'y'
-       'press'
-       'press'
-       sprintf('y = m_loopedit(x1, %f);', ptol);
-       ' '
-       ' '
-       ' '};
-   mcalib2
-   MEXEC_A.MARGS_IN = {wkfile1d; 'y'};
-   for kloop_scr = 1:length(var_copycell)
-       if ~strcmp(var_copycell{kloop_scr},'press')
-           MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
-               var_copycell{kloop_scr}
-               [var_copycell{kloop_scr} ' press']
-               'y = x1; y(isnan(x2)) = NaN;'
-               ' '
-               ' '];
-       end
-   end
-   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-   mcalib2
+    disp(['applying loopediting for ' otfile1d])
+    %loopedit involves a big matrix so to save time, NaN pressure first,
+    %then use to NaN other fields
+    MEXEC_A.MARGS_IN = {wkfile1d
+        'y'
+        'press'
+        'press'
+        sprintf('y = m_loopedit(x1, %f);', ptol);
+        ' '
+        ' '
+        ' '};
+    mcalib2
+    MEXEC_A.MARGS_IN = {wkfile1d; 'y'};
+    for kloop_scr = 1:length(var_copycell)
+        if ~strcmp(var_copycell{kloop_scr},'press')
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
+                var_copycell{kloop_scr}
+                [var_copycell{kloop_scr} ' press']
+                'y = x1; y(isnan(x2)) = NaN;'
+                ' '
+                ' '];
+        end
+    end
+    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+    mcalib2
 end
 
 
 %%%%% sort by pressure %%%%%
 
 MEXEC_A.MARGS_IN = {
-wkfile1d
-wkfile2d
-'press'
-};
+    wkfile1d
+    wkfile2d
+    'press'
+    };
 msort
 
 MEXEC_A.MARGS_IN = {
-wkfile1u
-wkfile2u
-'press'
-};
+    wkfile1u
+    wkfile2u
+    'press'
+    };
 msort
 
 %%%%% average to 2 dbar %%%%%
 
 MEXEC_A.MARGS_IN = {
-wkfile2d
-wkfile3d
-'/'
-'press'
-'0 10000 2'
-'b'
-};
+    wkfile2d
+    wkfile3d
+    '/'
+    'press'
+    '0 10000 2'
+    'b'
+    };
 mavrge
 
 MEXEC_A.MARGS_IN = {
-wkfile2u
-wkfile3u
-'/'
-'press'
-'0 10000 2'
-'b'
-};
+    wkfile2u
+    wkfile3u
+    '/'
+    'press'
+    '0 10000 2'
+    'b'
+    };
 mavrge
 
 %%%%%interpolate to fill in gaps %%%%%
 
-oopt = 'interp2db'; get_cropt
+scriptname = mfilename; oopt = 'interp2db'; get_cropt
 
 if interp2db
     MEXEC_A.MARGS_IN = {
-    wkfile3d
-    'y'
-    '/'
-    'press'
-    '0'
-    '0'
-    };
+        wkfile3d
+        'y'
+        '/'
+        'press'
+        '0'
+        '0'
+        };
     mintrp
-
+    
     MEXEC_A.MARGS_IN = {
-    wkfile3u
-    'y'
-    '/'
-    'press'
-    '0'
-    '0'
-    };
+        wkfile3u
+        'y'
+        '/'
+        'press'
+        '0'
+        '0'
+        };
     mintrp
 end
 
 %%%%% add potemp and contemp %%%%%
 
 MEXEC_A.MARGS_IN = {
-wkfile3d
-otfile1d
-var_copystr
-'press'
-'y = -gsw_z_from_p(x1,h.latitude)'
-'depth'
-'metres'
-'asal temp press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp'
-'degc90'
-'asal1 temp1 press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp1'
-'degc90'
-'asal2 temp2 press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp2'
-'degc90'
-' '
-};
+    wkfile3d
+    otfile1d
+    var_copystr
+    'press'
+    'y = -gsw_z_from_p(x1,h.latitude)'
+    'depth'
+    'metres'
+    'asal temp press'
+    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'potemp'
+    'degc90'
+    'asal1 temp1 press'
+    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'potemp1'
+    'degc90'
+    'asal2 temp2 press'
+    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'potemp2'
+    'degc90'
+    ' '
+    };
 margsin = MEXEC_A.MARGS_IN;
 mcalc
 
 MEXEC_A.MARGS_IN = {
-wkfile3u
-otfile1u
-var_copystr
-'press'
-'y = -gsw_z_from_p(x1,h.latitude)'
-'depth'
-'metres'
-'asal temp press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp'
-'degc90'
-'asal1 temp1 press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp1'
-'degc90'
-'asal2 temp2 press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp2'
-'degc90'
-' '
-};
+    wkfile3u
+    otfile1u
+    var_copystr
+    'press'
+    'y = -gsw_z_from_p(x1,h.latitude)'
+    'depth'
+    'metres'
+    'asal temp press'
+    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'potemp'
+    'degc90'
+    'asal1 temp1 press'
+    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'potemp1'
+    'degc90'
+    'asal2 temp2 press'
+    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'potemp2'
+    'degc90'
+    ' '
+    };
 mcalc
 
 unix(['/bin/rm ' wkfile1d '.nc ' wkfile2d '.nc ' wkfile3d '.nc']);

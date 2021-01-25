@@ -16,8 +16,8 @@
 % further revision on jr302: inspect .bl file; default flag is 2 if there
 % is a .bl entry; 3 otherwise. Some code adapted from mfir_00
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['adds default Niskin bottle numbers and flags to bot_' mcruise '_' stn_string '.csv']);
+minit; 
+mdocshow(mfilename, ['adds default Niskin bottle numbers and flags to bot_' mcruise '_' stn_string '.csv']);
 
 root_botraw = mgetdir('M_CTD_BOT');
 root_botcsv = mgetdir('M_CTD_CNV');
@@ -25,20 +25,14 @@ root_botcsv = mgetdir('M_CTD_CNV');
 prefix1 = ['bot_' mcruise '_'];
 prefix2 = ['ctd_' mcruise '_'];
 infile = [root_botraw '/' prefix2 stn_string '.bl'];
-otfile = [root_botcsv '/' prefix1 stn_string '.csv'];
+scriptname = mfilename; oopt = 'nbotfile'; get_cropt
 
 % first read the .bl file.
-
 m = ['infile = ' infile];
 fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
-
 cellall = mtextdload(infile,','); % load all text
 
 krow = 0;
-kmax = 50; % preallocate space for 50; after that the arrays will grow in the loop
-position = nan+zeros(kmax,1);
-scan = position;
-
 for kline = 1:length(cellall)
     cellrow = cellall{kline};
     if length(cellrow) < 4
@@ -50,25 +44,20 @@ for kline = 1:length(cellall)
     end
 end
 
-if krow < kmax
-    position(krow+1:end) = [];
-end
-% the 'position' array is now the list of bottles closed.
-oopt = 'fixbl'; get_cropt
-
-kpos = 1:24;
+scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
+kpos = 1:nnisk;
 sampnum = 100*stnlocal + kpos;
-stnarray = stnlocal * ones(24,1);  % default up to here. 24 bottles on each station
-flag = 9*ones(24,1); % default flag of 9 meaning not closed
+stnarray = stnlocal + zeros(nnisk,1);
+flag = 9+zeros(nnisk,1); % default flag of 9 meaning not closed
 flag(position) = 2; % if bottle closed, default closure flag is 2.
 
-oopt = 'nispos'; get_cropt; %niskin-position mapping information
+scriptname = mfilename; oopt = 'nispos'; get_cropt; %niskin-position mapping information
 
 out = [sampnum(:) stnarray(:) kpos(:) nis(:) flag(:)];
 
 form = '%5d , %2d , %3d , %2d , %2d \n';
 
-fid = fopen(otfile,'w');
+fid = fopen(otfile,'a');
 fprintf(fid,'%s, %s, %s, %s, %s\n', 'sampnum', 'sta', 'niskin', 'bottle_number', 'bottle_qc_flag');
 fprintf(fid,form,out');
 fclose(fid);

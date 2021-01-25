@@ -40,9 +40,8 @@ for kloop = klist
             
 end
 
-%nnisk = 1; mout_sam_csv %this makes a list in reverse niskin order (useful for nutrient analysts, else can comment out)
-nnisk = 0; mout_sam_csv %this makes a list in deep-to-surface niskin order
+%mout_cchdo_sam with argument to make in reverse niskin order, see jc191 version
 
-%copy files to public drive
+%copy files to public drive -- make this a cruise option***
 %unix(['cp /local/users/pstar/cruise/data/samlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);
 %unix(['cp /local/users/pstar/cruise/data/collected_files/ctdlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);

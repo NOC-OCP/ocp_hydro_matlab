@@ -5,8 +5,8 @@
 %
 % uses parameters set in mexec_processing_scripts/cruise_options/opt_${cruise}
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['makes corrections/conversions (for instance for oxygen hysteresis), as set in get_cropt and opt_' mcruise '.m) and writes to ctd_' mcruise '_' stn_string '_24hz.nc']);
+minit;
+mdocshow(mfilename, ['makes corrections/conversions (for instance for oxygen hysteresis), as set in get_cropt and opt_' mcruise '.m) and writes to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');
@@ -16,83 +16,98 @@ prefix = ['ctd_' mcruise '_'];
 %figure out which file to start from
 infile = [root_ctd '/' prefix stn_string '_raw_cleaned'];
 if ~exist(m_add_nc(infile), 'file')
-   infile = [root_ctd '/' prefix stn_string '_raw'];
-end
-unix(['chmod u+w ' m_add_nc(infile)]);
-
-otfile2 = [root_ctd '/' prefix stn_string '_24hz'];
-
-oopt = 'calibs_to_do'; get_cropt
-
-wkfile1 = ['wk1_mctd_02b_' datestr(now,30)];
-wkfile2 = ['wk2_mctd_02b_' datestr(now,30)];
-unix(['/bin/cp ' m_add_nc(infile) ' ' m_add_nc(wkfile1)]);
-
-if ismember(dooxyhyst, -1) %reverse oxy hyst first
-   wkfile3 = ['wk3_mctd_02b_' datestr(now,3)];
-   oopt = 'oxyrev'; get_cropt;
-   disp(['reversing oxy hyst for ' stn_string ', output to'])
-   varnames
-   MEXEC_A.MARGS_IN = {
-   infile
-   wkfile3
-   '/'
-   };
-   for vno = 1:size(varnames,1)
-      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
-      var_strings{vno}
-      sprintf('y = mcoxyhyst_reverse(x1,x2,x3,%f,%f,%f);', pars{vno}(1), pars{vno}(2), pars{vno}(3))
-      varnames{vno}
-      ' '
-      ];
-   end
-   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
-   ' '
-   ];
-   mcalc
-   unix(['/bin/mv ' m_add_nc(wkfile3) ' ' m_add_nc(wkfile1)])   
+    infile = [root_ctd '/' prefix stn_string '_raw'];
 end
 
+otfile = [root_ctd '/' prefix stn_string '_24hz'];
+unix(['/bin/cp ' m_add_nc(infile) ' ' m_add_nc(otfile)])
 
-if ismember(dooxyhyst, 1)
-   oopt = 'oxyhyst'; get_cropt;
-   disp(['applying oxy hyst for ' stn_string ', output to'])
-   varnames
-   MEXEC_A.MARGS_IN = {
-   wkfile1
-   wkfile2
-   '/'
-   };
-   for vno = 1:size(varnames,1)
-      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
-      var_strings{vno}
-      sprintf('y = mcoxyhyst(x1,x2,x3,%f,%f,%f,%i);',pars{vno}(1),pars{vno}(2),pars{vno}(3),vno)
-      varnames{vno}
-      ' '
-      ];
-   end
-   MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
-   ' '
-   ];
-   mcalc;
-   unix(['/bin/mv ' m_add_nc(wkfile2) ' ' m_add_nc(wkfile1)]);
+
+%which corrections to do?
+scriptname = mfilename; oopt = 'raw_corrs'; get_cropt
+scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
+nox = size(oxyvars,1);
+
+
+%oxygen hysteresis and/or renaming oxygen variables
+if dooxyrev | dooxyhyst
+    
+    if dooxyrev
+        %calculate oxy_rev, the oxygen hysteresis reversed variables, and
+        %add to otfile
+        scriptname = mfilename; oopt = 'oxyrev'; get_cropt
+        varsin = [];
+        for no = 1:nox
+            varsin = [varsin ' ' oxyvars{no,1}];
+        end
+        varsin = ['press time' varsin];
+        [d,h] = mload(infile, varsin);
+        scriptname = mfilename; oopt = 'oxyrev'; get_cropt
+        otfilestruct=struct('name',[otfile '.nc']);
+        disp(['reversing oxy hyst for ' stn_string ', output to _rev'])
+        for no = 1:nox
+            oxy_unhyst = mcoxyhyst_rev(getfield(d, oxyvars{no,1}), d.time, d.press, H1, H2, H3);
+            vind = find(strcmp(oxyvars{no,1}, h.fldnam)); %same units
+            datastruct = struct('name',[oxyvars{no,1} '_rev'], 'units',h.fldunts{vind}, 'data',oxy_unhyst);
+            m_write_variable(otfilestruct, datastruct);
+        end
+        revstring = '_rev'; %if dooxyhyst will apply to _rev variables
+    else
+        revstring = ''; %if dooxyhyst will apply to original variables
+    end
+    
+    if dooxyhyst
+        %calculate the variables with oxygen hysteresis applied, and add to
+        %otfile
+        scriptname = mfilename; oopt = 'oxyhyst'; get_cropt
+        varsin = [];
+        for no = 1:nox
+            %start from reversed variables if set above, otherwise
+            %(revstring is empty) start from sbe variables
+            varsin = [varsin ' ' oxyvars{no,1} revstring];
+        end
+        varsin = ['press time' varsin];
+        [d,h] = mload(infile,varsin);
+        scriptname = mfilename; oopt = 'oxyhyst'; get_cropt
+        otfilestruct=struct('name',[otfile '.nc']);
+        disp(['applying oxy hyst for ' stn_string ', output to ']); oxyvars{:,2}
+        for no = 1:nox
+            oxy_out = mcoxyhyst_rev(getfield(d, [oxyvars{no,1} revstring]), d.time, d.press, H1, H2, H3);
+            vind = find(strcmp(oxyvars{no,1}, h.fldnam)); %same units
+            datastruct = struct('name',oxyvars{no,2}, 'units',h.fldunts{vind}, 'data',oxy_out);
+            m_write_variable(otfilestruct, datastruct);
+        end
+    end
+    
+else
+    %just rename oxyvars(:,1) to oxyvars(:,2)
+    hin = m_read_header(otfile); % get var names and units in file
+    snames_units = {};
+    for no = 1:nox
+        kmatch = strmatch(oxyvars{no,1},hin.fldnam,'exact'); %to use the same units
+        if length(kmatch)==1
+            snames_units = [snames_units; oxyvars{no,1}; oxyvars{no,2}; hin.fldunt{kmatch}];
+        end
+    end
+    MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; snames_units; '-1'; '-1'}; %***check this is correct
+    mheadr
+    
 end
 
+
+%turbidity conversion from turbidity volts
 if doturbV
-   disp(['computing turbidity from turbidity volts for ' stn_string])
-   oopt = 'turbV'; get_cropt
-   MEXEC_A.MARGS_IN = {
-   wkfile1
-   'y'
-   varname
-   var_string
-   sprintf('y = (x1-%f)*%f;', pars(2), pars(1))
-   ' '
-   'm^-1/sr'
-   ' '
-   };
-   mcalib2;
-end    
-
-unix(['chmod a-w ' m_add_nc(infile)]);
-unix(['/bin/mv ' m_add_nc(wkfile1) ' ' m_add_nc(otfile2)]);
+    disp(['computing turbidity from turbidity volts for ' stn_string])
+    scriptname = mfilename; oopt = 'turbVpars'; get_cropt
+    MEXEC_A.MARGS_IN = {
+        otfile
+        'y'
+        'turbidity'
+        'turbidityV'
+        sprintf('y = (x1-%f)*%f;', turbVpars(2), turbVpars(1))
+        ' '
+        'm^-1/sr'
+        ' '
+        };
+    mcalib2;
+end

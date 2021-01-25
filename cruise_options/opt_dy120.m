@@ -7,21 +7,6 @@ switch scriptname
         end
         %%%%%%%%%% end smallscript %%%%%%%%%%
         
-        %%%%%%%%%% mctd_02b %%%%%%%%%% added by Kristin, 09/10/2020
-    case 'mctd_02b'
-        switch oopt
-            case 'calibs_to_do'
-                dooxyhyst = 1; % 0 no oxyhist, 1 apply oxyhyst, -1
-            case 'oxyhyst' %this only comes up if ismember(dohyst,1)
-                var_strings = {'oxygen_sbe1 time press','oxygen_sbe2 time press'};
-                pars = {[-0.033 5000 1450],[-0.033 5000 1450]}; %sbe default
-                varnames = {'oxygen1','oxygen2'};
-                disp(' ')
-                disp('Apply hysteris correction on O2 sensors')
-                disp(' ')
-        end
-        %%%%%%%%%% end mctd_02b %%%%%%%%%%
-        
         %%%%%%%%%% mbot_00 %%%%%%%%%% added by Kristin, 10/10/2020
     case 'mbot_00' %information about niskin bottle numbers
         switch oopt
@@ -56,8 +41,7 @@ switch scriptname
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'
         switch oopt
-            case 'fnin'
-                %                 fnin = [root_ctddep '/station_depths_' mcruise '.txt'];
+            case 'depth_source'
                 depmeth = 3; %calculate from CTD depth and altimeter reading (will load and update station_depths.mat)
             case 'bestdeps'
                 ii = find(bestdeps(:,1)==3); bestdeps(ii,2) = 1787; % from CTD+Altim

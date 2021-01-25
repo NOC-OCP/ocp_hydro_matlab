@@ -43,7 +43,7 @@ switch scriptname
    %%%%%%%%%% mctd_02b %%%%%%%%
    case 'mctd_02b'
       switch oopt
-         case 'calibs_to_do'
+         case 'raw_corrs'
 	    dooxyhyst = 0; %already applied in the datcnv on this cruise
       end
    %%%%%%%%%% end mctd_02b %%%%%%%%
@@ -54,7 +54,6 @@ switch scriptname
       switch oopt
          case 's_choice'
 	    s_choice = 2;
-	    alternate = [];
       end
    %%%%%%%%% end mctd_03 %%%%%%%%%
 
