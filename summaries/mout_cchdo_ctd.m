@@ -12,7 +12,6 @@
 % from all_ctd_renamelist and write to outfileall rather than outfile (both
 % are set in opt_cruise)
 
-scriptname = 'mout_cchdo_ctd';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
@@ -31,12 +30,7 @@ root_templates = mgetdir('M_TEMPLATES');
 root_ctd = mgetdir('M_CTD');
 
 prefix2 = ['ctd_' mcruise '_'];
-if exist('writeallctd') & writeallctd
-    prefix3 = 'all_ctd_';
-else
-    prefix3 = 'cchdo_ctd_';
-end
-
+prefix3 = 'cchdo_ctd_';
 infile1 = [root_ctd '/' prefix2 stn_string '_2db.nc'];
 renamefile = [root_templates '/' prefix3 'varlist.csv']; % read list of var names and units for empty sam template
 renamefileout = [root_templates '/' prefix3 'varlist_out.csv']; % write list of var names and units for empty sam template
@@ -155,7 +149,7 @@ end
 nsamp2 = 1;
 othercells = cell(nsamp2,8);
 
-oopt = 'expo'; get_cropt
+scriptname = 'mout_cchdo'; oopt = 'expo'; get_cropt
 
 for ks = 1:nsamp2
     stn_nbr = stnlocal;
@@ -200,7 +194,7 @@ for kvar = 1:ncvars
             % (really should keep track of despiking, at least, through processing)
             data = 2+0*data;
             data(isnan(data)) = 9;
-            oopt = 'flags'; get_cropt %optionally change flags
+            scriptname = 'mout_cchdo'; oopt = 'woce_ctd_flags'; get_cropt %optionally change flags
         end
         for ks = 1:nsamp
             maincells(ks,length(otnames)) = {data(ks)};
@@ -219,18 +213,14 @@ for kvar = 1:ncvars
     end
 end
 
-oopt = 'outfile'; get_cropt
-if exist('writeallctd','var') & writeallctd
-    fotname = [outfileall '_' sprintf('%05d',stnlocal) '_0001.csv'];
-else
-    fotname = [outfile '_' sprintf('%05d',stnlocal) '_0001_ct1.csv'];
-end
+scriptname = 'mout_cchdo'; oopt = 'woce_ctd_file'; get_cropt
+fotname = sprintf('%s_%05d_0001_ct1.csv',prefix,stnlocal);
 
 %%%%%% now start writing file %%%%%%
 fid = fopen(fotname,'w');
 
 % write header
-oopt = 'headstr'; get_cropt
+mfilename = 'mout_cchdo'; oopt = 'woce_headstr_ctd'; get_cropt
 for no = 1:size(headstring, 1)
    fprintf(fid,'%s\n',headstring{no});
 end

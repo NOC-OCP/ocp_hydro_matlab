@@ -13,37 +13,72 @@
 
 switch scriptname
     
-   
-        
-        %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
-    case 'mout_cchdo_ctd'
+        %%%%%%%%%% station_summary %%%%%%%%%%
+    case 'station_summary'
+        switch oopt
+            case 'optsams'
+                snames = {'nsal'}; 
+                sgrps = {{'sal'}}; 
+                sashore = [0]; 
+            case 'stnmiss'
+                stnmiss = []; %this is only for processed stations numbered between 1 and 900 that you don't want to include in the summary
+            case 'cordep'
+                cordep(k) = h2.water_depth_metres; % jc159 changed to h2, which is header from psal instead of 2db
+            case 'comments'
+                %             comments = cell(size(stnall));
+                comments = cell(max(stnall),1); % bak fix jc159 30 March 2018; If stnall = [1 2 3 5] then size(stnall) is 4 but we need comments ot be of size 5 so we can prepare comments by station number rather than by index in stnall
+            case 'altdep'
+            case 'varnames'
+                varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'minalt' 'resid' 'maxw' 'maxp' 'ndpths' 'nsal'}; %these probably won't change, but in any case the first 6 should always be the same
+                varnames = [varnames snames']; %if snames has been set in opt_cruise, this will incorporate it
+                varunits = {'number' 'seconds' 'seconds' 'seconds' 'deg min' 'deg min' 'metres' 'metres' 'metres' 'metres' 'metres' 'dbar' 'number' 'number'};
+                varunits = [varunits  repmat({'number'},1,length(snames)) ];
+        end
+        %%%%%%%%%% end station_summary %%%%%%%%%%
+                
+        %%%%%%%%%% mout_cchdo %%%%%%%%%%
+    case 'mout_cchdo'
         switch oopt
             case 'expo'
+                crhelp_str = {'information for header of exchange-format csv files: '
+                    'expocode and sect_id (defaults: ''unknown'')'};
                 expocode = 'unknown';
                 sect_id = 'unknown';
-            case 'outfile'
-                outfile = [expocode '_ct1'];
-            case 'headstr'
+            case 'woce_ctd_flags';
+                crhelp_str = {'optional: change flags from default of 2 where data present, 9 otherwise'};
+            case 'woce_file_pre'
+                crhelp_str = {'prefix: filename prefix for exchange-format csv file of ctd data '
+                    '(default: expocode)'};
+                prefix = expocode;
+            case 'woce_ctd_headstr'
+                crhelp_str = {'optional ctdheadstring is a cell array of strings to add to header of '
+                    'exchange-format csv file of ctd data (default: empty)'};
                 headstring = [];
+            case 'woce_sam_headstr'
+                crhelp_str = {'optional samheadstring is a cell array of strings to add to header of '
+                    'exchange-format csv file of sample data (default: empty)'};
+                headstring = [];
+            case 'woce_file_flagonly'
+                crhelp_str = {'varsexclude is a cell array listing variables to NaN before printing to'
+                    'exchange-format csv files (default: {})'};
+                varsexclude = {};
         end
-        %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
+        %%%%%%%%%% end mout_cchdo %%%%%%%%%%
         
-                %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
-    case 'mout_cchdo_sam'
+        %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
+    case 'msec_run_mgridp'
         switch oopt
-            case 'expo'
-                expocode = 'unknown';
-                sect_id = 'unknown';
-            case 'nocfc'
-                nocfc = 0;
-            case 'outfile'
-                outfile = expocode;
-            case 'headstr'
-                headstring = [];
+            case 'sections'
+                %set list of all sections here, if not specified as an input (see opt_jr302)
+            case 'gpars'
+                gstart = []; gstop = []; gstep = []; %default grid range and spacing--can be set per cruise but is also specified by section name in msec_run_mgridp (or can be provided as an input argument)
+            case 'varlist'
+                varlist  = ['press temp psal potemp oxygen'];
+            case 'kstns'
+            case 'varuse'
         end
-        %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
+        %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
         
-
         %%%%%%%%%% m_maptracer %%%%%%%%%%
     case 'm_maptracer'
         switch oopt
@@ -73,21 +108,6 @@ switch scriptname
                 scale_z = 1;
                 
         end
-        %%%%%%%%%% end m_maptracer %%%%%%%%%%
-        
-        %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
-    case 'msec_run_mgridp'
-        switch oopt
-            case 'sections'
-                %set list of all sections here, if not specified as an input (see opt_jr302)
-            case 'gpars'
-                gstart = []; gstop = []; gstep = []; %default grid range and spacing--can be set per cruise but is also specified by section name in msec_run_mgridp (or can be provided as an input argument)
-            case 'varlist'
-                varlist  = ['press temp psal potemp oxygen'];
-            case 'kstns'
-            case 'varuse'
-        end
-        %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
-                
+        %%%%%%%%%% end m_maptracer %%%%%%%%%%      
         
 end

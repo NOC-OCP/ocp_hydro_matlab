@@ -1,5 +1,13 @@
 switch scriptname
 
+   %%%%%%%%%% castpars %%%%%%%%%%
+   case 'castpars'
+      switch oopt
+         case 'klist'
+	    klist_exc = 8;
+      end
+   %%%%%%%%%% end castpars %%%%%%%%%%
+
    %%%%%%%%%% ctd_evaluate_sensors %%%%%%%%%%
    case 'ctd_evaluate_sensors'
       switch oopt
@@ -248,15 +256,6 @@ switch scriptname
              salout = salin+off;
       end
    %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
-
-
-   %%%%%%%%%% smallscript %%%%%%%%%%
-   case 'smallscript'
-      switch oopt
-         case 'klist'
-	    klist = [1:7 9:44];
-      end
-   %%%%%%%%%% end smallscript %%%%%%%%%%
 
 
    %%%%%%%%%% station_summary %%%%%%%%%%

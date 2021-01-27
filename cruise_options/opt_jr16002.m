@@ -53,13 +53,13 @@ switch scriptname
         %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
         
         
-        %%%%%%%%%% mbot_01 %%%%%%%%%%
-    case 'mbot_01'
+        %%%%%%%%%% mbot_00 %%%%%%%%%%
+    case 'mbot_00'
         switch oopt
-            case 'nbotfile1'
-                infile = [root_botcnv '/log_samp_jr16002_all.txt'];
+            case 'nbotfile' %***only mbot_01 is called on jr16002, reading in this file
+                otfile = [root_botcnv '/log_samp_jr16002_all.txt'];
         end
-        %%%%%%%%%% end mbot_01y %%%%%%%%%%
+        %%%%%%%%%% end mbot_00 %%%%%%%%%%
         
         
         %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
@@ -314,15 +314,6 @@ switch scriptname
                 salout = salin+off;
         end
         %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
-        
-        
-        %%%%%%%%%% smallscript %%%%%%%%%%
-    case 'smallscript'
-        switch oopt
-            case 'klist'
-                klist = 1:30;
-        end
-        %%%%%%%%%% end smallscript %%%%%%%%%%
         
         
         %%%%%%%%%% station_summary %%%%%%%%%%

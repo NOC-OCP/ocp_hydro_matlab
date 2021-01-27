@@ -123,20 +123,10 @@ end
 
 varnames = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35flag'};
 varunits = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9'};
-
-% sorting out units for msave
-
-varnames_units = {};
-for k = 1:length(varnames)
-    varnames_units = [varnames_units; varnames(k)];
-    varnames_units = [varnames_units; {'/'}];
-    varnames_units = [varnames_units; varunits(k)];
-end
+mvarnames_units
 
 timestring = ['[' sprintf('%d %d %d %d %d %d',hd.data_time_origin) ']'];
 
-
-%--------------------------------
 MEXEC_A.MARGS_IN_1 = {
     otfile1
     };
@@ -164,6 +154,5 @@ MEXEC_A.MARGS_IN_5 = {
     };
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
 msave
-%--------------------------------
 
 

@@ -1,6 +1,21 @@
 %%%%%%%%%% Warnings for unset options (called at end of get_cropt, after opt_cruise) %%%%%%%%%
 switch scriptname
     
+        %%%%%%%%%% msam_01 %%%%%%%%%%
+    case 'msam_01'
+        switch oopt
+            case 'samvars'
+                if sum([strcmp(samvars_replace,'sampnum');strcmp(samvars_replace,'statnum');strcmp(samvars_replace,'position')])>0
+                    warning('are you sure you want to change units or default value for sampnum, statnum, or position?')
+                end
+                for vno = 1:length(samvars_use)
+                    if sum(strcmp([ds_sam.varnames; samvars_add(:,1)], samvars_use{vno})==0
+                        error(sprintf('variable %s not found in either templates/sam_varlist.csv or in samvars_add from opt_%s', samvars_use{vno}, mcruise));
+                    end
+                end
+        end
+        %%%%%%%%%% end msam_01 %%%%%%%%%%
+
         %%%%%%%%%% mctd_02a %%%%%%%%%%
     case 'mctd_02a'
         switch oopt
@@ -9,14 +24,27 @@ switch scriptname
                     warning(['rerunning cell thermal mass correction on raw file for station ' stn_string 'but no raw edits are specified under mctd_02a, editraw in opt_' mcruise])
                 end
         end
-                %%%%%%%%%% end mctd_02a %%%%%%%%%%
-
-    %%%%%%%%%% mctd_02b %%%%%%%%%%
+        %%%%%%%%%% end mctd_02a %%%%%%%%%%
+        
+        %%%%%%%%%% mctd_02b %%%%%%%%%%
     case 'mctd_02b'
         switch oopt
             case 'oxyrev'
                 if length(H1)>1 | length(H2)>1 | length(H3)>1
                     warning('mcoxyhyst_rev not set up to use vector parameters') %***should probably modify this anyway
+                end
+            case 'oxyhyst'
+                if sum(isnan(H1))+sum(isnan(H2))+sum(isnan(H3))>0
+                    error(['oxygen hysteresis parameters have NaNs; check opt_' mcruise])
+                end
+                %just record whether a non-default calibration is set, for
+                %mstar file comment
+                if length(H1)>1 | length(H2)>1 | length(H3)>1
+                    ohtyp = 2;
+                elseif max(abs(H_0-[H1 H2 H3]))>0
+                    ohtyp = 1;
+                else
+                    ohtyp = 0;
                 end
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
@@ -31,7 +59,7 @@ switch scriptname
                 end
         end
         %%%%%%%%%% end mctd_03 %%%%%%%%%%
-     
+        
         %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
     case 'msal_standardise_avg'
         switch oopt
@@ -44,42 +72,55 @@ switch scriptname
         end
         %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
         
-        %%%%%%%%%% cond_apply_cal %%%%%%%%%%
-    case 'cond_apply_cal'
-        if 
-        if ~exist('off','var') & ~exist('fac','var')
-            warning(['no cond cal set for sensor ' sensor]); 
-        elseif exist('off','var') & exist('fac','var')
-        if off==0 & fac==1
-        warning(['cond cal for sensor ' sensor ' will have no effect'])
+        %%%%%%%%%% mctd_senscal %%%%%%%%%%
+    case 'mctd_senscal'
+        %check that expected variable name and (where relevant) sensor
+        %number is being used, that calmsg has been updated to the correct
+        %variable/sensor/cruise (hopefully this will catch in case of
+        %copy-pasting in from previous cruise and without updating
+        %parameters), and that cond cal is not using temperature from a
+        %different CTD (just warn if oxy cal is)
+        if isempty(calvars) | isempty(calstr)
+            warning(sprintf('mctd_senscal finds no %s calibration function to apply in opt_%s', oopt, mcruise));
+            return
         end
+        if exist('senslocal', 'var')
+            calsens_expect = [oopt num2str(senslocal)];
+        else
+            calsens_expect = oopt;
         end
-        %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
-        
-        %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
-    case 'tsgsal_apply_cal'
+        if ~strcmp(calsens_expect, calvars{1})
+            error(sprintf('first element of calvars, %s, should be %s; check opt_%s and try again',calvars{1},calsens_expect,mcruise));
+        end
+        calmsg_expect = sprintf('%s %s',calsens_expect,mcruise);
+        if ~strcmp(calmsg, calmsg_expect)
+            error(['opt_' mcruise ' calmsg: ' calmsg ' does not match variable/sensor/cruise expected: ' calmsg_expect '; check and try again'])
+        end
         switch oopt
-            case 'saladj'
-                if ~exist('salout'); warning(['no salinity cal set for TSG']); end
-            case 'tempadj'
-                if ~exist('tempout'); warning(['no temperature adjustment set for TSG']); end
+            case 'condcal'
+                %also check that if it depends on temp it's from the same CTD
+                iit = find(strncmp('temp',calvars,4));
+                if length(iit)==0
+                    tsens = senslocal;
+                elseif length(iit)==1
+                    tsens = calvars{iit}(end);
+                end
+                if length(iit)>1 | tsens~=senslocal
+                    error(sprintf('calibration of conductivity from CTD %d should not depend on temperature from CTD %d; check opt_%s and try again',senslocal,tsens,mcruise));
+                end
+            case 'oxygencal'
+                iit = find(strncmp('temp',calvars,4));
+                if length(iit)==0
+                    tsens = senslocal;
+                elseif length(iit)==1
+                    tsens = calvars{iit}(end);
+                end
+                if length(iit)>1 | tsens~=senslocal
+                    warning(sprintf('calibration of oxygen sensor %d is being based on temperature from CTD %d'),senslocal,tsens)
+                end
         end
-        %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
+        %%%%%%%%%% end mctd_senscal %%%%%%%%%%
         
-        %%%%%%%%%% temp_apply_cal %%%%%%%%%%
-    case 'temp_apply_cal'
-        if ~exist('tempadj'); warning(['no temp cal set for sensor ' sensor]); end
-        %%%%%%%%%% end temp_apply_cal %%%%%%%%%%
-        
-        %%%%%%%%%% oxy_apply_cal %%%%%%%%%%
-    case 'oxy_apply_cal'
-        if ~exist('alpha') & ~exist('beta'); warning(['no oxy cal set for sensor ' sensor]); end
-        %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
-        
-        %%%%%%%%%% fluor_apply_cal %%%%%%%%%%
-    case 'fluor_apply_cal'
-        if ~exist('fac') & ~exist('expco'); warning(['no fluor cal set']); end
-        %%%%%%%%%% end fluor_apply_cal %%%%%%%%%%
         
         %%%%%%%%%% miso_02 %%%%%%%%%%
     case 'miso_02'

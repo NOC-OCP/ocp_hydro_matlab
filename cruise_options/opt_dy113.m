@@ -79,6 +79,43 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
         
+        %%%%%%%%%% mctd_senscal %%%%%%%%%%
+    case 'mctd_senscal'
+        switch oopt
+            case 'tempcal'
+                if senslocal==1
+                    calvars = {'temp1', 'statnum', 'press'};
+                    calstr = '%s = %s - 1.5e-5*%s + interp1([0 5000],[0 -1.5]*1e-3, %s) - 1.1e-4;';
+                    calmsg = 'temp1 dy113';
+                elseif senslocal==2
+                    calvars = {'temp2', 'statnum'};
+                    calstr = '%s = %s - 1e-5*%s - 3.8e-4';
+                    calmsg = 'temp2 dy113';
+                end
+            case 'condcal'
+                if senslocal==1
+                    calvars = {'cond1', 'press'};
+                    calstr = '%s = %s.*(1 + interp1([0 5000], [-1.8 -6.5], %s)*1e-3 - 7.2e-4)/35;';
+                    calmsg = 'cond1 dy113';
+                elseif senslocal==2
+                    calvars = {'cond2', 'press'};
+                    calstr = '%s = %s.*(1 + interp1([0 5000], [1.4 -2], %s)*1e-3 - 7e-4)/35;';
+                    calmsg = 'cond2 dy113';
+                end
+            case 'oxygencal'
+                if senslocal==1
+                    calvars = {'oxygen1', 'press', 'statnum'};
+                    calstr = '%s = 1.025*%s + interp1([0 5000], [1.8 12.8], %s) - 1.5e-2*%s;';
+                    calmsg = 'oxygen1 dy113';
+                elseif senslocal==2
+                    calvars = {'oxygen2', 'press', 'statnum'};
+                    calstr = '%s = 1.029*%s + interp1([0 500 5000], [0.5 0.8 9], %s) + 1e-2*%s;';
+                    calmsg = 'oxygen2 dy113';
+                end
+        end
+        %%%%%%%%%% end mctd_senscal %%%%%%%%%%
+        
+        
         %%%%%%%%%% set_cast_params_cfgstr %%%%%%%%%%
     case 'set_cast_params_cfgstr'
         switch oopt
@@ -136,7 +173,7 @@ switch scriptname
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         
-                
+        
         %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
     case 'msal_standardise_avg'
         switch oopt
@@ -310,44 +347,6 @@ switch scriptname
                 doocal = 1;
         end
         %%%%%%%%%% end msam_checkbottles_02 %%%%%%%%%%
-        
-        %%%%%%%%%% temp_apply_cal %%%%%%%%%%
-    case 'temp_apply_cal'
-        switch sensor
-            case 1
-                tempout = temp - 1.5e-5*stn + interp1([0 5000],[0 -1.5]*1e-3, press) - 1.1e-4; %interp1([0 5000],[.75 2],press)*1e-3;
-            case 2
-                tempout = temp - 1e-5*stn - 3.8e-4;
-        end
-        %%%%%%%%%% end temp_apply_cal %%%%%%%%%%
-        
-        %%%%%%%%%% cond_apply_cal %%%%%%%%%%
-    case 'cond_apply_cal'
-        switch sensor
-            case 1
-                %off = interp1([0 300 2000 3500 5000], [-.6 -3 -4.2 -6 -7], press)*1e-3;
-                off = interp1([0 5000], [-1.8 -6.5], press)*1e-3 - 7.2e-4;
-            case 2
-                %off = interp1([0 100 1600 5000], [1.2 0.5 -.8 -2.7], press)*1e-3 + 1.5e-4;
-                off = interp1([0 5000], [1.4 -2], press)*1e-3 - 7e-4;
-        end
-        fac = 1 + off/35;
-        condadj = 0;
-        condout = cond.*fac + condadj;
-        %%%%%%%%%% cond_apply_cal %%%%%%%%%%
-        
-        %%%%%%%%%% oxy_apply_cal %%%%%%%%%%
-    case 'oxy_apply_cal'
-        switch sensor
-            case 1
-                alpha = 1.025;
-                beta = interp1([0 5000],[1.8 12.8],press) - 1.5e-2*stn;
-            case 2
-                alpha = 1.029;%interp1([0 5000]',[1.035 1.062]',press) + 0.3*1e-4*stn;
-                beta = interp1([0 500 5000],[.5 .8 9],press) + 1e-2*stn;
-        end
-        oxyout = alpha.*oxyin + beta;
-        %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
         
         %%%%%%%%%% miso_01 %%%%%%%%%%
     case 'miso_01'
@@ -600,15 +599,15 @@ switch scriptname
         %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
         
         
-        %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
-    case 'mout_cchdo_sam'
+        %%%%%%%%%% mout_cchdo %%%%%%%%%%
+    case 'mout_cchdo'
         switch oopt
             case 'expo'
                 expocode = '74EQ20200203';
                 sect_id = 'SR1b_A23';
-            case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode];
-            case 'headstr'
+            case 'woce_file_pre'
+                prefix = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode];
+            case 'woce_sam_headstr'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];... %the last field specifies group, institution, initials
                     '#SHIP: Discovery';...
                     '#Cruise DY113; SR1B and A23';...
@@ -629,18 +628,7 @@ switch scriptname
                     '#DELO18: Who - M. Leng; Status - preliminary';...
                     '#Nutrient isotopes: Who - R. Tuerena; Status - not yet analysed';...
                     '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
-        end
-        %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
-        
-        %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
-    case 'mout_cchdo_ctd'
-        switch oopt
-            case 'expo'
-                expocode = '74EQ20200203';
-                sect_id = 'SR1b, A23';
-            case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode '_ct1/sr1b_a23_' expocode];
-            case 'headstr'
+            case 'woce_ctd_headstr'
                 headstring = {['CTD,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];...
                     '#SHIP: Discovery';...
                     '#Cruise DY113; SR1B and A23';...

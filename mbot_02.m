@@ -14,14 +14,6 @@ if exist(m_add_nc(infile1),'file') ~= 2
     return
 end
 
-
-%--------------------------------
-% 2009-03-14 00:33:19
-% mpaste
-% input files
-% Filename bot_jc032_001.nc   Data Name :  bot_jc032_001 <version> 1 <site> jc032
-% output files
-% Filename sam_jc032_001.nc   Data Name :  sam_jc032_001 <version> 19 <site> jc032
 MEXEC_A.MARGS_IN = {
 otfile2
 infile1
@@ -32,4 +24,3 @@ infile1
 'bottle_number bottle_qc_flag'
 };
 mpaste
-%--------------------------------

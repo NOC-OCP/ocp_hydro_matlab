@@ -585,14 +585,5 @@ switch scriptname
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
         
         
-        %%%%%%%%%% smallscript_sams %%%%%%%%%%
-    case 'smallscript_sams'
-        dodcs24 = 1;
-        doucav = 1;
-        rmvars = {'totnit';'totnit_flag'};
-        addvars = {'no3';'no3_flag'};
-        addunts = {'umol/kg';'number'};
-        chunts = {'no2' 'umol/kg';'phos' 'umol/kg';'silc' 'umol/kg'};
-        %%%%%%%%%% end smallscript %%%%%%%%%%
         
 end

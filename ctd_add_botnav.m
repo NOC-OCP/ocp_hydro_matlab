@@ -2,29 +2,23 @@
 %or information entered into station_depths/station_depths_cruise.txt, 
 %nav/pos/pos_cruise_01.nc, and ctd/ASCII_FILES/bot_cruise_01.csv
 
-scriptname = 'smallscript';
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
-
 %update .mat file in station_depths/
 populate_station_depths;
-
-if ~exist('klist'); oopt = 'klist'; get_cropt; end
 	
-disp('Will process stations in klist: ')
+if length(klist)>1
+    disp('Will process stations in klist: ')
 disp(klist)
 okc = input('OK to continue (y/n)?','s');
 if okc == 'n' | okc == 'N'
 	return
 end
-
-if ~exist('docsv'); docsv = 0; end
+end
 
 for kloop = klist
-    stn = kloop;
-    stn_string = sprintf('%03d',stn);
-        
-    %rerun these in case flags have been changed in opt_cruise
+    stn = kloop; minit
+
+%    %rerun niskin steps if flags have been changed in opt_cruise
+%    d = mload([mgetdir('M_CTD') 'bot_' mcruise '_' stn_string],'bottle_qc_flag');
     stn = kloop; mbot_01
     stn = kloop; mbot_02
 
@@ -37,7 +31,7 @@ for kloop = klist
     
     stn = kloop; msam_02b;
     stn = kloop; msam_updateall;
-            
+
 end
 
 %mout_cchdo_sam with argument to make in reverse niskin order, see jc191 version

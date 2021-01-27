@@ -11,7 +11,9 @@ stn = stnlocal; mctd_01; %read in sbe .cnv data to mstar
 stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.csv
 
 %ylf added jc159: check for out-of-range pressures that will cause trouble
-%in mctd_03
+%in mctd_03. shouldn't be necessary to redo this before subsequent
+%invocations of mctd_02b, because any necessary edits will have been
+%added to opt_cruise already (and to mplxyed_* file when mctd_rawedits is run)***
 root_ctd = mgetdir('M_CTD');
 [d, h] = mload([root_ctd '/ctd_' mcruise '_' stn_string '_raw'], '/');
 if min(d.press)<=-1.495

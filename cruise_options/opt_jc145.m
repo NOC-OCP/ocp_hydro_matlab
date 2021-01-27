@@ -1,26 +1,15 @@
 switch scriptname
     
-    %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
-    case 'mout_cchdo_sam'
+    %%%%%%%%%% mout_cchdo %%%%%%%%%%
+    case 'mout_cchdo'
         switch oopt
             case 'expo'
                 expocode = 'jc145';
                 sect_id = 'RAPID_2017';
-            case 'outfile'
-                outfile = ['RAPID_jc145'];
+            case 'woce_file_pre'
+                prefix = ['RAPID_jc145'];
         end
-        %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
-        
-        %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
-    case 'mout_cchdo_ctd'
-        switch oopt
-            case 'expo'
-                expocode = 'jc145';
-                sect_id = 'RAPID_2017';
-            case 'outfile'
-                outfile = ['RAPID_jc145'];
-        end
-        %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
+        %%%%%%%%%% end mout_cchdo %%%%%%%%%%
         
         %%%%%%%%%% ctd_evaluate_sensors %%%%%%%%%%
     case 'ctd_evaluate_sensors'
@@ -213,16 +202,6 @@ switch scriptname
                 %salbotqf***
         end
         %%%%%%%%%% end sal_standardise_avg %%%%%%%%%%
-        
-        
-        %%%%%%%%%% smallscript %%%%%%%%%%
-    case 'smallscript'
-        switch oopt
-            case 'klist'
-                klist = 1:5;
-                klist = 7:16; %***
-        end
-        %%%%%%%%%% end smallscript %%%%%%%%%%
         
         
         %%%%%%%%%% station_summary %%%%%%%%%%

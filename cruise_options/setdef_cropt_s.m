@@ -11,15 +11,25 @@
 %         kept unique, not reused under different scriptnames)
 
 
-switch scriptname
-    
-        %%%%%%%%%% batchscript_sams %%%%%%%%%%
-    case 'smallscript_sams' %***batchscript, oopt
-        crhelp_str = []; %***
-        dodcs24 = 0; doucav = 0; rmvars = {}; addvars = {}; %default is not to rerun
-        %%%%%%%%%% end batchscript_sams %%%%%%%%%%
-        
+switch scriptname        
                 
+        %%%%%%%%%% msam_01 %%%%%%%%%%
+    case 'msam_01'
+        switch oopt
+            case 'samvars' %***not updating past opt_cruise files (yet)
+                crhelp_str = {'Get list of variables, units, and fill values for sam_ files. '
+                    'samvars_use is a cell array listing all the variable names to go in the '
+                    '_sam files. They will first be looked up samvars_replace, a cell array with '
+                    'columns [varname, varunit, fillvalue] (default {'', '', ''}), then looked up '
+                    'in templates/sam_varlist.csv, then in samvars_add (default {'', '', ''}). The'
+                    'default is thus to use all and only sam_varlist.csv.'};
+                ds_sam = dataset('File',[mgetdir('M_TEMPLATES') '/sam_varlist.csv'],'Delimiter',',');
+                samvars_use = ds_sam.varname;
+                samvars_replace = {'','',''};
+                samvars_add = {'','',''};
+        end
+        %%%%%%%%%% end msam_01 %%%%%%%%%%
+
         %%%%%%%%%% msal_01 %%%%%%%%%%
     case 'msal_01'
         switch oopt
@@ -62,7 +72,7 @@ switch scriptname
     case 'msbe35_01'
         switch oopt
             case 'sbe35flag'
-                crhelp_str = {'place to modify flags on SBE35 temperature data'};
+                crhelp_str = {'place to modify flags (sbe35flag) on SBE35 temperature data'};
         end
         %%%%%%%%%% end msbe35_01 %%%%%%%%%%
         
@@ -231,28 +241,5 @@ switch scriptname
         %%%%%%%%%% end msam_checkbottles_02 %%%%%%%%%%
         
                         
-        %%%%%%%%%% station_summary %%%%%%%%%%
-    case 'station_summary'
-        switch oopt
-            case 'optsams'
-                snames = {'nsal'}; 
-                sgrps = {{'sal'}}; 
-                sashore = [0]; 
-            case 'stnmiss'
-                stnmiss = []; %this is only for processed stations numbered between 1 and 900 that you don't want to include in the summary
-            case 'cordep'
-                cordep(k) = h2.water_depth_metres; % jc159 changed to h2, which is header from psal instead of 2db
-            case 'comments'
-                %             comments = cell(size(stnall));
-                comments = cell(max(stnall),1); % bak fix jc159 30 March 2018; If stnall = [1 2 3 5] then size(stnall) is 4 but we need comments ot be of size 5 so we can prepare comments by station number rather than by index in stnall
-            case 'altdep'
-            case 'varnames'
-                varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'minalt' 'resid' 'maxw' 'maxp' 'ndpths' 'nsal'}; %these probably won't change, but in any case the first 6 should always be the same
-                varnames = [varnames snames']; %if snames has been set in opt_cruise, this will incorporate it
-                varunits = {'number' 'seconds' 'seconds' 'seconds' 'deg min' 'deg min' 'metres' 'metres' 'metres' 'metres' 'metres' 'dbar' 'number' 'number'};
-                varunits = [varunits  repmat({'number'},1,length(snames)) ];
-        end
-        %%%%%%%%%% end station_summary %%%%%%%%%%
-                
                 
 end

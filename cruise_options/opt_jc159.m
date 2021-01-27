@@ -1,12 +1,10 @@
 switch scriptname
     
-    %%%%%%%%%% smallscript %%%%%%%%%%
-    case 'smallscript'
-        switch oopt
-            case 'klist'
-                klist = [3:26 29:58 60:124]; %stations 1 and 2 were swivel tests; 27 and 28 aborted; 59 no samples
+          %%%%%%%%%% castpars %%%%%%%%%%
+          case 'klist'
+                klist_exc = [1 2 27 28 59]; %stations 1 and 2 were swivel tests; 27 and 28 aborted; 59 no samples
         end
-        %%%%%%%%%% end smallscript %%%%%%%%%%
+        %%%%%%%%%% end castpars %%%%%%%%%%
         
         
         %%%%%%%%%% mctd_01 %%%%%%%%%%
@@ -690,21 +688,21 @@ switch scriptname
         %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
         
         
-        %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
-    case 'mout_cchdo_sam'
+        %%%%%%%%%% mout_cchdo %%%%%%%%%%
+    case 'mout_cchdo'
         switch oopt
             case 'expo'
                 expocode = '740H20180228';
                 sect_id = 'A09.5_24S';
-            case 'nocfc'
-                nocfc = 1;
-                d.cfc11(:) = NaN; d.cfc12(:) = NaN; d.f113(:) = NaN; d.ccl4(:) = NaN; d.sf6(:) = NaN; d.sf5cf3(:) = NaN;
-            case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/A095_' expocode];
-                if nocfc
-                    outfile = [outfile '_no_cfc_values'];
+            case 'woce_file_flagonly'
+                varsexclude = {'cfc11' 'cfc12' 'f113' 'ccl4' 'sf6' 'sf5cf3'};
+            case 'woce_file_pre'
+                prefix = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/A095_' expocode];
+                if length(varsexclude)>0
+                    prefix = [prefix '_no_cfc_values'];
                 end
-            case 'headstr'
+                %outfileall = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/ctd_with_fluor/A095_' expocode '_fluoruncal'];
+            case 'woce_headstr_sam'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCBAK'];...
                     '#SHIP: James Cook';...
                     '#Cruise JC159; A09.5 24S';...
@@ -721,28 +719,13 @@ switch scriptname
                     '#Notes: bottle salinity from stations 3-85 used for CTD calibration';...
                     '#Oxygen and Nutrients: Who - E. Mawji; Status - final';...
                     '#Notes: bottle oxygen from stations 35-123 used for CTD calibration';...
-                    %        '#DIC and Talk: Who - P. Brown; Status - final';...
-                    '#DIC and Talk: Who - P. Brown; Status - uncalibrated ';...
-                    %        '#CFCs and SF6: Who - M.J. Messias; Status - final';...
+                    '#DIC and Talk: Who - P. Brown; Status - final';...
                     '#CFCs and SF6: Who - M.J. Messias; Status - uncalibrated, proprietary ';...
                     'C14/13: Who: A. McNichol; Status - final (data rcd 2019/03/11 from J. Lester)';...
-                    %'C13: Who: M. Leng; Status - preliminary';...
-                    %'C13, O18: Who: M. Leng; Status - preliminary';...
+                    'C13, O18: Who: M. Leng; Status - final';...
                     '#Notes:';...
                     '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with funding from the UK Natural Environment Research Council to the National Oceanography Centre and the University of Exeter."'};
-        end
-        %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
-        
-        %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
-    case 'mout_cchdo_ctd'
-        switch oopt
-            case 'expo'
-                expocode = '740H20180228';
-                sect_id = 'A09.5_24S';
-            case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/A095_' expocode '_ct1/A095_' expocode];
-                outfileall = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/ctd_with_fluor/A095_' expocode '_fluoruncal'];
-            case 'headstr'
+            case 'woce_headstr_ctd'
                 headstring = {['CTD,' datestr(now,'yyyymmdd') 'OCPNOCBAK'];...
                     '#SHIP: James Cook';...
                     '#Cruise JC159; A09.5 24S';...
@@ -757,12 +740,8 @@ switch scriptname
                     '#The CTD PRS;  TMP;  SAL; OXY data are all calibrated and good.';...
                     '#DEPTH_TYPE   : COR';...
                     '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'};
-                %case 'flags'
-                %    if stn<10 & strcmp(newname, 'CTDFLUOR_FLAG_W')
-                %        data(data==2 & d.press>1000) = 3;
-                %    end
         end
-        %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
+        %%%%%%%%%% end mout_cchdo %%%%%%%%%%
         
         %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
     case 'msec_run_mgridp'

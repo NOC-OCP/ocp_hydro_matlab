@@ -1,14 +1,14 @@
 switch scriptname
     
     %%%%%%%%%% smallscript %%%%%%%%%%
-    case 'smallscript'
+    case 'smallscript' %not currently called but retains some information about what was rerun (going forward this should be available in file histories/comments)
         switch oopt
             case 'klist_reread_raw'
-                klist = [2 ] ; %stations 1 and 2 were swivel tests; 27 and 28 aborted; 59 no samples
+                klist = [2 ] ; 
             case 'klist_new_oxyhyst'
-                klist = [26:49 ] ; %stations 1 and 2 were swivel tests; 27 and 28 aborted; 59 no samples
+                klist = [26:49 ] ; 
             case 'klist_all_cals'
-                klist = [71:135] ; %stations 1 and 2 were swivel tests; 27 and 28 aborted; 59 no samples
+                klist = [71:135] ; 
         end
         %%%%%%%%%% end smallscript %%%%%%%%%%
         
@@ -116,23 +116,6 @@ switch scriptname
                 if stnlocal ==95
                     nis = nis_mix0; % revert to all 20L for bulk water sample.
                 end
-                
-                %                 %inventory/serial numbers of the niskins in order of 1 to 24
-                %                 nis = [5977, 6406, 6407, 6408, 6409, 6410, 6411, 6412, 6413,...
-                %                     6414, 6415, 6416, 6417, 6418, 6419, 6420, 1122, 6692, 1098,...
-                %                     6428, 6425, 6426, 6427, 1086]; nis_spare = [1077];
-                %                 % 18 and 19 were switched from stn51 (and relabelled, so the
-                %                 %physical labels on the bottles still correspond to position
-                %                 %on the rosette)
-                %                 %spare niskin (was labelled "18" but it's a different one so
-                %                 %calling it 25) in position 1 from stn 101 so that CFCs can sparge
-                %                 %the original bottle 1
-                %                 %after stn 103 original 1 was put back in place, spare was moved to
-                %                 %position 2, and original 2 was taken for sparging
-                %                 if stnlocal>=51 & stnlocal<101; nis = nis([1:17 19 18 20:24])
-                %                 elseif stnlocal>=101 & stnlocal<104; nis = [nis_spare nis([2:17 19 18 20:24])];
-                %                 elseif stnlocal>=104; nis = [nis(1) nis_spare nis([3:17 19 18 20:24])];
-                %                 end
         end
         %%%%%%%%%% end mbot_00 %%%%%%%%%%
         

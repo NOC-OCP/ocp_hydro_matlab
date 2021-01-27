@@ -1,11 +1,11 @@
-% msam_01: if no template sam file exists, create; (then) 
+% msam_01: if no template sam file exists, create; (then)
 %          copy template to file for this station and edit station number
 %          etc.
-% 
+%
 % Use: msam_01        and then respond with station number, or for station 16
 %      stn = 16; msam_01;
 %
-% The input list of variable names, templates/sam_varlist.csv, 
+% The input list of variable names, templates/sam_varlist.csv,
 %    is a comma-delimeted list of vars and units to be created
 %    The format of each line is
 %    varname,newunits,default_value
@@ -16,91 +16,61 @@
 % _out.csv file is more suitable for editing on unix.
 %
 
-minit; scriptname = mfilename; 
+minit; scriptname = mfilename;
 mdocshow(scriptname, ['creating empty sam_' mcruise '_' stn_string '.nc based on templates/sam_varlist.csv']);
-
-% resolve root directories for various file types
-root_templates = mgetdir('M_TEMPLATES');
-root_sam = mgetdir('M_SAM');
-
-prefixt = ['sam_'];
-prefix1 = ['sam_' mcruise '_'];
 
 oopt = 'nnisk'; scriptname = 'general'; get_cropt %number of niskins (may be station-dependent)
 
-otfile = [root_sam '/' prefix1 stn_string];
-otfile2 = [root_sam '/' prefix1 'template_' num2str(num_bottles)];
+root_sam = mgetdir('M_SAM');
+dataname = ['sam_' mcruise '_'];
+otfile = [root_sam '/' dataname];
+otfile2 = [root_sam '/sam_' mcruise '_template_' num2str(num_bottles)];
 
-dataname = [prefix1 stn_string];
-
-if ~exist(otfile2, 'file') 
+if ~exist(otfile2, 'file')
     %if there is no sam_cruise_template file of the right size, create file
     %for this station, and copy to template
     disp(['copying from ' otfile2])
-
-    %what variables we want, from templates/
-    varfile = [root_templates '/' prefixt 'varlist.csv']; % read list of var names and units for empty sam template
-    varfileout = [root_templates '/' prefixt 'varlist_out.csv']; % write list of var names and units for empty sam template
-    cellall = mtextdload(varfile,','); % load all text
-    clear snames sunits sdef
-    for kline = 1:length(cellall)
-        cellrow = cellall{kline}; % unpack rows
-        snames{kline} = m_remove_outside_spaces(cellrow{1});
-        sunits{kline} = m_remove_outside_spaces(cellrow{2});
-        if length(cellrow) > 2 % unpick default value if its there
-            sdef{kline} = m_remove_outside_spaces(cellrow{3}); % string, inserted in a command later on
-        else
-            sdef{kline} = 'nan'; % backwards compatible. If there's no default use nan
-        end
-    end
-    snames = snames(:);
-    sunits = sunits(:);
-    sdef = sdef(:);
-    numvar = length(snames);
-    fidmsam01 = fopen(varfileout,'w'); % save back to out file
-    for k = 1:numvar
-        fprintf(fidmsam01,'%s%s%s\n',snames{k},',',sunits{k});
-    end
-    fclose(fidmsam01);
     
-    z = zeros(num_bottles,1); % mod by bak on jr302 to use default value from template
-    data.junk = [];
-    for k = 1:numvar
-        data = setfield(data, snames{k}, sdef{k}+z);
-    end
-    data = rmfield(data, 'junk');
-
-    checknames = {'position' 'statnum' 'sampnum'};
-    checkunits = {'on.rosette' 'number' 'number'};
-    % ensure at least these three names exist in the list
-    for k = 1:length(checknames)
-        cname = checknames{k};
-        kmatch = strmatch(cname,snames,'exact');
-        if isempty(kmatch)
-            snames = [cname; snames(:)];
-            sunits = [checkunits{k}; sunits(:)];
+    %get list of variables and units
+    scriptname = mfilename; oopt = 'samvars'; get_cropt
+    varnames = {}; varunits = {}; ds.junk = [];
+    for vno = 1:length(samvars_use)
+        iir = find(strcmp(samvars_replace(:,1), samvars_use{vno}));
+        ii0 = find(strcmp(ds_sam.varname, samvars_use{vno}));
+        iia = find(strcmp(samvars_add(:,1), samvars_use{vno}));
+        if length(ii0)>0
+            if length(iir)>0
+                warning(sprintf('replacing %s, %s, %s with %s, %s, %s',ds_sam.varname(ii0), ds_sam.varunit(ii0), ds_sam.fillvalue(ii0), samvars_replace{iir,1}, samvars_replace{iir,2}, samvars_replace{iir,3}));
+                varnames = [varnames; samvars_use{vno}];
+                varunits = [varunits; samvars_replace{iir,2}];
+                ds = setfield(ds, samvars_use{vno}, repmat(samvars_replace{iir,3},nnisk,1));
+            else
+                varnames = [varnames; samvars_use{vno}];
+                varunits = [varunits; ds_sam.varunit(ii)];
+                ds = setfield(ds, samvars_use{vno}, repmat(ds_sam.fillvalue(ii),nnisk,1));
+            elseif length(iia)>0
+                varnames = [varnames; samvars_use{vno}];
+                varunits = [varunits; samvars_add{iia,2}];
+                ds = setfield(ds, samvars_use{vno}, repmat(samvars_add{iia,3},nnisk,1));
+            else
+                error(sprintf('variable %s not found in either templates/sam_varlist.csv or in samvars_add from opt_%s', samvars_use{vno}, mcruise));
+            end
         end
     end
-
-    snames_units = {};
-    for k = 1:length(snames)
-        snames_units = [snames_units; snames(k)];
-        snames_units = [snames_units; {'/'}];
-        snames_units = [snames_units; sunits(k)];
-    end
-
+    mvarnames_units %get varnames_units, and variables with default values
+    
     %set values of the not-blank variables
     position = [1:nnisk]';
-    sampnum = stnlocal*100+data.position;
-    statnum = stnlocal+0*data.position;
-
+    sampnum = stnlocal*100+position;
+    statnum = repmat(stnlocal,nnisk,1);
+        
     %write to file
     timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
-
+    
     MEXEC_A.MARGS_IN_1 = {
         otfile
         };
-    MEXEC_A.MARGS_IN_2 = snames(:);
+    MEXEC_A.MARGS_IN_2 = varnames(:);
     MEXEC_A.MARGS_IN_3 = {
         ' '
         ' '
@@ -117,14 +87,14 @@ if ~exist(otfile2, 'file')
         '/'
         '8'
         };
-    MEXEC_A.MARGS_IN_4 = snames_units(:);
+    MEXEC_A.MARGS_IN_4 = varnames_units(:);
     MEXEC_A.MARGS_IN_5 = {
         '-1'
         '-1'
         };
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
     msave
-
+    
     %copy to template file, for next time
     unix(['cp ' m_add_nc(otfile) ' ' m_add_nc(otfile2)])
     

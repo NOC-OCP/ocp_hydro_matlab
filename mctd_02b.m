@@ -77,6 +77,17 @@ if dooxyrev | dooxyhyst
             datastruct = struct('name',oxyvars{no,2}, 'units',h.fldunts{vind}, 'data',oxy_out);
             m_write_variable(otfilestruct, datastruct);
         end
+        if ohtyp>0
+            %and add comments to file
+            if ohtyp==1
+                comment = 'oxygen hysteresis correction different from SBE default applied';
+            elseif ohtyp = 2
+                comment = [comment ' (depth-varying)'];
+            end
+            ncfile.name = m_add_nc(infile);
+            m_add_comment(ncfile,comment);
+        end
+        
     end
     
 else

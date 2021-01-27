@@ -1,11 +1,4 @@
 switch scriptname
-    %%%%%%%%%% smallscript %%%%%%%%%%
-    case 'smallscript' %this is just used to set the list of stations to run (in, for instance, smallscript_*)
-        switch oopt
-            case 'klist'
-                klist=1:10;
-        end
-        %%%%%%%%%% end smallscript %%%%%%%%%%
         
         %%%%%%%%%% mbot_00 %%%%%%%%%% added by Kristin, 10/10/2020
     case 'mbot_00' %information about niskin bottle numbers

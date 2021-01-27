@@ -68,7 +68,7 @@ if exist('help_cropt', 'var') & help_cropt %help mode
         dc = pwd;
         try
             cd(dm);
-            [st, slist] = unix('grep case cruise_options/setdef_cropt.m | grep -v switch');
+            [st, slist] = unix('grep case cruise_options/setdef_cropt_?.m | grep -v switch');
             cd(dc);
             more on
             disp('these are the scriptnames and oopts (the latter indented) with settings under get_cropt')

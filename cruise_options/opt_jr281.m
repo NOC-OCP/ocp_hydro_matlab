@@ -144,7 +144,7 @@ switch scriptname
     case 'mbot_00'
         switch oopt
             case 'nbotfile'
-                otfile = [root_botcsv '/' prefix1 '001.csv']; % on jr281 have a single bottle input file
+                botfile = [root_botcsv '/' prefix1 '001.csv']; % on jr281 have a single bottle input file
             case 'nispos'
                 if stnlocal>=74
                     nis(12:22) = 14:24;
@@ -153,13 +153,6 @@ switch scriptname
         end
         %%%%%%%%% end mbot_00 %%%%%%%%%
         
-        %%%%%%%%%% mbot_01 %%%%%%%%%%
-    case 'mbot_01'
-        switch oopt
-            case 'nbotfile1'
-                otfile = [root_botcsv '/' prefix1 '001.csv']; % on jr281 have a single bottle input file
-        end
-        %%%%%%%%%% end mbot_01 %%%%%%%%%%
         
         %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
     case 'mout_cchdo_ctd'

@@ -13,13 +13,14 @@
 
 switch scriptname
     
-        %%%%%%%%%% castpars (not a script) %%%%%%%%%%
+    %%%%%%%%%% castpars (not a script) %%%%%%%%%%
     case 'castpars'
         %parameters used by multiple scripts, related to CTD/LADCP casts
         switch oopt
             case 'klist'
-                crhelp_str = {'klist (1xN, no default) is a list of stations to be batch-processed by batchscript_*.m. '
-                    'batchscripts will test for existence of klist before calling this, so they won''t overwrite it'}; %***see opt_jc191 smallscript
+                crhelp_str = {'klist_exc (default: []) lists casts with no CTD to exclude from klist for ';
+                'batch processing scripts'};
+                klist_exc = [];
             case 'nnisk'
                 crhelp_str = 'nnisk (default: 24) is number of Niskins on rosette. can be station-dependent.';
                 nnisk = 24;
@@ -32,7 +33,8 @@ switch scriptname
                     'oxygen_sbe2' 'oxygen2'};
         end
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
-                
+        
+        
         %%%%%%%%%% minit %%%%%%%%%%
     case 'minit'
         switch oopt
@@ -41,7 +43,7 @@ switch scriptname
                 stn_string = sprintf('%03d',stn);
         end
         %%%%%%%%%% end minit %%%%%%%%%%
-                
+        
         %%%%%%%%%% ctd_all_part1 %%%%%%%%%%
     case 'ctd_all_part1'
         switch oopt
@@ -139,6 +141,7 @@ switch scriptname
                 H1 = -0.033;
                 H2 = 5000;
                 H3 = 1450;
+                H_0 = [H1 H2 H3];
             case 'turbVpars'
                 crhelp_str = {'sets scale factor and offset to apply to turbidity volts to convert to turbidity, '
                     'defaults to the values from XMLCON for BBRTD-182, calibration date 6 Mar 17 (see your XMLCON file)'};
@@ -270,9 +273,9 @@ switch scriptname
     case 'mbot_00'
         switch oopt
             case 'nbotfile'
-                crhelp_str = {'sets output file to which to write information about Niskins from the .bl file'
+                crhelp_str = {'Sets output file to which to write information about Niskins from the .bl file'
                     'default: one file per station: [root_botcsv ''/bot_'' mcruise ''_'' stn_string ''.csv'']'};
-                otfile = [root_botcsv '/' prefix1 stn_string '.csv'];
+                botfile = [root_botcsv '/' prefix1 stn_string '.csv'];
             case 'nispos'
                 crhelp_str = {'nis gives the bottle numbers (e.g. serial numbers, if known) for niskins in '
                     'carousel positions 1 through 24. defaults to nis = [1:24].'};
@@ -283,13 +286,9 @@ switch scriptname
         %%%%%%%%%% mbot_01 %%%%%%%%%%
     case 'mbot_01'
         switch oopt
-            case 'nbotfile1'
-                crhelp_str = {'sets input file from which to read information about Niskins; should usually '
-                    'be the same as the file output by mbot_00. '
-                    'default: one file per station: [root_botcsv ''/bot_'' mcruise ''_'' stn_string ''.csv'']'};
-                infile = [root_botcsv '/' prefix1 stn_string '.csv'];
             case 'botflags'
-                crhelp_str = {'optional: edit bottle_qc_flag, the vector of quality flags for Niskin bottle firing'};
+                crhelp_str = {'Optional: edit bottle_qc_flag, the vector of quality flags for Niskin bottle firing'
+                    'for this station.'};
         end
         %%%%%%%%%% end mbot_01 %%%%%%%%%%
         
@@ -322,42 +321,6 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
         
-       
-        %%%%%%%%%% ctd_evaluate_sensors %%%%%%%%%%
-    case 'ctd_evaluate_sensors'
-        switch oopt
-            case {'tsensind','csensind','osensind'}
-                sensind = {1:length(d.statnum)}; %default: no sensors changed out
-        end
-        %%%%%%%%%% end ctd_evaluate_sensors %%%%%%%%%%
-        
-        %%%%%%%%%% cond_apply_cal %%%%%%%%%%
-    case 'cond_apply_cal'
-        switch oopt
-            case 'condcal'
-                crhelp_str = {'place to compute calibrated conductivity, condout, from '
-                    'input conductivity, cond, dependent on sensor, press, ***. there is no default; if this script is '
-                    'called without a *** default is condout = cond, but this will '
-                    'produce a warning. must also set'};
-        condout = cond;
-        %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
-        
-        %%%%%%%%%% oxy_apply_cal %%%%%%%%%%
-    case 'oxy_apply_cal'
-        oxyout = oxyin;
-        %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
-        
-        %%%%%%%%%% temp_apply_cal %%%%%%%%%%
-    case 'temp_apply_cal'
-        tempout = temp;
-        %%%%%%%%%% end temp_apply_cal %%%%%%%%%%
-        
-        %%%%%%%%%% fluorcal %%%%%%%%%%
-    case 'fluorcal'
-        fluorout = fluor;
-        %%%%%%%%%% end fluorcal %%%%%%%%%%
-        
-        
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'
         switch oopt
@@ -376,32 +339,58 @@ switch scriptname
         end
         %%%%%%%%%% end populate_station_depths %%%%%%%%%%
         
-        %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
-    case 'mout_cchdo_ctd'
-        switch oopt
-            case 'expo'
-                expocode = 'unknown';
-                sect_id = 'unknown';
-            case 'outfile'
-                outfile = [expocode '_ct1'];
-            case 'headstr'
-                headstring = [];
-        end
-        %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
         
-        %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
-    case 'msec_run_mgridp'
+        %%%%%%%%%% ctd_evaluate_sensors %%%%%%%%%%
+    case 'ctd_evaluate_sensors'
         switch oopt
-            case 'sections'
-                %set list of all sections here, if not specified as an input (see opt_jr302)
-            case 'gpars'
-                gstart = []; gstop = []; gstep = []; %default grid range and spacing--can be set per cruise but is also specified by section name in msec_run_mgridp (or can be provided as an input argument)
-            case 'varlist'
-                varlist  = ['press temp psal potemp oxygen'];
-            case 'kstns'
-            case 'varuse'
+            case {'tsensind','csensind','osensind'}
+                %***
+                sensind = {1:length(d.statnum)}; %default: no sensors changed out
         end
-        %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
-                
+        %%%%%%%%%% end ctd_evaluate_sensors %%%%%%%%%%
+        
+        %%%%%%%%%% mctd_senscal %%%%%%%%%%
+    case 'mctd_senscal'
+        calvars = {}; calstr = ''; calmsg = {};
+        switch oopt
+            case 'tempcal'
+                crhelp_str = {'Set temperature calibration functions to be applied to _24hz file, using variable '
+                    'senslocal to select sensor 1 or sensor 2 (if there are two CTDs). '
+                    'calvars (default: {}) is a cell array listing first the variable to be calibrated '
+                    '(e.g. temp1), and then other independent variables for the selected calibration function,'
+                    'which is given by string calstr. calstr is constructed using sprintf notation to '
+                    'be filled with the calibrated variable then the strings from calvars in order, e.g.:'
+                    'calvars = {''temp1'' ''press''}; '
+                    'calstr = ''%s = %s - 1e-3*%s;''; '
+                    'sprintf(calstr, [calvars{1} ''_cal''], calvars{:}) '
+                    'prints the calibration function '
+                    'temp1_cal = temp1 - 1e-3*press;'
+                    'Finally, string calmsg must be set to contain the variable to be calibrated then a space '
+                    'then the cruise name (lower case). This is used as a partial check against copy-pasting '
+                    'code from a previous cruise and accidentally applying the wrong calibration. '};
+            case 'condcal'
+                crhelp_str = {'Set conductivity calibration functions to be applied to _24hz file, using '
+                    'calvars, calstr, and calmsg; see help message for '
+                    'scriptname=''senscals''; oopt = ''temp''; '
+                    'for details.'};
+            case 'oxygencal'
+                crhelp_str = {'Set oxygen calibration function(s) to be applied to _24hz file, using '
+                    'calvars, calstr, and calmsg; see help message for '
+                    'scriptname=''senscals''; oopt = ''temp''; '
+                    'for details.'};
+            case 'fluorcal'
+                crhelp_str = {'Set fluorecsense calibration function to be applied to _24hz file, using '
+                    'calvars, calstr, and calmsg; see help message for '
+                    'scriptname=''senscals''; oopt = ''temp''; '
+                    'for details.'};
+            case 'transmittancecal'
+                crhelp_str = {'Set transmittance calibration function to be applied to _24hz file, using '
+                    'calvars, calstr, and calmsg; see help message for '
+                    'scriptname=''senscals''; oopt = ''temp''; '
+                    'for details.'};
+        end
+        %%%%%%%%%% mctd_senscal %%%%%%%%%%
+        
+        
         
 end

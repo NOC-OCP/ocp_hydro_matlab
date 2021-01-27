@@ -112,15 +112,6 @@ switch scriptname
    %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
 
 
-   %%%%%%%%%% smallscript %%%%%%%%%%
-   case 'smallscript'
-      switch oopt
-         case 'klist'
-	    klist = [3:31];
-      end
-   %%%%%%%%%% end smallscript %%%%%%%%%%
-
-
    %%%%%%%%%% station_summary %%%%%%%%%%
    case 'station_summary'
       switch oopt

@@ -47,27 +47,16 @@ switch scriptname
    %%%%%%%%%% end oxy_apply_cal %%%%%%%%%%
 
 
-   %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
-   case 'mout_cchdo_sam'
+   %%%%%%%%%% mout_cchdo %%%%%%%%%%
+   case 'mout_cchdo'
       switch oopt
          case 'expo'
             expocode = '74DI368_1';
             sect_id = 'A16N2011';
-	 case 'outfile'
-	    outfile = 'a16n2011';
+	 case 'woce_file_pre'
+	    prefix = 'a16n2011';
       end
-   %%%%%%%%%% end mout_cchdo_sam %%%%%%%%%%
-
-   %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
-   case 'mout_cchdo_ctd'
-      switch oopt
-         case 'expo'
-            expocode = '74DI368_1';
-            sect_id = 'A16N2011';
-	 case 'outfile'
-	    outfile = 'a16n2011';
-      end
-   %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
+   %%%%%%%%%% end mout_cchdo %%%%%%%%%%
 
 
    %%%%%%%%%% mctd_03 %%%%%%%%%%

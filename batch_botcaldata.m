@@ -9,70 +9,37 @@
 %klistnut (nutrients)
 %klistco2 (carbon)
 %klistcfc (tranient tracers/cfcs)
+%klistpig (pigments)
+%klistiso (isotopes)
 %at the end, all of the affected stations are updated in the appended file
 %
 %this allows you to read in bottle data from different possibly overlapping sets of
 %stations without calling msam_02b or msam_updateall more than necessary
 
-scriptname = 'smallscript_load_botcaldata';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-klist = [];
-if exist('klisttem', 'var') & ~isempty(klisttem)
-    klisttem = klisttem(:)';
-    disp('Will process sbe35 temperature from stations in klisttem: ')
-    disp(klisttem)
-    pause(1)
-    klist = [klist klisttem];
-else; klisttem = []; end
-if exist('klistsal', 'var') & ~isempty(klistsal)
-    klistsal = klistsal(:)';
-    disp('Will process salinity from stations in klistsal: ')
-    disp(klistsal)
-    pause(1)
-    klist = [klist klistsal];
-else; klistsal = []; end
-if exist('klistoxy', 'var') & ~isempty(klistoxy)
-    klistoxy = klistoxy(:)';
-    disp('Will process oxygen from stations in klistoxy: ')
-    disp(klistoxy)
-    pause(1)
-    klist = [klist klistoxy];
-else; klistoxy = []; end
-if exist('klistnut', 'var') & ~isempty(klistnut)
-    klistnut = klistnut(:)';
-    disp('Will process nutrients from stations in klistnut: ')
-    disp(klistnut)
-    pause(1)
-    klist = [klist klistnut];
-    disp('if the nutrients .csv file has more than one header line')
-    disp('or if it does not have a name for the final column')
-    warning('fix it now'); pause
-else; klistnut = []; end
-if exist('klistco2', 'var') & ~isempty(klistco2)
-    klistco2 = klistco2(:)';
-    disp('Will process carbon from stations in klistco2: ')
-    disp(klistco2)
-    pause(1)
-    klist = [klist klistco2];
-else; klistco2 = []; end
-if exist('klistcfc', 'var') & ~isempty(klistcfc)
-    klistcfc = klistcfc(:)';
-    disp('Will process tracers from stations in klistcfc: ')
-    disp(klistcfc)
-    pause(1)
-    klist = [klist klistcfc];
-else; klistcfc = []; end
-if exist('klistiso', 'var') & ~isempty(klistiso)
-    klistiso = klistiso(:)';
-    disp('Will process tracers from stations in klistiso: ')
-    disp(klistiso)
-    pause(1)
-    klist = [klist klistiso];
-else; klistiso = []; end
-klist = unique(klist);
-
-if ~exist('docsv'); docsv = 0; end
+%get concatenated list of stations
+list_actions = {'klisttem' 'process sbe35 temperature';
+    'klistsal' 'process bottle salinity';
+    'klistoxy' 'process bottle oxygen';
+    'klistnut' 'process nutrients';
+    'klistco2' 'process CO2';
+    'klistcfc' 'process transient tracers';
+    'klistpig' 'process pigments';
+    'klistiso' 'process isotopes'};
+klistall = [];
+for lno = 1:size(list_actions,1)
+    if ~exist(list_actions{lno,1}, 'var')
+        eval([list_actions{lno,1} ' = [];']);
+    else
+        eval(['klist = ' list_actions{lno,1} '(:)';']);
+        klistall = [klistall klist];
+        sprintf('Will %s from stations\n', list_actions{lno,2});
+        disp(klist); pause(0.5)
+    end
+end
+scriptname = 'castpars'; oopt = 'klist'; get_cropt
+klist = setdiff(klist, klist_exc); %remove non-CTD casts
 
 %first do steps that create concatenated (rather than per-station) mstar files
 
@@ -128,20 +95,8 @@ for kloop = klist
     stn = kloop; msam_02b %updates sample flags to match niskin flags
     stn = kloop; msam_updateall %puts sam data into sam_all file
     
-    if docsv
-        %csv files
-        mout_makelists(kloop, 'nutsodv');
-        mout_makelists(kloop, 'allpsal');
-    end
-    
 end
 
-if docsv
-    %   mout_sam_csv % end of jc159 no need for sam lists
-    mout_cchdo_sam
+mout_cchdo_sam
     
-    %sync csv files to public drive, by way of mac mini since there's no write
-    %permission from eriu
-    % end of jc159 mac mini no longer is there
-    % % % %    unix(['rsync -auv --delete /local/users/pstar/cruise/data/collected_files/ 10.cook.local:/Volumes/Public/JC159/collected_files/']);
-end
+%sync csv files to public drive, by way of mac mini since there's no write

@@ -57,7 +57,7 @@ out = [sampnum(:) stnarray(:) kpos(:) nis(:) flag(:)];
 
 form = '%5d , %2d , %3d , %2d , %2d \n';
 
-fid = fopen(otfile,'a');
-fprintf(fid,'%s, %s, %s, %s, %s\n', 'sampnum', 'sta', 'niskin', 'bottle_number', 'bottle_qc_flag');
+fid = fopen(botfile,'a');
+fprintf(fid,'%s, %s, %s, %s, %s\n', 'sampnum', 'statnum', 'niskin', 'bottle_number', 'bottle_qc_flag');
 fprintf(fid,form,out');
 fclose(fid);
