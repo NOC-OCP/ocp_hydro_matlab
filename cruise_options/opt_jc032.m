@@ -12,19 +12,19 @@ switch scriptname
    case 'msec_run_mgridp'
       switch oopt
          case 'sections'
-	    sections = {'bc1' 'bc2' 'bc3' 'main'};
-	 case 'kstns'
+	    sections = {'bc1' 'bc2' 'bc3' '24s'};
+	 case 'sec_stns'
 	    switch section
 	       case 'bc1'
-	          sstring = '1:9';
+	          kstn = 1:9;
                case 'bc2'
-	          sstring = '10:22';
+	          kstn = 10:22;
 	       case 'bc3'
-	          sstring = '23:35';
+	          kstn = 23:35;
 	       case 'all'
-	          sstring = '[1:47 49:118]';
-	       case 'main'
-	          sstring = '[23:35 37:47 49:118]';
+	          kstn = [1:47 49:118];
+	       case '24s'
+	          kstn = [23:35 37:47 49:118];
 	    end
       end
    %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%

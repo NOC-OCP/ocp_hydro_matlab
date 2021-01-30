@@ -20,71 +20,21 @@ mdocshow(scriptname, ['creates empty data cycles file dcs_' mcruise '_' stn_stri
 root_templates = mgetdir('M_TEMPLATES');
 root_ctd = mgetdir('M_CTD');
 
-prefix1 = ['dcs_' mcruise '_'];
-prefixt = ['dcs_'];
-
-varfile = [root_templates '/' prefixt 'varlist.csv']; % read list of var names and units for empty sam template
-varfileout = [root_templates '/' prefixt 'varlist_out.csv']; % write list of var names and units for empty sam template
-otfile = [root_ctd '/' prefix1 stn_string];
-
-dataname = [prefix1 stn_string];
-
-num_bottles = 1;
-
-cellall = mtextdload(varfile,','); % load all text
-
-clear snames sunits
-for kline = 1:length(cellall)
-    cellrow = cellall{kline}; % unpack rows
-    snames{kline} = m_remove_outside_spaces(cellrow{1});
-    sunits{kline} = m_remove_outside_spaces(cellrow{2});
+varfile = [root_templates '/dcs_' mcruise '_varlist.csv']; % read list of var names and units for empty sam template
+dsv = dataset('File',varfile,'Delimiter',',');
+varnames = dsv.varname; varunits = dsv.varunit;
+mvarnames_units
+for vno = 1:length(varnames)
+    eval([varnames{vno} ' = NaN']);
 end
-snames = snames(:);
-sunits = sunits(:);
-numvar = length(snames);
+statnum = stnlocal;
 
-fidmsam01 = fopen(varfileout,'w'); % save back to out file
-for k = 1:numvar
-    fprintf(fidmsam01,'%s%s%s\n',snames{k},',',sunits{k});
-end
-fclose(fidmsam01);
+%save 
 
-null = nan+zeros(num_bottles,1);
-for k = 1:numvar
-    cmd = [snames{k} ' = null;']; eval(cmd);
-end
-
-checknames = {'statnum'};
-checkunits = {'number'};
-% ensure at least these three names exist in the list
-for k = 1:length(checknames)
-    cname = checknames{k};
-    kmatch = strmatch(cname,snames,'exact');
-    if isempty(kmatch)
-        snames = [cname; snames(:)];
-        sunits = [checkunits{k}; sunits(:)];
-    end
-end
-    
-position = [1:num_bottles]';
-statnum = stnlocal+0*position;
-
-snames_units = {};
-for k = 1:length(snames)
-    snames_units = [snames_units; snames(k)];
-    snames_units = [snames_units; {'/'}];
-    snames_units = [snames_units; sunits(k)];
-end
-
-timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
- 
+dataname = ['dcs_' stn_string];
+otfile = [root_ctd '/' dataname];
+timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']']; 
 %--------------------------------
-% 2009-01-26 16:40:45
-% msave
-% input files
-% Filename    Data Name :   <version>  <site> 
-% output files
-% Filename sam_jr193_016.nc   Data Name :  sam_jr193_016 <version> 17 <site> bak_macbook
 MEXEC_A.MARGS_IN_1 = {
     otfile
 };

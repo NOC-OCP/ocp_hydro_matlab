@@ -3,79 +3,82 @@ switch scriptname
     
     %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
     case 'mday_01_clean_av'
-        switch abbrev
-            case 'surfmet'
-                if ~exist([otfile '.nc'])
-                    unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+        switch oopt
+            case 'uway_apply_cal'
+                switch abbrev
+                    case 'surfmet'
+                        if ~exist([otfile '.nc'])
+                            unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+                        end
+                        % CALIBRATION
+                        A = -1.17483;
+                        B = 1.00152;
+                        [d h] = mload(otfile,'press',' ');
+                        [dt ht] = mload(otfile,'time',' ');
+                        time_p = getfield(dt, 'time');
+                        data_raw = getfield(d, 'press');
+                        data_calib = A + B.*data_raw;
+                        % CORRECT FOR HEIGHT OF MOUNTED BAROMETER ABOVE SEA LEVEL
+                        % Assume hydrostatic (dw/dz ~ 0)  dp/dz = -rho*g = -pg/RT
+                        % and well mixed BL ==> T = const between sfc and estimated z
+                        % then Pz = Psfc*exp(-z*g/Rd*T) ==>  Psfc = Pz/exp(-z/H)
+                        % where z =  height of mounting ~ 16.10m on di346
+                        Rd = 287.05;
+                        g = 9.81;
+                        % pickup temperature on mast from surfmet data
+                        dir_T = [MEXEC_G.MEXEC_DATA_ROOT '/met/surfmet/'];
+                        ncfileT.name = [dir_T 'met_' cruise '_d' daystr '_' MEXEC.status '.nc'];
+                        [dT1 hT1] = mload([ncfileT.name],'airtemp',' ');
+                        T_today = getfield(dT1, 'airtemp');
+                        [dt1 ht1] = mload([ncfileT.name],'time',' ');
+                        time_today = getfield(dt1, 'time');
+                        % Assume temperature is mixed to a constant profile in the surface layer
+                        % over a period of n minutes. Here 30mins is assumed reasonable
+                        % (both the nocturnal and daytime ABL are to be smoothed. bad for nocturnal?)
+                        % Apply n minute median despiking to airtemp data and use smoothed
+                        % T(t) profile in the P correction.
+                        n = 60; % smoothing period in minutes
+                        Tsmooth = met_median(T_today,time_today,day,n); % call function to smooth airtemp profile
+                        T_smoothed = Tsmooth.T_smoothed;
+                        % efolding height
+                        H = (Rd.*(T_smoothed+273.15))/g;                 % T IN KELVIN
+                        z = 16.10*ones(size(H,1),size(H,2));
+                        data_zcorrect = data_calib.*(1/exp(-z/H));
+                        % SAVE CORRECTED DATA TO 'calib_.nc' FILE
+                        MEXEC_A.MARGS_IN = {otfile 'time_p' 'data_zcorrect' ' ' ' ' '8' '0' 'time' 'seconds' 'press_zcorrected' 'mb' ' ' ' '}
+                        msave;
+                    case 'surflight'
+                        % pyranometer
+                        PPAR_SCALE = 11.04;   % micro volts per W/m/m
+                        SPAR_SCALE = 10.53;   % micro volts per W/m/m
+                        PTIR_SCALE = 9.60;    % micro volts per W/m/m
+                        STIR_SCALE = 9.76;    % micro volts per W/m/m
+                        % -------------
+                        % convert volts
+                        % -------------
+                        MEXEC_A.MARGS_IN = {
+                            otfile
+                            'y'
+                            'ppar'
+                            'y = x*0.01104'
+                            'ppar_calc'
+                            'W/m^2'
+                            'spar'
+                            'y = x*0.01053'
+                            'spar_calc'
+                            'W/m^2'
+                            'ptir'
+                            'y = x*0.00960'
+                            'ptir_calc'
+                            'W/m^2'
+                            'stir'
+                            'y = x*0.00976'
+                            'stir_calc'
+                            'W/m/m'
+                            ' '
+                            };
+                        mcalib
                 end
-                % CALIBRATION
-                A = -1.17483;
-                B = 1.00152;
-                [d h] = mload(otfile,'press',' ');
-                [dt ht] = mload(otfile,'time',' ');
-                time_p = getfield(dt, 'time');
-                data_raw = getfield(d, 'press');
-                data_calib = A + B.*data_raw;
-                % CORRECT FOR HEIGHT OF MOUNTED BAROMETER ABOVE SEA LEVEL
-                % Assume hydrostatic (dw/dz ~ 0)  dp/dz = -rho*g = -pg/RT
-                % and well mixed BL ==> T = const between sfc and estimated z
-                % then Pz = Psfc*exp(-z*g/Rd*T) ==>  Psfc = Pz/exp(-z/H)
-                % where z =  height of mounting ~ 16.10m on di346
-                Rd = 287.05;
-                g = 9.81;
-                % pickup temperature on mast from surfmet data
-                dir_T = [MEXEC_G.MEXEC_DATA_ROOT '/met/surfmet/'];
-                ncfileT.name = [dir_T 'met_' cruise '_d' daystr '_' MEXEC.status '.nc'];
-                [dT1 hT1] = mload([ncfileT.name],'airtemp',' ');
-                T_today = getfield(dT1, 'airtemp');
-                [dt1 ht1] = mload([ncfileT.name],'time',' ');
-                time_today = getfield(dt1, 'time');
-                % Assume temperature is mixed to a constant profile in the surface layer
-                % over a period of n minutes. Here 30mins is assumed reasonable
-                % (both the nocturnal and daytime ABL are to be smoothed. bad for nocturnal?)
-                % Apply n minute median despiking to airtemp data and use smoothed
-                % T(t) profile in the P correction.
-                n = 60; % smoothing period in minutes
-                Tsmooth = met_median(T_today,time_today,day,n); % call function to smooth airtemp profile
-                T_smoothed = Tsmooth.T_smoothed;
-                % efolding height
-                H = (Rd.*(T_smoothed+273.15))/g;                 % T IN KELVIN
-                z = 16.10*ones(size(H,1),size(H,2));
-                data_zcorrect = data_calib.*(1/exp(-z/H));
-                % SAVE CORRECTED DATA TO 'calib_.nc' FILE
-                MEXEC_A.MARGS_IN = {otfile 'time_p' 'data_zcorrect' ' ' ' ' '8' '0' 'time' 'seconds' 'press_zcorrected' 'mb' ' ' ' '}
-                msave;
-            case 'surflight'
-                % pyranometer
-                PPAR_SCALE = 11.04;   % micro volts per W/m/m
-                SPAR_SCALE = 10.53;   % micro volts per W/m/m
-                PTIR_SCALE = 9.60;    % micro volts per W/m/m
-                STIR_SCALE = 9.76;    % micro volts per W/m/m
-                % -------------
-                % convert volts
-                % -------------
-                MEXEC_A.MARGS_IN = {
-                    otfile
-                    'y'
-                    'ppar'
-                    'y = x*0.01104'
-                    'ppar_calc'
-                    'W/m^2'
-                    'spar'
-                    'y = x*0.01053'
-                    'spar_calc'
-                    'W/m^2'
-                    'ptir'
-                    'y = x*0.00960'
-                    'ptir_calc'
-                    'W/m^2'
-                    'stir'
-                    'y = x*0.00976'
-                    'stir_calc'
-                    'W/m/m'
-                    ' '
-                    };
-                mcalib
         end
         %%%%%%%%%% end mday_01_clean_av %%%%%%%%%%
         
@@ -162,14 +165,12 @@ switch scriptname
         switch oopt
             case 'sections'
                 sections = {'fc' '24n'};
-            case 'gpars'
-                gstart = 10; gstop = 6500; gstep = 20;
-            case 'kstns'
+            case 'sec_stns'
                 switch section
                     case 'fc'
-                        sstring = '2:13';
+                        kstns = 2:13;
                     case '24n'
-                        sstring = '[14:16 18 17 19:135]';
+                        kstns = [14:16 18 17 19:135];
                 end
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%

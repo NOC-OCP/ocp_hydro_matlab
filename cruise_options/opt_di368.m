@@ -93,7 +93,7 @@ switch scriptname
    %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
    case 'msec_run_mgridp'
       switch oopt
-         case 'varuse'
+         case 'sam_gridlist'
 	    varuselist.names = {'botoxy'};
       end
    %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%

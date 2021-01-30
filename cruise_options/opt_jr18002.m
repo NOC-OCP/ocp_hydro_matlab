@@ -141,10 +141,10 @@ switch scriptname
     case 'populate_station_depths'
         switch oopt
             case 'depth_source'
-                depmeth = 4; %get from LADCP data
+                depth_source = {'ladcp' 'ctd'}; %get from LADCP data
             case 'bestdeps'
                 bestdeps(bestdeps(:,1)==11,2) = 4789;
-                bestdeps(repeat_casts(:,1),2) = bestdeps(repeat_casts(:,2),2); %***
+                bestdeps(repeat_casts(:,1),2) = bestdeps(repeat_casts(:,2),2);
         end
         %%%%%%%%%% end populate_station_depths %%%%%%%%%%
         
@@ -513,20 +513,18 @@ switch scriptname
         switch oopt
             case 'sections'
                 sections = {'sr1b' 'sr1ba' 'sr1bb'};
-            case 'varlist'
+            case 'ctd_regridlist'
                 varlist = [varlist ' fluor transmittance'];
-            case 'kstns'
+            case 'sec_stns'
                 switch section
                     case 'sr1b'
-                        sstring = '[3:21 22 44 40 36 32 31 27 26 25 23]'; %with earlier sr1b21
+                        kstns = [3:21 22 44 40 36 32 31 27 26 25 23]; %with earlier sr1b21
                     case 'sr1ba'
-                        sstring = '[3:10 1 12:21 22 44 40 36 32 31 27 26 25 23]'; %with full depth sr1b9
+                        kstns = [3:10 1 12:21 22 44 40 36 32 31 27 26 25 23]; %with full depth sr1b9
                     case 'sr1bb'
-                        sstring = '[3:21 45 44 40 36 32 31 27 26 25 23]'; %with later sr1b21
+                        kstns = [3:21 45 44 40 36 32 31 27 26 25 23]; %with later sr1b21
                 end
-            case 'varuse'
-                %varuselist.names = {'botoxy' 'totnit_per_kg' 'phos_per_kg' 'silc_per_kg' 'dic' 'alk' 'cfc11'  'cfc12' 'f113' 'sf6' 'ccl4'};
-                %varuselist.names = {'botoxy' 'totnit_per_kg' 'phos_per_kg' 'silc_per_kg' 'dic' 'alk' 'cfc11'  'cfc12' 'f113' 'sf6'};
+            case 'sam_gridlist'
                 varuselist.names = {'botoxy' 'totnit' 'phos' 'silc' 'dic' 'alk'};
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
@@ -575,12 +573,10 @@ switch scriptname
         %%%%%%%%%% mvad_01 %%%%%%%%%%
     case 'mvad_01'
         switch oopt
-            case 'files'
+            case 'vmadcp_files'
                 cname = 'enrproc007_029';
-                pre1 = [mcruise '_' inst '/adcp_pyproc/' cname '/' inst nbbstr];
-                datadir = [root_vmadcp '/' pre1 '/contour'];
-                fnin = [datadir '/' inst 'nb.nc'];
-                dataname = [inst '_' mcruise '_01'];
+                fnin = [root_vmadcp '/' mcruise '_' oslocal '/adcp_pyproc/' cname '/' oslocal '/contour/' oslocal '.nc'];
+                dataname = [oslocal '_' mcruise '_01'];
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
         

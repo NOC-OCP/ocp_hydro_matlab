@@ -1,9 +1,10 @@
-function [varlist, var_copystr] = mvars_in_file(varlist, infile, varargin);
-% [varlist, var_copystr] = mvars_in_file(varlist, infile);
-% [varlist, var_copystr] = mvars_in_file(varlist, infile, prestr, poststr);
+function [varlist, var_copystr, iiv] = mvars_in_file(varlist, infile, varargin);
+% [varlist, var_copystr, iiv] = mvars_in_file(varlist, infile);
+% [varlist, var_copystr, iiv] = mvars_in_file(varlist, infile, prestr, poststr);
 %
 % exclude any variables in varlist (1-D cell array of strings)
-%     that aren't in mstar .nc file infile
+%     that aren't in mstar .nc file infile; indices of those that are are
+%     in iiv
 %
 % concatenate remaining variables into string var_copystr, 
 %     with 2 input arguments, looks like 'var1 var2 var3' etc.

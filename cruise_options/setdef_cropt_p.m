@@ -69,13 +69,22 @@ switch scriptname
     case 'msec_run_mgridp'
         switch oopt
             case 'sections'
-                %set list of all sections here, if not specified as an input (see opt_jr302)
+                crhelp_str = {'sections (cell array) contains a list of all sections to grid for this cruise'};
             case 'gpars'
-                gstart = []; gstop = []; gstep = []; %default grid range and spacing--can be set per cruise but is also specified by section name in msec_run_mgridp (or can be provided as an input argument)
-            case 'varlist'
-                varlist  = ['press temp psal potemp oxygen'];
-            case 'kstns'
-            case 'varuse'
+                crhelp_str = {'Set gstart, gstop, and gstep to override section-dependent default pressure grid'
+                    'range and spacing (dbar) coded in msec_run_mgridp.'};
+                gstart = []; gstop = []; gstep = []; 
+            case 'ctd_regridlist'
+                crhelp_str = {'ctd_regridlist (string) is a list of CTD variables separated by spaces to grid using '
+                    'mgridp. Default is [''press temp psal potemp oxygen'']}. Make ctd_regridlist empty to not rerun '
+                    'the gridding.'};
+                ctd_regridlist  = ['press temp psal potemp oxygen'];
+            case 'sec_stns'
+                crhelp_str = {'kstns (1xN) contains list of stations (on this cruise) in each section'};
+            case 'sam_gridlist'
+                crhelp_str = {'varuselist.names (default: {''botpsal'' ''botoxy''}) contains a list of sample '
+                    'variables to grid.'};
+                varuselist.names = {'botpsal' 'botoxy'};
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
         
@@ -106,8 +115,26 @@ switch scriptname
                 % unity, unless changed in opt_cruise.
                 scale_x = 0.5; % choose value < 1 for smoother
                 scale_z = 1;
-                
         end
         %%%%%%%%%% end m_maptracer %%%%%%%%%%      
         
+        %%%%%%%%%% msec_plot_contrs %%%%%%%%%%
+    case 'msec_plot_contrs'
+        switch oopt
+            case 'add_station_depths'
+                crhelp_str = {'station_depth_width (default 0), if greater than 0, gives linewidth '
+                    'for adding station depths to contour plots.'};
+                station_depth_width = 0;
+            case 'add_bottle_depths'
+            crhelp_str = {'bottle_depth_size (default 0), if greater than 0, gives markersize '
+                'for adding bottle positions to contour plots.'};
+                bottle_depth_size = 0;
+        end
+        %%%%%%%%%% end msec_plot_contrs %%%%%%%%%%
+
+        %%%%%%%%%% set_clev_col %%%%%%%%%%
+    case 'set_clev_col'
+        switch oopt
+            case 'samfn'
+
 end

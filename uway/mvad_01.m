@@ -8,7 +8,7 @@
 % cruise, input file example is os150nb.nc
 % to run on os75 nb without prompts type
 %
-% os = 75; nbb = 1; mcodpy_01
+% os = 75nb; mvad_01
 
 
 m_common
@@ -22,28 +22,18 @@ if exist('os','var')
     m = ['Running script ' scriptname ' for OS ' sprintf('%d',os)];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m)
 else
-    os = input('Enter OS type: 75 or 150: ');
+    os = input('Enter OS type: e.g. os150nb, os75nb, os150bb : ', 's');
 end
-inst=['os' sprintf('%d',os)];
-oslocal = os; clear os
-
-if ~exist('nbb');
-    nbb = input('Enter narrowband (1) or broadband (2): ');
-end
-if nbb==1;
-    nbbstr='nb';
-else
-    nbbstr='bb';
-end
+oslocal = os; clear os; % so it doesnt persist
 
 root_vmadcp = mgetdir('M_VMADCP');
-oopt = 'files'; get_cropt %datadir, fnin, dataname
+scriptname = mfilename; oopt = 'vmadcp_files'; get_cropt %fnin, dataname
 
 if ~exist(fnin, 'file')
     error(['input file ' fnin ' not found'])
 end
 otfile = [root_vmadcp '/mproc/' dataname '.nc'];
-clear allin nbb
+clear allin 
 
 allin.decday = nc_varget(fnin,'time');
 tu = nc_attget(fnin,'time','units');

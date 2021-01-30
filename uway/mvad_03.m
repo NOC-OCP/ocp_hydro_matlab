@@ -47,9 +47,7 @@
 % assume uhdas output file is eg vmadcp/mproc/os150nb_jc191_01.nc
 
 
-scriptname = 'mvad_03';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
 
 if exist('cast','var')
     m = ['Running script ' scriptname ' on cast type ' sprintf('%s',cast)];
@@ -200,18 +198,12 @@ end
 % times contained ok, find index of adcp times required
 
 kok = find(time >=  tstart &  time <= tend);
-
 if isempty(kok)
     merr = ['No ADCP data in file ' infile ' falls in time range of ' cast_string ' ' stn_string ];
     fprintf(MEXEC_A.Mfider,'%s\n',merr);
     return
 end
 colrange = [min(kok) max(kok)];
-
-
-
-
-%--------------------------------
 
 MEXEC_A.MARGS_IN = {
     infile
@@ -227,18 +219,6 @@ mcopya
 
 
 % fix dataname
-%--------------------------------
-% gdm on di346 edited to fix up the dataname for the new variable
-%--------------------------------
-% 2010-01-17 06:20:25
-% mheadr
-% calling history, most recent first
-%    mheadr in file: mheadr.m line: 49
-% input files
-% Filename os75_di346nnx_007.nc   Data Name :  os75_di346nnx_01 <version> 7 <site> di346_atsea
-% output files
-% Filename os75_di346nnx_007.nc   Data Name :  os75_di346nnx_007 <version> 1 <site> di346_atsea
-
 MEXEC_A.MARGS_IN = {
     otfile1
     'y'
@@ -248,19 +228,9 @@ MEXEC_A.MARGS_IN = {
     ' '
     };
 mheadr
-%--------------------------------
 
 
 % average. Use time bin average as the time variable
-%--------------------------------
-% 2012-02-04 14:51:42
-% mavrge
-% calling history, most recent first
-%    mavrge in file: mavrge.m line: 324
-% input files
-% Filename os75_jc069nnx_stn001.nc   Data Name :  os150_jc069nnx_01 <version> 8 <site> jc069_atsea
-% output files
-% Filename gash.nc   Data Name :  os150_jc069nnx_01 <version> 13 <site> jc069_atsea
 MEXEC_A.MARGS_IN = {
     otfile1
     otfile2
@@ -271,6 +241,6 @@ MEXEC_A.MARGS_IN = {
     'b'
     };
 mavrge
-%--------------------------------
+
 
 

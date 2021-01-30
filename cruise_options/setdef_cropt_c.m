@@ -19,7 +19,7 @@ switch scriptname
         switch oopt
             case 'klist'
                 crhelp_str = {'klist_exc (default: []) lists casts with no CTD to exclude from klist for ';
-                'batch processing scripts'};
+                    'batch processing scripts'};
                 klist_exc = [];
             case 'nnisk'
                 crhelp_str = 'nnisk (default: 24) is number of Niskins on rosette. can be station-dependent.';
@@ -85,6 +85,12 @@ switch scriptname
         %%%%%%%%%% mctd_02a %%%%%%%%%%
     case 'mctd_02a'
         switch oopt
+            case 'ctdvars' %***not updating past opt_cruise files (yet)
+                crhelp_str = {'Place to put additional (ctdvars_add) or replacement (ctdvars_replace)'
+                    'triplets of SBE variable name, mstar variable name, mstar variable units to '
+                    'supplement those in templates/ctd_renamelist.csv. Default is both empty.'};
+                ctdvars_replace = {'','',''};
+                ctdvars_add = {'','',''};
             case 'absentvars' % introduced new on jc191
                 crhelp_str = {'absentvars (default {}) is a cell array of strings listing variables not present '
                     'for given station(s); if applicable should be set in opt_cruise for selected stations '
@@ -175,8 +181,8 @@ switch scriptname
                 switchscans24 = {};
             case '24hz_interp'
                 crhelp_str = {'flag interp24 sets whether to interpolate over gaps in 24 hz data; if 1, variable '
-                    'maxgap is required to set maximum number of missing scans to fill. interp24 defaults to 0 for '
-                    'pre-dy113 cruises, jc191/192, and dy120/129, and 1 for dy113, jc211, and subsequent cruises'}; %***
+                    'maxgap (default: 12) is required to set maximum number of missing scans to fill. interp24 defaults to 0 for '
+                    'pre-dy113 cruises, jc191/192, and dy120/129, and 1 for dy113, jc211, and subsequent cruises'}; 
                 if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 | sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191';'jc192';'dy120';'dy129'}))
                     interp24 = 0;
                 else
@@ -237,12 +243,13 @@ switch scriptname
         switch oopt
             case 'fir_fill'
                 crhelp_str = {'fillstr determines how many NaNs to fill in 1hz data before interpolation '
-                    'to bottle firing times: ''f'' or inf for any number (default), 0 or ''k'' for not at all, or '
+                    'to bottle firing times: ''f'' or inf for any number, 0 or ''k'' for not at all, or '
                     'an integer (as a string, e.g. ''10'') to fill that number of points (seconds). '
-                    'if avi_opt==0 (default), linearly interpolate to bottle firing time; if avi_opt is a tuple, '
-                    'compute the median over the window of points specified by avi_opt.'};
+                    'if avi_opt==0, linearly interpolate to bottle firing time; if avi_opt is a tuple, '
+                    'compute the median over the window of (24-hz) scans specified by avi_opt. Defaults'
+                    'are ''f'' and 0.'}; %***but should this be different? the default shouldn't be to fill any length gap should it?
                 fillstr = 'f';
-                avi_opt = 0;
+                avi_opt = 0; 
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
@@ -324,13 +331,16 @@ switch scriptname
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'
         switch oopt
+            case 'depth_recalc'
+                crhelp_str = {'recalcdepth_stns (default []) lists stations for which to recalculate depths '
+                    'even if they already have values in station_depths mat-file'};
+                recalcdepth_stns = [];
             case 'depth_source'
-                crhelp_str = {'depmeth determines preferred method for finding station depth; do '
-                    '>> help bestdeps '
-                    'for values. If depmeth==1 (default), fnin gives name of two-column text file '
-                    'of stations, depths.'};
-                depmeth = 1; %load from two-column text file ***is this really the best default?
-                fnin = [root_ctddep '/station_depths_' mcruise '.txt'];
+                crhelp_str = {'depth_source (default: {''file'', ''ctd''}) determines preferred method(s), '
+                    'in order, for finding station depths. Other option is ''ladcp''. If one of the methods '
+                    'is ''file'', fnintxt specifies name of ascii (csv or two-column text) file of [stations, depths].'}
+                depth_source = {'file', 'ctd'}; %load from two-column text file, then fill with ctd press+altimeter
+                fnintxt = [root_ctddep '/station_depths_' mcruise '.txt'];
             case 'bestdeps'
                 crhelp_str = {'place to edit those station depths that were not correctly filled in by '
                     'the chosen depmeth, either directly by editing bestdeps (a list of [station, depth]), '
@@ -353,41 +363,17 @@ switch scriptname
     case 'mctd_senscal'
         calvars = {}; calstr = ''; calmsg = {};
         switch oopt
-            case 'tempcal'
-                crhelp_str = {'Set temperature calibration functions to be applied to _24hz file, using variable '
+            case {'tempcal' 'condcal' 'oxygencal' 'fluorcal' 'transmittancecal'}
+                crhelp_str = {['Set ' oopt(1:end-3) ' calibration functions to be applied to _24hz file, using variable ']
                     'senslocal to select sensor 1 or sensor 2 (if there are two CTDs). '
-                    'calvars (default: {}) is a cell array listing first the variable to be calibrated '
-                    '(e.g. temp1), and then other independent variables for the selected calibration function,'
-                    'which is given by string calstr. calstr is constructed using sprintf notation to '
-                    'be filled with the calibrated variable then the strings from calvars in order, e.g.:'
-                    'calvars = {''temp1'' ''press''}; '
-                    'calstr = ''%s = %s - 1e-3*%s;''; '
-                    'sprintf(calstr, [calvars{1} ''_cal''], calvars{:}) '
-                    'prints the calibration function '
-                    'temp1_cal = temp1 - 1e-3*press;'
+                    'calstr is a string expressing the calibration function, e.g.:'
+                    'calstr = ''temp1 = temp1 - 1.2e-4*statnum;'';'
+                    'calvars (default: {}) is a cell array listing the variables used in calstr (starting with the '
+                    'variable to be calibrated), e.g.:'
+                    'calstr = {''temp1'' ''statnum''};'
                     'Finally, string calmsg must be set to contain the variable to be calibrated then a space '
                     'then the cruise name (lower case). This is used as a partial check against copy-pasting '
                     'code from a previous cruise and accidentally applying the wrong calibration. '};
-            case 'condcal'
-                crhelp_str = {'Set conductivity calibration functions to be applied to _24hz file, using '
-                    'calvars, calstr, and calmsg; see help message for '
-                    'scriptname=''senscals''; oopt = ''temp''; '
-                    'for details.'};
-            case 'oxygencal'
-                crhelp_str = {'Set oxygen calibration function(s) to be applied to _24hz file, using '
-                    'calvars, calstr, and calmsg; see help message for '
-                    'scriptname=''senscals''; oopt = ''temp''; '
-                    'for details.'};
-            case 'fluorcal'
-                crhelp_str = {'Set fluorecsense calibration function to be applied to _24hz file, using '
-                    'calvars, calstr, and calmsg; see help message for '
-                    'scriptname=''senscals''; oopt = ''temp''; '
-                    'for details.'};
-            case 'transmittancecal'
-                crhelp_str = {'Set transmittance calibration function to be applied to _24hz file, using '
-                    'calvars, calstr, and calmsg; see help message for '
-                    'scriptname=''senscals''; oopt = ''temp''; '
-                    'for details.'};
         end
         %%%%%%%%%% mctd_senscal %%%%%%%%%%
         

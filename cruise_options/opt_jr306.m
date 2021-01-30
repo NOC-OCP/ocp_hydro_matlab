@@ -1,21 +1,18 @@
 switch scriptname
 
-   %%%%%%%%%% cond_apply_cal %%%%%%%%%%
-   case 'cond_apply_cal'
-      switch sensor
-         case 1
-            off1 = -0.0007; % only one primary; simple offset
-            fac1 = off1/35 + 1;
-            fac = fac1;
-            condadj = 0;
-            condout = cond.*fac;
-            condout = condout+condadj;
-         case 2
-            off =interp1([-10 0 3500 8000],[0.0020 0.0020  0.0005 0.0005],press)-0.0007; % only one secondary
-            fac = off/35 + 1;
-            condadj = 0;
-            condout = cond.*fac;
-            condout = condout+condadj;
+   %%%%%%%%%% mctd_senscal %%%%%%%%%%
+   case 'mctd_senscal'
+       switch oopt
+           case 'condcal'
+               if senslocal==1
+                   calvars = {'cond1'};
+                   calstr = '%s = %s.*(1-0.0007/35);';
+                   calmsg = 'cond1 jr306';
+               elseif senslocal==2
+                   calvars = {'cond2' 'press'};
+                   calstr = '%s = %s.*(1+(interp1([-10 0 3500 8000],[0.0020 0.0020  0.0005 0.0005],%s)-0.0007)/35);';
+                   calmsg = 'cond2 jr306';
+               end
       end
    %%%%%%%%%% end cond_apply_cal %%%%%%%%%%
 

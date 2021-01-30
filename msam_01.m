@@ -32,6 +32,7 @@ if ~exist(otfile2, 'file')
     disp(['copying from ' otfile2])
     
     %get list of variables and units
+    ds_sam = dataset('File',[mgetdir('M_TEMPLATES') '/sam_varlist.csv'],'Delimiter',',');
     scriptname = mfilename; oopt = 'samvars'; get_cropt
     varnames = {}; varunits = {}; ds.junk = [];
     for vno = 1:length(samvars_use)
@@ -57,7 +58,7 @@ if ~exist(otfile2, 'file')
             end
         end
     end
-    mvarnames_units %get varnames_units, and variables with default values
+    mvarnames_units; clear ds %get varnames_units, and variables with default values
     
     %set values of the not-blank variables
     position = [1:nnisk]';

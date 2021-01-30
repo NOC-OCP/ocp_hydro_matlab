@@ -325,14 +325,7 @@ switch scriptname
     case 'populate_station_depths'
         switch oopt
             case 'depth_source'
-                fnin = [root_ctddep '/' cruise '_stn_depth.txt'];
-                fidin = fopen(fnin,'r');
-                l1 = fgetl(fidin); % need to read a line of headers off the top
-                a4 = fscanf(fidin,'%f %f %f %f');
-                a4 = reshape(a4,4,numel(a4)/4)';
-                stns = a4(:,1);
-                deps = a4(:,4);
-                fclose(fidin);
+                fnintxt = [root_ctddep '/' cruise '_stn_depth.txt'];
             case 'bestdeps'
                 bestdeps(35,2) = 3443; % from CTD deck unit log aborted cast
                 bestdeps(122,2) = 6059; % from CTD deck unit log cast did not go to full depth
@@ -367,29 +360,26 @@ switch scriptname
         switch oopt
             case 'sections'
                 sections = {'orkney' 'a23' 'srp' 'nsr' 'nsra23' 'abas' 'falk' 'sr1b'};
-            case 'gpars'
-                gstart = 10; gstop = 5000; gstep = 20;
-            case 'kstns'
+            case 'sec_stns'
                 switch section
                     case 'sr1b'
-                        sstring = '[2:19 22:33]';
+                        kstns = [2:19 22:33];
                     case 'orkney'
-                        sstring = '[60 53:55 52 56 49 61 48 47 36 66 38 64 39 40 45]';
+                        kstns = [60 53:55 52 56 49 61 48 47 36 66 38 64 39 40 45];
                     case 'a23'
-                        sstring = '[67:92]';
+                        kstns = [67:92];
                     case 'srp'
-                        sstring = '108:112';
+                        kstns = 108:112;
                     case 'nsr'
-                        sstring = '93:107';
+                        kstns = 93:107;
                     case 'nsra23'
-                        sstring = '[67:107]';
+                        kstns = [67:107];
                     case 'abas'
-                        sstring = '113:122';
+                        kstns = 113:122;
                     case 'falk'
-                        sstring = '123:128';
+                        kstns = 123:128;
                 end
-            case 'varuse'
-                %varuselist.names = {'botoxy' 'totnit' 'phos' 'silc' 'dic' 'alk' 'cfc11'  'cfc12' 'f113' 'sf6' 'ccl4'};
+            case 'sam_gridlist'
                 varuselist.names = {'botoxy' 'totnit' 'phos' 'silc' 'dic' 'alk'};
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%

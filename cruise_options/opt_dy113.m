@@ -17,7 +17,7 @@ switch scriptname
     case 'mfir_03'
         switch oopt
             case 'fir_fill'
-                avi_opt = [0 121/24]-1/24; %default is to linearly interpolate, not average
+                avi_opt = [0 121/24]-1/24; %average over 5 s to match .ros file used in BASproc
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
@@ -85,31 +85,32 @@ switch scriptname
             case 'tempcal'
                 if senslocal==1
                     calvars = {'temp1', 'statnum', 'press'};
-                    calstr = '%s = %s - 1.5e-5*%s + interp1([0 5000],[0 -1.5]*1e-3, %s) - 1.1e-4;';
+                    calstr = 'temp1 = temp1 - 1.5e-5*statnum + interp1([0 5000],[0 -1.5]*1e-3, press) - 1.1e-4;';
                     calmsg = 'temp1 dy113';
                 elseif senslocal==2
                     calvars = {'temp2', 'statnum'};
-                    calstr = '%s = %s - 1e-5*%s - 3.8e-4';
+                    calstr = 'temp2 = temp2 - 1e-5*statnum - 3.8e-4';
                     calmsg = 'temp2 dy113';
                 end
             case 'condcal'
                 if senslocal==1
                     calvars = {'cond1', 'press'};
-                    calstr = '%s = %s.*(1 + interp1([0 5000], [-1.8 -6.5], %s)*1e-3 - 7.2e-4)/35;';
+                    offstr = 'interp1([0 5000], [-1.8 -6.5], press)*1e-3 - 7.2e-4';
+                    calstr = ['cond1 = cond1.*(1 + ' offstr ')/35);'];
                     calmsg = 'cond1 dy113';
                 elseif senslocal==2
                     calvars = {'cond2', 'press'};
-                    calstr = '%s = %s.*(1 + interp1([0 5000], [1.4 -2], %s)*1e-3 - 7e-4)/35;';
+                    calstr = 'cond2 = cond2.*(1 + (interp1([0 5000], [1.4 -2], press)*1e-3 - 7e-4)/35);';
                     calmsg = 'cond2 dy113';
                 end
             case 'oxygencal'
                 if senslocal==1
                     calvars = {'oxygen1', 'press', 'statnum'};
-                    calstr = '%s = 1.025*%s + interp1([0 5000], [1.8 12.8], %s) - 1.5e-2*%s;';
+                    calstr = 'oxygen1 = 1.025*oxygen1 + interp1([0 5000], [1.8 12.8], press) - 1.5e-2*statnum';
                     calmsg = 'oxygen1 dy113';
                 elseif senslocal==2
                     calvars = {'oxygen2', 'press', 'statnum'};
-                    calstr = '%s = 1.029*%s + interp1([0 500 5000], [0.5 0.8 9], %s) + 1e-2*%s;';
+                    calstr = 'oxygen22 = 1.029*oxygen2 + interp1([0 500 5000], [0.5 0.8 9], press) + 1e-2*statnum;';
                     calmsg = 'oxygen2 dy113';
                 end
         end
@@ -134,7 +135,7 @@ switch scriptname
     case 'populate_station_depths'
         switch oopt
             case 'depth_source'
-                depmeth = 4; %calculate from ladcp data
+                depth_source = {'ladcp' 'ctd'};
         end
         %%%%%%%%%% end populate_station_depths %%%%%%%%%%
         
@@ -274,22 +275,20 @@ switch scriptname
         %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
     case 'msec_run_mgridp'
         switch oopt
-            case 'regridctd'
-                regridctd = 1;
             case 'sections'
-                sections = {'sr1b' 'a23' 'cb' 'nsr'};
-            case 'varlist'
-                varlist = [varlist ' fluor transmittance'];
-            case 'kstns'
+                sections = {'sr1b' 'a23' 'cumb' 'nsr'};
+            case 'ctd_regridlist'
+                ctd_regridlist = [ctd_regridlist ' fluor transmittance'];
+            case 'sec_stns'
                 switch section
                     case 'sr1b'
-                        sstring = '[2:31]';
+                        kstns = [2:31];
                     case 'a23'
-                        sstring = '[32:62]';
+                        kstns = [32:62];
                     case 'cb'
-                        sstring = '[63:79]';
+                        kstns = [63:79];
                     case 'nsr'
-                        sstring = '[80:92 104:-1:93]';
+                        kstns = [80:92 104:-1:93];
                 end
             case 'varuse'
                 varuselist.names = {'botoxy'};
@@ -387,11 +386,11 @@ switch scriptname
             case 'uway_apply_cal'
                 switch abbrev
                     case 'met_tsg'
-                        sensors_to_cal={'fluo','trans'};
-                        sensorcals={'y=(x1-0.045)*11.4' % fluorometer: s/n WS3S-351P
+                        sensors_to_cal={'fluo';'trans'};
+                        sensorcals={'y=(x1-0.045)*11.4'; % fluorometer: s/n WS3S-351P
                             'y=(x1-0.004)/(4.700-0.004)*100' %transmissometer: s/n CST-1852PR
                             };
-                        sensorunits={'ug/l','percent'};
+                        sensorunits={'ug/l';'percent'};
                     case 'surflight'
                         % fix radiometers on DY113 - before normal calibration
                         if ~exist([otfile '.nc'])
@@ -452,13 +451,13 @@ switch scriptname
                             };
                         mcalib2
                         
-                        sensors_to_cal={'ppar','ptir','spar','stir'};
+                        sensors_to_cal={'ppar';'ptir';'spar';'stir'};
                         sensorcals={'y=x1*1.061' % port PAR: s/n 28562
                             'y=x1*1.100' % port TIR: 973134
                             'y=x1*0.9398' % stb PAR: s/n 28563
                             'y=x1*1.135'}; % stb TIR: 994132
                         % the surfmet instrument box is outputting in V*1e-5 already
-                        sensorunits={'W/m2','W/m2','W/m2','W/m2'};
+                        sensorunits={'W/m2';'W/m2';'W/m2';'W/m2'};
                     case 'attphins'
                         sensors_to_cal={'roll'};
                         sensorcals = {'y=-x1'};

@@ -25,7 +25,7 @@ switch z
             250 066 075
             251 000 038
             ]/255;
-        oopt = 'potemp'; get_cropt % possibly change contour levels, boundaries or colours
+        scriptname = oopt = 'potemp'; get_cropt % possibly change contour levels, boundaries or colours
         
     case 'psal'
         c.clev = [ 34.3:.1:35.5 35.5:.5:38 34.88 34.96]; 

@@ -124,8 +124,8 @@ switch scriptname
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'
         switch oopt
-            case 'deoth_source'
-                depmeth = 3; calculate from CTD depth and altimeter reading
+            case 'depth_source'
+                depth_source = {'ctd'}; calculate from CTD depth and altimeter reading
         end
         %%%%%%%%%% end populate_station_depths %%%%%%%%%%
         
@@ -297,75 +297,7 @@ switch scriptname
         end
         %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
         
-        %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
-    case 'msec_run_mgridp'
-        switch oopt
-            case 'sections'
-                sections = {'fs27n' '24n'};
-                %                 sections = {'fs27n'};
-                sections = {'24n'}; % note: if you change the section you want, you need to clear 'sections'; otherwise the code doesnt check cropt.
-                clear gstart
-            case 'varlist'
-                varlist = [varlist ' fluor transmittance '];
-            case 'kstns'
-                switch section
-                    case 'fs27n'
-                        sstring = '[2:13]';
-                    case '24n'
-                        sstring = '[14:20 22:24 26:27 29:94 96:130 132:135]'; % 131 = bulk water station 95 = bulk sample; 21 = carbon blanks; 25=26; 28=lukas surface sample
-                end
-            case 'varuse'
-                varuselist.names = {'botoxy' 'totnit_per_kg' 'phos_per_kg' 'silc_per_kg' 'dic' 'alk' 'cfc11'  'cfc12' 'f113' 'sf6' 'ccl4'};
-                varuselist.names = {'botpsal' 'botoxy' 'totnit_per_kg' 'phos_per_kg' 'silc_per_kg' 'dic' 'alk' 'totnit' 'phos' 'silc'};
-                %                 varuselist.names = {'botoxy' 'silc'};
-        end
-        %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
-        
-        %%%%%%%%%% msec_plot_contours_set_clev_col %%%%%%%%%%
-    case 'msec_plot_contours_set_clev_col'
-        % set options for colours and contours that depart from the WOCE
-        % atlas 'defaults'
-        % there should be a field c.section to enable different contours on
-        % different sections.
-        switch oopt
-            case 'potemp'
-                switch c.section
-                    case '24n'
-                        c.clev = [c.clev 22 23 24 1:.1:2];
-                        cbound = cbound; % no change; here as a placeholder only.
-                        cols = cols; % no change
-                    case 'fs27n'
-                        c.clev = [c.clev 22 23 24];
-                end
-            case 'psal'
-                c.clev = [c.clev 36.25 36.75];
-            case 'oxygen'
-                c.clev = [c.clev 100 110 120 130 140];
-            case 'fluor'
-                c.clev = [c.clev];
-            case 'silc'
-                c.clev = [c.clev];
-            case 'phos'
-                c.clev = [c.clev];
-            case 'totnit'
-                c.clev = [c.clev];
-            case 'dic'
-                c.clev = [c.clev];
-            case 'alk'
-                c.clev = [c.clev];
-            case 'cfc11'
-                c.clev = [c.clev];
-            case 'cfc12'
-                c.clev = [c.clev];
-            case 'f113'
-                c.clev = [c.clev];
-            case 'ccl4'
-                c.clev = [c.clev];
-            case 'sf6'
-                c.clev = [c.clev];
-        end
-        %%%%%%%%%% end msec_plot_contours_set_clev_col %%%%%%%%%%
-        
+
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
@@ -405,24 +337,6 @@ switch scriptname
                 %*** station 123?
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
-        
-        
-        %%%%%%%%%% msec_plot_contrs %%%%%%%%%%
-    case 'msec_plot_contrs'
-        switch oopt
-            case 'add_station_depths'
-                % bak jc191. control adding station depths to contour plots
-                % gretaer than zero adds to the plot with linewidth set
-                % here. suggest 3
-                station_depth_width = 3; % default is zero for not adding
-            case 'add_bottle_depths'
-                % bak jc191. control adding bottle positions to contour plots
-                % greater than zero adds to the plot with markersize given here
-                % suggest 3. Size in plot not the same as it appears on
-                % screen
-                bottle_depth_size = 3; % default is zero for not adding
-        end
-        %%%%%%%%%% end msec_plot_contrs %%%%%%%%%%
         
         
 end

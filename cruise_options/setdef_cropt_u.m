@@ -43,21 +43,24 @@ switch scriptname
         %%%%%%%%%% m_daily_proc %%%%%%%%%%
     case 'm_daily_proc'
         switch oopt
-            case 'exclude'
-                if ~exist('uway_streams_proc_exclude'); uway_streams_proc_exclude = {'posmvtss'}; end
-                if ~exist('uway_pattern_proc_exclude'); uway_pattern_proc_exclude = {'satinfo';'aux';'dps'}; end
+            case 'excludestreams'
+                switch MEXEC_G.Mshipdatasystem
+                    case 'techsas'
+                        uway_excludes = {'posmvtss'};
+                        uway_excludep = {'satinfo';'aux';'dps'};
+                end
             case 'bathycomb'
                 bathycomb = 1;
-            case 'allmat'
+            case 'uwayallmat'
                 allmat = 0;
         end
         %%%%%%%%%% end m_daily_proc %%%%%%%%%%
         
-        %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
-    case 'mday_01_clean_av'
+        %%%%%%%%%% mday_01_fcal %%%%%%%%%%
+    case 'mday_01_fcal'
         % set non-cruise-specific calibration or editing actions
         switch oopt
-            case 'uway_apply_cal'
+            case 'uway_factory_cal'
                 switch abbrev
                     case 'cnav'
                         d = mload(infile, 'lat long');
@@ -180,26 +183,13 @@ switch scriptname
         %%%%%%%%%% mvad_01 %%%%%%%%%%
     case 'mvad_01'
         switch oopt
-            case 'files'
-                datadir = [root_vmadcp '/mproc/dy113/' inst nbbstr '/contour'];
-                fnin = [datadir '/' inst nbbstr '.nc'];
-                dataname = [inst nbbstr '_' mcruise '_01'];
-                %vmdas defaults
-                %                pre1 = [mcruise '_' inst '/adcp_pyproc/' mcruise '_enrproc/' inst nbbstr];
-                %                datadir = [root_vmadcp '/' pre1 '/contour'];
-                %                fnin = [datadir '/' inst nbbstr '.nc'];
-                %                dataname = [inst '_' mcruise '_01'];
+            case 'vmadcp_files'
+                crhelp_str = {'Set fnin, the filename (including path) of (the local copy of) codas-output'
+                    '.nc vmadcp file, and dataname, the name of the mstar output file'};
+                fnin = [root_vmadcp '/mproc/' mcruise '/' oslocal '/contour/' oslocal '.nc'];
+                dataname = [oslocal '_' mcruise '_01'];
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
-        
-        %%%%%%%%%% vel_compare %%%%%%%%%%
-    case 'vel_compare'
-        switch oopt
-            case 'lpre'
-                %directory for uhladcp files, e.g.
-                %lpre = '/local/users/pstar/cruise/data/ladcp/uh/pro/jc1802/ladcp/proc/matprof/h/';
-        end
-        %%%%%%%%%% end vel_compare %%%%%%%%%%
-        
+                
         
 end

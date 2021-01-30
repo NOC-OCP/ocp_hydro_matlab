@@ -257,12 +257,11 @@ switch scriptname
         %%%%%%%%%% mvad_01 %%%%%%%%%%
     case 'mvad_01'
         switch oopt
-            case 'files'
+            case 'vmadcp_files'
                 cname = [mcruise '_01'];
-                pre1 = ['postprocessing/' cname '/proc_archive/' inst nbbstr]; %link here to version you want to use (spprocessing or postprocessing)
-                datadir = [root_vmadcp '/' pre1 '/contour'];
-                fnin = [datadir '/' inst nbbstr '.nc'];
-                dataname = [inst nbbstr '_' mcruise '_01'];
+                pre1 = ['postprocessing/' mcruise '_01/proc_archive/' oslocal]; %link here to version you want to use (spprocessing or postprocessing)
+                fnin = [root_vmadcp '/' pre1 '/contour/' oslocal '.nc'];
+                dataname = [oslocal '_' mcruise '_01'];
                 %*** station 123?
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%

@@ -51,7 +51,7 @@ if length(iista)>0
     %get variables and units for msave
     varnames = {'sampnum','statnum','position','bottle_number','bottle_qc_flag'};
     varunits = {'number','number','on rosette','number', 'woce table 4.8'};
-    ds = ds_bot; mvarnames_units
+    ds = ds_bot; mvarnames_units; clear ds
     
     %modify flags
     scriptname = mfilename; oopt = 'botflags'; get_cropt

@@ -35,7 +35,7 @@ switch scriptname
     case 'populate_station_depths'
         switch oopt
             case 'depth_source'
-                depmeth = 3; %calculate from CTD depth and altimeter reading (will load and update station_depths.mat)
+                depth_source = 'ctd';
             case 'bestdeps'
                 ii = find(bestdeps(:,1)==3); bestdeps(ii,2) = 1787; % from CTD+Altim
         end
@@ -130,11 +130,11 @@ switch scriptname
             case 'uway_apply_cal'
                 switch abbrev
                     case 'met_tsg'
-                        sensors_to_cal={'fluo','trans'};
+                        sensors_to_cal={'fluo';'trans'};
                         sensorcals={'y=(x1-0.055)*14.8' % fluorometer: s/n WS3S-246 (changed KB)
                             'y=(x1-0.010)/(4.698-0.010)*100' %transmissometer: s/n CST-1131PR (changed KB)
                             };
-                        sensorunits={'ug/l','percent'};
+                        sensorunits={'ug/l';'percent'};
                     case 'surflight'
                         % fix radiometers on DY113 - before normal calibration
                         if ~exist([otfile '.nc'])

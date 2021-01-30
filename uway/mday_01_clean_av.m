@@ -4,6 +4,9 @@ function mday_01_clean_av(abbrev,day)
 % abbrev (char) is the mexec short name prefix for the data stream
 % day (char or numeric) is the day number
 %
+% the output with all edits and calibrations applied goes to 
+% abbrev_day_edt.nc
+%
 % updated by bak for jr195 2009-sep-17 for scs/techsas interface
 % extensively revised by bak at noc aug 2010; hopefully integrates
 % SCS&techsas streams with suitable switches and traps
@@ -14,10 +17,9 @@ function mday_01_clean_av(abbrev,day)
 % Revised ylf jc145 to remove redundancy and cases for streams with no action
 % and to add additional cases, incorporating actions formerly in m${stream}_01 files
 %
-% The function now checks for a case for the stream for types of transformations in succession
-% abbrev_day_edt is the final output with all applicable corrections made
-%
-% The possible edits include checking for out-of-range values
+% The possible edits include checking for out-of-range values, but
+% instrument calibrations, which may vary by ship/cruise, are applied
+% separately***
 %
 % revised ylf dy105 to check for various variable names (requiring similar transformations) in the header
 %
@@ -26,219 +28,45 @@ function mday_01_clean_av(abbrev,day)
 % fluorometer and transmissometer in met_tsg, and all radiometers in surflight
 
 m_common
-scriptname = 'mday_01_clean_av';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 root_out = mgetdir(abbrev);
 
 day_string = sprintf('%03d',day);
-mdocshow(scriptname, ['performs any automatic cleaning/editing/averaging from ' abbrev '_' mcruise '_d' day_string '_raw.nc to ' abbrev '_' mcruise '_d' day_string '_edt.nc']);
+mdocshow(mfilename, ['performs any automatic cleaning/editing/averaging from ' abbrev '_' mcruise '_d' day_string '_raw.nc to ' abbrev '_' mcruise '_d' day_string '_edt.nc']);
 
 prefix = [abbrev '_' mcruise '_d' day_string];
 infile = [root_out '/' prefix '_raw'];
 otfile = [root_out '/' prefix '_edt'];
-wkfile = ['wk_' prefix '_' scriptname '_' datestr(now,30)];
+wkfile = ['wk_' prefix '_' mfilename '_' datestr(now,30)];
 
 
 if exist([infile '.nc']) %only if there is a raw file for this day
 
+    % edit names and units
+    mday_01_namesunits %***needs rvdas ones added
 
-   %%%%% change variable names (calling mheadr) %%%%%
-   %abbrev, new name, old name(s, or beginnings of)
-   can = {'ash' 'head_ash' {'head'}
-          'gys' 'head_gyr' {'head'}
-	  'gyro_s' 'head_gyr' {'head'}
-	  'gyro_pmv' 'head_gyr' {'head'}
-	  'gyropmv' 'head_gyr' {'head'}
-          'gpsfugro' 'long' {'lon'}
-	  'sim' 'depth_uncor' {'depthm' 'depth' 'dep' 'snd'}
-	  'ea600' 'depth_uncor' {'depthm' 'depth' 'dep' 'snd'}
-	  'ea600m' 'depth_uncor' {'depthm' 'depth' 'dep' 'snd'}
-	  'em120' 'swath_depth' {'depthm' 'dep' 'snd'}
-	  'em122' 'swath_depth' {'depthm' 'dep' 'snd'}
-      'tsg' 'psal' {'salinity' 'salin'}
-      'met_tsg' 'psal' {'salinity' 'salin'}
-         };
-
-   ii = find(strcmp(abbrev, can(:,1))); 
-   if length(ii)>0
-      %work on the latest file, which may already be an edited version; always output to otfile
-      if ~exist([otfile '.nc'])
-         unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
-      end
-
-      newname = can{ii,2};
-      h = m_read_header(otfile);
-      if ~sum(strcmp(newname, h.fldnam))
-         for no = 1:length(can{ii,3})
-            name = can{ii,3}{no};
-            varnum = find(strncmp(name, h.fldnam, length(name)));
-            if length(varnum)>0
-               MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; sprintf('%d', varnum); newname; ' '; '-1'; '-1'; };
-               mheadr
-               break %only for renaming one variable per file (listed above in order of preference)
-            end
-         end
-      end	    
-
-   end
-
-
-   %%%%% change units labels (calling mheadr) %%%%%
-   switch abbrev
-      case 'met' %asf note: techsas records m/s, however, the SSDS displays values converted to knots. There is no separate record of this since SSDS is live, so all wind records should be in m/s and no conversions are needed.
-         if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
-            MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; 'speed'; ' '; 'm/s'; '-1'; '-1'};
-            mheadr
-         end
-   end
-
-
-   %%%%% check for repeated times and backward time jumps %%%%%
-   switch abbrev
-
-      case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet'}
-         %work on the latest file, which already be an edited version; always output to otfile
-         if exist([otfile '.nc'])
-            unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
-         else
-            infile1 = infile;
-         end
-         MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'time'; 'y=[1 x1(2:end)-x1(1:end-1)]'; 'deltat'; 'seconds'; ' '};
-         mcalc
-         unix(['/bin/rm ' m_add_nc(wkfile)]);
-
-      case {'gys', 'gyr', 'gyro_s', 'gyropmv' 'posmvpos'}
-         %work on the latest file, which already be an edited version; always output to otfile
-         if exist([otfile '.nc'])
-            unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
-         else
-            infile1 = infile;
-         end
-         wkfile2 = [prefix '_wk2'];
-         % flag non-monotonic times
-         MEXEC_A.MARGS_IN = {infile1; wkfile2; '/'; 'time'; 'y = m_flag_monotonic(x1);'; 'tflag'; ' '; ' '};
-         mcalc
-         if strcmp(abbrev, 'posmvpos')
-	        varlist = '1 2 3 4 5 6 7 8 9';
-         else
-	        varlist = '1 2';
-         end
-         MEXEC_A.MARGS_IN = {wkfile2; otfile; '2'; 'tflag .5 1.5'; ' '; varlist};
-         mdatpik
-         unix(['/bin/rm ' m_add_nc(wkfile2)])
-         unix(['/bin/rm ' m_add_nc(wkfile)]);
-
-   end
+    % do things to techsas and scs files, hopefully unnecessary for rvdas
+    if sum(strcmp(MEXEC_G.Mshipdatasystem,{'scs' 'techsas'}))
+        mday_01_fixtimes
+        if strcmp(abbrev,'cnav')
+            mday_01_cnavfix %this re-parses degrees/minutes, hasn't been necessary since ***
+        end
+    end
    
-   %%%%% apply factory calibrations to uncalibrated (still in voltage units) underway sensors - from cruise option file %%%%%
-   oopt='uway_apply_cal'; get_cropt;
-   for m=1:length(sensors_to_cal)
-       if ~exist([otfile '.nc'])
-          unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
-       end
-       h = m_read_header(otfile);
-       varnum = find(strcmp(sensors_to_cal{m}, h.fldnam));
-       
-       % rename variable to raw
-       MEXEC_A.MARGS_IN = {
-           otfile
-           'y' % yes, overwrite file
-           '8' % rename vars
-           int2str(varnum) % variable number to rename
-           [sensors_to_cal{m},'_raw'] % new name
-           '/' % keep existing unit (volt?)
-           '-1' % done
-           '/' % quit
-           };
-       mheadr
-       % apply calibration and rename units
-       MEXEC_A.MARGS_IN = {
-           otfile
-           'y' % yes, overwrite file
-           [sensors_to_cal{m},'_raw'] % variable to calibrate
-           [sensors_to_cal{m},'_raw'] % input variables for calibration
-           sensorcals{m} % function for calibration
-           sensors_to_cal{m} % new name for output variable
-           sensorunits{m} % new unit for output variable (or '/' to retain existing)
-           ' ' % quit
-           };
-       mcalib2
-   end
+   % apply factory calibrations to uncalibrated (still in voltage units) underway sensors
+   % from cruise option file (introduced dy113)
+   mday_01_fcal %***variable names? 
 
-   %%%%% apply carter table soundspeed correction to single-beam bathymetry %%%%%
+   % apply carter table soundspeed correction to single-beam bathymetry
    if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600'}))
-      %work on the latest file, which may already be an edited version; always output to otfile
-      if exist([otfile '.nc'])
-         unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
-      else
-         infile1 = infile;
-      end
-
-      navname = MEXEC_G.default_navstream; navdir = mgetdir(navname);
-      navfile = [navdir '/' navname '_' mcruise '_d' day_string '_raw.nc'];
-      if exist(navfile)
-         [dn,hn] = mload(navfile,'/'); if ~isfield(dn, 'lon'); dn.lon = dn.long; end
-         lon = nanmean(dn.lon); lat = nanmean(dn.lat); clear dn hn
-      else
-         warning(['no pos file for day ' day_string ' found, using current position to select carter area for echosounder correction'])
- 	     if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
-	        pos = mtlast(navname); lon = pos.long; lat = pos.lat; clear pos
-	     elseif strcmp(MEXEC_G.Mshipdatasystem, 'scs')
-	        pos = mslast(navname); lon = pos.long; lat = pos.lat; clear pos
-         end
-      end
-
-      calcstr = ['y = mcarter(' num2str(lat) ', ' num2str(lon) ', x1); y = y.cordep;'];
-      MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'depth_uncor'; calcstr; 'depth'; 'metres'; '0'};
-      mcalc
+       mday_01_cordep
    end
-
     
-   %%%%% set data to absent outside ranges %%%%%
-   %list of possible streams and fields; this should generally only be added to because extras will just be ignored
-   car = {'ash' {'head_ash' 'pitch' 'roll' 'mrms' 'brms'} {'0 360' '-5 5' '-7 7' '0.00001 0.01' '0.00001 0.1'}
-	  'gp4' {'long' 'lat'} {'-181 181' '-91 91'}
-	  'pos' {'long' 'lat'} {'-181 181' '-91 91'}
-	  'seapos' {'long' 'lat'} {'-181 181' '-91 91'}
-	  'posdps' {'long' 'lat'} {'-181 181' '-91 91'}
-	  'met' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
-	  'surfmet' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
-	  'met_light' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
-	  'surflight' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
-	  'tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105'}
-	  'met_tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans' 'fluo' 'flow1'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105' '0 10' '0 10'}
-	  'ocl' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105'}
-	  'sim' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
-	  'ea600m' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
-	  'ea600' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
-	  'em120' {'swath_depth'} {'20 10000'}
-	  'em122' {'swath_depth'} {'20 10000'}
-      };
+   % set data to absent outside ranges
+   mday_01_rangeedit %***needs rvdas variable names
 
-   ii = find(strcmp(abbrev, car(:,1))); 
-   if length(ii)>0
-      %work on the latest file, which may already be an edited version; always output to otfile
-      if ~exist([otfile '.nc'])
-         unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
-      end
-
-      MEXEC_A.MARGS_IN = {otfile; 'y'};
-      h = m_read_header(infile);
-      for no = 1:length(car{ii,2})
-         if sum(strcmp(car{ii,2}{no}, h))
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; car{ii,2}{no}; car{ii,3}{no}];
-         end
-      end
-      if length(MEXEC_A.MARGS_IN)>2
-         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'y'; ' '];
-         medita
-      end
-
-   end
-
-
-   %%%%% median average %%%%%
+   % median average %***only bathymetry?
    if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'em120' 'em122'}))
       %work on the latest file, which may already be an edited version; always output to otfile
       if exist([otfile '.nc'])
@@ -254,48 +82,11 @@ if exist([infile '.nc']) %only if there is a raw file for this day
       unix(['/bin/rm ' wkfile '.nc']);
    end
 
-
-   %%%%% compute salinity and add to tsg file %%%%%
+   % compute salinity and add to tsg file
    if sum(strcmp(abbrev, {'met_tsg' 'tsg' 'ocl'}))
-      %work on the latest file, which already be an edited version; always output to otfile
-      if exist([otfile '.nc'])
-         unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']);
-      else
-         unix(['/bin/cp ' infile '.nc ' wkfile '.nc']);
-      end
-      infile1 = wkfile;
-      h = m_read_header(infile1);
-      if sum(strcmp('cond', h.fldnam))
-         if sum(strcmp('tstemp', h.fldnam))
-            tvar = 'tstemp';
-         elseif sum(strcmp('temp_h', h.fldnam))
-            tvar = 'temp_h';
-         elseif sum(strcmp('temp_m', h.fldnam))
-            tvar = 'temp_m';
-         else
-            warning('no housing/pumped seawater supply temperature set')
-            tvar = [];
-         end
-         if sum(strcmp('psal', h.fldnam))==0 & length(tvar)>0
-            MEXEC_A.MARGS_IN = {infile1; otfile; '/'; ['cond ' tvar]; 'y = gsw_SP_from_C(10*x1,x2,0)'; 'psal'; 'pss-78'; ' '};
-            mcalc
-            unix(['/bin/rm ' m_add_nc(wkfile)]);
-         elseif length(tvar)>0
-            unix(['/bin/mv ' wkfile '.nc ' otfile '.nc']);
-            MEXEC_A.MARGS_IN = {otfile; 'y'; 'psal'; ['cond ' tvar]; 'y = gsw_SP_from_C(10*x1,x2,0)'; '/'; 'pss-78'; ' '};
-            mcalib2
-         else
-            unix(['/bin/rm ' m_add_nc(wkfile)]);
-         end
-      else %if exist(m_add_nc(wkfile),'file') % if we don't have conductivity, e.g. on Discovery, where it's in tsg but not met_tsg, don't delete the file!
-         unix(['/bin/mv ' wkfile '.nc ' otfile '.nc']);
-      end
+       mday_01_tsgsal %***selection of temperature variable to use?
    end
-
-
-    %%%%% anything else specified in cruise options file %%%%%    
-%     get_cropt
-
+   
     
 end
 

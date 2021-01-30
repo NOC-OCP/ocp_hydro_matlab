@@ -545,16 +545,16 @@ switch scriptname
                 sections = {'fs27n' 'fs27n2' '24n'};
             case 'gpars'
                 gstart = 10; gstop = 4000; gstep = 20; % dy040
-            case 'kstns'
+            case 'sec_stns'
                 switch section
                     case 'fs72n'
-                        sstring = '[2:5 7:15]';
+                        kstns = [2:5 7:15];
                     case 'fs72n2'
-                        sstring = '16:24';
+                        kstns = 16:24;
                     case '24n'
-                        sstring = '[25:37 39:62 64:122 124:145]'; %38 is repeat; 63 &123 are CFC bottle blank
+                        kstns = [25:37 39:62 64:122 124:145]; %38 is repeat; 63 &123 are CFC bottle blank
                 end
-            case 'varuse'
+            case 'sam_gridlist'
                 %varuselist.names = {'botoxy' 'totnit' 'phos' 'silc' 'dic' 'alk' 'cfc11'  'cfc12' 'f113' 'sf6' 'ccl4'};
                 varuselist.names = {'botoxy' 'totnit' 'phos' 'silc' 'dic' 'alk'};
         end

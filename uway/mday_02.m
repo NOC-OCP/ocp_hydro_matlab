@@ -1,15 +1,15 @@
 function mday_02(varargin)
-% function mday_02(M_OUT,mstarprefix,daynum)
+% function mday_02(mstarprefix,daynum)
 %
-% append daily file in directory M_OUT
+% append daily file in directory determined by mstarprefix (using mgetdir
+% to look up in MEXEC_G.MDIRLIST)
 %
-% char: M_OUT is the output directory, identified by abbreviation in m_setup
 % char: mstarprefix is the prefix used in mstar filenames
 % numeric: daynum is the day number 
 %
-% eg mday_02('M_GPS','gps',33)
+% eg mday_02('gps',33)
 % or
-% eg mday_02('M_GPS','gps','33')
+% eg mday_02('gps','33')
 
 % arguments can be left blank so script will prompt the terminal
 % arguments can be queued in MEXEC_A.MARGS_IN
@@ -18,15 +18,7 @@ m_common
 m_margslocal
 m_varargs
 
-scriptname = 'mday_02';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-m1 = 'Type name of output directory abbreviation,       eg; M_GPS   ';
-reply = m_getinput(m1,'s');
-MEXEC_A.MARGS_IN_LOCAL_OLD = MEXEC_A.MARGS_IN_LOCAL;
-root_dir = mgetdir(reply);
-MEXEC_A.MARGS_IN_LOCAL = MEXEC_A.MARGS_IN_LOCAL_OLD;
-M_OUT = reply;
 
 m4 = 'Type name of mstar prefix for file names,           eg: gps   ';
 mstarprefix = m_getinput(m4,'s');
@@ -37,12 +29,12 @@ cmd = ['daynum = ' reply ';']; eval(cmd);
 day = daynum;
 
 day_string = sprintf('%03d',daynum);
-mdocshow(scriptname, ['appends ' mstarprefix '_' mcruise '_d' day_string '_edt.nc to ' mstarprefix '_' mcruise '_01.nc']);
+mdocshow(mfilename, ['appends ' mstarprefix '_' mcruise '_d' day_string '_edt.nc to ' mstarprefix '_' mcruise '_01.nc']);
 
-root_out = mgetdir(M_OUT);
+root_out = mgetdir(mstarprefix);
 if exist(root_out,'dir') ~= 7
     % requested data stream/directory doesn't seem to exist
-    m = ['Directory ' M_OUT ' not found - skipping'];
+    m = ['Directory ' mstarprefix ' not found - skipping'];
     fprintf(MEXEC_A.Mfider,'%s\n',m);
     return
 end
@@ -52,7 +44,7 @@ infile1 = [root_out '/' prefix1 '01'];
 infile2 = [root_out '/' prefix1 'd' day_string];
 infile3 = [root_out '/' prefix1 'd' day_string '_edt'];
 infile4 = [root_out '/' prefix1 'd' day_string '_raw'];
-wkfile = ['wk_' scriptname '_' datestr(now,30)];
+wkfile = ['wk_' mfilename '_' datestr(now,30)];
 
 apfilename = infile2;
 if ~exist(m_add_nc(apfilename),'file')

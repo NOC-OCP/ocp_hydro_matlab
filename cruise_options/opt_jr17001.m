@@ -57,7 +57,7 @@ switch scriptname
    case 'populate_station_depths'
       switch oopt
         case 'depth_source'
-           depmeth = 3;
+           depth_source = {'ctd'};
 	 case 'bestdeps'
          replacedeps = [13 3707;
              14 3763;

@@ -59,22 +59,3 @@ MEXEC_A.MARGS_IN_3 = {
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3];
 mheadr
 %--------------------------------
-
-%ylf added dy113: add info about local gradients (and
-%wiggliness)***incomplete, doesn't propagate through to sam
-%***instead use stdev over 5 s? 
-gvar_copycell = mcvars_list(3);
-[gvar_copycell, junk] = mvars_in_file(gvar_copycell, infile2);
-otfilestruct=struct('name',[otfile2 '.nc']);
-d=mload(otfilestruct.name,'upress',' ');
-d1 = mload(infile2,'/');
-sb = mload(dcsfile,'scan_bot',' ');
-deltap = 10;
-mp = abs(repmat(d.upress,1,length(d1.press))-repmat(d1.press,length(d.upress),1))<=deltap/2;
-mp = mp & repmat(d1.scan,length(d.upress),1)>=sb.scan_bot;
-for kls = 1:length(gvar_copycell)
-        g = getfield(d1, gvar_copycell{kls});
-        g = nanmean(abs(diff((repmat(g,length(d.upress),1).*mp)'))); 
-        m_write_variable(otfilestruct,struct('name',[gvar_copycell{kls} 'grad'],'units',['<Delta/10 dbar>'],'data',g));
-end
-

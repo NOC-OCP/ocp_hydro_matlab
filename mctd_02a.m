@@ -24,7 +24,6 @@ mdocshow(mfilename, ['renames variables in ctd_' mcruise '_' stn_string '_raw.nc
 root_templates = mgetdir('M_TEMPLATES');
 root_ctd = mgetdir('M_CTD');
 
-prefixt = ['ctd_'];
 prefix = ['ctd_' mcruise '_'];
 
 %if the noctm file exists, assume we should start there
@@ -40,47 +39,31 @@ else
     unix(['chmod 644 ' m_add_nc(infile1)]); % write protect raw_noctm file
 end
 
-renamefile = [root_templates '/' prefixt 'renamelist.csv']; % read list of var names and units
-renamefileout = [root_templates '/' prefixt 'renamelist_out.csv']; % write list of var names and units
+%change variable names and add units
 
-cellall = mtextdload(renamefile,','); % load all text
-
-clear snamesin snamesot sunits
-for kline = 1:length(cellall)
-    cellrow = cellall{kline}; % unpack rows
-    snamesin{kline} = m_remove_outside_spaces(cellrow{1});
-    snamesot{kline} = m_remove_outside_spaces(cellrow{2});
-    sunits{kline} = m_remove_outside_spaces(cellrow{3});
+%get list of names and units
+renamefile = [root_templates '/ctd_renamelist.csv']; 
+dsv = dataset('File', renamefile, 'Delimiter', ',');
+scriptname = mfilename; oopt = 'ctdvars'; get_cropt
+dsv.sbename = [dsv.sbename; ctdvars_add(:,1)];
+dsv.varname = [dsv.varname; ctdvars_add(:,2)];
+dsv.varunit = [dsv.varunit; ctdvars_add(:,3)];
+if length(unique(dsv.sbename))<length(dsv.sbename)
+    error(['There is a duplicate name in the list of variables to rename; use ctdvars_replace rather than ctdvars_add in opt_' mcruise]);
 end
-snamesin = snamesin(:);
-snamesot = snamesot(:);
-sunits = sunits(:);
-numvar = length(snamesin);
-
-sunique = unique(snamesin);
-if length(sunique) < length(snamesin)
-    m = 'There is a duplicate name in the list of variables to rename';
-    error(m);
-end
-
-fidmctd02 = fopen(renamefileout,'w'); % save back to out file
-for k = 1:numvar
-    fprintf(fidmctd02,'%s%s%s%s%s\n',snamesin{k},',',snamesot{k},',',sunits{k});
-end
-fclose(fidmctd02);
-
-hin = m_read_header(infile); % get var names in file
-
-snames_units = {};
-for k = 1:numvar
-    vnamein = snamesin{k};
-    kmatch = strmatch(vnamein,hin.fldnam,'exact');
-    if ~isempty(kmatch) % var exists in the raw file
-        snames_units = [snames_units snamesin{k} snamesot{k} sunits{k}];
+[varnames, junk, iiv] = mvars_in_file(dsv.sbename, infile);
+dsv = dsv(iiv,:);
+varnames_units = [];
+for vno = 1:length(dsv)
+    iir = find(strcmp(ctdvars_replace(:,1), dsv.sbename{vno}));
+    if length(iir)==0
+        varnames_units = [varnames_units; dsv.sbename{vno}; dsv.varname{vno}; dsv.varunit{vno}];
+    else
+        varnames_units = [varnames_units; dsv.sbename{vno}; ctdvars_replace{vno,2}; ctdvars_replace{vno,3}];
     end
 end
-snames_units = snames_units(:);
 
+%edit file names and units in header
 MEXEC_A.MARGS_IN_1 = {
     infile
     'y'

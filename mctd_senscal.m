@@ -50,15 +50,22 @@ end
 scriptname = 'senscals'; oopt = [calvar 'cal']; get_cropt
 
 if ~isempty(calvars) & ~isempty(calstr)
+    d = mload(infile, sprintf('%s ', calvars{:}));
+    for vno = 1:length(calvars)
+        eval([calvars{dno} ' = getfield(d, ' calvars{dno} ');'])
+    end
+    fprintf(1,'\n%s\n\n',calstr);
+    eval(calstr)
+    
     
     %get list of variables and calibration string in form expected by mcalib2
-    xa = {}; invars = ' ';
+    x = {}; invars = ' ';
     for n = 1:length(calvars);
-        xa = [xa 'x' num2str(n)];
+        x = [x 'x' num2str(n)];
         invars = [invars calvars{n} ' '];
     end
     invars = invars(2:end-1);
-    calstr_mcalib2 = sprintf(ccalstr, 'y', xa{:});
+    calstr_mcalib2 = sprintf(ccalstr, 'y', x{:});
     
     %apply to 24hz file
     MEXEC_A.MARGS_IN = {
@@ -74,6 +81,7 @@ if ~isempty(calvars) & ~isempty(calstr)
     mcalib2
     
     %display calibration and add comments to file
+    x = calvars; 
     calstr_print = sprintf(calstr, calvars{1}, calvars{:});
     fprintf(1,'\n%s\n\n',calstr_print);
     ncfile.name = m_add_nc(infile);

@@ -1,155 +1,126 @@
 function bestdeps = populate_station_depths()
 % function bestdeps = populate_station_depths()
 % Prepare a .mat file with station depths for use in mdep_01
-% bak on jr281 April 2013
-%
-% depths should be in corrected metres.
+% bak on jr281 April 2013%
 %
 % populate a file called 'station_depths_cruise.mat' with a single
-% array of depths, one per station number. Missing stations have a NaN as a
+% array, bestdeps = [statnum depth]. Missing stations have a NaN as a
 % placeholder
 %
-% depths can be obtained from a text file (with or without header); 
-% IX-processed LADCP .mat files; or CTD data
-% 
-% Best results are from LADCP processing combining LADCP and CTD data
+% tries to do this using specified depth_source
 %
+% depth_source = 'file': load from a text file
+%     either csv with column headers including statnum and depth
+%     or two columns no header, first column is statnum, second depth
+% depth_source = 'ctd': calculate from CTD depth and altimeter reading (will load and update station_depths.mat)
+% depth_source = 'ladcp': load from IX LADCP .mat file, creating or updating existing station_depths .mat file
 %
-% ylf edited jr16002 and jc145 to include code for different ways to get depth,
-% depending on settings in opt_cruise
-% depmeth = 1 (default): load from a two-column text file of [stn dep]
-% depmeth = 2: load from text file with header
-% depmeth = 3: calculate from CTD depth and altimeter reading (will load and update station_depths.mat)
-% depmeth = 4: load from IX LADCP .mat file, creating or updating existing station_depths .mat file
+% Best results are from LADCP processing (depth_source=4) combining LADCP and CTD data
 
 m_common
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; scriptname = mfilename; 
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-root_ctddep = mgetdir('M_CTD_DEP');
-root_ctd = mgetdir('M_CTD');
-
-scriptname = mfilename; oopt = 'depths_source'; get_cropt
-if depmeth==3
-   fnin = [root_ctd '/ctd_' mcruise '_'];
-elseif depmeth==4
-   fnin = [root_ctd '/ctd_' mcruise '*_raw.nc'];
-end
-
-%load depths file if it already exists, figure out which stations need to
-%be added
-fn = dir([root_ctd '/ctd_' mcruise '_*_raw.nc']);
+%find statnums with ctd data
+fn = dir([mgetdir('M_CTD') '/ctd_' mcruise '_*_raw.nc']);
 stns = struct2cell(fn); stns = cell2mat(stns(1,:)'); stns = str2num(stns(:,end-9:end-7));
-fnot = [root_ctddep '/station_depths_' mcruise '.mat'];
+
+%output file of depths
+fnot = [mgetdir('M_CTD_DEP') '/station_depths_' mcruise '.mat'];
+
+%load this if it already exists and extend if necessary, otherwise set up empty array
 if exist(fnot, 'file')
-   disp(['loading ' fnot]); load(fnot, 'bestdeps');
+    disp(['loading ' fnot]); load(fnot, 'bestdeps');
+    ns = max(stns)-max(bestdeps(:,1));
+    if ns>0
+        bestdeps = [bestdeps; [[max(bestdeps(:,1))+1:max(stns)]' NaN+zeros(ns,1)]];
+    end
 else
-   bestdeps = NaN+zeros(max(stns),2); bestdeps(stns,1) = stns; 
+    bestdeps = NaN+zeros(max(stns),2); bestdeps(stns,1) = stns;
 end
-stns = setdiff(stns, bestdeps(:,1));
-if ~isempty(stns) % add more rows for new stations
-   bestdeps = [bestdeps; [stns NaN+zeros(length(stns),1)]];
-   [stns, ii] = sort(bestdeps(:,1)); bestdeps = bestdeps(ii,:);
-end
-ii0 = find(isnan(bestdeps(:,2))); 
 
-%try preferred method, then cruise options, then method 3
-bestdeps = get_deps(bestdeps, depmeth, fnin);
-scriptname = mfilename; oopt = 'bestdeps'; get_cropt %modify any of the depths
+%which stations need depths
+ii0 = find(isnan(bestdeps(:,2)));
+scriptname = mfilename; oopt = 'depth_recalc'; get_cropt
+if length(recalcdepth_stns)>0
+    ii0 = unique([ii0; find(ismember(bestdeps(:,1),recalcdepth_stns))]);
+end
+bestdeps(ii0,2) = NaN;
+
+%preferred method(s) for calculating depths
+scriptname = mfilename; oopt = 'depth_source'; get_cropt
+
+%apply in order
+for sno = 1:length(depth_source)
+    if strcmp(depth_source{sno},'file')
+        fnin = fnintxt;
+    else
+        fnin = '';
+    end
+    bestdeps(ii0,:) = get_deps(bestdeps(ii0,:), depth_source{sno}, fnin);
+end
+
+%finally look to cruise options for any changes
+scriptname = mfilename; oopt = 'bestdeps'; get_cropt
 if length(replacedeps)>0
     [c,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
     if length(ia)<size(replacedeps(:,1)); error(['replacedeps repeats stations; check opt_' mcruise]); end
     bestdeps(ib,2) = replacedeps(ia,2);
 end
-
-ii = find(isnan(bestdeps(:,2))); 
-if ~isempty(ii)
-   fnin = [root_ctd '/ctd_' mcruise '_'];
-   bestdeps = get_deps(bestdeps, 3, fnin);
-end
-scriptname = mfilename; oopt = 'bestdeps'; get_cropt % modify any of the depths
-if length(replacedeps)>0
-    [c,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
-    if length(ia)<size(replacedeps(:,1)); error(['replacedeps repeats stations; check opt_' mcruise]); end
-    bestdeps(ib,2) = replacedeps(ia,2);
-end
-
-ii = find(isnan(bestdeps(:,1))); bestdeps(ii,:) = [];
 
 save(fnot, 'bestdeps')
 
-ii0 = find(isnan(bestdeps(:,2));
-if ~isempty(ii0)
-   disp('new depths:')
-   disp(round(bestdeps(ii0,:)))
-   disp('ok?'); pause
-end
 
+function bestdeps = get_deps(bestdeps, depth_source, fnin);
 
+m_common
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-function bestdeps = get_deps(bestdeps, depmeth, fnin);
-
-root_ctd = mgetdir('M_CTD');
-
-switch depmeth
-
-   case 1 % load from two-column text file
-
-      a1 = load(fnin);
-      a2 = bestdeps; a2(~isnan(bestdeps(:,2)),1) = NaN;
-      [c,ii1,ii2] = intersect(a1(:,1), bestdeps(:,1));
-      bestdeps(ii2,2) = a1(ii1,2);
-
-   case 2 % load from text file with header
-   
-      fidin = fopen(fnin,'r');
-      l1 = fgetl(fidin); % need to read a line of headers off the top
-      a4 = fscanf(fidin,'%f %f %f %f');
-      a4 = reshape(a4,ncol,numel(a4)/ncol)';
-      fclose(fidin);
-      dcol = 4; %***
-      a1 = a4(:,[1 dcol]);
-      a2 = bestdeps; a2(~isnan(bestdeps(:,2)),1) = NaN;
-      [c,ii1,ii2] = intersect(a1(:,1), bestdeps(:,1));
-      bestdeps(ii2,2) = a1(ii1,2);
-
-   case 3 % calculate from CTD depth and altimeter, creating or updating existing station_depths .mat file
-
-      ii = find(isnan(bestdeps(:,2))); 
-      for no = 1:length(ii) % try to fill these in from 1hz files
-         fn = [fnin sprintf('%03d', bestdeps(ii(no),1)) '_psal.nc'];
-         if exist(fn)
-            [d, h] = mload(fn, '/');
-            if ~isfield(d, 'depSM'); d.depSM = filter_bak(ones(1,21), sw_dpth(d.press, h.latitude)); end
-            [max_dep,bot_ind] = max(d.depSM); % Find cast max depth
-            % Average altimeter and CTD depth for 30 seconds around max depth
-            ctd_bot = nanmean(d.depSM(bot_ind-15:bot_ind+15));
-            % Eliminate altim readings >20m (unlikely when CTD at bottom)
-            altim_select = d.altimeter(bot_ind-15:bot_ind+15); altim_select(altim_select>20) = NaN; alt_bot = nanmean(altim_select);
-            bestdeps(ii(no),2) = alt_bot + ctd_bot;
-         end
-      end
-   
-   case 4 % load from IX LADCP .mat files, creating or updating existing station_depths .mat file
-
-      root_ladcp = mgetdir('M_IX');
-      fn = dir(fnin);
-      stns = struct2cell(fn); stns = cell2mat(stns(1,:)');
-      stn_string = stns(:,end-9:end-7); stns = str2num(stn_string);
-      stns = intersect(stns, bestdeps(isnan(bestdeps(:,2)),1));
-      for no = 1:length(stns)
-         stn_string = sprintf('%03d', stns(no));
-         lf = [root_ladcp '/DL_GPS/processed/' stn_string '/' stn_string '.mat'];
-         if exist(lf)
-	        load(lf, 'p');
-            bestdeps(bestdeps(:,1)==stns(no),2) = round(p.zbottom);
-         else
-         lf = [root_ladcp '/DLUL_GPS/processed/' stn_string '/' stn_string '.mat'];
-            if exist(lf)
-         	        load(lf, 'p');
-            bestdeps(bestdeps(:,1)==stns(no),2) = round(p.zbottom);
+switch depth_source
+    
+    iif = find(isnan(bestdeps(:,2)));
+    
+    case 'file' % load from text file
+        
+        try
+            dsd = dataset('File',fnin,'Delimiter',',');
+            fnam = dsd.Properties.VarNames;
+            if sum(strcmp('statnum',fname))==0 | sum(strcmp('depth',fnam))==0
+                error;
+            else
+                deps = [dsd.statnum dsd.depth]; %two-column format
             end
-         end
-      end
-
+        catch
+            deps = load(fnin);
+        end
+        [c,ii1,ii2] = intersect(deps(:,1), bestdeps(iif,1));
+        bestdeps(iif(ii2),2) = deps(ii1,2);
+        
+    case 'ctd' % calculate from CTD depth and altimeter
+        
+        for no = 1:length(iif) % try to fill these in from 1hz files
+            fn = sprintf('%s/ctd_%s_%03d_psal.nc', mgetdir('M_CTD'), mcruise, bestdeps(iif(no),1));
+            if exist(fn)
+                [d, h] = mload(fn, '/');
+                if ~isfield(d, 'depSM'); d.depSM = filter_bak(ones(1,21), sw_dpth(d.press, h.latitude)); end
+                [max_dep,bot_ind] = max(d.depSM); % Find cast max depth
+                % Average altimeter and CTD depth for 30 seconds around max depth
+                ctd_bot = nanmean(d.depSM(bot_ind-15:bot_ind+15));
+                % Eliminate altim readings >20m (unlikely when CTD at bottom)
+                altim_select = d.altimeter(bot_ind-15:bot_ind+15); altim_select(altim_select>20) = NaN; alt_bot = nanmean(altim_select);
+                bestdeps(iif(no),2) = alt_bot + ctd_bot;
+            end
+        end
+        
+    case 'ladcp' % load from IX LADCP .mat files
+        
+        for no = 1:length(iif)
+            lf = sprintf('%s/DL_GPS/processed/%03d/%03d.mat', mgetdir('M_IX'),bestdeps(iif(no),1),bestdeps(iif(no),1));
+            if ~exist(lf)
+                lf = sprintf('%s/DLUL_GPS/processed/%03d/%03d.mat', mgetdir('M_IX'),bestdeps(iif(no),1),bestdeps(iif(no),1));
+            end
+            load(lf, 'p');
+            bestdeps(iif(no),2) = round(p.zbottom);
+        end
+        
 end
 
