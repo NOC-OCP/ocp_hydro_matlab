@@ -3,9 +3,6 @@
 scriptname = mfilename; oopt='uway_factory_cal'; get_cropt
 
 for m=1:length(sensors_to_cal)
-    if ~exist([otfile '.nc'])
-        unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
-    end
     h = m_read_header(otfile);
     varnum = find(strcmp(sensors_to_cal{m}, h.fldnam));
     

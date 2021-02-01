@@ -124,8 +124,8 @@ switch scriptname
         switch oopt
             case 'botflags'
                 %stn nis
-                flag3 = [0 0; 8 12; 10 5; 17 5; 29 12; 33 23]; % leaking (Woce table 4.8)
-                flag4 = [0 0; 2 5; 4 3; 4 16; 5 4; 5 20; 5 24; 6 2; 6 16; 6 20; 7 20; 8 3; 9 3; 9 16; 10 1; 10 3; 10 16;...
+                flag3 = [8 12; 10 5; 17 5; 29 12; 33 23]; % leaking (Woce table 4.8)
+                flag4 = [2 5; 4 3; 4 16; 5 4; 5 20; 5 24; 6 2; 6 16; 6 20; 7 20; 8 3; 9 3; 9 16; 10 1; 10 3; 10 16;...
                     10 20; 10 24; 12 4; 16 4; 18 4; 20 17; 23 1; 23 24; 29 1; 29 2; 29 4; 29 17; 29 19; 29 24;.....
                     31 1; 31 12; 32 1; 33 1; 33 12; 33 17; 34 1; 35 1]; % did not trip correctly (Woce table 4.8)
                 flag4 = [flag4; 27 01; 73 10; 84 08; 87 08; 90 08; 96 15; 97 15; 98 15; 114 20]; % 2701 psal, botoxy, silc all suggest closed shallower.
@@ -139,7 +139,6 @@ switch scriptname
                 iif = find(flag3(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag3(iif,2)) = 3; end
                 iif = find(flag4(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag4(iif,2)) = 4; end
                 iif = find(flag9(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag9(iif,2)) = 9; end
-                %                 if ismember(stnlocal, [27 28 59 125]); bottle_qc_flag(:) = 9; end
         end
         %%%%%%%%%% end mbot_01 %%%%%%%%%%
         
@@ -236,14 +235,7 @@ switch scriptname
                 ds_sal.K15(iistd) = ssw_batches(ssw_batches(:,1)==sswb,2)/2;
             case 'cellT'
                 ds_sal.cellT = 24+zeros(length(ds_sal.sampnum),1);
-            case 'std2use'
-                %                 std2use([47 68 121],1) = 0;
-                %                 std2use([50],2) = 0;
-                %                 std2use([61],3) = 0;
-            case 'sam2use'
-                %                 sam2use(51,2) = 0;
-                %                 sam2use([2587 2896],3) = 0;
-            case 'fillstd'
+             case 'fillstd'
                 %add the start standard--can add it at the end because we'll
                 %use time to interpolate
                 ds_sal.sampnum = [ds_sal.sampnum; 999000];
@@ -284,7 +276,7 @@ switch scriptname
                 ds_oxy.oxy_titre = ds_oxy.sample;
                 ds_oxy.mol_std = ds_oxy.iodate_m;
                 ds_oxy.no2 = ds_oxy.n0x28O20x29;
-                ds_oxy.conc_o2 = ds_oxy.Ccx28O20x29;
+                ds_oxy.conc_o2 = ds_oxy.C0x28O20x29;
             case 'oxyflags'
                 flags3 = [0];
                 flags4 = [2017 2912 3112 3317 3323];
@@ -329,24 +321,6 @@ switch scriptname
                 ds_nut.position = ds_nut.BTTLE_NB;
                 ds_nut.sampnum = 100*ds_nut.station + ds_nut.position;
                 ds_nut.niskin = ds_nut.position;
-                %                 stncol = ds_nut.METH;
-                %                 ds_nut.sampnum = zeros(size(stncol));
-                %                 b = zeros(size(stncol));
-                %                 forms = {'st'; 'sta'; 'stn'}; %station number may be preceded by any of these (or their upper case versions)
-                %                 for no = 1:length(forms)
-                %                     b = b + strncmpi([forms{no} stn_string], stncol, length(forms{no})+length(stn_string)); %may be a 3-digit station number
-                %                     b = b + strncmpi([forms{no} num2str(stnlocal)], stncol, length(forms{no})+length(num2str(stnlocal))); %or may be a variable-digit station number
-                %                 end
-                %                 iig = find(b>0);
-                %                 for no = 1:length(iig)
-                %                     %station and niskin can be separated by - or space
-                %                     ii = strfind(stncol{iig(no)}, '-'); if length(ii)==0; ii = strfind(stncol{iig(no)}, ' '); end
-                %                     %sample may or may not have a trailing letter
-                %                     nisk = str2num(stncol{iig(no)}(ii+1:end)); if isempty(nisk); nisk = str2num(stncol{iig(no)}(ii+1:end-1)); end
-                %                     ds_nut.sampnum(iig(no)) = stnlocal*100 + nisk;
-                %                 end
-                %                 ds_nut.station = floor(ds_nut.sampnum/100);
-                %                 ds_nut.niskin = ds_nut.sampnum-floor(ds_nut.sampnum/100)*100;
             case 'vars'
                 vars = {
                     'position'     'number'     'niskin'
@@ -366,7 +340,6 @@ switch scriptname
                     'no2_flag'	  'woceflag'   ''
                     };
             case 'flags'
-                %flags4 = [12001 12004];
                 flag0 = 5; % if there is a line in the nut file for this sample, but no value, then the flag is '5', 'not reported'
                 flags4 = [2001 2017 2701 2902 3112 3317 4716 5016 5612 5714 5716 5915 5916 7311 8211 11522 11805 12113];
                 sampnum = ds_nut.sampnum;
@@ -414,7 +387,6 @@ switch scriptname
                     'pheoa_flag'     'woceflag'   ''
                     };
             case 'flags'
-                %                 flags4 = [12001 12004];
                 flag0 = 5; % if there is a line in the pig file for this sample, but no value, then the flag is '5', 'not reported'
                 flags4 = [0];
                 sampnum = ds_pig.sampnum;
@@ -672,9 +644,7 @@ switch scriptname
                 cal_stations1.oxy = [1:999];
                 cal_stations1.trans = [1:999];
                 cal_stations1.fluor = [1:999];
-                
         end
-        
         %%%%%%%%%% ctd_all_part1 %%%%%%%%%%
         
         %%%%%%%%%% cond_apply_cal %%%%%%%%%%
@@ -896,24 +866,12 @@ switch scriptname
                     ['#EXPOCODE: ' expocode];...
                     '#DATES: 20200119 - 20200301';...
                     '#Chief Scientist: A. Sanchez Franks, NOC';...
-                    %                     '#Supported by NERC NE/N018095/1 (ORCHESTRA) and NERC NE/P019064/1 (TICTOC)';...
-                    %                     '#121 stations with 24-place rosette';...
-                    %                     '#CTD: Who - B. KING; Status - final';...
                     '#CTD: Who - B. KING; Status - final';...
-                    %                     '#CTD: Who - B. KING; Status - uncalibrated';...
                     '#Notes: Includes CTDSAL, CTDOXY';...
                     '#The CTD PRS;  TMP;  SAL; OXY data are all calibrated and good.';...
-                    %                     '#The CTD PRS;  TMP;  SAL; OXY data are all uncalibrated.';...
                     '#Salinity: Who - K. Grayson/B. King; Status - final';...
-                    %                     '#Notes: bottle salinity from stations 1-122 used for CTD calibration';...
-                    %                     '#Oxygen and Nutrients: Who - E. Mawji; Status - final';...
                     '#Oxygen and Nutrients: Who - E. Mawji; Status - end of cruise';...
-                    %                     '#Notes: bottle oxygen from stations 35-123 used for CTD calibration';...
-                    %                     '#DIC and Talk: Who - P. Brown; Status - final ';...
                     '#DIC and Talk: Who - P. Brown; Status - end of cruise ';...
-                    %                     '#CFCs and SF6: Who - M.J. Messias; Status - uncalibrated, proprietary ';...
-                    %                     '#C14/13: Who: A. McNichol; Status - final (data rcd 2019/03/11 from J. Lester)';...
-                    %                     '#O18: Who: M. Leng, M. Meredith; Status - final';...
                     '#The A05 section consists of stations [2:13] [14:20 22:24 26:27 29:94 96:130 132:135] ';...
                     '#Notes:';...
                     '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with funding from the UK Natural Environment Research Council to the National Oceanography Centre."'};
@@ -937,7 +895,6 @@ switch scriptname
                     ['#EXPOCODE: ' expocode];...
                     '#DATES: 20200119 - 20200301';...
                     '#Chief Scientist: A. Sanchez Franks, NOC';...
-                    %                     '#Supported by NERC NE/N018095/1 (ORCHESTRA)';...
                     '#135 stations with 24-place rosette';...
                     '#CTD: Who - B. King; Status - final';...
                     '#Notes: Includes CTDSAL, CTDOXY';...
@@ -945,10 +902,6 @@ switch scriptname
                     '#DEPTH_TYPE   : COR';...
                     '#The A05 section consists of stations [2:13] [14:20 22:24 26:27 29:94 96:130 132:135] ';...
                     '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."'};
-                %case 'flags'
-                %    if stn<10 & strcmp(newname, 'CTDFLUOR_FLAG_W')
-                %        data(data==2 & d.press>1000) = 3;
-                %    end
         end
         %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
         
@@ -956,7 +909,6 @@ switch scriptname
     case 'msec_run_mgridp'
         switch oopt
             case 'sections'
-                %sections = {'fs27n' '24n'};
                 sections = {'24n'}; 
             case 'varlist'
                 varlist = [varlist ' fluor transmittance '];
@@ -970,7 +922,6 @@ switch scriptname
             case 'sam_gridlist'
                 varuselist.names = {'botoxy' 'totnit_per_kg' 'phos_per_kg' 'silc_per_kg' 'dic' 'alk' 'cfc11'  'cfc12' 'f113' 'sf6' 'ccl4'};
                 varuselist.names = {'botpsal' 'botoxy' 'totnit_per_kg' 'phos_per_kg' 'silc_per_kg' 'dic' 'alk' 'totnit' 'phos' 'silc'};
-                %                 varuselist.names = {'botoxy' 'silc'};
         end
         %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
         
@@ -1035,12 +986,7 @@ switch scriptname
             case 'kstatgroups'
                 % jc191 Florida St and main section; each array is a set of stations that can be used for mapping
                 kstatgroups = {[2:13] [14:20 22:24 26:27 29:94 96:130 132:135]};
-            case 'xzlim'
-                %defaults
-            case 'scales_xz'
-                %defaults
             case 'samfn'
-                %                 samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
                 samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all_nutkg' ];
         end
         %%%%%%%%%% end m_maptracer %%%%%%%%%%
@@ -1108,7 +1054,6 @@ switch scriptname
                 pre1 = ['postprocessing/' cname '/proc_archive/' oslocal]; %link here to version you want to use (spprocessing or postprocessing)
                 fnin = [root_vmadcp '/' pre1 '/contour/' oslocal '.nc'];
                 dataname = [oslocal '_' mcruise '_01'];
-                %*** station 123?
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
         

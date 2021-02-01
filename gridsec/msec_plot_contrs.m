@@ -1,7 +1,12 @@
 % mcsetd M_SCRIPTS; root_scripts = MEXEC_G.MEXEC_CWD;
 
-root_plots = mgetdir('M_CTD');
+scriptname = 'msec_plot_contrs'; % bak jc191 so can control adding things in cropt
+mcd M_CTD;
+
+% some hardwiring from jc032 removed di346
 root_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/MEXEC.mexec_processing_scripts'];
+% load([root_scripts '/cdfs'],'clog')
+% load([root_scripts '/cdfs'])
 
 % section = 'bc1'; % jc032
 % section = 'bc2'; % jc032

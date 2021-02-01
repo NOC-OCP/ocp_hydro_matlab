@@ -1,4 +1,4 @@
-% msbe35_02: paste sbe35 data into sam file
+% msbe35_02: paste sbe35 data into sam_all file
 
 minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes SBE35 data into sam_' mcruise '_' stn_string '.nc']);

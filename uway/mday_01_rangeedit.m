@@ -1,37 +1,38 @@
 %%%%% set data to absent outside ranges %%%%%
 
-%list of possible streams and fields; this should generally only be added to because extras will just be ignored
-car = {'ash' {'head_ash' 'pitch' 'roll' 'mrms' 'brms'} {'0 360' '-5 5' '-7 7' '0.00001 0.01' '0.00001 0.1'}
-    'gp4' {'long' 'lat'} {'-181 181' '-91 91'}
-    'pos' {'long' 'lat'} {'-181 181' '-91 91'}
-    'seapos' {'long' 'lat'} {'-181 181' '-91 91'}
-    'posdps' {'long' 'lat'} {'-181 181' '-91 91'}
-    'met' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
-    'surfmet' {'airtemp' 'humid' 'direct' 'speed'} {'-50 50' '0.1 110' '-0.1 360.1' '-0.001 200'}
-    'met_light' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
-    'surflight' {'pres' 'ppar' 'spar' 'ptir' 'stir'} {'0.01 1500' '-10 1500' '-10 1500' '-10 1500' '-10 1500'}
-    'tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105'}
-    'met_tsg' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans' 'fluo' 'flow1'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105' '0 10' '0 10'}
-    'ocl' {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'cond' 'trans'} {'-2 50' '-2 50' '-2 50' '-2 50' '-2 50' '0 10' '0 105'}
-    'sim' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
-    'ea600m' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
-    'ea600' {'depth' 'depth_uncor'} {'20 10000' '20 10000'}
-    'em120' {'swath_depth'} {'20 10000'}
-    'em122' {'swath_depth'} {'20 10000'}
-    };
+%list of possible fields and ranges; this should generally only be added to because extras will just be ignored
+varr.head.range = [0 360]; varr.head.names = {'head' 'head_ash' 'headingtrue'};
+varr.pitch.range = [-5 5];
+varr.roll.range = [-7 7];
+varr.mrms.range = [1e-5 1e-2]; 
+varr.brms.range =[1e-5 0.1];
+varr.lon.range = [-181 181]; varr.lon.names = {'lon' 'long' 'longitude'};
+varr.lat.range = [-91 91]; varr.lat.names = {'lat' 'latitude'};
+varr.airtemp.range = [-50 50]; varr.airtemp.names = {'airtemp' 'airtemperature'};
+varr.humid.range = [0.1 110]; varr.humid.names = {'humid' 'humidity'};
+varr.winddirection.range = [-0.1 360.1]; varr.winddirection.names = {'direct' 'winddirection'};
+varr.windspeed.range = [-0.001 200]; varr.windspeed.names = {'speed' 'windspeed'};
+varr.airpressure.range = [0.01 1500]; varr.airpressure.names = {'pres' 'airpressure'};
+varr.rad.range = [-10 1500]; varr.rad.names = {'ppar' 'spar' 'ptir' 'stir' 'parport' 'parstarboard' 'tirport' 'tirstarboard'};
+varr.seatemp.range = [-2 50]; varr.seatemp.names = {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'housingwatertemperature' 'remotewatertemperature'};
+varr.cond.range = [0 10]; varr.cond.names = {'cond' 'conductivity'};
+varr.trans.range = [0 105]; 
+varr.dep.range = [20 1e4]; varr.dep.names = {'depth' 'swath_depth'};
 
-ii = find(strcmp(abbrev, car(:,1)));
-if length(ii)>0
-    %work on the latest file, which may already be an edited version; always output to otfile
-    if ~exist([otfile '.nc'])
-        unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+
+fn = fieldnames(varr);
+h = m_read_header(otfile);
+for vno = 1:length(fn) %look for each variable type in file
+    v = varr.(fn{vno});
+    if isfield(v, 'names')
+        vnames = v.names;
+    else
+        vnames = fn(vno);
     end
-    
     MEXEC_A.MARGS_IN = {otfile; 'y'};
-    h = m_read_header(otfile);
-    for no = 1:length(car{ii,2})
-        if sum(strcmp(car{ii,2}{no}, h.fldnam)) %fixed jc191/192, jc211
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; car{ii,2}{no}; car{ii,3}{no}];
+    for nno = 1:length(vnames)
+        if sum(strcmp(vnames{nno}, h.fldnam)
+            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; vnames{nno}; sprintf('''%f %f''',v.range)];
         end
     end
     if length(MEXEC_A.MARGS_IN)>2

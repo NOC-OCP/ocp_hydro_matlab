@@ -269,16 +269,10 @@ switch scriptname
         switch oopt
             case 'sbe35flag'
                 % these might have been closed too quickly for a good reading
-                sbe35flag(isnan(sbe35temp)) = 9;
-                if stnlocal==22
-                    sbe35flag(position == 9) = 4;
-                end
-                if stnlocal == 24
-                    sbe35flag(position == 6 | position ==9) = 4;
-                end
-                if stnlocal == 27
-                    sbe35flag(position == 17) = 4;
-                end
+                d.sbe35temp_flag(isnan(d.sbe35temp)) = 9;
+                d.sbe35temp_flag(d.statnum==22 & d.position == 9) = 4;
+                d.sbe35temp_flag(d.statnum==24 & (d.position == 6 | d.position ==9)) = 4;
+                d.sbe35temp_flag(d.statnum==27 & d.position == 17) = 4;
         end
         %%%%%%%%%% end msbe35_01 %%%%%%%%%%
         

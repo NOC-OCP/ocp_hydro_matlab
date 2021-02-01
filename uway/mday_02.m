@@ -39,56 +39,31 @@ if exist(root_out,'dir') ~= 7
     return
 end
 
-prefix1 = [mstarprefix '_' mcruise '_'];
-infile1 = [root_out '/' prefix1 '01'];
-infile2 = [root_out '/' prefix1 'd' day_string];
-infile3 = [root_out '/' prefix1 'd' day_string '_edt'];
-infile4 = [root_out '/' prefix1 'd' day_string '_raw'];
-wkfile = ['wk_' mfilename '_' datestr(now,30)];
+dataname = [mstarprefix '_' mcruise '_01'];
 
-apfilename = infile2;
-if ~exist(m_add_nc(apfilename),'file')
-    apfilename = infile3;
-    if ~exist( m_add_nc(apfilename),'file')
-        apfilename = infile4;
-        if ~exist( m_add_nc(apfilename),'file')
-            m = 'None of the possible files propose to append was found';
-            m2 = infile2;
-            m3 = infile3;
-            m4 = infile4;
-            fprintf(MEXEC_A.Mfider,'%s\n','',m,m2,m3,m4)
-            return
-    
-       end
+apfile = [root_out '/' dataname(1:end-2) 'd' day_string '.nc'];
+if ~exist(apfile,'file')
+    apfile = [root_out '/' dataname(1:end-2) 'd' day_string '_edt.nc'];
+    if ~exist(apfile,'file')
+        apfile = [root_out '/' dataname(1:end-2) 'd' day_string '_raw.nc'];
+        error('None of the files proposed to append was found; no action');
     end
 end
 
-dataname = [prefix1 '01'];
+%load data
+[d,h] = mload(apfile,'/');
 
-%YLF added jr17001 to check for row vs column vector
-[d,h] = mload(apfilename,'/'); s = size(d.time);
-if s(1)==1; vdir = 'r'; else; vdir = 'c'; end
-
-MEXEC_A.MARGS_IN_1 = {
-   wkfile
-   dataname
-   't'
-};
-MEXEC_A.MARGS_IN_2 = {
-   infile1 % current accumulated file. This is first file offered to mapend unless the file doesn't exist
-   apfilename
-   ''
-};
-if ~exist(m_add_nc(infile1),'file')
-    MEXEC_A.MARGS_IN_2(1) = []; % can't offer infile1 first if it doesn't exist.
+%headers
+if exist(otfile,'file')
+    hnew.fldnam = h.fldnam; hnew.fldunt = h.fldunt; hnew.comment = h.comment;
+    d0 = mload(otfile, 'time');
+    if length(intersect(d.time,d0.time))>2 %in case 1 on each boundary?
+        warning(['overwriting day ' daynum ' in appended file ' otfile]);
+    end
+else
+    hnew = h; 
 end
-MEXEC_A.MARGS_IN_3 = {
-   '/'
-   vdir
-};
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1 ; MEXEC_A.MARGS_IN_2 ; MEXEC_A.MARGS_IN_3];
-mapend
+hnew.dataname = dataname;
 
-unix(['/bin/mv ' m_add_nc(wkfile) ' ' m_add_nc(infile1)]);
-
-
+%merge onto otfile
+mfsave(otfile, d, hnew, '-merge', 'time');

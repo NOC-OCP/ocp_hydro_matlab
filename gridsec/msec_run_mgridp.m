@@ -98,29 +98,12 @@ for ksec = 1:length(sections)
         };
     mcalc
     
-    varlist = { % list of possible names, flags and units that might be mapped on a cruise
-        'botpsal'   'botpsalflag'   'pss-78' % added bak jc191
-        'botoxy'   'botoxyflag'   'umol/kg'
-        'silc_per_kg'     'silc_flag'    'umol/kg'
-        'phos_per_kg'     'phos_flag'    'umol/kg'
-        'totnit_per_kg'   'totnit_flag'  'umol/kg'
-        'alk'      'alk_flag'     'umol/kg'
-        'dic'      'dic_flag'     'umol/kg'
-        'cfc11'    'cfc11_flag'   'pmol/kg' % jc159 data come across from analysts as per kg
-        'cfc12'    'cfc12_flag'   'pmol/kg'
-        'cfc13'    'cfc13_flag'   'pmol/kg'
-        'f113'     'f113_flag'    'pmol/kg'
-        'sf6'      'sf6_flag'     'fmol/kg'
-        'sf5cf3'   'sf5cf3_flag'  'fmol/kg'
-        'ccl4'     'ccl4_flag'    'pmol/kg'
-        'tn'       'tn_flag'      'umol/kg'
-        'tp'       'tp_flag'      'umol/kg'
-        'don'      'don_flag'     'umol/kg'
-        'dop'      'dop_flag'     'umol/kg'
-        };
-    
     % select vars to map
+    samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
+    scriptname = 'm_maptracer'; oopt = 'samfn'; get_cropt; % bak jc191: choose sam_all or sam_all_nutkg
     scriptname = mfilename; oopt = 'sam_gridlist'; get_cropt
+    [varuselist.names, a, iiv] = mvars_in_file(varuselist.names, samfn);
+
     for kv = 1:length(varuselist.names)
         kuse = find(strcmp(varuselist.names{kv},varlist(:,1)));
         if length(kuse) ~= 1
@@ -139,10 +122,10 @@ for ksec = 1:length(sections)
         };
     for klist = 1:length(varuselist.names)
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'statnum psal temp press'];
-        yline = ['y = m_maptracer(x1,x2,x3,x4,''' varuselist.names{klist} ''',''' varuselist.flags{klist} ''')'];
+        yline = ['y = m_maptracer(x1,x2,x3,x4,''' varuselist.names{klist} ''',''' [varuselist.names{klist} '_flag'] ''')'];
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; yline];
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; varuselist.names{klist}];
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; varuselist.units{klist}];
+%        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; varuselist.units{klist}]; %units shouldn't change
     end
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
     mcalc

@@ -43,8 +43,13 @@ wkfile = ['wk_' prefix '_' mfilename '_' datestr(now,30)];
 
 if exist([infile '.nc']) %only if there is a raw file for this day
 
+    %work on the latest file, which may already be an edited version; always output to otfile
+    if ~exist([otfile '.nc'])
+        unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+    end
+    
     % edit names and units
-    mday_01_namesunits %***needs rvdas ones added
+    mday_01_namesunits
 
     % do things to techsas and scs files, hopefully unnecessary for rvdas
     if sum(strcmp(MEXEC_G.Mshipdatasystem,{'scs' 'techsas'}))
@@ -54,17 +59,14 @@ if exist([infile '.nc']) %only if there is a raw file for this day
         end
     end
    
-   % apply factory calibrations to uncalibrated (still in voltage units) underway sensors
-   % from cruise option file (introduced dy113)
-   mday_01_fcal %***variable names? 
-
-   % apply carter table soundspeed correction to single-beam bathymetry
+   % apply adjustments
+   mday_01_fcal %factory calibrations as specified in opt_cruise
    if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600'}))
-       mday_01_cordep
+       mday_01_cordep %carter table soundspeed correction, go from depth_uncor to depth
    end
     
    % set data to absent outside ranges
-   mday_01_rangeedit %***needs rvdas variable names
+   mday_01_rangeedit 
 
    % median average %***only bathymetry?
    if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'em120' 'em122'}))

@@ -2,7 +2,7 @@
 %
 %by default it will process all the available techsas/scs/rvdas underway
 %streams (of the set in mtnames/msnames/mrnames), unless you either
-%specify uway_proc_list, a list of mexec short names to process, or add 
+%specify uway_proc_list, a list of mexec short names to process, or add
 %to the cruise options file list(s) of names (uway_excludes) or patterns
 %(uway_excludep) to exclude
 %
@@ -61,82 +61,82 @@ shortnames = udirs(:,1); streamnames = udirs(:,4); udirs = udirs(:,3);
 scriptname = mfilename; oopt = 'bathycomb'; get_cropt
 
 for daynumber = days
-   daystr = sprintf('%03d', daynumber);
-  
-   for sno = 1:size(udirs, 1)
-
-      %load
-      mday_01(['M_' upper(shortnames{sno})], streamnames{sno}, shortnames{sno}, daynumber, year);
-
-      %apply additional processing and cleaning for some streams
-      edname = [root_u '/' udirs{sno} '/' shortnames{sno} '_' mcruise '_d' daystr '_edt.nc'];
-      if exist(edname, 'file'); unix(['/bin/rm -f ' edname]); end
-      mday_01_clean_av(shortnames{sno}, daynumber);
-      
-   end
-   
-   %cross-merge bathy streams for later editing
-   if bathycomb
-   iis = find(strcmp('sim', shortnames) | strncmp('ea6',shortnames,3)); 
-   iie = find(strncmp('em12', shortnames, 4));
-   if length(iis)>0 & exist([root_u '/' udirs{iis} '/' shortnames{iis} '_' mcruise '_d' daystr '_raw.nc'],'file')
-      day = daynumber; msim_02;
-   end
-   if length(iie)>0 & exist([root_u '/' udirs{iie} '/' shortnames{iie} '_' mcruise '_d' daystr '_raw.nc'],'file')
-      day = daynumber; mem120_02;
-   end
-   end
-   
-   % on Discovery, we have temperature and salinity in tsg, other variables 
-   % in met_tsg so we need to combine these streams into met_tsg. Originally, 
-   % we tried to do this at the end, but this doesn't work when appending
-   % additional days, as some variables will be missing from files being
-   % appended...
-   if strcmp(MEXEC_G.Mship,'discovery') 
-     if exist([root_tsg '/tsg_' mcruise '_d' daystr '_edt.nc'],'file') & exist([root_tsg '/tsg/met_tsg_' mcruise '_d' daystr '_edt.nc'],'file')
-
-      mdocshow(mfilename, ['merge tsg data from from tsg_' mcruise '_d' daystr '_edt.nc into met_tsg_' mcruise '_d' daystr '_edt.nc']);
-
-      wkfile = ['wk_' mfilename '_' datestr(now,30)];
-      cmd = ['/bin/cp -p ' root_tsg '/met_tsg_' mcruise '_d' daystr '_edt.nc ' m_add_nc(wkfile)]; unix(cmd);
-
-      MEXEC_A.MARGS_IN = {
-         [root_tsg '/met_tsg_' mcruise '_d' daystr '_edt.nc']
-         m_add_nc(wkfile)
-         '/'
-         'time'
-         ['tsg_' mcruise '_d' daystr '_edt.nc']
-         'time'
-         'psal temp_r temp_h cond sndspeed' % not deltat
-         'k'
-         };
-      mmerge
-      unix(['/bin/rm ' wkfile '.nc']);
-     else % no TSG file for this day - so we need to add blank variables 
-          % to MET_TSG so the files can be merged when data become available
-      otfilestruct=struct('name',[root_tsg '/met_tsg_' mcruise '_d' daystr '_edt.nc']);
-      h=m_read_header(otfilestruct.name);
-      blankdata=repmat(-99999,h.rowlength,h.collength);
-      m_write_variable(otfilestruct,struct('name','psal','units','pss-78','data',blankdata));
-      m_write_variable(otfilestruct,struct('name','temp_r','units','degree_Celsius','data',blankdata));
-      m_write_variable(otfilestruct,struct('name','temp_h','units','degree_Celsius','data',blankdata));
-      m_write_variable(otfilestruct,struct('name','cond','units','S/m','data',blankdata));
-      m_write_variable(otfilestruct,struct('name','sndspeed','units','m/s','data',blankdata));
-     end
-   end
-  
-   %update appended files
-   for sno = 1:size(udirs, 1)
-      if daynumber==days(1) & restart_uway_append     
-          if strcmp(MEXEC_G.Mshipdatasystem, 'scs')
-          unix(['rm -f ' root_u '/scs_mat/' udirs{sno,4}])
-          end
-         warning(['clobbering ' shortnames{sno} '_' mcruise '_01.nc'])
-         unix(['/bin/rm ' root_u '/' udirs{sno} '/' shortnames{sno} '_' mcruise '_01.nc']);
-      end
-      mday_02(shortnames{sno}, daynumber);
-   end
-
+    daystr = sprintf('%03d', daynumber);
+    
+    for sno = 1:size(udirs, 1)
+        
+        %load
+        mday_01(['M_' upper(shortnames{sno})], streamnames{sno}, shortnames{sno}, daynumber, year);
+        
+        %apply additional processing and cleaning for some streams
+        edname = [root_u '/' udirs{sno} '/' shortnames{sno} '_' mcruise '_d' daystr '_edt.nc'];
+        if exist(edname, 'file'); unix(['/bin/rm -f ' edname]); end
+        mday_01_clean_av(shortnames{sno}, daynumber);
+        
+    end
+    
+    %cross-merge bathy streams for later editing
+    if bathycomb
+        iis = find(strcmp('sim', shortnames) | strncmp('ea6',shortnames,3));
+        iie = find(strncmp('em12', shortnames, 4));
+        if length(iis)>0 & exist([root_u '/' udirs{iis} '/' shortnames{iis} '_' mcruise '_d' daystr '_raw.nc'],'file')
+            day = daynumber; msim_02;
+        end
+        if length(iie)>0 & exist([root_u '/' udirs{iie} '/' shortnames{iie} '_' mcruise '_d' daystr '_raw.nc'],'file')
+            day = daynumber; mem120_02;
+        end
+    end
+    
+    % on Discovery, we have temperature and salinity in tsg, other variables
+    % in met_tsg so we need to combine these streams into met_tsg. Originally,
+    % we tried to do this at the end, but this doesn't work when appending
+    % additional days, as some variables will be missing from files being
+    % appended...
+    if strcmp(MEXEC_G.Mship,'discovery')
+        if exist([root_tsg '/tsg_' mcruise '_d' daystr '_edt.nc'],'file') & exist([root_tsg '/tsg/met_tsg_' mcruise '_d' daystr '_edt.nc'],'file')
+            
+            mdocshow(mfilename, ['merge tsg data from from tsg_' mcruise '_d' daystr '_edt.nc into met_tsg_' mcruise '_d' daystr '_edt.nc']);
+            
+            wkfile = ['wk_' mfilename '_' datestr(now,30)];
+            cmd = ['/bin/cp -p ' root_tsg '/met_tsg_' mcruise '_d' daystr '_edt.nc ' m_add_nc(wkfile)]; unix(cmd);
+            
+            MEXEC_A.MARGS_IN = {
+                [root_tsg '/met_tsg_' mcruise '_d' daystr '_edt.nc']
+                m_add_nc(wkfile)
+                '/'
+                'time'
+                ['tsg_' mcruise '_d' daystr '_edt.nc']
+                'time'
+                'psal temp_r temp_h cond sndspeed' % not deltat
+                'k'
+                };
+            mmerge
+            unix(['/bin/rm ' wkfile '.nc']);
+        else % no TSG file for this day - so we need to add blank variables
+            % to MET_TSG so the files can be merged when data become available
+            otfilestruct=struct('name',[root_tsg '/met_tsg_' mcruise '_d' daystr '_edt.nc']);
+            h=m_read_header(otfilestruct.name);
+            blankdata=repmat(-99999,h.rowlength,h.collength);
+            m_write_variable(otfilestruct,struct('name','psal','units','pss-78','data',blankdata));
+            m_write_variable(otfilestruct,struct('name','temp_r','units','degree_Celsius','data',blankdata));
+            m_write_variable(otfilestruct,struct('name','temp_h','units','degree_Celsius','data',blankdata));
+            m_write_variable(otfilestruct,struct('name','cond','units','S/m','data',blankdata));
+            m_write_variable(otfilestruct,struct('name','sndspeed','units','m/s','data',blankdata));
+        end
+    end
+    
+    %update appended files
+    for sno = 1:size(udirs, 1)
+        if daynumber==days(1) & restart_uway_append
+            if strcmp(MEXEC_G.Mshipdatasystem, 'scs')
+                unix(['rm -f ' root_u '/scs_mat/' udirs{sno,4}])
+            end
+            warning(['clobbering ' shortnames{sno} '_' mcruise '_01.nc'])
+            unix(['/bin/rm ' root_u '/' udirs{sno} '/' shortnames{sno} '_' mcruise '_01.nc']);
+        end
+        mday_02(shortnames{sno}, daynumber);
+    end
+    
 end
 clear restart_uway_append
 
@@ -153,7 +153,7 @@ catch
 end
 
 switch MEXEC_G.Mshipdatasystem
-   case 'scs'
-      scriptname = mfilename; oopt = 'uwayallmat'; get_cropt
-      if allmat; update_allmat; end
+    case 'scs'
+        scriptname = mfilename; oopt = 'uwayallmat'; get_cropt
+        if allmat; update_allmat; end
 end

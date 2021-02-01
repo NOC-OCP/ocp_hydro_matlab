@@ -122,22 +122,17 @@ switch scriptname
    %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
 
    %%%%%%%%%% msbe35_01 %%%%%%%%%%
-   case 'msbe35_01'
-      switch oopt
-         case 'sbe35flag'
-            % bottles not used for salinity samples closed on the fly in
-            % quick succession
-            if stnlocal == 3
-                sbe35flag(position >= 11) = 4;
-                sbe35flag(isnan(sbe35temp)) = 9;
-            end
-            if stnlocal == 7
-                sbe35flag(position >= 11) = 4;
-                sbe35flag(isnan(sbe35temp)) = 9;
-            end
-      end
-   %%%%%%%%%% end msbe35_01 %%%%%%%%%%
-   
+    case 'msbe35_01'
+        switch oopt
+            case 'sbe35flag'
+                % bottles not used for salinity samples closed on the fly in
+                % quick succession
+                d.sbe35temp_flag(d.statnum==3 & d.position >= 11) = 4;
+                d.sbe35temp_flag(d.statnum==7 & d.position >= 11) = 4;
+                d.sbe35temp_flag(isnan(d.sbe35temp)) = 9;
+        end
+        %%%%%%%%%% end msbe35_01 %%%%%%%%%%
+        
 
    %%%%%%%%%% mtsg_01 %%%%%%%%%%
    case 'mtsg_01'

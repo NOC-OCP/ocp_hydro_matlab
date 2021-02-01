@@ -7,13 +7,17 @@ function ygrid = m_maptracer(statnumgrid,sgrid,tgrid,pgrid,yname,yfname)
 %
 % function ygrid = m_maptracer(statnumgrid,sgrid,tgrid,pgrid,yname,yfname)
 %
-m_common; mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+m_common
+
+scriptname = 'm_maptracer';
+
 
 root_ctd = mgetdir('M_CTD');
-oopt = 'samfn'; scriptname = mfilename; get_cropt
+samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
+oopt = 'samfn'; get_cropt; % bak jc191: choose sam_all or sam_all_nutkg
 
-MEXEC_A.MARGS_IN = MEXEC_A.MARGS_IN_LOCAL; % get back the queue of responses
-MEXEC_A.MARGS_IN = [samfn '/' MEXEC_A.MARGS_IN(:)' ]; % must use MEXEC_A.MARGS_IN because we are calling mheader which is a 'main' program
+    MEXEC_A.MARGS_IN = MEXEC_A.MARGS_IN_LOCAL; % get back the queue of responses
+    MEXEC_A.MARGS_IN = [samfn '/' MEXEC_A.MARGS_IN(:)' ]; % must use MEXEC_A.MARGS_IN because we are calling mheader which is a 'main' program
 
 % [d h] = mload(samfn,'/');
 [d h] = mload;
@@ -21,7 +25,12 @@ MEXEC_A.MARGS_IN = [samfn '/' MEXEC_A.MARGS_IN(:)' ]; % must use MEXEC_A.MARGS_I
 stdpres = [0 5 25 50 75 100 175 250 375 500 ...
     625 750 875 1000 1250 1500 1750 2000 2250 2500 ...
     2750 3000 3250 3500 3750 4000 4250 4500 4750 ...
-    5000 5250 5500 5750 6000 6250 6500];
+    5000 5250 5500 5750 6000 6250 6500]; % add 6250 6500 jc191 24N
+% stdpres = [0 50 100 175 250 375 500 ...
+%     625 750 875 1000 1250 1500 1750 2000 2250 2500 ...
+%     2750 3000 3250 3500 3750 4000 4250 4500 4750 ...
+%     5000 5250 5500 5750 6000 6250 6500]; % add 6250 and 6500 di346
+% stdpres = [0:100:1000 1000:20:2000]; % jc069
 stdpres = unique(stdpres);
 plev = 1:length(stdpres);
 
@@ -45,16 +54,41 @@ else
     cmd = ['yflag = d.' yfname ';']; eval(cmd);
 end
 flaglim = 2; % highest flag to be used for gridding
-oopt = 'xzlim'; scriptname = mfilename; get_cropt %half widths
+s.xlim = 1; % width of gridding window, measured in statnum 
+s.zlim = 4; % vertical extent of gridding window measured in plev
+% bak jc191 reset s.xlim and s.zlim in a cruise option.
+% s.xlim and s.zlim are the half-width of the number of points used in the
+% local fit. ie s.xlim = 1 means three stations used. This one and one
+% either side.
+%
+oopt = 'xlim'; get_cropt
+% pgrid = 10:20:4000;
+% stnlist = 23:44;
+% 
+% ktest = find(statnum == 30 & 4000 > p & p > 1500); % test points
+% ktest = find(statnum >= 1 ); % test points
 
 
 testfit = nan+y;
 
-% group stations that can be used together for gridding
-oopt = 'kstatgroups'; scriptname = mfilename; get_cropt
+% % % % group stations that can be used together for gridding
+% % % % saloups = {[1:9] [10:22] [23:200]}; % jc032
+% % % kstatgroups = {[2:13] [14:200]}; % di346
+% % % kstatgroups = {[3:42]}; % jc069
+% % % kstatgroups = {[60 53 54 55 52 56 49 61 48 47 36 38 39 40 45]}; % jr281
+% % % kstatgroups = {[1:33] [60 53 54 55 52 56 49 61 48 47 36 38 39 40 45] [67:82]}; % jr281
+% % % kstatgroups = {[67:82]}; % jr281
+% % % kstatgroups = {[1:19 21:999]}; % jr302
+% % % kstatgroups = {3 [4:999]}; % jc159
+% % % kstatgroups = {[1:71]};%3:10 1 12:22] [45 44 40 36 32 31 27 26 25 23]};
+% % % kstatgroups = {[2:13] [14:20 22:24 26:27 29:200]};% jc191 Florida St and main section
+% % % % should put this in a cruise option
+
+oopt = 'kstatgroups'; get_cropt; % added jc191 define kstatgroups in opt file
+
 
 %now distribute the sample numbers into sets corresponding to the station
-%groups
+%groups 
 for kount = 1:length(kstatgroups)
     ks = kstatgroups{kount};
     kall = [];
@@ -83,6 +117,9 @@ s.kstatgroups = kstatgroups;
 action = 'grid';
 mm = [action ' ' yname ' ' yfname];
 fprintf(MEXEC_A.Mfidterm,'%s\n',mm);
+% action = 'self'
+% action = 'self_omit_stn'
+% action = 'self_include_all'
 
 s.action = action; % save for switch in mapping subroutine;
 switch action
@@ -104,6 +141,8 @@ switch action
         ot = [sampnum s.p y yot s.yf resid];
         sprintf('%7d %7.1f %10.4f %10.4f %3d %10.4f\n',ot(kquestion,:)')
     case 'grid'
+        %         p = pgrid(:);
+        %         yotall = nan+ones(length(p),length(stnlist));
         yotall = nan+pgrid;
         
         % bak on jc159 26 march 2018; modify so the horizontal
@@ -122,9 +161,24 @@ switch action
             end
             s.statnumindex(kref) = ki;
         end
+        % end of mod 26 march 2018.
         
         for kx = 1:size(pgrid,1)
             for ky = 1:size(pgrid,2)
+% % % % %             kstn = stnlist(kount);
+% % % % %             stnstr = sprintf('%03d',kstn);
+% % % % %             ctdfn = [root_ctd '/' 'ctd_jc032_' stnstr '_2db.nc']; % load ctd data for this station
+% % % % %                             %  ctd data are required so we know density at the target mapping point
+% % % % %             if exist(ctdfn,'file') ~=2; 
+% % % % %                 m = ['Required CTD file ' fn ' does not exist'];
+% % % % %                 fprintf(MEXEC_A.Mfider,'%s\n',' ',m,' ');
+% % % % %                 return; 
+% % % % %             end
+% % % % %             [dctd h] = mload(ctdfn,'press temp psal',' ');
+% % % % %             psal = interp1(dctd.press,dctd.psal,p);
+% % % % %             t = interp1(dctd.press,dctd.temp,p);
+% % % % %             yot = nan+p;
+% % % % %             for k = 1:length(p)
                 g.p = pgrid(kx,ky);
                 g.statnum = statnumgrid(kx,ky);
                 g.s = sgrid(kx,ky);
@@ -133,6 +187,7 @@ switch action
                 g = bakmap2(g,s);
                 yotall(kx,ky) = g.fit;
             end
+% % % % %             yotall(:,kount) = yot(:);
         end
         yot = yotall;
         ygrid =yot;
@@ -142,84 +197,100 @@ end
 
 
 function g = bakmap2(g,s)
-m_common; scriptname = 'm_maptracer'; oopt = 'scales_xz'; get_cropt
-g.fit = nan;
-pref = g.p;
-sig = sw_pden(s.s,s.t,s.p,pref)-1000; % recalculate sigma for the reference pressure of the test point
-sigref = sw_pden(g.s,g.t,g.p,pref)-1000; % measure sig relative to test point.
-if isnan(sigref); g.fit = nan; return; end
+    m_common
+    scriptname = 'm_maptracer'; % bak jc191 still use m_maptracer, for opt_cruise
 
-sk = g.statnum; % station number of the test point
-
-%sort out section range
-% After this ksec contains the data cycle numbers of the tracer data
-% that lie in the required section
-for jsec = 1:length(s.kstatgroups)
-    if ~isempty(find(s.kstatgroups{jsec} == sk)); ksec = s.kdcgroups{jsec}; end
-end
-
-
-plk = g.pl; % this is the plevel of the test point
-%x = s.statnum-sk;
-% bak on jc159 26 march 2018; station separation for weight calculated
-% from index in station grid rather than just station number.
-skindex = find(g.statlist == sk);
-if length(skindex) ~= 1
-    fprintf(2,'\n%s\n\n','Problem in m_maptracer: a station to be used for gridding does not occur uniquely in the station set');
-    error('exiting');
-end
-x = s.statnumindex-skindex;
-% end of mod
-z = s.pl-plk;
-kpoints = find(-s.xlim <= x & x <= s.xlim ...
-    & -s.zlim <= z & z <= s.zlim ...
-    & isfinite(s.y + sig + s.yf) ...
-    ); % these are the points within xlim stations an zlim levels.
-
-kuse = kpoints;
-%     kuse = setdiff(kuse,k);
-kuse = intersect(kuse,ksec);% only carry points forward if they're in the right station group
-if isempty(kuse); return; end
-
-nu = length(kuse);
-sigu = sig(kuse); sigu = sigu(:)-sigref;
-yu = s.y(kuse); yu = yu(:);
-xu = x(kuse); xu = xu(:);
-zu = z(kuse); zu = zu(:);
-xu = xu*scale_x;
-zu = zu*scale_z;
-
-%weights
-w = ones(nu,1);
-dist = sqrt(xu.*xu+zu.*zu);
-w = exp(-dist);
-switch s.action
-    case 'self'
-        w(dist==0) = 0; % omit point from self-test
-    case 'self_omit_stn'
-        w(xu==0) = 0;
-    case 'self_include_all'
-        % do not change weights
-    otherwise
-end
-
-V = [ones(nu,1) sigu sigu.*sigu];% sigu.*sigu.*sigu];
-wrep = repmat(w,1,size(V,2)); % weights
-yw = w.*yu;
-Vw = wrep.*V;
-[Q,R] = qr(Vw,0);
-poly = R\(Q'*yw);
-
-g.fit = poly(1); % mapped data on y points
-
-%%%% bak on jc159 24 March 2018
-% do not allow extrapolation; output is nan if the density of the test
-% point is not bracketed by density of samples being used.
-if min(sigu(w~=0))*max(sigu(w~=0)) > 0 % test point is not bracketed by points with non-zero weight; make result be nan.
     g.fit = nan;
-end
-%%%%
-return
+    pref = g.p;
+    sig = sw_pden(s.s,s.t,s.p,pref)-1000; % recalculate sigma for the reference pressure of the test point
+    sigref = sw_pden(g.s,g.t,g.p,pref)-1000; % measure sig relative to test point.
+    if isnan(sigref); g.fit = nan; return; end
+    
+    sk = g.statnum; % station number of the test point
+    
+    %sort out section range
+    % After this ksec contains the data cycle numbers of the tracer data
+    % that lie in the required section
+    for jsec = 1:length(s.kstatgroups)
+        if ~isempty(find(s.kstatgroups{jsec} == sk)); ksec = s.kdcgroups{jsec}; end
+    end
+
+
+    plk = g.pl; % this is the plevel of the test point
+    %x = s.statnum-sk;
+    % bak on jc159 26 march 2018; station separation for weight calculated
+    % from index in station grid rather than just station number.
+    skindex = find(g.statlist == sk);
+    if length(skindex) ~= 1
+        fprintf(2,'\n%s\n\n','Problem in m_maptracer: a station to be used for gridding does not occur uniquely in the station set');
+        error('exiting');
+    end
+    x = s.statnumindex-skindex;
+    % end of mod
+    z = s.pl-plk;
+    kpoints = find(-s.xlim <= x & x <= s.xlim ...
+                 & -s.zlim <= z & z <= s.zlim ...
+                 & isfinite(s.y + sig + s.yf) ...
+        ); % these are the points within xlim stations an zlim levels.
+
+    kuse = kpoints;
+%     kuse = setdiff(kuse,k);
+    kuse = intersect(kuse,ksec);% only carry points forward if they're in the right station group
+    if isempty(kuse); return; end
+
+    nu = length(kuse);
+    sigu = sig(kuse); sigu = sigu(:)-sigref;
+    yu = s.y(kuse); yu = yu(:);
+    xu = x(kuse); xu = xu(:);
+    zu = z(kuse); zu = zu(:);
+    
+      
+    % bak jc191 feb 2020 . scale_x and scale_z are scalings on the distances xu and zu.
+    % xu and zu measure the distance away in counts of stations for x and
+    % levels for z. s.xlim and s.zlim control the number of stations/levels
+    % included. scale_x and scale_z control the relative importance of
+    % those distances in the weight. So low values of scale_x and scale_z
+    % make the map smoother by not reducing the weight of more distant points.
+    % High values of scale_x and scale_z give high weight to nearby points
+    % and low weight to distant points. Default for scale_x and scale_z is
+    % unity, unless changed in opt_cruise.
+    scale_x = 1;  
+    scale_z = 1;
+    oopt = 'scales_xz'; get_cropt;
+    xu = xu*scale_x;
+    zu = zu*scale_z;
+    
+    %weights
+    w = ones(nu,1);
+    dist = sqrt(xu.*xu+zu.*zu);
+    w = exp(-dist);
+    switch s.action
+        case 'self'
+            w(dist==0) = 0; % omit point from self-test
+        case 'self_omit_stn'
+            w(xu==0) = 0;
+        case 'self_include_all'
+            % do not change weights
+        otherwise
+    end
+
+    V = [ones(nu,1) sigu sigu.*sigu];% sigu.*sigu.*sigu];
+    wrep = repmat(w,1,size(V,2)); % weights
+    yw = w.*yu;
+    Vw = wrep.*V;
+    [Q,R] = qr(Vw,0);
+    poly = R\(Q'*yw);
+    
+    g.fit = poly(1); % mapped data on y points
+    
+    %%%% bak on jc159 24 March 2018
+    % do not allow extrapolation; output is nan if the density of the test
+    % point is not bracketed by density of samples being used.
+    if min(sigu(w~=0))*max(sigu(w~=0)) > 0 % test point is not bracketed by points with non-zero weight; make result be nan.
+        g.fit = nan;
+    end
+    %%%%
+    return
 
 %     resid = yu-V*poly;
 

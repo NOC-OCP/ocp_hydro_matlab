@@ -16,17 +16,6 @@ var_copycell = mcvars_list(2);
 [var_copycell, junk] = mvars_in_file(var_copycell, infile1);
 [var_copycell, var_copystr] = mvars_in_file(var_copycell, otfile2, 'u');
 
-% get list of gradient variables that can be computed from
-% variables  in both input files
-gvar_copycell = mcvars_list(3);
-[gvar_copycell, junk] = mvars_in_file(var_copycell, infile1);
-[gvar_copycell, gvar_copystr] = mvars_in_file(var_copycell, otfile2, '', 'grad');
-
-%combine and add time
-var_copycell = [{'time'} var_copycell gvar_copycell];
-var_copystr = ['time ' var_copystr ' ' gvar_copystr];
-
-
 %--------------------------------
 MEXEC_A.MARGS_IN = {
     otfile2

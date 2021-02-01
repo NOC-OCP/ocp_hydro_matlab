@@ -2,7 +2,7 @@ function var_copycell = mcvars_list(typ);
 %function var_copycell = mcvars_list(typ);
 %
 %YLF JR15003
-% Lists of variables to copy for ctd profiles (typ = 1)
+% Lists of ctd variables to copy for ctd profiles (typ = 1)
 % or bottle firing/sample files (typ = 2)
 %
 % It is safe to simply add to this list, because a bit of code called later
@@ -38,14 +38,7 @@ elseif typ==2 % this is for comparing with bottle samples
         'EH' 'LSS' 'BBRTD'... % light variables added on JC044
         'ph' ...
         };
-    
-elseif typ==3 %variables for which to calculate the background gradient to inform sample comparison for calibration
-    
-    var_copycell = {...
-        'temp' 'cond' 'oxygen' ...
-        %'fluor' ...
-        };
-    
+        
 else
     
     error('pick variable list type 1, 2, or 3')

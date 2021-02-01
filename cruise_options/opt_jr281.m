@@ -242,10 +242,8 @@ switch scriptname
         switch oopt
             case 'sbe35flag'
                 % did not wait 20 seconds for 10 dbar bottles in position > 8 on station 040
-                if stnlocal == 40
-                    sbe35flag(position > 8) = 4;
-                    sbe35flag(isnan(sbe35temp)) = 9;
-                end
+                d.sbe35temp_flag(d.statnum==40 & d.position > 8) = 4;
+                d.sbe35temp_flag(isnan(d.sbe35temp_flag)) = 9;
         end
         %%%%%%%%%% end msbe35_01 %%%%%%%%%%
         

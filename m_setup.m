@@ -170,7 +170,7 @@ if length(which('get_cropt'))==0 % this function is in mexec_processing_scripts/
    addpath([MEXEC.mexec_processing_scripts '/cruise_options/'])
    addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/'])
    addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/ladcp'])
-   addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/gridsec'])
+   addpath([MEXEC.mexec_processing_scripts '/gridsec'])
    addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/planning'])
    addpath([MEXEC.mexec_processing_scripts '/summaries/'])
    addpath([MEXEC.mexec_processing_scripts '/utilities/'])
