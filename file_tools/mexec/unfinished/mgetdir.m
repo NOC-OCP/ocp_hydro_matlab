@@ -9,11 +9,9 @@ function mpath = mgetdir(M_ABBREV);
 %   or root_sal = mgetdir('M_BOT_SAL');
 %   might give root_sal = '/local/users/pstar/cruise/data/ctd/BOTTLE_SAL';
 
-if ~strncmp(M_ABBREV, 'M_', 2); M_ABBREV = ['M_' upper(M_ABBREV)]; end
-
 m_common
 
-ii = find(strcmp(M_ABBREV, MEXEC_G.MDIRLIST(:,1)));
+ii = find(strcmp(M_ABBREV, MEXEC_G.MDIRLIST(:,1)) | strcmp(['M_' upper(M_ABBREV)], MEXEC_G.MDIRLIST(:,1)));
 if length(ii)==1
    mpath = [MEXEC_G.MEXEC_DATA_ROOT '/' MEXEC_G.MDIRLIST{ii,2}];
 else

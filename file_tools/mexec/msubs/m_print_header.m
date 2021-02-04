@@ -7,7 +7,7 @@ m_common
     
 m_print_global_attributes(h);
 m_print_varsummary(h);
-m_print_comments(h);
+if ~MEXEC_G.quiet; m_print_comments(h); end % BAK jc211 comments have got so long the header is unuseable if they are shown
 
 disp(['File last updated : ' h.last_update_string ]);
 disp(' ');

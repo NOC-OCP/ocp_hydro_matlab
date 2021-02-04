@@ -1,5 +1,5 @@
-function [oxygen_rev]=mcoxyhyst_reverse(oxygen_sbe,time,press,H1,H2,H3)
-% function [oxygen_rev]=mcoxyhyst_reverse(oxygen_sbe,time,press,H1,H2,H3)
+function [oxygen_unhyst]=mcoxyhyst_reverse(oxygen_hyst,time,press,H1,H2,H3)
+% function [oxygen_unhyst]=mcoxyhyst_reverse(oxygen_hyst,time,press,H1,H2,H3)
 %
 % gdm on di346
 % function to reverse the adjustment for hysteresis in the oxygen sensor
@@ -10,24 +10,32 @@ function [oxygen_rev]=mcoxyhyst_reverse(oxygen_sbe,time,press,H1,H2,H3)
 % H2      5000      
 % H3      1450      [1200  to  2000]
 
-% DAS chnaged to deal with absent data but note this could give slightly different results from original data as 
+% DAS changed to deal with absent data but note this could give slightly different results from original data as 
 % the sbe software may deal with absent data differently
 % YLF updated to eliminate redundant code
 %
 
-oxygen_rev=oxygen_sbe;
+%replicate any scalar parameters
+zz = zeros(size(oxygen_sbe));
+if length(H1)<length(zz); H1 = H1 + zz; end
+if length(H2)<length(zz); H2 = H2 + zz; end
+if length(H3)<length(zz); H3 = H3 + zz; end
 
-kfirst = min(find(isfinite(oxygen_sbe)));
+press(press<0) = 0; 
+iig = find(isfinite(press+oxygen_hyst));
+kfirst = min(iig);
+
+%initialise
+oxygen_unhyst = NaN + zz; 
+oxygen_unhyst(kfirst) = oxygen_sbe(kfirst);
 klastgood = kfirst; % keep track of most recent good cycle
 
-for k=2:length(time)
-    if isnan(oxygen_sbe(k)+press(k))
-        oxygen_rev(k) = nan; %already the case when oxygen_sbe = nan because of initialisation of oxygen_rev
-    else
-        if press(k) < 0; press(k) = 0; end
-        D=1+H1*(exp(press(k)/H2)-1);
-        C=exp(-1*(time(k)-time(klastgood))/H3);
-	oxygen_rev(k)=D*(oxygen_sbe(k)-C*oxygen_sbe(klastgood))+C*oxygen_rev(klastgood);
-        klastgood = k;
-    end 
+for k = iig(2:end)
+    
+    D = 1 + H1(k)*(exp(press(k)/H2(k))-1);
+    C = exp(-(time(k)-time(klastgood))/H3(k));
+    
+	oxygen_unhyst(k) = D*(oxygen_hyst(k) - C*oxygen_hyst(klastgood)) + C*oxygen_unhyst(klastgood);
+    klastgood = k;
+    
 end

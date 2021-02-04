@@ -259,15 +259,11 @@ else
 end
 
 ok = 0;
-m1 = sprintf('%s','If NaNs are found in the merging variable, do you want them filled first (f, default)');
-m2 = sprintf('%s','or do you want them kept in place (k) so that NaNs may appear in the output ?');
-m4 = sprintf('\n%s\n%s','After 28 March 2018, new option to specify the maximum number of NaNs that will be filled','before the merge takes place.');
-m5 = sprintf('\n%s','This is backwards compatible, so ''k'' is equivalent to zero and ''f'' is equivalent to inf');
-m6 = sprintf('%s','You can reply with characters f or k, or an integer');
-fprintf(MEXEC_A.Mfidterm,'%s\n\n',m1,m2,m4,m5,m6);
+m1 = sprintf('%s','If NaNs are found in the merging variable, do you want them filled first (f or inf, default)');
+m2 = sprintf('%s','or kept in place (k or 0) or only filled for gaps up to a certain length so that NaNs may appear in the output ?');
+m3 = sprintf('%s','reply ''f'', inf or return for fill; ''k'' or 0 for keep; \nor an integer for the maximum number of NaNs to be filled : ');
 while ok == 0;
-    m3 = sprintf('%s','reply ''f'' or inf or return for fill or ''k'' or 0 for keep, \nor an integer for the maximum number of NaNs to be filled : ');
-    reply = m_getinput(m3,'s');
+    reply = m_getinput([m1 '\n' m2 '\n' m3],'s');
     if strcmp(reply,' '); absfill = inf; break; end
     if strcmp(reply,'f'); absfill = inf; break; end
     if strcmp(reply,'k'); absfill = 0; break; end

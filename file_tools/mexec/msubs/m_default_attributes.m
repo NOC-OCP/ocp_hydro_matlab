@@ -5,17 +5,17 @@ function hatt = m_default_attributes
 
 m_common
 
-hatt.mstar_string = ['mstar_version_' MEXEC_G.mexec_version]'; % Always make the first 5 characters of this string identical to 'mstar'
+hatt.mstar_string = ['mstar_' MEXEC_G.mexec_version]'; % Always make the first 5 characters of this string identical to 'mstar'
 hatt.openflag = 'W'; % set to W if file is open to write. Otherwise R.
 hatt.date_file_updated = [0 0 0 0 0 0]; % This is the time of file update, stored as a recognisable 6 element vector
 hatt.mstar_time_origin = MEXEC_G.MSTAR_TIME_ORIGIN; % If ever we need a reference time for some mstar purpose, this is what we will use. Stored as a 6 element vector.
-hatt.data_time_origin = MEXEC_G.MSTAR_TIME_ORIGIN; % This is the reference time for data, stored as a recognisable 6 element vector; usually time will be measured as decimal days or seconds since this time
+hatt.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN; % This is the reference time for data, stored as a recognisable 6 element vector; usually time will be measured as decimal days or seconds since this time
 hatt.time_convention = 'date_file_updated and data_time_origin are 6-element vectors, as commonly used in matlab date handling: [yyyy mo dd hh mm ss]';
 hatt.dataname = 'null_dataname';
 hatt.version = 0;
-hatt.platform_type = 'none_specified'; % eg 'ship'
-hatt.platform_identifier = 'none_specified'; % eg 'James_Cook'
-hatt.platform_number = 'none_specified'; % eg 'Cruise 31'
+hatt.platform_type = MEXEC_G.PLATFORM_TYPE; % eg 'ship'
+hatt.platform_identifier = MEXEC_G.PLATFORM_IDENTIFIER; % eg 'RRS James Cook'
+hatt.platform_number = MEXEC_G.PLATFORM_NUMBER; % eg 'Cruise 31'
 hatt.instrument_identifier = 'none_specified'; % eg 'CTD' or 'Current meter plus serial number'
 hatt.recording_interval = 'none_specified'; % plain text eg '1 Hz'
 hatt.water_depth_metres = -999; % eg 4000

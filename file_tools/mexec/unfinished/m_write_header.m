@@ -1,7 +1,8 @@
 function m_write_header(ncfile,h)
 % function m_write_header(ncfile,h)
 %
-% write header h to mstar file ncfile (in global attributes)
+% write the global attribute elements of header h to global attributes of
+% mstar file ncfile (fldnam, fldunt, dimensions, etc. not included)
 % assume that the calling program already has checked it is suitable for writing, 
 % and the openflag set to W
 % don't reset the MEXEC.status of the openflag

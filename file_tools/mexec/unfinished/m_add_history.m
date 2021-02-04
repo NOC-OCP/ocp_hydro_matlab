@@ -34,7 +34,8 @@ stacklist = dbstack(1); % get calling history but skip the present function
 
 st = stacklist(end);
 % start saving version record to add to file as a comment
-filecom = ['prog ' st.name ';'];
+commit_version = MEXEC_G.mexec_version; % Added JC211 1 Feb 2021
+filecom = ['prog ' st.name '(' commit_version ');']; % eg prog mcopya(v3_commit_3bec1b5c);
 
 
 if isfield(MEXEC_A,'Mhistory_in') ~= 1

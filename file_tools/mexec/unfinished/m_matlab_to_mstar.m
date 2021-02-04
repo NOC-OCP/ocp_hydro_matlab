@@ -33,9 +33,8 @@ for k = 1:nvar
 end
 
 nowstring = datestr(now,31);
-m_add_comment(ncfile_ot,'Variables written from matlab to mstar');
-m_add_comment(ncfile_ot,['at ' nowstring]);
-m_add_comment(ncfile_ot,['by ' MEXEC_G.MUSER]);
+m_add_comment(ncfile_ot,['Variables written from matlab to mstar at ' nowstring ' by ' MEXEC_G.MUSER]);
+
 
 
 m_finis(ncfile_ot);
