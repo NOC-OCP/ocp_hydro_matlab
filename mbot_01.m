@@ -12,49 +12,52 @@
 % YLF jr16002 and jc145 modified heavily to use database and cruise-specific options
 
 minit;
-mdocshow(mfilename, ['puts Niskin bottle information from file specified in opt_' mcruise ' (by default, bot_' mcruise '_' stn_string '.csv) into bot_' mcruise '_' stn_string '.nc']);
+mdocshow(mfilename, ['puts Niskin bottle information from .bl files and from opt_' mcruise ' into bot_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types
-root_bot = mgetdir('M_CTD_CNV'); % the csv bottle file(s) is/are in the ascii files directory
-root_ctd = mgetdir('M_CTD');
-dataname = ['bot_' mcruise '_' stn_string];
-otfile = [root_ctd '/' dataname];
+root_bot = mgetdir('M_CTD_BOT'); % the bottle file(s) is/are in the ascii files directory
+infile = [root_bot '/ctd_' mcruise '_' stn_string '.bl'];
 
-%load the sample information from the file produced by mbot_00
-scriptname = 'mbot_00'; oopt = 'nbotfile'; get_cropt
-ds_bot = dataset('File', botfile, 'Delimiter', ',');
+arebottles = 0;
 
-%get expected fields
-fn = ds_bot.Properties.VarNames;
-if ~sum(strcmp('sampnum', fn))
-    ds_bot.sampnum = ds_bot.statnum*100 + ds_bot.niskin;
-end
-if ~sum(strcmp('statnum', fn))
-    ds_bot.statnum = floor(ds_bot.sampnum/100);
-    ds_bot.niskin = ds_bot.sampnum - 100*ds_bot.statnum;
-end
-if ~sum(strcmp('bottle_number', fn))
-    ds_bot.bottle_number = ds_bot.niskin;
-end
-if ~sum(strcmp('bottle_qc_flag', fn))
-    ds_bot.bottle_qc_flag = 2+zeros(size(ds_bot.sampnum));
-end
-
-%extract info for this station
-iista = find(ds_bot.statnum==stnlocal);
-
-if length(iista)>0
+if exist(infile,'file')
     
-    %eliminate lines about duplicate samples from the same bottle***
-    [c, iiu] = unique(ds_bot.sampnum); ds_bot = ds_bot(iista(iiu),:);
+    % first read the .bl file.
+    cellall = mtextdload(infile,','); % load all text
+    krow = 0; clear blpos
+    for kline = 1:length(cellall)
+        cellrow = cellall{kline};
+        if length(cellrow) < 4
+            % header lines
+            continue
+        else % found a bottle line
+            krow = krow+1;
+            blpos(krow,1) = str2num(cellrow{2});
+        end
+    end
+    
+    if krow>0
+        
+    scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
+    clear ds
+    ds.position = [1:nnisk]';
+    ds.sampnum = 100*stnlocal + ds.position;
+    ds.statnum = stnlocal + zeros(nnisk,1);
+    ds.bottle_qc_flag = 9+zeros(nnisk,1); % default flag of 9 meaning not closed
+    ds.bottle_qc_flag(blpos) = 2; % if bottle closed, default closure flag is 2.
+    
+    scriptname = mfilename; oopt = 'nispos'; get_cropt; %niskin-position mapping information
     
     %get variables and units for msave
     varnames = {'sampnum','statnum','position','bottle_number','bottle_qc_flag'};
     varunits = {'number','number','on rosette','number', 'woce table 4.8'};
-    ds = ds_bot; mvarnames_units; clear ds
+    force_set_var = 1; mvarnames_units; clear ds force_set_var
     
     %modify flags
     scriptname = mfilename; oopt = 'botflags'; get_cropt
+    
+    dataname = ['bot_' mcruise '_' stn_string];
+    otfile = [root_bot '/' dataname];
     
     timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
     MEXEC_A.MARGS_IN_1 = {
@@ -85,8 +88,12 @@ if length(iista)>0
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
     msave
     
-else
+    arebottles = 1;
     
-    warning(['no Niskin bottle info for station ' stn_string])
+    end
     
+end
+
+if ~arebottles
+    warning(['no Niskin bottle info for station ' stn_string ' in ' infile])
 end

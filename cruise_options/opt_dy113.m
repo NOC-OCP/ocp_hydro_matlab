@@ -142,7 +142,7 @@ switch scriptname
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'optsams'
+            case 'sum_sams'
                 snames = {'noxy'; 'nnuts'; 'no18s'; 'nnisos'}; % Use s suffix for variable to count number on ship for o18 c13 chl, which will be zero
                 snames_shore = {'noxy_shore'; 'nnut'; 'no18'; 'nniso'}; % can use name without _shore, because all samples are analysed ashore
                 sgrps = { {'botoxy'} %list of oxy variables
@@ -151,7 +151,12 @@ switch scriptname
                     {'del15n' 'del30si'}
                     };
                 sashore = [0; 1; 1; 1]; %count samples to be analysed ashore? % can't presently count botoxy_flag == 1
-            case 'comments' % set comments
+            case 'sum_varnames'
+                varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'ndpths' 'nsal' 'noxy' 'nnut' 'no18' 'nniso'};
+                varunits={'number' 'seconds' 'seconds' 'seconds' 'degrees' 'degrees' 'metres' 'metres' 'number' 'number' 'number' 'number' 'number' 'number'};
+            case 'sum_stn_list'
+                stnadd = [73 74 75 77 79]; % force add of these stations to station list
+            case 'sum_comments' % set comments
                 comments{1} = 'Test station (SR1b_08)';
                 comments{2} = 'Start of SR1b';
                 comments{31} = 'End of SR1b';
@@ -164,13 +169,8 @@ switch scriptname
                 comments{92} = 'Break after NSR_16 for FI call';
                 comments{93} = 'Resume NSR near FI';
                 comments{104} = 'Repeat of NSR_16';
-            case 'parlist'
+            case 'parlist' %***
                 parlist = [' sal'; ' oxy'; ' nut'; 'd18o'; 'nniso'];
-            case 'varnames'
-                varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'ndpths' 'nsal' 'noxy' 'nnut' 'no18' 'nniso'};
-                varunits={'number' 'seconds' 'seconds' 'seconds' 'degrees' 'degrees' 'metres' 'metres' 'number' 'number' 'number' 'number' 'number' 'number'};
-            case 'stnadd'
-                stnadd = [73 74 75 77 79]; % force add of these stations to station list
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         
@@ -380,10 +380,10 @@ switch scriptname
         %%%%%%%%%% end miso_02 %%%%%%%%%%
         
         
-        %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
-    case 'mday_01_clean_av'
+        %%%%%%%%%% mday_01_fcal %%%%%%%%%%
+    case 'mday_01_fcal'
         switch oopt
-            case 'uway_apply_cal'
+            case 'uway_factory_cal'
                 switch abbrev
                     case 'met_tsg'
                         sensors_to_cal={'fluo';'trans'};

@@ -1,9 +1,6 @@
 % mvad_03
 %
-% gdm on di346 edited to run as a script for convenience
-% 'os' is specified to work for 75 or 150; and directorys are also resolved
-% automatically
-% high level script to split out on station data
+% high level script to split out vmadcp on station data
 % overhaul by bak on jc069 to make direct use of ctd dcs files for station
 % start and end times
 % further mod on jc069 by bak:
@@ -21,12 +18,12 @@
 %
 % overhaul on jc159 bak 2 april 2018
 % new scriptname mvad_03; previously mcod_03;
-% new input and output directories as we move to the pythn version of
+% new input and output directories as we move to the python version of
 % codas.
 %
 % The work takes place in data/vmadcp/mproc
 %
-% selection of times controlled by data/vmadcp/mproc/mvad_03_jc159_times.txt;
+% selection of times controlled by data/vmadcp/mproc/mvad_03_mcruise_times.txt;
 % format of times file as before, eg
 % wait 04 [2018 03 02 01 14 31] [2018 03 02 03 14 31]
 % wait 05 [2018 03 02 03 44 33] [2018 03 02 05 34 33]
@@ -41,16 +38,11 @@
 %
 % Then run
 % cast = 'wait'; stn = 4; os = 150; mvad_03
-%
-% bak jc191: update for uhdas. Now enter os as full string eg os150nb,
-% since in uhdas there could be 75 or 150 and nb or bb;
-% assume uhdas output file is eg vmadcp/mproc/os150nb_jc191_01.nc
-
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if exist('cast','var')
-    m = ['Running script ' scriptname ' on cast type ' sprintf('%s',cast)];
+    m = ['Running script ' mfilename ' on cast type ' sprintf('%s',cast)];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m)
 else
     cast = input('type cast type ','s');
@@ -59,7 +51,7 @@ castlocal = cast; clear cast; % so it doesnt persist
 cast_string = sprintf('%s',castlocal);
 
 if exist('stn','var')
-    m = ['Running script ' scriptname ' on station ' sprintf('%03d',stn)];
+    m = ['Running script ' mfilename ' on station ' sprintf('%03d',stn)];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m)
 else
     stn = input('type stn number ');
@@ -67,21 +59,19 @@ end
 stnlocal = stn; clear stn; % so it doesnt persist
 stn_string = sprintf('%03d',stnlocal);
 
-if exist('os','var')
-    m = ['Running script ' scriptname ' for OS ' sprintf('%d',os)];
+if exist('inst','var')
+    m = ['Running script ' mfilename ' for VMADCP ' sprintf('%s',inst)];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m)
 else
-    os = input('Enter OS type: e.g. os150nb, os75nb, os150bb : ', 's');
+    inst = input('Enter instrument type: e.g. os150nb, os75nb, os150bb : ', 's');
 end
-oslocal = os; clear os; % so it doesnt persist
+instlocal = inst; clear inst; % so it doesnt persist
 
 root_ctd = mgetdir('M_CTD');
 root_vmadcp = mgetdir('M_VMADCP');
 
-inst = [sprintf('%s',oslocal)]; % bak jc191, now entered as the full string
-
 root_vmad = mgetdir('M_VMADCP');
-infile = [root_vmad '/mproc/' inst '_' mcruise '_01.nc'];
+infile = [root_vmad '/mproc/' instlocal '_' mcruise '_01.nc'];
 
 
 % construct output filename;

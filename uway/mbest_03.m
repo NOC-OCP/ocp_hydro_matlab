@@ -5,32 +5,29 @@
 % 2011 09 06 It has been added the Seapath heading (attsea) instead of
 % gyros for James Cook cruises due its better accuracy. CFL/GDM
 
-scriptname = 'mbest_03';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
 clear infile* otfile* wkfile*
 
 abbrev = MEXEC_G.default_hedstream;
-root_dir = mgetdir(['M_' upper(abbrev)])
+root_dir = mgetdir(abbrev);
 prefix = [abbrev '_' mcruise '_'];
 
-mdocshow(scriptname, ['average 1-Hz navigation stream from ' abbrev '_' mcruise '_01.nc to 30 s in ' abbrev '_' mcruise '_ave.nc']);
+mdocshow(mfilename, ['average 1-Hz navigation stream from ' abbrev '_' mcruise '_01.nc to 30 s in ' abbrev '_' mcruise '_ave.nc']);
 
 infile = [root_dir '/' prefix '01'];
 otfile = [root_dir '/' prefix 'ave'];
 
-wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
-wkfile2 = ['wk2_' scriptname '_' datestr(now,30)];
-wkfile3 = ['wk3_' scriptname '_' datestr(now,30)];
+wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
+wkfile2 = ['wk2_' mfilename '_' datestr(now,30)];
+wkfile3 = ['wk3_' mfilename '_' datestr(now,30)];
 
 tave_period = 30; % seconds
 tave_period = round(tave_period);
 tav2 = round(tave_period/2);
 
 [d h] = mload(infile, 'time', ' ');
-
-if strncmp(abbrev, 'gyro', 4); headstr = 'head_gyr'; elseif strcmp(MEXEC_G.Mship,'jcr'); headstr = 'heading'; else; headstr = 'head'; end
 
 t1 = min(d.time);
 tdays = floor(t1/86400);
@@ -40,11 +37,14 @@ t1 = t1; % unlike positions files, make gyro average be vector average of period
 tavstring = [sprintf('%d',t1) ' 1e10 ' sprintf('%d',tave_period)];
 toffstring = ['y = x + ' sprintf('%d',tav2)];
 
+head_choices = {'head' 'heading' 'head_gyr'}; 
+headvar = mvarname_find(head_choices, h.fldnam);
+
 MEXEC_A.MARGS_IN = {
     infile
     wkfile1
     '/'
-    [headstr ' ' headstr]
+    [headvar ' ' headvar]
     'y = 1+x1-x2'
     'dummy'
     'none'
@@ -57,7 +57,7 @@ MEXEC_A.MARGS_IN = {
     wkfile2
     '/'
     '2'
-    ['dummy ' headstr]
+    ['dummy ' headvar]
     'dum_e'
     ' '
     'dum_n'

@@ -60,7 +60,25 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-if exist('help_cropt', 'var') & help_cropt %help mode
+if ~exist('help_cropt', 'var') | ~help_cropt %normal, use-in-scripts mode
+    
+    %set defaults
+    setdef_cropt_c %defaults for ctd scripts
+    setdef_cropt_s %defaults for sample scripts
+    setdef_cropt_u %defaults for underway scripts
+    setdef_cropt_o %others (sections, plots, ladcp, summaries)
+    
+    %continue to set cruise-specific options
+    if exist(['opt_' mcruise])==2
+        eval(['opt_' mcruise]);
+    else
+        disp(['opt_' mcruise ' not found; probably needs to be created to set cruise-specific options'])
+    end
+    
+    % check and warn for unset options
+    check_cropt
+    
+else %help mode
     
     if ~exist('scriptname') | length(scriptname)==0
         %called to get list of scriptnames and oopts
@@ -136,23 +154,5 @@ if exist('help_cropt', 'var') & help_cropt %help mode
     
     clear help_cropt %don't want this to persist
     return
-    
-else %normal, use-in-scripts mode
-    
-    %set defaults
-    setdef_cropt_c
-    setdef_cropt_s
-    setdef_cropt_u
-    setdef_cropt_p
-    
-    %continue to set cruise-specific options
-    if exist(['opt_' mcruise])==2
-        eval(['opt_' mcruise]);
-    else
-        disp(['opt_' mcruise ' not found; probably needs to be created to set cruise-specific options'])
-    end
-    
-    % check and warn for unset options
-    check_cropt
     
 end

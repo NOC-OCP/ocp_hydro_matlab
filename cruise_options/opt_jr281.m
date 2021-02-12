@@ -334,7 +334,7 @@ switch scriptname
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'comments'
+            case 'sum_comments'
                 comments{1} = 'Test station';
                 ki = 2:33; comments(ki) = repmat({'sr1b'}, length(ki), 1);
                 ki = [8 10 12 14 17 19 24 28]; comments(ki) = repmat({[comments{ki} ', float']}, length(ki), 1);
@@ -346,10 +346,6 @@ switch scriptname
                 ki = 123:128; comments(ki) = repmat({'F. Trough'}, length(ki), 1);
             case 'parlist'
                 parlist = [' sal'; ' cfc'];
-            case 'altdep'
-                % stns 35 and 122 originally hardwired here, but now set in populate_station_depths.m and inserted in file headers
-                %if k == 35; cordep(k) = 3443; minalt(k) = -9; resid(k) = -999; end % aborted. cordep from CTD deck unit log
-                %if k == 122; cordep(k) = 6059; minalt(k) = -9; resid(k) = -999; end % only went to 2500 for tracer. cordep from CTD deck unit log
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         

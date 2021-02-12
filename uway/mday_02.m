@@ -29,7 +29,7 @@ cmd = ['daynum = ' reply ';']; eval(cmd);
 day = daynum;
 
 day_string = sprintf('%03d',daynum);
-mdocshow(mfilename, ['appends ' mstarprefix '_' mcruise '_d' day_string '_edt.nc to ' mstarprefix '_' mcruise '_01.nc']);
+mdocshow(mfilename, ['appends ' mstarprefix '_' mcruise '_d' day_string '_edt.nc or _edt_av.nc to ' mstarprefix '_' mcruise '_01.nc']);
 
 root_out = mgetdir(mstarprefix);
 if exist(root_out,'dir') ~= 7
@@ -40,30 +40,28 @@ if exist(root_out,'dir') ~= 7
 end
 
 dataname = [mstarprefix '_' mcruise '_01'];
+otfile = [mgetdir(mstarprefix) '/' dataname];
 
-apfile = [root_out '/' dataname(1:end-2) 'd' day_string '.nc'];
+apfile = [root_out '/' dataname(1:end-2) 'd' day_string '_edt_av.nc'];
 if ~exist(apfile,'file')
     apfile = [root_out '/' dataname(1:end-2) 'd' day_string '_edt.nc'];
     if ~exist(apfile,'file')
-        apfile = [root_out '/' dataname(1:end-2) 'd' day_string '_raw.nc'];
-        error('None of the files proposed to append was found; no action');
+        warning('None of the files proposed to append was found; no action');
+        return
     end
 end
 
-%load data
-[d,h] = mload(apfile,'/');
+%load data to be appended
+[d,hnew] = mloadq(apfile,'/');
 
 %headers
-if exist(otfile,'file')
-    hnew.fldnam = h.fldnam; hnew.fldunt = h.fldunt; hnew.comment = h.comment;
+if exist(m_add_nc(otfile),'file')
     d0 = mload(otfile, 'time');
     if length(intersect(d.time,d0.time))>2 %in case 1 on each boundary?
         warning(['overwriting day ' daynum ' in appended file ' otfile]);
     end
-else
-    hnew = h; 
 end
-hnew.dataname = dataname;
+hnew.comment = [];
 
 %merge onto otfile
 mfsave(otfile, d, hnew, '-merge', 'time');

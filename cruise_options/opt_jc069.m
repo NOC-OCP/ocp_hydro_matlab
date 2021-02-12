@@ -167,8 +167,10 @@ switch scriptname
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'cordep'
-                load('/local/users/pstar/jc069/data/station_depths/bestdeps'); cordep(k) = bestdeps(k);
+            case 'sum_edit'
+                load('/local/users/pstar/jc069/data/station_depths/bestdeps'); cordep = bestdeps;
+                minalt([41 46 47 54 55 76 86]) = -0; % altimeter didn't find bottom
+                minalt(50) = 65; minalt(56) = 58; minalt(73) = 95; % altimeter height off taken from deck unit log sheet
             case 'comments'
                 ki = 37; comments(ki) = repmat({'twoyo 1'}, length(ki), 1);
                 ki = 40:43; comments(ki) = repmat({'twoyo 2'}, length(ki), 1);
@@ -181,13 +183,8 @@ switch scriptname
                 ki = 79; comments(ki) = repmat({'Mooring site'}, length(ki), 1);
                 ki = 80:94; comments(ki) = repmat({'sr1b'}, length(ki), 1);
                 ki = 95:100; comments(ki) = repmat({'A21'}, length(ki), 1);
-            case 'parlist'
-                parlist = [' sal'; ' cfc'];
-            case 'altdep'
-                if ismember(k, [41 46 47 54 55 76 86 ]); minalt(k) = -9; resid(k) = -999; end % altimeter didn't find bottom
-                if k == 50; minalt(k) = 65; resid(k) = maxd(k)+minalt(k)-cordep(k); end % altimeter height off taken from deck unit log sheet
-                if k == 56; minalt(k) = 58; resid(k) = maxd(k)+minalt(k)-cordep(k); end % altimeter height off taken from deck unit log sheet
-                if k == 73; minalt(k) = 95; resid(k) = maxd(k)+minalt(k)-cordep(k); end % altimeter height off taken from deck unit log sheet
+            case 'sum_varnames'
+                varnames = {'sal'; 'cfc'};
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         

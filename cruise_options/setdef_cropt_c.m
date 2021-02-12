@@ -31,6 +31,17 @@ switch scriptname
                     'column accordingly.'};
                 oxyvars = {'oxygen_sbe1' 'oxygen1';
                     'oxygen_sbe2' 'oxygen2'};
+            case 'oxy_align'
+                crhelp_str = {'oxy_align (default 6) is the number of seconds by which oxygen has been shifted in'
+                    'SBE processing. set oxy_end (default 0) to 1 to remove this many seconds before end of cast '
+                    'selected in mdcs_03g.'};
+                oxy_align = 6;
+                oxy_end = 0;
+            case 'shortcasts'
+                crhelp_str = {'shortcasts (default: []) is a list of statnums with non full depth casts '
+                    '(for which you would need to fill in depth in populate_station_depths,'
+                    'and wouldn''t bother with the BT constraint on LADCP processing, etc.)'};
+                shortcasts = [];
         end
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
         
@@ -74,11 +85,6 @@ switch scriptname
                     'and subsequently apply ctm correction in mctd_02a.'
                     'suf is the .cnv file suffix in either case (defaults ''_align_ctm'' or ''_align_noctm'')'};
                 redoctm = 0;
-                if redoctm
-                    suf = '_align_ctm'; %on some cruises, just _ctm
-                else
-                    suf = '_align_noctm'; %on some cruises, just _noctm
-                end %***why is align redone?
         end
         %%%%%%%%%% end mctd_01 %%%%%%%%%%
         
@@ -89,8 +95,8 @@ switch scriptname
                 crhelp_str = {'Place to put additional (ctdvars_add) or replacement (ctdvars_replace)'
                     'triplets of SBE variable name, mstar variable name, mstar variable units to '
                     'supplement those in templates/ctd_renamelist.csv. Default is both empty.'};
-                ctdvars_replace = {'','',''};
-                ctdvars_add = {'','',''};
+                ctdvars_replace = {};
+                ctdvars_add = {};
             case 'absentvars' % introduced new on jc191
                 crhelp_str = {'absentvars (default {}) is a cell array of strings listing variables not present '
                     'for given station(s); if applicable should be set in opt_cruise for selected stations '
@@ -161,13 +167,13 @@ switch scriptname
             case 's_choice'
                 crhelp_str = {'s_choice (default 1) sets the primary sensor for temperature and conductivity; '
                     'stns_alternate_s (default []) lists stations on which to use the other one. if there is '
-                    'only one CTD, keep the default (1).'}
+                    'only one CTD, keep the default (1).'};
                 s_choice = 1;
                 stns_alternate_s = [];
             case 'o_choice'
                 crhelp_str = {'o_choice (default 1) sets the primary sensor for oxygen; '
                     'stns_alternate_o (default []) lists stations on which to use the other one.'
-                    'if there is only one oxygen sensor, keep the default (1).'}
+                    'if there is only one oxygen sensor, keep the default (1).'};
                 o_choice = 1;
                 stns_alternate_o = [];
             case '24hz_edit'
@@ -182,7 +188,7 @@ switch scriptname
             case '24hz_interp'
                 crhelp_str = {'flag interp24 sets whether to interpolate over gaps in 24 hz data; if 1, variable '
                     'maxgap (default: 12) is required to set maximum number of missing scans to fill. interp24 defaults to 0 for '
-                    'pre-dy113 cruises, jc191/192, and dy120/129, and 1 for dy113, jc211, and subsequent cruises'}; 
+                    'pre-dy113 cruises, jc191/192, and dy120/129, and 1 for dy113, jc211, and subsequent cruises'};
                 if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 | sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191';'jc192';'dy120';'dy129'}))
                     interp24 = 0;
                 else
@@ -195,23 +201,22 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_03 %%%%%%%%%%
         
-        %%%%%%%%%% mdcs_02 %%%%%%%%%%
-    case 'mdcs_02'
+        %%%%%%%%%% mdcs_01 %%%%%%%%%%
+    case 'mdcs_01'
         switch oopt
             case 'kbot'
                 crhelp_str = {'kbot sets the index of the bottom; it defaults to the first index where '
                     'p==max(p), where p is pressure from the 1hz _psal file.'};
                 kbot = min(find(d1.press==max(d1.press)));
         end
-        %%%%%%%%%% end mdcs_02 %%%%%%%%%%
-        
+        %%%%%%%%%% end mdcs_01 %%%%%%%%%%
         
         %%%%%%%%%% mctd_04 %%%%%%%%%%
     case 'mctd_04'
         switch oopt
             case 'pre_2_treat'
                 crhelp_str = {'edit data (24 hz data including derived variables) in dvars file before averaging '
-                    'to 2 dbar. this has generally been done by modifying copystr (see prevous opt_cruise file for examples)'};
+                    'to 2 dbar. this has generally been done by modifying copystr (see prevous opt_cruise file for examples).'};
             case 'doloopedit'
                 crhelp_str = {'flag doloopedit (default 0) determines whether to apply automatic loop editing using m_loopedit, and scalar '
                     'ptol (default 0.08) sets the size of pressure loops to ignore/tolerate if so.'};
@@ -227,6 +232,8 @@ switch scriptname
                     interp2db = 0;
                 end
         end
+        %%%%%%%%%% end mctd_04 %%%%%%%%%%
+        
         %%%%%%%%%% end mctd_04 %%%%%%%%%%
         
         %%%%%%%%%% mfir_01 %%%%%%%%%%
@@ -260,39 +267,33 @@ switch scriptname
                 crhelp_str = {'time_window = [time_start time_end] (default [-600 800] sets time range (s) '
                     'before/after cast time (which is determined from the ctd file) to look for winch data. '
                     'alternately, if winch_time_start and winch_time_end exist and are non-NaN, they give '
-                    'the start and end times (matlab datenum form). they default to NaN.'}
+                    'the start and end times (matlab datenum form). they default to NaN.'};
                 time_window = [-600 800];
                 winch_time_start = nan;
                 winch_time_end = nan;
         end
         %%%%%%%%%% end mwin_01 %%%%%%%%%%
         
-        %%%%%%%%%% mwin_03 %%%%%%%%%%
-    case 'mwin_03'
+        %%%%%%%%%% mwin_to_fir %%%%%%%%%%
+    case 'mwin_to_fir'
         switch oopt
             case 'winch_fix_string'
                 crhelp_str = {};
                 winch_fix_string = [];
         end
-        %%%%%%%%%% end mwin_03 %%%%%%%%%%
+        %%%%%%%%%% end mwin_to_fir %%%%%%%%%%
         
-        %%%%%%%%%% mbot_00 %%%%%%%%%%
-    case 'mbot_00'
+        %%%%%%%%%% mbot_01 %%%%%%%%%%
+    case 'mbot_01'
         switch oopt
             case 'nbotfile'
                 crhelp_str = {'Sets output file to which to write information about Niskins from the .bl file'
                     'default: one file per station: [root_botcsv ''/bot_'' mcruise ''_'' stn_string ''.csv'']'};
                 botfile = [root_botcsv '/' prefix1 stn_string '.csv'];
             case 'nispos'
-                crhelp_str = {'nis gives the bottle numbers (e.g. serial numbers, if known) for niskins in '
-                    'carousel positions 1 through 24. defaults to nis = [1:24].'};
-                nis = [1:24];
-        end
-        %%%%%%%%%% end mbot_00 %%%%%%%%%%
-        
-        %%%%%%%%%% mbot_01 %%%%%%%%%%
-    case 'mbot_01'
-        switch oopt
+                crhelp_str = {'bottle_number gives the bottle numbers (e.g. serial numbers, if known) for niskins in '
+                    'carousel positions 1 through nnisk. defaults to [1:24].'};
+                bottle_number = [1:24];
             case 'botflags'
                 crhelp_str = {'Optional: edit bottle_qc_flag, the vector of quality flags for Niskin bottle firing'
                     'for this station.'};
@@ -315,14 +316,17 @@ switch scriptname
             case 'rawedit_auto'
                 crhelp_str = {'edits to the raw (or raw_cleaned, if file already exists) data to be made before '
                     'running the mctd_rawedit GUI to choose additional edits: '
+                    'oxy_end sets number of seconds to NaN off the end of the oxygen records, if you selected the '
+                    'end of the cast based on temperature and conductivity instead (default: 0); '
                     'sevars is a list of variables for which to edit out scans between the limits given by the second '
                     'and third columns, inclusive (can use -inf or +inf); '
                     'revars is a list of variables to NaN values out of the ranges given by the 2nd (lower limits) '
                     'and 3rd (upper limits) columns of the array; '
                     'dsvars is a list of variables to despike using m_median_despike, with thresholds given columns 2:end;'
                     'all default to empty (no automatic edits at this stage).'};
+                oxy_end = 0;
                 pvars = {};
-                sevars = [];
+                sevars = {};
                 revars = {};
                 dsvars = {};
         end
@@ -338,9 +342,9 @@ switch scriptname
             case 'depth_source'
                 crhelp_str = {'depth_source (default: {''file'', ''ctd''}) determines preferred method(s), '
                     'in order, for finding station depths. Other option is ''ladcp''. If one of the methods '
-                    'is ''file'', fnintxt specifies name of ascii (csv or two-column text) file of [stations, depths].'}
+                    'is ''file'', fnintxt specifies name of ascii (csv or two-column text) file of [stations, depths].'};
                 depth_source = {'file', 'ctd'}; %load from two-column text file, then fill with ctd press+altimeter
-                fnintxt = [root_ctddep '/station_depths_' mcruise '.txt'];
+                fnintxt = [mgetdir('M_CTD_DEP') '/station_depths_' mcruise '.txt'];
             case 'bestdeps'
                 crhelp_str = {'place to edit those station depths that were not correctly filled in by '
                     'the chosen depmeth, either directly by editing bestdeps (a list of [station, depth]), '
@@ -364,8 +368,8 @@ switch scriptname
         calvars = {}; calstr = ''; calmsg = {};
         switch oopt
             case {'tempcal' 'condcal' 'oxygencal' 'fluorcal' 'transmittancecal'}
-                crhelp_str = {['Set ' oopt(1:end-3) ' calibration functions to be applied to _24hz file, using variable ']
-                    'senslocal to select sensor 1 or sensor 2 (if there are two CTDs). '
+                crhelp_str = {['Set ' oopt(1:end-3) ' calibration functions to be applied to _24hz file, using ']
+                    'variable senslocal to select sensor 1 or sensor 2 (if there are two CTDs). '
                     'calstr is a string expressing the calibration function, e.g.:'
                     'calstr = ''temp1 = temp1 - 1.2e-4*statnum;'';'
                     'calvars (default: {}) is a cell array listing the variables used in calstr (starting with the '

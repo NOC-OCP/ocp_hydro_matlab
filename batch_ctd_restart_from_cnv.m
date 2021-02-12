@@ -25,7 +25,7 @@ root_hv = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_housekeeping'];
 
 for no = 1:length(klist)
 
-    stn_string = sprintf('%03d', klist(no));
+    stn = klist; minit
     dataname = ['ctd_' mcruise '_' stn_string];
     
     disp(['removing files for station ' stn_string '; ok?']); pause
@@ -54,5 +54,6 @@ for no = 1:length(klist)
 
 end
 
-disp('now carry on from mdcs or ctd_all_part2')
+disp('now carry on from mdcs_02 or ctd_all_part2')
+clear klist
 

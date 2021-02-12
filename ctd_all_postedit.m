@@ -1,26 +1,23 @@
 %scripts to rerun after editing using mctd_rawedit
-scriptname = 'smallscript';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
 
 root_ctd = mgetdir('M_CTD');
-    
-if ~exist('klist'); oopt = 'klist'; get_cropt; end
 
+if ~exist('klist','var')
+    if ~exist('stn','var') %prompt
+        minit
+    end
+    klist = stn;
+else
 disp('Will process stations in klist: ')
 disp(klist)
-okc = input('OK to continue (y/n)?','s');
-if okc == 'n' | okc == 'N'
-	return
 end
+klist = klist(:)';
 
 for kloop = klist
-    stn = kloop;
-    stn_string = sprintf('%03d',stn);
+    stn = kloop; minit
     
-    prefix1 = ['ctd_' mcruise '_'];
-    infile1 = [root_ctd '/' prefix1 stn_string '_raw'];
-    
+    infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_raw'];
     if exist(m_add_nc(infile1),'file') ~= 2
         mess = ['File ' m_add_nc(infile1) ' not found'];
         fprintf(MEXEC_A.Mfider,'%s\n',mess)
@@ -32,8 +29,7 @@ for kloop = klist
     mout_1hzasc(stnlocal);
     stn = kloop; mctd_04;
     
-    prefix2 = ['fir_' mcruise '_'];
-    infile2 = [root_ctd '/' prefix2 stn_string '_time'];
+    infile2 = [root_ctd '/fir_' mcruise '_' stn_string];
     if exist(m_add_nc(infile2),'file') ~= 2
         mess = ['File ' m_add_nc(infile2) ' not found'];
         fprintf(MEXEC_A.Mfider,'%s\n',mess)
@@ -41,8 +37,12 @@ for kloop = klist
     end
 
     stn = kloop; mfir_03;
-    stn = kloop; mfir_04;
+    stn = kloop; mfir_to_sam;
     
-    stn = kloop; msam_updateall;
-
+    scriptname = 'batchactions'; oopt = 'ctd'; get_cropt
+    
 end
+
+scriptname = 'batchactions'; oopt = 'sam'; get_cropt
+scriptname = 'batchactions'; oopt = 'sync'; get_cropt
+clear klist*

@@ -9,36 +9,19 @@
 %                  Requires mbest_all to be run first to generate cruise
 %                  bst_xxxxx_01.nc
 %
-%
-% BAK di368 edit for Discovery variable names
-% GDM jc145 edit for Cook variable names
-% 
-% bak on jr281 23 march 2013
-% apparently the di368 version was also in use on jc069.
-% edited on jr281 to reflect choice of ship, so hopefully useable
-% on all 3 ships.
-%
-% bak on jr302 july 2014: in an effort to tidy up, a collection of previous wind analysis scripts
-% was moved to directory "wind_scripts_old". Hopefully this script is all
-% that is needed, and can be applied on any of the ships by use of
-% switches. Apologies to anyone who finds that their favourite script has
-% been moved down to the "old" directory.
-%
-% sometime earlier than jr302 this was altered to run the entire cruise
-% using the appended met file and appended nav file. Previously, the "Use"
-% instruction suggested it coudl be run one day at a time.
 
-scriptname = 'mtruew_01';
+
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 root_pos = mgetdir('M_POS');
-root_met = mgetdir('M_SURFMET');
-prefix1 = ['surfmet_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+root_met = mgetdir('surfmet');
+prefix1 = ['surfmet_' mcruise '_'];
 if length(root_met)==0
-    root_met = mgetdir('M_ANEMOMETER'); 
-    prefix1 = ['anemometer_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+    root_met = mgetdir('anemometer'); 
+    prefix1 = ['anemometer_' mcruise '_'];
 end
 
-prefix2 = ['bst_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+prefix2 = ['bst_' mcruise '_'];
 
 infile1 = [root_met '/' prefix1 '01'];
 infile2 = [root_pos '/' prefix2 '01'];
@@ -46,26 +29,23 @@ otfile1 = [root_met '/' prefix1 'true'];
 otfile2 = [root_met '/' prefix1 'trueav'];
 
 dstring = datestr(now,30);
-wkfile1 = ['wk1_' scriptname '_' dstring];
-wkfile2 = ['wk2_' scriptname '_' dstring];
-wkfile2a = ['wk2a_' scriptname '_' dstring];
-wkfile2b = ['wk2b_' scriptname '_' dstring];
-wkfile2c = ['wk2c_' scriptname '_' dstring];
-wkfile3 = ['wk3_' scriptname '_' dstring];
-wkfile4 = ['wk4_' scriptname '_' dstring];
-wkfile5 = ['wk5_' scriptname '_' dstring];
-wkfile6 = ['wk6_' scriptname '_' dstring];
-wkfile7 = ['wk7_' scriptname '_' dstring];
-wkfile8 = ['wk8_' scriptname '_' dstring];
-wkfile9 = ['wk9_' scriptname '_' dstring];
-wkfile10 = ['wk10_' scriptname '_' dstring];
-wkfile11 = ['wk11_' scriptname '_' dstring];
-wkfile12 = ['wk12_' scriptname '_' dstring];
-wkfile13 = ['wk13_' scriptname '_' dstring];
-wkfile14 = ['wk14_' scriptname '_' dstring];
-wkfile15 = ['wk15_' scriptname '_' dstring];
-wkfile16 = ['wk16_' scriptname '_' dstring];
-
+wscriptname = mfilename;
+wkfile2 = ['wk2_' wscriptname '_' dstring];
+wkfile2a = ['wk2a_' wscriptname '_' dstring];
+wkfile2b = ['wk2b_' wscriptname '_' dstring];
+wkfile2c = ['wk2c_' wscriptname '_' dstring];
+wkfile3 = ['wk3_' wscriptname '_' dstring];
+wkfile4 = ['wk4_' wscriptname '_' dstring];
+wkfile5 = ['wk5_' wscriptname '_' dstring];
+wkfile6 = ['wk6_' wscriptname '_' dstring];
+wkfile7 = ['wk7_' wscriptname '_' dstring];
+wkfile8 = ['wk8_' wscriptname '_' dstring];
+wkfile9 = ['wk9_' wscriptname '_' dstring];
+wkfile10 = ['wk10_' wscriptname '_' dstring];
+wkfile11 = ['wk11_' wscriptname '_' dstring];
+wkfile12 = ['wk12_' wscriptname '_' dstring];
+wkfile13 = ['wk13_' wscriptname '_' dstring];
+wkfile14 = ['wk14_' wscriptname '_' dstring];
 
 tave_period = 60; % seconds
 tave_period = round(tave_period);
@@ -79,45 +59,7 @@ t1 = tdays*86400;
 t1 = t1-tav2;
 tavstring = [sprintf('%d',t1) ' 1e10 ' sprintf('%d',tave_period)];
 
-
-%--------------------------------------------
-% convert wind speed to m/s
-%--------------------------------------------
-
-switch MEXEC_G.Mship
-    case 'cook'
-        speedname = 'speed';
-        speedcal = ['y = x1'];
-        lon_name = 'long'; % name of longitude variable in nav file
-    case 'discovery'
-        speedname = 'speed';
-        speedcal = ['y = x1'];% di368 speed is m/s already, even though labelled as knots in techsas. Keep this conversion step for clarity and to avoid having to change code later in this script
-        lon_name = 'long';
-    case 'jcr'
-        %speedname = 'wind_speed';
-        %speedcal = ['y = x1*1852/3600']; % knots to m/s
-        speedname = 0; %YLF edited 12/2015; jcr already has wind_speed_ms
-        speedcal = 0;
-        lon_name = 'lon';
-    otherwise
-        speedname = 'speed';
-        speedcal = ['y = x1'];
-        lon_name = 'long';
-end
-
-MEXEC_A.MARGS_IN = {
-infile1
-wkfile1
-'/'
-speedname
-% 'y = x1*1852/3600' % 'y=x1*0.512' % bim used 0.512 on jc032, but the correct answer is (BAK thinks) 0.5144444
-speedcal
-'wind_speed_ms'
-'m/s'
-' '
-};
-
-mcalc
+%wind should already be in m/s (update at the namesunits or fcal stage***)
 
 % fix by bak on jr281 march 2013. old code merged on averaged heading,
 % which could cause problems at 0/360. No idea how this error survived so
@@ -157,7 +99,7 @@ muvsd
 
 MEXEC_A.MARGS_IN = {
 wkfile2c
-wkfile1
+infile1 %  jc211 there is no longer a wkfile1 % wkfile1
 '/'
 'time'
 wkfile2b
@@ -186,72 +128,40 @@ muvsd
 
 %--------------------------------
 % change some input var names for later clarity
-switch MEXEC_G.Mship
-    case {' '}%'discovery'} %***why not query for which variable is which?
-        MEXEC_A.MARGS_IN = {
-            wkfile2
-            'y'
-            '8'
-            % 'direct speed wind_speed_ms ve vn'
-            'speed direct wind_speed_ms ve vn' % di368, order of vars in file is speed & direction
-            'relwind_spd'
-            ' '
-            'relwind_dirship'
-            'degrees relative to ship 0 = from bow'
-            'relwind_spd_ms'
-            ' '
-            'ship_u'
-            ' '
-            'ship_v'
-            ' '
-            '-1'
-            '-1'
-            };
-        mheadr
-    case {'cook', 'discovery'}
-        MEXEC_A.MARGS_IN = {
-            wkfile2
-            'y'
-            '8'
-            'direct speed wind_speed_ms ve vn' % jc145, cook vars different
-%             'speed direct wind_speed_ms ve vn' % di368, order of vars in file is speed & direction
-            'relwind_dirship'
-            'degrees relative to ship 0 = from bow'
-            'relwind_spd'
-            ' '
-            'relwind_spd_ms'
-            ' '
-            'ship_u'
-            ' '
-            'ship_v'
-            ' '
-            '-1'
-            '-1'
-            };
-        mheadr
-    case 'jcr'
-        MEXEC_A.MARGS_IN = {
-            wkfile2
-            'y'
-            '8'
-            'wind_dir wind_speed wind_speed_ms ve vn'
-            'relwind_dirship'
-            'degrees relative to ship 0 = from bow'
-            'relwind_spd'
-            ' '
-            'relwind_spd_ms'
-            ' '
-            'ship_u'
-            ' '
-            'ship_v'
-            ' '
-            '-1'
-            '-1'
-            };
-        mheadr
+%
+% bak jc211, all the cases replaced by the following code
+hwk2 = m_read_header(wkfile2); 
+relwind_speed_ms_choices = {'windspeed_raw' 'wind_speed_ms' 'relwind_spd_raw'}; % rvdas = windspeed_raw; jcr & techsas probably = wind_speed_ms;
+relwind_speed_ms = mvarname_find(relwind_speed_ms_choices, hwk2.fldnam);
+if length(relwind_speed_ms)==0
+    error('windspeed raw not found uniquely in input file; error in mtruew_01.m')
 end
+relwind_dir_choices = {'winddirection_raw' 'direct' 'wind_dir' 'relwind_dirship_raw'}; % rvdas = winddirection_raw; jcr & techsas direct or wind_dir
+relwind_dir = mvarname_find(relwind_dir_choices, hwk2.fldnam);
+if length(relwind_dir)==0
+    error('wind direction raw not found uniquely in input file; error in mtruew_01.m')
+end
+MEXEC_A.MARGS_IN = { % if the variables are offered in one at a time after option 8, then it doesn't matter what order they are in the data file
+    wkfile2
+    'y'
+    '8'
+    relwind_speed_ms % This is the correct variable name in rvdas, scs, techsas.
+    'relwind_spd'
+    ' '
+    relwind_dir
+    'relwind_dirship'
+    'degrees relative to ship 0 = from bow'
+    've'
+    'ship_u'
+    ' '
+    'vn'
+    'ship_v'
+    ' '
+    '-1'
+    '-1'
+    };
+mheadr
 
-%--------------------------------
 
 %--------------------------------------------
 %calculate true wind direction 
@@ -277,7 +187,7 @@ wkfile3
 wkfile4
 '/'
 '2'
-'relwind_spd_ms relwind_direarth'
+'relwind_spd relwind_direarth' % 'relwind_spd_ms relwind_direarth' % on jc211
 'relwind_u'
 'm/s towards'
 'relwind_v'
@@ -330,10 +240,23 @@ muvsd
 %-------------------------------------------
 
 % prepare to re-average interpolated ship heading
+hot1 = m_read_header(otfile1); % find any lat or lon string; bak on jc211
+lat_choices = {'lat' 'latitude'}; % find either
+latstr = mvarname_find(lat_choices, hot1.fldnam);
+if length(latstr)==0
+    error('lat not found uniquely in input file; error in mtruew_01.m')
+end
+lon_choices = {'lon' 'long' 'longitude'}; % find any
+lonstr = mvarname_find(lon_choices, hot1.fldnam);
+if length(lonstr)==0
+    error('lon not found uniquely in input file; error in mtruew_01.m')
+end
+
 MEXEC_A.MARGS_IN = {
 otfile1
 wkfile6
-['time lat ' lon_name ' ship_u ship_v heading_av relwind_u relwind_v truwind_u truwind_v/']
+% ['time lat ' lon_name ' ship_u ship_v heading_av relwind_u relwind_v truwind_u truwind_v/']
+['time ' latstr ' ' lonstr ' ship_u ship_v heading_av relwind_u relwind_v truwind_u truwind_v/'] % jc211
 'heading_av heading_av'
 'y = 1+x1-x2'
 'dummy2'
@@ -458,6 +381,18 @@ mcopya
 
 %---------------------------------------------
 % re-merge navigation
+hin2 = m_read_header(infile2); % find any lat or lon string; bak on jc211
+lat_choices = {'lat' 'latitude'}; % find either
+latstr = mvarname_find(lat_choices, hin2.fldnam);
+if length(latstr)==0
+    error('lat not found uniquely in input file; error in mtruew_01.m')
+end
+lon_choices = {'lon' 'long' 'longitude'}; % find any
+lonstr = mvarname_find(lon_choices, hin2.fldnam);
+if length(lonstr)==0
+    error('lon not found uniquely in input file; error in mtruew_01.m')
+end
+
 
 MEXEC_A.MARGS_IN = {
 otfile2
@@ -466,7 +401,8 @@ wkfile14
 'time'
 infile2
 'time'
-['lat ' lon_name ' distrun/']
+% ['lat ' lon_name ' distrun/']
+[latstr ' ' lonstr ' distrun/'] % jc211
 'k'
 };
 
@@ -478,5 +414,5 @@ mmerge
 % clean up files
 %----------------------------------------
 
-unix(['/bin/rm wk*mtruew_01*.nc'])
+unix(['/bin/rm wk*' wscriptname '*.nc'])
 

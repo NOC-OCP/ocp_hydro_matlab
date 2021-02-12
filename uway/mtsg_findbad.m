@@ -18,27 +18,24 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-scriptname = 'ship'; oopt = 'shiptsg'; get_cropt
-roottsg = mgetdir(abbrev);
+scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+roottsg = mgetdir(tsgpre);
 infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
 
 %get previous limits
 scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt
 
 [d h] = mload(infile1,'/');
-switch MEXEC_G.Mship
-    case 'cook'
-        d.salin = d.psal;
-        d.sstemp = d.temp_r; %***
-    case 'discovery'
-        d.salin = d.psal;
-        d.sstemp = d.temp_r;
-        d.flowrate = d.flow1;
-    case 'jcr'
-        d.salin = d.salinity;
-        d.cond = d.conductivity;
-        d.temp_h = d.tstemp;
-end
+salvar = mvarname_find({'salinity' 'psal'},h.fldnam);
+if length(salvar)>0; issal = 1; else; issal = 0; end
+tempsst = mvarname_find({'remotetemp' 'temp_4' 'sstemp'},h.fldnam);
+if length(tempsst)>0; issst = 1; else; isst = 0; end
+condvar = mvarname_find({'conductivity' 'cond'},h.fldnam);
+if length(condvar)>0; iscond = 1; else; iscond = 0; end
+tempvar = mvarname_find({'housingtemp' 'temp_h' 'tstemp'},h.fldnam);
+if length(tempvar)>0; istemp = 1; else; istemp = 0; end
+flowvar = mvarname_find({'flow' 'flow1'},h.fldnam);
+if length(flowvar)>0; isflow = 1; else; isflow = 0; end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
 
@@ -57,16 +54,16 @@ clear yporgs yptops
 
 % first count how many plots we will have, so we can get the size
 
-if isfield(d,'salin')
+if issal
     np = np+1;
 end
-if isfield(d,'cond')
+if iscond
     np = np+1;
 end
-if isfield(d,'sstemp') | isfield(d,'temp_h')
+if issst | istemp
     np = np+1;
 end
-if isfield(d,'flowrate')
+if isflow
     np = np+1;
 end
 
@@ -120,10 +117,10 @@ while 1
                 iib = [iib find(decday>=kbadlims1(no,1) & decday<=kbadlims1(no,2))];
             end
             
-            if isfield(d,'salin')
+            if issal
                 kount = kount+1;
                 subplot('position',[pl pb+(np-1)*(ph+pb) pw ph*2])
-                plot(decday,d.salin,'k+-',decday(iib),d.salin(iib),'c+');
+                plot(decday,d.(salvar),'k+-',decday(iib),d.(salvar)(iib),'c+');
                 hold on; grid on
                 ha(kount) = gca;
                 ylabel('salin');
@@ -132,37 +129,37 @@ while 1
                 set(ht,'interpreter','none');
             end
             
-            if isfield(d,'cond')
+            if iscond
                 kount = kount+1;
                 subplot('position',[pl pb+(np-2)*(ph+pb) pw ph])
-                plot(decday,d.cond,'k+-',decday(iib),d.cond(iib),'c+');
+                plot(decday,d.(condvar),'k+-',decday(iib),d.(condvar)(iib),'c+');
                 hold on; grid on
                 ha(kount) = gca;
                 ylabel('cond');
             end
             
-            if isfield(d,'sstemp') | isfield(d,'temp_h')
+            if issst | istemp
                 kount = kount+1;
                 subplot('position',[pl pb+(np-3)*(ph+pb) pw ph])
-                if isfield(d,'temp_h')
-                    plot(decday,d.temp_h,'k+-',decday(iib),d.temp_h(iib),'c+');
+                if issst
+                    plot(decday,d.(tempvar),'k+-',decday(iib),d.(tempvar)(iib),'c+');
                     hold on; grid on
                 end
-                if isfield(d,'sstemp')
-                    plot(decday,d.sstemp,'r+-',decday(iib),d.sstemp(iib),'c+');
+                if istemp
+                    plot(decday,d.(tempsst),'r+-',decday(iib),d.(tempsst)(iib),'c+');
                     hold on ;grid on
                 end
                 ha(kount) = gca;
                 ylabel('temp')
             end
             
-            if isfield(d,'flowrate')
+            if isflow
                 kount = kount+1;
                 subplot('position',[pl pb+(np-4)*(ph+pb) pw ph])
-                plot(decday,d.flowrate,'k+-',decday(iib),d.flowrate(iib),'c+');
+                plot(decday,d.(flowvar),'k+-',decday(iib),d.(flowvar)(iib),'c+');
                 hold on; grid on
                 ha(kount) = gca;
-                ylabel('flowrate');
+                ylabel('flow rate');
             end
             
         case 'z'

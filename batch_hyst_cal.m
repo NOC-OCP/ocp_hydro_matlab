@@ -4,9 +4,8 @@
 %
 % this script takes one or more of several variations on klist:
 %
-% klisthyst or klistfromraw to rerun mctd_02b, applying (new) oxygen
-%     hysteresis correction as well as getting rid of any
-%     previously-applied calibrations
+% klistraw to rerun mctd_02b, applying (new) oxygen hysteresis correction
+%     as well as getting rid of any previously-applied calibrations
 % klisttemp to calibrate temperature sensors
 % klistcond to calibrate conductivity sensors
 % klistoxy to calibrate oxygen sensor(s)
@@ -14,16 +13,20 @@
 % klistxmiss to calibration transmissivity sensor
 %
 % the correction and calibrations are taken from opt_cruise
+%
+% you probably wouldn't do klistraw at the same time as the sensor cals,
+% but the steps to be rerun from mctd_03 on overlap, so they are combined
+% in one batch_ script
+%
+% ideally you should calibrate temp before deciding on the calibration for
+% cond, and calibrate temp and cond before deciding on the calibration for
+% oxy
 
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-%accept either list for running mctd_02b
-if ~exist('klisthyst'); klisthyst = []; end
-if exist('klistfromraw','var'); klisthyst = unique([klisthyst(:); klistfromraw(:)]); end
-
 %get concatenated list of stations
-list_actions = {'klisthyst' 'rerun mctd_02b, applying oxygen hysteresis (if set in opt_cruise) and regenerating _24hz from _raw';
+list_actions = {'klistraw' 'rerun mctd_02b, applying oxygen hysteresis (if set in opt_cruise) and regenerating _24hz from _raw';
     'klisttemp' 'apply temperature calibrations';
     'klistcond' 'apply conductivity calibrations';
     'klistoxy' 'apply oxygen calibration(s)';
@@ -104,12 +107,12 @@ for kloop = klist
         stn = kloop; mfir_04;
         
         stn = kloop; msam_02b; %***necessary? what about msam_putpos?***
-        stn = kloop; msam_updateall;
         
-        %stn = kloop; mout_cchdo_ctd
     end
     
 end
 
-%mout_cchdo_sam %reverse niskin option
-%sync if selected
+scriptname = 'batchactions'; oopt = 'ctd'; get_cropt
+scriptname = 'batchactions'; oopt = 'sam'; get_cropt
+scriptname = 'batchactions'; oopt = 'sync'; get_cropt
+clear klist*

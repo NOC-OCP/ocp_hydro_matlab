@@ -1,22 +1,24 @@
 % msbe35_01: load sbe35 data from one or more stations and write to
-%     mstar file sbe35_cruise_01.nc
+%     mstar file sbe35_cruise_01.nc, as well as pasting into
+%     sam_cruise_all.nc
 %
-% Use: msbe35_01        and then respond with station number, or for station 16
-%      stn = 16; msbe35_01;
+% Use: stn = 16; msbe35_01;
 %
 % or for multiple stations use klist
 %      klist = 1:5; msbe35_01;
 
-mdocshow(mfilename, ['loads SBE35 ascii file(s) and writes to sbe35_' mcruise '_01.nc']);
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-m_common
+mdocshow(mfilename, ['loads SBE35 ascii file(s) and writes to sbe35_' mcruise '_01.nc and to sam_' mcruise '_all.nc']);
 
 % load sbe35 data
-d = struct2cell(dir([mgetdir('M_SBE35') '/*.asc'])); file_list = d(1,:);
+root_sbe35 = mgetdir('M_SBE35');
+ds = struct2cell(dir([root_sbe35 '/sbe35_' mcruise '*.asc'])); file_list = ds(1,:);
 kount = 0;
-alldata = {};
+alldata = {}; statnum = [];
 for kf = 1:length(file_list);
     fn = [root_sbe35 '/' file_list{kf}];
+    iis = strfind(file_list{kf},'.asc')+[-3:-1];
     fid2 = fopen(fn,'r');
     while 1
         str = fgetl(fid2);
@@ -26,7 +28,8 @@ for kf = 1:length(file_list);
         % else
         if strlen ~= 77; continue; end % data are in 77 byte lines
         kount = kount+1;
-        alldata = [alldata ; str];
+        alldata = [alldata; str];
+        statnum = [statnum; str2num(file_list{kf}(iis))]; %not used finally, but may be used by opt_cruise
     end
     fclose(fid2);
 end
@@ -56,23 +59,24 @@ for kd = 1:numdata
     val(kd) = str2num(data(53:61));
     t90(kd) = str2num(data(68:77));
 end
+scriptname = mfilename; oopt = 'sbe_datetime_adj'; get_cropt
+
+%initialise
+varnames = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag' 'statnum'};
+varunits = {'seconds' 'on_rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9' 'number'};
+clear ds
+for vno = 1:length(varnames)
+    ds.(varnames{vno}) = [];
+end
 
 if ~exist('klist','var')
-    if ~exist(stn)
-        minit
+    if ~exist('stn','var')
+        minit; klist = stn;
     end
-    klist = stn; clear stn
 end
 klist = klist(:)';
 
-%initialise
-varnames = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag'};
-varunits = {'seconds' 'on_rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9'};
-for vno = 1:length(varnames)
-    d.(varnames{vno}) = [];
-end
-
-%loop through stations to get data and add to structure d
+%loop through stations to get data and add to structure ds
 for kloop = klist
     
     stn = kloop; minit
@@ -85,7 +89,7 @@ for kloop = klist
         fprintf(MEXEC_A.Mfider,'%s\n',msg);
         return
     end
-    [dd, hd] = mload(infile1,'time_start time_end');
+    [dd, hd] = mloadq(infile1,'time_start time_end');
     stn_start = datenum(hd.data_time_origin) + dd.time_start/86400;
     stn_end = datenum(hd.data_time_origin) + dd.time_end/86400;
     
@@ -95,23 +99,31 @@ for kloop = klist
         time = 86400*(datnum(kok)-datenum(hd.data_time_origin));
         [timesort, ksort, junk] = unique(time); %YLF JR15003 in case of duplicates (recorder not erased between casts)
         % repopulate time, just to be sure all data variables are sorted identically
-        d.time = [d.time; 86400*(datnum(kok(ksort))-datenum(hd.data_time_origin))];
-        d.position = [d.position; bn(kok(ksort))];
-        d.sampnum = [d.sampnum; 100*stnlocal+position];
-        d.tdiff = [d.tdiff; tdiff(kok(ksort))];
-        d.val = [d.val; val(kok(ksort))];
-        d.sbe35temp = [d.sbe35temp; t90(kok(ksort))];
-        d.sbe35temp_flag = [d.sbe35temp_flag; 2+0*sbe35temp];
+        ds.time = [ds.time; 86400*(datnum(kok(ksort))-datenum(hd.data_time_origin))];
+        ds.position = [ds.position; bn(kok(ksort))];
+        ds.tdiff = [ds.tdiff; tdiff(kok(ksort))];
+        ds.val = [ds.val; val(kok(ksort))];
+        ds.sbe35temp = [ds.sbe35temp; t90(kok(ksort))];
+        ds.sbe35temp_flag = [ds.sbe35temp_flag; 2+zeros(length(ksort),1)];
+        ds.statnum = [ds.statnum; kloop+zeros(length(ksort),1)];
     end
     
 end
+ds.sampnum = 100*ds.statnum+ds.position;
 scriptname = mfilename; oopt = 'sbe35flag'; get_cropt
+%***bottle not fired won't be in list, so nan must be bad
+ds.sbe35temp_flag(isnan(ds.sbe35temp)&ds.sbe35temp_flag<4) = 4; 
 
 % now save the data
 dataname = ['sbe35_' mcruise '_01'];
 otfile1 = [mgetdir('M_SBE35') '/' dataname];
-flds = [varnames; varunits];
-mfsave(otfile1, d, flds, '-merge', 'sampnum');
+hnew.fldnam = varnames; hnew.fldunt = varunits; hnew.dataname = dataname;
+hnew.comment = ['files ' sprintf('%s ', file_list{:})]; %***
+mfsave(otfile1, ds, hnew, '-merge', 'sampnum');
+otfile2 = [mgetdir('M_CTD') '/sam_' mcruise '_all'];
 
-%timestring = ['[' sprintf('%d %d %d %d %d %d',hd.data_time_origin) ']'];
-%%***
+%and update sam_cruise_all file
+[ds,hnew] = mloadq(otfile1,'/');
+mfsave(otfile2, ds, hnew, '-merge', 'sampnum');
+
+clear klist

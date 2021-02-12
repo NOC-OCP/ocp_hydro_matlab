@@ -116,24 +116,24 @@ for ks = [slist(:)' stnlocal];
     if exist(infile4,'file') ~= 2; continue; end
     % If there is a station 0 this is a test stations and
     if ks == 0
-        ks1 = 1
+        ks1 = 1;
     else
-        ks1 = ks
+        ks1 = ks;
     end
     infiles{1,ks1} = infile1;
     infiles{2,ks1} = infile2;
     infiles{3,ks1} = infile3;
     infiles{4,ks1} = infile4;
-    [d h] = mload(infile1,'/');
+    [d h] = mloadq(infile1,'/');
     d2db = [d2db d];
     h2db = [h2db h];
-    [d h] = mload(infile2,'/');
+    [d h] = mloadq(infile2,'/');
     d2up = [d2up d];
     h2up = [h2up h];
-    [d h] = mload(infile3,'/');
+    [d h] = mloadq(infile3,'/');
     dpsal = [dpsal d];
     hpsal = [hpsal h];
-    [d h] = mload(infile4,'/');
+    [d h] = mloadq(infile4,'/');
     ddcs = [ddcs d];
     hdcs = [hdcs h];
     sused = [sused ks]; % list of stations that will be used
@@ -229,7 +229,7 @@ for plotlist = cklist
             
             subplot(223)
             for ks = 1:numused
-                plot(d2db{ks}.press,getfield(d{ks},oxyvars{1,2}),[cols(ks) '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,getfield(d2db{ks},oxyvars{1,2}),[cols(ks) '-'],'linewidth',lwid);
                 hold on
             end; grid on
             title ('oxygen')
@@ -287,7 +287,7 @@ for plotlist = cklist
                 plot(getfield(d2db{ks},[saltype '2']),d2db{ks}.potemp2,[cols(ks) '-'],'linewidth',lwid);
                 hold on; grid on;
             end
-            title (['potemp-' tis])
+            title (['potemp-' saltype])
             
         case 4
             
@@ -387,7 +387,7 @@ for plotlist = cklist
                 hold on; grid on;
                 plot(dpsal{ks}.press(koku),sd(koku),[cols(ks) '--'],'linewidth',lwid);
             end
-            title ([tis ': dash for upcast'])
+            title ([saltype ': dash for upcast'])
             
             subplot(223)
             if nox>1
@@ -496,7 +496,7 @@ for plotlist = cklist
                 hold on; grid on;
                 plot(d2db{ks}.press,getfield(d2db{ks},[saltype '2']),['r' '-'],'linewidth',lwid);
             end
-            title (tis)
+            title(saltype)
             
             subplot(223)
             for ks = numused
@@ -742,12 +742,12 @@ for plotlist = cklist
             end; grid on
             title ([saltype ' diff']);
             xlabel('minutes away from bottom');
-            axoff = m_nanmedian(sdata1(kok)-sdata2(kok)); % bak on jr302 17 jun 2014; centre axes on data if out of range
+            axoff = m_nanmedian(sd1(kok)-sd2(kok)); % bak on jr302 17 jun 2014; centre axes on data if out of range
             if abs(axoff) < 0.004; axoff = 0; end
             if axoff ~= 0
                 subplot(326)
                 axis([0 1 0 1]);
-                ht = text(.5,1/3,[tis ' diff axes not centred on zero']);
+                ht = text(.5,1/3,[saltype ' diff axes not centred on zero']);
                 set(ht,'verticalalignment','middle')
                 set(ht,'horizontalalignment','center')
                 set(ht,'color','r')

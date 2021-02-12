@@ -16,6 +16,16 @@
 %
 
 MEXEC.mexec_version = 'v3';
+cdir = pwd; pdir = mfilename('fullpath'); pdir = pdir(1:end-7);
+try
+    cd(pdir)
+    [s,c] = unix(['git log -1 | head -1']);
+    c = c(1:15);
+    MEXEC.mexec_version = [MEXEC.mexec_version '_last' c(1:6) '_' c(8:15)];
+    cd(cdir)
+catch
+    warning('git commit unknown');
+end
 MEXEC.MSCRIPT_CRUISE_STRING='jc211';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2021 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
@@ -68,6 +78,7 @@ if length(which('m_common'))==0 % this is in msubs
    addpath([MEXEC.mexec_source_root '/source/mtechsas'])
    addpath([MEXEC.mexec_source_root '/source/unfinished'])
    addpath([MEXEC.mexec_source_root '/source/mrvdas']) % addition on jc211; 28 jan 2021; use rvdas as main data acquisition
+   addpath([MEXEC.mexec_source_root '/source/mnew']) % addition on jc211; mfsave
 
    % paths to other useful libraries %%%***could make this search for whatever version is there? 
    if MEXEC.ix_ladcp
@@ -167,14 +178,15 @@ MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scr
 
 if length(which('get_cropt'))==0 % this function is in mexec_processing_scripts/cruise_options
    disp('adding mexec_processing_scripts subdirectories to path')
+   addpath([MEXEC.mexec_processing_scripts '/bottle_samples'])
    addpath([MEXEC.mexec_processing_scripts '/cruise_options/'])
-   addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/'])
-   addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/ladcp'])
    addpath([MEXEC.mexec_processing_scripts '/gridsec'])
-   addpath([MEXEC.mexec_processing_scripts '/other_calcs_plots/planning'])
+   addpath([MEXEC.mexec_processing_scripts '/ladcp_scripts'])
+   addpath([MEXEC.mexec_processing_scripts '/plots'])
    addpath([MEXEC.mexec_processing_scripts '/summaries/'])
    addpath([MEXEC.mexec_processing_scripts '/utilities/'])
    addpath([MEXEC.mexec_processing_scripts '/uway/'])
+   addpath([MEXEC.mexec_processing_scripts '/varlists/'])
 end
 
 %set data directories within MEXEC_G.MEXEC_DATA_ROOT
@@ -194,7 +206,7 @@ MEXEC_G.MDIRLIST = {
     'M_BOT_CHL' 'ctd/BOTTLE_SHORE'
     'M_BOT_ISO' 'ctd/BOTTLE_SHORE'
     'M_SAM' 'ctd'
-    'M_TEMPLATES' 'mexec_processing_scripts/templates'
+    'M_TEMPLATES' 'mexec_processing_scripts/varlists'
     'M_VMADCP' 'vmadcp'
     'M_LADCP' 'ladcp'
     'M_IX' 'ladcp/ix'

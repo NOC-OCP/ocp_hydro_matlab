@@ -11,9 +11,8 @@ root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
 infile = [root_botraw '/ctd_' mcruise '_' stn_string '.bl'];
 m = ['infile = ' infile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
-prefix = ['fir_' mcruise '_'];
-otfile = [root_ctd '/' prefix stn_string '_bl'];
-dataname = [prefix stn_string];
+dataname = ['fir_' mcruise '_' stn_string];
+otfile = [root_ctd '/' dataname];
 
 cellall = mtextdload(infile,','); % load all text
 

@@ -14,7 +14,7 @@ infile2 = [root_ctd '/dcs_' mcruise '_' stn_string ];
 infile3 = [root_ctd '/' prefix1 stn_string '_psal'];
 
 hraw = m_read_header(infile1);
-[ddcs hdcs]  = mload(infile2,'/');
+[ddcs hdcs]  = mloadq(infile2,'/');
 dcs_ts = ddcs.time_start(1);
 dcs_te = ddcs.time_end(1);
 dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
@@ -59,7 +59,7 @@ end
 pshow2.startdc = startdc;
 pshow2.stopdc = stopdc;
 pshow2.cols = 'kgrbmcy'; % so raw oxygen in this plot matches 1 hz trace in figure 1.
-mplotxy(pshow2)
+mplotxy(pshow2);
 
 %raw data fluor trans
 clear pshow3
@@ -80,7 +80,7 @@ ylist = {'latitude' 'longitude'};
 if length(ylist)>0
     pshow4.startdc = startdc;
     pshow4.stopdc = stopdc;
-    mplotxy(pshow4)
+    mplotxy(pshow4);
 end
 
 m = {'To edit out spikes, run mctd_rawedit.';

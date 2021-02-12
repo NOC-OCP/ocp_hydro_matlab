@@ -533,7 +533,7 @@ switch scriptname
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'optsams'
+            case 'sum_sams'
                 snames = {'noxy'; 'nnut'; 'nco2'; 'ncfc'; 'no18s'; 'nradcs'}; %s suffix for variables not analysed on ship at all
                 snames_shore = {'noxy_shore'; 'nnut_shore'; 'nco2_shore'; 'ncfc_shore'; 'no18'; 'nradc'};
                 sgrps = { {'botoxy'} %list of oxy variables
@@ -544,7 +544,7 @@ switch scriptname
                     {'del13c_bgs' 'del13c_noc' 'del13c_whoi' 'del14c_whoi'} % All delC13  delC14 except BGS
                     };
                 sashore = [0; 0; 0; 0; 1; 1]; %count samples partially analysed ashore
-            case 'comments' % set comments
+            case 'sum_comments' % set comments
                 comments{1} = 'Test cast; aborted on upcast due to multiple shorts and wire slipping';
                 comments{2} = 'Test cast for replacement wire; aborted on downcast due to weather';
                 comments{3} = 'Start of SR1b section';
@@ -553,18 +553,15 @@ switch scriptname
                 comments{22} = 'Section broken after this cast to procede to Elephant Island due to weather';
                 comments{45} = 'Repeat of cast 22 to join up SR1b section';
                 ii = repeat_casts(:,1); ii = ii(~ismember(ii,[1 2 45])); comments(ii) = {'Ra cast'};
-            case 'alttimes' % impose start and end times not captured from CTD dcs files
+            case 'sum_edit' % impose start and end times not captured from CTD dcs files
                 dne(1) = datenum(2018,11,06,01,30,00);
-            case 'altdep'
                 cordep(2) = 5000; %from em122, not full depth cast
                 cordep(11) = 4789; %from em122, not full depth cast
             case 'parlist'
                 parlist = [' sal'; ' oxy'; ' nut'; ' car'; ' co2'; ' cfc'; ' ch4'];
-            case 'varnames'
+            case 'sum_varnames'
                 varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'minalt' 'resid' 'maxw' 'maxp' 'ndpths' 'nsal' 'noxy' 'nnut' 'nco2' 'ncfc' 'no18' 'nradc'};
                 varunits={'number' 'seconds' 'seconds' 'seconds' 'degrees' 'degrees' 'metres' 'metres' 'metres' 'metres' 'metres' 'dbar' 'number' 'number' 'number' 'number' 'number' 'number' 'number' 'number'};
-            case 'stnmiss'
-                stnmiss = [];
             case 'stnadd'
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%

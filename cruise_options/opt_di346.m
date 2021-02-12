@@ -149,15 +149,15 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_04 %%%%%%%%%%
         
-        %%%%%%%%%% mdcs_02 %%%%%%%%
-    case 'mdcs_02'
+        %%%%%%%%%% mdcs_01 %%%%%%%%
+    case 'mdcs_01'
         switch oopt
             case 'kbot'
                 if stnlocal==81
                     kbot = 5574;
                 end
         end
-        %%%%%%%%%% end mdcs_02 %%%%%%%%
+        %%%%%%%%%% end mdcs_01 %%%%%%%%
         
         
         %%%%%%%%%% msec_run_mgridp %%%%%%%%%%

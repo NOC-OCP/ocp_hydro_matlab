@@ -13,31 +13,17 @@
 
 switch scriptname        
                 
-        %%%%%%%%%% msam_01 %%%%%%%%%%
-    case 'msam_01'
-        switch oopt
-            case 'samvars' %***not updating past opt_cruise files (yet)
-                crhelp_str = {'Get list of variables, units, and fill values for sam_ files. '
-                    'samvars_use is a cell array listing all the variable names to go in the '
-                    '_sam files. They will first be looked up samvars_replace, a cell array with '
-                    'columns [varname, varunit, fillvalue] (default {'', '', ''}), then looked up '
-                    'in templates/sam_varlist.csv, then in samvars_add (default {'', '', ''}). The'
-                    'default is thus to use all and only sam_varlist.csv.'};
-                ds_sam = dataset('File',[mgetdir('M_TEMPLATES') '/sam_varlist.csv'],'Delimiter',',');
-                samvars_use = ds_sam.varname;
-                samvars_replace = {'','',''};
-                samvars_add = {'','',''};
-        end
-        %%%%%%%%%% end msam_01 %%%%%%%%%%
-
         %%%%%%%%%% msal_01 %%%%%%%%%%
     case 'msal_01'
         switch oopt
-            case 'salfile'
-                sal_mat_file = ['sal_' mcruise '_01.mat'];
+            case 'salfiles'
+                crhelp_str = {'salfiles is a list of 
+                salfiles = struct2cell(dir([root_sal '/sal_' mcruise '_*.csv']));
+                salfiles = salfiles(1,:);
             case 'salflags'
                 %set bottle/bottle reading flags
         end
+        %%%%%%%%%% end msal_01 %%%%%%%%%%
         
         %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
     case 'msal_standardise_avg'
@@ -71,8 +57,11 @@ switch scriptname
         %%%%%%%%%% msbe35_01 %%%%%%%%%%
     case 'msbe35_01'
         switch oopt
+             case 'sbe_datetime_adj'
+                 crhelp_str = {'Place to modify SBE35 file dates/times, as date is sometimes '
+                     'not reset correctly before deployment'};
             case 'sbe35flag'
-                crhelp_str = {'place to modify flags (sbe35flag) on SBE35 temperature data'};
+                crhelp_str = {'Place to modify flags (sbe35flag) on SBE35 temperature data'};
         end
         %%%%%%%%%% end msbe35_01 %%%%%%%%%%
         
@@ -93,7 +82,7 @@ switch scriptname
                 flags4 = [];
                 %could also set flags explicitly
             otherwise
-                warning(['oopt ' oopt ' not in get_cropt for ' scriptname])
+                warning(['oopt ' oopt ' not in get_cropt for ' scriptname]) %***more of this?
         end
         %%%%%%%%%% end moxy_01 %%%%%%%%%%
         
@@ -101,17 +90,22 @@ switch scriptname
     case 'moxy_ccalc'
         switch oopt
             case 'oxypars'
-                cal_temp = 25; % calibration temp (deg. C) for flasks
+                crhelp_str = {'oxygen titration parameters that don''t change over the cruise: '
+                    'vol_reag1 (MnCl2 vol, mL, default 1), vol_reag2 (NaOH/NaI, same), cal_temp '
+                    '(temperature at which flask volumes were calibrated), mol_O2_reag (mol/mL of'
+                    'dissolved oxygen in pickling reagents, default 3.8e-8, probably don''t change'
+                    'this at all).'};
                 vol_reag1 = 1; % MnCl2 vol (mL) (default)
                 vol_reag2 = 1; % NaOH/NaI vol (mL) (default)
+                %below probably won't change
+                cal_temp = 25; % calibration temp (deg. C) for flasks
                 mol_O2_reag = 0.5*7.6e-8; % mol/mL of dissolved oxygen in pickling reagents
-                vol_std = 10;           % volume (mL) standard KIO3
-                mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
-                std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
-                sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
-            case 'blstd' %no defaults, blank and standard titre volumes are cruise-specific
+            case 'blstd'
+                crhelp_str = {'vol_std (mL) is volume of standard KIO3 used for standards, '
+                    'vol_titre_std is the standard titre, and vol_blank the blank titre'};
             case 'botvols'
-                %no defaults, these might be in a separate file or in the same file
+                crhelp_str = {'Place to set bottle volumes obot_vol, if not listed in same file as '
+                    'sample data.'};
             case 'compcalc'
                 compcalc = 1; %if there are pre-calculated concentrations and concentrations calculated by moxy_ccalc, pause to compare them
         end

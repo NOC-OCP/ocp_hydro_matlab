@@ -8,16 +8,24 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 scriptname = mfilename; oopt = 'usecal'; get_cropt;
 usecallocal = usecal; clear usecal
 
-scriptname = 'ship'; oopt = 'shiptsg'; get_cropt
+scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 root_tsg = mgetdir(tsgprefix);
 root_bot = mgetdir('M_SAM');
 
 if usecallocal
     tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean_cal']; % median averaged file
+else
+    tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean']; % median averaged file
+end
+[dt, ht] = mload(tsgfn, '/');
+tempvar = mvarname_find({'housingtemp' 'temp_h' 'tstemp'},ht.fldnam);
+salvar = mvarname_find({'salinity' 'psal'},ht.fldnam);
+tempsst = mvarname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
+
+if usecallocal
     tempvar = [tempvar '_cal'];
     calstr = 'cal';
 else
-    tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean']; % median averaged file
     calstr = 'uncal';
 end
         
@@ -26,8 +34,8 @@ botfn = [root_bot '/sam_' mcruise '_all'];
 %***this script was unfinished, have pasted in the salinity comparison
 %code, modify for temperature
 
-[dt, ht] = mload(tsgfn, '/');
 [db, hb] = mload(botfn, '/');
+db.time = m_commontime(db.time, hb.data_time_origin, ht.data_time_origin);
 [db.time, iibot] = sort(db.time);
 db.run1 = db.run1(iibot); db.run2 = db.run2(iibot); db.run3 = db.run3(iibot);
 db.runavg = db.runavg(iibot); db.flag = db.flag(iibot);
@@ -37,12 +45,11 @@ db.time = db.time/3600/24+1;
 [Y,ii] = min(abs(repmat(dt.time,[length(db.time),1])-repmat(db.time,[1,length(dt.time)])),[].2);
 db.temp_h = dt.temp_h(ii); %jc191? dy120? dy129?***why are we doing this?***
 
-tsal = getfield(dt, salvar);
+tsal = dt.(salvar);
 tsals = interp1(dt.time, tsal, db.time);
 nsp = 2;
 if exist('tempsst')
-    tsst = getfield(dt, tempsst);
-    tssts = interp1(dt.time, tsst, db.time);
+    tssts = interp1(dt.time, dt.(tempsst), db.time);
     nsp = 4;
 end
 

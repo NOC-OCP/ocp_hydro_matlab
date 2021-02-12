@@ -25,20 +25,45 @@
 %
 % ylf jc145 revised to set non-standard sample names and how to count them in opt_cruise
 
-scriptname = 'station_summary';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
 
-oopt = 'optsams'; get_cropt %set snames, sgrps and sashore, groupings for counting samples of nuts, cfcs, etc.
-oopt = 'varnames'; get_cropt %set names of variables to output
-
-root_win = mgetdir('M_CTD_WIN');
+%find list of processed stations
 root_ctd = mgetdir('M_CTD');
-root_sum = mgetdir('M_SUM');
+d = struct2cell(dir([root_ctd '/ctd_' mcruise '_???_psal.nc'])); d = cell2mat(d(1,:)');
+stnall = str2num(d(:,length(mcruise)+[6:8]));
+scriptname = mfilename; oopt = 'sum_stn_list'; get_cropt
+stnset = setdiff(stnall,stnmiss); stnset = stnset(:)'; %these are stations to include with ctd data
+stnall = unique([stnset(:); stnadd(:)]); stnall = stnall(:)'; %these are stations to include with or without ctd data
 
+%variables and formats
+vars = {'statnum' 'number' -999 '%03d'
+    'time_start' 'seconds' -999 '%f'
+    'time_bottom' 'seconds' -999
+    'time_end' 'seconds' -999
+    'lat' 'deg min' -999
+    'lon' 'deg min' -999
+    'cordep' 'metres' -999
+    'maxd' 'metres' -999
+    'minalt' 'metres' -9
+    'resid' 'metres' -9
+    'maxw' 'metres' -999
+    'maxp' 'metres' -999
+    'ndpths' 'number' -9};
+[c,ia,ib] = intersect(varnames,vars(:,1)); %***
+scriptname = mfilename; oopt = 'sum_varsams'; get_cropt %set snames, sgrps and sashore, groupings for counting samples of nuts, cfcs, etc.
+vars = [vars(ib,:); [snames repmat({'number'},length(snames),1) repmat(-9,length(snames),1) repmat('%d',length(snames),1)]];
+    fprintf(fid,' %2d %05.2f %s %3d %05.2f %s', latd, latm, l1, lond, lonm, l2);
 
-% bak at noc 18 aug 2010
-% pick up wireout name from file
+cordep(cordep == -999) = -99999;
+resid(resid == -999) = -99999;
+maxp(maxp == -999) = -99999;
+maxd(maxd == -999) = -99999;
+minalt(minalt == -9) = -99999;
+
+%%%%% load data %%%%%
+
+%winch variable
+root_win = mgetdir('M_CTD_WIN');
 [a b] = unix(['ls ' root_win '/' 'win_' mcruise '_???.nc']);
 knc = strfind(b,'.nc');
 if isempty(knc)
@@ -47,52 +72,24 @@ if isempty(knc)
     return
 end
 fnwin = b(1:knc+2); % first winch file name
-% now scan files until a  matching var is found
-cablook1 = 'cab'; % should match 'cablout' (techsas) or 'winch_cable_out' (scs) or 'cableout'
-cablook2 = 'out'; % should match 'cablout' (techsas) or 'winch_cable_out' (scs) or 'cableout'
-h_in = m_read_header(fnwin);
-kmat = [];
-for kloopscr = 1:length(h_in.fldnam);
-    kmat1 = findstr(h_in.fldnam{kloopscr},cablook1);
-    kmat2 = findstr(h_in.fldnam{kloopscr},cablook2);
-    if ~isempty(kmat1) & ~isempty(kmat2) %this variable matches both searches
-        kmat = [kmat kloopscr];
-    end
-end
-if isempty(kmat)
+h = m_read_header(fnwin);
+cabname = mvarname_find({'cablout' 'cableout' 'winch_cable_out'},h.fldnam);
+if isempty(cabname)
     m1 = ['No match for ''' cablook1 ' & ' cablook2 ''' as wireout variable in file '];
     m2 = [fnwin];
     m3 = 'exiting';
     fprintf(MEXEC_A.Mfider,'%s\n',m1,m2,m3)
     cabname = ' ';
     return
-elseif length(kmat) > 1
-    m1 = ['More than one variable found whose name matches ''' cablook1 ' & ' cablook2 ''' in file'];
-    m2 = [fnwin];
-    m3 = ' '; for kloopscr = 1:length(kmat); m3 = [m3 ' ' h_in.fldnam{kmat(kloopscr)}]; end
-    m4 = ['Specify variable name here : '];
-    fprintf(MEXEC_A.Mfider,'%s\n',m1,m2,m3)
-    cabname = m_getinput(m4,'s');
-else % just one match
-    cabname = h_in.fldnam{kmat};
 end
 
-
-%ylf jc145 find list of processed stations
-d = struct2cell(dir([root_ctd '/ctd_' mcruise '_*psal.nc'])); d = cell2mat(d(1,:)');
-stnall = str2num(d(:,length(mcruise)+[6:8]));
-oopt = 'stnmiss'; get_cropt
-stnadd = [];
-oopt = 'stnadd'; get_cropt % bak jc159 force some stations into listing, even if there aren't any CTD data, eg wire tests with winch data allocated a station number, or aborted CTD stations
-stnset = setdiff(stnall,stnmiss);  stnset = stnset(:)';
-stnall = unique([stnset(:); stnadd(:)]); stnall = stnall(:)';
-
 %get information from files
-
-% a = NaN+ones(length(stnset),1);
 a = NaN+ones(max(stnall),1); % bak on jc159 30 March 2018 has to be max (stnset) not size(stnset) so we can address by station number
 a9 = -9 + zeros(size(a)); % bak on jc159 initialise with  -9.
 a999 = -999 + zeros(size(a)); % bak on jc159 initialise with  -9.
+vars = {'statnum' 'lat' 'lon' 'dns' 'dnb' 'dne'};
+vars9 = {'minalt'};
+vars999 = {'maxp' 'maxd' 'maxw' 'resid' 'cordep'};
 statnum = a; lat = a; lon = a;
 maxp = a999; maxd = a999;
 maxw = a999;
@@ -104,24 +101,19 @@ ndpths = zeros(max(stnset),1);
 nopt = zeros(max(stnset),size(sgrps,1));
 if sum(sashore); nopt_shore = nopt; end
 
-for k = stnall; statnum(k) = k; end
+statnum(stnall) = stnall;
 
 for k = stnset
     stnstr = sprintf('%03d',k);
 
-    fn2db = [root_ctd '/ctd_' mcruise '_' stnstr '_2db'];
     fnsal = [root_ctd '/ctd_' mcruise '_' stnstr '_psal'];
     fndcs = [root_ctd '/dcs_' mcruise '_' stnstr ];
     fnwin = [root_win '/' 'win_' mcruise '_' stnstr];
     fnsam = [root_ctd '/sam_' mcruise '_' stnstr];
     
-    %     [d2db h1] = mload(fn2db,'/');
-    %     lat(k) = h1.latitude;
-    %     lon(k) = h1.longitude;
-    
-    [dpsal h2] = mload(fnsal,'/');
-    lat(k) = h2.latitude;
-    lon(k) = h2.longitude;
+    [dpsal hpsal] = mload(fnsal,'/');
+    lat(k) = hpsal.latitude;
+    lon(k) = hpsal.longitude;
     maxp(k) = max(dpsal.press);
     maxd(k) = sw_dpth(maxp(k),lat(k));
     if isfield(dpsal, 'altimeter')
@@ -139,12 +131,7 @@ for k = stnset
     if exist(m_add_nc(fnsam),'file') == 2
         [dsam h4] = mload(fnsam,'/');
         
-        %         if isfield(dsam,'wireout'); ndpths(k) = length(unique(dsam.wireout(~isnan(dsam.wireout)))); end
-        % bak on jc191: heave compensator means wireout is no longer fixed for
-        % multiple bottles at the same nominal depth; new function to get number of
-        % unique levels.
         if isfield(dsam,'wireout'); ndpths(k) = mctd_count_depths(dsam,1); end
-%         if isfield(dsam,'botpsal'); nsal(k) = sum(ismember(dsam.botpsalflag, [2 3 5])); nsal = nsal(:); end % bak jc191 make nsal a column;
         if isfield(dsam,'botpsal'); nsal(k) = sum(ismember(dsam.botpsalflag, [2 3 6])); nsal = nsal(:); end % bak jc191  count flag of 2, 3 or 6; 6 == mean of replicate; 5 == not reported.
         %loop through groups of non-standard samples
         for sgno = 1:size(sgrps,1)
@@ -156,7 +143,6 @@ for k = stnset
             for fno = 1:length(ii)
                 s = [sgrp{ii(fno)} '_flag']; if ~isfield(dsam, s); s = [sgrp{ii(fno)} 'flag']; end
                 if isfield(dsam, s)
-%                     a = ismember(getfield(dsam, s), [2 3 5]); log_all = [log_all a(:)];
                     a = ismember(getfield(dsam, s), [2 3 6]); log_all = [log_all a(:)]; % bak jc191  count flag of 2, 3 or 6; 6 == mean of replicate
                     if sashore(sgno); 
                         a = getfield(dsam, s)==1; 
@@ -172,7 +158,7 @@ for k = stnset
     end
 
 
-    oopt = 'cordep'; get_cropt;
+    cordep(k) = hpsal.water_depth_metres;
 
     [ddcs h4] = mload(fndcs,'/');
     dns(k) = datenum(h4.data_time_origin) + ddcs.time_start/86400;
@@ -188,8 +174,7 @@ if sum(sashore); for no = 1:size(sashore,1)
    eval([snames_shore{no} ' = nopt_shore(:,no);'])
 end; end
 
-oopt = 'altdep'; get_cropt
-
+scriptname = mfilename; oopt = 'sum_edit'; get_cropt; %edit depths, times, etc. not captured from CTD data
 
 resid = maxd+minalt-cordep;
 ii = find((cordep-maxd) > 99); minalt(ii) = -9; resid(ii) = -999; %can't expect altimeter to detect bottom
@@ -197,27 +182,43 @@ ii = find(cordep == -999); resid(ii) = -999; % no resid if cordep undefined
 ii = find(maxd == -999); resid(ii) = -999; % no resid if maxd undefined
 ii = find(minalt == -9); resid(ii) = -999; % no resid if minalt undefined
 
-oopt = 'comments'; get_cropt
-oopt = 'alttimes'; get_cropt % impose start and end times not cpatured from CTD dcs files
-
+comments = cell(max(stnall),1); % bak fix jc159 30 March 2018; If stnall = [1 2 3 5] then size(stnall) is 4 but we need comments ot be of size 5 so we can prepare comments by station number rather than by index in stnall
+scriptname = mfilename; oopt = 'sum_comments'; get_cropt
 
 %write to ascii file
+root_sum = mgetdir('M_SUM');
 stnlistname = [root_sum '/station_summary_' mcruise '_all.txt'];
 fid = fopen(stnlistname,'w');
 
+ewidth = 4; nwidth = 10; % each width must allow for one space to follow
+pad = '                                                           ';
+eventhead = [pad 'Ev '];  % event number and header are right justified in width ewidth
+eventhead = eventhead(end-ewidth+1:end);
+namehead = ['Waypoint' pad]; % waypoint name and header are left justified in width nwidth, with a space after, but truncated to nwidth
+namehead = [namehead(1:nwidth-1) ' '];
+namehead = namehead(1:nwidth);
+
 % list headings
-fprintf(fid,'%3s %8s %4s', 'stn', 'yy/mo/dd', 'hhmm');
+fprintf(fid,'%s%s%3s %8s %4s',eventhead,namehead, 'stn', 'yy/mo/dd', 'hhmm');
 fprintf(fid,' %10s %11s', 'dg min lat', 'dg min lon');
 fprintf(fid,' %4s', varnames{7:end});
 fprintf(fid,'  %s\n','Comments');
 
 for k = stnall
+    
+    [eventnum,statname] = parse_ctd_event_name(k); % jc211, BAS western core box events % need to set default width of event and name fields to zero. Set to desired length in cropt
+    pade = pad(1:ewidth); padn = pad(1:nwidth);
+    stringe = [pad sprintf('%03d ',eventnum)]; stringe = stringe(end-ewidth+1:end);
+    stringn = [statname pad]; 
+    stringn = [stringn(1:nwidth-1) ' '];
+    stringn = stringn(1:nwidth);
 
+    
     ss = datestr(dns(k),'yy/mm/dd HHMM');
     sb = datestr(dnb(k),'yy/mm/dd HHMM');
     se = datestr(dne(k),'yy/mm/dd HHMM');
-    fprintf(fid,'\n%3s %s\n', '', ss);
-    fprintf(fid,'%03d %s', k, sb);
+    fprintf(fid,'\n%s%s%3s %s\n',pade,padn,'', ss); % pad the timestart line
+    fprintf(fid,'%s%s%03d %s',stringe,stringn,k,sb);
 
     l1 = 'N'; if lat(k) < 0; l1 = 'S'; end
     l2 = 'E'; if lon(k) < 0; l2 = 'W'; end
@@ -242,17 +243,12 @@ for k = stnall
     fprintf(fid,'  %s',comments{k});
     fprintf(fid,'\n');
 
-    fprintf(fid,'%3s %s \n', '', se);
+    fprintf(fid,'%s%s%3s %s \n',pade,padn,'',se); % pad the timeend line
 
 end
 
 fclose(fid);
 
-cordep(cordep == -999) = -99999;
-resid(resid == -999) = -99999;
-maxp(maxp == -999) = -99999;
-maxd(maxd == -999) = -99999;
-minalt(minalt == -9) = -99999;
 
 
 %write to mstar .nc file

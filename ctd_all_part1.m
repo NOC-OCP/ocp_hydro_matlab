@@ -1,12 +1,5 @@
 minit
 
-%if necessary/specified, make blank sample file for this station
-oopt = 'remakesam'; scriptname = mfilename; get_cropt
-if remakesam | ~exist([mgetdir('M_SAM') '/sam_' mcruise '_' sprintf('%03d',stnlocal)], 'file')
-    stn = stnlocal; msam_01 %jc211: combined msam_01b (to copy template) and msam_01 (to make new sample file)
-end
-
-
 stn = stnlocal; mctd_01; %read in sbe .cnv data to mstar
 stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.csv
 
@@ -15,7 +8,7 @@ stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.c
 %invocations of mctd_02b, because any necessary edits will have been
 %added to opt_cruise already (and to mplxyed_* file when mctd_rawedits is run)***
 root_ctd = mgetdir('M_CTD');
-[d, h] = mload([root_ctd '/ctd_' mcruise '_' stn_string '_raw'], '/');
+[d, h] = mloadq([root_ctd '/ctd_' mcruise '_' stn_string '_raw'], '/');
 if min(d.press)<=-1.495
     disp(['negative pressures in ctd_' mcruise '_' stn_string '_raw'])
     disp(['check ctd_' mcruise '_' stn_string '_raw; if there are large'])
@@ -50,10 +43,7 @@ end
 
 stn = stnlocal; mctd_03; %average to 1 hz, compute salinity
 
-stn = stnlocal; msam_putpos; % jr302 populate lat and lon vars in sam file
-
-stn = stnlocal; mdcs_01; % on jr306 make all these files at start of cruise
-stn = stnlocal; mdcs_02;
+stn = stnlocal; mdcs_01; % now does mdcs_01 and mdcs_02 in one step
 
 if MEXEC_G.ix_ladcp == 1
     mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)

@@ -10,20 +10,17 @@ mdocshow(mfilename, ['converts from .cnv to ctd_' mcruise '_' stn_string '_raw.n
 root_cnv = mgetdir('M_CTD_CNV');
 root_ctd = mgetdir('M_CTD'); % change working directory
 
-prefix = ['ctd_' mcruise '_'];
+dataname = ['ctd_' mcruise '_' stn_string];
 
 oopt = 'redoctm'; scriptname = mfilename; get_cropt
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
-    infile = [root_cnv '/' prefix stn_string suf '.cnv']; %default _align_ctm
-    otfile = [root_ctd '/' prefix stn_string '_raw'];
-else %in some cases, operate on pre-CTM file (to remove large spikes), then apply CTM in mexec
-    infile = [root_cnv '/' prefix stn_string suf '.cnv']; %default _align_noctm
-    otfile = [root_ctd '/' prefix stn_string '_raw_noctm'];
+    infile = [root_cnv '/' dataname '_align_ctm.cnv'];
+    otfile = [root_ctd '/' dataname '_raw'];
+else %in some cases, operate on original file (to remove large spikes), then apply align and CTM in mexec
+    infile = [root_cnv '/' dataname '_noctm.cnv']; %align and ctm will be reapplied
+    otfile = [root_ctd '/' dataname '_raw_noctm'];
     disp('starting from noctm file')
 end
-
-
-dataname = [prefix stn_string];
 
 otfile = m_add_nc(otfile);
 if exist(otfile,'file')

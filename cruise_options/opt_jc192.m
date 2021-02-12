@@ -297,33 +297,6 @@ switch scriptname
         end
         %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
         
-
-        %%%%%%%%%% station_summary %%%%%%%%%%
-    case 'station_summary'
-        switch oopt
-            case 'optsams'
-                snames = {'noxy'; 'nnut'; 'nco2'; 'nchla' ; 'nch4'}; % Use s suffix for variable to count number on ship for o18 c13 chl, which will be zero
-                snames_shore = {'noxy_shore'; 'nnut_shore'; 'nco2_shore'; 'nchla_shore' ; 'nch4_shore' ; 'ndel13c_noc_shore' ; 'ndel14c_shore'}; % can use name without _shore, because all samples are analysed ashore
-                sgrps = { {'botoxy'} %list of oxy variables
-                    {'silc' 'phos' 'totnit'} %list of nuts variables
-                    {'dic' 'talk'} %list of co2 variables
-                    %                     {'cfc11' 'cfc12' 'f113' 'sf6' 'ccl4' 'sf5cf3' 'cfc13'} %list of cfc variables
-                    %                     {'del18o_bgs'} % BGS del O 18
-                    %                     {'del13c_imp' 'del14c_imp' 'del13c_whoi' 'del14c_whoi'} % All delC13  delC14 except BGS
-                    {'chla'}
-                    {'ch4'}
-                    {'del13c_noc'}
-                    {'del13c_imp' 'del14c_imp' 'del13c_whoi' 'del14c_whoi'}
-                    };
-                sashore = [0; 1; 1; 1; 1; 1; 1]; %count samples to be analysed ashore? % can't presently count botoxy_flag == 1
-            case 'parlist'
-                parlist = [' sal'; ' oxy'; ' nut'; ' car'; ' co2'; ' cfc'; ' ch4'];
-            case 'varnames'
-                varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'minalt' 'resid' 'maxw' 'maxp' 'ndpths' 'nsal' 'noxy' };
-                varunits={'number' 'seconds' 'seconds' 'seconds' 'degrees' 'degrees' 'metres' 'metres' 'metres' 'metres' 'metres' 'dbar' 'number' 'number' 'number' };
-        end
-        %%%%%%%%%% end station_summary %%%%%%%%%%
-        
         
         %%%%%%%%%% mvad_01 %%%%%%%%%%
     case 'mvad_01'

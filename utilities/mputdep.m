@@ -3,7 +3,7 @@ function mputdep(ncfile,depth)
 %
 % insert depth in header from ldeo ladcp processing
 %
-% function mputpos(filename,depth)
+% function mputdep(filename,depth)
 %
 % Use: mputdep(filename,depth);
 

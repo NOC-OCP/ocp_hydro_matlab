@@ -10,7 +10,7 @@ clear infile* otfile* wkfile*
 
 %there may be a bst file in this directory but we want the other (original) one
 abbrev = MEXEC_G.default_navstream;
-root_dir = mgetdir(['M_' upper(abbrev)])
+root_dir = mgetdir(abbrev);
 prefix = [abbrev '_' mcruise '_'];
 
 mdocshow(scriptname, ['calculates speed, course, distrun from 30 s averages in ' abbrev '_' mcruise '_ave.nc, writes to ' abbrev '_' mcruise '_spd.nc']);
@@ -20,17 +20,16 @@ otfile = [root_dir '/' prefix 'spd'];
 wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
 wkfile2 = ['wk2_' scriptname '_' datestr(now,30)];
 
-if strncmp(MEXEC_G.Mshipdatasystem,'scs',3)
-    latlonstr = 'lat lon';
-else % techsas
-    latlonstr = 'lat long';
-end
+lat_choices = {'lat' 'latitude'}; % find either
+latvar = mvarname_find(lat_choices, h.fldnam);
+lon_choices = {'lon' 'long' 'longitude'}; % find any
+lonvar = mvarname_find(lon_choices, h.fldnam);
 
 MEXEC_A.MARGS_IN = {
 infile
 wkfile1
-['time ' latlonstr]
-['time ' latlonstr]
+['time ' latvar ' ' lonvar]
+['time ' latvar ' ' lonvar]
 'm'
 've'
 'vn'
@@ -54,7 +53,7 @@ MEXEC_A.MARGS_IN = {
 wkfile2
 otfile
 '/'
-latlonstr
+[latvar ' ' lonvar]
 'y = m_nancumsum(sw_dist(x1,x2,''km'')); y(2:length(y)+1) = y; y(1) = 0;'
 'distrun'
 'km'

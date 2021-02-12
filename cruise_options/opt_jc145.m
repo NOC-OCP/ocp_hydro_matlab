@@ -207,13 +207,8 @@ switch scriptname
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'optsams'
-                %	    snames = {'noxy'}; sgrps = {'oxy'};
+            case 'sum_sams'
                 sashore = 0;
-            case 'stnmiss'
-                stnmiss = [];
-            case 'comments'
-                comments = cell(size(stnset));
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         

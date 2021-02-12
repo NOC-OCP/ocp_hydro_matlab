@@ -50,7 +50,7 @@ end
 scriptname = 'senscals'; oopt = [calvar 'cal']; get_cropt
 
 if ~isempty(calvars) & ~isempty(calstr)
-    d = mload(infile, sprintf('%s ', calvars{:}));
+    d = mloadq(infile, sprintf('%s ', calvars{:}));
     for vno = 1:length(calvars)
         eval([calvars{dno} ' = getfield(d, ' calvars{dno} ');'])
     end

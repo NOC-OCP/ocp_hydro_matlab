@@ -186,7 +186,7 @@ ctdflag = 2+zeros(1,maxn);
 
 root_sum = mgetdir('M_SUM');
 sumfn = [root_sum '/station_summary_' mcruise '_all.nc'];
-[dsum hsum] = mload(sumfn,'/');
+[dsum hsum] = mload(sumfn,'/'); %***just use sam_all instead?
 
 for kcount = 1:length(ustatnums);
     kstn = ustatnums(kcount);

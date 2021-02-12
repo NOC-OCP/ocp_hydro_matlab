@@ -36,6 +36,7 @@ else
         'gravity'    'uother/gravity'
         'hdtgyro'    'nav/gyro'
         'hdtpmv'     'nav/pmv'
+        'hdtsea'     'nav/sea'
         'logchf'     'uother/chf'
         'logskip'    'uother/skip'
         'mag'        'uother/mag'
@@ -71,7 +72,7 @@ switch(MEXEC_G.Mshipdatasystem)
         f = 'msnames';
     case 'rvdas'
         matlist = mrnames('q'); am = matlist(:,2); %mrnames list
-        as = mrgettables; %list of tables found in database
+        as = fieldnames(mrgettables); %list of tables found in database
         f = 'mrnames';
 end
 

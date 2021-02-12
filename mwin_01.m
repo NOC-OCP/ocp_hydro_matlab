@@ -72,12 +72,15 @@ instream = rvsstreamname; % this should be set in m_setup and picked up from a g
 flags = datapupflags;
 varlist = '-';
 
-if strncmp(MEXEC_G.Mshipdatasystem,'scs',3)
+switch MEXEC_G.Mshipdatasystem
+    case 'scs'
     mdatapupscs(yy_start,daystart,timestart,yy_end,dayend,timeend,...
         flags,instream,otfile2,varlist);
-else % techsas
+    case 'techsas'
      mdatapuptechsas(yy_start,daystart,timestart,yy_end,dayend,timeend,...
         flags,instream,otfile2,varlist);
+    case 'rvdas'
+        mrrvdas2mstar(instream,t_start_vec,t_end_vec,otfile2,varlist);
 end
 
 
@@ -94,7 +97,7 @@ MEXEC_G.PLATFORM_NUMBER
 '/'
 '-1'
 };
-mheadr
+mheadr;
 
 hdr = m_read_header(otfile2);
 noflds = hdr.noflds;
@@ -110,7 +113,7 @@ wkfile3
 ' '
 ' '
 };
-mcalc
+mcalc;
 
 MEXEC_A.MARGS_IN = {
 wkfile3
@@ -120,6 +123,6 @@ otfile2
 ' '
 copystring
 };
-mdatpik
+mdatpik;
 
 unix(['/bin/rm ' wkfile3 '.nc']);

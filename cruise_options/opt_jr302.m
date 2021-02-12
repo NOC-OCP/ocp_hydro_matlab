@@ -54,8 +54,8 @@ switch scriptname
         end
         %%%%%%%%%% end mwin_01 %%%%%%%%%%
         
-        %%%%%%%%%% mwin_03 %%%%%%%%%%
-    case 'mwin_03'
+        %%%%%%%%%% mwin_to_fir %%%%%%%%%%
+    case 'mwin_to_fir'
         switch oopt
             case 'winch_fix_string'
                 if stnlocal == 65
@@ -63,7 +63,7 @@ switch scriptname
                     fix_string = 'y(14:24) = [40 30 30 25 20 15 15 7 7 3 3];';
                 end
         end
-        %%%%%%%%%% end mwin_03 %%%%%%%%%%
+        %%%%%%%%%% end mwin_to_fir %%%%%%%%%%
         
         
         %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
@@ -433,7 +433,7 @@ switch scriptname
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'optsams'
+            case 'sum_sams'
                 snames = {'noxy'; 'nnuts'; 'nco2'; 'ncfc'; 'nother'};
                 sgrps = { {'oxy'} %list of oxy variables
                     {'silc' 'phos' 'totnit'} %list of nuts variables
@@ -442,7 +442,7 @@ switch scriptname
                     {'ch4' 'no2'} %list of other variables
                     };
                 sashore = [0; 1; 1; 1]; %count samples to be analysed ashore?
-            case 'comments'
+            case 'sum_comments'
                 ki = 3:53; comments(ki) = repmat({'OSNAP-W'}, length(ki), 1);
                 ki = 3:16; comments(ki) = repmat({'OSNAP-W; shelf'}, length(ki), 1);
                 ki = 54:62; comments(ki) = repmat({'A-B arc'}, length(ki), 1);
@@ -489,9 +489,6 @@ switch scriptname
                 comments{234} = 'OSNAP-E/EEL final station';
             case 'parlist'
                 parlist = [' sal'; ' oxy'; ' nut'; ' car'; ' co2'; ' cfc'; ' ch4'];
-            case 'varnames'
-                varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'minalt' 'resid' 'maxw' 'maxp' 'ndpths' 'nsal' 'noxy' 'nnut' 'nco2' 'nco2_shore' 'ncfc'};
-                varunits={'number' 'seconds' 'seconds' 'seconds' 'degrees' 'degrees' 'metres' 'metres' 'metres' 'metres' 'metres' 'dbar' 'number' 'number' 'number' 'number' 'number' 'number' 'number'};
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         

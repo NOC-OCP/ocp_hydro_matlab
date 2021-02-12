@@ -309,14 +309,4 @@ switch scriptname
         end
         %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
         
-        
-        %%%%%%%%%% station_summary %%%%%%%%%%
-    case 'station_summary'
-        switch oopt
-            case 'optsams'
-                snames = {'nopt'}; sgrps = {'oxy'}; sashore = 0;
-        end
-        %%%%%%%%%% end station_summary %%%%%%%%%%
-        
-        
 end

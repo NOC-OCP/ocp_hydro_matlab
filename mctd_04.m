@@ -10,16 +10,17 @@ mdocshow(mfilename, ['averages from 24 hz to 2 dbar in ctd_' mcruise '_' stn_str
 
 root_ctd = mgetdir('M_CTD');
 
+wscriptname = mfilename;
 wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
 infile2 = [root_ctd '/dcs_' mcruise '_' stn_string];
 otfile1d = [root_ctd '/ctd_' mcruise '_' stn_string '_2db'];
 otfile1u = [root_ctd '/ctd_' mcruise '_' stn_string '_2up'];
-wkfile1d = ['wk1d_' scriptname '_' datestr(now,30)];
-wkfile1u = ['wk1u_' scriptname '_' datestr(now,30)];
-wkfile2d = ['wk2d_' scriptname '_' datestr(now,30)];
-wkfile2u = ['wk2u_' scriptname '_' datestr(now,30)];
-wkfile3d = ['wk3d_' scriptname '_' datestr(now,30)];
-wkfile3u = ['wk3u_' scriptname '_' datestr(now,30)];
+wkfile1d = ['wk1d_' wscriptname '_' datestr(now,30)];
+wkfile1u = ['wk1u_' wscriptname '_' datestr(now,30)];
+wkfile2d = ['wk2d_' wscriptname '_' datestr(now,30)];
+wkfile2u = ['wk2u_' wscriptname '_' datestr(now,30)];
+wkfile3d = ['wk3d_' wscriptname '_' datestr(now,30)];
+wkfile3u = ['wk3u_' wscriptname '_' datestr(now,30)];
 
 if exist(m_add_nc(wkfile_dvars),'file') ~= 2
     mess = ['File ' m_add_nc(wkfile_dvars) ' not found, rerun mctd_03b?'];
@@ -30,7 +31,7 @@ end
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[d h] = mload(infile2,'statnum','dc24_start','dc24_bot','dc24_end',' ');
+[d h] = mloadq(infile2,'statnum','dc24_start','dc24_bot','dc24_end',' ');
 % allow for the possibility that the dcs file contains many stations
 kf = find(d.statnum == stnlocal);
 dcstart = d.dc24_start(kf);
@@ -57,6 +58,25 @@ for kloop_scr = numcopy:-1:1
     end
 end
 var_copystr([1 end]) = [];
+
+%use oxy_end to NaN that many seconds before dcs scan_start
+scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
+if oxy_end==1
+    scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
+    dd = mloadq(infile2,'scan_end');
+    MEXEC_A.MARGS_IN = {wkfile_dvars; 'y'};
+    for no = 1:size(oxyvars,1)
+        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
+            oxyvars{no,2}
+            [oxyvars{no,2} ' scan']
+            sprintf('y = x1; y(x2>=%d) = NaN;',dd.scan_end-24*oxy_align)
+            ' '
+            ' '];
+    end
+    disp(['will edit out last ' num2str(oxy_end*24) ' scans from oxygen'])
+    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
+    mcalib2
+end
 
 %might have to remove some contaminated data or substitute upcast data before averaging
 %although the former you should probably do in mctd_03 (case 'interp24') instead

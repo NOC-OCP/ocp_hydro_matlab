@@ -7,6 +7,8 @@
 %is required, and nu is the same for changing units
 %if multiple changes are required in one file (for different variables)
 %expand row dimension of cell arrays
+clear nn nu
+nn.junk = []; nu.junk = [];
 switch MEXEC_G.Mshipdatasystem
     case {'techasas' 'scs'}
         nn.ash.new = {'head_ash'}; nn.ash.old = {'head'};
@@ -18,22 +20,23 @@ switch MEXEC_G.Mshipdatasystem
         nn.em122 = nn.em120;
         nn.tsg.new = {'psal'}; nn.tsg.old = {'salinity' 'salin'};
         nn.met_tsg = nn.tsg;
-        %if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
-        %    nu.met.name = {'speed'}; nu.met.unit = {'m/s'};
-        %    %asf note: techsas records m/s, however, the SSDS displays values converted to knots. There is no separate record of this since SSDS is live, so all wind records should be in m/s and no conversions are needed.
-        %end
+        nn.met.old = {'wind_speed_ms','direct','wind_dir'}; nn.met.new = {'relwind_spd','relwind_dirship','relwind_dirship'};
+        nu.met.name = {'relwind_dirship'}; nu.met.unit = {'degrees relative to ship 0 = from bow'};
     case 'rvdas'
-        nn.em120.new = {'swath_depth'}; nn.em120.old = {'waterdepthmeter'};
-        nn.ea600.new = {'depth_uncor'}; nn.ea600.old = {'waterdepthmeterfromsurface'};
+        nn.em120.new = {'swath_depth'}; nn.em120.old = {'waterdepth'};
+        nn.ea600.new = {'depth_uncor'}; nn.ea600.old = {'waterdepth'};
+        nn.surfmet.old = {'windspeed_raw';'winddirection_raw'}; nn.surfmet.new = {'relwind_spd_raw';'relwind_dirship_raw'};
+        nu.surfmet.name = {'relwind_dirship'}; nu.surfmet.unit = {'degrees relative to ship 0 = from bow'};
 end
 
 if isfield(nn, abbrev)
-    newnames = nn.(abbrev).new; oldnames = nn(abbrev).old;
+    newnames = nn.(abbrev).new; oldnames = nn.(abbrev).old;
     h = m_read_header(otfile);
     for nno = 1:size(newnames,1)
         no = 1;
         while ~sum(strcmp(newnames{nno}, h.fldnam)) & no<=length(oldnames(nno,:))
-            varnum = find(strncmp(oldnames{nno,no}, h.fldnam, length(name)));
+            name = oldnames{nno,no};
+            varnum = find(strncmp(name, h.fldnam, length(name)));
             if length(varnum)>0
                 MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; sprintf('%d', varnum); newnames{nno}; ' '; '-1'; '-1'; };
                 mheadr
@@ -44,11 +47,12 @@ if isfield(nn, abbrev)
 end
 
 if isfield(nu, abbrev)
-    name = nu.(abbrev).name; newunit = nu(abbrev).unit;
+    name = nu.(abbrev).name; newunit = nu.(abbrev).unit;
     h = m_read_header(otfile);
-    for nno = 1:size(name,1)
+    for nno = 1:length(name)
         if sum(strcmp(name{nno}, h.fldnam))
-            MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; name; ' '; newunit{nno}; '-1'; '-1'};
+            warning(['changing units of ' name ' to ' newunit{nno}]);
+            MEXEC_A.MARGS_IN = {otfile; 'y'; '8'; name{nno}; ' '; newunit{nno}; '-1'; '-1'};
             mheadr
         end
     end

@@ -261,14 +261,14 @@ switch scriptname
    %%%%%%%%%% station_summary %%%%%%%%%%
    case 'station_summary'
       switch oopt
-     	 case 'comments'
+     	 case 'sum_comments'
             comments = cell(44,1);
             comments{1} = 'test';
             comments([2:7 9:14]) = {'ICEBERGS'};
             comments(15:18) = {'ORCHESTRA gliders'};
             comments(19:24) = {'MT'};
             comments(25:44) = {'ORCHESTRA SR1b'};
-         case 'optsams'
+         case 'sum_sams'
 	        snames = {'noxy'}; sgrps = {'oxy' 'botoxya'}; sashore = 0;
       end
    %%%%%%%%%% end station_summary %%%%%%%%%%

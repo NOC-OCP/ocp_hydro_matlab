@@ -1,11 +1,14 @@
-% mdep_01: read water depth for ctd cast from ldeo ladcp or combined
-% altimeter and depth readings
+% mdep_01: read water depth for ctd cast from station_depths_cruise.mat file
+%     produced by populate_station_depths based on (as specified by
+%     opt_cruise) some or all of ldeo ladcp, combined ctd altimeter and
+%     depth readings, or depths noted in text file or specified in
+%     opt_cruise
 %
 % Use: mdep_01        and then respond with station number, or for station 16
 %      stn = 16; mdep_01;
 
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['adds water depth from station_depths/station_depths_' mcruise '.mat to all the files for station ' stn_string]);
+minit; 
+mdocshow(mfilename, ['adds water depth from station_depths/station_depths_' mcruise '.mat to all the files for station ' stn_string]);
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
@@ -29,16 +32,12 @@ else
    n = 1;
    fn{n} = [root_ctd '/dcs_' mcruise '_' stn_string]; n = n+1;
 
-   %modified YLF jr15003
-   if exist([root_ctd '/ctd_' mcruise '_' stn_string '_raw_original.nc'], 'file');
-      fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_original']; n = n+1;
-      fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_cleaned']; n = n+1;
-   else
-      fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw']; n = n+1;
-   end
+   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw']; n = n+1;
+   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_cleaned']; n = n+1;
+   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_original']; n = n+1;
+
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz']; n = n+1;
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_psal']; n = n+1;
-   %fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_surf']; n = n+1;
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2db']; n = n+1;
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2up']; n = n+1;
 
@@ -50,10 +49,12 @@ else
 
    fn{n} = [root_sal '/sal_' mcruise '_' stn_string]; n = n+1;
    fn{n} = [root_ctd '/sam_' mcruise '_' stn_string]; n = n+1;
-   %fn{n} = [root_ctd '/sam_' mcruise '_' stn_string '_resid']; n = n+1;
 
    for kfile = 1:length(fn)
-       mputdep(fn{kfile},bestdeps(bestdeps(:,1)==stnlocal,2))
+       [s,r] = unix(['ls -l ' m_add_nc(fn{kfile})]);
+       if s==0 & ~strcmp(r(1),'l') %file exists and is not a symlink
+           mputdep(fn{kfile},bestdeps(bestdeps(:,1)==stnlocal,2))
+       end
    end
    
 end

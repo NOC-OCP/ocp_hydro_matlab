@@ -10,18 +10,17 @@
 %
 % modded bak jr302 second SST
 
-scriptname = 'mtsg_medav_clean_cal';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-oopt = 'shiptsg'; get_cropt
+scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 
-mdocshow(scriptname, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' prefix '_' mcruise '_01_medav_clean.nc; calls tsgsal_apply_cal to apply salinity calibration set in opt_' mcruise ', writing to ' prefix '_' mcruise '_01_medav_clean_cal.nc'])
+mdocshow(mfilename, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' prefix '_' mcruise '_01_medav_clean.nc; calls tsgsal_apply_cal to apply salinity calibration set in opt_' mcruise ', writing to ' prefix '_' mcruise '_01_medav_clean_cal.nc'])
 
 root_dir = mgetdir(prefix);
 infile1 = [root_dir '/' prefix '_' mcruise '_01'];
 otfile1 = [root_dir '/' prefix '_' mcruise '_01_medav_clean']; % 1-minute median data
 otfile2 = [root_dir '/' prefix '_' mcruise '_01_medav_clean_cal']; % 1-minute median data
-wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
+wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
 
 if ~exist(m_add_nc(infile1),'file')
     error(['no tsg file ' infile1])
@@ -56,19 +55,12 @@ MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
 mcalib2
 
 %determine if there is a tsg salinity calibration
-scriptname0 = scriptname; scriptname = 'tsgsal_apply_cal';
-salin = 1; time = 1; oopt = 'saladj'; eval(['opt_' mcruise])
-scriptname = scriptname0;
+scriptname = 'tsgsal_apply_cal'; salin = 1; time = 1; oopt = 'saladj'; eval(['opt_' mcruise])
 
 %apply it if there is one
 if exist('salout','var')
 
-   switch MEXEC_G.Mship
-      case {'cook','discovery'}
-         salvar = 'psal';
-      case 'jcr'
-         salvar = 'salinity';
-   end
+   salvar = mvarname_find({'salinity' 'psal'},ht.fldnam);
    salinline = ['y = tsgsal_apply_cal(x1,x2)'];
 
    MEXEC_A.MARGS_IN = {
@@ -85,9 +77,7 @@ if exist('salout','var')
 end
 
 %determine if there is a tsg temperature adjustment
-scriptname0 = scriptname; scriptname = 'tsgsal_apply_cal';
-tempin = 1; time = 1; oopt = 'tempadj'; eval(['opt_' mcruise])
-scriptname = scriptname0;
+scriptname = 'tsgsal_apply_cal'; tempin = 1; time = 1; oopt = 'tempadj'; eval(['opt_' mcruise])
 
 %apply it if there is one
 if exist('tempout','var')
@@ -98,12 +88,7 @@ if exist('tempout','var')
       wkfile1=otfile1;
    end
 
-   switch MEXEC_G.Mship
-      case {'cook','discovery'}
-         tempvar = 'temp_r';
-      case 'jcr'
-         tempvar = 'sstemp';
-   end
+   tempvar = mvarname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
    tempinline = ['y = tsgsal_apply_temp_cal(x1,x2)'];
 
    MEXEC_A.MARGS_IN = {

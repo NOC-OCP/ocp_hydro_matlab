@@ -994,7 +994,7 @@ switch scriptname
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'optsams'
+            case 'sum_sams'
                 snames = {'noxy'; 'nnut'; 'nco2'; 'nchla' ; 'nch4'}; % Use s suffix for variable to count number on ship for o18 c13 chl, which will be zero
                 snames_shore = {'noxy_shore'; 'nnut_shore'; 'nco2_shore'; 'nchla_shore' ; 'nch4_shore' ; 'ndel13c_noc_shore' ; 'ndel14c_shore'}; % can use name without _shore, because all samples are analysed ashore
                 sgrps = { {'botoxy'} %list of oxy variables
@@ -1009,7 +1009,7 @@ switch scriptname
                     {'del13c_imp' 'del14c_imp' 'del13c_whoi' 'del14c_whoi'}
                     };
                 sashore = [0; 1; 1; 1; 1; 1; 1]; %count samples to be analysed ashore? % can't presently count botoxy_flag == 1
-            case 'comments' % set comments
+            case 'sum_comments' % set comments
                 comments{1}  = 'Test station';
                 comments{2}  = 'Start of Florida St';
                 comments{13} = 'End of Florida St';
@@ -1028,7 +1028,7 @@ switch scriptname
                 comments{70} = 'Deep tow wire; some instruments off';
                 comments{95} = 'Bulk water station';
                 comments{131} = 'Bulk water station';
-            case 'altdep'
+            case 'sum_edit'
                 minalt(1) = -9; %
                 minalt(14) = -9; %
                 minalt(15) = -9; %
@@ -1040,7 +1040,7 @@ switch scriptname
             case 'varnames'
                 varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'minalt' 'resid' 'maxw' 'maxp' 'ndpths' 'nsal' 'noxy' 'nnut' 'nco2' 'nchla' 'ndel13c_noc_shore' 'ndel14c_shore' 'nch4_shore'};
                 varunits={'number' 'seconds' 'seconds' 'seconds' 'degrees' 'degrees' 'metres' 'metres' 'metres' 'metres' 'metres' 'dbar' 'number' 'number' 'number' 'number' 'number' 'number' 'number' 'number' 'number'};
-            case 'stnmiss'
+            case 'sum_stn_list'
                 stnmiss = [25];
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%

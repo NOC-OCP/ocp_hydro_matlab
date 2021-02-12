@@ -93,10 +93,9 @@ for kloop = klist
     
     
     stn = kloop; msam_02b %updates sample flags to match niskin flags
-    stn = kloop; msam_updateall %puts sam data into sam_all file
     
 end
 
-mout_cchdo_sam
-    
-%sync csv files to public drive, by way of mac mini since there's no write
+scriptname = 'batchactions'; oopt = 'sam'; get_cropt
+scriptname = 'batchactions'; oopt = 'sync'; get_cropt
+clear klist*

@@ -6,9 +6,9 @@
 %
 % Unlike previous versions, runs on a single appended file for a whole
 % cruise, input file example is os150nb.nc
-% to run on os75 nb without prompts type
+% to run on os75nb without prompts type
 %
-% os = 75nb; mvad_01
+% inst = 'os75nb'; mvad_01
 
 
 m_common
@@ -18,16 +18,17 @@ m_varargs
 scriptname = 'mvad_01';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-if exist('os','var')
-    m = ['Running script ' scriptname ' for OS ' sprintf('%d',os)];
+if exist('inst','var')
+    m = ['Running script ' scriptname ' for OS ' sprintf('%d',inst)];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m)
 else
-    os = input('Enter OS type: e.g. os150nb, os75nb, os150bb : ', 's');
+    inst = input('Enter instrument type inst: e.g. os150nb, os75nb, os150bb : ', 's');
 end
-oslocal = os; clear os; % so it doesnt persist
+instlocal = inst; clear inst; % so it doesnt persist
 
 root_vmadcp = mgetdir('M_VMADCP');
-scriptname = mfilename; oopt = 'vmadcp_files'; get_cropt %fnin, dataname
+fnin = [root_vmadcp '/mproc/' mcruise '/' instlocal '/contour/' instlocal '.nc'];
+dataname = [instlocal '_' mcruise '_01'];
 
 if ~exist(fnin, 'file')
     error(['input file ' fnin ' not found'])

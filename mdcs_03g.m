@@ -16,10 +16,9 @@ root_ctd = mgetdir('M_CTD'); % change working directory
 
 infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
 infile0 = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz'];
-infile2 = [root_ctd '/dcs_' mcruise '_' stn_string];
-otfile2 = [root_ctd '/dcs_' mcruise '_' stn_string ];
+otfile = [root_ctd '/dcs_' mcruise '_' stn_string];
 
-db = mload(infile2, 'scan_bot', 'press_bot', ' ');
+db = mloadq(otfile, 'scan_bot', 'press_bot', ' ');
 
 % pik data near surface for inspection
 hinctd = m_read_header(infile1);
@@ -30,10 +29,9 @@ if isempty (vnum)
     error(m)
 end
 
-[d h] = mload(infile1,'/');
-d24 = mload(infile0, 'scan', 'time', 'press', ' ');
-%  d.psal1 = d.cond1;  % A temporary fudge so coudl edit pressure
-%  d.psal2 = d.cond2;
+[d h] = mloadq(infile1,'/');
+d24 = mloadq(infile0, 'scan', 'time', 'press', ' ');
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
 
 figure(102)
@@ -59,7 +57,7 @@ plims = [-300 10];
 
 while 1
     if kfirst == 0
-        mess = ['choose : \n'];
+        mess = ['use zoom/pan from figure toolbar, then choose : \n'];
         mess = [mess 'p   : plot all\n'];
         mess = [mess 'z   : zoom all panels to current x lims\n'];
         mess = [mess 'q   : quit without saving new values\n'];
@@ -126,16 +124,21 @@ while 1
             end
         case 'ss'
             % select downcast start scan
+            disp('select start scan on any panel');
             [x y] = ginput(1);
             scan_start = ceil(x)
             
         case 'sb'
+            disp('select bottom scan on any panel');
             % select bottom scan
             [x y] = ginput(1);
             scan_bot = round(x)
             
         case 'se'
             % select upcast end scan
+            disp('select end scan on any panel');
+            disp('you may want to select based on T and C, and add oxy_end in cruise');
+            disp('options file so that mctd_04 will truncate O when it goes bad (earlier)');
             [x y] = ginput(1);
             scan_end = floor(x)
         case 'pp'
@@ -194,145 +197,45 @@ end
 
 % find the data cycle numbers and other parameters
 scan = d.scan;
+clear ds
 
-kstart = min(find(scan >= scan_start - 1));
-scanstart = floor(d.scan(kstart));
-pstart = d.press(kstart);
-tstart = d.time(kstart);
+ds.dc_start = min(find(scan >= scan_start - 1));
+ds.scan_start = floor(d.scan(ds.dc_start));
+ds.press_start = d.press(ds.dc_start);
+ds.time_start = d.time(ds.dc_start);
 
-kend = max(find(scan <= scan_end + 1));
-scanend = floor(d.scan(kend));
-pend = d.press(kend);
-tend = d.time(kend);
+ds.dc_end = max(find(scan <= scan_end + 1));
+ds.scan_end = floor(d.scan(ds.dc_end));
+ds.press_end = d.press(ds.dc_end);
+ds.time_end = d.time(ds.dc_end);
 
-k24start = min(find(d24.scan >= scan_start - 1));
-scan24start = floor(d24.scan(k24start));
-p24start = d24.press(k24start);
-t24start = d24.time(k24start);
+ds.dc24_start = min(find(d24.scan >= scan_start - 1));
+ds.dc24_end = max(find(d24.scan <= scan_end + 1));
 
-k24end = max(find(d24.scan <= scan_end + 1));
-scan24end = floor(d24.scan(k24end));
-p24end = d24.press(k24end);
-t24end = d24.time(k24end);
-
-response_bot = {};
 if isfinite(scan_bot)
-    
-    kbot = min(find(scan >= scan_bot));
-    scanbot = floor(d.scan(kbot));
-    pbot = d.press(kbot);
-    tbot = d.time(kbot);
-    
-    k24bot = min(find(d24.scan >= scan_bot));
-    scan24bot = floor(d24.scan(k24bot));
-    p24bot = d24.press(k24bot);
-    t24bot = d24.time(k24bot);
-    
-    response_bot = {% prepare response if bottom has been redefined.
-        'time_bot'
-        ['y(1,1) = ' num2str(tbot)]
-        '/'
-        '/'
-        'dc_bot'
-        ['y(1,1) = ' num2str(kbot)]
-        '/'
-        '/'
-        'scan_bot'
-        ['y(1,1) = ' num2str(scanbot)]
-        '/'
-        '/'
-        'press_bot'
-        ['y(1,1) = ' num2str(pbot)]
-        '/'
-        '/'
-        'dc24_bot'
-        ['y(1,1) = ' num2str(k24bot)]
-        '/'
-        '/'
-        };
+    ds.dc_bot = min(find(scan >= scan_bot));
+    ds.scan_bot = floor(d.scan(ds.dc_bot));
+    ds.press_bot = d.press(ds.dc_bot);
+    ds.time_bot = d.time(ds.dc_bot);
+    ds.dc24_bot = min(find(d24.scan >= scan_bot));
 end
 
-% set up the data time origin for times start,bot,end
-
-hinctd = m_read_header(infile1);
-hindcs = m_read_header(otfile2);
-
-dtoctd = hinctd.data_time_origin;
-dtodcs = hindcs.data_time_origin;
-dtodif = dtoctd-dtodcs;
-
-if max(abs(dtodif)) > 0 % reset time origin if needed
-    %--------------------------------
-    % 2009-01-28 14:51:48
-    % mchangetimeorigin
-    % input files
-    % Filename dcs_jr193_016.nc   Data Name :  dcs_jr193_016 <version> 2 <site> bak_macbook
-    % output files
-    % Filename dcs_jr193_016.nc   Data Name :  dcs_jr193_016 <version> 3 <site> bak_macbook
-    MEXEC_A.MARGS_IN = {
-        otfile2
-        'y'
-        ['[' num2str(hinctd.data_time_origin) ']']
-        };
-    mchangetimeorigin
-    %--------------------------------
+clear hnew
+hnew.fldnam = fieldnames(ds)'; 
+hnew.fldunt = hnew.fldnam;
+for no = 1:length(hnew.fldnam)
+    ii = strfind(hnew.fldnam{no},'_');
+    pre = hnew.fldnam{no}(1:ii-1);
+    switch pre
+        case {'dc' 'dc24' 'scan'}
+            hnew.fldunt{no} = 'number';
+        case 'press'
+            hnew.fldunt{no} = 'dbar';
+        case 'time'
+            hnew.fldunt{no} = 'seconds';
+        otherwise
+            error('unknown dcs variable type');
+    end
 end
 
-%--------------------------------
-% 2009-01-28 14:41:30
-% mcalib
-% input files
-% Filename dcs_jr193_016.nc   Data Name :  dcs_jr193_016 <version> 1 <site> bak_macbook
-% output files
-% Filename dcs_jr193_016.nc   Data Name :  dcs_jr193_016 <version> 2 <site> bak_macbook
-MEXEC_A.MARGS_IN_1 = {
-    otfile2
-    'y'
-    'time_start'
-    ['y(1,1) = ' num2str(tstart)]
-    '/'
-    '/'
-    'dc_start'
-    ['y(1,1) = ' num2str(kstart)]
-    '/'
-    '/'
-    'scan_start'
-    ['y(1,1) = ' num2str(scanstart)]
-    '/'
-    '/'
-    'press_start'
-    ['y(1,1) = ' num2str(pstart)]
-    '/'
-    '/'
-    'time_end'
-    ['y(1,1) = ' num2str(tend)]
-    '/'
-    '/'
-    'dc_end'
-    ['y(1,1) = ' num2str(kend)]
-    '/'
-    '/'
-    'scan_end'
-    ['y(1,1) = ' num2str(scanend)]
-    '/'
-    '/'
-    'press_end'
-    ['y(1,1) = ' num2str(pend)]
-    '/'
-    '/'
-    'dc24_start'
-    ['y(1,1) = ' num2str(k24start)]
-    '/'
-    '/'
-    'dc24_end'
-    ['y(1,1) = ' num2str(k24end)]
-    '/'
-    '/'
-    };
-MEXEC_A.MARGS_IN_2 = response_bot(:); % may be empty
-MEXEC_A.MARGS_IN_3 = {
-    ' '
-    };
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3];
-mcalib
-%--------------------------------
+mfsave(otfile, ds, hnew, '-addvars');

@@ -36,8 +36,9 @@ if ~exist(m_add_nc(infile1), 'file');
 else
     redoctm = 1;
     unix(['/bin/cp -p ' m_add_nc(infile1) ' ' m_add_nc(infile)]);
-    unix(['chmod 644 ' m_add_nc(infile1)]); % write protect raw_noctm file
+    unix(['chmod 444 ' m_add_nc(infile1)]); % write protect raw_noctm file
 end
+unix(['chmod 644 ' m_add_nc(infile)]); % make file writeable
 
 %change variable names and add units
 
@@ -45,17 +46,23 @@ end
 renamefile = [root_templates '/ctd_renamelist.csv']; 
 dsv = dataset('File', renamefile, 'Delimiter', ',');
 scriptname = mfilename; oopt = 'ctdvars'; get_cropt
-dsv.sbename = [dsv.sbename; ctdvars_add(:,1)];
-dsv.varname = [dsv.varname; ctdvars_add(:,2)];
-dsv.varunit = [dsv.varunit; ctdvars_add(:,3)];
+if length(ctdvars_add)>0
+    dsv.sbename = [dsv.sbename; ctdvars_add(:,1)];
+    dsv.varname = [dsv.varname; ctdvars_add(:,2)];
+    dsv.varunit = [dsv.varunit; ctdvars_add(:,3)];
+end
 if length(unique(dsv.sbename))<length(dsv.sbename)
     error(['There is a duplicate name in the list of variables to rename; use ctdvars_replace rather than ctdvars_add in opt_' mcruise]);
 end
 [varnames, junk, iiv] = mvars_in_file(dsv.sbename, infile);
 dsv = dsv(iiv,:);
-varnames_units = [];
+varnames_units = {};
 for vno = 1:length(dsv)
-    iir = find(strcmp(ctdvars_replace(:,1), dsv.sbename{vno}));
+    if length(ctdvars_replace)>0
+        iir = find(strcmp(ctdvars_replace(:,1), dsv.sbename{vno}));
+    else
+        iir = [];
+    end
     if length(iir)==0
         varnames_units = [varnames_units; dsv.sbename{vno}; dsv.varname{vno}; dsv.varunit{vno}];
     else
@@ -69,7 +76,7 @@ MEXEC_A.MARGS_IN_1 = {
     'y'
     '8'
     };
-MEXEC_A.MARGS_IN_2 = snames_units;
+MEXEC_A.MARGS_IN_2 = varnames_units;
 MEXEC_A.MARGS_IN_3 = {
     '-1'
     '-1'
@@ -79,17 +86,20 @@ mheadr
 
 % Use the mtposinfo/msposinfo to find position at bottom of cast time and
 % update header
-[d h] = mload(infile,'time','press',' ');
+[d h] = mloadq(infile,'time','press',' ');
 p = d.press;
 kbot = min(find(p == max(p)));
 tbot = d.time(kbot);
 tbotmat = datenum(h.data_time_origin) + tbot/86400; % bottom time as matlab datenum
-if strncmp(MEXEC_G.Mshipdatasystem,'scs',3)
-    [botlat botlon] = msposinfo(tbotmat);
-elseif strcmp(MEXEC_G.Mshipdatasystem,'techsas')
-    [botlat botlon] = mtposinfo(tbotmat);
-else
-    botlat = []; botlon = [];
+switch MEXEC_G.Mshipdatasystem
+    case 'scs'
+        [botlat botlon] = msposinfo(tbotmat);
+    case 'techsas'
+        [botlat botlon] = mtposinfo(tbotmat);
+    case 'rvdas'
+        [botlat botlon] = mrposinfo(tbotmat);
+    otherwise
+        botlat = []; botlon = [];
 end
 if length(botlat>0)
     latstr = sprintf('%14.8f',botlat);
@@ -191,11 +201,12 @@ if redoctm
         ' '
         ' '
         };
+    scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
     for no = 1:length(ovars)
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
             ovars{no}
             ['time ' ovars{no}]
-            'y = interp1(x1,x2,x1+5);'
+            sprintf('y = interp1(x1,x2,x1+%d);',oxy_align)
             ' '
             ' '
             ];

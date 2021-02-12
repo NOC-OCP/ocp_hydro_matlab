@@ -5,15 +5,14 @@
 % 2011 09 06 It has been added the Seapath heading (attsea) instead of
 % gyros for James Cook cruises due its better accuracy. CFL/GDM
 
-scriptname = 'mbest_04';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 clear infile* otfile* wkfile*
 
-wkfile = ['wk_' scriptname '_' datestr(now,30)];
+wkfile = ['wk_' mfilename '_' datestr(now,30)];
 
 abbrev = MEXEC_G.default_navstream;
-root_dir = mgetdir(['M_' upper(abbrev)])
+root_dir = mgetdir(abbrev);
 prefix1 = [abbrev '_' mcruise '_'];
 infile1 = [root_dir '/' prefix1 'spd'];
 
@@ -29,10 +28,10 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     otherwise
         abbrev = MEXEC_G.default_hedstream;  
 end
-root_head = mgetdir(['M_' upper(abbrev)]);
+root_head = mgetdir(abbrev);
 infile2 = [root_head '/' abbrev '_' mcruise '_ave'];
 
-mdocshow(scriptname, ['merge vector-averaged heading from ' abbrev '_' mcruise '_ave onto 30 s averaged speed, in bst_' mcruise '_01.nc']);
+mdocshow(mfilename, ['merge vector-averaged heading from ' abbrev '_' mcruise '_ave onto 30 s averaged speed, in bst_' mcruise '_01.nc']);
 
 MEXEC_A.MARGS_IN = {
     otfile

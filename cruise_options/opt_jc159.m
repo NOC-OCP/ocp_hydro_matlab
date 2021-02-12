@@ -136,8 +136,8 @@ switch scriptname
         
         %%%%%%%%%% end mwin_01 %%%%%%%%%%
         
-        %%%%%%%%%% mwin_03 %%%%%%%%%%
-    case 'mwin_03'
+        %%%%%%%%%% mwin_to_fir %%%%%%%%%%
+    case 'mwin_to_fir'
         switch oopt
             case 'winch_fix_string'
                 % jc159: when winch is switched from auto control to manual control
@@ -157,7 +157,7 @@ switch scriptname
                     otherwise
                 end
         end
-        %%%%%%%%%% end mwin_03 %%%%%%%%%%
+        %%%%%%%%%% end mwin_to_fir %%%%%%%%%%
         
         
         %%%%%%%%%% mctd_checkplots %%%%%%%%%%
@@ -783,7 +783,7 @@ switch scriptname
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'optsams'
+            case 'sum_sams'
                 snames = {'noxy'; 'nnut'; 'nco2'; 'ncfc'; 'no18s'; 'nc13s'; 'nchls'}; % Use s suffix for variable to count number on ship for o18 c13 chl, which will be zero
                 snames_shore = {'noxy_shore'; 'nnut_shore'; 'nco2_shore'; 'ncfc_shore'; 'no18'; 'nc13'; 'nchl'}; % can use name without _shore, because all samples are analysed ashore
                 sgrps = { {'botoxy'} %list of oxy variables
@@ -795,7 +795,7 @@ switch scriptname
                     {'botchla'}
                     };
                 sashore = [0; 1; 1; 1; 1; 1; 1]; %count samples to be analysed ashore? % can't presently count botoxy_flag == 1
-            case 'comments' % set comments
+            case 'sum_comments' % set comments
                 comments{1} = 'Test station with swivel; no CTD';
                 comments{2} = 'Test station with swivel; no CTD';
                 comments{3} = 'Test station with CTD';
@@ -822,7 +822,18 @@ switch scriptname
                 comments{123} = 'Repeat of 113';
                 comments{124} = 'Shallow station for bulk surface water';
                 comments{125} = 'Test station for video recording; CTD 1';
-            case 'alttimes' % impose start and end times not captured from CTD dcs files
+            case 'sum_edit'
+                cordep(1) = 2859; maxw(1) = 2500.1; % cordep from station 3
+                cordep(2) = 2859; maxw(2) = 2500.1; % cordep from station 3
+                cordep(27) = 5063; maxw(27) = 661.5; % cordep from station 29
+                cordep(28) = 5063; maxw(28) = 125.0; % cordep from station 29
+                cordep(63) = 4419; % from CTD + alt; ladcp IX estimate is poor.
+                cordep(77) = 4972; % from CTD + alt; ladcp IX estimate is poor.
+                cordep(78) = 5244; % from CTD + alt; ladcp IX estimate is poor.
+                cordep(124) = 3624; % from em122; 10m dip for surface bulk water samples
+                cordep(125) = 204; % from em122; 10m dip for go-pro video of bottles closing
+                minalt(42) = 42; % altimeter had pings to small values but CTD was about 42 off bottom
+                minalt(54) = 83; % from LADCP; No good reading from altimeter.
                 dns(1) = datenum([2018 03 01 12 35 00]); % Swivel test; times from winch data
                 dnb(1) = datenum([2018 03 01 13 39 00]);
                 dne(1) = datenum([2018 03 01 14 33 00]);
@@ -835,26 +846,12 @@ switch scriptname
                 lon(1) =  -40.31568;
                 lat(2) =  -23.74601;
                 lon(2) =  -40.31571;
-            case 'altdep'
-                cordep(1) = 2859; maxw(1) = 2500.1; % cordep from station 3
-                cordep(2) = 2859; maxw(2) = 2500.1; % cordep from station 3
-                cordep(27) = 5063; maxw(27) = 661.5; % cordep from station 29
-                cordep(28) = 5063; maxw(28) = 125.0; % cordep from station 29
-                cordep(63) = 4419; % from CTD + alt; ladcp IX estimate is poor.
-                cordep(77) = 4972; % from CTD + alt; ladcp IX estimate is poor.
-                cordep(78) = 5244; % from CTD + alt; ladcp IX estimate is poor.
-                cordep(124) = 3624; % from em122; 10m dip for surface bulk water samples
-                cordep(125) = 204; % from em122; 10m dip for go-pro video of bottles closing
-                minalt(42) = 42; % altimeter had pings to small values but CTD was about 42 off bottom
-                minalt(54) = 83; % from LADCP; No good reading from altimeter.
             case 'parlist'
                 parlist = [' sal'; ' oxy'; ' nut'; ' car'; ' co2'; ' cfc'; ' ch4'];
-            case 'varnames'
+            case 'sum_varnames'
                 varnames={'statnum' 'time_start' 'time_bottom' 'time_end' 'lat' 'lon' 'cordep' 'maxd' 'minalt' 'resid' 'maxw' 'maxp' 'ndpths' 'nsal' 'noxy' 'nnut' 'nco2' 'ncfc' 'no18' 'nc13' 'nchl'};
                 varunits={'number' 'seconds' 'seconds' 'seconds' 'degrees' 'degrees' 'metres' 'metres' 'metres' 'metres' 'metres' 'dbar' 'number' 'number' 'number' 'number' 'number' 'number' 'number' 'number' 'number'};
-            case 'stnmiss'
-                stnmiss = [];
-            case 'stnadd'
+            case 'sum_stn_list'
                 stnadd = [1 2 ]; % force add of these stations to station list
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%

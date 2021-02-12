@@ -1,9 +1,9 @@
-function mvad_for_ladcp(cast,statnum,os)
-%function mvad_for_ladcp(cast,statnum,os)
+function mvad_for_ladcp(cast,statnum,inst)
+%function mvad_for_ladcp(cast,statnum,inst)
 
 % bak jc069
 
-% os is string '75nb', '150bb', etc.
+% inst is string '75nb', '150bb', etc.
 % cast could be 'ctd' (text string so includes quotes, or on jc069 could be
 % hrp02, eg
 % mcod_stn_out('hrp02',kstn,thisos)
@@ -25,7 +25,7 @@ stn_string = sprintf('%03d',kstn);
 root_vmadcp = mgetdir('M_VMADCP');
 
 % construct input filename;
-prefix = ['os' os '_' mcruise];
+prefix = [inst '_' mcruise];
 %infile = [root_vmadcp '/mproc/' prefix '_' cast '_' stn_string '_ave'];
 infile = [root_vmadcp '/mproc/' prefix '_' cast '_' stn_string]; % CV
 
@@ -55,4 +55,4 @@ v_sadcp   = da.vabs*1e-2; % cm/s to m/s
 z_sadcp   = da.depth(:,1);
 % END ------- CV 2018/11/17
 
-save([root_vmadcp '/mproc/os' os '_' mcruise '_' cast '_' stn_string '_forladcp'], 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');
+save([root_vmadcp '/mproc/' inst '_' mcruise '_' cast '_' stn_string '_forladcp'], 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');

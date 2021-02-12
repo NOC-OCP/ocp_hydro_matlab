@@ -13,76 +13,89 @@
 
 switch scriptname
     
-        %%%%%%%%%% ship (not a script) %%%%%%%%%%
+    %%%%%%%%%% ship (not a script) %%%%%%%%%%
     case 'ship'
         %parameters used by multiple scripts, related to ship underway data
         switch oopt
-            case 'shiptsg'
-                crhelp_str = {'ship-specific list of tsg directory prefix and variable names:';
-                    'tsgpre is used to find directory for tsg data in m_udirs,';
-                    'salvar/condvar are the salinity/conductivity variables in tsg data stream,';
-                    'tempvar/tempsst are the housing/intake temperatures'};
-                switch MEXEC_G.Mship
-                    case {'cook','discovery'}
+            case 'ship_data_sys_names'
+                crhelp_str = {'Datasystem- (and possibly ship-) specific list of mexec directory names '
+                    'and variable names for certain categories: tsg variables, met/surfmet file, '
+                    'lat, lon, heading, and wind variables. Presently there are defaults for '
+                    'tsgpre and metpre (mexec directory names), salvar, condvar, tempvar, tempsst '
+                    '(tsg file variable names for salinity, conductivity, tsg housing temperature, and '
+                    'remote [intake] temperature), latvar, lonvar, headvar (for lat, lon, heading), and '
+                    'winds and windd (variable names for wind speed and direction).'};
+                switch MEXEC_G.Mshipdatasystem
+                    case 'rvdas'
                         tsgpre = 'tsg';
-                        salvar = 'psal'; % salinity var in tsg data stream
-                        tempvar = 'temp_h'; % housing temp
-                        tempsst = 'temp_r'; % remote temp
-                        condvar = 'cond'; % conductivity
-                    case 'jcr'
+                        metpre = 'surfmet';
+                    case 'techsas'
+                        tsgpre = 'tsg';
+                        metpre = 'met';
+                    case 'scs'
                         tsgpre = 'oceanlogger';
-                        salvar = 'salinity'; % salinity var in tsg data stream
-                        tempvar = 'tstemp'; % housing temp
-                        condvar = 'conductivity'; % conductivity
-                        tempsst = 'sstemp'; % "sea surface" temperature?
+                        metpre = 'met';
                 end
         end
         %%%%%%%%%% end ship (not a script) %%%%%%%%%%
+
+        %%%%%%%%%% bathy (not a script) %%%%%%%%%%
+    case 'bathy'
+        switch oopt
+            case 'bathy_grid'
+                crhelp_str = {'load gridded bathymetry into top.lon, top.lat, top.depth'};
+        end
+        %%%%%%%%%% end bathy (not a script) %%%%%%%%%%
         
                 
         %%%%%%%%%% m_daily_proc %%%%%%%%%%
     case 'm_daily_proc'
         switch oopt
             case 'excludestreams'
+                crhelp_str = {'uway_excludes lists streams to skip and uway_excludep lists '
+                    'patterns (in stream names) to skip. Defaults depend on ship data system.'};
                 switch MEXEC_G.Mshipdatasystem
                     case 'techsas'
                         uway_excludes = {'posmvtss'};
                         uway_excludep = {'satinfo';'aux';'dps'};
+                    case 'rvdas'
+                        uway_excludes = {'gravity';'mag';'winch'};
                 end
-            case 'bathycomb'
-                bathycomb = 1;
-            case 'uwayallmat'
-                allmat = 0;
+            case 'comb_uvars'
+                crhelp_str = {'umtypes lists types of operations to perform combining multiple '
+                    'appended underway files. Default is {''bathy''}, to interpolate the swath '
+                    'centre beam depth into the single-beam file, and vice versa; for techsas, '
+                    'and curently for rvdas, default also includes ''tsgmet'', to combine the '
+                    'tsg and surfmet variables (techsas) or the digital sonic anemometer and surfmet '
+                    'variables (rvdas) in a single file.'};
+                umtypes = {'bathy'};
+                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'}))
+                    umtypes = [umtypes 'tsgsurfmet'];
+                end
         end
         %%%%%%%%%% end m_daily_proc %%%%%%%%%%
+        
+                 %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
+     case 'mday_01_clean_av'
+         switch oopt
+             case 'pre_edit_uway'
+crhelp_str = {'place to do specific edits like patching in data from another source'};
+         end
+         %%%%%%%%%% end mday_01_clean_av %%%%%%%%%%
         
         %%%%%%%%%% mday_01_fcal %%%%%%%%%%
     case 'mday_01_fcal'
         % set non-cruise-specific calibration or editing actions
         switch oopt
             case 'uway_factory_cal'
-                switch abbrev
-                    case 'cnav'
-                        d = mload(infile, 'lat long');
-                        if max(mod(abs([d.lat(:);d.long(:)])*100,100))<=61
-                            if std(d.lat)<.1 & std(d.lon)<.1 % ship hasn't moved much
-                                warning('Cannot determine whether or not to apply cnav fix. Not applying.');
-                                sensors_to_cal={};
-                            else
-                                mdocshow(scriptname, ['applying cnav fix to cnav_' mcruise '_d' day_string '_edt.nc']);
-                                sensors_to_cal={'lat','long'};
-                                sensorcals={'y=cnav_fix(x1)' 'y=cnav_fix(x1)'};
-                                sensorunits={'/','/'}; % keep existing units
-                            end
-                        else
-                            mdocshow(scriptname, ['cnav fix not required for cnav_' mcruise '_d' day_string '_edt.nc']);
-                            sensors_to_cal={};
-                        end
-                    otherwise
+                crhelp_str = {'this is a place to include factory calibration coefficients to'
+                    'be applied to underway sensors: sensors_to_cal is a cell array list of sensors,'
+                    'and sensorcals is a corresponding list of calibration equations ***'
+                    'sensorunits gives the corresponding units for data once the cals have been applied.'
+                    'sensors_to_cal defaults to empty ({}) meaning no action.s'};
                         sensors_to_cal={};
-                end
         end
-        %%%%%%%%%% end mday_01_clean_av %%%%%%%%%%
+        %%%%%%%%%% end mday_01_fcal %%%%%%%%%%
         
         %%%%%%%%%% msim_plot %%%%%%%%%%
     case 'msim_plot'
@@ -162,34 +175,5 @@ switch scriptname
         end
         %%%%%%%%%% end mtsg_merge_and_listing %%%%%%%%%%
         
-        
-        %%%%%%%%%% vmadcp_proc %%%%%%%%%%
-    case 'vmadcp_proc'
-        switch oopt
-            case 'aa0_75' %set approximate/nominal instrument angle
-                ang = 0; amp = 1;
-            case 'aa0_150' %set approximate/nominal instrument angle
-                ang = 0; amp = 1;
-            case 'aa75' %refined additional rotation and amplitude corrections based on btm/watertrk
-                ang = 0;
-                amp = 1;
-            case 'aa150' %refined additional rotation and amplitude corrections based on btm/watertrk
-                ang = 0;
-                amp = 1;
-        end
-        %%%%%%%%%% end vmadpc_proc %%%%%%%%%%
-        
-        
-        %%%%%%%%%% mvad_01 %%%%%%%%%%
-    case 'mvad_01'
-        switch oopt
-            case 'vmadcp_files'
-                crhelp_str = {'Set fnin, the filename (including path) of (the local copy of) codas-output'
-                    '.nc vmadcp file, and dataname, the name of the mstar output file'};
-                fnin = [root_vmadcp '/mproc/' mcruise '/' oslocal '/contour/' oslocal '.nc'];
-                dataname = [oslocal '_' mcruise '_01'];
-        end
-        %%%%%%%%%% end mvad_01 %%%%%%%%%%
-                
         
 end

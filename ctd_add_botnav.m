@@ -5,14 +5,16 @@
 %update .mat file in station_depths/
 populate_station_depths;
 	
-if length(klist)>1
-    disp('Will process stations in klist: ')
+if ~exist('klist','var')
+    if ~exist('stn','var') %prompt
+        minit
+    end
+    klist = stn;
+else
+disp('Will process stations in klist: ')
 disp(klist)
-okc = input('OK to continue (y/n)?','s');
-if okc == 'n' | okc == 'N'
-	return
 end
-end
+klist = klist(:)';
 
 for kloop = klist
     stn = kloop; minit
@@ -25,17 +27,12 @@ for kloop = klist
     %gets depth from .mat file in station_depths/, puts them in .nc files
     stn = kloop; mdep_01
     
-    %puts start/bottom/end cast positions in .nc files
-    stn = kloop; mdcs_04
-    stn = kloop; mdcs_05
-    
-    stn = kloop; msam_02b;
-    stn = kloop; msam_updateall;
+    %stn = kloop; msam_02b;
+
+    scriptname = 'batchactions'; oopt = 'ctd'; get_cropt
 
 end
 
-%mout_cchdo_sam with argument to make in reverse niskin order, see jc191 version
-
-%copy files to public drive -- make this a cruise option***
-%unix(['cp /local/users/pstar/cruise/data/samlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);
-%unix(['cp /local/users/pstar/cruise/data/collected_files/ctdlists/* /local/users/pstar/cruise/data/legwork/scientific_work_areas/ctd/csvfiles/']);
+scriptname = 'batchactions'; oopt = 'sam'; get_cropt
+scriptname = 'batchactions'; oopt = 'sync'; get_cropt
+clear klist*

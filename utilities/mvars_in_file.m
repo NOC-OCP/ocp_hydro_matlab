@@ -30,7 +30,7 @@ iiv = []; var_copystr = ' ';
 for no = nv:-1:1
     if sum(strcmp(varlist{no},h.fldnam))>0
         iiv = [iiv no];
-        var_copystr = [var_copystr prestr varlist{no} posttr ' '];
+        var_copystr = [var_copystr prestr varlist{no} poststr ' '];
     end
 end
 var_copystr = var_copystr(2:end-1);

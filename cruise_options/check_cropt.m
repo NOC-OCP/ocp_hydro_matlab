@@ -9,7 +9,7 @@ switch scriptname
                     warning('are you sure you want to change units or default value for sampnum, statnum, or position?')
                 end
                 for vno = 1:length(samvars_use)
-                    if sum(strcmp([ds_sam.varnames; samvars_add(:,1)], samvars_use{vno})==0
+                    if sum(strcmp([ds_sam.varname; samvars_add(:,1)], samvars_use{vno}))==0
                         error(sprintf('variable %s not found in either templates/sam_varlist.csv or in samvars_add from opt_%s', samvars_use{vno}, mcruise));
                     end
                 end
@@ -29,22 +29,9 @@ switch scriptname
         %%%%%%%%%% mctd_02b %%%%%%%%%%
     case 'mctd_02b'
         switch oopt
-            case 'oxyrev'
-                if length(H1)>1 | length(H2)>1 | length(H3)>1
-                    warning('mcoxyhyst_rev not set up to use vector parameters') %***should probably modify this anyway
-                end
-            case 'oxyhyst'
+            case {'oxyrev' 'oxyhyst'}
                 if sum(isnan(H1))+sum(isnan(H2))+sum(isnan(H3))>0
                     error(['oxygen hysteresis parameters have NaNs; check opt_' mcruise])
-                end
-                %just record whether a non-default calibration is set, for
-                %mstar file comment
-                if length(H1)>1 | length(H2)>1 | length(H3)>1
-                    ohtyp = 2;
-                elseif max(abs(H_0-[H1 H2 H3]))>0
-                    ohtyp = 1;
-                else
-                    ohtyp = 0;
                 end
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
@@ -121,10 +108,19 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_senscal %%%%%%%%%%
         
-        
         %%%%%%%%%% miso_02 %%%%%%%%%%
     case 'miso_02'
         if ~exist('cvars'); warning(['must set cvars, list of isotope variable names to write, in miso_02 options']); end
         %%%%%%%%%% end miso_02 %%%%%%%%%%
+        
+        %%%%%%%%%% mday_01_fcal %%%%%%%%%%
+    case 'mday_01_fcal'
+        switch oopt
+            case 'uway_factory_cal'
+                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'})) & length(sensors_to_cal)==0
+                    warning('do factory calibrations need to be applied to your datastream? for techsas and scs surfmet, probably so')
+                end
+        end
+        %%%%%%%%%% end mday_01_fcal %%%%%%%%%%
         
 end % End of second "switch scriptname" to check for unset options

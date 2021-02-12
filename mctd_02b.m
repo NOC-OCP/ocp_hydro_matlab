@@ -1,4 +1,5 @@
-% mctd_02b: oxygen hysteresis and other corrections to raw file
+% mctd_02b: oxygen hysteresis and other corrections to raw file (or
+% raw_cleaned file)
 %
 % Use: mctd_02b        and then respond with station number, or for station 16
 %      stn = 16; mctd_02;
@@ -21,7 +22,7 @@ end
 
 otfile = [root_ctd '/' prefix stn_string '_24hz'];
 unix(['/bin/cp ' m_add_nc(infile) ' ' m_add_nc(otfile)])
-
+unix(['chmod 644 ' m_add_nc(otfile)]); % make file writeable
 
 %which corrections to do?
 scriptname = mfilename; oopt = 'raw_corrs'; get_cropt
@@ -41,14 +42,14 @@ if dooxyrev | dooxyhyst
             varsin = [varsin ' ' oxyvars{no,1}];
         end
         varsin = ['press time' varsin];
-        [d,h] = mload(infile, varsin);
+        [d,h] = mloadq(infile, varsin);
         scriptname = mfilename; oopt = 'oxyrev'; get_cropt
         otfilestruct=struct('name',[otfile '.nc']);
         disp(['reversing oxy hyst for ' stn_string ', output to _rev'])
         for no = 1:nox
-            oxy_unhyst = mcoxyhyst_rev(getfield(d, oxyvars{no,1}), d.time, d.press, H1, H2, H3);
+            oxy_unhyst = mcoxyhyst_reverse(getfield(d, oxyvars{no,1}), d.time, d.press, H1, H2, H3);
             vind = find(strcmp(oxyvars{no,1}, h.fldnam)); %same units
-            datastruct = struct('name',[oxyvars{no,1} '_rev'], 'units',h.fldunts{vind}, 'data',oxy_unhyst);
+            datastruct = struct('name',[oxyvars{no,1} '_rev'], 'units',h.fldunt{vind}, 'data',oxy_unhyst);
             m_write_variable(otfilestruct, datastruct);
         end
         revstring = '_rev'; %if dooxyhyst will apply to _rev variables
@@ -60,6 +61,14 @@ if dooxyrev | dooxyhyst
         %calculate the variables with oxygen hysteresis applied, and add to
         %otfile
         scriptname = mfilename; oopt = 'oxyhyst'; get_cropt
+        %record whether a non-default calibration is set, for mstar comment
+        if length(H1)>1 | length(H2)>1 | length(H3)>1
+            ohtyp = 2;
+        elseif max(abs(H_0-[H1 H2 H3]))>0
+            ohtyp = 1;
+        else
+            ohtyp = 0;
+        end
         varsin = [];
         for no = 1:nox
             %start from reversed variables if set above, otherwise
@@ -67,21 +76,22 @@ if dooxyrev | dooxyhyst
             varsin = [varsin ' ' oxyvars{no,1} revstring];
         end
         varsin = ['press time' varsin];
-        [d,h] = mload(infile,varsin);
+        [d,h] = mloadq(infile,varsin);
         scriptname = mfilename; oopt = 'oxyhyst'; get_cropt
         otfilestruct=struct('name',[otfile '.nc']);
-        disp(['applying oxy hyst for ' stn_string ', output to ']); oxyvars{:,2}
+        disp(['applying oxy_hyst for ' stn_string ', output to'])
+        disp(sprintf('%s ',oxyvars{:,2}))
         for no = 1:nox
-            oxy_out = mcoxyhyst_rev(getfield(d, [oxyvars{no,1} revstring]), d.time, d.press, H1, H2, H3);
+            oxy_out = mcoxyhyst(getfield(d, [oxyvars{no,1} revstring]), d.time, d.press, H1, H2, H3);
             vind = find(strcmp(oxyvars{no,1}, h.fldnam)); %same units
-            datastruct = struct('name',oxyvars{no,2}, 'units',h.fldunts{vind}, 'data',oxy_out);
+            datastruct = struct('name',oxyvars{no,2}, 'units',h.fldunt{vind}, 'data',oxy_out);
             m_write_variable(otfilestruct, datastruct);
         end
         if ohtyp>0
             %and add comments to file
-            if ohtyp==1
+            if ohtyp == 1
                 comment = 'oxygen hysteresis correction different from SBE default applied';
-            elseif ohtyp = 2
+            elseif ohtyp == 2
                 comment = [comment ' (depth-varying)'];
             end
             ncfile.name = m_add_nc(infile);
