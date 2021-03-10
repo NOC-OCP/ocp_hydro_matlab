@@ -1,6 +1,21 @@
 %%%%%%%%%% Warnings for unset options (called at end of get_cropt, after opt_cruise) %%%%%%%%%
 switch scriptname
     
+    %%%%%%%%%% castpars (not a script) %%%%%%%%%%
+    case 'castpars'
+        switch oopt
+            case 'cal_stations'
+                cvnames = intersect(fieldnames(cal_stations1),fieldnames(cal_stations2));
+                for cvno = 1:length(cvnames)
+                    ii = intersect(cal_stations1.(cvnames{cvno}),cal_stations2.(cvnames{cvno}));
+                    if length(ii)>0
+                        warning([cvnames{cvno} ' calibrations set to be applied in both ctd_all_part1 and ctd_all_postedit to stations:'])
+                        disp(ii)
+                    end
+                end
+        end
+        %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
+       
         %%%%%%%%%% msam_01 %%%%%%%%%%
     case 'msam_01'
         switch oopt
@@ -33,6 +48,57 @@ switch scriptname
                 if sum(isnan(H1))+sum(isnan(H2))+sum(isnan(H3))>0
                     error(['oxygen hysteresis parameters have NaNs; check opt_' mcruise])
                 end
+            case 'ctdcals'
+                if isempty(calstr)
+                    warning(sprintf('mctd_02b found no calibration functions to apply in opt_%s', mcruise));
+                    return
+                
+                else
+                    
+                    for sno = 1:size(calstr,1)
+                        
+                        %test for correct calmsg matching calstr
+                        iis = strfind(calmsg{sno,1},[' ' mcruise]);
+                        calsens_expect = calmsg{sno,1}(1:iis-1);
+                        if ~strncmp(['dcal.' calsens_expect], calstr{sno}, length(calsens_expect)+5)
+                            error(sprintf('based on calmsg, calstr row %d should start with %s; check opt_%s and try again',sno,calsens_expect,mcruise));
+                        end
+                        calmsg_expect = sprintf('%s %s',calsens_expect,mcruise);
+                        if ~strcmp(calmsg{sno,1}, calmsg_expect)
+                            error(sprintf('opt_%s calmsg row %d: %s does not match cruise expected: %s; check and try again',mcruise,sno,calmsg{sno,1},calmsg_expect))
+                        end
+                        
+                        if strncmp(calsens_expect, 'cond', 4)
+                            %check that if cond cal depends on temp it's from the same CTD
+                            csens = str2num(calsens_expect(end));
+                            if ~isempty(csens)
+                                iit = findstr('temp',calstr{sno});
+                                if length(iit)>0
+                                    tsens = str2num(calstr{sno}(iit+4)');
+                                    tsens(tsens==csens) = [];
+                                    if length(tsens)>0
+                                        error(sprintf('calibration of conductivity from CTD %d should not depend on temperature from CTD %d; check opt_%s and try again',csens,tsens,mcruise));
+                                    end
+                                end
+                            end
+                        elseif strncmp(calsens_expect, 'oxygen', 6)
+                            %check that ocal uses temp from same ctd, but don't require it
+                            osens = str2num(calsens_expect(end));
+                            if ~isempty(osens)
+                                iit = findstr('temp',calstr{sno});
+                                if length(iit)>0
+                                    tsens = str2num(calstr{sno}(iit+4)');
+                                    tsens(tsens==osens) = [];
+                                    if length(tsens)>0
+                                        warning(sprintf('calibration of oxygen sensor %d is being based on temperature from CTD %d'),osens,tsens)
+                                    end
+                                end
+                            end
+                        end
+                        
+                    end
+                    
+                end
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
         
@@ -58,55 +124,6 @@ switch scriptname
                 if ~exist('sam2use'); disp('set salinity sample readings to use for this cruise'); keyboard; end
         end
         %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
-        
-        %%%%%%%%%% mctd_senscal %%%%%%%%%%
-    case 'mctd_senscal'
-        %check that expected variable name and (where relevant) sensor
-        %number is being used, that calmsg has been updated to the correct
-        %variable/sensor/cruise (hopefully this will catch in case of
-        %copy-pasting in from previous cruise and without updating
-        %parameters), and that cond cal is not using temperature from a
-        %different CTD (just warn if oxy cal is)
-        if isempty(calvars) | isempty(calstr)
-            warning(sprintf('mctd_senscal finds no %s calibration function to apply in opt_%s', oopt, mcruise));
-            return
-        end
-        if exist('senslocal', 'var')
-            calsens_expect = [oopt num2str(senslocal)];
-        else
-            calsens_expect = oopt;
-        end
-        if ~strcmp(calsens_expect, calvars{1})
-            error(sprintf('first element of calvars, %s, should be %s; check opt_%s and try again',calvars{1},calsens_expect,mcruise));
-        end
-        calmsg_expect = sprintf('%s %s',calsens_expect,mcruise);
-        if ~strcmp(calmsg, calmsg_expect)
-            error(['opt_' mcruise ' calmsg: ' calmsg ' does not match variable/sensor/cruise expected: ' calmsg_expect '; check and try again'])
-        end
-        switch oopt
-            case 'condcal'
-                %also check that if it depends on temp it's from the same CTD
-                iit = find(strncmp('temp',calvars,4));
-                if length(iit)==0
-                    tsens = senslocal;
-                elseif length(iit)==1
-                    tsens = calvars{iit}(end);
-                end
-                if length(iit)>1 | tsens~=senslocal
-                    error(sprintf('calibration of conductivity from CTD %d should not depend on temperature from CTD %d; check opt_%s and try again',senslocal,tsens,mcruise));
-                end
-            case 'oxygencal'
-                iit = find(strncmp('temp',calvars,4));
-                if length(iit)==0
-                    tsens = senslocal;
-                elseif length(iit)==1
-                    tsens = calvars{iit}(end);
-                end
-                if length(iit)>1 | tsens~=senslocal
-                    warning(sprintf('calibration of oxygen sensor %d is being based on temperature from CTD %d'),senslocal,tsens)
-                end
-        end
-        %%%%%%%%%% end mctd_senscal %%%%%%%%%%
         
         %%%%%%%%%% miso_02 %%%%%%%%%%
     case 'miso_02'

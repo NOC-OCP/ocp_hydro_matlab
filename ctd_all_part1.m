@@ -8,38 +8,20 @@ stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.c
 %invocations of mctd_02b, because any necessary edits will have been
 %added to opt_cruise already (and to mplxyed_* file when mctd_rawedits is run)***
 root_ctd = mgetdir('M_CTD');
-[d, h] = mloadq([root_ctd '/ctd_' mcruise '_' stn_string '_raw'], '/');
+[d, h] = mloadq([root_ctd '/ctd_' mcruise '_' stn_string '_raw'], 'press', ' ');
 if min(d.press)<=-1.495
-    disp(['negative pressures in ctd_' mcruise '_' stn_string '_raw'])
-    disp(['check ctd_' mcruise '_' stn_string '_raw; if there are large'])
-    disp(['spikes, edit opt_' mcruise ' mctd_01 case and reprocess this station'])
-    disp(['if not too large, check/edit revars in mctd_rawedit case in opt_cruise so that'])
-    disp([' values<-1.495 will be removed; run mctd_rawedit here and dbcont to continue'])
-    disp(['(note this will only apply automatic edits; you will still need to'])
-    disp(['run mctd_rawedit again after ctd_all_part2 to go through the GUI editor)'])
+    m = {['negative pressures in ctd_' mcruise '_' stn_string '_raw']
+    ['check d.press (loaded from ctd_' mcruise '_' stn_string '_raw); if there are large']
+    ['spikes, edit opt_' mcruise ' mctd_01 case and reprocess this station']
+    ['if not too large, check/edit revars in mctd_rawedit case in opt_cruise so that']
+    [' values<-1.495 will be removed; run mctd_rawedit here and dbcont to continue']
+    ['(note this will only apply automatic edits; you will still need to']
+    ['run mctd_rawedit again after ctd_all_part2 to go through the GUI editor)']};
+    warning(sprintf('%s\n',m{:}));
     keyboard
 end
-stn = stnlocal; mctd_02b; %apply corrections (e.g. oxygen hysteresis)
-
-scriptname = mfilename; oopt = 'cal_stations1'; get_cropt % jc191 use cropt to select which stations get cals applied in first-pass processing
-if ismember(stnlocal,cal_stations1.temp)
-    stn = stnlocal; senscal = 1; mctd_tempcal % temp1 sensor
-    stn = stnlocal; senscal = 2; mctd_tempcal % temp2 sensor
-end
-if ismember(stnlocal,cal_stations1.cond)
-    stn = stnlocal; senscal = 1; mctd_condcal % cond1 sensor
-    stn = stnlocal; senscal = 2; mctd_condcal % cond2 sensor
-end
-if ismember(stnlocal,cal_stations1.oxy)
-    stn = stnlocal; senscal = 1; mctd_oxycal % oxygen1 sensor
-    stn = stnlocal; senscal = 2; mctd_oxycal % oxygen2 sensor
-end
-if ismember(stnlocal,cal_stations1.trans)
-    stn = stnlocal; mctd_transmisscal % transmittance
-end
-if ismember(stnlocal,cal_stations1.fluor)
-    stn = stnlocal; mctd_fluorcal % fluor
-end
+%apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise
+stn = stnlocal; mctd_02b; 
 
 stn = stnlocal; mctd_03; %average to 1 hz, compute salinity
 

@@ -28,6 +28,7 @@ if exist(m_add_nc(wkfile_dvars),'file') ~= 2
     return
 end
 
+MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 

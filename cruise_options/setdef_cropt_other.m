@@ -31,99 +31,109 @@ switch scriptname
     %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
-            case 'sum_sams'
-                crhelp_str = {'snames (default {''nsal''; ''noxy''} lists variable groups to count,'
-                    'snames_shore (default {''nsal_shore''; ''noxy_shore''} lists the corresponding group names for '
-                    'variables to be analysed ashore, '
-                    'sgrps (default {{''sal''}; {''botoxy''}}) lists the corresponding variable names in each group,'
-                    'and sashore (default [0 0]) is a flag for which of snames_shore will be used (as opposed to all done at sea).'};
-                snames = {'nsal'; 'noxy'};
-                snames_shore = {};
-                sgrps = {{'sal'} % salt
-                    {'botoxy'}}; % oxygen
-                sashore = [0; 0];
-            case 'sum_varnames'
-                crhelp_str = {'varnames is a list of variables, besides the numbers of samples, to include in the'
-                    'station summary; varunits is the corresponding units'};
             case 'sum_stn_list'
                 crhelp_str = {'stnmiss (default []) is a list of CTD station numbers that have '
                     'been processed but that are to be excluded from the summary;'
                     'stnadd (default []) is a list of stations without processed CTD data that '
                     'are to be included.'};
-                stnmiss = []; 
+                stnmiss = [];
                 stnadd = [];
-            case 'sum_dep_edit'
+            case 'sum_varsams'
+                crhelp_str = {'Place to set or select from vars, a list of station/ctd variables, their '
+                    'units, fill values, and formats for printing to table (see code for defaults); '
+                    'snames (default {''nsal''} a list of variable groups to count,'
+                    'sgrps (default {{''sal''}}), a list of the corresponding variable names.'
+                    'For samples analysed ashore, elements of snames should end in _shore.'};
+                %names, units, fill values, table headers, formats for printing to table
+                %rows with empty units are for table only, rows with empty
+                %header/formats are for .nc file only, rows with header
+                %column -1 are printed before the rest, with header column
+                %+1 after
+                %if last column is not a format string the row must have
+                %code to print it under case sum_special_print
+                vars = {
+                    'statnum'      'number'    -999  'stn '            '%03d '
+                    'time_start'   'seconds'   -999  -1                ''
+                    'time_bottom'  'seconds'   -999  'yy/mm/dd     '   'special'
+                    'time_end'     'seconds'   -999  1                 ''
+                    'lat'          'degN'      -999  'lat deg min '    'special'
+                    'lon'          'degE'      -999  'lon deg min '    'special'
+                    'cordep'       'metres'    -999  'cordep'          '  %4.0f'
+                    'maxd'         'metres'    -999  'maxd'            '%4.0f'
+                    'minalt'       'metres'    -9    'minalt'          '   %2.0f'
+                    'resid'        'metres'    -9    'resid'           ' %4.0f '
+                    'maxw'         'metres'    -999  'maxw'            '%4.0f'
+                    'maxp'         'metres'    -999  'maxp'            '%4.0f'
+                    'ndepths'      'number'     0    'ndpths'          '    %2d'
+                    };
+                snames = {'nsal'};
+                sgrps = {{'botpsal'}}; % salt
+            case 'sum_extras'
+                crhelp_str = {'Place to add columns before or after the existing ones, for instance'
+                    'for event numbers or station names, or comments. Add the names to vars either '
+                    'at the start or end, and set the corresponding variables as cell arrays.'};
+            case 'sum_edit'
                 crhelp_str = {'Place to edit cordep, the vector of corrected depths for the set of stations'
-                    'to be processed (default is to get from _psal file header), and minalt, the minimum '
-                    'altimeter distance above bottom (set to -9 for did not detect the bottom)).'};
-            case 'alttimes'
-            case 'sum_comments'
-                crhelp_str = {'Place to fill in comments, a cell array of comments for each station in'
-                    'list (default Nx1, each empty)'};
+                    'to be processed (default is to get from _psal file header), and/or minalt, the minimum '
+                    'altimeter distance above bottom (set to -9 for did not detect the bottom));'
+                    'also to set times for stations with no ctd cast.'};
+            case 'sum_special_print'
+                crhelp_str = {'Code for printing special cases, by default lat and lon in degrees minutes'
+                    'format, and start, bottom, and end times as yy/mm/dd HHMM.'};
+                switch vars{cno,1}
+                    case 'time_start'
+                        ii = find(strcmp('time_bottom',vars(:,1))); ii = 1:ii-1;
+                        co = 0;
+                        for pcno = 1:length(ii)
+                            co = co + length(vars{ii(pcno),4});
+                        end
+                        svar = [repmat(' ',1,co+1) datestr(time_start(k), ' yy/mm/dd HHMM ')];
+                    case 'time_bottom'
+                        svar = datestr(time_bottom(k), 'yy/mm/dd HHMM');
+                    case 'time_end'
+                        svar = [repmat(' ',1,co+1) datestr(time_end(k), ' yy/mm/dd HHMM')];
+                    case 'lat'
+                        latd = floor(abs(lat(k))); latm = 60*(abs(lat(k))-latd); if latm>=59.995; latm = 0; latd = latd+1; end
+                        if lat(k)>=0; lath = 'N'; else; lath = 'S'; end
+                        svar = sprintf('%02d %06.3f %s ', latd, latm, lath);
+                    case 'lon'
+                        lond = floor(abs(lon(k))); lonm = 60*(abs(lon(k))-lond); if lonm>=59.995; lonm = 0; lond = lond+1; end
+                        if lon(k)>=0; lonh = 'E'; else; lonh = 'W'; end
+                        svar = sprintf('%03d %06.3f %s', lond, lonm, lonh);
+                end
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         
         %%%%%%%%%% mout_cchdo %%%%%%%%%%
     case 'mout_cchdo'
         switch oopt
-            case 'expo'
+            case 'woce_expo'
                 crhelp_str = {'information for header of exchange-format csv files: '
                     'expocode and sect_id (defaults: ''unknown'')'};
                 expocode = '740H20210202';
                 sect_id = 'SR1b_A23';
             case 'woce_ctd_flags';
-                crhelp_str = {'optional: change flags from default of 2 where data present, 9 otherwise'};
-            case 'woce_file_pre'
-                crhelp_str = {'prefix: filename prefix for exchange-format csv file of ctd data '
-                    '(default: expocode)'};
-                prefix = expocode;
-            case 'woce_ctd_headstr'
-                crhelp_str = {'optional ctdheadstring is a cell array of strings to add to header of '
-                    'exchange-format csv file of ctd data (default: empty)'};
-                headstring = {['CTD,' datestr(now,'yyyymmdd') 'POGBASEPA'];...
-                    '#SHIP: James Cook';...
-                    '#Cruise JC211; SR1B and A23';...
-                    '#Region: Drake Passage, Weddell Sea, Scotia Sea';...
-                    ['#EXPOCODE: ' expocode];...
-                    '#DATES: 20210202 - 20210307';...
-                    '#Chief Scientist: E. P. Abrahamsen, BAS';...
-                    '#Supported by NERC National Capability NE/N018095/1 (ORCHESTRA)';...
-                    '#?? stations with 24-place rosette';...
-                    '#Notes: PI for SR1B section (??-??): Y. Firing; PI for A23 section (??-??): E. P. Abrahamsen';...
-                    '#CTD: Who - B. King and Y. Firing; Status - preliminary';...
-                    '#Notes: Includes CTDSAL, CTDOXY, SBE35';...
-                    '#CTD data not yet calibrated';...%'#The CTD PRS;  TMP;  SAL; OXY data are all calibrated and good.';...
-                    '# DEPTH_TYPE   : COR';...
-                    '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
-            case 'woce_sam_headstr'
-                crhelp_str = {'optional samheadstring is a cell array of strings to add to header of '
-                    'exchange-format csv file of sample data (default: empty)'};
-                headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'POGBASEPA'];... %the last field specifies group, institution, initials
-                    '#SHIP: James Cook';...
-                    '#Cruise JC211; SR1B and A23';...
-                    '#Region: Drake Passage, Weddell Sea, Scotia Sea';...
-                    ['#EXPOCODE: ' expocode];...
-                    '#DATES: 20210202 - 20210307';...
-                    '#Chief Scientist: E. P. Abrahamsen, BAS';...
-                    '#Supported by NERC National Capability NE/N018095/1 (ORCHESTRA)';...
-                    '#?? stations with 24-place rosette';...
-                    '#Notes: PI for SR1B section (??-??): Y. Firing; PI for A23 section (??-??): E. P. Abrahamsen';...
-                    '#CTD: Who - B. King and Y. Firing; Status - not yet calibrated';...
-                    '#Notes: Includes CTDSAL, CTDOXY, SBE35';...
-                    '#CTD data not yet calibrated';...%'#The CTD PRS;  TMP;  SAL; OXY data are all calibrated and good.';...
-                    '#CTD files also contain CTDXMISS, CTDFLUOR';...
-                    '#Salinity: Who - A. Marzocchi; Status - not yet analysed';...
-                    '#Oxygen: Who - Y. Firing; Status - not yet analysed';...
-                    '#Nutrients: Who - C. Liszka; Status - not yet analysed';...
-                    '#DELO18: Who - M. Leng; Status - not yet analysed';...
-                    '#Nutrient isotopes: Who - S. Fielding/K. Hendry?; Status - not yet analysed';...
-                    '#POM: Who - G. Stowasser - not yet analysed';...
-                    '#Chlorophyll: Who - C. Liszka; Status - not yet analysed';...
-                    '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
+                crhelp_str = {'optional: change flag variables ctdflag (temp, sal) and ctoflag (oxygen) '
+                    'from default of 2 where data present, 9 otherwise'};
+            case 'woce_vars_exclude'
+                crhelp_str = {'vars_exclude_ctd and vars_exclude_sam are lists of mstar variable names'
+                    'to exclude from woce exchange-format output files for submission to cchdo, even if '
+                    'they are in ctd/sam files and in lists set in m_cchdo_vars_list.m. '
+                    'Defaults: vars_exclude_ctd = {''fluor'' ''transmittance''}, vars_exclude_sam = {}.'};
+                vars_exclude_ctd = {'fluor' 'transmittance'};
+                vars_exclude_sam = {};
+            case 'woce_ctd_flags'
+                crhelp_str = {'Place to change values for ctdflag and ctoflag (from default of 2 where data present, 9 otherwise.'};
             case 'woce_file_flagonly'
                 crhelp_str = {'varsexclude is a cell array listing variables to NaN before printing to'
                     'exchange-format csv files (default: {})'};
                 varsexclude = {};
+            case 'woce_ctd_headstr'
+                crhelp_str = {'optional headstring is a cell array of strings to add to header of '
+                    'exchange-format csv file of ctd data (default: empty)'};
+            case 'woce_sam_headstr'
+                crhelp_str = {'optional headstring is a cell array of strings to add to header of '
+                    'exchange-format csv file of sample data (default: empty)'};
         end
         %%%%%%%%%% end mout_cchdo %%%%%%%%%%
         

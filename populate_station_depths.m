@@ -24,11 +24,6 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 %find statnums with ctd data
 fn = dir([mgetdir('M_CTD') '/ctd_' mcruise '_*_raw.nc']);
 stns = struct2cell(fn); stns = cell2mat(stns(1,:)'); stns = str2num(stns(:,end-9:end-7));
-if sum(stns==0)
-    stnind = stns+1;
-else
-    stnind = stns;
-end
 
 %output file of depths
 fnot = [mgetdir('M_CTD_DEP') '/station_depths_' mcruise '.mat'];
@@ -36,21 +31,26 @@ fnot = [mgetdir('M_CTD_DEP') '/station_depths_' mcruise '.mat'];
 %load this if it already exists and extend if necessary, otherwise set up empty array
 if exist(fnot, 'file')
     disp(['loading ' fnot]); load(fnot, 'bestdeps');
-    ns = max(stns)-max(bestdeps(:,1));
-    if ns>0
-        bestdeps = [bestdeps; [[max(bestdeps(:,1))+1:max(stns)]' NaN+zeros(ns,1)]];
+    stnn = setdiff(stns, bestdeps(:,1));
+    if ~isempty(stnn)
+        bestdeps = [bestdeps; [stnn NaN+zeros(length(stnn),1)]];
+        [~,ii] = sort(bestdeps(:,1));
+        bestdeps = bestdeps(ii,:);
     end
 else
-    bestdeps = NaN+zeros(max(stnind),2); bestdeps(stnind,1) = stns;
+    bestdeps = [stns NaN+zeros(length(stns),2)];
 end
 
 %which stations need depths
-ii0 = find(isnan(bestdeps(:,2)));
 scriptname = mfilename; oopt = 'depth_recalc'; get_cropt
-if length(recalcdepth_stns)>0
+if ~isempty(stnmiss)
+    bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
+end
+ii0 = find(isnan(bestdeps(:,2)));
+if ~isempty(recalcdepth_stns)
     ii0 = unique([ii0; find(ismember(bestdeps(:,1),recalcdepth_stns))]);
 end
-bestdeps(ii0,2) = NaN;
+bestdeps(ii0,2:3) = NaN;
 
 %preferred method(s) for calculating depths
 scriptname = mfilename; oopt = 'depth_source'; get_cropt
@@ -63,12 +63,15 @@ for sno = 1:length(depth_source)
         fnin = [];
     end
     bestdeps(ii0,:) = get_deps(bestdeps(ii0,:), depth_source{sno}, fnin);
+    ii00 = ii0;
+    ii0 = find(isnan(bestdeps(:,2)));
+    ii = setdiff(ii00, ii0); bestdeps(ii,3) = sno;
 end
 
 %finally look to cruise options for any changes
 scriptname = mfilename; oopt = 'bestdeps'; get_cropt
-if length(replacedeps)>0
-    [c,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
+if ~isempty(replacedeps)
+    [~,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
     if length(ia)<size(replacedeps(:,1)); error(['replacedeps repeats stations; check opt_' mcruise]); end
     bestdeps(ib,2) = replacedeps(ia,2);
 end
@@ -76,7 +79,7 @@ end
 save(fnot, 'bestdeps')
 
 
-function bestdeps = get_deps(bestdeps, depth_source, fnin);
+function bestdeps = get_deps(bestdeps, depth_source, fnin)
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
@@ -90,7 +93,7 @@ switch depth_source
         try
             dsd = dataset('File',fnin,'Delimiter',',');
             fnam = dsd.Properties.VarNames;
-            if sum(strcmp('statnum',fname))==0 | sum(strcmp('depth',fnam))==0
+            if sum(strcmp('statnum',fname))==0 || sum(strcmp('depth',fnam))==0
                 error;
             else
                 deps = [dsd.statnum dsd.depth]; %two-column format
@@ -98,7 +101,7 @@ switch depth_source
         catch
             deps = load(fnin);
         end
-        [c,ii1,ii2] = intersect(deps(:,1), bestdeps(iif,1));
+        [~,ii1,ii2] = intersect(deps(:,1), bestdeps(iif,1));
         bestdeps(iif(ii2),2) = deps(ii1,2);
         
     case 'ctd' % calculate from CTD depth and altimeter
@@ -108,7 +111,7 @@ switch depth_source
             if exist(fn)
                 [d, h] = mloadq(fn, '/');
                 if ~isfield(d, 'depSM'); d.depSM = filter_bak(ones(1,21), sw_dpth(d.press, h.latitude)); end
-                [max_dep,bot_ind] = max(d.depSM); % Find cast max depth
+                [~,bot_ind] = max(d.depSM); % Find cast max depth
                 % Average altimeter and CTD depth for 30 seconds around max depth
                 ii = bot_ind-15:bot_ind+15;
                 if min(ii)>0 & max(ii)<=length(d.depSM)
@@ -136,15 +139,22 @@ switch depth_source
     case 'bathy'
         
         simvar = mvarname_find({'ea600' 'sim'},MEXEC_G.MDIRLIST(:,1));
-        if length(simvar)>0
+        if ~isempty(simvar)
             fileb = [mgetdir(simvar) '/' simvar '_' mcruise '_01.nc'];
             if exist(fileb,'file')
                 [db,hb] = mloadq(fileb,'/');
                 for no = 1:length(iif)
                     fn = sprintf('%s/dcs_%s_%03d.nc',mgetdir('M_CTD'),mcruise,bestdeps(iif(no)));
-                    [ddcs,hdcs] = mloadq(fn,'/');
-                    btim = m_commontime(db.time, hb.data_time_origin, hdcs.data_time_origin); %put into dcs file time origin
-                    bestdeps(iif(no),2) = interp1(btim,db.depth,ddcs.time_bot);
+                    if exist(fn, 'file')
+                        [ddcs,hdcs] = mloadq(fn,'/');
+                        btim = m_commontime(db.time, hb.data_time_origin, hdcs.data_time_origin); %put into dcs file time origin
+                        iig = find(~isnan(db.depth));
+                        bestdeps(iif(no),2) = interp1(btim(iig),db.depth(iig),ddcs.time_bot);
+                        dt = btim(iig)-ddcs.time_bot; dt = [min(dt(dt>0)) max(dt(dt<0))];
+                        if max(dt)>3600
+                            warning(['interpolating ea600 over >1 hour gap for ' num2str(bestdeps(iif(no)))])
+                        end
+                    end
                 end
             end
         end

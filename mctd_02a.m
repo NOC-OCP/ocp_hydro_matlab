@@ -18,7 +18,7 @@
 % After mheadr, the _raw.nc file is write protected
 
 minit;
-mdocshow(mfilename, ['renames variables in ctd_' mcruise '_' stn_string '_raw.nc (or _raw_noctm.nc) based on templates/ctd_renamelist.csv, adds position from underway stream (if available), applies automatic edits and cellTM (if selected)']);
+mdocshow(mfilename, ['renames variables in ctd_' mcruise '_' stn_string '_raw.nc (or _raw_noctm.nc) based on varlists/ctd_renamelist.csv, adds position from underway stream (if available), applies automatic edits and cellTM (if selected)']);
 
 % resolve root directories for various file types
 root_templates = mgetdir('M_TEMPLATES');
@@ -39,6 +39,8 @@ else
     unix(['chmod 444 ' m_add_nc(infile1)]); % write protect raw_noctm file
 end
 unix(['chmod 644 ' m_add_nc(infile)]); % make file writeable
+
+MEXEC_A.Mprog = mfilename;
 
 %change variable names and add units
 
@@ -84,22 +86,28 @@ MEXEC_A.MARGS_IN_3 = {
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3];
 mheadr
 
-% Use the mtposinfo/msposinfo to find position at bottom of cast time and
-% update header
-[d h] = mloadq(infile,'time','press',' ');
-p = d.press;
-kbot = min(find(p == max(p)));
-tbot = d.time(kbot);
-tbotmat = datenum(h.data_time_origin) + tbot/86400; % bottom time as matlab datenum
-switch MEXEC_G.Mshipdatasystem
-    case 'scs'
-        [botlat botlon] = msposinfo(tbotmat);
-    case 'techsas'
-        [botlat botlon] = mtposinfo(tbotmat);
-    case 'rvdas'
-        [botlat botlon] = mrposinfo(tbotmat);
-    otherwise
-        botlat = []; botlon = [];
+% Get position at bottom of cast either from ctd-logged nmea lat, lon or
+% from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
+h = m_read_header(infile);
+if sum(strcmp('latitude',h.fldnam)) & sum(strcmp('longitude',h.fldnam))
+    d = mloadq(infile,'press','latitude','longitude',' ');
+    kbot = min(find(d.press == max(d.press)));
+    botlat = d.latitude(kbot); botlon = d.longitude(kbot);
+else
+    [d h] = mloadq(infile,'time','press',' ');
+    kbot = min(find(d.press == max(d.press)));
+    tbot = d.time(kbot);
+    tbotmat = datenum(h.data_time_origin) + tbot/86400; % bottom time as matlab datenum
+    switch MEXEC_G.Mshipdatasystem
+        case 'scs'
+            [botlat botlon] = msposinfo(tbotmat);
+        case 'techsas'
+            [botlat botlon] = mtposinfo(tbotmat);
+        case 'rvdas'
+            [botlat botlon] = mrposinfo(tbotmat);
+        otherwise
+            botlat = []; botlon = [];
+    end
 end
 if length(botlat>0)
     latstr = sprintf('%14.8f',botlat);

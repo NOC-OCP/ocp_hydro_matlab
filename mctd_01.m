@@ -22,6 +22,11 @@ else %in some cases, operate on original file (to remove large spikes), then app
     disp('starting from noctm file')
 end
 
+if ~exist(infile,'file')
+    warning(['file ' infile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
+    pause
+end
+
 otfile = m_add_nc(otfile);
 if exist(otfile,'file')
     m = ['File' ];
@@ -31,6 +36,8 @@ if exist(otfile,'file')
     fprintf(MEXEC_A.Mfider,'%s\n',m,' ',m1,' ',m2,m3)
     return
 end
+
+MEXEC_A.Mprog = mfilename;
 
 %--------------------------------
 MEXEC_A.MARGS_IN = {

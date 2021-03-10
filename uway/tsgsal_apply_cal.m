@@ -6,7 +6,6 @@ function salout = tsgsal_apply_cal(time,salin)
 
 m_common
 
-scriptname = 'tsgsal_apply_cal';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 switch MEXEC_G.Mship
    case {'cook','discovery'} % used on jc069
@@ -15,4 +14,4 @@ switch MEXEC_G.Mship
       prefix = 'oceanlogger';
 end
 root_tsg = mgetdir(prefix);
-oopt = 'saladj'; get_cropt
+scriptname = mfilename; oopt = 'tsgsaladj'; get_cropt

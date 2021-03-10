@@ -2,12 +2,12 @@ function c = mtextdload(infile,delim)
 %
 % Use: c = mtextdload(infile,[delim])
 %
-% mcsvload: load text rows in file, and divide according to delimeter
+% mtextdload: load text rows in file, and divide according to delimeter
 %           matlab version of csvload only handles numeric data
 %
 % infile is any file name; contents must be rows of text
 %               each row is unpacked around commas
-% delim is a text delimeter used to divide input lines of text; default is comma
+% delim is a text delimiter used to divide input lines of text; default is comma
 % output c is a cell array. Length(c) is the number of lines of text in the
 %               input file; each row of cell c is a set of cells containing the text from
 %               that row of the input file, divided at delimeter 'delim'
@@ -16,11 +16,11 @@ function c = mtextdload(infile,delim)
 if nargin < 1
     error('No input file')
 elseif nargin <2
-    delim = ','; % default delimeter is comma
+    delim = ','; % default delimiter is comma
 end
 
 if ~exist(infile,'file')
-    m = ['Error in mcsvload: File ''' infile ''' does not exist'];
+    m = ['File ''' infile ''' does not exist'];
     m1 = sprintf('%s\n','',m);
     error(m1)
 end

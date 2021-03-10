@@ -16,7 +16,7 @@ mdocshow(mfilename, ['average 1-Hz navigation stream from ' abbrev '_' mcruise '
 
 infile = [root_dir '/' prefix '01'];
 otfile = [root_dir '/' prefix 'ave'];
-wkfile = ['wk_' scriptname '_' datestr(now,30)];
+wkfile = ['wk_' mfilename '_' datestr(now,30)];
 
 tave_period = 30; % seconds
 tav2 = round(tave_period/2);

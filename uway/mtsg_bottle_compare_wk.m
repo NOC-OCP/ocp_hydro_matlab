@@ -4,7 +4,7 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-scriptname = mfilename; oopt = 'tsg_usecal'; get_cropt;
+scriptname = mfilename; oopt = 'usecal'; get_cropt;
 usecallocal = usecal; clear usecal
 
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
@@ -37,16 +37,19 @@ end
 botfn = [root_bot '/tsg_' mcruise '_all'];
 [db, hb] = mload(botfn, '/');
 db.time = m_commontime(db.time, hb.data_time_origin, ht.data_time_origin);
-%sort all variables
-[a, iibot] = sort(db.time);
-fn = fieldnames(db);
-for fno = 1:length(fn)
-    db.(fn{fno}) = db.(fn{fno})(iibot);
-end
+[db.time, iibot] = sort(db.time);
+% db.run1 = db.run1(iibot); % these are called sample_1 etc on jc211, and aren't used anywhere else, so comment these lines out
+% db.run2 = db.run2(iibot); 
+% db.run3 = db.run3(iibot);
+% db.runavg = db.runavg(iibot); 
+db.flag = db.flag(iibot);
+% db.salinity = db.salinity(iibot); 
+db.salinity_adj = db.salinity_adj(iibot);
 
-%year-day
 dt.time = dt.time/3600/24+1; 
-db.time = db.time/3600/24+1+1/1440; % delay bottles by one minute to allow for time between bottle sample being drawn and water passing through TSG
+db.time = db.time/3600/24+1;
+% [Y,ii] = min(abs(repmat(dt.time,[length(db.time),1])-repmat(db.time,[1,length(dt.time)])),[],2);
+% db.temp_h = dt.temp_h(ii); %jc191? dy120? dy129?***why are we doing this?***
 
 tsal = dt.(salvar);
 tsals = interp1(dt.time, tsal, db.time);
@@ -56,7 +59,7 @@ if exist('tempsst','var') & ~isempty(tempsst)
     nsp = 4;
 end
 
-scriptname = mfilename; oopt = 'tsg_bad'; get_cropt %NaN some of the db.salinity_adj points
+scriptname = mfilename; oopt = 'dbbad'; get_cropt %NaN some of the db.salinity_adj points
 
 sdiff = db.salinity_adj-tsals; %offset is bottle minus tsg, so that it is correction to be added to tsg
 sdiff_std = nanstd(sdiff); sdiff_mean = nanmean(sdiff);
@@ -76,7 +79,7 @@ sdiff(idx) = NaN;
 
 % bak jc211, break points in sdiffsm to allow for cleaning
 tbreak = []; % example of how to set tbreak in opt_jc211
-scriptname = mfilename; oopt = 'tsg_timebreaks'; get_cropt;
+scriptname = mfilename; oopt = 'timebreaks'; get_cropt;
 
 
 tbreak = [datenum([1900 1 1]); tbreak; datenum([2200 1 1])]-datenum(ht.data_time_origin);
@@ -106,7 +109,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
     
     %smoothed difference--default is a two-pass filter on the whole time series
     clear sdiffsm
-    scriptname = mfilename; oopt = 'tsg_sdiff'; get_cropt
+    scriptname = mfilename; oopt = 'sdiff'; get_cropt
     if exist('sc1') & exist('sc2') & ~exist('sdiffsm')
         sdiffsm = filter_bak(ones(1,21),sdiff); % first filter
         sdiff(abs(sdiff-sdiffsm) > sc1) = NaN;
@@ -138,7 +141,6 @@ subplot(nsp,1,2)
 plot(db.time, sdiffall, 'r+-',t_all+1, sdiffsm,' kx-'); grid
 ylabel([calstr ' bottle minus TSG salinity (psu)']); xlabel('yearday')
 xlim(dt.time([1 end]))
-ylim([-.02 .04])
 if nsp==4
     subplot(nsp,1,3)
     plot(tssts, sdiffall, 'r+', tssts, sdiffsm, 'kx'); grid

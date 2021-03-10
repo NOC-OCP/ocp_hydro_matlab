@@ -9,28 +9,20 @@ function vout = mtsg_cleanup(torg,time,vin,varinid)
 % select cases in the function. varinid is the variable name.
 
 m_common
-
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-scriptname = 'mtsg_cleanup';
-oopt = '';
 
 dn = torg+time/86400;
 
 MARGS_STORE = MEXEC_A.MARGS_IN_LOCAL; % need to save this because it would otherwise be used by mcsetd
-switch MEXEC_G.Mship
-   case {'cook' 'discovery'} % used on jc069
-      prefix = 'met_tsg'; %discovery after some date should be different name maybe, or else one of the partial files should have a different name
-   case 'jcr'
-      prefix = 'oceanlogger';
-end
-roottsg = mgetdir(prefix);
+scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+roottsg = mgetdir(tsgpre);
 MEXEC_A.MARGS_IN_LOCAL = MARGS_STORE;
 
 vout = vin;
 
-oopt = 'editvars'; get_cropt %which variables to edit based on bad times
+scriptname = mfilename; oopt = 'tsg_editvars'; get_cropt %which variables to edit based on bad times
 
-oopt = 'kbadlims'; get_cropt
+scriptname = mfilename; oopt = 'tsg_badlims'; get_cropt
 if iscell(kbadlims)
    for kb = 1:size(kbadlims,1)
       if ischar(kbadlims{kb,3}) & sum(strcmp(kbadlims{kb,3},'all'))
@@ -50,4 +42,4 @@ elseif sum(strcmp(varinid, editvars)) %always the same ones
    end
 end
 
-oopt = 'moreedit'; get_cropt %any other edits
+scriptname = mfilename; oopt = 'tsg_moreedit'; get_cropt %any other edits

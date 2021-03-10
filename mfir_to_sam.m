@@ -9,7 +9,7 @@ minit;
 mdocshow(mfilename, ['pastes CTD data at bottle firing times from fir_' mcruise '_' stn_string '.nc to sam_' mcruise '_all.nc']);
 
 root_ctd = mgetdir('M_CTD'); % change working directory
-infile = [root_ctd '/fir_' mcruise '_' stn_string '_ctd'];
+infile = [root_ctd '/fir_' mcruise '_' stn_string];
 otfile = [root_ctd '/sam_' mcruise '_all'];
 
 if exist(m_add_nc(infile),'file') == 2
@@ -18,6 +18,7 @@ if exist(m_add_nc(infile),'file') == 2
     h.fldnam = ['sampnum' h.fldnam]; h.fldunt = ['number' h.fldunt];
     if sum(~isnan(d.sampnum))>0
         h.comment = []; % BAK fixing comment problem: Don't pass in this comment string
+        MEXEC_A.Mprog = mfilename;
         mfsave(otfile, d, h, '-merge', 'sampnum');
     end
 end

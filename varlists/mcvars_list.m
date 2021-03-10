@@ -37,6 +37,7 @@ elseif typ==2 % this is for comparing with bottle samples
         'fluorc' 'fluore' ...
         'EH' 'LSS' 'BBRTD'... % light variables added on JC044
         'ph' ...
+        'time' 'latitude' 'longitude'
         };
         
 else

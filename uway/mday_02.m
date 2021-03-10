@@ -58,7 +58,7 @@ end
 if exist(m_add_nc(otfile),'file')
     d0 = mload(otfile, 'time');
     if length(intersect(d.time,d0.time))>2 %in case 1 on each boundary?
-        warning(['overwriting day ' daynum ' in appended file ' otfile]);
+        warning(['overwriting day ' day_string ' in appended file ' otfile]);
     end
 end
 hnew.comment = [];

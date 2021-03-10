@@ -1,4 +1,5 @@
-%scripts to rerun after editing using mctd_rawedit
+%scripts to rerun after editing using mctd_rawedit, or if calibration is
+%changed
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 root_ctd = mgetdir('M_CTD');
@@ -23,8 +24,8 @@ for kloop = klist
         fprintf(MEXEC_A.Mfider,'%s\n',mess)
         continue
     end
-
     stn = kloop; mctd_02b
+
     stn = kloop; mctd_03;
     mout_1hzasc(stnlocal);
     stn = kloop; mctd_04;
@@ -35,7 +36,6 @@ for kloop = klist
         fprintf(MEXEC_A.Mfider,'%s\n',mess)
         continue
     end
-
     stn = kloop; mfir_03;
     stn = kloop; mfir_to_sam;
     
@@ -44,5 +44,5 @@ for kloop = klist
 end
 
 scriptname = 'batchactions'; oopt = 'sam'; get_cropt
-scriptname = 'batchactions'; oopt = 'sync'; get_cropt
+scriptname = 'batchactions'; oopt = 'syncc'; get_cropt
 clear klist*

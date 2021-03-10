@@ -14,7 +14,12 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 
+% bak jc211 ship_data_sys_names sets metpre and tsgpre. In this scripts we
+% want tsgpre
+prefix = tsgpre;
+
 mdocshow(mfilename, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' prefix '_' mcruise '_01_medav_clean.nc; calls tsgsal_apply_cal to apply salinity calibration set in opt_' mcruise ', writing to ' prefix '_' mcruise '_01_medav_clean_cal.nc'])
+
 
 root_dir = mgetdir(prefix);
 infile1 = [root_dir '/' prefix '_' mcruise '_01'];
@@ -55,13 +60,20 @@ MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
 mcalib2
 
 %determine if there is a tsg salinity calibration
-scriptname = 'tsgsal_apply_cal'; salin = 1; time = 1; oopt = 'saladj'; eval(['opt_' mcruise])
+scriptname = 'tsgsal_apply_cal'; salin = 1; time = 1; oopt = 'tsgsaladj'; get_cropt; %eval(['opt_' mcruise])
 
 %apply it if there is one
 if exist('salout','var')
 
-   salvar = mvarname_find({'salinity' 'psal'},ht.fldnam);
+   salvar = mvarname_find({'salinity' 'psal' 'salinity_raw'},h.fldnam);
    salinline = ['y = tsgsal_apply_cal(x1,x2)'];
+   
+   switch salvar
+       case 'salinity_raw'
+           salcalvar = 'salinity_cal';
+       otherwise
+           salcalvar = [salvar '_cal'];
+   end
 
    MEXEC_A.MARGS_IN = {
       otfile1
@@ -69,7 +81,7 @@ if exist('salout','var')
       '/'
       ['time ' salvar]
       salinline
-      [salvar '_cal']
+      salcalvar % [salvar '_cal']
       'pss-78'
       ' '
       };

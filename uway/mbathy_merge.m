@@ -10,19 +10,25 @@ if exist(filesbot,'file') & exist(filembot,'file')
     ds.timec = ds.time/3600/24+datenum(hs.data_time_origin);
     [dm,hm] = mloadq(filembot,'/');
     dm.timec = dm.time/3600/24+datenum(hm.data_time_origin);
+        
+    %interpolate swath depth onto single-beam times, save to single-beam file
+    clear dsn
+    dsn.swath_depth = interp1(dm.timec, dm.swath_depth, ds.timec);
+    clear hnew
+    hnew.fldnam = {'swath_depth'}; hnew.fldunt = {'m'};
+    if ~sum(strcmp('swath_depth', hs.fldnam))
+        hs.comment = [hs.comment 'Swath depth from ' shortnames{iim} ' interpolated onto single-beam times as swath_depth'];
+    end
+    mfsave(filesbot, dsn, hnew, '-addvars');
     
-    %interpolate single-beam depth onto swath times and vice versa
-    dm.depth = interp1(ds.timec, ds.depth, dm.timec);
-    ds.swath_depth = interp1(dm.timec, dm.swath_depth, ds.timec);
-    dm = rmfield(dm, 'timec'); ds = rmfield(ds, 'timec');
-    
-    %save to single-beam file
-    hnew.fldnam = [hs.fldnam 'swath_depth']; hnew.fldunt = [hs.fldunt 'm'];
-    hnew.comment = ['Swath depth from ' shortnames{iim} ' interpolated onto single-beam times as swath_depth'];
-    mfsave(filesbot, ds, hnew, '-addvars');
-    %and to swath file
-    hnew.fldnam = [hm.fldnam 'depth']; hnew.fldunt = [hm.fldunt 'm'];
-    hnew.comment = ['Single-beam depth from ' shortnames{iis} ' interpolated onto swath times as depth'];
-    mfsave(filembot, dm, hnew, '-addvars');
-    
+    %interpolate single-beam depth onto swath times, save to swath file
+    clear dmn
+    dmn.depth = interp1(ds.timec, ds.depth, dm.timec);
+    clear hnew
+    hnew.fldnam = {'depth'}; hnew.fldunt = {'m'};
+    if ~sum(strcmp('depth', hm.fldnam))
+        hnew.comment = ['Single-beam depth from ' shortnames{iis} ' interpolated onto swath times as depth'];
+    end
+    mfsave(filembot, dmn, hnew, '-addvars');
+
 end

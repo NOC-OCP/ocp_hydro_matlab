@@ -1,11 +1,11 @@
-% mctd_03b:
+% mctd_03:
 %   copy data from chosen sensors (set in opt_cruise) to temp, cond, and
 %   oxygen (if two oxygen sensors),
 %   and calculate psal, asal
 %   average to 1 hz and calculate potemp, contemp
 %
-% Use: mctd_03b        and then respond with station number, or for station 16
-%      stn = 16; mctd_03b;
+% Use: mctd_03        and then respond with station number, or for station 16
+%      stn = 16; mctd_03;
 % input: _24hz
 % output: _psal
 
@@ -21,9 +21,7 @@ infile2 = [root_ctd '/dcs_' mcruise '_' stn_string];
 otfile1 = [root_ctd '/' prefix1 stn_string '_psal'];
 otfile2d = [root_ctd '/' prefix1 stn_string '_2db'];
 otfile2u = [root_ctd '/' prefix1 stn_string '_2up'];
-wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
-wkfile2 = ['wk2_' scriptname '_' datestr(now,30)];
-wkfile3 = ['wk3_' scriptname '_' datestr(now,30)];
+wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
 wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string]; %this one persists through a later processing stage
 
 
@@ -41,6 +39,7 @@ if o_choice == 2 & ~sum(strcmp('oxygen2', h.fldnam))
    error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
 end
 
+MEXEC_A.Mprog = mfilename;
 
 %optional: edit out bad scans, or replace data from specified sensor with data from the other
 scriptname = mfilename; oopt = '24hz_edit'; get_cropt
@@ -102,84 +101,48 @@ end
 
 
 %calculate derived variables and make 1 hz averaged file, _psal.nc
-%this happens in multiple steps, and involves a persisting working file, 
-%because some calculations here and subsequently rely on others
+%now done in workspace
 
 %find variables to copy, that are in both mcvars_list and the input file
 var_copycell = mcvars_list(1);
 [var_copycell, var_copystr] = mvars_in_file(var_copycell, wkfile1);
+[d,h] = mloadq(wkfile1,var_copystr);
+clear hnew dnew
+hnew.data_time_origin = h.data_time_origin; 
+hnew.dataname = h.dataname;
+hnew.latitude = h.latitude;
+hnew.longitude = h.longitude;
+hnew.fldunt = {};
+for no = 1:length(var_copycell)
+    ii = find(strcmp(var_copycell{no},h.fldnam));
+    hnew.fldunt = [hnew.fldunt h.fldunt{ii}];
+    dnew.(var_copycell{no}) = d.(var_copycell{no});
+end
+hnew.fldnam = var_copycell;
+hnew.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '];
 
-MEXEC_A.MARGS_IN = {
-wkfile1
-wkfile2
-var_copystr %copy these
-'cond temp press' %use these
-'y = gsw_SP_from_C(x1,x2,x3)' %in this equation
-'psal' %to calculate this
-'pss-78' %with these units
-'cond1 temp1 press'
-'y = gsw_SP_from_C(x1,x2,x3)'
-'psal1'
-'pss-78'
-'cond2 temp2 press'
-'y = gsw_SP_from_C(x1,x2,x3)'
-'psal2'
-'pss-78'
-' '
-};
-mcalc
-    
-MEXEC_A.MARGS_IN = {
-wkfile2
-wkfile3
-'/'
-'psal press'
-'y=gsw_SA_from_SP(x1,x2,h.longitude,h.latitude )'
-'asal'
-'g/kg'
-'psal1 press'
-'y=gsw_SA_from_SP(x1,x2,h.longitude,h.latitude )'
-'asal1'
-'g/kg'
-'psal2 press'
-'y=gsw_SA_from_SP(x1,x2,h.longitude,h.latitude )'
-'asal2'
-'g/kg'
-' '
-};
-mcalc
+%new variables
+hnew.fldnam = [hnew.fldnam 'psal' 'psal1' 'psal2' 'asal' 'asal1' 'asal2' 'potemp' 'potemp1' 'potemp2'];
+hnew.fldunt = [hnew.fldunt 'pss-78' 'pss-78' 'pss-78' 'g/kg' 'g/kg' 'g/kg' 'degc90' 'degc90' 'degc90'];
 
-MEXEC_A.MARGS_IN = {
-wkfile3
-wkfile_dvars %this one persists
-'/'
-'asal temp press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp'
-'degc90'
-'asal1 temp1 press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp1'
-'degc90'
-'asal2 temp2 press'
-'y = gsw_pt0_from_t(x1,x2,x3)'
-'potemp2'
-'degc90'
-'asal temp press'
-'y = gsw_CT_from_t(x1,x2,x3)'
-'contemp'
-'degc90'
-'asal1 temp1 press'
-'y = gsw_CT_from_t(x1,x2,x3)'
-'contemp1'
-'degc90'
-'asal2 temp2 press'
-'y = gsw_CT_from_t(x1,x2,x3)'
-'contemp2'
-'degc90'
-' '
-};
-mcalc
+dnew.psal = gsw_SP_from_C(dnew.cond,dnew.temp,dnew.press);
+dnew.psal1 = gsw_SP_from_C(dnew.cond1,dnew.temp1,dnew.press);
+dnew.psal2 = gsw_SP_from_C(dnew.cond2,dnew.temp2,dnew.press);
+dnew.asal = gsw_SA_from_SP(dnew.psal,dnew.press,h.longitude,h.latitude);
+dnew.asal1 = gsw_SA_from_SP(dnew.psal1,dnew.press,h.longitude,h.latitude);
+dnew.asal2 = gsw_SA_from_SP(dnew.psal2,dnew.press,h.longitude,h.latitude);
+dnew.potemp = gsw_pt0_from_t(dnew.asal,dnew.temp,dnew.press);
+dnew.potemp1 = gsw_pt0_from_t(dnew.asal1,dnew.temp1,dnew.press);
+dnew.potemp2 = gsw_pt0_from_t(dnew.asal2,dnew.temp2,dnew.press);
+
+% hnew.fldnam = [hnew.fldnam 'contemp' 'contemp1' 'contemp2'];
+% hnew.fldunt = [hnew.fldunt 'degc90' 'degc90' 'degc90'];
+% dnew.contemp = gsw_CT_from_t(dnew.asal,dnew.temp,dnew.press);
+% dnew.contemp1 = gsw_CT_from_t(dnew.asal1,dnew.temp1,dnew.press);
+% dnew.contemp2 = gsw_CT_from_t(dnew.asal2,dnew.temp2,dnew.press);
+
+%save
+mfsave(wkfile_dvars, dnew, hnew);
 
 % average to 1hz, output to _psal file
 MEXEC_A.MARGS_IN = {
@@ -209,4 +172,4 @@ if interp1hz
 end
 
 %tidy up
-unix(['/bin/rm ' wkfile1 '.nc ' wkfile2 '.nc ' wkfile3 '.nc']);
+unix(['/bin/rm ' m_add_nc(wkfile1)]);

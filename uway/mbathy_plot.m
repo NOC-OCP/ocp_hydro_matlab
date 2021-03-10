@@ -5,7 +5,7 @@
 %
 
 if exist('day','var')
-    m = ['Running script ' mfilename 'for day ' sprintf('%03d',day)];
+    m = ['Running script ' mfilename ' for day ' sprintf('%03d',day)];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m)
 else
     day = input('type day number ');
@@ -13,6 +13,7 @@ end
 day_string = sprintf('%03d',day);
 daylocal = day;
 clear day % so that it doesn't persist
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %find files
 [udirs, udcruise] = m_udirs;
@@ -25,13 +26,13 @@ if length(emvar)>0
     ism = 1;
 end
 if iss
-    filesb = [mgetdir(simvar) '/' simvar '_d' day_string '_edt_av.nc'];
+    filesb = [mgetdir(simvar) '/' simvar '_' mcruise '_d' day_string '_edt_av.nc'];
     if ~exist(filesb, 'file')
         iss = 0;
     end
 end
 if ism
-    filemb = [mgetdir(emvar) '/' emvar '_d' day_string '_edt_av.nc'];
+    filemb = [mgetdir(emvar) '/' emvar '_' mcruise '_d' day_string '_edt_av.nc'];
     if ~exist(filemb, 'file')
         ism = 0;
     end
@@ -43,7 +44,7 @@ if ~iss & ~ism
 end
 
 %get gridded bathy interpolated to track
-dn1 = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1)+daylocal);
+dn1 = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1)+daylocal-1;
 dn2 = dn1+1;
 switch MEXEC_G.Mshipdatasystem
     case 'rvdas'
@@ -58,12 +59,22 @@ switch MEXEC_G.Mshipdatasystem
         return
 end
 if ~isfield(dnav,'dnum'); dnav.dnum = dnav.time + MEXEC_G.uway_torg; end
-dt = 300; dnav.time = dnav.time(1:dt:end); %about 5 minutes
+
+% it's broken at this point and needs fixing
+% dnav.time won't exist after mrload.
+
+
+
+
+dt = 300; 
+% dnav.time = dnav.time(1:dt:end); %about 5 minutes % bak dnav.time not
+% needed
 latvar = mvarname_find({'lat' 'latitude' 'seatex_gll_lat'},fieldnames(dnav));
 lonvar = mvarname_find({'lon' 'long' 'longitude' 'seatex_gll_lon'},fieldnames(dnav));
+
 scriptname = 'bathy'; oopt = 'bathy_grid'; get_cropt
-if mean(sslons)<0 & mean(top.lon)>0; top.lon = top.lon-360; end
-iix = find(top.lon>=min(sslons)-1 & top.lon<=max(sslons)+1); iiy = find(top.lat>=min(sslats)-1 & top.lat<=max(sslats)+1);
+if mean(dnav.(lonvar))<0 & mean(top.lon)>0; top.lon = top.lon-360; end
+iix = find(top.lon>=min(dnav.(lonvar))-1 & top.lon<=max(dnav.(lonvar))+1); iiy = find(top.lat>=min(dnav.(latvar))-1 & top.lat<=max(dnav.(latvar))+1);
 ssdeps = -interp2(top.lon(iix), top.lat(iiy)', top.depth(iiy,iix), dnav.(lonvar)(1:dt:end), dnav.(latvar)(1:dt:end));
 
 %load and plot each file
@@ -88,7 +99,7 @@ for fno = 1:length(files)
     % quick plot
     figure(101); clf
     
-    plot(dnav.dnum,ssdeps,'k'); % gridded bathymetry
+    plot(dnav.dnum(1:dt:end),ssdeps,'k'); % gridded bathymetry
     grid on; hold on;
     
     if isfield(db,dvar2{fno})
@@ -119,11 +130,13 @@ for fno = 1:length(files)
     pdf.xax = [0 24];
     pdf.ntick = [12 10];
     pdf.yax = m_autolims([bottom+100 top-100],pdf.ntick(2));
-    if plotswath == 1
+    if plot2ndbathy == 1
         pdf.ylist=sprintf('%s %s',dvar2{fno},dvar1{fno});
         pdf.yax = [pdf.yax; pdf.yax];
+        pdf.varednum = 2;
     else
         pdf.ylist = dvar1{fno};
+        pdf.varednum = 1;
     end
     pdf.yax = fliplr(pdf.yax);
     mplxyed(pdf)

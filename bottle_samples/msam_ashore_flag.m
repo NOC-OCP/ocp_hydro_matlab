@@ -1,51 +1,48 @@
-% quick and simple script to add list of samples drawn on jc159 for 
-% shoreside analysis
+% msam_ashore_flag
+% 
+% set samtype (string) before calling
 %
-% formerly mchibo_01
-%
-% some input parsing moved to opt_cruise file to facilitate setting
-% multiple different sample flags
+% add list(s) of samples drawn for shoreside analysis to sam_cruise_all.nc
+% from one or more files
+% use opt_cruise to specify which fields to look for in which file(s),
+% based on samtype
 
-stn = 0; minit; scriptname = mfilename;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if ~exist('samtype', 'var')
     samtype = input('sample type? ','s');
 end
-get_cropt %oopt not needed because this one switches on samtype
-    
+scriptname = mfilename; oopt = ['sam_ashore_' samtype]; get_cropt 
+
 root_sam = mgetdir('M_CTD');
 
-stns = unique(stations);
-for kstn = stns(:)'
-    
-    stn_string = sprintf('%03d',kstn);
-    otfile = [root_sam '/sam_' mcruise '_' stn_string];
+samfile = [root_sam '/sam_' mcruise '_all'];
+[d,h] = mloadq(samfile,'/');
+iibb = find(d.niskin_flag==4);
 
-    iistn = find(stations==kstn);
-    
-    %now change flag values
-    MEXEC_A.MARGS_IN = {otfile; 'y'};
-    for nno = 1:length(flagnames)
-        for fno = 1:length(flagvals)
-           snum = sampnums{nno,fno}; snum = snum(:);
-           iifl = find(floor(snum/100)==kstn);
-           if ~isempty(iifl)
-              MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-              flagnames{nno}
-              sprintf('sampnum %s bottle_qc_flag', flagnames{nno})
-              sprintf('y = x2; y(x3~=9 & x3~=4 & ismember(x1, [%s])) = %d;', num2str(snum(iifl)'), flagvals(fno));
-              ' '
-              ' '
-              ];
-           end
-        end
+clear dnew hnew
+hnew.fldnam = {'sampnum'}; hnew.fldunt = {'number'};
+dnew.sampnum = d.sampnum;
+for nno = 1:length(varnames)
+    flagname = [varnames{nno} '_flag'];
+    hnew.fldnam = [hnew.fldnam flagname];
+    hnew.fldunt = [hnew.fldunt 'woce_table_4.8'];
+    if ~isfield(d,flagname)
+        dnew.(flagname) = 9+zeros(size(d.sampnum));
+    else
+        dnew.(flagname) = d.(flagname);
     end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    mcalib2
-    
-    stn = kstn; msam_updateall;
-    
+    for fno = 1:length(flagvals)
+       snum = sampnums{nno,fno}; snum = snum(:);
+       [c,ia,ib] = intersect(snum,d.sampnum);
+       dnew.(flagname)(ib) = flagvals(fno);
+    end
+    dnew.(flagname)(iibb) = max(5,dnew.(flagname)(iibb)); %if niskin was bad, not analysed, presumably
+    dnew.(flagname)(d.niskin_flag==9) = 9;
 end
 
-clear samtype
+ii = strfind(fnin, mgetdir('M_BOT_ISO')); if isempty(ii); ii = -1; end
+hnew.comment = ['flags for shore-analysed samples set based on ' fnin(ii(end)+2:end)];
+MEXEC_A.Mprog = mfilename;
+mfsave(samfile, dnew, hnew, '-merge', 'sampnum');
 

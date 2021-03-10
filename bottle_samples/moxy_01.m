@@ -1,243 +1,187 @@
-% moxy_01: read in bottle oxy data from csv file, and save to appended
-% mstar file oxy_cruise_01.nc
+% moxy_01: read in bottle oxy data from csv files, and save to appended
+% mstar file oxy_cruise_01.nc, and to sam_cruise_all.nc
 %
-% Use: moxy_01        and then respond with station number, or for station 16
-%      stn = 16; moxy_01;
+% The input data are in comma-delimited files, with one or more header
+% rows; the fields to look for to identify the header rows as well as
+% connect them to standard variable names are set in opt_cruise
 %
-% The input data are in comma-delimited files suitable for loading as a database, with
-%    fields/headers including either:
-%        option 1:
-%            statnum, niskin, botoxytempa, botoxya, botoxyflaga, botoxytempb, botoxyb, botoxyflagb
-%            where units are degC, umol/l, and woce flag
-%        or
-%        option 2:
-%            statnum, niskin, oxy_bot, oxy_temp, oxy_titre
-%            in the second case moxy_ccalc will be called to compute oxygen concentrations
-%            using parameters set in opt_cruise, to and match up botoxya and botoxyb
-%            flags will also be set in opt_cruise
+% If concentrations are not included in file or in the list of columns to
+% parse in opt_cruise, calls moxy_ccalc to compute them
 
-minit;
-mdocshow(mfilename, ['loads bottle oxygens from file specified in opt_' mcruise ', optionally calls moxy_ccalc to compute concentration from titration, and writes to oxy_' mcruise '_' stn_string '.nc']);
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mdocshow(mfilename, ['loads bottle oxygens from file specified in opt_' mcruise ', optionally calls moxy_ccalc to compute concentration from titration, and writes to oxy_' mcruise '_01.nc']);
 
-% resolve root directories for various file types
+% find list of files
 root_oxy = mgetdir('M_BOT_OXY');
+scriptname = mfilename; oopt = 'oxy_files'; get_cropt
+if length(ofiles)==0
+    warning(['no files matching ' ofpat ' found in ' root_oxy '; skipping'])
+    return
+end
 
+%initialise
+ds_oxy = dataset;
 
+%information on header format and identification, and mapping between
+%column headers and standard fieldnames
+scriptname = mfilename; oopt = 'oxy_parse'; get_cropt
 
-%%%%%%%%%%%%%%%%%% load %%%%%%%%%%%%%%%%%%
+fn_unt_expect = {'vol_blank' {'ml' 'mls'}
+    'vol_std' {'ml' 'mls'}
+    'vol_titre_std' {'ml' 'mls'}
+    'bot_vol_tfix' {'ml' 'mls'}
+    'sample_titre' {'ml' 'mls'}
+    'fix_temp' {'c' 'degc' 'deg_c'}
+    'conc_o2' {'umol/l' 'umol_per_l' 'umols_per_l'}};
 
-scriptname = mfilename; oopt = 'oxycsv'; get_cropt %filename
-if ~exist(infile, 'file'); warning(['file ' infile ' not found']); return; end
-
-
-%%%%%%%%% first try loading as dataset; check for required fields %%%%%%%%%
-try %first try treating as dataset with required fields
+%load and store fields
+ld = 0;
+for flno = 1:length(ofiles)
     
-    ds_oxy = dataset('File', infile, 'Delimiter', ',');
+    %load
+    [ds, hs] = m_load_samin([root_oxy '/' ofiles(flno).name], hcpat, 'chrows', chrows, 'chunits', chunits);
+    ns = size(ds,1);
+    iid = ld+[1:ns]';
     
-    %test for required fields
-    ds_oxy_fn = ds_oxy.Properties.VarNames;
-    if sum(strcmp(mcruise, lower(ds_oxy_fn)))
-        me = MException('myfile:notdataset:obeexcel', '%s is obe excel file', infile);
-        throw(me)
-    elseif ~(sum(strcmpi('sampnum', ds_oxy_fn))+sum(strcmpi('station', ds_oxy_fn))+sum(strcmpi('cast', ds_oxy_fn)))
-        me = MException('myfile:notdataset:unknown', 'check %s format, columns, header', infile);
-        throw(me)
-    end
-    
-    
-    %%%%%%%%% if not, try loading as obe excel file, and putting into dataset %%%%%%%%%
-catch me
-    
-    if strcmp(me.identifier, 'myfile:notdataset:unknown')
-        error(me.message)
-    else
-        disp(me.message) %probably fine to load as an obe excel file, but display message just for info
-    end
-    
-    warning('off', 'stats:dataset:subsasgn:DefaultValuesAdded')
-    
-    %load as text
-    indata = mtextdload(infile, ',');
-    
-    %parse to find column header rows and data rows
-    nrows = length(indata);
-    ltype = zeros(nrows,1); iiss = []; iiss0 = 1;
-    kskip = [];
-    for k = 1:nrows-1
-        if ~ismember(k,kskip)
-            nc = min(length(indata{k}),length(indata{k+1}));
-            iiss = find(strncmp('Cast', indata{k}(1:nc), 4) & strncmp('Number', indata{k+1}(1:nc), 6));
-            if ~isempty(iiss)
-                ltype(k) = 1; %column header
-                iiss0 = iiss;
-                %kskip = [kskip k+1 k+2]; %next two rows are also part of the column header
-            elseif length(indata{k})>=iiss0 & ~isempty(str2double(indata{k}{iiss0}))
-                ltype(k) = 2; %data
+    fn = ds.Properties.VarNames;
+    if chunits>0
+        for fno = 1:size(fn_unt_expect,1)
+            ii1 = find(strcmp(fn_unt_expect{fno,1},mvar_fvar(:,1)));
+            if length(ii1)>0
+                ii = find(strcmp(mvar_fvar{ii1,2},fn));
+                if length(ii)>0 && ~sum(strcmp(lower(hs.colunit{ii}),fn_unt_expect{fno,2}))
+                    warning([ofiles(fno).name ' unit corresponding to ' fn_unt_expect{fno,1} ', ' hs.colunit{ii} ', does not match expected:'])
+                    disp(fn_unt_expect{fno,2})
+                end
             end
         end
     end
-    ltype(nrows) = 2; %assume ends with data
     
-    %initalise dataset
-    ds_oxy = dataset;
-    loxy = 0;
+    scriptname = mfilename; oopt = 'oxy_parse_files'; get_cropt
     
-    %put into dataset
-    iih = [find(ltype==1); nrows+1];
-    
-    %for every block separated by headers
-    for cno = 1:length(iih)-1
-        
-        %find the relevant columns for this block
-        issta = strncmpi('Cast', indata{iih(cno)}, 4);
-        isnis = strncmpi('Niskin', indata{iih(cno)}, 6);
-        isbot = strncmpi('Bottle', indata{iih(cno)}, 6);
-        isvol = strncmpi('Bottle', indata{iih(cno)}, 6) & strncmpi('mls', indata{iih(cno)+2}, 2);
-        isbot = isbot & ~isvol;
-        isblk = strncmpi('Blank', indata{iih(cno)}, 5);
-        isstv = strncmpi('Std', indata{iih(cno)}, 3);% & strncmpi('vol', indata{iih(cno)+1}, 3);
-        isstd = strncmpi('Standard', indata{iih(cno)}, 8);% & strncmpi('titre', indata{iih(cno)+1}, 5);
-        istem = strncmpi('Fixing', indata{iih(cno)}, 6);% & strncmpi('temp', indata{iih(cno)+1}, 4);
-        isoti = strncmpi('Sample', indata{iih(cno)}, 6);% & strncmpi('titre', indata{iih(cno)+1}, 5);
-        isiod = strncmpi('Iodate', indata{iih(cno)}, 6);
-        isno2 = strncmpi('n(O2)', indata{iih(cno)}, 5);% & strncmpi('mol', indata{iih(cno)+2}, 3);
-        isco2 = strncmpi('C(O2)', indata{iih(cno)}, 5);% & strncmpi('umol', indata{iih(cno)+2}, 4);
-        isflg = strncmpi('flag', lower(indata{iih(cno)}), 4);
-        
-        %find the sample lines for this block
-        iis = find(ltype==2); iis = iis(iis>iih(cno) & iis<iih(cno+1));
-        
-        %append sample rows %***possibly this could be done faster with
-        %cell2mat? or possibly not
-        for sno = 1:length(iis)
-            loxy = loxy+1;
-            ds_oxy.statnum(loxy,1) = str2double(indata{iis(sno)}{issta});
-            ds_oxy.niskin(loxy,1) = str2double(indata{iis(sno)}{isnis});
-            ds_oxy.oxy_bot(loxy,1) = str2double(indata{iis(sno)}{isbot});
-            ds_oxy.bot_vol(loxy,1) = str2double(indata{iis(sno)}{isvol});
-            ds_oxy.oxy_temp(loxy,1) = str2double(indata{iis(sno)}{istem});
-            ds_oxy.vol_blank(loxy,1) = str2double(indata{iis(sno)}{isblk});
-            ds_oxy.vol_std(loxy,1) = str2double(indata{iis(sno)}{isstv});
-            ds_oxy.vol_titre_std(loxy,1) = str2double(indata{iis(sno)}{isstd});
-            ds_oxy.mol_std(loxy,1) = str2double(indata{iis(sno)}{isiod});
-            ds_oxy.oxy_titre(loxy,1) = str2double(indata{iis(sno)}{isoti});
-            ds_oxy.concO2(loxy,1) = str2double(indata{iis(sno)}{isco2});
-            if sum(isflg)>0
-                ds_oxy.flag(loxy,1) = str2double(indata{iis(sno)}{isflg});
-            else
-                ds_oxy.flag(loxy,1) = 2;
-            end
+    warning('off','all')
+    for vno = 1:size(mvar_fvar,1)
+        if sum(strcmp(mvar_fvar{vno,2},ds.Properties.VarNames))
+            ds_oxy.(mvar_fvar{vno,1})(iid,1) = ds.(mvar_fvar{vno,2});
+        else
+            ds_oxy.(mvar_fvar{vno,1})(iid,1) = NaN;
         end
-        
     end
+    if sum(strcmp('notes',ds.Properties.VarNames))
+        ds_oxy.comment(iid,1) = ds.notes;
+    end
+    warning('on','all')
+    
+    ld = ld+ns;
     
 end
 
-%%%%%%%%%%%%%%%%%% now operate on dataset %%%%%%%%%%%%%%%%%%
-
+%rearrange some fields
 ds_oxy_fn = ds_oxy.Properties.VarNames;
-
-%rename/create dataset fields if necessary
-if sum(strcmp('statnum', ds_oxy_fn))==0
-    if sum(strcmp('sampnum', ds_oxy_fn))
+if sum(strcmp('sampnum',ds_oxy_fn))==0
+    ds_oxy.sampnum = 100*ds_oxy.statnum + ds_oxy.position;
+else
+    if sum(strcmp('statnum',ds_oxy_fn))==0
         ds_oxy.statnum = floor(ds_oxy.sampnum/100);
-    else
-        oopt = 'sampnum_parse'; get_cropt
+    end
+    if sum(strcmp('position',ds_oxy_fn))==0
+        ds_oxy.position = ds_oxy.sampnum - ds_oxy.statnum*100;
     end
 end
-ds_oxy_fn = ds_oxy.Properties.VarNames;
+if sum(strcmp('flag',ds_oxy_fn))==0
+    iif = 1:length(ds_oxy.sampnum);
+else
+    iif = find(isnan(ds_oxy.flag));
+end
+f = 9+zeros(length(iif),1);
+f(~isnan(ds_oxy.sample_titre(iif))) = 2;
+f(isnan(ds_oxy.sample_titre(iif) & ~isnan(ds_oxy.fix_temp(iif)))) = 5;
+ds_oxy.flag(iif) = f;
 
-%find this station
-iig = find(ds_oxy.statnum==stnlocal);
-if length(iig)==0; warning(['no oxy data for station ' stn_string]); return; end
-ds_oxy = ds_oxy(iig,:);
-
-%%% ASF edit to get around niskin vs Niskin
-if sum(strcmp(ds_oxy_fn(2),'niskin'))
-    ds_oxy.Niskin = ds_oxy.niskin;
-    %     ds_oxy_fun(2) = {'niskin'};
-    disp('jolly rancher')
+%compute bottle volumes at fixing temperature if not present
+if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0
+    if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
+        ds_oxy.bot_cal_temp = 25+zeros(size(ds_oxy.sampnum)); %assume*** put in cruise options
+    end
+    ds_oxy.bot_vol_tfix = ds_oxy.bot_vol.*(1+9.75e-5*(ds_oxy.fix_temp-ds_oxy.bot_cal_temp));
 end
 
-%%% ASF edit to get around the N/A strings in the csv files
-if sum(strcmp(ds_oxy.bot_vol,'#N/A'))
-    ds_oxy.bot_vol = str2double(ds_oxy.bot_vol);
-    ds_oxy.Bottle_vol0x2E = str2double(ds_oxy.Bottle_vol0x2E);
+%compute concentration if not present
+if sum(strcmp('conc_o2',ds_oxy_fn))==0
+    scriptname = mfilename; oopt = 'oxycalcpars'; get_cropt
+    n_o2_reag = mol_o2_reag*vol_reag_tot;
+    % molarity (mol/mL) of titrant
+    mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);
+    % moles of O2 in sample
+    ds_oxy.n_o2 = (ds_oxy.sample_titre - ds_oxy.vol_blank).*mol_titrant*sample_react_ratio;
+    % volume of sample, accounting for pickling reagent volumes.
+    sample_vols = ds_oxy.bot_vol_tfix - vol_reag_tot; %mL
+    % concentration of O2 in sample, accounting for concentration in pickling reagents
+    a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
+    ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
+    ds_oxy.conc_o2(isnan(ds_oxy.sample_titre+ds_oxy.bot_vol_tfix)) = NaN;
 end
-%%%
+ds_oxy.flag((isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2)) & ~isnan(ds_oxy.fix_temp)) = 5; %drawn but not analysed
 
-%optionally calculate concentrations
-if sum(strcmp('oxy_titre', ds_oxy_fn)) & sum(strcmp('oxy_temp', ds_oxy_fn)) & sum(strcmp('oxy_bot', ds_oxy_fn)+strcmp('oxy_vol', ds_oxy_fn)) %necessary information is in file
-    ds_oxy = moxy_ccalc(ds_oxy); %compute concentrations from titre, temperature, and other parameters
-end
+%now put into structure and output
+clear d hnew
+[d.sampnum, iia, iic] = unique(ds_oxy.sampnum);
+d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
+hnew.dataname = ['oxy_' mcruise '_01'];
+hnew.comment = ['data loaded from ' root_oxy '/' ofpat];
+hnew.fldnam = {'sampnum' 'statnum' 'position'};
+hnew.fldunt = {'number' 'number' 'on.rosette'};
 
-oopt = 'oxybotnisk'; get_cropt
+d.botoxya_per_l = ds_oxy.conc_o2(iia);
+d.botoxya_temp = ds_oxy.fix_temp(iia);
+d.botoxya_flag = ds_oxy.flag(iia);
+hnew.fldnam = [hnew.fldnam 'botoxya_per_l' 'botoxya_temp' 'botoxya_flag'];
+hnew.fldunt = [hnew.fldunt 'umol/L' 'degC' 'woce_9.4'];
 
-sampnum = ds_oxy.statnum*100 + ds_oxy.niskin;
-position = ds_oxy.niskin;
-statnum = ds_oxy.statnum;
-botoxya_per_l = ds_oxy.botoxya_per_l; botoxyflaga = ds_oxy.botoxyflaga; botoxytempa = ds_oxy.botoxytempa;
-botoxyb_per_l = ds_oxy.botoxyb_per_l; botoxyflagb = ds_oxy.botoxyflagb; botoxytempb = ds_oxy.botoxytempb;
-
-%make sure there's always data in a
-ii = find(isnan(botoxya_per_l) & ~isnan(botoxyb_per_l));
-if ~isempty(ii)
-    oa = botoxya_per_l(ii); ta = botoxytempa(ii); fa = botoxyflaga(ii);
-    ob = botoxyb_per_l(ii); tb = botoxytempb(ii); fb = botoxyflagb(ii);
-    botoxya_per_l(ii) = ob; botoxytempa(ii) = tb; botoxyflaga(ii) = fb;
-    botoxyb_per_l(ii) = oa; botoxytempb(ii) = ta; botoxyflagb(ii) = fa;
-end
-
-%edit flags
-botoxyflaga(botoxyflaga == -999) = 9; %sample not drawn
-botoxyflagb(botoxyflagb == -999) = 9;
-botoxyflaga(botoxyflaga~=9 & isnan(botoxya_per_l)) = 5; %not reported
-botoxyflagb(botoxyflagb~=9 & isnan(botoxyb_per_l)) = 5;
-oopt = 'flags'; get_cropt
-
-otfile = [root_oxy '/oxy_' mcruise '_' stn_string];
-dataname = ['oxy_' mcruise '_' stn_string];
-
-varnames = {'position','statnum','sampnum','botoxytempa','botoxya_per_l','botoxyflaga','botoxytempb','botoxyb_per_l','botoxyflagb'};
-varunits = {'number','number','number','degC','umol/l','woceflag','degC','umol/l','woceflag'};
-nvars = length(varnames);
-
-varnames_units = {};
-for k = 1:length(varnames)
-    varnames_units = [varnames_units; varnames(k)];
-    varnames_units = [varnames_units; {'/'}];
-    varnames_units = [varnames_units; varunits(k)];
+iib = setdiff(1:length(ds_oxy.sampnum),iia);
+if ~isempty(iib) %***do something different for different input, like duplicates on same line? or don't allow this
+    d.botoxyb_per_l = NaN+d.botoxya_per_l; 
+    d.botoxyb_temp = d.botoxyb_per_l;
+    d.botoxyb_flag = 9+zeros(size(d.sampnum));
+    [~,ii,iid] = intersect(ds_oxy.sampnum(iib),d.sampnum);
+    d.botoxyb_per_l(iid) = ds_oxy.conc_o2(iib);
+    d.botoxyb_temp(iid) = ds_oxy.fix_temp(iib);
+    d.botoxyb_flag(iid) = ds_oxy.flag(iib);
+    hnew.fldnam = [hnew.fldnam 'botoxyb_per_l' 'botoxyb_temp' 'botoxyb_flag'];
+    hnew.fldunt = [hnew.fldunt 'umol/L' 'degC' 'woce_9.4'];
 end
 
-timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
+scriptname = mfilename; oopt = 'oxyflags'; get_cropt
 
-%save
-MEXEC_A.MARGS_IN_1 = {
-    otfile
-    };
-MEXEC_A.MARGS_IN_2 = varnames(:);
-MEXEC_A.MARGS_IN_3 = {
-    ' '
-    ' '
-    '1'
-    dataname
-    '/'
-    '2'
-    MEXEC_G.PLATFORM_TYPE
-    MEXEC_G.PLATFORM_IDENTIFIER
-    MEXEC_G.PLATFORM_NUMBER
-    '/'
-    '4'
-    timestring
-    '/'
-    '8'
-    };
-MEXEC_A.MARGS_IN_4 = varnames_units(:);
-MEXEC_A.MARGS_IN_5 = {
-    '-1'
-    '-1'
-    };
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; ...
-    MEXEC_A.MARGS_IN_4;MEXEC_A.MARGS_IN_5];
-msave
+mfsave([root_oxy '/oxy_' mcruise '_01.nc'], d, hnew);
+
+% compute botoxy_per_kg (umol/kg) from botoxy (umol/L) and save to samfile
+clear dnew hnew
+samfile = [mgetdir('M_CTD') '/sam_' mcruise '_all.nc'];
+[ds,hs] = mloadq(samfile,'sampnum','uasal',' ');
+[c,iio,iis] = intersect(d.sampnum, ds.sampnum);
+dnew.sampnum = ds.sampnum;
+hnew.fldnam = {'sampnum'}; 
+hnew.fldunt = {'number'};
+
+dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxya_temp(iio),0),0);
+dnew.botoxya = NaN+ds.sampnum; dnew.botoxya_temp = dnew.botoxya; dnew.botoxya_flag = 9+zeros(size(ds.sampnum));
+dnew.botoxya(iis) = d.botoxya_per_l(iio)./(dens/1000);
+dnew.botoxya_temp(iis) = d.botoxya_temp(iio);
+dnew.botoxya_flag(iis) = d.botoxya_flag(iio);
+hnew.fldnam = [hnew.fldnam 'botoxya' 'botoxya_temp' 'botoxya_flag'];
+hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
+
+if isfield(d,'botoxyb_per_l')
+    dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxyb_temp(iio),0),0);
+    dnew.botoxyb = NaN+ds.sampnum; dnew.botoxyb_temp = dnew.botoxyb; dnew.botoxyb_flag = 9+zeros(size(ds.sampnum));
+    dnew.botoxyb(iis) = d.botoxyb_per_l(iio)./(dens/1000);
+    dnew.botoxyb_temp(iis) = d.botoxyb_temp(iio);
+    dnew.botoxyb_flag(iis) = d.botoxyb_flag(iio);
+    hnew.fldnam = [hnew.fldnam 'botoxyb' 'botoxyb_temp' 'botoxyb_flag'];
+    hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
+end
+
+mfsave(samfile, dnew, hnew, '-addvars');
+
+%station 14, 1034 --> 1.034

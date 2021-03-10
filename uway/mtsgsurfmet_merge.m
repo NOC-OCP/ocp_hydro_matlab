@@ -51,14 +51,15 @@ for no = 1:length(metnames)
                     
                 case 'rvdas'
                     
+                    %vector interpolate windsonic data onto met times
                     filesa = [mgetdir('windsonic') '/windsonic_' mcruise '_01.nc'];
                     if exist(filesa, 'file')
                         [ds, hs] = mloadq(filesa, '/'); 
                         ds.timec = ds.time/3600/24+datenum(hs.data_time_origin);
                         
-                        scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
-                        windsin = [winds '_raw']; winddin = [windd '_raw']; % field names of raw data in windsonic_mcruise_01 file
-                        windssa = [winds '_sonic']; winddsa = [windd '_sonic'];
+                        windsin = mvarname_find({'windspeed_raw' 'wind_speed_ms' 'relwind_spd_raw'}, hs.fldnam);
+                        winddin = mvarname_find({'winddirection_raw' 'direct' 'wind_dir' 'relwind_dirship_raw'}, hs.fldnam);
+                        windssa = [windsin '_sonic']; winddsa = [winddin '_sonic'];
                         data = interp1(ds.timec, ds.(windsin).*exp(sqrt(-1)*ds.(winddin)/180*pi), dm.timec);
                         dm.(windssa) = abs(data); dm.(winddsa) = mod(angle(data)*180/pi,360);
                         hnew.fldnam = [hnew.fldnam windssa winddsa];

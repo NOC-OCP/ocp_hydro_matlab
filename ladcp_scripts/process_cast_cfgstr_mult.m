@@ -197,7 +197,47 @@ if pcs.begin_step <= pcs.cur_step
     %     apply magnetic deviation if given
     %  2) merge down-up data
     %  3) do some fist order error checks
-    [d,p]=loadrdi(f,p);
+    if iscell(f.ladcpdo) & ~isempty(f.ladcpdo)
+        %load multiple files
+        for no = 1:length(f.ladcpdo)
+            f1 = f; f1.ladcpdo = f1.ladcpdo{no};
+            [d1(no), p1(no)] = loadrdi(f1, p);
+            l(no) = length(d1(no).time_jul);
+        end
+        ii = find(l==max(l)); ii = ii(1); %start with longest
+        iia = setdiff(1:length(f.ladcpdo), ii);
+        d = d1(ii); p = p1(ii); f.ladcpdo = f.ladcpdo{no};
+        %append
+        fldnms = fieldnames(d);
+        for no = iia
+            for fno = 1:length(fldnms)
+                dat = getfield(d1(no), fldnms{fno});
+                if isnumeric(dat)
+                    s = size(dat);
+                    if s(2)==l(no)
+                        d = setfield(d, fldnms{fno}, [getfield(d,fldnms{fno}) getfield(d1(no),fldnms{fno})]);
+                    elseif s(1)==l(no)
+                        d = setfield(d, fldnms{fno}, [getfield(d,fldnms{fno}); getfield(d1(no),fldnms{fno})]);
+                    end
+                end
+            end
+        end
+        %sort
+        [t, iit] = sort(d.time_jul);
+        for fno = 1:length(fldnms)
+            dat = getfield(d, fldnms{fno});
+            if isnumeric(dat)
+                s = size(dat);
+                if s(2)==length(d.time_jul)
+                    d = setfield(d, fldnms{fno}, dat(:,iit));
+                elseif s(1)==length(d.time_jul)
+                    d = setfield(d, fldnms{fno}, dat(iit,:));
+                end
+            end
+        end
+    else
+        [d,p]=loadrdi(f,p);
+    end
     
     % get instrument serial number
     p=getserial(f,p);

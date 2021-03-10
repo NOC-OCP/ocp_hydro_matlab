@@ -35,7 +35,7 @@ scriptname = 'ctd_evaluate_sensors';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 oopt = '';
 
-okf = [2 2.3]; %only bother with good samples
+okf = [2]; %only bother with good samples
 %okf = [2 3]; %include good or questionable samples (useful for checking flags due to niskins)
 
 printdir = [MEXEC_G.MEXEC_DATA_ROOT '/plots/'];
@@ -89,7 +89,7 @@ if strcmp(sensname, 'temp')
    
 elseif strcmp(sensname, 'cond')
    fnm = ['ucond' sensstr]; ctddata = getfield(d, fnm); ctddata = ctddata(:);
-   caldata = [gsw_C_from_SP(d.botpsal(:),d.utemp1(:),d.upress(:)) gsw_C_from_SP(d.botpsal(:),d.utemp2(:),d.upress(:))]; calflag = d.botpsalflag(:);
+   caldata = [gsw_C_from_SP(d.botpsal(:),d.utemp1(:),d.upress(:)) gsw_C_from_SP(d.botpsal(:),d.utemp2(:),d.upress(:))]; calflag = d.botpsal_flag(:);
    caldata = caldata(:,sensnum);
    oopt = 'csensind'; get_cropt;
    res = (caldata./ctddata - 1)*35;
@@ -99,11 +99,11 @@ elseif strcmp(sensname, 'cond')
    
 elseif strcmp(sensname, 'oxy')
    fnm = ['uoxygen' sensstr]; ctddata = getfield(d, fnm); ctddata = ctddata(:);
-   caldata = d.botoxy(:); calflag = d.botoxyflag(:);
+   caldata = d.botoxya(:); calflag = d.botoxya_flag(:);
    oopt = 'osensind'; get_cropt
    res = (caldata - ctddata);
    if isfield(d, 'uoxygen1') & isfield(d, 'uoxygen2'); ctdres = (d.uoxygen2(:)-d.uoxygen1(:)); else; ctdres = NaN+ctddata; end
-   rlabel = 'O_{bot} - O_{ctd} (umol/kg)'; rlim = [-10 10];
+   rlabel = 'O_{bot} - O_{ctd} (umol/kg)'; rlim = [-5 5];
    vlim = [50 450];
    
 else
@@ -200,9 +200,9 @@ if sum(strcmp(sensname, {'temp';'cond';'oxy'})) & plotprof
    mres = abs(res)>rlim(2)/2; mres(d.upress>=pdeep) = abs(res(d.upress>=pdeep))>rlim(2)/4;
    ii = find(mres & ismember(calflag, okf));
    if length(ii)>0
-      disp([sensname sensstr ' difference out of range (station, bottle, press, res):']);  
+      disp([sensname sensstr ' difference out of range (station, bottle, press, res, flag):']);  
       a = d.statnum(ii); b = d.position(ii); c = d.upress(ii);
-      disp(round([a(:) b(:) c(:) res(ii)]))
+      disp(round([a(:) b(:) c(:) res(ii) calflag(ii)]))
       disp('dbcont to plot profile-by-profile')
       keyboard
 
@@ -247,7 +247,7 @@ if sum(strcmp(sensname, {'temp';'cond';'oxy'})) & plotprof
 	 mn = nanmean(c); st = nanstd(c); xl = [-st st]*5+mn; set(gca, 'xlim', xl);
          text(repmat(st*4.5+mn,length(iiq),1), -d.upress(iiq), num2str(d.position(iiq)));
 	 for qno = 1:length(iiq)
-            sprintf('%d %d %5.2f %d %d', s(no), d.position(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), d.bottle_qc_flag(iiq(qno)))
+            sprintf('%d %d %5.2f %d %d', s(no), d.position(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), d.niskin_flag(iiq(qno)))
 	 end
          keyboard
 

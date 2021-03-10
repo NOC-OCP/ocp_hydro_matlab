@@ -97,9 +97,10 @@ if exist(f.ctd,'file')
 	f.ctd_pressure_field	= 2;
 	f.ctd_temperature_field = 3;
 	f.ctd_salinity_field	= 4;
-	f.ctd_time_field	= 1;
-	f.ctd_time_base 	= 0;		% elapsed
-%	f.ctd_time_base 	= 1;		% 
+%	f.ctd_time_field	= 1;
+%	f.ctd_time_base 	= 0;		% elapsed
+    f.ctd_time_field    = 7;
+	f.ctd_time_base 	= 1;		% yearday
 	
 	f.nav                   = f.ctd;
 	f.nav_header_lines	= f.ctd_header_lines;

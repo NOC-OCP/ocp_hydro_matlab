@@ -9,7 +9,10 @@ mdocshow(mfilename, ['plots 24 hz and 1 hz CTD data for station ' stn_string]);
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');
 prefix1 = ['ctd_' mcruise '_'];
-infile1 = [root_ctd '/' prefix1 stn_string '_raw'];
+infile1 = [root_ctd '/' prefix1 stn_string '_raw_cleaned'];
+if ~exist(m_add_nc(infile1),'file')
+    infile1 = [root_ctd '/' prefix1 stn_string '_raw'];
+end
 infile2 = [root_ctd '/dcs_' mcruise '_' stn_string ];
 infile3 = [root_ctd '/' prefix1 stn_string '_psal'];
 
@@ -21,6 +24,11 @@ dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
 dn_end = datenum(hdcs.data_time_origin)+dcs_te/86400;
 startdc = datevec(dn_start);
 stopdc = datevec(dn_end);
+scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
+if oxy_end
+    stopdco = stopdc; 
+    stopdco = datevec(datenum(stopdc)-oxy_align/3600/24);
+end
 
 close all
 
@@ -32,7 +40,12 @@ clear pshow5
 pshow5.ncfile.name = infile3;
 pshow5.xlist = 'time';
 pshow5.ylist = ['temp1 temp2 cond1 cond2 press'];
-for no = 1:nox; pshow5.ylist = [pshow5.ylist ' ' oxyvars{no,2}]; end
+for no = 1:nox
+    pshow5.ylist = [pshow5.ylist ' ' oxyvars{no,2}];
+    if oxy_end
+        pshow5.stopdcv.(oxyvars{no,2}) = stopdco;
+    end
+end
 pshow5.startdc = startdc;
 pshow5.stopdc = stopdc;
 mplotxy(pshow5);
@@ -45,15 +58,23 @@ pshow1.ylist = 'temp1 temp2 cond1 cond2 press';
 pshow1.startdc = startdc;
 pshow1.stopdc = stopdc;
 mplotxy(pshow1);
-    
+
 % raw data oxygen
 clear pshow2
 pshow2.ncfile.name = infile1;
 pshow2.xlist = 'time';
 if nox>1
-ylist = {'pressure_temp' 'press' 'oxygen_sbe1' 'oxygen_sbe2'};
+    ylist = {'pressure_temp' 'press' 'oxygen_sbe1' 'oxygen_sbe2'};
+    if oxy_end
+        pshow2.stopdcv.oxygen_sbe1 = stopdco;
+        pshow2.stopdcv.oxygen_sbe2 = stopdco;
+    end
 else
-    ylist = {'pressure_temp' 'press' 'oxygen_sbe1' 'sbeoxyV1' 'oxygen_sbe'};
+    ylist = {'pressure_temp' 'press' 'oxygen_sbe1' 'sbeoxyV1'};
+    if oxy_end
+        pshow2.stopdcv.oxygen_sbe1 = stopdco;
+        pshow2.stopdcv.sbeoxyV1 = stopdco;
+    end
 end
 [ylist, pshow2.ylist] = mvars_in_file(ylist, infile1);
 pshow2.startdc = startdc;

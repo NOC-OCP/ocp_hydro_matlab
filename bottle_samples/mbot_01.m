@@ -43,14 +43,15 @@ if exist(infile,'file')
     ds.position = [1:nnisk]';
     ds.sampnum = 100*stnlocal + ds.position;
     ds.statnum = stnlocal + zeros(nnisk,1);
-    ds.bottle_qc_flag = 9+zeros(nnisk,1); % default flag of 9 meaning not closed
-    ds.bottle_qc_flag(blpos) = 2; % if bottle closed, default closure flag is 2.
+    ds.niskin_flag = 9+zeros(nnisk,1); % default flag of 9 meaning not closed
+    ds.niskin_flag(blpos) = 2; % if bottle closed, default closure flag is 2.
     
     scriptname = mfilename; oopt = 'nispos'; get_cropt; %niskin-position mapping information
-    
+    ds.niskin = niskin; 
+
     %get variables and units for msave
-    varnames = {'sampnum','statnum','position','bottle_number','bottle_qc_flag'};
-    varunits = {'number','number','on rosette','number', 'woce table 4.8'};
+    varnames = {'sampnum','statnum','position','niskin','niskin_flag'};
+    varunits = {'number','number','on.rosette','number', 'woce table 4.8'};
     force_set_var = 1; mvarnames_units; clear ds force_set_var
     
     %modify flags
@@ -58,7 +59,8 @@ if exist(infile,'file')
     
     dataname = ['bot_' mcruise '_' stn_string];
     otfile = [root_bot '/' dataname];
-    
+    MEXEC_A.Mprog = mfilename;
+
     timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
     MEXEC_A.MARGS_IN_1 = {
         otfile
@@ -96,4 +98,24 @@ end
 
 if ~arebottles
     warning(['no Niskin bottle info for station ' stn_string ' in ' infile])
+else
+    
+    %write to sam_cruise_all.nc
+    root_ctd = mgetdir('M_CTD');
+    root_bot = mgetdir('M_CTD_BOT'); % the bottle file(s) is/are in the ascii files directory
+    infile = [root_bot '/bot_' mcruise '_' stn_string];
+    otfile = [root_ctd '/sam_' mcruise '_all'];
+    
+    if exist(m_add_nc(infile),'file') == 2
+        [d,h] = mloadq(infile,'/');
+        clear hnew
+        hnew.fldnam = h.fldnam; hnew.fldunt = h.fldunt;
+        hnew.dataname = h.dataname; hnew.mstar_site = h.mstar_site; hnew.version = h.version;
+        if sum(~isnan(d.sampnum))>0
+            MEXEC_A.Mprog = mfilename;
+            mfsave(otfile, d, hnew, '-merge', 'sampnum');
+        end
+    end
+    
 end
+

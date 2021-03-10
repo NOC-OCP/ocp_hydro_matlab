@@ -232,6 +232,7 @@ switch MEXEC_G.Mshipdatasystem
             {'M_SCSSED' 'scs_sed'}
             ];
     case 'rvdas'
+        MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
         MEXEC_G.RVDAS_CSVROOT = [MEXEC_G.MEXEC_DATA_ROOT '/rvdas/rvdas_csv_tmp/'];
         MEXEC_G.RVDAS_MACHINE = ['rvdas.' MEXEC_G.Mship '.local'];
         MEXEC_G.RVDAS_USER = 'rvdas';

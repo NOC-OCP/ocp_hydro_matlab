@@ -19,7 +19,7 @@ infile = [root_ctd '/' prefix stn_string '_raw_cleaned'];
 if ~exist(m_add_nc(infile), 'file')
     infile = [root_ctd '/' prefix stn_string '_raw'];
 end
-
+    
 otfile = [root_ctd '/' prefix stn_string '_24hz'];
 unix(['/bin/cp ' m_add_nc(infile) ' ' m_add_nc(otfile)])
 unix(['chmod 644 ' m_add_nc(otfile)]); % make file writeable
@@ -29,8 +29,10 @@ scriptname = mfilename; oopt = 'raw_corrs'; get_cropt
 scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
 nox = size(oxyvars,1);
 
+MEXEC_A.Mprog = mfilename;
 
-%oxygen hysteresis and/or renaming oxygen variables
+%%%%% oxygen hysteresis and/or renaming oxygen variables %%%%%
+
 if dooxyrev | dooxyhyst
     
     if dooxyrev
@@ -42,14 +44,14 @@ if dooxyrev | dooxyhyst
             varsin = [varsin ' ' oxyvars{no,1}];
         end
         varsin = ['press time' varsin];
-        [d,h] = mloadq(infile, varsin);
+        [d,hcal] = mloadq(infile, varsin);
         scriptname = mfilename; oopt = 'oxyrev'; get_cropt
         otfilestruct=struct('name',[otfile '.nc']);
         disp(['reversing oxy hyst for ' stn_string ', output to _rev'])
         for no = 1:nox
             oxy_unhyst = mcoxyhyst_reverse(getfield(d, oxyvars{no,1}), d.time, d.press, H1, H2, H3);
-            vind = find(strcmp(oxyvars{no,1}, h.fldnam)); %same units
-            datastruct = struct('name',[oxyvars{no,1} '_rev'], 'units',h.fldunt{vind}, 'data',oxy_unhyst);
+            vind = find(strcmp(oxyvars{no,1}, hcal.fldnam)); %same units
+            datastruct = struct('name',[oxyvars{no,1} '_rev'], 'units',hcal.fldunt{vind}, 'data',oxy_unhyst);
             m_write_variable(otfilestruct, datastruct);
         end
         revstring = '_rev'; %if dooxyhyst will apply to _rev variables
@@ -60,6 +62,14 @@ if dooxyrev | dooxyhyst
     if dooxyhyst
         %calculate the variables with oxygen hysteresis applied, and add to
         %otfile
+        varsin = [];
+        for no = 1:nox
+            %start from reversed variables if set above, otherwise
+            %(revstring is empty) start from sbe variables
+            varsin = [varsin ' ' oxyvars{no,1} revstring];
+        end
+        varsin = ['press time' varsin];
+        [d,hcal] = mloadq(infile,varsin);
         scriptname = mfilename; oopt = 'oxyhyst'; get_cropt
         %record whether a non-default calibration is set, for mstar comment
         if length(H1)>1 | length(H2)>1 | length(H3)>1
@@ -69,33 +79,22 @@ if dooxyrev | dooxyhyst
         else
             ohtyp = 0;
         end
-        varsin = [];
-        for no = 1:nox
-            %start from reversed variables if set above, otherwise
-            %(revstring is empty) start from sbe variables
-            varsin = [varsin ' ' oxyvars{no,1} revstring];
-        end
-        varsin = ['press time' varsin];
-        [d,h] = mloadq(infile,varsin);
-        scriptname = mfilename; oopt = 'oxyhyst'; get_cropt
         otfilestruct=struct('name',[otfile '.nc']);
         disp(['applying oxy_hyst for ' stn_string ', output to'])
         disp(sprintf('%s ',oxyvars{:,2}))
         for no = 1:nox
             oxy_out = mcoxyhyst(getfield(d, [oxyvars{no,1} revstring]), d.time, d.press, H1, H2, H3);
-            vind = find(strcmp(oxyvars{no,1}, h.fldnam)); %same units
-            datastruct = struct('name',oxyvars{no,2}, 'units',h.fldunt{vind}, 'data',oxy_out);
+            vind = find(strcmp(oxyvars{no,1}, hcal.fldnam)); %same units
+            datastruct = struct('name',oxyvars{no,2}, 'units',hcal.fldunt{vind}, 'data',oxy_out);
             m_write_variable(otfilestruct, datastruct);
         end
         if ohtyp>0
             %and add comments to file
-            if ohtyp == 1
-                comment = 'oxygen hysteresis correction different from SBE default applied';
-            elseif ohtyp == 2
+            comment = 'oxygen hysteresis correction different from SBE default applied';
+            if ohtyp == 2
                 comment = [comment ' (depth-varying)'];
             end
-            ncfile.name = m_add_nc(infile);
-            m_add_comment(ncfile,comment);
+            m_add_comment(otfilestruct, comment);
         end
         
     end
@@ -116,7 +115,8 @@ else
 end
 
 
-%turbidity conversion from turbidity volts
+%%%%% turbidity conversion from turbidity volts %%%%%
+
 if doturbV
     disp(['computing turbidity from turbidity volts for ' stn_string])
     scriptname = mfilename; oopt = 'turbVpars'; get_cropt
@@ -131,4 +131,52 @@ if doturbV
         ' '
         };
     mcalib2;
+end
+
+
+%%%%% sensor calibrations %%%%%
+
+if tempcal | condcal | oxygencal | fluorcal | transmittancecal
+    %if any are true, get whole list and test for which to apply below
+    scriptname = mfilename; oopt = 'ctdcals'; get_cropt
+end
+
+if size(calstr,1)>0
+    
+    %initialise
+    [d0,h0] = mloadq(otfile, '/');
+    clear dcal hcal
+    hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
+    
+    for sno = 1:size(calstr,1)
+        
+        iis = strfind(calmsg{sno,1},[' ' mcruise]);
+        calsens = calmsg{sno,1}(1:iis-1);
+        
+        %figure out if this calstr should be applied, depending on flag set
+        %above in oopt = 'raw_corrs' call to get_cropt 
+        if ~isempty(str2num(calsens(end)))
+            calvar = calsens(1:end-1);
+        else
+            calvar = calsens;
+        end
+        eval(['docal = ' calvar 'cal;'])
+        
+        if docal
+            %apply, and store in hcal
+            fprintf(1,'\n%s\n\n',calstr{sno})
+            eval([calstr{sno}]);
+            ii = find(strcmp(calsens,h0.fldnam));
+            hcal.fldnam = [hcal.fldnam calsens]; hcal.fldunt = [hcal.fldunt h0.fldunt(ii)];
+            hcal.comment = [hcal.comment sprintf('calibration (%s) applied to %s using %s\n', calmsg{sno,2}, calsens, calstr{sno})];
+        end
+        
+    end
+    
+    %if there were calibrations applied to any variables, save those back
+    %to 24hz file (overwriting uncalibrated versions)
+    if length(hcal.fldnam)>0
+        mfsave(otfile, dcal, hcal, '-addvars');
+    end
+    
 end

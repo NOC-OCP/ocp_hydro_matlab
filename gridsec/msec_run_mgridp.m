@@ -58,6 +58,7 @@ for ksec = 1:length(sections)
     
     %ctd data
     scriptname = mfilename; oopt = 'ctd_regridlist'; get_cropt
+    scriptname = mfilename; oopt = 'sec_stns'; get_cropt
     if length(ctd_regridlist)>0
         MEXEC_A.MARGS_IN = {
             otfile
@@ -67,7 +68,7 @@ for ksec = 1:length(sections)
         for kstn = kstns
             % bak jc191 check to see if a file exists before adding it to
             % the list
-            fn_2db = sprintf('%s/%s%03d_2db.nc', root_ctd, dataname, kstn);
+            fn_2db = sprintf('%s/%s_%03d_2db.nc', root_ctd, dataname, kstn);
             if exist(fn_2db,'file') == 2
                 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
                     fn_2db
@@ -97,6 +98,28 @@ for ksec = 1:length(sections)
         ' '
         };
     mcalc
+    
+        varlist = { % list of possible names, flags and units that might be mapped on a cruise
+        'botpsal'   'botpsal_flag'   'umol/kg'
+        'botoxya'   'botoxya_flag'   'umol/kg'
+        'silc'     'silc_flag'    'umol/kg'
+        'phos'     'phos_flag'    'umol/kg'
+        'totnit'   'totnit_flag'  'umol/kg'
+        'alk'      'alk_flag'     'umol/kg'
+        'dic'      'dic_flag'     'umol/kg'
+        'cfc11'    'cfc11_flag'   'pmol/kg' % jc159 data come across from analysts as per kg
+        'cfc12'    'cfc12_flag'   'pmol/kg'
+        'cfc13'    'cfc13_flag'   'pmol/kg'
+        'f113'     'f113_flag'    'pmol/kg'
+        'sf6'      'sf6_flag'     'fmol/kg'
+        'sf5cf3'   'sf5cf3_flag'  'fmol/kg'
+        'ccl4'     'ccl4_flag'    'pmol/kg'
+        'tn'       'tn_flag'      'umol/kg'
+        'tp'       'tp_flag'      'umol/kg'
+        'don'      'don_flag'     'umol/kg'
+        'dop'      'dop_flag'     'umol/kg'
+        };
+    
     
     % select vars to map
     samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
@@ -128,7 +151,7 @@ for ksec = 1:length(sections)
 %        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; varuselist.units{klist}]; %units shouldn't change
     end
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    mcalc
+    %mcalc
     
     unix(['/bin/rm ' m_add_nc(wkfile)])
 end

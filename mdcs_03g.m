@@ -18,8 +18,6 @@ infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
 infile0 = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz'];
 otfile = [root_ctd '/dcs_' mcruise '_' stn_string];
 
-db = mloadq(otfile, 'scan_bot', 'press_bot', ' ');
-
 % pik data near surface for inspection
 hinctd = m_read_header(infile1);
 vnames = hinctd.fldnam;
@@ -50,8 +48,23 @@ ph = .13;
 
 %start here
 scan_start = 1;
+h = m_read_header(otfile);
+if sum(strcmp('scan_start',h.fldnam))
+    d0 = mloadq(otfile,'scan_start',' ');
+    if d0.scan_start>1
+        scan_start = d0.scan_start;
+    end
+end
 scan_bot = nan; kbot = nan;
+db = mloadq(otfile, 'scan_bot', 'press_bot', ' ');
 scan_end = max(d.scan);
+if sum(strcmp('scan_end',h.fldnam))
+    d0 = mloadq(otfile,'scan_end',' ');
+    if d0.scan_end<max(d.scan)
+        scan_end = d0.scan_end;
+    end
+end
+
 kfirst = 1;
 plims = [-300 10];
 
@@ -60,6 +73,7 @@ while 1
         mess = ['use zoom/pan from figure toolbar, then choose : \n'];
         mess = [mess 'p   : plot all\n'];
         mess = [mess 'z   : zoom all panels to current x lims\n'];
+        mess = [mess 'x   : change all panel x lims to range supplied next\n'];
         mess = [mess 'q   : quit without saving new values\n'];
         mess = [mess 'w   : save values and proceed\n'];
         mess = [mess 'ss  : select start scan\n'];
@@ -122,6 +136,15 @@ while 1
             for kp = 1:5
                 set(ha(kp),'xlim',xl);
             end
+            
+        case 'x'
+            xl = []; 
+            xl(1) = input('type x-axis lower limit   ');
+            xl(2) = input('type x-axis upper limit   ');
+            for kp = 1:5
+                set(ha(kp),'xlim',xl);
+            end
+            
         case 'ss'
             % select downcast start scan
             disp('select start scan on any panel');
@@ -238,4 +261,5 @@ for no = 1:length(hnew.fldnam)
     end
 end
 
+MEXEC_A.Mprog = mfilename;
 mfsave(otfile, ds, hnew, '-addvars');

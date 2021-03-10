@@ -3,6 +3,10 @@
 %
 % Use: mctd_rawedit        and then respond with station number, or for station 16
 %      stn = 16; mctd_rawedit;
+%
+% to skip the GUI, set rawedit_nogui = 1
+%     stn = 16; rawedit_nogui = 1; mctd_rawedit
+% will just apply automatic edits
 
 minit;
 mdocshow(mfilename, ['applies despiking and other edits if set in opt_cruise; allows interactive selection of bad data cycles; writes cleaned data to ctd_' mcruise '_' stn_string '_raw_cleaned.nc']);
@@ -13,20 +17,22 @@ root_ctd = mgetdir('M_CTD');
 prefix1 = ['ctd_' mcruise '_'];
 prefix2 = ['dcs_' mcruise '_'];
 
-otfile = [root_ctd '/' prefix1 stn_string '_raw_cleaned'];
-infile = [root_ctd '/' prefix1 stn_string '_raw'];
-infiled = [root_ctd '/' prefix2 stn_string ]; % dcs file
+otfile = [root_ctd '/' prefix1 stn_string '_raw_cleaned.nc'];
+infile = [root_ctd '/' prefix1 stn_string '_raw.nc'];
+infiled = [root_ctd '/' prefix2 stn_string '.nc']; % dcs file
 
 if ~exist(m_add_nc(otfile), 'file')
     unix(['/bin/cp -p ' m_add_nc(infile) ' ' m_add_nc(otfile)])
 end
 unix(['chmod 644 ' m_add_nc(otfile)])
 
+scriptname = mfilename; oopt = 'rawedit_auto'; get_cropt
+
 %scanedit (for additional bad scans)
-if exist('sevars','file') & length(sevars)>0
+if exist('sevars','var') & length(sevars)>0
     MEXEC_A.MARGS_IN = {otfile; 'y'};
-    for no = 1:length(sevars)
-        sestring = sprintf('y = x1; y(x2>=%d & x2<=%d);', sevars{no,2}, sevars{no,3});
+    for no = 1:size(sevars,1)
+        sestring = sprintf('y = x1; y(x2>=%d & x2<=%d) = NaN;', sevars{no,2}, sevars{no,3});
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; sevars{no,1}; [sevars{no,1} ' scan']; sestring; ' '; ' '];
         disp(['will edit out scans from ' sevars{no,1} ' with ' sestring])
     end
@@ -71,41 +77,54 @@ end
 
 %%%%%%%%% now the GUI %%%%%%%%%
 
-%only plot the good part of the cast, chosen in mdcs_03g (not the on-deck or soak periods)
-if ~exist(m_add_nc(infiled), 'file')
-    unix(['chmod 444 ' m_add_nc(otfile)]);
-    warning('dcs file required for GUI editing; quitting'); return
+if (exist('rawedit_nogui','var') & rawedit_nogui)
+    clear rawedit_nogui
+    return
 else
     
-    [ddcs hdcs]  = mloadq(infiled,'/');
-    dcs_ts = ddcs.time_start(1);
-    dcs_te = ddcs.time_end(1);
-    dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
-    dn_end = datenum(hdcs.data_time_origin)+dcs_te/86400;
-    startdc = datevec(dn_start);
-    stopdc = datevec(dn_end);
-    
-    close all
-    
-    %ylf edited jc159 to allow multiple passes through mplxyed (probably for different variables) in a single call to mctd_rawedit
-    scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt; nox = size(oxyvars,1);
-    redo = 1;
-    while redo
+ %only plot the good part of the cast, chosen in mdcs_03g (not the on-deck or soak periods)
+    if ~exist(m_add_nc(infiled), 'file')
+        unix(['chmod 444 ' m_add_nc(otfile)]);
+        warning('dcs file required for GUI editing; quitting'); return
+    else
         
-        clear pshow1
-        hraw = m_read_header(otfile);
-        pshow1.ncfile.name = otfile;
-        pshow1.xlist = 'time';
-        pshow1.ylist = ['temp1 temp2 cond1 cond2 press'];
-        for no = 1:nox; pshow1.ylist = [pshow1.ylist ' ' oxyvars{no,1}]; end
-        pshow1.startdc = startdc;
-        pshow1.stopdc = stopdc;
-        mplxyed(pshow1);
+        [ddcs hdcs]  = mloadq(infiled,'/');
+        dcs_ts = ddcs.time_start(1);
+        dcs_te = ddcs.time_end(1);
+        dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
+        dn_end = datenum(hdcs.data_time_origin)+dcs_te/86400;
+        clear pshow0
+        pshow0.startdc = datevec(dn_start);
+        pshow0.stopdc = datevec(dn_end);
+        pshow0.ncfile.name = otfile;
+        pshow0.xlist = 'time';
+        pshow0.ylist = ['temp1 temp2 cond1 cond2 press'];
+        scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
+        scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
+        nox = size(oxyvars,1); % bak add
+        for no = 1:nox
+            pshow0.ylist = [pshow0.ylist ' ' oxyvars{no,1}];
+            if oxy_end %truncate extra oxy_align seconds from end of oxygen variables shown
+                pshow0.stopdcv.(oxyvars{no,1}) = datevec(datenum(pshow0.stopdc)-oxy_align/3600/24);
+            end
+        end
         
-        redo = input('run for another variable? (1 for yes, 0 for no)');
+        close all
+        
+        %ylf edited jc159 to allow multiple passes through mplxyed (probably for different variables) in a single call to mctd_rawedit
+        redo = 1;
+        while redo
+            
+            %hraw = m_read_header(otfile);
+            pshow1 = pshow0;
+            mplxyed(pshow1);
+            
+            redo = input('run for another variable? (1 for yes, 0 for no) ');
+            
+        end
+        
+        unix(['chmod 444 ' m_add_nc(otfile)]);
         
     end
-    
-    unix(['chmod 444 ' m_add_nc(otfile)]);
     
 end

@@ -10,7 +10,7 @@ wkfile2 = ['wk2_' prefix '_' mfilename '_' datestr(now,30)];
 
 switch abbrev
     
-    case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet' 'possea' 'dopsea' 'vtgsea' 'attsea' 'dopcnav' 'hdtsea' 'ea600'}
+    case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet' 'possea' 'dopsea' 'vtgsea' 'attsea' 'dopcnav' 'hdtsea' 'ea600' 'logskip' 'posranger'}
         %work on the latest file, which already be an edited version; always output to otfile
         if exist([otfile '.nc'])
             unix(['/bin/mv ' otfile '.nc ' wkfile1 '.nc']); infile1 = wkfile1;

@@ -12,11 +12,11 @@
 % otherwise (normally), get_cropt will:
 %   call the setdef_cropt_? scripts to set defaults
 %       (split into 4 scripts for easier editing; broadly,
-%       setdef_cropt_c contains defaults related to ctd data processing,
-%       setdef_cropt_s contains defaults related to sample ingestion,
-%       setdef_cropt_p contains defaults related to ctd/sample mapping,
+%       setdef_cropt_cast contains defaults related to ctd data processing,
+%       setdef_cropt_sam contains defaults related to sample ingestion,
+%       setdef_cropt_other contains defaults related to ctd/sample mapping,
 %       plotting, and non-mstar output files,
-%       setdef_cropt_u contains defaults related to underway data)
+%       setdef_cropt_uway contains defaults related to underway data)
 %   call the cruise-specific options script (opt_cruise, e.g. opt_jc211)
 %     to make any cruise-specific changes
 %   call check_cropt to warn if expected options have not been set in
@@ -63,10 +63,10 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 if ~exist('help_cropt', 'var') | ~help_cropt %normal, use-in-scripts mode
     
     %set defaults
-    setdef_cropt_c %defaults for ctd scripts
-    setdef_cropt_s %defaults for sample scripts
-    setdef_cropt_u %defaults for underway scripts
-    setdef_cropt_o %others (sections, plots, ladcp, summaries)
+    setdef_cropt_cast %defaults for ctd scripts
+    setdef_cropt_sam %defaults for sample scripts
+    setdef_cropt_uway %defaults for underway scripts
+    setdef_cropt_other %others (sections, plots, ladcp, summaries)
     
     %continue to set cruise-specific options
     if exist(['opt_' mcruise])==2
@@ -127,10 +127,10 @@ else %help mode
     else %called to get help message for specific scriptname, oopt pair
         
         %get help messages from setdef_cropt
-        setdef_cropt_c
-        setdef_cropt_s
-        setdef_cropt_u
-        setdef_cropt_p
+        setdef_cropt_cast
+        setdef_cropt_sam
+        setdef_cropt_uway
+        setdef_cropt_other
         dm = which('m_setup'); dm = dm(1:end-9);
         dc = pwd;
         try

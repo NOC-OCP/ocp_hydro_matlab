@@ -139,7 +139,7 @@ switch scriptname
         %%%%%%%%%% mwin_to_fir %%%%%%%%%%
     case 'mwin_to_fir'
         switch oopt
-            case 'winch_fix_string'
+            case 'winch_fix'
                 % jc159: when winch is switched from auto control to manual control
                 % for recovery, usually around 100 metres, the winch telemetry is
                 % off for a few seconds and techsas records a zero, which sometimes
@@ -147,14 +147,13 @@ switch scriptname
                 % first introduced on jr302
                 switch stnlocal
                     case 5
-                        winch_fix_string = 'y(14:15) = y(13);'; % use existing bottle wireout to ensure they match exactly
+                        d.wireout(14:15) = d.wireout(13); % use existing bottle wireout to ensure they match exactly
                     case 6
-                        winch_fix_string = 'y(18) = y(17);';
+                        d.wireout(18) = d.wireout(17);
                     case 15
-                        winch_fix_string = 'y(18) = y(19);';
+                        d.wireout(18) = d.wireout(19);
                     case 16
-                        winch_fix_string = 'y(20) = [100];'; % nominal
-                    otherwise
+                        d.wireout(20) = [100]; % nominal
                 end
         end
         %%%%%%%%%% end mwin_to_fir %%%%%%%%%%

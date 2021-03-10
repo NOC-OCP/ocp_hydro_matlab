@@ -59,53 +59,52 @@ for kd = 1:numdata
     val(kd) = str2num(data(53:61));
     t90(kd) = str2num(data(68:77));
 end
-scriptname = mfilename; oopt = 'sbe_datetime_adj'; get_cropt
+scriptname = mfilename; oopt = 'sbe35_datetime_adj'; get_cropt
 
 %initialise
 varnames = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag' 'statnum'};
-varunits = {'seconds' 'on_rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9' 'number'};
+varunits = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9' 'number'};
 clear ds
 for vno = 1:length(varnames)
     ds.(varnames{vno}) = [];
 end
 
-if ~exist('klist','var')
-    if ~exist('stn','var')
-        minit; klist = stn;
-    end
-end
-klist = klist(:)';
-
 %loop through stations to get data and add to structure ds
-for kloop = klist
-    
-    stn = kloop; minit
+files = dir([mgetdir('M_CTD') '/dcs_' mcruise '_*.nc']);
+for fno = 1:length(files)
+
+    infile1 = [mgetdir('M_CTD') '/' files(fno).name];
+    stnlocal = str2num(infile1(end-5:end-3));
     scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
     
     % read the station dcs file to identify start and end of station
-    infile1 = [mgetdir('M_CTD') '/dcs_' mcruise '_' stn_string];
     if exist(m_add_nc(infile1),'file') ~= 2
         msg = ['dcs file ' infile1 ' not found'];
         fprintf(MEXEC_A.Mfider,'%s\n',msg);
         return
     end
-    [dd, hd] = mloadq(infile1,'time_start time_end');
-    stn_start = datenum(hd.data_time_origin) + dd.time_start/86400;
-    stn_end = datenum(hd.data_time_origin) + dd.time_end/86400;
-    
-    %append data from this station into structure d
-    kok = find(datnum >= stn_start-15/1440 & datnum <= stn_end+15/1440);
-    if ~isempty(kok)
-        time = 86400*(datnum(kok)-datenum(hd.data_time_origin));
-        [timesort, ksort, junk] = unique(time); %YLF JR15003 in case of duplicates (recorder not erased between casts)
-        % repopulate time, just to be sure all data variables are sorted identically
-        ds.time = [ds.time; 86400*(datnum(kok(ksort))-datenum(hd.data_time_origin))];
-        ds.position = [ds.position; bn(kok(ksort))];
-        ds.tdiff = [ds.tdiff; tdiff(kok(ksort))];
-        ds.val = [ds.val; val(kok(ksort))];
-        ds.sbe35temp = [ds.sbe35temp; t90(kok(ksort))];
-        ds.sbe35temp_flag = [ds.sbe35temp_flag; 2+zeros(length(ksort),1)];
-        ds.statnum = [ds.statnum; kloop+zeros(length(ksort),1)];
+    hd = m_read_header(infile1);
+    if sum(strcmp('time_start',hd.fldnam)) && sum(strcmp('time_end',hd.fldnam))
+        
+        [dd, hd] = mloadq(infile1,'time_start time_end');
+        stn_start = datenum(hd.data_time_origin) + dd.time_start/86400;
+        stn_end = datenum(hd.data_time_origin) + dd.time_end/86400;
+        
+        %append data from this station into structure d
+        kok = find(datnum >= stn_start-15/1440 & datnum <= stn_end+15/1440);
+        if ~isempty(kok)
+            time = 86400*(datnum(kok)-datenum(hd.data_time_origin));
+            [timesort, ksort, junk] = unique(time); %YLF JR15003 in case of duplicates (recorder not erased between casts)
+            % repopulate time, just to be sure all data variables are sorted identically
+            ds.time = [ds.time; 86400*(datnum(kok(ksort))-datenum(hd.data_time_origin))];
+            ds.position = [ds.position; bn(kok(ksort))];
+            ds.tdiff = [ds.tdiff; tdiff(kok(ksort))];
+            ds.val = [ds.val; val(kok(ksort))];
+            ds.sbe35temp = [ds.sbe35temp; t90(kok(ksort))];
+            ds.sbe35temp_flag = [ds.sbe35temp_flag; 2+zeros(length(ksort),1)];
+            ds.statnum = [ds.statnum; stnlocal+zeros(length(ksort),1)];
+        end
+        
     end
     
 end
@@ -115,15 +114,17 @@ scriptname = mfilename; oopt = 'sbe35flag'; get_cropt
 ds.sbe35temp_flag(isnan(ds.sbe35temp)&ds.sbe35temp_flag<4) = 4; 
 
 % now save the data
+clear hnew
 dataname = ['sbe35_' mcruise '_01'];
 otfile1 = [mgetdir('M_SBE35') '/' dataname];
 hnew.fldnam = varnames; hnew.fldunt = varunits; hnew.dataname = dataname;
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; %***
+MEXEC_A.Mprog = mfilename;
 mfsave(otfile1, ds, hnew, '-merge', 'sampnum');
-otfile2 = [mgetdir('M_CTD') '/sam_' mcruise '_all'];
 
 %and update sam_cruise_all file
-[ds,hnew] = mloadq(otfile1,'/');
+otfile2 = [mgetdir('M_CTD') '/sam_' mcruise '_all'];
+hnew = rmfield(hnew, 'dataname');
+hnew.comment = ['SBE35 data from sbe35_' mcruise '_01.nc'];
+MEXEC_A.Mprog = mfilename;
 mfsave(otfile2, ds, hnew, '-merge', 'sampnum');
-
-clear klist

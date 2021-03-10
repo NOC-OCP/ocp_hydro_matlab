@@ -13,8 +13,10 @@ z = c.zlist; % variable to be plotted
 switch z
     case 'potemp'
         c.clev = [0 .25 .5 1 2 2.5 3 3.5 4 5 6 7 8 9 10 12 15 18 21 25];
+        c.clev = [-.8:.2:2 0.1 2.5 3 3.5 4 5 6 7 8 9 10 12 ]; % jc211 for sr1b
         cbound = [1 2 3 4 8 10 15]; % from AO_theta.cpt, but does not match A10 plots
         cbound = [1 2 3 4 10 15 20]; % read from A10 plots, online WOCE atlas
+        cbound = [-0.8 -0.4 0 1 2 3 12]; % jc211 for sr1b
         cols = [
             001 146 191
             065 171 206
@@ -25,12 +27,14 @@ switch z
             250 066 075
             251 000 038
             ]/255;
-        scriptname = oopt = 'potemp'; get_cropt % possibly change contour levels, boundaries or colours
+        oopt = 'potemp'; get_cropt % possibly change contour levels, boundaries or colours
         
     case 'psal'
         c.clev = [ 34.3:.1:35.5 35.5:.5:38 34.88 34.96]; 
+        c.clev = [ 34.0:.1:34.7   34.66:.01:34.72]; % jc211 for sr1b
         c.clev = round(1e8*c.clev)/1e8;
         cbound = [34 34.3 34.7 34.94 35 35.5 36.0  ];
+        cbound = [34 34.4 34.66 34.68 34.7 34.74 35.0  ]; % jc211 for sr1b
         cols = [
             001 146 191
             065 171 206
@@ -47,6 +51,8 @@ switch z
         c.clev = [150:10:300];
         cbound = [140 195 245 255 275]; % from AO_oxygen.cpt, but does not match A10 plots
         cbound = [140 170 200 220 240]; % read from A10 plots, online WOCE atlas 140 1nad 170 are guesses; lowest value on pdf plot is < 180
+        c.clev = [150:10:300]; % jc211 for sr1b
+        cbound = [180 200 210 220 240]; % 
         cols = [
             255 200 000
 %             255 255 000 % this was the original full yellow. Try 200 for

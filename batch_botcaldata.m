@@ -43,32 +43,15 @@ klist = setdiff(klist, klist_exc); %remove non-CTD casts
 
 %first do steps that create concatenated (rather than per-station) mstar files
 
-if length(klistsal)>0; msal_standardise_avg; end %checks standardisations for salinity
+if length(klisttemp)>0; msbe35_01; end %loads into concatenated file and sam file
+if length(klistsal)>0; msal_01; end %loads into concatenated file and sam file
+if length(klistoxy)>0; moxy_01; msam_oxykg; end %loads into concatenated file and sam file
 if length(klistco2)>0; mco2_01; end %loads alk and dic into concatenated co2 file
 if length(klistiso)>0; miso_01; end %loads c13, c14, o18 into concatenated isotope file
 if length(klistcfc)>0; mcfc_01; end %loads cfcs into concatenated cfc file
 
 %now loop through stations
 for kloop = klist
-    
-    %temperature
-    if ismember(kloop, klisttem)
-        stn = kloop; msbe35_01 %loads SBE35 temperatures into sbe35 file
-        stn = kloop; msbe35_02 %puts temperature into sam file
-    end
-    
-    %salinity
-    if ismember(kloop, klistsal)
-        stn = kloop; msal_01 %loads bottle salts into sal file
-        stn = kloop; msal_02 %puts salt in sam file
-    end
-    
-    %oxygen
-    if ismember(kloop, klistoxy)
-        stn = kloop; moxy_01 %loads bottle oxygen into oxy file
-        stn = kloop; moxy_02 %puts oxygen in sam file
-        stn = kloop; msam_oxykg %converts from /L to /kg based on ctd T,S
-    end
     
     %nutrients
     if ismember(kloop, klistnut)

@@ -11,17 +11,58 @@
 %         kept unique, not reused under different scriptnames)
 
 
-switch scriptname        
-                
+switch scriptname
+    
+        %%%%%%%%%% mbot_01 %%%%%%%%%%
+    case 'mbot_01'
+        switch oopt
+            case 'nbotfile'
+                crhelp_str = {'Sets output file to which to write information about Niskins from the .bl file'
+                    'default: one file per station: [root_botcsv ''/bot_'' mcruise ''_'' stn_string ''.csv'']'};
+                botfile = [root_botcsv '/' prefix1 stn_string '.csv'];
+            case 'nispos'
+                crhelp_str = {'niskin gives the bottle numbers (e.g. serial numbers, if known) for niskins in '
+                    'carousel positions 1 through nnisk. defaults to [1:24].'};
+                niskin = [1:24];
+            case 'botflags'
+                crhelp_str = {'Optional: edit niskin_flag, the vector of quality flags for Niskin bottle firing'
+                    'for each station.'};
+        end
+        %%%%%%%%%% end mbot_01 %%%%%%%%%%
+        
+        %%%%%%%%%% msbe35_01 %%%%%%%%%%
+    case 'msbe35_01'
+        switch oopt
+            case 'sbe35_datetime_adj'
+                crhelp_str = {'Place to modify SBE35 file dates/times, as date is sometimes '
+                    'not reset correctly before deployment'};
+            case 'sbe35flag'
+                crhelp_str = {'Place to modify flags (sbe35flag) on SBE35 temperature data'};
+        end
+        %%%%%%%%%% end msbe35_01 %%%%%%%%%%
+        
         %%%%%%%%%% msal_01 %%%%%%%%%%
     case 'msal_01'
         switch oopt
             case 'salfiles'
-                crhelp_str = {'salfiles is a list of 
+                crhelp_str = {'salfiles is a list of files to load, defaults to '
+                    'all sal_cruise_*.csv files in BOTTLE_SAL directory'};
                 salfiles = struct2cell(dir([root_sal '/sal_' mcruise '_*.csv']));
                 salfiles = salfiles(1,:);
+            case 'salnames'
+                crhelp_str = {'place to change fieldnames, combine fields, etc. after '
+                    'loading'}; %per file
             case 'salflags'
-                %set bottle/bottle reading flags
+                crhelp_str = {'Place to set flags on salinity bottles or readings.'};
+            case 'sal_off'
+                crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive) for ranges '
+                    'of sampnum, or leave empty (default) to run msal_standardise_avg to calculate and plot.'
+                    'Also must set sal_off_base to specify how to match them to samples. Optionally set '
+                    'sal_adj_comment here to give information on how standards offsets were chosen (if'
+                    'not chosen using msal_standardise_avg).'};
+                sal_off = [];
+                sal_off_base = '';
+                sal_adj_comment = '';
         end
         %%%%%%%%%% end msal_01 %%%%%%%%%%
         
@@ -54,62 +95,62 @@ switch scriptname
         end
         %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
         
-        %%%%%%%%%% msbe35_01 %%%%%%%%%%
-    case 'msbe35_01'
-        switch oopt
-             case 'sbe_datetime_adj'
-                 crhelp_str = {'Place to modify SBE35 file dates/times, as date is sometimes '
-                     'not reset correctly before deployment'};
-            case 'sbe35flag'
-                crhelp_str = {'Place to modify flags (sbe35flag) on SBE35 temperature data'};
-        end
-        %%%%%%%%%% end msbe35_01 %%%%%%%%%%
-        
         %%%%%%%%%% moxy_01 %%%%%%%%%%
     case 'moxy_01'
         switch oopt
-            case 'oxycsv'
-                infile = [root_oxy '/oxy_' mcruise '_all.csv'];
-            case 'oxysampnum'
-                %make sure there are at least two of statnum, niskin, sampnum
-                %and that if there is sampnum, it is (statnum*100 + niskin)
-            case 'oxyconccalc'
-                oxyconccalc = 1; %default: calculate from other fields
-                %set to 0 to use from file
-            case 'oxyflags'
-                %list sampnums to get flags of 3 or 4
-                flags3 = [];
-                flags4 = [];
-                %could also set flags explicitly
-            otherwise
-                warning(['oopt ' oopt ' not in get_cropt for ' scriptname]) %***more of this?
-        end
-        %%%%%%%%%% end moxy_01 %%%%%%%%%%
-        
-        %%%%%%%%%% moxy_ccalc %%%%%%%%%%
-    case 'moxy_ccalc'
-        switch oopt
-            case 'oxypars'
-                crhelp_str = {'oxygen titration parameters that don''t change over the cruise: '
-                    'vol_reag1 (MnCl2 vol, mL, default 1), vol_reag2 (NaOH/NaI, same), cal_temp '
-                    '(temperature at which flask volumes were calibrated), mol_O2_reag (mol/mL of'
-                    'dissolved oxygen in pickling reagents, default 3.8e-8, probably don''t change'
-                    'this at all).'};
-                vol_reag1 = 1; % MnCl2 vol (mL) (default)
-                vol_reag2 = 1; % NaOH/NaI vol (mL) (default)
+            case 'oxy_files'
+                crhelp_str = {'ofiles is a list of csv files containing oxygen data to be loaded;'
+                    'defaults to all oxy_cruise_*.csv files in BOTTLE_OXY directory.'};
+                ofpat = ['/oxy_' mcruise '_*.csv'];
+ofiles = dir([root_oxy '/' ofpat]);
+            case 'oxy_parse'
+                crhelp_str = {'1) Variables to be passed to m_load_samin to identify column headers'
+                    'and units: '
+                    'hcpat, cell array (default {''Niskin'' ''Bottle'' ''Number''}) giving the'
+                    '    contents of the header rows of an indicative column, and '
+                    'chrows (default 2) giving the number of rows to combine for variable names,'
+                    '    (e.g., for the default indicative column, ''niskin_bottle''), with additional'
+                    '    rows if any forming the units (e.g., for the default indicative column, ''number''.'
+                    'chunits (optional, default []), specifying which in any of the header rows contain units'
+                    '2) mvar_fvar (no default) is an Nx2 cell array giving mapping from '
+                    '    oxyfile column headers (as parsed by m_load_samin) in column 2 to '
+                    '    variables used by moxy_01 in column 1: '
+                    'sampnum, statnum, position (either sampnum or statnum and position '
+                    '    required)'
+                    'vol_blank, vol_std, vol_titre_std (optional, may be set in case ''oxy_std'' instead)'
+                    'fix_temp, sample_titre (required)'
+                    'botvol_at_tfix or botvol or botnum (at least one; if botvol_at_tfix is not included'
+                    '    in csv files, include code under oopt = ''oxy_std'' case to compute from fix_temp and '
+                    'botvol or botnum and a lookup table of bottle volumes)'
+                    'n_o2, conc_o2 (optional, only include if you don''t want to recalculate '
+                    '    from sample_titre)'
+                    'flag, comment (optional).'};
+                hcpat = {'Niskin' 'Bottle' 'Number'};
+                chrows = 2;
+                chunits = [];
+            case 'oxy_parse_files'
+                crhelp_str = {'Place to parse/store additional info from each file, for instance from header hs,'
+                    'or to compute things from fields of ds, for instance looking up bottle volumes from bottle '
+                    'numbers.'};
+            case 'oxycalcpars'
+                crhelp_str = {'Place to set oxygen titration parameters: '
+                    'vol_reag_tot (for fixing reagents, default 2) '
+                    'cal_temp (temperature at which flask volumes were calibrated, default 25), '
+                    'mol_std, std_react_ratio, sample_react_ratio, mol_o2_reag (don''t change), '
+                    'and optionally ds_oxy.vol_blank, ds_oxy.vol_titre_std, ds_oxy.vol_std, and'
+                    'ds_oxy.bot_vol_tfix or ds_oxy.bot_vol (vol_reag_tot will be subtracted from bot_vol_tfix).'};
+                vol_reag_tot = 2; % MnCl2 vol + NaOH/NaI vol (mL) (default)
                 %below probably won't change
                 cal_temp = 25; % calibration temp (deg. C) for flasks
-                mol_O2_reag = 0.5*7.6e-8; % mol/mL of dissolved oxygen in pickling reagents
-            case 'blstd'
-                crhelp_str = {'vol_std (mL) is volume of standard KIO3 used for standards, '
-                    'vol_titre_std is the standard titre, and vol_blank the blank titre'};
-            case 'botvols'
-                crhelp_str = {'Place to set bottle volumes obot_vol, if not listed in same file as '
-                    'sample data.'};
-            case 'compcalc'
-                compcalc = 1; %if there are pre-calculated concentrations and concentrations calculated by moxy_ccalc, pause to compare them
+                %below almost certainly won't change
+                mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
+                std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
+                sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
+                mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
+            case 'oxyflags'
+                crhelp_str = {'Place to change flags, ds_oxy.botoxya_flag, ds_oxy.botoxyb_flag.'};
         end
-        %%%%%%%%%% end moxy_ccalc %%%%%%%%%%
+        %%%%%%%%%% end moxy_01 %%%%%%%%%%
         
         %%%%%%%%%% msam_oxykg %%%%%%%%%%
     case 'msam_oxykg'
@@ -215,13 +256,14 @@ switch scriptname
         
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
     case 'msam_ashore_flag'
-        switch samtype
-            %set sample numbers and flags to change (to 1, probably0 for
-            %samples to be run ashore
-        end
+        crhelp_str = {'set fnin, the file from which to load information on samples collected'
+            'for analysis ashore;'
+            'varnames (Mx1 cell array), a list of flag field names for sam_cruise_all file;'
+            'sampnums (MxN cell array), lists of sample numbers, and'
+            'flagvals (1xN vector), the values to assign to flag variables for these sets of sampnums.'
+            'in most cases flagvals = 1 and sampnums has a single column. sampnums not specified default'
+            'to 9, or 5 (not analysed) where bottle_qc_flag is 4 (bad).'};
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
-        
-        
         
         %%%%%%%%%% msam_checkbottles_02 %%%%%%%%%%
     case 'msam_checkbottles_02'

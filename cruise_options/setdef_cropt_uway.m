@@ -126,26 +126,40 @@ crhelp_str = {'place to do specific edits like patching in data from another sou
         %%%%%%%%%% mtsg_bottle_compare %%%%%%%%%%
     case 'mtsg_bottle_compare'
         switch oopt
-            case 'usecal'
+            case 'tsg_usecal'
+                crhelp_str = {'If usecal has not been set before calling mtsg_bottle_compare,'
+                    'set here (default 0) to determine whether to inspect the calibrated (1) or'
+                    'uncalibrated (0) salinities.'};
                 if ~exist('usecal'); usecal = 0; end
-            case 'dbbad'
-                %NaN some of the bottle salinity points
-            case 'sdiff'
-                sc1 = 0.5; sc2 = 0.02; %thresholds to use for smoothed series
+            case 'tsg_badsal'
+                crhelp_str = {'Place to NaN some of the bottle salinity points.'};
+            case 'tsg_timebreaks'
+                crhelp_str = {'tbreak (default []) is vector of datenums of break points for'
+                    'the calibration e.g. when the TSG was cleaned'};
+                tbreak = [];
+            case 'tsg_sdiff'
+                crhelp_str = {'sc1 (default 0.5) and sc2 (default 0.02) are thresholds to use'
+                    'for successive smoothing of bottle-tsg differences by removing outliers.'};
+                sc1 = 0.5; sc2 = 0.02;
         end
         %%%%%%%%%% end mtsg_bottle_compare %%%%%%%%%%
         
         %%%%%%%%%% mtsg_cleanup %%%%%%%%%%
     case 'mtsg_cleanup'
         switch oopt
-            case 'kbadlims'
-                crhelp_str = 'kbadlims = [t1 t2]; %bad from t1 to t2 (matlab datenum)';
-                kbadlims = [];
-            case 'editvars'
+            case 'tsg_editvars'
+                crhelp_str = {'editvars is a list of possible variables to edit (where they exist)'
+                    'based on bad times. Add to this list if you have a new variable name; only'
+                    'need to set it in opt_cruise if you want to exclude one of the variables'
+                    'in the list even though it''s found in your file.'};
                 %default: edit all ocean vars
                 editvars = {'salinity','tstemp','sstemp','sstemp2','sampletemp','chlorophyll','trans','psal','fluo','cond','temp_m','temp_h','salin','fluor'};
-            case 'moreedit'
-                %can specify non-time-range based edits (see e.g. opt_jc069)
+                editvars = [editvars {'temp_housing_raw','conductivity_raw','salinity_raw','soundvelocity_raw','temp_remote_raw'}]; % bak jc211 added for rvdas
+            case 'tsg_badlims'
+                crhelp_str = 'kbadlims (default []) is an Nx2 vector of start and end datenums of bad times to NaN';
+                kbadlims = [];
+            case 'tsg_moreedit'
+                crhelp_str = {'Place to specify non-time-range based edits to tsg data.'};
         end
         %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
         
@@ -158,8 +172,10 @@ crhelp_str = {'place to do specific edits like patching in data from another sou
         
         %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
     case 'tsgsal_apply_cal'
-        switch oopt;
-            case 'saladj'
+        switch oopt
+            case 'tsgsaladj'
+                crhelp_str = {'Place to set salout, adjusted tsg salinity, based on salin,'
+                    'existing tsg salinity. Default is salout = salin.'};
                 salout = salin;
         end
         %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%

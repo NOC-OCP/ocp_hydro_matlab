@@ -40,6 +40,7 @@ otfile = [root_ctd '/' dataname];
 varnames = {'statnum' 'time_bot' 'dc_bot' 'scan_bot' 'press_bot' 'dc24_bot'};
 varunits = {'number' 'seconds' 'number' 'number' 'dbar' 'number'};
 
+MEXEC_A.Mprog = mfilename;
 if exist(m_add_nc(otfile),'file')
 
     %add to existing file

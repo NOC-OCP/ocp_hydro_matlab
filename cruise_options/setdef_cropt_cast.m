@@ -54,28 +54,7 @@ switch scriptname
                 stn_string = sprintf('%03d',stn);
         end
         %%%%%%%%%% end minit %%%%%%%%%%
-        
-        %%%%%%%%%% ctd_all_part1 %%%%%%%%%%
-    case 'ctd_all_part1'
-        switch oopt
-            case 'remakesam'
-                crhelp_str = {'remakesam (default 0) determines whether to overwrite existing sam_cruise_stn.nc,'
-                    'if you need to rewrite, for instance to change the list of variables,'
-                    'remove the template file and set remakesam = 1 in opt_cruise'};
-                remakesam = 0;
-            case 'cal_stations1'
-                crhelp_str = {'cal_stations1 is a structure with fieldnames temp, cond, oxy, fluor, trans, etc.'
-                    'each of which contains a list of stations for which to apply calibrations to that variable'
-                    'in first-pass processing '
-                    '(default empty, because cals are unknown at start of cruise)'};
-                cal_stations1.temp = [];
-                cal_stations1.cond = [];
-                cal_stations1.oxy = [];
-                cal_stations1.fluor = [];
-                cal_stations1.trans = [];
-        end
-        %%%%%%%%%% end ctd_all_part1 %%%%%%%%%%
-        
+                
         %%%%%%%%%% mctd_01 %%%%%%%%%%
     case 'mctd_01'
         switch oopt
@@ -129,18 +108,23 @@ switch scriptname
         switch oopt
             case 'raw_corrs'
                 crhelp_str = {'flags for optional corrections to apply to the raw file (in this order): '
-                    'dooxyrev (default 0), if true, run moxyhyst_rev to undo the hysteresis correction applied in '
-                    'SBE processing, using parameters set in case ''oxyrev''; '
-                    'dooxyhyst (default 1), if true, run moxyhyst to apply a hysteresis correction, using parameters '
-                    'set in case ''oxyhyst''; '
-                    'doturbV (default 0), if true, convert from turbidity volts to turbidity again (to correct for '
-                    'precision problem), using parameters set in case ''turbVpars''. '
+                    'dooxyrev (default 0), if true, run moxyhyst_rev to undo the hysteresis '
+                    'correction applied in SBE processing, using parameters set in case ''oxyrev''; '
+                    'dooxyhyst (default 1), if true, run moxyhyst to apply a hysteresis correction, '
+                    'using parameters set in case ''oxyhyst'' '
+                    '(note recommended path is to apply oxyhyst not in SBE processing but here, meaning'
+                    'it does not have to be undone before applying revised parameters here if indicated);'
                     'note: if dooxyrev = 1 & dooxyhyst = 0, _24hz file will only have the oxygen_rev vars, not the ones '
                     'that mctd_03 and subsequent processing stages are expecting (specified by second column of oxyvars '
-                    'set in scriptname = ''ctdpars''; oopt = ''oxyvars'').'};
+                    'set in scriptname = ''ctdpars''; oopt = ''oxyvars'').'
+                    'doturbV (default 0), if true, convert from turbidity volts to turbidity again (to correct for '
+                    'precision problem), using parameters set in case ''turbVpars''. '
+                    'tempcal, condcal, oxygencal, fluorcal, transmittancecal (all default to 0) determine whether to'
+                    'apply calibrations specified under ''ctdcals'' below to these sensors.'};
                 dooxyrev = 0;
                 dooxyhyst = 1;
                 doturbV = 0;
+                tempcal = 0; condcal = 0; oxygencal = 0; fluorcal = 0; transmittancecal = 0;
             case 'oxyrev'
                 crhelp_str = {'sets three parameters to pass to mcoxyhyst_rev; defaults to standard SBE processing values.'};
                 H1 = -0.033;
@@ -153,11 +137,23 @@ switch scriptname
                 H1 = -0.033;
                 H2 = 5000;
                 H3 = 1450;
-                H_0 = [H1 H2 H3];
             case 'turbVpars'
                 crhelp_str = {'sets scale factor and offset to apply to turbidity volts to convert to turbidity, '
                     'defaults to the values from XMLCON for BBRTD-182, calibration date 6 Mar 17 (see your XMLCON file)'};
                 turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
+            case 'ctdcals'
+                crhelp_str = {'Set calibration functions to be applied to variables in _24hz file, if '
+                    'corresponding flags were set in ''raw_corrs'' case above, using: '
+                    'calstr, a cell array (Nx1) of strings expressing the calibration functions between '
+                    'fields in d0 and calibrated fields in dcal, e.g.:'
+                    'calstr = {''dcal.temp1 = d0.temp1 - 1.2e-4*d0.statnum;''};'
+                    'and calmsg, a cell array (Nx2) whose rows correspond to calstr, with the first column '
+                    'set to contain the varible to be calibrated, then a space, then the cruise name '
+                    '(lower case) -- this is used as a partial check against copy-pasting code from a '
+                    'previous cruise and accidentally applying the wrong calibration -- the second '
+                    'column of calmsg optionally contains a string about how/when the calibration '
+                    'function was selected, e.g. calmsg = {''temp1 jc211'' ''based on comparison with SBE35 from stations 1-30''}.'};
+                calstr = ''; calmsg = {};
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
         
@@ -192,7 +188,7 @@ switch scriptname
                 if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 | sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191';'jc192';'dy120';'dy129'}))
                     interp24 = 0;
                 else
-                    interp24 = 1; maxgap = 12; %***
+                    interp24 = 1; maxgap = 12;
                 end
             case '1hz_interp'
                 crhelp_str = {'flag interp1hz sets whether to interpolate over gaps in 1 hz data (in _psal file): '
@@ -218,8 +214,9 @@ switch scriptname
                 crhelp_str = {'edit data (24 hz data including derived variables) in dvars file before averaging '
                     'to 2 dbar. this has generally been done by modifying copystr (see prevous opt_cruise file for examples).'};
             case 'doloopedit'
-                crhelp_str = {'flag doloopedit (default 0) determines whether to apply automatic loop editing using m_loopedit, and scalar '
-                    'ptol (default 0.08) sets the size of pressure loops to ignore/tolerate if so.'};
+                crhelp_str = {'flag doloopedit (default 0) determines whether to apply automatic loop editing'
+                    'using m_loopedit, and scalar ptol (default 0.08) sets the size of pressure loops to '
+                    'ignore/tolerate if so.'};
                 doloopedit = 0;
                 ptol = 0.08; %default is not to apply, but this would be the default value if you did
             case 'interp2db'
@@ -233,9 +230,7 @@ switch scriptname
                 end
         end
         %%%%%%%%%% end mctd_04 %%%%%%%%%%
-        
-        %%%%%%%%%% end mctd_04 %%%%%%%%%%
-        
+
         %%%%%%%%%% mfir_01 %%%%%%%%%%
     case 'mfir_01'
         switch oopt
@@ -250,12 +245,13 @@ switch scriptname
         switch oopt
             case 'fir_fill'
                 crhelp_str = {'fillstr determines how many NaNs to fill in 1hz data before interpolation '
-                    'to bottle firing times: ''f'' or inf for any number, 0 or ''k'' for not at all, or '
+                    'to bottle firing scans: ''f'' or inf for any number, 0 or ''k'' for not at all, or '
                     'an integer (as a string, e.g. ''10'') to fill that number of points (seconds). '
-                    'if avi_opt==0, linearly interpolate to bottle firing time; if avi_opt is a tuple, '
-                    'compute the median over the window of (24-hz) scans specified by avi_opt. Defaults'
-                    'are ''f'' and 0.'}; %***but should this be different? the default shouldn't be to fill any length gap should it?
-                fillstr = 'f';
+                    'if avi_opt==0, linearly interpolate to bottle firing scan; if avi_opt is a tuple, '
+                    'it specifies the window of scans relative to firing scan over which to'
+                    'compute the median. Note scans are 24-hz. Defaults are inf and 0.'};
+                    %***default fill any length gap???
+                fillstr = inf;
                 avi_opt = 0; 
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
@@ -277,29 +273,10 @@ switch scriptname
         %%%%%%%%%% mwin_to_fir %%%%%%%%%%
     case 'mwin_to_fir'
         switch oopt
-            case 'winch_fix_string'
-                crhelp_str = {};
-                winch_fix_string = [];
+            case 'winch_fix'
+                crhelp_str = {'Place to fix d.wireout'};
         end
         %%%%%%%%%% end mwin_to_fir %%%%%%%%%%
-        
-        %%%%%%%%%% mbot_01 %%%%%%%%%%
-    case 'mbot_01'
-        switch oopt
-            case 'nbotfile'
-                crhelp_str = {'Sets output file to which to write information about Niskins from the .bl file'
-                    'default: one file per station: [root_botcsv ''/bot_'' mcruise ''_'' stn_string ''.csv'']'};
-                botfile = [root_botcsv '/' prefix1 stn_string '.csv'];
-            case 'nispos'
-                crhelp_str = {'bottle_number gives the bottle numbers (e.g. serial numbers, if known) for niskins in '
-                    'carousel positions 1 through nnisk. defaults to [1:24].'};
-                bottle_number = [1:24];
-            case 'botflags'
-                crhelp_str = {'Optional: edit bottle_qc_flag, the vector of quality flags for Niskin bottle firing'
-                    'for this station.'};
-        end
-        %%%%%%%%%% end mbot_01 %%%%%%%%%%
-        
         
         %%%%%%%%%% mctd_checkplots %%%%%%%%%%
     case 'mctd_checkplots'
@@ -346,10 +323,12 @@ switch scriptname
                 depth_source = {'file', 'ctd'}; %load from two-column text file, then fill with ctd press+altimeter
                 fnintxt = [mgetdir('M_CTD_DEP') '/station_depths_' mcruise '.txt'];
             case 'bestdeps'
-                crhelp_str = {'place to edit those station depths that were not correctly filled in by '
+                crhelp_str = {'Place to edit those station depths that were not correctly filled in by '
                     'the chosen depmeth, either directly by editing bestdeps (a list of [station, depth]), '
-                    'or by setting replacedeps, a list of [station, depth] only containing the pairs to edit.'};
+                    'or by setting replacedeps, a list of [station, depth] only containing the pairs to edit.'
+                    'Also can set stnmiss, a list of stations not to include in bestdeps list.'};
                 replacedeps = [];
+                stnmiss = [];
         end
         %%%%%%%%%% end populate_station_depths %%%%%%%%%%
         
@@ -362,25 +341,6 @@ switch scriptname
                 sensind = {1:length(d.statnum)}; %default: no sensors changed out
         end
         %%%%%%%%%% end ctd_evaluate_sensors %%%%%%%%%%
-        
-        %%%%%%%%%% mctd_senscal %%%%%%%%%%
-    case 'mctd_senscal'
-        calvars = {}; calstr = ''; calmsg = {};
-        switch oopt
-            case {'tempcal' 'condcal' 'oxygencal' 'fluorcal' 'transmittancecal'}
-                crhelp_str = {['Set ' oopt(1:end-3) ' calibration functions to be applied to _24hz file, using ']
-                    'variable senslocal to select sensor 1 or sensor 2 (if there are two CTDs). '
-                    'calstr is a string expressing the calibration function, e.g.:'
-                    'calstr = ''temp1 = temp1 - 1.2e-4*statnum;'';'
-                    'calvars (default: {}) is a cell array listing the variables used in calstr (starting with the '
-                    'variable to be calibrated), e.g.:'
-                    'calstr = {''temp1'' ''statnum''};'
-                    'Finally, string calmsg must be set to contain the variable to be calibrated then a space '
-                    'then the cruise name (lower case). This is used as a partial check against copy-pasting '
-                    'code from a previous cruise and accidentally applying the wrong calibration. '};
-        end
-        %%%%%%%%%% mctd_senscal %%%%%%%%%%
-        
         
         
 end

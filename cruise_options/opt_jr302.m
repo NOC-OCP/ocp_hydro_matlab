@@ -57,10 +57,9 @@ switch scriptname
         %%%%%%%%%% mwin_to_fir %%%%%%%%%%
     case 'mwin_to_fir'
         switch oopt
-            case 'winch_fix_string'
+            case 'winch_fix'
                 if stnlocal == 65
-                    % fix some winch wireout when winch data logging to SCS was off after power outage
-                    fix_string = 'y(14:24) = [40 30 30 25 20 15 15 7 7 3 3];';
+                    d.wireout(14:24) = [40 30 30 25 20 15 15 7 7 3 3];
                 end
         end
         %%%%%%%%%% end mwin_to_fir %%%%%%%%%%
