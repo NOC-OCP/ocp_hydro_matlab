@@ -223,7 +223,6 @@ while endflag == 0
     if strcmp(var,'7') == 1 | strcmp(var,'0') == 1
         eflag = 0;
         while eflag == 0
-            disp('Accept or change comments line by line')
 
             c = h.comment;
             delim = h.comment_delimiter_string;
@@ -235,9 +234,10 @@ while endflag == 0
             
             eflag2 = 0;
             while eflag2 == 0
+                m0 = 'Accept or change comments line by line';
                 m1 = 'Review existing comments (/ or return) or ';
                 m2 = 'skip the review and start adding new comments (-1) ?';
-                m = sprintf('%s\n',m1,m2);
+                m = sprintf('%s\n',m0,m1,m2);
                 var2 = m_getinput(m,'s');
                 if strcmp(var2,'-1') == 1; break; end
                 % review existing comments

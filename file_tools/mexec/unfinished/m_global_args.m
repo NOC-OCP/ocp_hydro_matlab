@@ -10,7 +10,7 @@ MEXEC_A.Mfidterm = 1;
 MEXEC_A.Mfider = 2;
 
 % variable names recognised as time: 
-MEXEC_A.Mtimnames = {'time'}; % 'tim' 'other_string'} any variable whose name begins 'time' eg 'time' 'timenew'
+MEXEC_A.Mtimnames = {'time' 'utime'}; % 'tim' 'other_string'} any variable whose name begins 'time' eg 'time' 'timenew';  bak jc211 'utime' added
 % time units recognised as days and assumed to be relative to mstar_data_origin: 
 MEXEC_A.Mtimunits_days = {'day'}; % any unit whose name begins 'day' eg 'day' 'day_of_year'
 % time units recognised as seconds and assumed to be relative to mstar_data_origin:

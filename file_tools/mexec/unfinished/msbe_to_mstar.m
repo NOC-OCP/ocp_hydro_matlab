@@ -329,6 +329,7 @@ while length(head) > 0
     end
     inl = strfind(c,sprintf('\n'));
     c(inl) = []; % strip out the newline chars that were read in with fgets
+    c = strrep(c,'\','\\');
     m_add_comment(ncfile,c);
 end
 

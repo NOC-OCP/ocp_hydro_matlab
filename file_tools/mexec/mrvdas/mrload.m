@@ -215,7 +215,7 @@ end
 
 
 if isempty(qflag)
-    fprintf(MEXEC_A.Mfidterm,'%d %s%s%s\n',length(dd.dnum),' vars loaded from ''',mtable,''' including time');
+    fprintf(MEXEC_A.Mfidterm,'%d %s%s%s\n',length(fieldnames(dd)),' vars loaded from ''',mtable,''' including time');
     numdc = size(ds,1);
     if numdc > 0
         fprintf(MEXEC_A.Mfidterm,'%d %s %s %s %s\n',size(ds,1),' data cycles loaded from ',datestr(dd.dnum(1),'yyyy-mm-dd HH:MM:SS'), ' to ',datestr(dd.dnum(end),'yyyy-mm-dd HH:MM:SS'));

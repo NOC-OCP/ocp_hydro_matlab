@@ -261,15 +261,11 @@ else
 end
 
 ok = 0;
-m1 = sprintf('%s','If NaNs are found in the merging variable, do you want them filled first (f, default)');
-m2 = sprintf('%s','or do you want them kept in place (k) so that NaNs may appear in the output ?');
-m4 = sprintf('\n%s\n%s','After 28 March 2018, new option to specify the maximum number of NaNs that will be filled','before the merge takes place.');
-m5 = sprintf('\n%s','This is backwards compatible, so ''k'' is equivalent to zero and ''f'' is equivalent to inf');
-m6 = sprintf('%s','You can reply with characters f or k, or an integer');
-fprintf(MEXEC_A.Mfidterm,'%s\n\n',m1,m2,m4,m5,m6);
+m1 = sprintf('%s','If NaNs are found in the merging variable, do you want them filled first (f or inf, default)');
+m2 = sprintf('%s','or kept in place (k or 0) or only filled for gaps up to a certain length so that NaNs may appear in the output ?');
+m3 = sprintf('%s','reply ''f'', inf or return for fill; ''k'' or 0 for keep; \nor an integer for the maximum number of NaNs to be filled : ');
 while ok == 0;
-    m3 = sprintf('%s','reply ''f'' or inf or return for fill or ''k'' or 0 for keep, \nor an integer for the maximum number of NaNs to be filled : ');
-    reply = m_getinput(m3,'s');
+    reply = m_getinput([m1 '\n' m2 '\n' m3],'s');
     if strcmp(reply,' '); absfill = inf; break; end
     if strcmp(reply,'f'); absfill = inf; break; end
     if strcmp(reply,'k'); absfill = 0; break; end
@@ -284,10 +280,9 @@ ok = 0;
 m1 = sprintf('%s','Do you want to interpolate (0, default),');
 m2 = sprintf('%s','or take the median over time range [deltat1 deltat2]');
 m4 = sprintf('%s','such that deltat1<time2-time1<deltat2');
-fprintf(MEXEC_A.Mfidterm,'%s\n\n',m1,m2,m4);
 while ok ==0;
     m3 = sprintf('%s','reply 0 to interpolate or [deltat1 deltat2] to compute median: ');
-    reply = m_getinput(m3,'d');
+    reply = m_getinput([m1 '\n' m2 '\n' m4 '\n' m3],'d');
     reply = str2num(reply);
     if length(reply)==1; noav = 1; break; 
     else; avi = reply; noav = 0; break; end
@@ -365,44 +360,9 @@ for k = 1:length(kmat)
     zsort = z(ksort,:);
     zsort(xbad,:) = [];
     
-if absfill > 0;
-    % fill any nans in z by interpolation
-    for kfill = 1:size(zsort,2);
-        ok = ~isnan(zsort(:,kfill));
-        if sum(ok) < 2 ; continue; end % not enough good data to fill with interp1
-        if sum(ok) == size(zsort,1); continue; end % all data are good; skip interp1
-        % bak on jc159 28 March 2018; To handle the case of not
-        % interpolating more than absfill values, construct a
-        % mask to set back to NaN. absfill = 0 means interpolate max of
-        % zero values, ie no interpolation. absfill NaNs will be filled;
-        % absfill+1 NaNs will not be filled.
-        zs = zsort(:,kfill);
-        kmask = zeros(size(zs));
-        kok = find(ok);
-        gap = diff(kok); % gap size to next OK value
-        kbiggap = find(gap > absfill+1); % when there are absfill values, which is acceptable to fill, the step between good values is absfill+1. Take action if this gap is exceeded.
-        %kok(biggap) are the index in zs of the last good cycles before big
-        %gaps
-        for kl = 1:length(kbiggap)
-            kmask((kok(kbiggap(kl))+1):(kok(kbiggap(kl))+gap(kbiggap(kl))-1)) = nan;
-        end
-        % fill them all, then mask out the ones that should not have been
-        % filled.
-        zsort(:,kfill) = interp1(xsort(ok),zsort(ok,kfill),xsort);
-        zsort(:,kfill) = zsort(:,kfill)+kmask;
-    end
-end
-    
-    [dontcare iuni juni]=unique(xsort); %redundant? (sort only returns unique values)
-    if noav
-       zi = interp1(xsort(iuni),zsort(iuni),data_c_1); % zi has same dimensions as  data_c_1
-    else
-       m = repmat(x(:),1,length(data_c_1))-repmat(data_c_1(:)',length(x),1);
-       m = (m<avi(1) | m>avi(2));
-       z = repmat(z(:),1,length(data_c_1)); z(m) = NaN;
-       zi = nanmedian(z)'; %***could add something to keep track of stdev too
-       if size(data_c_1,1) == 1; zi = zi'; end
-    end
+    zi = merge_avmed(xsort,zsort,data_c_1,avi,absfill);
+    if length(avi)>1 & size(data_c_1,1) == 1; zi = zi'; end
+
     % yi = interp1(x,y,xi)
     % if y is 2-D then yi is always a column, so we need to fix its shape
     % to match xi

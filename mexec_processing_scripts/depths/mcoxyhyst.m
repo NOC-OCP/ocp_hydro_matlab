@@ -30,7 +30,7 @@ oxygen_out(kfirst) = oxygen_sbe(kfirst);
 klastgood = kfirst; % keep track of most recent good cycle
 Cvec = NaN + zz; Dvec = Cvec;
 
-for k=iig(2):length(time) %***or only iig(2:end)?
+for k=iig(2:end)
     
     D = 1 + H1(k)*(exp(press(k)/H2(k))-1); Dvec(k) = D;
     C = exp(-(time(k)-time(klastgood))/H3(k)); Cvec(k) = C;

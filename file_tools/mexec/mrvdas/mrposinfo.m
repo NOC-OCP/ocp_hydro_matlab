@@ -52,6 +52,12 @@ function [latout,lonout] = mrposinfo(varargin)
 %   rvdas_table name
 %   dnum : time onto which position was interpolated
 %   datestring of dnum
+%   latitude     (same value as lat, but full name)
+%   latdeg, latitude degrees, negative if southern hemisphere
+%   latmin, latitude minutes, always positive. latdeg is negative in S hemisphere
+%   longitude    (same value as lon, but full name)
+%   londeg, longitude degrees, negative if western hemisphere
+%   lonmin, longitude minutes, always positive. londeg is negative in W hemisphere
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
 table = argot.table;
@@ -107,6 +113,10 @@ switch nargout
         latout.rvdas_table = table;
         latout.dnum = dn;
         latout.datestring = datestr(latout.dnum,31);
+        latout.latitude = lat;
+        [latout.latdeg,latout.latmin] = m_degmin_from_decdeg(lat);
+        latout.longitude = lon;
+        [latout.londeg,latout.lonmin] = m_degmin_from_decdeg(lon);
         lonout = nan;
 end
 

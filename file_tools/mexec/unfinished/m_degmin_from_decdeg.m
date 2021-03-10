@@ -14,5 +14,7 @@ deg = floor(dec);
 min = 60*(dec-deg);
 
 kz = find(deg == 0 & s < 0);
-deg(kz) = deg(kz) + 1e-10; % ensure negative hemisphere zeros can be printed as "-0" using %f6.0
+% deg(kz) = deg(kz) + 1e-10; % ensure negative hemisphere zeros can be printed as "-0" using %f6.0
+% bak on jc211. Use eps instead of 1e-10
+deg(kz) = deg(kz) + eps(180); % ensure negative hemisphere zeros can be printed as "-0" using %f6.0
 deg(kn) = -deg(kn);

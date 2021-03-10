@@ -10,7 +10,7 @@ function argot = mrparseargs(argsin)
 %
 % This function parses arguments to mrvdas functions. The intention is that
 % mrvdas functions can be called from a matlab command prompt with arguments
-% on the command line, or within a script with arguments as fucntion
+% on the command line, or within a script with arguments as function
 % arguments in the usal way.
 %
 % eg
@@ -32,7 +32,7 @@ function argot = mrparseargs(argsin)
 % Input:
 %
 % argsin should be a cell array
-%   Typically the rvdas function that calls mrparseargs will have varargin
+%   Typically the mrvdas function that calls mrparseargs will have varargin
 %   as the argument. This will collect a cell array from either the command
 %   line or the function arguments, one element per argument.
 %   Numerical values will be char strings if they were on a matlab
@@ -40,7 +40,7 @@ function argot = mrparseargs(argsin)
 %   were function arguments (example 2).
 %
 %   char strings are inspected to see if they could be numbers.
-%   if the char string starts with 'now', then assume it is intended as a
+%   If the char string starts with 'now', then assume it is intended as a
 %   matlab time, and try to evaluate it.
 %
 % In the examples above,
@@ -52,7 +52,7 @@ function argot = mrparseargs(argsin)
 %   will succeed. eg '10' '7200' '[2021 1 28]'
 % If there is no conversion, the result is an empty double, and the
 %   argument is then processed as a string.
-% If the string begins with 'now', eg 'now' or 'now-1/23' then an attempt
+% If the string begins with 'now', eg 'now' or 'now-1/24' then an attempt
 %   is made to evaluate the string to turn it into a datenum. If the
 %   attempt fails, processing continues with the original string.
 %
@@ -60,7 +60,7 @@ function argot = mrparseargs(argsin)
 %
 % A string that matches an rvdas table name or its mexec short equivalent,
 %   returned in argot.table
-% The string 'q', returned with argot.qflag = 'q'. argor.qflag = ''
+% The string 'q', returned with argot.qflag = 'q'. argot.qflag = ''
 %   otherwise
 % A string beginning with 'now' which is evaluated as a datenum
 % Any other datenum/datevec format, described below, converted to a
@@ -69,7 +69,7 @@ function argot = mrparseargs(argsin)
 % Any numbers smaller than the datenum limit is returned in
 %   argot.othernums
 % Any other strings, not yet recognised, eg a string that is a variable
-%   list, ar returned in argot.otherstrings, in the order in which they
+%   list, are returned in argot.otherstrings, in the order in which they
 %   appeared in the argsin cell array.
 %
 %

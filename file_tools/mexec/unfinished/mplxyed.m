@@ -68,20 +68,27 @@ hist = h;
 hist.filename = pdfot.ncfile.name;
 MEXEC_A.Mhistory_in{1} = hist;
 
-m = 'Type the number of the variable you wish to edit from the list below ';
-fprintf(MEXEC_A.Mfidterm,'%s\n',m)
-
 h = m_read_header(pdfot.ncfile.name);
 ynumlist = m_getvlist(pdfot.ylist,h);
-for k = 1:length(hplot)
-    m1 = [sprintf('%3d ',k) h.fldnam{ynumlist(k)}];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m1)
+if isfield(pdfin,'varednum') && isnumeric(pdfin.varednum) && pdfin.varednum>0
+    vared = pdfin.varednum;
+    fprintf(MEXEC_A.Mfidterm,'set to edit variable %d, %s\n',vared,h.fldnam{ynumlist(vared)});
+else
+    m = 'Type the number of the variable you wish to edit from the list below, or return to quit ';
+    fprintf(MEXEC_A.Mfidterm,'%s\n',m)
+    for k = 1:length(hplot)
+        m1 = [sprintf('%3d ',k) h.fldnam{ynumlist(k)}];
+        fprintf(MEXEC_A.Mfidterm,'%s\n',m1)
+    end
+    m = sprintf('%s',': ');
+    vared = m_getinput(m,'d');
+    if length(vared)==0 | vared<=0 | vared>length(hplot)
+        vared = m_getinput('try again (number): ', 'd');
+    elseif isnan(vared)
+        disp('exiting mplxyed'); return
+    end
 end
-m = sprintf('%s',': ');
-varedstr = m_getinput(m,'s');
-if length(str2num(varedstr))==0; varedstr = m_getinput('try again (number): ', 's'); end
-eval(['vared = ' varedstr ';']);
-% yname = h.fldnam{ynumlist(vared)};
+
 yname = pdfot.ylist;
 xname = pdfot.xlist;
 
@@ -111,7 +118,12 @@ while ok == 0
             % list
             m_edlist
         case 's'
-            kfind = m_edfinddc(pdfot);
+            try
+                kfind = m_edfinddc(pdfot);
+            catch
+                disp('try again; select diagonal corners with crosshairs');
+                kfind = m_edfinddc(pdfot);
+            end
             m = [sprintf('%d',length(kfind{vared})) ' data cycles selected'];
             fprintf(MEXEC_A.Mfidterm,'%s\n',m,' ');
         case 'w'
@@ -131,12 +143,22 @@ while ok == 0
             m_ededit            
 %             need to finish m_ededit to do housekeeping, nabs, version, lock file, etc
         case 'z'
-            pdfot = m_edzoom(pdfot,'n');
+            try
+                pdfot = m_edzoom(pdfot,'n');
+            catch
+                disp('try again; select diagonal corners with crosshairs');
+                pdfot = m_edzoom(pdfot,'n');
+            end
             pdfsave = [pdfsave {pdfot}]; % bak jc032 save this view
             ydo = get(hplot(vared),'ydata');
             xdo = get(hplot(vared),'xdata');
         case 'a'
-            pdfot = m_edzoom(pdfot,'y');
+            try
+                pdfot = m_edzoom(pdfot,'y');
+            catch
+                disp('try again; select diagonal corners with crosshairs');
+                pdfot = m_edzoom(pdfot,'n');
+            end
             pdfsave = [pdfsave {pdfot}]; % bak jc032 save this view
             ydo = get(hplot(vared),'ydata');
             xdo = get(hplot(vared),'xdata');
@@ -188,7 +210,20 @@ if kedit > 0
     % This function is used when processing underway stream and don't always want to write in the CTD diectory (DAS)
     % change so that write in the same directory as the datafile
     %editfn = [mgetdir('M_CTD') '/mplxyed_' nowtime '_' h.dataname];
-    [flpath,flname,flext] = fileparts(pdfin.ncfile.name);
+    try 
+        % bak, jc211, 20 feb 2021
+        % If the program has not been run using a pdfin, then pdfin is an
+        % empty array, not a structure, so the next line fails.
+        %  [flpath,flname,flext] = fileparts(pdfin.ncfile.name);
+        % I haven't tested it thoroughly, but pdfot is probably populated even
+        % if pdfin is empty. Try next line instead
+        [flpath,flname,flext] = fileparts(pdfot.ncfile.name);
+        if isempty(flpath) % if this is a simple run on a local file, the filename could just be 'surfmet_jc211_d050_edt.nc' and flpath is empty
+            flpath = '.'; 
+        end
+    catch
+        flpath = '.'; % flname and flext not needed.
+    end
     editfn = [flpath '/mplxyed_' nowtime '_' h.dataname];
     % bak jc069 put more detailed information about source and output files in edit record file
     mess_4 = ['ot_file     : ' hist.filename];
