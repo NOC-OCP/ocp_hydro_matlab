@@ -74,6 +74,12 @@ if oxy_end==1
             ' '
             ' '];
     end
+    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
+        'oxygen'
+        'oxygen scan'
+        sprintf('y = x1; y(x2>=%d) = NaN;',dd.scan_end-24*oxy_align)
+        ' '
+        ' '];
     disp(['will edit out last ' num2str(oxy_end*24) ' scans from oxygen'])
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
     mcalib2

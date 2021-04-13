@@ -22,18 +22,12 @@ switch scriptname
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
         
-        %%%%%%%%%% mbot_00 %%%%%%%%%%
-    case 'mbot_00' %information about niskin bottle numbers
-        switch oopt
-            case 'nispos'
-                %inventory/serial numbers of the niskins in order of 1 to 24
-                nis = [2754:2774 2776:2778]; %250002754:250002778
-        end
-        %%%%%%%%%% end mbot_00 %%%%%%%%%%
-        
         %%%%%%%%%% mbot_01 %%%%%%%%%%
     case 'mbot_01'
         switch oopt
+            case 'nispos'
+                %inventory/serial numbers of the niskins in order of 1 to 24
+                niskin = [2754:2774 2776:2778]'; %250002754:250002778
             case 'botflags'
                 flag3 = []; flag4 = []; flag9 = []; %[station niskin]
                 flag3 = [1 1; 1 20; 2 1; 6 9; 7 5; 7 8; 13 18; 17 9; 22 13; 24 7;...
@@ -44,9 +38,9 @@ switch scriptname
                 flag4 = [flag4; 59 24; 62 1; 62 9; 67 9; 69 9; 72 9; 87 2; 89 9; 101 14]; %bad (end cap not closed)
                 flag4 = [flag4; 1 1; 8 2; 22 13]; %sample data very suspicious
                 flag9 = [13 4; 21 4; 25 4; 26, 4; 41 5; 51 12]; %did not fire
-                iif = find(flag3(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag3(iif,2)) = 3; end
-                iif = find(flag4(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag4(iif,2)) = 4; end
-                iif = find(flag9(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag9(iif,2)) = 9; end
+                iif = find(flag3(:,1)==stnlocal); if length(iif)>0; niskin_flag(flag3(iif,2)) = 3; end
+                iif = find(flag4(:,1)==stnlocal); if length(iif)>0; niskin_flag(flag4(iif,2)) = 4; end
+                iif = find(flag9(:,1)==stnlocal); if length(iif)>0; niskin_flag(flag9(iif,2)) = 9; end
                 %cast 45: some question about niskins closing at wrong
                 %depth if damaged by slack wire but probably ok
         end
@@ -595,11 +589,9 @@ switch scriptname
         %%%%%%%%%% mout_cchdo %%%%%%%%%%
     case 'mout_cchdo'
         switch oopt
-            case 'expo'
+            case 'woce_expo'
                 expocode = '74EQ20200203';
                 sect_id = 'SR1b_A23';
-            case 'woce_file_pre'
-                prefix = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_a23_' expocode];
             case 'woce_sam_headstr'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];... %the last field specifies group, institution, initials
                     '#SHIP: Discovery';...
@@ -618,7 +610,7 @@ switch scriptname
                     '#Salinity: Who - Y. Firing; Status - final';...
                     '#Oxygen: Who - N. Ensor; Status - final';...
                     '#Nutrients: Who - E. Mawji; Status - not yet analysed';...
-                    '#DELO18: Who - M. Leng; Status - preliminary';...
+                    '#DELO18: Who - M. Leng, M. Barham; Status - final';...
                     '#Nutrient isotopes: Who - R. Tuerena; Status - not yet analysed';...
                     '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
             case 'woce_ctd_headstr'

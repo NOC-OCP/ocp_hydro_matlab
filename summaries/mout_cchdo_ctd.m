@@ -18,11 +18,12 @@ if exist(m_add_nc(infile1),'file') ~= 2; return; end
 nsamp = length(d.press);
 
 
-%%%%% add some fields that don't exist (or edit) %%%%%
+%%%%% add some fields that don't exist (or edit), get header fields %%%%%
 
+clear dh
 scriptname = 'mout_cchdo'; oopt = 'woce_expo'; get_cropt
-d.expocode = repmat(expocode,nsamp,1);
-d.sect_id = repmat(sect_id,nsamp,1);
+dh.expocode = repmat(expocode,nsamp,1);
+dh.sect_id = repmat(sect_id,nsamp,1);
 
 sumfn = [mgetdir('M_SUM') '/station_summary_' mcruise '_all.nc'];
 iis = [];
@@ -31,14 +32,17 @@ if exist(sumfn,'file')
     iis = find(dsum.statnum==stnlocal);
 end
 if length(iis)==1
-    d.latitude = repmat(dsum.lat(iis),nsamp,1);
-    d.longitude = repmat(dsum.lon(iis),nsamp,1);
-    d.depth = repmat(dsum.cordep(iis),nsamp,1); %*** or use bestdeps? 
+    dh.latitude = dsum.lat(iis);
+    dh.longitude = dsum.lon(iis);
+    dh.depth = dsum.cordep(iis);
     dn = datenum(hsum.data_time_origin) + dsum.time_bottom(iis)/86400;
-    d.date = repmat(datestr(dn,'yyyymmdd'),nsamp,1);
-    d.time = repmat(datestr(dn,'HHMM'),nsamp,1);
+    dh.date = datestr(dn,'yyyymmdd');
+    dh.time = datestr(dn,'HHMM');
 else 
     %*** calculate from file if station_summary not updated yet?
+end
+if ~isfield(d, 'castno')
+    d.castno = ones(nsamp,1);
 end
 
 %flags default to 2 for data present but may be changed in opt_cruise
@@ -51,7 +55,7 @@ d.temp_flag = ctdflag; d.psal_flag = ctdflag; d.oxygen_flag = ctoflag;
 
 %%%%% figure out which fields to write %%%%%
 
-vars = m_cchdo_vars_list(1);
+[vars, varsh] = m_cchdo_vars_list(1);
 scriptname = 'mout_cchdo'; oopt = 'woce_vars_exclude'; get_cropt
 iie = [];
 for no = 1:length(vars_exclude_ctd)
@@ -89,7 +93,10 @@ if ~isempty(headstring)
 end
 
 % more header
-fprintf(fid, '%s %d\n', 'NUMBER_HEADERS = ', size(vars,1)); %***+1?
+fprintf(fid, '%s %d\n', 'NUMBER_HEADERS = ', size(varsh,1));
+for hno = 1:size(varsh,1)
+    fprintf(fid, ['%s = ' varsh{hno,4} '\n'], varsh{hno,1}, dh.(varsh{hno,3}));
+end
 
 %column headers
 fprintf(fid, '%s, ', vars{1:end-1,1});

@@ -34,21 +34,14 @@ else
 
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw']; n = n+1;
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_cleaned']; n = n+1;
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_original']; n = n+1;
-
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz']; n = n+1;
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_psal']; n = n+1;
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2db']; n = n+1;
    fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2up']; n = n+1;
 
    fn{n} = [root_win '/win_' mcruise '_' stn_string]; n = n+1;
-   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string '_bl']; n = n+1;
-   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string '_time']; n = n+1;
-   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string '_winch']; n = n+1;
-   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string '_ctd']; n = n+1;
+   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string]; n = n+1;
 
-   fn{n} = [root_sal '/sal_' mcruise '_' stn_string]; n = n+1;
-   fn{n} = [root_ctd '/sam_' mcruise '_' stn_string]; n = n+1;
 
    for kfile = 1:length(fn)
        [s,r] = unix(['ls -l ' m_add_nc(fn{kfile})]);

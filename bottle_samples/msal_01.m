@@ -11,7 +11,7 @@ mdocshow(mfilename, ['loads bottle salinities from the file(s) specified in opt_
 std_samp_range = [1e5 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
 %ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
 
-% resolve root directories for various file types
+% resolve root directories for various file types, and set output files
 root_sal = mgetdir('M_BOT_SAL');
 dataname = ['sal_' mcruise '_01'];
 salfile = [root_sal '/' dataname];

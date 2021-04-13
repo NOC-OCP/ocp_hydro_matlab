@@ -1,5 +1,5 @@
-function vars = m_cchdo_vars_list(typ);
-%function vars = m_cchdo_vars_list(typ);
+function [vars, varsh] = m_cchdo_vars_list(typ);
+%function [vars, varsh] = m_cchdo_vars_list(typ);
 %
 % Lists of woce exchange format variable names, units, mstar variable
 % names, and format strings for printing to _ct1.csv (CTD data, typ=1) or
@@ -12,28 +12,28 @@ function vars = m_cchdo_vars_list(typ);
 
 if typ==1 % this is for ctd profiles
     
-    vars = {'EXPOCODE', ' ', 'expocode', '%s'
+    varsh = {'EXPOCODE', ' ', 'expocode', '%s'
         'SECT_ID', ' ', 'sect_id', '%s'
-        'STNNBR', ' ', 'statnum', '%3d'
-        'CASTNO', ' ', 1, '%d'
         'DATE', ' ', 'date', '%s'
         'TIME', ' ', 'time', '%s'
-        'LATITUDE', ' ', 'ulatitude', '%11.5f'
-        'LONGITUDE', ' ', 'ulongitude', '%11.5f'
-        'DEPTH', ' ', 'depth', '%6.0f'
+        'LATITUDE', ' ', 'ulatitude', '%9.5f'
+        'LONGITUDE', ' ', 'ulongitude', '%10.5f'
+        'DEPTH', ' ', 'depth', '%4.0f'};
+    vars = {'STNNBR', ' ', 'statnum', '%3d'
+        'CASTNO', ' ', 'castno', '%d'
         'CTDPRS', 'DBAR', 'press', '%8.1f'
         'CTDPRS_FLAG_W', ' ', 'press_flag', '%d'
-        'CTDTMP','ITS-90', 'temp', '%8.4f'
+        'CTDTMP','ITS-90', 'temp', '%7.4f'
         'CTDTMP_FLAG_W', ' ', 'temp_flag', '%d'
-        'CTDSAL','PSS-78', 'psal', '%8.4f'
+        'CTDSAL','PSS-78', 'psal', '%7.4f'
         'CTDSAL_FLAG_W', ' ', 'psal_flag', '%d'
-        'CTDOXY','UMOL/KG', 'oxygen', '%8.1f'
+        'CTDOXY','UMOL/KG', 'oxygen', '%6.1f'
         'CTDOXY_FLAG_W', ' ', 'oxygen_flag', '%d'
         'CTDTURB','M^1/SR', 'turbidity', '%8.6f'
         'CTDTURB_FLAG_W', ' ', 'turbidity_flag', '%d'
         'CTDXMISS','%TRANS', 'transmittance', '%8.4f'
         'CTDXMISS_FLAG_W', ' ', 'transmittance_flag', '%d'
-        'CTDFLUOR','MG/M^3', 'fluor', '%8.4f'
+        'CTDFLUOR','MG/M^3', 'fluor', '%7.4f'
         'CTDFLUOR_FLAG_W', ' ', 'fluor_flag', '%d'
         };
     
@@ -42,22 +42,24 @@ elseif typ==2 % this is for comparing with bottle samples
     vars = {'EXPOCODE', ' ', 'expocode', '%s'
         'SECT_ID', ' ', 'sect_id', '%s'
         'STNNBR', ' ', 'statnum', '%3d'
-        'CASTNO', ' ', 1, '%d'
+        'CASTNO', ' ', 'castno', '%d'
         'SAMPNO', ' ', 'position', '%2d'
-        'BTLNBR', ' ', 'niskin', '%2d'
+        'BTLNBR', ' ', 'niskin', '%d'
+        'BTLNBR_FLAG_W', ' ', 'niskin_flag', '%d'
         'DATE', ' ', 'date', '%s'
         'TIME', ' ', 'time', '%s'
-        'LATITUDE', ' ', 'ulatitude', '%11.5f'
-        'LONGITUDE', ' ', 'ulongitude', '%11.5f'
-        'DEPTH', ' ', 'depth', '%6.0f'
-        'CTDPRS', 'DBAR', 'upress', '%8.1f'
-        'CTDTMP', 'ITS-90', 'utemp', '%8.4f'
-        'SBE35', 'ITS-90', 'sbe35temp', '%8.4f'
-        'CTDSAL', 'PSS-78', 'upsal', '%8.4f'
-        'SALNTY', 'PSS-78', 'botpsal', '%8.4f'
+        'LATITUDE', ' ', 'ulatitude', '%9.5f'
+        'LONGITUDE', ' ', 'ulongitude', '%10.5f'
+        'DEPTH', ' ', 'depth', '%4.0f'
+        'CTDPRS', 'DBAR', 'upress', '%6.1f'
+        'CTDTMP', 'ITS-90', 'utemp', '%7.4f'
+        'SBE35', 'ITS-90', 'sbe35temp', '%7.4f'
+        'SBE35_FLAG_W', ' ', 'sbe35temp_flag', '%7.4f'
+        'CTDSAL', 'PSS-78', 'upsal', '%7.4f'
+        'SALNTY', 'PSS-78', 'botpsal', '%7.4f'
         'SALNTY_FLAG_W', ' ', 'botpsal_flag', '%d'
-        'CTDOXY', 'UMOL/KG', 'uoxygen', '%8.1f'
-        'OXYGEN', 'UMOL/KG', 'botoxya', '%8.1f'
+        'CTDOXY', 'UMOL/KG', 'uoxygen', '%6.1f'
+        'OXYGEN', 'UMOL/KG', 'botoxya', '%6.1f'
         'OXYGEN_FLAG_W', ' ', 'botoxya_flag', '%d'
         'SILCAT', 'UMOL/KG', 'silc', '%8.2f'
         'SILCAT_FLAG_W', ' ', 'silc_flag', '%d'
@@ -95,8 +97,8 @@ elseif typ==2 % this is for comparing with bottle samples
         'D15N_NO3_FLAG_W', '/MILLE', 'del15n_flag', '%d'
         'D30SI_SILCAT', '/MILLE', 'del30si', '%8.4f'
         'D30SI_SILCAT_FLAG_W', '/MILLE', 'del30si_flag', '%d'
-        'CTDFLUOR','MG/M^3', 'ufluor', '%8.4f'
-        'BOTCHLA', 'ML/L', 'botchla', '%8.1f'
+        'CTDFLUOR','MG/M^3', 'ufluor', '%7.4f'
+        'BOTCHLA', 'ML/L', 'botchla', '%7.1f'
         'BOTCHLA_FLAG_W', 'ML/L', 'botchla_flag', '%d'
         };
         

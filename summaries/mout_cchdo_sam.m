@@ -25,9 +25,37 @@ iig = iig(:)';
 scriptname = 'mout_cchdo'; oopt = 'woce_expo'; get_cropt
 d.expocode = repmat(expocode,length(d.sampnum),1);
 d.sect_id = repmat(sect_id,length(d.sampnum),1);
-dn = d.utime/86400+datenum(h.data_time_origin);
-d.date = datestr(dn,'yyyymmdd');
-d.time = datestr(dn,'HHMM');
+if isfield(d,'utime')
+    dn = d.utime/86400+datenum(h.data_time_origin);
+else
+    dn = d.time/86400+datenum(h.data_time_origin);
+end
+d.date = datestr(dn,'yyyymmddHHMM');
+d.time = d.date(:,9:12); d.date = d.date(:,1:8);
+if ~isfield(d,'ulatitude') && isfield(d,'latitude')
+    d.ulatitude = d.latitude; d.ulongitude = d.longitude;
+end
+if ~isfield(d,'ulatitude') && isfield(d,'lat')
+    d.ulatitude = d.lat; d.ulongitude = d.lon;
+end
+if ~isfield(d, 'castno')
+    d.castno = ones(size(d.sampnum));
+end
+if ~isfield(d, 'depth')
+    sumfn = [mgetdir('M_SUM') '/station_summary_' mcruise '_all.nc'];
+    if exist(sumfn,'file')
+        [dsum, hsum] = mloadq(sumfn,'/');
+        d.depth = NaN+zeros(size(d.sampnum));
+        for sno = 1:length(dsum)
+            ii = find(d.statnum==dsum.statnum(sno));
+            d.depth(ii) = dsum.cordep(sno);
+        end
+    end
+end
+if ~isfield(d,'sbe35temp_flag') && isfield(d,'sbe35flag')
+    d.sbe35temp_flag = d.sbe35flag;
+end
+
 
 %%%%% figure out which fields to write %%%%%
 
@@ -62,19 +90,16 @@ if ~isempty(headstring)
     fprintf(fid, '%s\n', headstring{:});
 end
 
-% more header
-fprintf(fid, '%s %d\n', 'NUMBER_HEADERS = ', size(vars,1)); %***+1?
-
 %column headers
-fprintf(fid, '%s, ', vars{1:end-1,1});
+fprintf(fid, '%s,', vars{1:end-1,1});
 fprintf(fid, '%s\n', vars{end,1});
-fprintf(fid, '%s, ', vars{1:end-1,2});
+fprintf(fid, '%s,', vars{1:end-1,2});
 fprintf(fid, '%s\n', vars{end,2});
 
 %data
 for sno = iig
     for cno = 1:size(vars,1)-1
-        fprintf(fid, [vars{cno,4} ', '], d.(vars{cno,3})(sno,:));
+        fprintf(fid, [vars{cno,4} ','], d.(vars{cno,3})(sno,:));
     end
     fprintf(fid, [vars{end,4} '\n'], d.(vars{end,3})(sno,:));
 end
