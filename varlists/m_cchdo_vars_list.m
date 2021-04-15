@@ -16,8 +16,8 @@ if typ==1 % this is for ctd profiles
         'SECT_ID', ' ', 'sect_id', '%s'
         'DATE', ' ', 'date', '%s'
         'TIME', ' ', 'time', '%s'
-        'LATITUDE', ' ', 'ulatitude', '%9.5f'
-        'LONGITUDE', ' ', 'ulongitude', '%10.5f'
+        'LATITUDE', ' ', 'latitude', '%9.5f'
+        'LONGITUDE', ' ', 'longitude', '%10.5f'
         'DEPTH', ' ', 'depth', '%4.0f'};
     vars = {'STNNBR', ' ', 'statnum', '%3d'
         'CASTNO', ' ', 'castno', '%d'

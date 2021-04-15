@@ -48,9 +48,6 @@ scriptname = mfilename; oopt = 'sum_stn_list'; get_cropt
 stnset = setdiff(stnall,stnmiss); stnset = stnset(:)'; %these are stations to include with ctd data
 stnall = unique([stnset(:); stnadd(:)]); stnall = stnall(:)'; %these are stations to include with or without ctd data
 
-%other info, like event number, station names, comments
-scriptname = mfilename; oopt = 'sum_extras'; get_cropt
-
 %%%%% load data and save to mstar file %%%%%
 if ~exist('reload','var'); reload = 1; end
 if reload
@@ -148,7 +145,9 @@ if reload
                         a = NaN;
                     end
                     log_all = [log_all sum(a(:))];
-                    if sum(isnan(log_all))>0; warning(['not all sample types in sgrps found for ' snames{sgno}]); end
+                    if sum(isnan(log_all))>0; 
+                        warning(['not all sample types in sgrps found for ' snames{sgno}]); 
+                    end
                     log_all = max(log_all);
                     if ~isnan(log_all)
                         eval([snames{sgno} '(k) = log_all;'])
@@ -188,6 +187,9 @@ if reload
     ds.time_bottom = (ds.time_bottom - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
     ds.time_end = (ds.time_end - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
     mfsave(otfile2, ds, hnew);
+    
+    %other info, like event number, station names, comments
+    scriptname = mfilename; oopt = 'sum_extras'; get_cropt
     
 else
     

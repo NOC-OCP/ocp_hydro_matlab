@@ -22,8 +22,8 @@ nsamp = length(d.press);
 
 clear dh
 scriptname = 'mout_cchdo'; oopt = 'woce_expo'; get_cropt
-dh.expocode = repmat(expocode,nsamp,1);
-dh.sect_id = repmat(sect_id,nsamp,1);
+dh.expocode = expocode;
+dh.sect_id = sect_id;
 
 sumfn = [mgetdir('M_SUM') '/station_summary_' mcruise '_all.nc'];
 iis = [];
