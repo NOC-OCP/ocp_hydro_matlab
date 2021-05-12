@@ -579,6 +579,7 @@ switch scriptname
         switch oopt
             case 'woce_vars_exclude'
                 vars_exclude_ctd = {};
+                %vars_exclude_sam = {'upsal_flag'; 'uoxygen_flag'};
             case 'woce_ctd_headstr'
                 headstring = {['CTD,' datestr(now,'yyyymmdd') 'POGBASEPA'];...
                     '#SHIP: James Cook';...

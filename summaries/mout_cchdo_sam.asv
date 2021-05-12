@@ -75,8 +75,7 @@ for vno = 1:size(vars,1)
             d.(vars{vno,3}(1:end-5)) = NaN+d.(vars{vno,3});
         end
     elseif endsWith(vars{vno,3},'_flag') && isfield(d, vars{vno,3}(1:end-5))
-        d.(vars{vno,3}) = 2+zeros(size(d.(vars{vno,3}(1:end-5))));
-        d.(vars{vno,3})(isnan(d.(vars{vno,3}(1:end-5)))) = 4;
+        d.(vars{vno,3}) = 2+zeros(size(d.(vars{vno,3}(1:end-5)
     end
 end
 

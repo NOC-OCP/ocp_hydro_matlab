@@ -24,6 +24,8 @@ clear dh
 scriptname = 'mout_cchdo'; oopt = 'woce_expo'; get_cropt
 dh.expocode = expocode;
 dh.sect_id = sect_id;
+dh.statnum = stnlocal;
+dh.castno = 1;
 
 sumfn = [mgetdir('M_SUM') '/station_summary_' mcruise '_all.nc'];
 iis = [];
@@ -93,7 +95,7 @@ if ~isempty(headstring)
 end
 
 % more header
-fprintf(fid, '%s %d\n', 'NUMBER_HEADERS = ', size(varsh,1));
+fprintf(fid, '%s %d\n', 'NUMBER_HEADERS = ', size(varsh,1)+1);
 for hno = 1:size(varsh,1)
     fprintf(fid, ['%s = ' varsh{hno,4} '\n'], varsh{hno,1}, dh.(varsh{hno,3}));
 end
