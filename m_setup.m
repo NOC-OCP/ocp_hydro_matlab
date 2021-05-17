@@ -26,13 +26,13 @@ try
 catch
     warning('git commit unknown');
 end
-MEXEC.MSCRIPT_CRUISE_STRING='jc211';
+MEXEC.MSCRIPT_CRUISE_STRING='dy000';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2021 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 1; %if true, print short documentation line to screen at beginning of scripts
 MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
 MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_athome']; % common suffixes '_atsea', '_atnoc', '_athome', '', etc. 
-MEXEC.ix_ladcp = 1; %set to 1 if processing LADCP data with LDEO IX
+MEXEC.ix_ladcp = 0; %set to 1 if processing LADCP data with LDEO IX
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
@@ -82,15 +82,15 @@ if length(which('m_common'))==0 % this is in msubs
 
    % paths to other useful libraries %%%***could make this search for whatever version is there? 
    if MEXEC.ix_ladcp
-mpath = [MEXEC.mstar_root '/sw/general_sw/LDEO_IX_13'];
-   if exist(mpath)==7; addpath(mpath); addpath([mpath '/geomag']); end
+       mpath = [MEXEC.mstar_root '/sw/general_sw/LDEO_IX_13'];
+       if exist(mpath)==7; addpath(mpath); addpath([mpath '/geomag']); end
    end
    mpath = [MEXEC.mstar_root '/sw/general_sw/m_map_v1_4'];
    if exist(mpath)==7; addpath(mpath); end
-   mpath = [MEXEC.mstar_root '/sw/general_sw/gamma_n_v3_05_10'];
-   if exist(mpath)==7; addpath(mpath); else; warning('could not add gamma_n to path'); end %%%***maybe this one is not required though
+   %mpath = [MEXEC.mstar_root '/sw/general_sw/gamma_n_v3_05_10'];
+   %if exist(mpath)==7; addpath(mpath); else; warning('could not add gamma_n to path'); end % only used in mcfc_03
    mpath = [MEXEC.mstar_root '/sw/general_sw/seawater_ver3_2'];
-   if exist(mpath)==7; addpath(mpath); end %%%***is this one required now?
+   if exist(mpath)==7; addpath(mpath); end
    mpath = [MEXEC.mstar_root '/sw/general_sw/gsw_matlab_v3_03'];
    if exist(mpath)==7; addpath(mpath); addpath([mpath '/library']); addpath([mpath '/thermodynamics_from_t']); else; warning('could not add gsw to path'); end
 end
@@ -136,14 +136,26 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         MEXEC_G.default_hedstream = 'gyro_s';
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
     case 'dy'
-        MEXEC_G.Mshipdatasystem = 'techsas';
-        MEXEC_G.default_navstream = 'posmvpos';
-        MEXEC_G.default_hedstream = 'attposmv';
+        if datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)>=datenum(2021,6,1)
+            MEXEC_G.Mshipdatasystem = 'rvdas';
+            MEXEC_G.default_navstream = 'pospmv';
+            MEXEC_G.default_hedstream = 'attpmv';
+        else
+            MEXEC_G.Mshipdatasystem = 'techsas';
+            MEXEC_G.default_navstream = 'posmvpos';
+            MEXEC_G.default_hedstream = 'attposmv';
+        end
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
     case 'jc'
-        MEXEC_G.Mshipdatasystem = 'techsas';
-        MEXEC_G.default_navstream = 'posmvpos';
-        MEXEC_G.default_hedstream = 'attposmv'; %or gyropmv
+        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
+            MEXEC_G.Mshipdatasystem = 'rvdas';
+            MEXEC_G.default_navstream = 'pospmv';
+            MEXEC_G.default_hedstream = 'attpmv';
+        else
+            MEXEC_G.Mshipdatasystem = 'techsas';
+            MEXEC_G.default_navstream = 'posmvpos';
+            MEXEC_G.default_hedstream = 'attposmv'; %or gyropmv
+        end
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
         MEXEC_G.Mrsh_machine = 'cook3'; % remote machine for rvs datapup command %%%***is this still used?
     case 'jr'
@@ -162,11 +174,6 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         merr = ['Ship ''' MEXEC_G.Mship ''' not recognised'];
         fprintf(2,'%s\n',merr);
         return
-end
-if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021 & sum(strcmp(MEXEC_G.Mship,{'cook' 'discovery'}))
-    MEXEC_G.Mshipdatasystem = 'rvdas';
-    MEXEC_G.default_navstream = 'pospmv';
-    MEXEC_G.default_hedstream = 'attpmv';
 end
 MEXEC_G.PLATFORM_TYPE= 'ship';
 
