@@ -37,8 +37,7 @@ if ~isempty(files)
 else
 
     m = 'There appears to be a problem in mtvars';
-    m2 = result;
-    fprintf(MEXEC_A.Mfider,'%s\n',' ',m,m2,' ')
+    fprintf(MEXEC_A.Mfider,'%s\n',' ',m,' ')
     return
 end
 
