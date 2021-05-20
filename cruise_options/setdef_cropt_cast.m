@@ -137,6 +137,7 @@ switch scriptname
                 H1 = -0.033;
                 H2 = 5000;
                 H3 = 1450;
+                H_0 = [H1 H2 H3];
             case 'turbVpars'
                 crhelp_str = {'sets scale factor and offset to apply to turbidity volts to convert to turbidity, '
                     'defaults to the values from XMLCON for BBRTD-182, calibration date 6 Mar 17 (see your XMLCON file)'};

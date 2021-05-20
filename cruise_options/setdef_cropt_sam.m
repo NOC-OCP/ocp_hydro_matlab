@@ -18,7 +18,7 @@ switch scriptname
         switch oopt
             case 'nbotfile'
                 crhelp_str = {'Sets output file to which to write information about Niskins from the .bl file'
-                    ['default: one file per station: ' fullfile(root_botcsv, ['bot_' mcruise '_' stn_string '.csv'])'};
+                    ['default: one file per station: ' fullfile(root_botcsv, ['bot_' mcruise '_' stn_string '.csv'])]'};
                 botfile = fullfile(root_botcsv, [prefix1 stn_string '.csv']);
             case 'nispos'
                 crhelp_str = {'niskin gives the bottle numbers (e.g. serial numbers, if known) for niskins in '

@@ -17,7 +17,7 @@ prefix = ['ctd_' mcruise '_'];
 %figure out which file to start from
 infile = fullfile(root_ctd, [prefix stn_string '_raw_cleaned']);
 if ~exist(m_add_nc(infile), 'file')
-    infile = fullfile(root_ctd, prefix stn_string '_raw']);
+    infile = fullfile(root_ctd, [prefix stn_string '_raw']);
 end
     
 otfile = fullfile(root_ctd, [prefix stn_string '_24hz']);
@@ -139,44 +139,44 @@ end
 if tempcal | condcal | oxygencal | fluorcal | transmittancecal
     %if any are true, get whole list and test for which to apply below
     scriptname = mfilename; oopt = 'ctdcals'; get_cropt
-end
-
-if size(calstr,1)>0
     
-    %initialise
-    [d0,h0] = mloadq(otfile, '/');
-    clear dcal hcal
-    hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
-    
-    for sno = 1:size(calstr,1)
+    if size(calstr,1)>0
         
-        iis = strfind(calmsg{sno,1},[' ' mcruise]);
-        calsens = calmsg{sno,1}(1:iis-1);
+        %initialise
+        [d0,h0] = mloadq(otfile, '/');
+        clear dcal hcal
+        hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
         
-        %figure out if this calstr should be applied, depending on flag set
-        %above in oopt = 'raw_corrs' call to get_cropt 
-        if ~isempty(str2num(calsens(end)))
-            calvar = calsens(1:end-1);
-        else
-            calvar = calsens;
+        for sno = 1:size(calstr,1)
+            
+            iis = strfind(calmsg{sno,1},[' ' mcruise]);
+            calsens = calmsg{sno,1}(1:iis-1);
+            
+            %figure out if this calstr should be applied, depending on flag set
+            %above in oopt = 'raw_corrs' call to get_cropt
+            if ~isempty(str2num(calsens(end)))
+                calvar = calsens(1:end-1);
+            else
+                calvar = calsens;
+            end
+            eval(['docal = ' calvar 'cal;'])
+            
+            if docal
+                %apply, and store in hcal
+                fprintf(1,'\n%s\n\n',calstr{sno})
+                eval([calstr{sno}]);
+                ii = find(strcmp(calsens,h0.fldnam));
+                hcal.fldnam = [hcal.fldnam calsens]; hcal.fldunt = [hcal.fldunt h0.fldunt(ii)];
+                hcal.comment = [hcal.comment sprintf('calibration (%s) applied to %s using %s\n', calmsg{sno,2}, calsens, calstr{sno})];
+            end
+            
         end
-        eval(['docal = ' calvar 'cal;'])
         
-        if docal
-            %apply, and store in hcal
-            fprintf(1,'\n%s\n\n',calstr{sno})
-            eval([calstr{sno}]);
-            ii = find(strcmp(calsens,h0.fldnam));
-            hcal.fldnam = [hcal.fldnam calsens]; hcal.fldunt = [hcal.fldunt h0.fldunt(ii)];
-            hcal.comment = [hcal.comment sprintf('calibration (%s) applied to %s using %s\n', calmsg{sno,2}, calsens, calstr{sno})];
+        %if there were calibrations applied to any variables, save those back
+        %to 24hz file (overwriting uncalibrated versions)
+        if length(hcal.fldnam)>0
+            mfsave(otfile, dcal, hcal, '-addvars');
         end
-        
+%         
     end
-    
-    %if there were calibrations applied to any variables, save those back
-    %to 24hz file (overwriting uncalibrated versions)
-    if length(hcal.fldnam)>0
-        mfsave(otfile, dcal, hcal, '-addvars');
-    end
-    
 end

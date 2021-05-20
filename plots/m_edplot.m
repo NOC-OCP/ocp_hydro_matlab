@@ -378,7 +378,7 @@ else
     %     plot(x,y(1,:)); bak on jc211 1 mar 2021. Previously if y(1,:) was
     %     largely absent, then the xlim found might not be wide enough to plot
     %     all vars. Now ensure all vars appear within xlim.
-    plot(x,nansum(y,1));
+    plot(x,m_nansum(y,1));
     h0 = gca;
     xax = get(h0,'xlim');
     xt = get(h0,'xtick');

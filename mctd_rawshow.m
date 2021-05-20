@@ -11,10 +11,10 @@ root_ctd = mgetdir('M_CTD');
 prefix1 = ['ctd_' mcruise '_'];
 infile1 = fullfile(root_ctd, [prefix1 stn_string '_raw_cleaned']);
 if ~exist(m_add_nc(infile1),'file')
-    infile1 = fullfile(root_ctd, prefix1 stn_string '_raw']);
+    infile1 = fullfile(root_ctd, [prefix1 stn_string '_raw']);
 end
-infile2 = fullfile(root_ctd ['dcs_' mcruise '_' stn_string]);
-infile3 = fullfile(root_ctd [prefix1 stn_string '_psal']);
+infile2 = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
+infile3 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
 
 hraw = m_read_header(infile1);
 [ddcs hdcs]  = mloadq(infile2,'/');

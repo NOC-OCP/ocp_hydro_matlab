@@ -104,7 +104,7 @@ else
     root_ctd = mgetdir('M_CTD');
     root_bot = mgetdir('M_CTD_BOT'); % the bottle file(s) is/are in the ascii files directory
     infile = fullfile(root_bot, ['bot_' mcruise '_' stn_string]);
-    otfile = fullfile(root_ctd, 'sam_' mcruise '_all']);
+    otfile = fullfile(root_ctd, ['sam_' mcruise '_all']);
     
     if exist(m_add_nc(infile),'file') == 2
         [d,h] = mloadq(infile,'/');

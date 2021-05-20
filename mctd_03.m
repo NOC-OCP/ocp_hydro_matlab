@@ -22,7 +22,7 @@ otfile1 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
 otfile2d = fullfile(root_ctd, [prefix1 stn_string '_2db']);
 otfile2u = fullfile(root_ctd, [prefix1 stn_string '_2up']);
 wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
-wkfile_dvars = fullfile(root_ctd ['wk_dvars_' mcruise '_' stn_string]); %this one persists through a later processing stage
+wkfile_dvars = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]); %this one persists through a later processing stage
 
 
 %identify preferred sensors for (T,C) and O on this station

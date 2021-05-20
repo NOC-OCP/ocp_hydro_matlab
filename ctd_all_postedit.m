@@ -27,7 +27,9 @@ for kloop = klist
     stn = kloop; mctd_02b
 
     stn = kloop; mctd_03;
-    mout_1hzasc(stnlocal);
+    if MEXEC_G.ix_ladcp==1
+        mout_1hzasc(stnlocal);
+    end
     stn = kloop; mctd_04;
     
     infile2 = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);

@@ -99,9 +99,9 @@ sused = [];
 for ks = [slist(:)' stnlocal];
     sstring = sprintf('%03d',ks);
     infile1 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2db']));
-    infile2 = m_add_nc(fullfile(root_ctd, prefix1 sstring '_2up']));
-    infile3 = m_add_nc(fullfile(root_ctd, prefix1 sstring '_psal']));
-    infile4 = m_add_nc(fullfile(root_ctd, prefix2 sstring]));
+    infile2 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2up']));
+    infile3 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_psal']));
+    infile4 = m_add_nc(fullfile(root_ctd, [prefix2 sstring]));
     % skip stations that don't have a complete set of files
     if exist(infile1,'file') ~= 2; continue; end
     if exist(infile2,'file') ~= 2; continue; end
@@ -602,60 +602,61 @@ for plotlist = cklist
             set(h,'VerticalAlignment','middle');
             axis off
             
-            subplot(321)
-            for ks = numused
-                upintrp = interp1(d2up{ks}.press,d2up{ks}.temp1,d2db{ks}.press);
-                down = d2db{ks}.temp1;
-                plot(d2db{ks}.press, upintrp-down,['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-            end
-            title ('temp1 up minus down diff');
-            
-            
-            subplot(322)
-            for ks = numused
-                upintrp = interp1(d2up{ks}.press,d2up{ks}.temp2,d2db{ks}.press);
-                down = d2db{ks}.temp2;
-                plot(d2db{ks}.press, upintrp-down,['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-            end
-            title ('temp2 up minus down diff');
-            
-            
-            subplot(323)
-            for ks = numused
-                upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},[saltype '1']),d2db{ks}.press);
-                plot(d2db{ks}.press, upintrp-getfield(d2db{ks},[saltype '1']),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-            end
-            title ([saltype '1 up minus down diff']);
-            
-            
-            subplot(324)
-            for ks = numused
-                upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},[saltype '2']),d2db{ks}.press);
-                plot(d2db{ks}.press, upintrp-getfield(d2db{ks},[saltype '2']),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-            end
-            title ([saltype '2 up minus down diff']);
-            
-            
-            subplot(325)
-            for ks = numused
-                upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},oxyvars{1,2}),d2db{ks}.press);
-                plot(d2db{ks}.press, upintrp-getfield(d2db{ks},oxyvars{1,2}),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-            end
-            title ('oxygen 1 up minus down diff');
-            
-            subplot(326)
-            if nox>1
+            if sum(~isnan(d2up{ks}.press))>1
+                subplot(321)
                 for ks = numused
-                    upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},oxyvars{2,2}),d2db{ks}.press);
-                    plot(d2db{ks}.press, upintrp-getfield(d2db{ks},oxyvars{2,2}),['k' '-'],'linewidth',lwid);
+                    upintrp = interp1(d2up{ks}.press,d2up{ks}.temp1,d2db{ks}.press);
+                    down = d2db{ks}.temp1;
+                    plot(d2db{ks}.press, upintrp-down,['k' '-'],'linewidth',lwid);
                     hold on; grid on;
                 end
-                title ('oxygen 2 up minus down diff');
+                title ('temp1 up minus down diff');
+                
+                subplot(322)
+                for ks = numused
+                    upintrp = interp1(d2up{ks}.press,d2up{ks}.temp2,d2db{ks}.press);
+                    down = d2db{ks}.temp2;
+                    plot(d2db{ks}.press, upintrp-down,['k' '-'],'linewidth',lwid);
+                    hold on; grid on;
+                end
+                title ('temp2 up minus down diff');
+                
+                
+                subplot(323)
+                for ks = numused
+                    upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},[saltype '1']),d2db{ks}.press);
+                    plot(d2db{ks}.press, upintrp-getfield(d2db{ks},[saltype '1']),['k' '-'],'linewidth',lwid);
+                    hold on; grid on;
+                end
+                title ([saltype '1 up minus down diff']);
+                
+                
+                subplot(324)
+                for ks = numused
+                    upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},[saltype '2']),d2db{ks}.press);
+                    plot(d2db{ks}.press, upintrp-getfield(d2db{ks},[saltype '2']),['k' '-'],'linewidth',lwid);
+                    hold on; grid on;
+                end
+                title ([saltype '2 up minus down diff']);
+                
+                
+                subplot(325)
+                for ks = numused
+                    upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},oxyvars{1,2}),d2db{ks}.press);
+                    plot(d2db{ks}.press, upintrp-getfield(d2db{ks},oxyvars{1,2}),['k' '-'],'linewidth',lwid);
+                    hold on; grid on;
+                end
+                title ('oxygen 1 up minus down diff');
+                
+                subplot(326)
+                if nox>1
+                    for ks = numused
+                        upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},oxyvars{2,2}),d2db{ks}.press);
+                        plot(d2db{ks}.press, upintrp-getfield(d2db{ks},oxyvars{2,2}),['k' '-'],'linewidth',lwid);
+                        hold on; grid on;
+                    end
+                    title ('oxygen 2 up minus down diff');
+                end
             end
             
         case 10
