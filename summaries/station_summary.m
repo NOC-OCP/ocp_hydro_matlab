@@ -40,7 +40,7 @@ end
 root_ctd = mgetdir('ctd');
 root_sum = mgetdir('sum');
 
-d = struct2cell(dir([root_ctd '/ctd_' mcruise '_*_psal.nc'])); d = cell2mat(d(1,:)');
+d = dir(fullfile(root_ctd, ['ctd_' mcruise '_*_psal.nc'])); d = {d.name};
 
 %which stations
 stnall = str2num(d(:,length(mcruise)+[6:8]));
@@ -55,14 +55,13 @@ if reload
     if sum(strcmp('maxw',vars(:,1)))
         %figure out winch variable
         root_win = mgetdir('M_CTD_WIN');
-        [a, b] = unix(['ls ' root_win '/' 'win_' mcruise '_???.nc']);
-        knc = strfind(b,'.nc');
-        if isempty(knc)
+        d = dir(fullfile(root_win, ['win_' mcruise '_???.nc']));
+        if isempty(d)
             m = 'No winch files found';
             fprintf(MEXEC_A.Mfider,'%s\n',m)
             return
         end
-        fnwin = b(1:knc+2); % first winch file name
+        fnwin = d(1).name; % first winch file name
         h = m_read_header(fnwin);
         cabname = mvarname_find({'cablout' 'cableout' 'winch_cable_out'},h.fldnam);
         if isempty(cabname)
@@ -85,7 +84,7 @@ if reload
     
     %get information from files
     disp('loading')
-    fnsam = [root_ctd '/sam_' mcruise '_all'];
+    fnsam = fullfile(root_ctd, ['sam_' mcruise '_all']);
     clear dsam
     if exist(m_add_nc(fnsam),'file') == 2
         dsam0 = mloadq(fnsam,'/');
@@ -94,7 +93,7 @@ if reload
         stnstr = sprintf('%03d',k);
         
         %lat, lon, depths and altimeter
-        fnsal = [root_ctd '/ctd_' mcruise '_' stnstr '_psal'];
+        fnsal = fullfile(root_ctd, ['ctd_' mcruise '_' stnstr '_psal']);
         [dpsal, hpsal] = mloadq(fnsal,'/');
         lat(k) = hpsal.latitude;
         lon(k) = hpsal.longitude;
@@ -107,14 +106,14 @@ if reload
         end
         
         %winch
-        fnwin = [root_win '/win_' mcruise '_' stnstr];
+        fnwin = fullfile(root_win, ['win_' mcruise '_' stnstr]);
         if exist(m_add_nc(fnwin),'file') == 2
             [dwin, h3] = mloadq(fnwin,cabname,'/');
             maxw(k) = max(dwin.(cabname));
         end
         
         %cast start, bottom, end times
-        fndcs = [root_ctd '/dcs_' mcruise '_' stnstr ];
+        fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' stnstr]);
         [ddcs, h4] = mloadq(fndcs,'/');
         time_start(k) = datenum(h4.data_time_origin) + ddcs.time_start/86400;
         time_bottom(k) = datenum(h4.data_time_origin) + ddcs.time_bot/86400;
@@ -162,7 +161,7 @@ if reload
     scriptname = mfilename; oopt = 'sum_edit'; get_cropt; %edit depths, times, etc. not captured from CTD data
     
     %when not close enough to bottom to detect on altimeter
-    load([mgetdir('ctd_dep') '/station_depths_' mcruise]);
+    load(fullfile(mgetdir('ctd_dep'), ['station_depths_' mcruise]));
     [~,ia,ib] = intersect(statnum,bestdeps(:,1));
     cordep(ia) = bestdeps(ib,2);
     minalt((cordep-maxd)>99) = -9;
@@ -175,7 +174,7 @@ if reload
     clear hnew ds
     hnew.dataname = ['station_summary_' mcruise '_all'];
     hnew.fldnam ={}; hnew.fldunt = {};
-    otfile2 = [root_sum '/' hnew.dataname];
+    otfile2 = fullfile(root_sum, hnew.dataname);
     for k = 1:size(vars,1)
         if ~isempty(vars{k,2})
             eval(['ds.(vars{k,1}) = ' vars{k,1} ';']);
@@ -194,7 +193,7 @@ if reload
 else
     
     disp('not regenerating station_summary file, just loading and printing table; clear reload or set to 0 to change this');
-    ds = mload([root_sum '/station_summary_' mcruise '_all'],'/');
+    ds = mloadq(fullfile(root_sum, ['station_summary_' mcruise '_all']),'/');
     fn = fieldnames(ds);
     for k = 1:length(fn)
         eval([fn{no} ' = ds.(fn{no});']);
@@ -205,7 +204,7 @@ end
 
 %%%%% write to ascii file %%%%%
 
-stnlistname = [root_sum '/station_summary_' mcruise '_all.txt'];
+stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.txt']);
 fid = fopen(stnlistname,'w');
 
 % list headings

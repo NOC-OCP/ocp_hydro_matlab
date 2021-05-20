@@ -9,8 +9,8 @@ minit;
 mdocshow(mfilename, ['pastes CTD data at bottle firing times from fir_' mcruise '_' stn_string '.nc to sam_' mcruise '_all.nc']);
 
 root_ctd = mgetdir('M_CTD'); % change working directory
-infile = [root_ctd '/fir_' mcruise '_' stn_string];
-otfile = [root_ctd '/sam_' mcruise '_all'];
+infile = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
+otfile = fullfile(root_ctd, ['sam_' mcruise '_all']);
 
 if exist(m_add_nc(infile),'file') == 2
     [d,h] = mloadq(infile,'/');

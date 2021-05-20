@@ -13,7 +13,7 @@ switch abbrev
     case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet' 'possea' 'dopsea' 'vtgsea' 'attsea' 'dopcnav' 'hdtsea' 'ea600' 'logskip' 'posranger'}
         %work on the latest file, which already be an edited version; always output to otfile
         if exist([otfile '.nc'])
-            unix(['/bin/mv ' otfile '.nc ' wkfile1 '.nc']); infile1 = wkfile1;
+            movefile(m_add_nc(otfile), m_add_nc(wkfile1)); infile1 = wkfile1;
         else
             infile1 = infile;
         end
@@ -27,7 +27,7 @@ switch abbrev
         end
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'deltat'; 'seconds'; ' '];
         mcalc
-        unix(['/bin/rm ' m_add_nc(wkfile1)]);
+        delete(m_add_nc(wkfile1));
         %now remove them
         d = mload(otfile, 'deltat');
         if sum(d.deltat==0)
@@ -49,7 +49,7 @@ switch abbrev
     case {'gys', 'gyr', 'gyro_s', 'gyropmv' 'posmvpos'}
         %work on the latest file, which already be an edited version; always output to otfile
         if exist([otfile '.nc'])
-            unix(['/bin/mv ' otfile '.nc ' wkfile '.nc']); infile1 = wkfile;
+            movefile(m_add_nc(otfile), m_add_nc(wkfile)); infile1 = wkfile;
         else
             infile1 = infile;
         end
@@ -63,7 +63,7 @@ switch abbrev
         end
         MEXEC_A.MARGS_IN = {wkfile2; otfile; '2'; 'tflag .5 1.5'; ' '; varlist};
         mdatpik
-        unix(['/bin/rm ' m_add_nc(wkfile2)])
-        unix(['/bin/rm ' m_add_nc(wkfile)]);
+        delete(m_add_nc(wkfile2))
+        delete(m_add_nc(wkfile));
         
 end

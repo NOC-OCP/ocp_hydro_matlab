@@ -13,11 +13,12 @@ mdocshow(mfilename, ['loads SBE35 ascii file(s) and writes to sbe35_' mcruise '_
 
 % load sbe35 data
 root_sbe35 = mgetdir('M_SBE35');
-ds = struct2cell(dir([root_sbe35 '/sbe35_' mcruise '*.asc'])); file_list = ds(1,:);
+ds = dir(fullfile(root_sbe35, ['sbe35_' mcruise '*.asc']));
+file_list = {ds.name};
 kount = 0;
 alldata = {}; statnum = [];
 for kf = 1:length(file_list);
-    fn = [root_sbe35 '/' file_list{kf}];
+    fn = fullfile(root_sbe35, file_list{kf});
     iis = strfind(file_list{kf},'.asc')+[-3:-1];
     fid2 = fopen(fn,'r');
     while 1
@@ -70,10 +71,10 @@ for vno = 1:length(varnames)
 end
 
 %loop through stations to get data and add to structure ds
-files = dir([mgetdir('M_CTD') '/dcs_' mcruise '_*.nc']);
+files = dir(fullfile(mgetdir('M_CTD'), ['dcs_' mcruise '_*.nc']));
 for fno = 1:length(files)
 
-    infile1 = [mgetdir('M_CTD') '/' files(fno).name];
+    infile1 = fullfile(mgetdir('M_CTD'), files(fno).name);
     stnlocal = str2num(infile1(end-5:end-3));
     scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
     
@@ -116,14 +117,14 @@ ds.sbe35temp_flag(isnan(ds.sbe35temp)&ds.sbe35temp_flag<4) = 4;
 % now save the data
 clear hnew
 dataname = ['sbe35_' mcruise '_01'];
-otfile1 = [mgetdir('M_SBE35') '/' dataname];
+otfile1 = fullfile(mgetdir('M_SBE35'), dataname);
 hnew.fldnam = varnames; hnew.fldunt = varunits; hnew.dataname = dataname;
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; %***
 MEXEC_A.Mprog = mfilename;
 mfsave(otfile1, ds, hnew, '-merge', 'sampnum');
 
 %and update sam_cruise_all file
-otfile2 = [mgetdir('M_CTD') '/sam_' mcruise '_all'];
+otfile2 = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all']);
 hnew = rmfield(hnew, 'dataname');
 hnew.comment = ['SBE35 data from sbe35_' mcruise '_01.nc'];
 MEXEC_A.Mprog = mfilename;

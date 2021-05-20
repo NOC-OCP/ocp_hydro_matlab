@@ -7,8 +7,8 @@ root_iso = mgetdir('M_BOT_ISO');
 root_ctd = mgetdir('M_CTD');
 prefix1 = ['iso_' mcruise '_'];
 prefix2 = ['sam_' mcruise '_'];
-infile1 = [root_iso '/' prefix1 '01'];
-otfile2 = [root_ctd '/' prefix2 stn_string];
+infile1 = fullfile(root_iso, [prefix1 '01']);
+otfile2 = fullfile(root_ctd, [prefix2 stn_string]);
 
 % bak on jr302 19 jun 2014 some stations don't have any iso data; exit
 % gracefully

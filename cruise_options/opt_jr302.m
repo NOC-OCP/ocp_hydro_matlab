@@ -176,7 +176,7 @@ switch scriptname
     case 'mcfc_02'
         switch oopt
             case 'infile1'
-                infile1 = [root_cfc '/' prefix1 '01'];
+                infile1 = fullfile(root_cfc, [prefix1 '01']);
             case 'cfclist'
                 cfcinlist = 'sf6 sf6_flag cfc11 cfc11_flag cfc12 cfc12_flag f113 f113_flag ccl4 ccl4_flag';
                 cfcotlist = cfcinlist;

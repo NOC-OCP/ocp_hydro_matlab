@@ -52,13 +52,10 @@ switch scriptname
     case 'moxy_01'
         switch oopt
             case 'oxycsv'
-                %infile = [root_oxy '/oxy_jc159_all.csv'];
-                infile = [root_oxy '/' 'oxy_' mcruise '_' sprintf('%3.3i',stnlocal) '.csv'];
+                infile = fullfile(root_oxy, ['oxy_' mcruise '_' sprintf('%3.3i',stnlocal) '.csv']);
             case 'oxysampnum'
-                %ds_oxy.niskin        = ds_oxy.botnum;
                 ds_oxy.botoxya_per_l = ds_oxy.botoxya; 
                 ds_oxy.botoxyb_per_l = ds_oxy.botoxyb;
-                %ds_oxy.sampnum       = ds_oxy.statnum*100 + ds_oxy.niskin;
         end
    %%%%%%%%%% end moxy_01 %%%%%%%%%%
  

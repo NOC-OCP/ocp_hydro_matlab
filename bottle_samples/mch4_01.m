@@ -13,8 +13,8 @@ mdocshow(scriptname, ['add documentation string for ' scriptname])
 root_ch4 = mgetdir('M_BOT_CH4');
 prefix1 = ['ch4_' MEXEC_G.MSCRIPT_CRUISE_STRING '_']; % in prefix
 prefix2 = ['ch4_' MEXEC_G.MSCRIPT_CRUISE_STRING '_']; % out prefix
-infile1 = [root_ch4 '/' prefix1 '01.csv']; % all in one file
-otfile2 = [root_ch4 '/' prefix2 stn_string];
+infile1 = fullfile(root_ch4, [prefix1 '01.csv']); % all in one file
+otfile2 = fullfile(root_ch4, [prefix2 stn_string]);
 dataname = [prefix2 stn_string];
 
 

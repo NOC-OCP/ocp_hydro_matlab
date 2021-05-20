@@ -98,10 +98,10 @@ infiles = {};
 sused = [];
 for ks = [slist(:)' stnlocal];
     sstring = sprintf('%03d',ks);
-    infile1 = m_add_nc([root_ctd '/' prefix1 sstring '_2db']);
-    infile2 = m_add_nc([root_ctd '/' prefix1 sstring '_2up' ]);
-    infile3 = m_add_nc([root_ctd '/' prefix1 sstring '_psal']);
-    infile4 = m_add_nc([root_ctd '/' prefix2 sstring ]);
+    infile1 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2db']));
+    infile2 = m_add_nc(fullfile(root_ctd, prefix1 sstring '_2up']));
+    infile3 = m_add_nc(fullfile(root_ctd, prefix1 sstring '_psal']));
+    infile4 = m_add_nc(fullfile(root_ctd, prefix2 sstring]));
     % skip stations that don't have a complete set of files
     if exist(infile1,'file') ~= 2; continue; end
     if exist(infile2,'file') ~= 2; continue; end

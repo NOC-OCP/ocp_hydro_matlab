@@ -5,8 +5,8 @@ stn = 0; minit; scriptname = mfilename;
 mdocshow(scriptname, ['converts nutrients from /L in sam_' mcruise '_all.nc to /kg in sam_' mcruise '_all_nutkg.nc'])
 
 root_ctd = mgetdir('M_CTD');
-infile = [root_ctd '/sam_' mcruise '_all'];
-otfile = [root_ctd '/sam_' mcruise '_all_nutkg'];
+infile = fullfile(root_ctd, ['sam_' mcruise '_all']);
+otfile = fullfile(root_ctd, ['sam_' mcruise '_all_nutkg']);
 
 %figure out which of the possible nutrients variables we have here
 h = m_read_header(infile);

@@ -26,11 +26,11 @@ end
 
 root_ctd = mgetdir('M_CTD');
 
-fnctd = [root_ctd '/ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal'];
-fnsamall = [root_ctd '/sam_' mcruise '_all'];
+fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal']);
+fnsamall = fullfile(root_ctd, 'sam_' mcruise '_all']);
 oopt = 'section'; get_cropt
-fngrid = [root_ctd '/grid_' mcruise '_' section];
-fndcs = [root_ctd '/dcs_' mcruise '_' sprintf('%03d',stnlocal)];
+fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section]);
+fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' sprintf('%03d',stnlocal)]);
 
 [dctd hctd] = mload(fnctd,'/');
 [dsamall hsamall]  = mload(fnsamall,'/');

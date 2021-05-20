@@ -2,12 +2,12 @@
 
 %work on the latest file, which may already be an edited version; always output to otfile
 if ~exist([otfile '.nc'])
-    unix(['/bin/cp ' infile1 '.nc ' otfile '.nc']);
+    copyfile(m_add_nc(infile1), m_add_nc(otfile));
 end
 [d,h] = mload(otfile,'time','depth_uncor',' ');
 
 navname = MEXEC_G.default_navstream; navdir = mgetdir(navname);
-navfile = [navdir '/' navname '_' mcruise '_d' day_string '_raw.nc'];
+navfile = fullfile(navdir, [navname '_' mcruise '_d' day_string '_raw.nc']);
 if exist(navfile)
     
     [dn,hn] = mload(navfile,'/');

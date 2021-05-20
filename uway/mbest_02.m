@@ -15,8 +15,8 @@ prefix = [abbrev '_' mcruise '_'];
 
 mdocshow(scriptname, ['calculates speed, course, distrun from 30 s averages in ' abbrev '_' mcruise '_ave.nc, writes to ' abbrev '_' mcruise '_spd.nc']);
 
-infile = [root_dir '/' prefix 'ave'];
-otfile = [root_dir '/' prefix 'spd'];
+infile = fullfile(root_dir, [prefix 'ave']);
+otfile = fullfile(root_dir, prefix 'spd']);
 wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
 wkfile2 = ['wk2_' scriptname '_' datestr(now,30)];
 
@@ -61,4 +61,5 @@ otfile
 };
 mcalc
 
-unix(['/bin/rm ' wkfile1 '.nc ' wkfile2 '.nc']);
+delete(m_add_nc(wkfile1));
+delete(m_add_nc(wkfile2));

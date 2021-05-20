@@ -14,9 +14,9 @@ mdocshow(mfilename, ['interactively select start and end of cast, written to dcs
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 
-infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
-infile0 = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz'];
-otfile = [root_ctd '/dcs_' mcruise '_' stn_string];
+infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
+infile0 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
+otfile = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
 
 % pik data near surface for inspection
 hinctd = m_read_header(infile1);

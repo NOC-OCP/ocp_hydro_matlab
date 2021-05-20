@@ -12,8 +12,8 @@ mdocshow(mfilename, ['adds winch data from bottle firing times to fir_' mcruise 
 root_win = mgetdir('M_CTD_WIN');
 root_ctd = mgetdir('M_CTD');
 
-winfile = [root_win '/win_' mcruise '_' stn_string];
-firfile = [root_ctd '/fir_' mcruise '_' stn_string];
+winfile = fullfile(root_win, ['win_' mcruise '_' stn_string]);
+firfile = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
 
 clear d h
 

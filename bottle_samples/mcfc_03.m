@@ -17,7 +17,7 @@ mdocshow(scriptname, ['add documentation string for ' scriptname])
 % % clear stn % so that it doesn't persist
 
 root_ctd = mgetdir('M_CTD');
-otfile = [MEXEC.mstar_root '/data/pickup/' 'cfc_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' 'all'];
+otfile = fullfile(MEXEC.mstar_root, 'data', 'pickup', ['cfc_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' 'all']);
 
 ncols = 30;
 

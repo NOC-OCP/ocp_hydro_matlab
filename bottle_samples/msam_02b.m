@@ -15,8 +15,8 @@ root_ctd = mgetdir('M_CTD');
 root_asc = mgetdir('M_CTD_CNV');
 
 prefix1 = ['sam_' mcruise '_'];
-infile1 = [root_ctd '/' prefix1 stn_string];
-infile2 = [root_asc '/bottle_data_flags.txt']; %not making this name a cruise option because it needs to be a m-file
+infile1 = fullfile(root_ctd, [prefix1 stn_string]);
+infile2 = fullfile(root_asc, 'bottle_data_flags.txt'); %not making this name a cruise option because it needs to be a m-file
 
 
 %%%%%%%%%

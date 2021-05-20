@@ -11,10 +11,10 @@ mdocshow(mfilename, ['averages from 24 hz to 2 dbar in ctd_' mcruise '_' stn_str
 root_ctd = mgetdir('M_CTD');
 
 wscriptname = mfilename;
-wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
-infile2 = [root_ctd '/dcs_' mcruise '_' stn_string];
-otfile1d = [root_ctd '/ctd_' mcruise '_' stn_string '_2db'];
-otfile1u = [root_ctd '/ctd_' mcruise '_' stn_string '_2up'];
+wkfile_dvars = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]);
+infile2 = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
+otfile1d = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2db']);
+otfile1u = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2up']);
 wkfile1d = ['wk1d_' wscriptname '_' datestr(now,30)];
 wkfile1u = ['wk1u_' wscriptname '_' datestr(now,30)];
 wkfile2d = ['wk2d_' wscriptname '_' datestr(now,30)];
@@ -267,6 +267,10 @@ MEXEC_A.MARGS_IN = {
     };
 mcalc
 
-unix(['/bin/rm ' wkfile1d '.nc ' wkfile2d '.nc ' wkfile3d '.nc']);
-unix(['/bin/rm ' wkfile1u '.nc ' wkfile2u '.nc ' wkfile3u '.nc']);
-unix(['/bin/rm ' wkfile_dvars '.nc'])
+delete(m_add_nc(wkfile1d));
+delete(m_add_nc(wkfile2d));
+delete(m_add_nc(wkfile3d));
+delete(m_add_nc(wkfile1u));
+delete(m_add_nc(wkfile2u));
+delete(m_add_nc(wkfile3u));
+delete(m_add_nc(wkfile_dvars));

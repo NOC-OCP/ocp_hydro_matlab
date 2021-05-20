@@ -17,7 +17,7 @@ clear stn % so that it doesn't persist
 
 root_ctd = mgetdir('M_CTD');
 prefix1 = ['sam_' mcruise '_'];
-infile1 = [root_ctd '/' prefix1 stn_string];
+infile1 = fullfile(root_ctd, [prefix1 stn_string]);
 
 % phosphate
 

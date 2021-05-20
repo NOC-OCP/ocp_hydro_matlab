@@ -12,10 +12,9 @@ prefix = tsgpre;
 root_tsg = mgetdir(tsgpre);
 root_bot = mgetdir('tsg');
 
+tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01_medav_clean']); % median averaged file
 if usecallocal
-    tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean_cal']; % median averaged file
-else
-    tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean']; % median averaged file
+    tsgfn = [tsgfn '_cal'];
 end
 [dt, ht] = mload(tsgfn, '/');
 salvar = mvarname_find({'salinity' 'psal' 'salinity_raw'},ht.fldnam);
@@ -34,7 +33,7 @@ else
     calstr = 'uncal';
 end
 
-botfn = [root_bot '/tsg_' mcruise '_all'];
+botfn = fullfile(root_bot, ['tsg_' mcruise '_all']);
 [db, hb] = mload(botfn, '/');
 db.time = m_commontime(db.time, hb.data_time_origin, ht.data_time_origin);
 %sort all variables
@@ -119,7 +118,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
         t = t_all; 
         if ~usecallocal;
 %             t = db.time-1; 
-            save([root_tsg '/sdiffsm'], 't', 'sdiffsm'); 
+            save(fullfile(root_tsg, 'sdiffsm'), 't', 'sdiffsm'); 
         end
     else
         warning(['sdiffsm not set; check opt_' mcruise])

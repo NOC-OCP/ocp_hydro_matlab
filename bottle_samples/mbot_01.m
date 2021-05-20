@@ -16,7 +16,7 @@ mdocshow(mfilename, ['puts Niskin bottle information from .bl files and from opt
 
 % resolve root directories for various file types
 root_bot = mgetdir('M_CTD_BOT'); % the bottle file(s) is/are in the ascii files directory
-infile = [root_bot '/ctd_' mcruise '_' stn_string '.bl'];
+infile = fullfile(root_bot, ['ctd_' mcruise '_' stn_string '.bl']);
 
 arebottles = 0;
 
@@ -58,7 +58,7 @@ if exist(infile,'file')
     scriptname = mfilename; oopt = 'botflags'; get_cropt
     
     dataname = ['bot_' mcruise '_' stn_string];
-    otfile = [root_bot '/' dataname];
+    otfile = fullfile(root_bot, dataname);
     MEXEC_A.Mprog = mfilename;
 
     timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
@@ -103,8 +103,8 @@ else
     %write to sam_cruise_all.nc
     root_ctd = mgetdir('M_CTD');
     root_bot = mgetdir('M_CTD_BOT'); % the bottle file(s) is/are in the ascii files directory
-    infile = [root_bot '/bot_' mcruise '_' stn_string];
-    otfile = [root_ctd '/sam_' mcruise '_all'];
+    infile = fullfile(root_bot, ['bot_' mcruise '_' stn_string]);
+    otfile = fullfile(root_ctd, 'sam_' mcruise '_all']);
     
     if exist(m_add_nc(infile),'file') == 2
         [d,h] = mloadq(infile,'/');

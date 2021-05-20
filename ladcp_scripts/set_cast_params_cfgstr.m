@@ -12,8 +12,8 @@
 %======================================================================
 
 stnlocal = stn; m_global; minit; stn = stnlocal; stnstr = sprintf('%03d', stnlocal);
-cd([MEXEC_G.MEXEC_DATA_ROOT '/ladcp/ix/'])
-rawdir = 'raw/';
+cd(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ladcp', 'ix'));
+rawdir = 'raw';
 
 if strcmp(cfg.orient, 'DL')
     isdo = 1; isup = 0;
@@ -39,11 +39,11 @@ else
    if sum(strcmp(cfg.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
 if ps.sadcpfac & isfield(cfg, 'SADCP_inst')
-    subdir = [subdir cfg.SADCP_inst];
+    subdir = fullfile(subdir, cfg.SADCP_inst);
 end
-pdir = [subdir '/processed/' stnstr '/'];
+pdir = fullfile(subdir, 'processed', stnstr);
 if ~exist(pdir, 'dir')
-   unix(['mkdir -p ' pdir])
+   mkdir(pdir);
 end
 
 %close all;
@@ -52,22 +52,22 @@ more off;subplot(222)
 %find files and set f.ladcpdo and f.ladcpup (if applicable)
 %this code allows for the possiblity of multiple files
 if isdo
-   d = dir([rawdir stnstr '/' stnstr 'DL*.000']);
+   d = dir(fullfile(rawdir, stnstr, [ststr 'DL*.000']));
    dlfiles = {};
    ii = [];
    for no = 1:length(d)
       if d(no).bytes>1024; ii = [ii no]; end
-      dlfiles{no} = [rawdir stnstr '/' d(no).name];
+      dlfiles{no} = fullfile(rawdir, stnstr, d(no).name);
    end
    if length(ii)==1; dlfiles = dlfiles{ii}; else; dlfiles = dlfiles(ii); end
 end
 if isup
-   d = dir([rawdir stnstr '/' stnstr 'UL*.000']);
+   d = dir(fullfile(rawdir, stnstr, [stnstr 'UL*.000']));
    ulfiles = {};
    ii = [];
    for no = 1:length(d)
       if d(no).bytes>1024; ii = [ii no]; end
-      ulfiles{no} = [rawdir stnstr '/' d(no).name];
+      ulfiles{no} = fullfile(rawdir, stnstr, d(no).name);
    end
    if length(ii)==1; ulfiles = ulfiles{ii}; else; ulfiles = ulfiles(ii); end
 end
@@ -83,14 +83,14 @@ elseif isdo & isup % both
 end
 
 f.res = [pdir stnstr];
-f.checkpoints = sprintf('checkpoints/%03d',stnlocal);
+f.checkpoints = fullfile('checkpoints', sprintf('%03d', stnlocal));
 if isfield(cfg, 'SADCP_inst')
-    f.sadcp	= ['SADCP/' cfg.SADCP_inst '_' mcruise '_ctd_' stnstr '_forladcp.mat'];
+    f.sadcp	= fullfile('SADCP', [cfg.SADCP_inst '_' mcruise '_ctd_' stnstr '_forladcp.mat']);
 else
-    f.sadcp	= ['SADCP/os75nb_' mcruise '_ctd_' stnstr '_forladcp.mat'];
+    f.sadcp	= fullfile('SADCP', ['os75nb_' mcruise '_ctd_' stnstr '_forladcp.mat']);
 end
 
-f.ctd = ['CTD/ctd.' stnstr '.02.asc'];
+f.ctd = fullfile('CTD', ['ctd.' stnstr '.02.asc']);
 if exist(f.ctd,'file')
 	f.ctd_header_lines      = 0;		% file layout
 	f.ctd_fields_per_line	= 7;

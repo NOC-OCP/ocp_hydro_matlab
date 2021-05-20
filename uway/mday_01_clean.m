@@ -36,8 +36,8 @@ day_string = sprintf('%03d',day);
 mdocshow(mfilename, ['performs any automatic cleaning/editing/averaging from ' abbrev '_' mcruise '_d' day_string '_raw.nc to ' abbrev '_' mcruise '_d' day_string '_edt.nc']);
 
 prefix = [abbrev '_' mcruise '_d' day_string];
-infile = [root_out '/' prefix '_raw'];
-otfile = [root_out '/' prefix '_edt'];
+infile = fullfile(root_out, [prefix '_raw']);
+otfile = fullfile(root_out, prefix '_edt']);
 wkfile = ['wk_' prefix '_' mfilename '_' datestr(now,30)];
 
 
@@ -47,7 +47,7 @@ if exist([infile '.nc']) %only if there is a raw file for this day
     scriptname = mfilename; oopt = 'pre_edit_uway'; get_cropt
      
     %start from raw file
-    unix(['/bin/cp -p ' infile '.nc ' otfile '.nc']); % bak jc211 copy -p
+    copyfile(m_add_nc(infile), m_add_nc(otfile)); %this does copy -p
     
     % edit names and units
     mday_01_namesunits

@@ -9,10 +9,10 @@ mdocshow(mfilename, ['reads in .bl file to fir_' mcruise '_' stn_string '.nc']);
 % resolve root directories for various file types
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
-infile = [root_botraw '/ctd_' mcruise '_' stn_string '.bl'];
+infile = fullfile(root_botraw, ['ctd_' mcruise '_' stn_string '.bl']);
 m = ['infile = ' infile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 dataname = ['fir_' mcruise '_' stn_string];
-otfile = [root_ctd '/' dataname];
+otfile = fullfile(root_ctd, dataname);
 
 cellall = mtextdload(infile,','); % load all text
 

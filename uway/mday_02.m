@@ -40,11 +40,11 @@ if exist(root_out,'dir') ~= 7
 end
 
 dataname = [mstarprefix '_' mcruise '_01'];
-otfile = [mgetdir(mstarprefix) '/' dataname];
+otfile = fullfile(mgetdir(mstarprefix), dataname);
 
-apfile = [root_out '/' dataname(1:end-2) 'd' day_string '_edt_av.nc'];
+apfile = fullfile(root_out, [dataname(1:end-2) 'd' day_string '_edt_av.nc']);
 if ~exist(apfile,'file')
-    apfile = [root_out '/' dataname(1:end-2) 'd' day_string '_edt.nc'];
+    apfile = fullfile(root_out, [dataname(1:end-2) 'd' day_string '_edt.nc']);
     if ~exist(apfile,'file')
         warning('None of the files proposed to append was found; no action');
         return

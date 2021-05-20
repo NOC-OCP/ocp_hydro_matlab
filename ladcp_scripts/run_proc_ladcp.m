@@ -13,7 +13,7 @@ cfg.constraints = {'GPS'};
 
 %UL
 if isul
-    infileu = sprintf('/local/users/pstar/cruise/data/ladcp/ix/raw/%03d/%03dUL000.000',stn,stn);
+    infileu = fullfile(mgetdir('M_IX'), 'raw', sprintf('%03d',stn), sprintf('%03dUL000.000',stn));
     if ~exist(infileu,'file')
         warning(['no uplooker file ' infileu ' found; try sync again if you expect one; return to continue'])
         pause
@@ -25,7 +25,7 @@ if isul
     end
 end
 
-infiled = sprintf('/local/users/pstar/cruise/data/ladcp/ix/raw/%03d/%03dDL000.000',stn,stn);
+infiled = fullfile(mgetdir('M_IX'), 'raw', sprintf('%03d',stn), sprintf('%03dDL000.000',stn));
 if ~exist(infiled,'file')
     warning(['no downlooker file ' infiled ' found; try sync again if you expect one; return to continue'])
     pause
@@ -67,7 +67,7 @@ if ~ismember(stn, shortcasts)
 end
 
 %SADCP, if it's been processed and output to file for ladcp
-sfile = sprintf('%s/mproc/os75nb_%s_ctd_%03d_forladcp.mat',mgetdir('M_VMADCP'),mcruise,stn);
+sfile = fullfile(mgetdir('M_VMADCP'), 'mproc', sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn));
 if exist(sfile,'file')
 %     disp('inspect figures then any key to continue, adding SADCP as a constraint'); pause
     cfg.constraints = [cfg.constraints 'SADCP'];

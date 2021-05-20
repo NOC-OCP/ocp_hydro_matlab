@@ -263,8 +263,7 @@ switch scriptname
             case 'oxyconcalc'
                 oxyconcalc = 1;
             case 'oxycsv'
-                %infile = [root_oxy '/oxy_jc159_all.csv'];
-                infile = [root_oxy '/' 'oxy_jc191_' sprintf('%03d',stnlocal) '.csv'];
+                infile = fullfile(root_oxy, ['oxy_jc191_' sprintf('%03d',stnlocal) '.csv']);
             case 'oxysampnum'
                 ds_oxy.statnum = ds_oxy.cast;
                 ds_oxy.oxy_bot = ds_oxy.bottle;
@@ -437,46 +436,12 @@ switch scriptname
         end
         %%%%%%%%%% end mpig_01 %%%%%%%%%%
         
-        %%%%%%%%%% miso_01 %%%%%%%%%%
-    case 'miso_01'
-        switch oopt
-            case 'files'
-                files{1} = [root_iso '/c13_jc159_bgs.csv'];
-                files{2} = [root_iso '/SampleResults_2018112_withStationNumbersCorrected.csv'];
-                files{3} = [root_iso '/A095_740H20180228_no_cfc_values_hy_with_d18o.csv'];
-            case 'vars'
-                vars{1} = {
-                    'del13c_bgs' 'per_mil' 'd13CDICPDB';
-                    'del13c_bgs_flag' 'woceflag' ''};
-                vars{2} = {
-                    'del13c_whoi'  'per_mil' 'd13C'
-                    'del14c_whoi'  'per_mil' 'D14C'
-                    %'dic_whoi' 'mmol_per_kg' 'DIC Conc (mmol/kg)'
-                    'del14c_whoi_flag' 'woceflag' 'flag'
-                    'del13c_whoi_flag' 'woceflag' 'flag'};
-                vars{3} = {
-                    'del18o_bgs'      'per_mil' 'BOT_O_18'
-                    'del18o_bgs_flag' 'per_mil' 'BOT_O_18_FLAG'};
-            case 'flags'
-                del18o_bgs(del18o_bgs<-990) = NaN;
-                del18o_bgs_flag(isnan(del18o_bgs) & ismember(del18o_bgs_flag, [2 3])) = 4;
-        end
-        %%%%%%%%%% end miso_01 %%%%%%%%%%
-        
-        %%%%%%%%%% miso_02 %%%%%%%%%%
-    case 'miso_02'
-        switch oopt
-            case 'vars'
-                cvars = 'del13c_bgs del13c_bgs_flag del13c_whoi del13c_whoi_flag del14c_whoi del14c_whoi_flag del18o_bgs del18o_bgs_flag'
-        end
-        %%%%%%%%%% end miso_02 %%%%%%%%%%
-        
         %%%%%%%%%% mco2_01 %%%%%%%%%%
     case 'mco2_01'
         switch oopt
             case 'infile'
-                load([root_co2 '/' mcruise '_alkalinity_hydro']); indata = hydro;
-                indata1 = load([root_co2 '/' mcruise '_dic_hydro']); indata1 = indata1.hydro;
+                load(fullfile(root_co2, [mcruise '_alkalinity_hydro'])); indata = hydro;
+                indata1 = load(fullfile(root_co2, [mcruise '_dic_hydro'])); indata1 = indata1.hydro;
                 indata1.talk = NaN+indata1.dic; indata1.talk(1:length(indata.talk)) = indata.talk;
                 indata1.QF_talk = NaN+zeros(size(indata1.QF_dic));
                 indata1.QF_talk(1:length(indata.QF_talk)) = indata.QF_talk;
@@ -500,42 +465,6 @@ switch scriptname
                 dic_flag(ismember(sampnum, flag4d)) = 4;
         end
         %%%%%%%%%% end mco2_01 %%%%%%%%%%
-        
-        %%%%%%%%%% mcfc_01 %%%%%%%%%%
-    case 'mcfc_01'
-        switch oopt
-            case 'inputs'
-                %list of variables and units in input, and in output, and
-                %scale factors
-                varsunits = {
-                    'station'    'number'  'station'  'number'    1
-                    'niskin'     'number'  'position' 'on.rosette' 1
-                    'sf6mole' 'mol/l' 'sf6'        'fmol/l' 1e15
-                    'sf6flag'   'woce_table_4.9' 'sf6_flag'   'woce_table_4.9' 1
-                    'f11mole'      'mol/l' 'cfc11' 'pmol/l' 1e12
-                    'f11flag' 'woce_table_4.9' 'cfc11_flag' 'woce_table_4.9' 1
-                    'f12mole'      'mol/l'  'cfc12' 'pmol/l'    1e12
-                    'f12flag' 'woce_table_4.9' 'cfc12_flag' 'woce_table_4.9' 1
-                    'f113mole' 'mol/l' 'f113'       'pmol/l' 1e12
-                    'f113flag'  'woce_table_4.9' 'f113_flag'  'woce_table_4.9' 1
-                    'ccl4mole' 'mol/l' 'ccl4'       'pmol/l' 1e12
-                    'ccl4flag'  'woce_table_4.9' 'ccl4_flag'  'woce_table_4.9' 1
-                    };
-                % bak post jc159 on bakmac; new file from M-J passed over
-                % at LHR
-                infile = [root_cfc '/cfc_' mcruise '_all.txt'];
-                
-        end
-        %%%%%%%%%% end mcfc_01 %%%%%%%%%%
-        
-        %%%%%%%%%% mcfc_02 %%%%%%%%%%
-    case 'mcfc_02'
-        switch oopt
-            case 'cfclist'
-                cfcinlist = 'sf6 sf6_flag cfc11 cfc11_flag cfc12 cfc12_flag f113 f113_flag ccl4 ccl4_flag';
-                cfcotlist = cfcinlist;
-        end
-        %%%%%%%%%% end mcfc_02 %%%%%%%%%%
         
         %%%%%%%%%% msam_checkbottles_02 %%%%%%%%%%
     case 'msam_checkbottles_02'
@@ -757,7 +686,7 @@ switch scriptname
                         prefix = 'oceanlogger';
                 end
                 root_tsg = mgetdir(prefix);
-                fnsm = [root_tsg '/sdiffsm.mat'];
+                fnsm = fullfile(root_tsg, 'sdiffsm.mat');
                 % make sure sdiffsm exists with zero correction if not
                 % already defined; this is so mtsg_medav_clean can work
                 % before mtsg_bottle_compare. bak jc191
@@ -769,7 +698,7 @@ switch scriptname
                 if time==1 & salin==1;
                     salout = 1;
                 else
-                    load([root_tsg '/sdiffsm'])
+                    load(fullfile(root_tsg, 'sdiffsm'))
                     salout = salin + interp1([0 t(:)' 1e3],[sdiffsm(1) sdiffsm(:)' sdiffsm(end)],time/86400); % interpolate/extrapolate correction                end
                 end
                 %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
@@ -849,7 +778,7 @@ switch scriptname
                 %                 printorder = 'first_bottle_first' ; % for carbon and oxygen
                 %                 printorder = 'first_bottle_last';  % for nutrients
             case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/A05_' expocode];
+                outfile = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files' ['A05_' expocode]);
                 if nocfc
                     outfile = [outfile '_no_cfc_values'];
                 end
@@ -885,8 +814,8 @@ switch scriptname
                 expocode = '740H20200119';
                 sect_id = 'A05';
             case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/A05_' expocode '_ct1/A05_' expocode];
-                outfileall = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/ctd_with_fluor/A05_' expocode '_fluor'];
+                outfile = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files', ['A05_' expocode '_ct1], ['A05_' expocode]);
+                outfileall = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files', 'ctd_with_fluor', ['A05_' expocode '_fluor']);
             case 'headstr'
                 headstring = {['CTD,' datestr(now,'yyyymmdd') 'OCPNOCBAK'];...
                     '#SHIP: James Cook';...
@@ -987,7 +916,7 @@ switch scriptname
                 % jc191 Florida St and main section; each array is a set of stations that can be used for mapping
                 kstatgroups = {[2:13] [14:20 22:24 26:27 29:94 96:130 132:135]};
             case 'samfn'
-                samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all_nutkg' ];
+                samfn = fullfile(root_ctd, ['sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all_nutkg']);
         end
         %%%%%%%%%% end m_maptracer %%%%%%%%%%
         
@@ -1051,8 +980,8 @@ switch scriptname
         switch oopt
             case 'vmadcp_files'
                 cname = 'jc191_02';
-                pre1 = ['postprocessing/' cname '/proc_archive/' oslocal]; %link here to version you want to use (spprocessing or postprocessing)
-                fnin = [root_vmadcp '/' pre1 '/contour/' oslocal '.nc'];
+                pre1 = fullfile('postprocessing', cname, 'proc_archive', oslocal); %link here to version you want to use (spprocessing or postprocessing)
+                fnin = fullfile(root_vmadcp, pre1, 'contour', [oslocal '.nc']);
                 dataname = [oslocal '_' mcruise '_01'];
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%

@@ -209,7 +209,7 @@ switch scriptname
     case 'moxy_01'
         switch oopt
             case 'oxycsv'
-                infile = [root_oxy '/oxy_dy113_' stn_string '.csv'];
+                infile = fullfile(root_oxy, ['oxy_dy113_' stn_string '.csv']);
             case 'oxyflags'
                 ds_oxy.flag(ds_oxy.flag==2.3) = 2; %these are mostly 'tiny bubbles' and replicates show they don't make a difference
         end
@@ -243,7 +243,7 @@ switch scriptname
         switch oopt
             case 'sam_ashore_all'
                 flagnames = {'del18o_flag','silc_flag','phos_flag','totnit_flag','no2_flag','del15n_flag','del30si_flag'};
-                fnin = [mgetdir('M_BOT_ISO') '/dy113_ashore_samples_log.csv'];
+                fnin = fullfile(mgetdir('M_BOT_ISO'), 'dy113_ashore_samples_log.csv');
                 ds_iso = dataset('File',fnin,'Delimiter',','); %csv file including text comments
                 ds_iso.sampnum = ds_iso.cast*100+ds_iso.niskin;
                 flagvals = 1;
@@ -339,7 +339,7 @@ switch scriptname
     case 'miso_01'
         switch oopt
             case 'files'
-                files{1} = [root_iso '/DY113_d18o.csv'];
+                files{1} = fullfile(root_iso, 'DY113_d18o.csv');
             case 'sampnum_parse' %handle station and niskin/position here
                 ds_iso.sampnum = ds_iso.x___Station*100 + ds_iso.Niskin;
             case 'vars'
@@ -382,7 +382,7 @@ switch scriptname
                     case 'surflight'
                         % fix radiometers on DY113 - before normal calibration
                         if ~exist([otfile '.nc'])
-                            unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+                            copyfile(m_add_nc(infile), m_add_nc(otfile));
                         end
                         h = m_read_header(otfile);
                         MEXEC_A.MARGS_IN = {

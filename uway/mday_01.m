@@ -50,7 +50,7 @@ switch MEXEC_G.Mshipdatasystem
         
         prefix1 = [mstarprefix '_' mcruise '_'];
         fnmstar = [prefix1 'd' day_string '_raw'];
-        otfile2 = [root_out '/' fnmstar];
+        otfile2 = fullfile(root_out, fnmstar);
         dataname = [prefix1 'd' day_string];
         
         mrrvdas2mstar(table,dn1,dn2,otfile2,dataname,'q');
@@ -77,7 +77,7 @@ switch MEXEC_G.Mshipdatasystem
         
         prefix1 = [mstarprefix '_' mcruise '_'];
         fnmstar = [prefix1 'd' day_string '_raw'];
-        otfile2 = [root_out '/' fnmstar];
+        otfile2 = fullfile(root_out, fnmstar);
         dataname = [prefix1 'd' day_string];
         
         % upgrade by bak at noc aug 2010 so it works on either scs or techsas

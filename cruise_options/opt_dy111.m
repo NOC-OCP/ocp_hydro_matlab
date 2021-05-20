@@ -15,8 +15,8 @@ switch scriptname
             case 'files'
                 cname = 'dy111_01';
                 pre1 = ['mproc/' cname '/' inst nbbstr]; %link here to version you want to use (spprocessing or postprocessing)
-                datadir = [root_vmadcp '/' pre1 '/contour'];
-                fnin = [datadir '/' inst nbbstr '.nc'];
+                datadir = fullfile(root_vmadcp, pre1, 'contour');
+                fnin = fullfile(datadir, [inst nbbstr '.nc']);
                 dataname = [inst nbbstr '_' mcruise '_01'];
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%

@@ -17,12 +17,12 @@ root_ctd = mgetdir('M_CTD');
 prefix1 = ['ctd_' mcruise '_'];
 prefix2 = ['dcs_' mcruise '_'];
 
-otfile = [root_ctd '/' prefix1 stn_string '_raw_cleaned.nc'];
-infile = [root_ctd '/' prefix1 stn_string '_raw.nc'];
-infiled = [root_ctd '/' prefix2 stn_string '.nc']; % dcs file
+otfile = fullfile(root_ctd, [prefix1 stn_string '_raw_cleaned.nc']);
+infile = fullfile(root_ctd, [prefix1 stn_string '_raw.nc']);
+infiled = fullfile(root_ctd, [prefix2 stn_string '.nc']); % dcs file
 
 if ~exist(m_add_nc(otfile), 'file')
-    unix(['/bin/cp -p ' m_add_nc(infile) ' ' m_add_nc(otfile)])
+    copyfile(m_add_nc(infile), m_add_nc(otfile))
 end
 unix(['chmod 644 ' m_add_nc(otfile)])
 

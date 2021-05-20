@@ -14,8 +14,8 @@ minit; scriptname = mfilename; mdocshow(scriptname, ['saves 1 hz t,P,T,S,lat,lon
 
 root_ctd = mgetdir('M_CTD');
 root_out = [mgetdir('M_LADCP')];
-%infile = [root_ctd '/wk_dvars_' mcruise '_' stn_string];
-infile = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
+%infile = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]);
+infile = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
 
 if exist(m_add_nc(infile),'file') ~= 2
     disp(['file not found: ' infile ', not writing 1 hz ascii file'])
@@ -34,7 +34,7 @@ dd.decday = datenum(dh.data_time_origin) + dd.time/86400 - datenum([dh.data_time
 
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
-fnot = [root_out '/ctd/ctd.' stn_string '.02.asc'];
+fnot = fullfile(root_out, 'ctd', ['ctd.' stn_string '.02.asc']);
 fid = fopen(fnot,'w');
 for kl = 1:length(kok)
    fprintf(fid,'%10.2f %8.2f %8.4f %8.4f %11.6f %10.6f %12.7f\n', dd.time(kok(kl)), dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)), dd.decday(kok(kl))); 
@@ -95,7 +95,7 @@ lon1(kount+1:end) = [];
 sm = [t1 lon1 lat1];
 
 pre = mgetdir('ladcp');
-d = dir([pre '/uh/raw/']);
-save([pre '/uh/raw/' d(end).name '/gps/sm'], 'sm')
+d = dir(fullfile(pre, 'uh', 'raw'));
+save(fullfile(pre, 'uh', 'raw', [d(end).name '/gps/sm']), 'sm')
 
 end

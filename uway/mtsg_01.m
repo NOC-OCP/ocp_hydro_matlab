@@ -24,9 +24,9 @@ mdocshow(scriptname, ['loads bottle salinities from file specified in opt_' mcru
 
 %root directory and filenames
 root_sal = mgetdir('M_BOT_SAL');
-otfile = [root_sal '/tsg_' mcruise '_all'];
+otfile = fullfile(root_sal, ['tsg_' mcruise '_all']);
 oopt = 'indata'; get_cropt; %sal_mat_file
-fname_sal = [root_sal '/' sal_mat_file];
+fname_sal = fullfile(root_sal, sal_mat_file]);
 
 %get the standardised salinity sample dataset for TSG samples
 msal_standardise_avg; %this loads the file, plots standards, sets flags, applies offsets, and averages samples

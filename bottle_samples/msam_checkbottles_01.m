@@ -40,11 +40,11 @@ mdocshow(scriptname, ['plots bottle sample residuals (from ctd, or from gridded 
 
 root_ctd = mgetdir('M_CTD'); % identify CTD directory
 root_asc = mgetdir('M_CTD_CNV'); %this is where the bottle data flags script will live
-bdffile = [root_asc '/bottle_data_flags.txt']; %the name of this file is not a cruise option, partially because it always needs to be a m-file
+bdffile = fullfile(root_asc, 'bottle_data_flags.txt'); %the name of this file is not a cruise option, partially because it always needs to be a m-file
 
 % check for existence of sam file and load; exit if absent;
 
-fnsamall = [root_ctd '/' 'sam_' mcruise '_all'];
+fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
 
 if exist(m_add_nc(fnsamall),'file') == 2;
     [dsam hsam]  = mload(fnsamall,'/');
@@ -57,7 +57,7 @@ end
 % check for existence of gridded file; warn if 3 arguments but file is absent
 
 if nargin >= 3
-    fngrid = [root_ctd '/' 'grid_' mcruise '_' section];
+    fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section]);
     if exist(m_add_nc(fngrid),'file') == 2;
         [dg hg]  = mload(fngrid,'/');
     else

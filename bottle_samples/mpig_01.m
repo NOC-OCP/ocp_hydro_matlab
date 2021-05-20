@@ -15,7 +15,7 @@ root_pig = mgetdir('M_BOT_PIG');
 
 % load
 prefix1 = ['pig_' mcruise '_'];
-otfile2 = [root_pig '/' prefix1 stn_string];
+otfile2 = fullfile(root_pig, [prefix1 stn_string]);
 dataname = [prefix1 stn_string];
 clear stn % so that it doesn't persist
 oopt = 'pigcsv'; get_cropt

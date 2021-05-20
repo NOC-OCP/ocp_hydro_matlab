@@ -57,7 +57,7 @@ switch scriptname
     case 'mbot_00'
         switch oopt
             case 'nbotfile' %***only mbot_01 is called on jr16002, reading in this file
-                otfile = [root_botcnv '/log_samp_jr16002_all.txt'];
+                otfile = fullfile(root_botcnv, 'log_samp_jr16002_all.txt');
         end
         %%%%%%%%%% end mbot_00 %%%%%%%%%%
         
@@ -69,7 +69,7 @@ switch scriptname
                 expocode = '74JC20161110';
                 sect_id = 'SR1b';
             case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_' expocode];
+                outfile = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files' ['sr1b_' expocode]);
             case 'headstr'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];...
                     '#SHIP: James Clark Ross';...
@@ -100,7 +100,7 @@ switch scriptname
                 expocode = '74JC20161110';
                 sect_id = 'SR1b';
             case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_' expocode '_ct1/sr1b_' expocode];
+                outfile = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files', ['sr1b_' expocode '_ct1/sr1b_' expocode]);
             case 'headstr'
                 headstring = {['CTD,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];...
                     '#SHIP: James Clark Ross';...

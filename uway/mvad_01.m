@@ -27,13 +27,13 @@ end
 instlocal = inst; clear inst; % so it doesnt persist
 
 root_vmadcp = mgetdir('M_VMADCP');
-fnin = [root_vmadcp '/mproc/' mcruise '/' instlocal '/contour/' instlocal '.nc'];
+fnin = fullfile(root_vmadcp, 'mproc', mcruise, instlocal, 'contour', [instlocal '.nc']);
 dataname = [instlocal '_' mcruise '_01'];
 
 if ~exist(fnin, 'file')
     error(['input file ' fnin ' not found'])
 end
-otfile = [root_vmadcp '/mproc/' dataname '.nc'];
+otfile = fullfile(root_vmadcp, 'mproc', [dataname '.nc']);
 clear allin 
 
 allin.decday = nc_varget(fnin,'time');

@@ -71,14 +71,14 @@ root_ctd = mgetdir('M_CTD');
 root_vmadcp = mgetdir('M_VMADCP');
 
 root_vmad = mgetdir('M_VMADCP');
-infile = [root_vmad '/mproc/' instlocal '_' mcruise '_01.nc'];
+infile = fullfile(root_vmad, 'mproc', [instlocal '_' mcruise '_01.nc']);
 
 
 % construct output filename;
 % previous code did some fancy stuff using strtok; this does the same.
 klastus = max(strfind(infile,'_'));
 prefix = infile(1:klastus);
-infile2 = [root_vmadcp '/mproc/mvad_03_' mcruise '_times.txt'];
+infile2 = fullfile(root_vmadcp, 'mproc', ['mvad_03_' mcruise '_times.txt']);
 otfile1 = [prefix cast_string '_' stn_string];
 otfile2 = [prefix cast_string '_' stn_string '_ave'];
 kslash = strfind(otfile1,'/');
@@ -88,7 +88,7 @@ switch castlocal
     case 'ctd'
         % collect ctd times from dcs file in ctd directory
         
-        prefix1 = [root_ctd '/dcs_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+        prefix1 = fullfile(root_ctd, ['dcs_' MEXEC_G.MSCRIPT_CRUISE_STRING '_']);
         dcsfile = [prefix1 stn_string];
         if exist(m_add_nc(dcsfile),'file') ~= 2; return; end % quit if the ctd station doesn't exist
         [ddcs hdcs] = mload(dcsfile,'/');

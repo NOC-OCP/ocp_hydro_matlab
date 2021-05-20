@@ -24,9 +24,9 @@ mdocshow(mfilename, ['adds winch data to win_' mcruise '_' stn_string '.nc']);
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
 root_ctd = mgetdir('M_CTD');
-infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
-otfile2 = [root_win '/win_' mcruise '_' stn_string];
-wkfile3 = [root_win '/' 'wk_' scriptname '_' datestr(now,30)];
+infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
+otfile2 = fullfile(root_win, ['win_' mcruise '_' stn_string]);
+wkfile3 = fullfile(root_win, ['wk_' scriptname '_' datestr(now,30)]);
 dataname = ['win_' mcruise '_' stn_string];
 
 
@@ -125,4 +125,4 @@ copystring
 };
 mdatpik;
 
-unix(['/bin/rm ' wkfile3 '.nc']);
+delete(m_add_nc(wkfile3));

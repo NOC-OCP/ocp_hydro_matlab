@@ -7,8 +7,8 @@ root_nut = mgetdir('M_BOT_NUT');
 root_ctd = mgetdir('M_CTD');
 prefix1 = ['nut_' mcruise '_'];
 prefix2 = ['sam_' mcruise '_'];
-infile1 = [root_nut '/' prefix1 stn_string];
-otfile2 = [root_ctd '/' prefix2 stn_string];
+infile1 = fullfile(root_nut, [prefix1 stn_string]);
+otfile2 = fullfile(root_ctd, [prefix2 stn_string]);
 
 % bak on jr302 19 jun 2014 some stations don't have any nut data; exit
 % gracefully

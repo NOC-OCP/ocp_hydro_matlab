@@ -16,7 +16,7 @@ root_sal = mgetdir('M_BOT_SAL');
 root_ctd = mgetdir('M_CTD');
 root_dep = mgetdir('M_CTD_DEP');
 
-deps_fn = [root_dep '/station_depths_' mcruise '.mat'];
+deps_fn = fullfile(root_dep, ['station_depths_' mcruise '.mat']);
 load(deps_fn);
 iis = find(bestdeps(:,1)==stnlocal);
 
@@ -30,23 +30,29 @@ else
     
    clear fn
    n = 1;
-   fn{n} = [root_ctd '/dcs_' mcruise '_' stn_string]; n = n+1;
+   fn{n} = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]); n = n+1;
 
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw']; n = n+1;
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_raw_cleaned']; n = n+1;
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz']; n = n+1;
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_psal']; n = n+1;
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2db']; n = n+1;
-   fn{n} = [root_ctd '/ctd_' mcruise '_' stn_string '_2up']; n = n+1;
+   fn{n} = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_raw']); n = n+1;
+   fn{n} = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_raw_cleaned']); n = n+1;
+   fn{n} = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']); n = n+1;
+   fn{n} = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); n = n+1;
+   fn{n} = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2db']); n = n+1;
+   fn{n} = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2up']); n = n+1;
 
-   fn{n} = [root_win '/win_' mcruise '_' stn_string]; n = n+1;
-   fn{n} = [root_ctd '/fir_' mcruise '_' stn_string]; n = n+1;
+   fn{n} = fullfile(root_win, ['win_' mcruise '_' stn_string]); n = n+1;
+   fn{n} = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]); n = n+1;
 
 
    for kfile = 1:length(fn)
-       [s,r] = unix(['ls -l ' m_add_nc(fn{kfile})]);
-       if s==0 & ~strcmp(r(1),'l') %file exists and is not a symlink
-           mputdep(fn{kfile},bestdeps(bestdeps(:,1)==stnlocal,2))
+       if exist(m_add_nc(fn{kfile}),'file')
+           try
+               [s,r] = unix(['ls -l ' m_add_nc(fn{kfile})]);
+	   catch
+	       s = 0;
+	   end
+	   if s==0 %file is not a symlink
+               mputdep(fn{kfile},bestdeps(bestdeps(:,1)==stnlocal,2))
+	   end
        end
    end
    

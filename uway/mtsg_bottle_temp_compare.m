@@ -12,10 +12,9 @@ scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 root_tsg = mgetdir(tsgprefix);
 root_bot = mgetdir('M_SAM');
 
+tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01_medav_clean']); % median averaged file
 if usecallocal
-    tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean_cal']; % median averaged file
-else
-    tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean']; % median averaged file
+    tsgfn = [tsgfn '_cal'];
 end
 [dt, ht] = mload(tsgfn, '/');
 tempvar = mvarname_find({'housingtemp' 'temp_h' 'tstemp'},ht.fldnam);
@@ -29,7 +28,7 @@ else
     calstr = 'uncal';
 end
         
-botfn = [root_bot '/sam_' mcruise '_all'];
+botfn = fullfile(root_bot, ['sam_' mcruise '_all']);
 
 %***this script was unfinished, have pasted in the salinity comparison
 %code, modify for temperature
@@ -81,7 +80,7 @@ if exist('sc1') & exist('sc2') & ~exist('sdiffsm')
     sdiffsm = filter_bak(ones(1,21),sdiff); % harsh filter to determine smooth adjustment
     sdiff(abs(sdiff-sdiffsm) > sc2) = NaN;
     sdiffsm = filter_bak(ones(1,41),sdiff); % harsh filter to determine smooth adjustment
-    if ~usecallocal; t = db.time-1; save([root_tsg '/sdiffsm'], 't', 'sdiffsm'); end
+    if ~usecallocal; t = db.time-1; save(fullfile(root_tsg, 'sdiffsm'), 't', 'sdiffsm'); end
 else
     warning(['sdiffsm not set; check opt_' mcruise])
     sdiffsm = NaN+sdiff;

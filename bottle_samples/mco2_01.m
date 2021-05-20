@@ -49,7 +49,7 @@ if ~exist('indata','var'); indata = load(input_file_name); end
 % Set up the output file name
 prefix1 = ['co2_' mcruise '_'];
 dataname = [prefix1 '01'];
-otfile = [root_co2 '/' prefix1 '01']; % di346 ; previously hardwired on jc032
+otfile = fullfile(root_co2, [prefix1 '01']);
 
 % standardise the field names into structure data
 oopt = 'varnames'; get_cropt

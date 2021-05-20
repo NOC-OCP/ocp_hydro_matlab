@@ -45,9 +45,9 @@ switch scriptname
     case 'mvad_01'
         switch oopt
             case 'files'
-                pre1 = ['postprocessing/DY120/proc_editing/' inst nbbstr ];
-                datadir = [root_vmadcp '/' pre1 '/contour'];
-                fnin = [datadir '/' inst nbbstr '.nc'];
+                pre1 = fullfile('postprocessing', 'DY120', 'proc_editing', [inst nbbstr]);
+                datadir = fullfile(root_vmadcp, pre1, 'contour');
+                fnin = fullfile(datadir, [inst nbbstr '.nc']);
                 dataname = [inst '_' mcruise '_01'];
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
@@ -138,7 +138,7 @@ switch scriptname
                     case 'surflight'
                         % fix radiometers on DY113 - before normal calibration
                         if ~exist([otfile '.nc'])
-                            unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+                            copyfile(m_add_nc(infile), m_add_nc(otfile));
                         end
                         h = m_read_header(otfile);
                         MEXEC_A.MARGS_IN = {

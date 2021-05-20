@@ -21,7 +21,7 @@ if ~exist('klist', 'var')
 end
 
 root_ctd = mgetdir('M_CTD');
-root_hv = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_housekeeping'];
+root_hv = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'mexec_housekeeping');
 
 for no = 1:length(klist)
 
@@ -29,21 +29,21 @@ for no = 1:length(klist)
     dataname = ['ctd_' mcruise '_' stn_string];
     
     disp(['removing files for station ' stn_string '; ok?']); pause
-    unix(['/bin/rm ' root_ctd '/' dataname '*.nc']);
+    delete(fullfile(root_ctd, [dataname '*.nc']));
     
     disp(['removing history file ' dataname '; ok?']); pause
-    unix(['/bin/rm ' root_hv '/history/' dataname]);
+    delete(fullfile(root_hv, 'history', dataname));
     
     disp(['resetting version for ctd_' mcruise '_' stn_string ' to 0; ok?']); pause
-    load([root_hv '/version/mstar_versionfile_' mcruise '.mat'], 'datanames', 'versions')
+    load(fullfile(root_hv, 'version', ['mstar_versionfile_' mcruise '.mat']), 'datanames', 'versions')
     ii = find(strcmp(datanames, dataname));
     if length(ii)>0
         versions(ii) = 0;
-        save([root_hv '/version/mstar_versionfile_' mcruise '.mat'], 'datanames', 'versions')
+        save(fullfile(root_hv, 'version', ['mstar_versionfile_' mcruise '.mat']), 'datanames', 'versions')
     end
         
     disp(['removing mplxyed files for ' stn_string '; ok?']); pause
-    unix(['/bin/rm ' root_ctd '/mplxyed_*_' dataname])
+    delete(fullfile(root_ctd, ['/mplxyed_*_' dataname]));
     
     stnlocal = klist(no);
     stn = stnlocal; mctd_01; %read in sbe .cnv data to mstar

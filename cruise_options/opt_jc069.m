@@ -64,7 +64,7 @@ switch scriptname
             case 'uway_apply_cal'
                 switch abbrev
                     case {'log_chf' 'chf'}
-                        unix(['/bin/cp ' otfile '.nc wkfile '.nc'])
+                        copyfile(m_add_nc(otfile), m_add_nc(wkfile));
                         ee4 =[ -2.0000    5.9000    7.8800   20.0000];
                         vv4 = [-2.3338    2.9490    6.2769   16.6582];
                         calstr = ['y = interp1([' sprintf('%2.4f ',ee4) '], [' sprintf('%2.4f ',vv4) '], x1);'];
@@ -88,7 +88,7 @@ switch scriptname
     case 'mcfc_02'
         switch oopt
             case 'infile1'
-                infile1 = [root_cfc '/' prefix1 stn_string];
+                infile1 = fullfile(root_cfc, [prefix1 stn_string]);
             case 'cfclist'
                 cfcinlist = 'sf6 sf6_flag cfc12 cfc12_flag cfc13 cfc13_flag sf5cf3 sf5cf3_flag';
                 cfcotlist = cfcinlist;

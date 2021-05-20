@@ -15,13 +15,13 @@ root_ctd = mgetdir('M_CTD');
 prefix = ['ctd_' mcruise '_'];
 
 %figure out which file to start from
-infile = [root_ctd '/' prefix stn_string '_raw_cleaned'];
+infile = fullfile(root_ctd, [prefix stn_string '_raw_cleaned']);
 if ~exist(m_add_nc(infile), 'file')
-    infile = [root_ctd '/' prefix stn_string '_raw'];
+    infile = fullfile(root_ctd, prefix stn_string '_raw']);
 end
     
-otfile = [root_ctd '/' prefix stn_string '_24hz'];
-unix(['/bin/cp ' m_add_nc(infile) ' ' m_add_nc(otfile)])
+otfile = fullfile(root_ctd, [prefix stn_string '_24hz']);
+copyfile(m_add_nc(infile), m_add_nc(otfile));
 unix(['chmod 644 ' m_add_nc(otfile)]); % make file writeable
 
 %which corrections to do?

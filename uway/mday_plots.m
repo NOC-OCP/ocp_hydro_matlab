@@ -35,9 +35,9 @@ switch stream
     case 'posmvpos'
         root_dir = mgetdir('M_POSMVPOS');
         prefix1 = ['posmvpos' '_' mcruise '_'];
-        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
         prefix2 = ['bst' '_' mcruise '_'];
-        infile2 = [root_dir '/' prefix1 '01'];
+        infile2 = fullfile(root_dir, [prefix1 '01']);
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -64,7 +64,7 @@ switch stream
     case 'attposmv'
         root_dir = mgetdir('M_ATTPOSMV');
         prefix1 = ['attposmv' '_' mcruise '_'];
-        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
         if exist(m_add_nc(infile1),'file') ~= 2;
             % file does not exist
             m_figure
@@ -96,7 +96,7 @@ switch stream
     case 'gyro_s'
         root_dir = mgetdir('M_GYRO_S');
         prefix1 = ['gyro_s' '_' mcruise '_'];
-        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -131,7 +131,7 @@ switch stream
                 fprintf(2,'\n\n%s\n\n\n',msg);
                 return
         end
-        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -155,7 +155,7 @@ switch stream
         end
         root_dir = mgetdir('M_ASH');
         prefix1 = ['ash' '_' mcruise '_'];
-        infile1 = [root_dir '/' prefix1 'd' day_string ''];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string]);
         if exist(m_add_nc(infile1),'file') ~= 2;
             % file does not exist
             m_figure
@@ -210,7 +210,7 @@ switch stream
         root_dir = mgetdir('M_SURFMET');
         %raw wind 
         prefix1 = ['surfmet' '_' mcruise '_'];
-        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -248,7 +248,7 @@ switch stream
         root_dir = mgetdir('M_OCL');
         %raw wind 
         prefix1 = ['ocl' '_' mcruise '_'];
-        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -268,7 +268,7 @@ switch stream
         root_dir = mgetdir('M_SURFMET');
         %processed wind 
         prefix1 = ['surfmet' '_' mcruise '_'];
-        infile1 = [root_dir '/' prefix1 'trueav' ''];
+        infile1 = fullfile(root_dir, [prefix1 'trueav']);
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -329,9 +329,9 @@ switch stream
                 fprintf(2,'\n\n%s\n\n\n',msg);
                 return
         end
-        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
         if exist(m_add_nc(infile1),'file') ~= 2;
-            infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
+            infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
             if exist(m_add_nc(infile1),'file') ~= 2; return; end
         end
         clear p
@@ -390,7 +390,7 @@ switch stream
                 fprintf(2,'\n\n%s\n\n\n',msg);
                 return
         end
-        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -438,7 +438,7 @@ switch stream
                 return
         end
         % met tsg including fluor & trans
-        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
+        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p

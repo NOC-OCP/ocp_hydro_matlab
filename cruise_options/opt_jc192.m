@@ -165,8 +165,7 @@ switch scriptname
             case 'oxyconcalc'
                 oxyconcalc = 1;
             case 'oxycsv'
-                %infile = [root_oxy '/oxy_jc159_all.csv'];
-                infile = [root_oxy '/' 'oxy_jc192_' sprintf('%03d',stnlocal) '.csv'];
+                infile = fullfile(root_oxy, ['oxy_jc192_' sprintf('%03d',stnlocal) '.csv']);
             case 'oxysampnum'
                 ds_oxy.niskin = ds_oxy.botnum;
                 ds_oxy.botoxytempa = ds_oxy.botoxyfixtempa;
@@ -239,7 +238,7 @@ switch scriptname
                         prefix = 'oceanlogger';
                 end
                 root_tsg = mgetdir(prefix);
-                fnsm = [root_tsg '/sdiffsm.mat'];
+                fnsm = fullfile(root_tsg, 'sdiffsm.mat');
                 % make sure sdiffsm exists with zero correction if not
                 % already defined; this is so mtsg_medav_clean can work
                 % before mtsg_bottle_compare. bak jc191
@@ -251,7 +250,7 @@ switch scriptname
                 if time==1 & salin==1;
                     salout = 1;
                 else
-                    load([root_tsg '/sdiffsm'])
+                    load(fnsm)
                     salout = salin + interp1([0 t(:)' 1e3],[sdiffsm(1) sdiffsm(:)' sdiffsm(end)],time/86400); % interpolate/extrapolate correction                end
                 end
                 %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
@@ -304,8 +303,8 @@ switch scriptname
             case 'files'
                 cname = 'jc192_01';
                 pre1 = ['postprocessing/' cname '/proc_archive/' inst nbbstr]; %link here to version you want to use (spprocessing or postprocessing)
-                datadir = [root_vmadcp '/' pre1 '/contour'];
-                fnin = [datadir '/' inst nbbstr '.nc'];
+                datadir = fullfile(root_vmadcp, pre1, 'contour');
+                fnin = fullfile(datadir, [inst nbbstr '.nc');
                 dataname = [inst nbbstr '_' mcruise '_01'];
                 %*** station 123?
         end

@@ -190,7 +190,7 @@ switch scriptname
     case 'moxy_01'
         switch oopt
             case 'oxycsv'
-                infile = 'ctd/BOTTLE_OXY/log_oxy_jc159_all.txt';
+                infile = fullfile('ctd', 'BOTTLE_OXY', 'log_oxy_jc159_all.txt');
         end
         %%%%%%%%%% end moxy_01 %%%%%%%%%%
         
@@ -518,7 +518,7 @@ switch scriptname
                 expocode = '74EQ20151206';
                 sect_id = 'A05';
             case 'woce_file_pre'
-                prefix = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/a05_' expocode];
+                prefix = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files' ['a05_' expocode]);
             case 'woce_sam_headstr'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCBAK'];...
                     '#SHIP: Discovery';...

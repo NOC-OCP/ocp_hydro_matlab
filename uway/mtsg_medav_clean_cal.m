@@ -22,9 +22,9 @@ mdocshow(mfilename, ['averages to 1 minute and calls mtsg_cleanup to remove bad 
 
 
 root_dir = mgetdir(prefix);
-infile1 = [root_dir '/' prefix '_' mcruise '_01'];
-otfile1 = [root_dir '/' prefix '_' mcruise '_01_medav_clean']; % 1-minute median data
-otfile2 = [root_dir '/' prefix '_' mcruise '_01_medav_clean_cal']; % 1-minute median data
+infile1 = fullfile(root_dir, [prefix '_' mcruise '_01']);
+otfile1 = fullfile(root_dir, [prefix '_' mcruise '_01_medav_clean']); % 1-minute median data
+otfile2 = fullfile(root_dir, [prefix '_' mcruise '_01_medav_clean_cal']); % 1-minute median data
 wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
 
 if ~exist(m_add_nc(infile1),'file')
@@ -95,7 +95,7 @@ scriptname = 'tsgsal_apply_cal'; tempin = 1; time = 1; oopt = 'tempadj'; eval(['
 if exist('tempout','var')
 
    if exist(m_add_nc(otfile2),'file')
-      unix(['/bin/mv ' m_add_nc(otfile2) ' ' m_add_nc(wkfile1)]);
+      movefile(m_add_nc(otfile2), m_add_nc(wkfile1));
    else
       wkfile1=otfile1;
    end
@@ -116,7 +116,7 @@ if exist('tempout','var')
   mcalc
   
   if ~strcmp(otfile1,wkfile1)
-     unix(['/bin/rm ' m_add_nc(wkfile1)]);
+     delete(m_add_nc(wkfile1));
   end
 
 end

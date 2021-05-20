@@ -16,8 +16,8 @@ prefix = [abbrev '_' mcruise '_'];
 
 mdocshow(mfilename, ['average 1-Hz navigation stream from ' abbrev '_' mcruise '_01.nc to 30 s in ' abbrev '_' mcruise '_ave.nc']);
 
-infile = [root_dir '/' prefix '01'];
-otfile = [root_dir '/' prefix 'ave'];
+infile = fullfile(root_dir, [prefix '01']);
+otfile = fullfile(root_dir, [prefix 'ave']);
 
 wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
 wkfile2 = ['wk2_' mfilename '_' datestr(now,30)];
@@ -99,4 +99,6 @@ toffstring
 };
 mcalib
 
-unix(['/bin/rm ' wkfile1 '.nc ' wkfile2 '.nc ' wkfile3 '.nc']);
+delete(m_add_nc(wkfile1));
+delete(m_add_nc(wkfile2));
+delete(m_add_nc(wkfile3));

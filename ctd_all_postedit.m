@@ -18,7 +18,7 @@ klist = klist(:)';
 for kloop = klist
     stn = kloop; minit
     
-    infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_raw'];
+    infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_raw']);
     if exist(m_add_nc(infile1),'file') ~= 2
         mess = ['File ' m_add_nc(infile1) ' not found'];
         fprintf(MEXEC_A.Mfider,'%s\n',mess)
@@ -30,7 +30,7 @@ for kloop = klist
     mout_1hzasc(stnlocal);
     stn = kloop; mctd_04;
     
-    infile2 = [root_ctd '/fir_' mcruise '_' stn_string];
+    infile2 = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
     if exist(m_add_nc(infile2),'file') ~= 2
         mess = ['File ' m_add_nc(infile2) ' not found'];
         fprintf(MEXEC_A.Mfider,'%s\n',mess)

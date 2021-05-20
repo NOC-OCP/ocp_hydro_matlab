@@ -304,8 +304,7 @@ switch scriptname
     case 'moxy_01'
         switch oopt
             case 'oxycsv'
-                %infile = [root_oxy '/oxy_jc159_all.csv'];
-                infile = [root_oxy '/' upper(mcruise) '_oxy_' num2str(stnlocal) '.csv'];
+                infile = fullfile(root_oxy, [upper(mcruise) '_oxy_' num2str(stnlocal) '.csv']);
             case 'oxysampnum'
                 ds_oxy.statnum = ds_oxy.cast;
                 ds_oxy.oxy_bot = ds_oxy.bottle;
@@ -415,9 +414,9 @@ switch scriptname
     case 'miso_01'
         switch oopt
             case 'files'
-                files{1} = [root_iso '/jc159_13c_dic_whcorrected.csv'];
-                files{2} = [root_iso '/SampleResults_2018112_withStationNumbersCorrected.csv'];
-                files{3} = [root_iso '/A095_740H20180228_no_cfc_values_hy_with_d18o.csv'];
+                files{1} = fullfile(root_iso, ['jc159_13c_dic_whcorrected.csv']);
+                files{2} = fullfile(root_iso, ['SampleResults_2018112_withStationNumbersCorrected.csv']);
+                files{3} = fullfile(root_iso, ['A095_740H20180228_no_cfc_values_hy_with_d18o.csv']);
             case 'vars'
                 vars{1} = {
                     'statnum'      'number'     'x0xEF0xBB0xBFStation'
@@ -455,8 +454,8 @@ switch scriptname
     case 'mco2_01'
         switch oopt
             case 'infile'
-                load([root_co2 '/' mcruise '_alkalinity_hydro']); indata = hydro;
-                indata1 = load([root_co2 '/' mcruise '_dic_hydro']); indata1 = indata1.hydro;
+                load(fullfile(root_co2, [mcruise '_alkalinity_hydro'])); indata = hydro;
+                indata1 = load(fullfile(root_co2, [mcruise '_dic_hydro'])); indata1 = indata1.hydro;
                 indata1.talk = NaN+indata1.dic; indata1.talk(1:length(indata.talk)) = indata.talk;
                 indata1.QF_talk = NaN+zeros(size(indata1.QF_dic));
                 indata1.QF_talk(1:length(indata.QF_talk)) = indata.QF_talk;
@@ -507,7 +506,7 @@ switch scriptname
                     };
                 % bak post jc159 on bakmac; new file from M-J passed over
                 % at LHR
-                infile = [root_cfc '/cfc_' mcruise '_all.txt'];
+                infile = fullfile(root_cfc, 'cfc_' mcruise '_all.txt']);
                 
         end
         %%%%%%%%%% end mcfc_01 %%%%%%%%%%
@@ -582,7 +581,7 @@ switch scriptname
             case 'cfc' %for these, change flags of 9 to 1 where cfc11 and cfc12 flag is 2, 3, or 4 (all quantities analysed for all cfc vars, but not all calibrated/analyses received yet)
                 flagnames = {'sf6_flag'; 'ccl4_flag'; 'f113_flag'};
                 flagvals = [1];
-                a = {[root_sam '/sam_' mcruise '_all']
+                a = {fullfile(root_sam, ['sam_' mcruise '_all'])
                     'sampnum'
                     'cfc11_flag'
                     'cfc12_flag'};
@@ -632,7 +631,7 @@ switch scriptname
         switch oopt
             case 'saladj'
                 if time==1 & salin==1; salout = 1; else
-                    load([root_tsg '/sdiffsm'])
+                    load(fullfile(root_tsg, 'sdiffsm'))
                     salout = salin + interp1([0 t(:)' 1e3],[sdiffsm(1) sdiffsm(:)' sdiffsm(end)],time/86400); % interpolate/extrapolate correction                end
                 end
                 %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
@@ -701,11 +700,10 @@ switch scriptname
             case 'woce_file_flagonly'
                 varsexclude = {'cfc11' 'cfc12' 'f113' 'ccl4' 'sf6' 'sf5cf3'};
             case 'woce_file_pre'
-                prefix = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/A095_' expocode];
+                prefix = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files', ['A095_' expocode]);
                 if length(varsexclude)>0
                     prefix = [prefix '_no_cfc_values'];
                 end
-                %outfileall = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/ctd_with_fluor/A095_' expocode '_fluoruncal'];
             case 'woce_headstr_sam'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCBAK'];...
                     '#SHIP: James Cook';...
@@ -866,8 +864,8 @@ switch scriptname
                     cname = 'os75_enr_002_041';
                 end
                 pre1 = [mcruise '_' inst '/adcp_pyproc/' cname '/' inst nbbstr];
-                datadir = [root_vmadcp '/' pre1 '/contour'];
-                fnin = [datadir '/' cname '.nc'];
+                datadir = fullfile(root_vmadcp, pre1, 'contour');
+                fnin = fullfile(datadir, [cname '.nc']);
                 dataname = [inst '_' mcruise '_01'];
                 %*** station 123?
         end

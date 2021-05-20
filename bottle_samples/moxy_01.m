@@ -39,7 +39,7 @@ ld = 0;
 for flno = 1:length(ofiles)
     
     %load
-    [ds, hs] = m_load_samin([root_oxy '/' ofiles(flno).name], hcpat, 'chrows', chrows, 'chunits', chunits);
+    [ds, hs] = m_load_samin(fullfile(root_oxy, ofiles(flno).name), hcpat, 'chrows', chrows, 'chunits', chunits);
     ns = size(ds,1);
     iid = ld+[1:ns]';
     
@@ -128,7 +128,7 @@ clear d hnew
 [d.sampnum, iia, iic] = unique(ds_oxy.sampnum);
 d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
 hnew.dataname = ['oxy_' mcruise '_01'];
-hnew.comment = ['data loaded from ' root_oxy '/' ofpat];
+hnew.comment = ['data loaded from ' fullfile(root_oxy, ofpat)];
 hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
 
@@ -153,11 +153,11 @@ end
 
 scriptname = mfilename; oopt = 'oxyflags'; get_cropt
 
-mfsave([root_oxy '/oxy_' mcruise '_01.nc'], d, hnew);
+mfsave(fullfile(root_oxy, ['/oxy_' mcruise '_01.nc']), d, hnew);
 
 % compute botoxy_per_kg (umol/kg) from botoxy (umol/L) and save to samfile
 clear dnew hnew
-samfile = [mgetdir('M_CTD') '/sam_' mcruise '_all.nc'];
+samfile = fullfile(mgetdir('M_CTD'), 'sam_' mcruise '_all.nc']);
 [ds,hs] = mloadq(samfile,'sampnum','uasal',' ');
 [c,iio,iis] = intersect(d.sampnum, ds.sampnum);
 dnew.sampnum = ds.sampnum;

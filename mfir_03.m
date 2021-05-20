@@ -7,9 +7,9 @@ minit;
 mdocshow(mfilename, ['adds CTD upcast data at bottle firing times to fir_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
-infile1 = [root_ctd '/fir_' mcruise '_' stn_string];
+infile1 = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
 %not using 24hz because we want at least some averaging
-infile2 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal']; 
+infile2 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); 
 
 var_copycell = mcvars_list(2);
 % remove any vars from copy list that aren't available in the input file

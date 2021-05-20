@@ -15,8 +15,8 @@ root_pig = mgetdir('M_BOT_PIG');
 root_ctd = mgetdir('M_CTD');
 prefix1 = ['pig_' mcruise '_'];
 prefix2 = ['sam_' mcruise '_'];
-infile1 = [root_pig '/' prefix1 stn_string];
-otfile2 = [root_ctd '/' prefix2 stn_string];
+infile1 = fullfile(root_pig, [prefix1 stn_string]);
+otfile2 = fullfile(root_ctd, [prefix2 stn_string]);
 
 if ~exist(m_add_nc(infile1), 'file')
     mess = ['file ' m_add_nc(infile1) ' not found']; % bak on jc069 exit if file not in the right place

@@ -63,9 +63,9 @@ else
     datpik_str = ['scan ' sprintf('%12.0f',floor(scan1)) ' ' sprintf('%12.0f',ceil(scan2))];
 end
 
-infile1 = [root_ctd '/' prefix1 stn_string_ctd '_psal'];
-infile2 = [root_ctd '/' prefix2 stn_string];
-otfile1 = [root_ctd '/' prefix1 stn_string_ctd seq_string '_2db'];
+infile1 = fullfile(root_ctd, [prefix1 stn_string_ctd '_psal']);
+infile2 = fullfile(root_ctd, [prefix2 stn_string]);
+otfile1 = fullfile(root_ctd, [prefix1 stn_string_ctd seq_string '_2db']);
 otfile2 = ['wk_' scriptname '_' datestr(now,30)];
 otfile3 = ['wk2_' scriptname '_' datestr(now,30)];
 otfile4 = ['wk3_' scriptname '_' datestr(now,30)];
@@ -175,4 +175,6 @@ mcalc
 %--------------------------------
 
 
-unix(['/bin/rm ' otfile2 '.nc ' otfile3 '.nc ' otfile4 '.nc']);
+delete(m_add_nc(otfile2));
+delete(m_add_nc(otfile3));
+delete(m_add_nc(otfile4));

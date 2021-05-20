@@ -10,10 +10,10 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 root_pos = mgetdir('M_POS');
 root_met = mgetdir(metpre);
-infilen = [root_pos '/bst_' mcruise '_01.nc'];
-infilew = [root_met '/' metpre '_' mcruise '_01.nc'];
-otfile1 = [root_met '/' prefix1 'true'];
-otfile2 = [root_met '/' prefix1 'trueav'];
+infilen = fullfile(root_pos, ['bst_' mcruise '_01.nc']);
+infilew = fullfile(root_met, [metpre '_' mcruise '_01.nc']);
+otfile1 = fullfile(root_met, [prefix1 'true']);
+otfile2 = fullfile(root_met, [prefix1 'trueav']);
 
 tave_period = 60; % seconds
 tave_period = round(tave_period);
@@ -316,5 +316,5 @@ mmerge
 % clean up files
 %----------------------------------------
 
-unix(['/bin/rm wk*' wscriptname '*.nc'])
+delete(['wk*' wscriptname '*.nc']);
 

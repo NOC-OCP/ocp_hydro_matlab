@@ -38,11 +38,11 @@ oopt = '';
 okf = [2]; %only bother with good samples
 %okf = [2 3]; %include good or questionable samples (useful for checking flags due to niskins)
 
-printdir = [MEXEC_G.MEXEC_DATA_ROOT '/plots/'];
+printdir = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'plots');
 prstr = '';
 if ~exist('plotprof','var'); plotprof = 1; end %for cond or oxy, make profile plots to check how good samples are
 
-d = mloadq([MEXEC_G.MEXEC_DATA_ROOT '/ctd/sam_' mcruise '_all'], '/');
+d = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['sam_' mcruise '_all']), '/');
 presrange = [-max(d.upress(~isnan(d.utemp))) 0];
 pdeep = 1500;
 
@@ -219,9 +219,9 @@ if sum(strcmp(sensname, {'temp';'cond';'oxy'})) & plotprof
       for no = 1:length(s);
          stn_string = sprintf('%03d', s(no));
 
-         [d1, h1] = mloadq([MEXEC_G.MEXEC_DATA_ROOT '/ctd/ctd_' mcruise '_' stn_string '_psal.nc'], '/');
+         [d1, h1] = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
          iidu1 = find(d1.press==max(d1.press)); iidu1 = iidu1:length(d1.press);
-         [du, hu] = mloadq([MEXEC_G.MEXEC_DATA_ROOT '/ctd/ctd_' mcruise '_' stn_string '_2up.nc'], '/');
+         [du, hu] = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
 
          iiq = find(d.statnum(:)==s(no) & mres & ismember(calflag, okf));
          iis = find(d.statnum(:)==s(no)); iisbf = find(d.statnum(:)==s(no) & ~ismember(calflag, okf));

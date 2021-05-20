@@ -53,8 +53,8 @@ for ksec = 1:length(sections)
     numlev = length(xpress);
     
     dataname = ['ctd_' mcruise];
-    otfile = [root_ctd '/' dataname '_' section];
-    otfile2 = [root_ctd '/grid_' mcruise '_' section];
+    otfile = fullfile(root_ctd, [dataname '_' section]);
+    otfile2 = fullfile(root_ctd, ['grid_' mcruise '_' section]);
     
     %ctd data
     scriptname = mfilename; oopt = 'ctd_regridlist'; get_cropt
@@ -68,7 +68,7 @@ for ksec = 1:length(sections)
         for kstn = kstns
             % bak jc191 check to see if a file exists before adding it to
             % the list
-            fn_2db = sprintf('%s/%s_%03d_2db.nc', root_ctd, dataname, kstn);
+            fn_2db = fullfile(root_ctd, sprintf('%s_%03d_2db.nc', dataname, kstn));
             if exist(fn_2db,'file') == 2
                 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
                     fn_2db
@@ -122,7 +122,7 @@ for ksec = 1:length(sections)
     
     
     % select vars to map
-    samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
+    samfn = fullfile(root_ctd, ['sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all']);
     scriptname = 'm_maptracer'; oopt = 'samfn'; get_cropt; % bak jc191: choose sam_all or sam_all_nutkg
     scriptname = mfilename; oopt = 'sam_gridlist'; get_cropt
     [varuselist.names, a, iiv] = mvars_in_file(varuselist.names, samfn);
@@ -153,7 +153,7 @@ for ksec = 1:length(sections)
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
     %mcalc
     
-    unix(['/bin/rm ' m_add_nc(wkfile)])
+    delete(m_add_nc(wkfile));
 end
 
 clear sections gstart gstop gstep

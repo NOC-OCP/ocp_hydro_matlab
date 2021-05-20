@@ -25,33 +25,33 @@ if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'scs'}))
 else
     %nav streams
     udirs = {
-        'attpmv'     'nav/pmv'
-        'attsea'     'nav/sea'
-        'dopcnav'    'nav/cnav'
-        'dopsea'     'nav/sea'
-        'ea600'      'bathy/ea600'
-        'em120'      'bathy/em120'
-        'envhumid'   'uother/env'
-        'envtemp'    'uother/env'
-        'gravity'    'uother/gravity'
-        'hdtgyro'    'nav/gyro'
-        'hdtpmv'     'nav/pmv'
-        'hdtsea'     'nav/sea'
-        'logchf'     'uother/chf'
-        'logskip'    'uother/skip'
-        'mag'        'uother/mag'
-        'poscnav'    'nav/cnav'
-        'posdps'     'nav/dps'
-        'pospmv'     'nav/pmv'
-        'posranger'  'nav/ranger'
-        'possea'     'nav/sea'
-        'surfmet'    'met/surfmet'
-        'tsg'        'met/tsg'
-        'vtgcnav'    'nav/cnav'
-        'vtgpmv'     'nav/pmv'
-        'vtgsea'     'nav/sea'
-        'winch'      'ctd/WINCH'
-        'windsonic'  'met/sonic'
+        'attpmv'     fullfile('nav','pmv')
+        'attsea'     fullfile('nav','sea')
+        'dopcnav'    fullfile('nav','cnav')
+        'dopsea'     fullfile('nav','sea')
+        'ea600'      fullfile('bathy','ea600')
+        'em120'      fullfile('bathy','em120')
+        'envhumid'   fullfile('uother','env')
+        'envtemp'    fullfile('uother','env')
+        'gravity'    fullfile('uother','gravity')
+        'hdtgyro'    fullfile('nav','gyro')
+        'hdtpmv'     fullfile('nav','pmv')
+        'hdtsea'     fullfile('nav','sea')
+        'logchf'     fullfile('uother','chf')
+        'logskip'    fullfile('uother','skip')
+        'mag'        fullfile('uother','mag')
+        'poscnav'    fullfile('nav','cnav')
+        'posdps'     fullfile('nav','dps')
+        'pospmv'     fullfile('nav','pmv')
+        'posranger'  fullfile('nav','ranger')
+        'possea'     fullfile('nav','sea')
+        'surfmet'    fullfile('met','surfmet')
+        'tsg'        fullfile('met','tsg')
+        'vtgcnav'    fullfile('nav','cnav')
+        'vtgpmv'     fullfile('nav','pmv')
+        'vtgsea'     fullfile('nav','sea')
+        'winch'      fullfile('ctd','WINCH')
+        'windsonic'  fullfile('met','sonic')
         };
 end
 
@@ -102,7 +102,7 @@ matlist(iim==0,:) = []; iim(iim==0) = [];
 %%%%%%% write m_udirs function using available underway streams %%%%%%%
 %%%%%%% and make directories as necessary %%%%%%%
 
-fid = fopen([MEXEC.mexec_processing_scripts '/uway/m_udirs.m'], 'w');
+fid = fopen(fullfile(MEXEC.mexec_processing_scripts, 'uway', 'm_udirs.m'), 'w');
 fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs();');
 fprintf(fid, 'udcruise = ''%s'';\n', MEXEC_G.MSCRIPT_CRUISE_STRING);
 fprintf(fid, '%s\n', 'udirs = {');
@@ -110,8 +110,8 @@ fprintf(fid, '%s\n', 'udirs = {');
 for sno = 1:size(matlist,1)
     iid = iim(sno);
     fprintf(fid, '''%s''    ''%s''    ''%s'';\n', udirs{iid,1}, udirs{iid,2}, matlist{sno,end});
-    if ~exist([MEXEC_G.MEXEC_DATA_ROOT '/' udirs{iid,2}], 'dir')
-        unix(['mkdir -p ' MEXEC_G.MEXEC_DATA_ROOT '/' udirs{iid,2}]);
+    if ~exist(fullfile(MEXEC_G.MEXEC_DATA_ROOT, udirs{iid,2}), 'dir')
+        mkdir(fullfile(MEXEC_G.MEXEC_DATA_ROOT, udirs{iid,2}));
     end
 end
 

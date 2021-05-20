@@ -184,10 +184,10 @@ crhelp_str = {'place to do specific edits like patching in data from another sou
     case 'mtsg_merge_and_listing'
         switch oopt
             case 'tsgmetfiles'
-                tsgfile = [root_tsg '/tsg_' mcruise '_01_medav_clean_cal.nc'];
-                metfile = [root_met '/met_tsg_' mcruise '_01.nc'];
-                metlightfile = [root_metlight '/met/surflight/met_light_' mcruise '_01.nc'];
-                posfile = [root_pos '/bst_nav_' mcruise '_01.nc'];
+                tsgfile = fullfile(root_tsg, ['tsg_' mcruise '_01_medav_clean_cal.nc']);
+                metfile = fullfile(root_met, ['met_tsg_' mcruise '_01.nc']);
+                metlightfile = fullfile(root_metlight, 'met', 'surflight', ['met_light_' mcruise '_01.nc']);
+                posfile = fullfile(root_pos, ['bst_nav_' mcruise '_01.nc']);
         end
         %%%%%%%%%% end mtsg_merge_and_listing %%%%%%%%%%
         

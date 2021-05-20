@@ -20,7 +20,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 roottsg = mgetdir(tsgpre);
-infile1 = [roottsg '/' abbrev '_' mcruise '_01_medav_clean'];
+infile1 = fullfile(roottsg, [abbrev '_' mcruise '_01_medav_clean']);
 
 %get previous limits
 scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt

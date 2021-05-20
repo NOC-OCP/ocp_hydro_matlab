@@ -14,22 +14,22 @@ wkfile = ['wk_' mfilename '_' datestr(now,30)];
 abbrev = MEXEC_G.default_navstream;
 root_dir = mgetdir(abbrev);
 prefix1 = [abbrev '_' mcruise '_'];
-infile1 = [root_dir '/' prefix1 'spd'];
+infile1 = fullfile(root_dir, [prefix1 'spd']);
 
 prefix3 = ['bst_' mcruise '_'];
-otfile = [root_dir '/' prefix3 '01'];
+otfile = fullfile(root_dir, [prefix3 '01']);
 
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     case {'jc' 'jr' 'dy'}
         abbrev = MEXEC_G.default_hedstream;
     case 'di'
         abbrev = 'gys';
-        root_ash = mgetdir('M_ASH'); infile4 = [root_ash '/ash_' mcruise '_01'];
+        root_ash = mgetdir('M_ASH'); infile4 = fullfile(root_ash, ['ash_' mcruise '_01']);
     otherwise
         abbrev = MEXEC_G.default_hedstream;  
 end
 root_head = mgetdir(abbrev);
-infile2 = [root_head '/' abbrev '_' mcruise '_ave'];
+infile2 = fullfile(root_head, [abbrev '_' mcruise '_ave']);
 
 mdocshow(mfilename, ['merge vector-averaged heading from ' abbrev '_' mcruise '_ave onto 30 s averaged speed, in bst_' mcruise '_01.nc']);
 
@@ -49,7 +49,7 @@ mmerge
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     % bak on jr281 march 23 2013: bad weather break, adding to edits from jc069
     case {'jc' 'jcr' 'dy' 'jr'} % ashtech broken on jr281 and not needed on cook
-        cmd = ['/bin/cp -p ' m_add_nc(otfile) ' ' m_add_nc(wkfile)]; unix(cmd);
+        copyfile(m_add_nc(otfile), m_add_nc(wkfile));
         calcvar = 'heading_av';
         calcstr = ['y = mcrange(x1+0,0,360);']; % no ashtech correction on jr281 yet
     case 'di' % old discovery techsas with ashtech present
@@ -91,4 +91,4 @@ MEXEC_A.MARGS_IN = {
 mcalc
 %--------------------------------
 
-unix(['/bin/rm ' wkfile '.nc']);
+delete(m_add_nc(wkfile));

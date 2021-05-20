@@ -7,8 +7,8 @@ root_co2 = mgetdir('M_BOT_CO2');
 root_ctd = mgetdir('M_CTD');
 prefix1 = ['co2_' mcruise '_'];
 prefix2 = ['sam_' mcruise '_'];
-infile1 = [root_co2 '/' prefix1 '01'];
-otfile2 = [root_ctd '/' prefix2 stn_string];
+infile1 = fullfile(root_co2, [prefix1 '01']);
+otfile2 = fullfile(root_ctd, [prefix2 stn_string]);
 
 
 %--------------------------------

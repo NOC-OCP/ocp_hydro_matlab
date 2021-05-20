@@ -11,7 +11,7 @@ mdocshow(scriptname, ['add documentation string for ' scriptname])
 root_cfc = mgetdir('M_BOT_CFC');
 
 dataname = ['cfc_' mcruise '_01'];
-otfile = [root_cfc '/' dataname];
+otfile = fullfile(root_cfc, dataname);
 
 %load
 oopt = 'inputs'; get_cropt %set input filename, variables, and units

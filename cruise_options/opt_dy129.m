@@ -113,8 +113,7 @@ switch scriptname
             case 'oxyconcalc'
                 oxyconcalc = 0;
             case 'oxycsv'
-                %infile = [root_oxy '/oxy_jc159_all.csv'];
-                infile = [root_oxy '/' 'oxy_' mcruise '_' sprintf('%03d',stnlocal) '.csv'];
+                infile = fullfile(root_oxy, ['oxy_' mcruise '_' sprintf('%03d',stnlocal) '.csv']);
             case 'oxysampnum'
                 ds_oxy.niskin = ds_oxy.botnum;
                 ds_oxy.botoxya_per_l = ds_oxy.botoxya;
@@ -170,7 +169,7 @@ switch scriptname
                         prefix = 'oceanlogger';
                 end
                 root_tsg = mgetdir(prefix);
-                fnsm = [root_tsg '/sdiffsm.mat'];
+                fnsm = fullfile(root_tsg, 'sdiffsm.mat');
                 % make sure sdiffsm exists with zero correction if not
                 % already defined; this is so mtsg_medav_clean can work
                 % before mtsg_bottle_compare. bak jc191
@@ -182,7 +181,7 @@ switch scriptname
                 if time==1 & salin==1;
                     salout = 1;
                 else
-                    load([root_tsg '/sdiffsm'])
+                    load(fullfile(root_tsg, 'sdiffsm'))
                     salout = salin + interp1([0 t(:)' 1e3],[sdiffsm(1) sdiffsm(:)' sdiffsm(end)],time/86400); % interpolate/extrapolate correction                end
                 end
         end 
@@ -232,8 +231,8 @@ switch scriptname
         switch oopt
             case 'vmadcp_files'
                 cname = [mcruise '_01'];
-                pre1 = ['postprocessing/' mcruise '_01/proc_archive/' oslocal]; %link here to version you want to use (spprocessing or postprocessing)
-                fnin = [root_vmadcp '/' pre1 '/contour/' oslocal '.nc'];
+                pre1 = fullfile('postprocessing', [mcruise '_01], 'proc_archive', oslocal); %link here to version you want to use (spprocessing or postprocessing)
+                fnin = fullfile(root_vmadcp, pre1, 'contour', [oslocal '.nc']);
                 dataname = [oslocal '_' mcruise '_01'];
                 %*** station 123?
         end

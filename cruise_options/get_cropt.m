@@ -86,7 +86,7 @@ else %help mode
         dc = pwd;
         try
             cd(dm);
-            [st, slist] = unix('grep case cruise_options/setdef_cropt_?.m | grep -v switch');
+            [st, slist] = unix('grep case cruise_options/setdef_cropt_*.m | grep -v switch');
             cd(dc);
             more on
             disp('these are the scriptnames and oopts (the latter indented) with settings under get_cropt')
@@ -141,13 +141,13 @@ else %help mode
             disp(['look in these files for examples of how to change default settings for scriptname = ''' scriptname '''; oopt = ''' oopt ''':'])
             disp(clist)
             more off
-            if exist('crhelp_str','var')
-                disp(crhelp_str);
-            else
-                disp(['no help string for ' scriptname ', ' oopt ' in setdef_cropt_*'])
-            end
         catch me
             throw(me)
+        end
+        if exist('crhelp_str','var')
+            disp(crhelp_str);
+        else
+            disp(['no help string for ' scriptname ', ' oopt ' in setdef_cropt_*'])
         end
         
     end

@@ -14,10 +14,10 @@ std_samp_range = [1e5 1e7]; %sample numbers for ssw are in this range, e.g. 9990
 % resolve root directories for various file types, and set output files
 root_sal = mgetdir('M_BOT_SAL');
 dataname = ['sal_' mcruise '_01'];
-salfile = [root_sal '/' dataname];
-samfile = [mgetdir('M_CTD') '/sam_' mcruise '_all'];
+salfile = fullfile(root_sal, dataname);
+samfile = fullfile(mgetdir('M_CTD'), 'sam_' mcruise '_all']);
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
-tsgfile = [mgetdir(tsgpre) '/tsg_' mcruise '_all'];
+tsgfile = fullfile(mgetdir(tsgpre), ['tsg_' mcruise '_all']);
 
 %get list of files to load
 scriptname = mfilename; oopt = 'salfiles'; get_cropt %list of files to load
@@ -30,7 +30,7 @@ un0 = {'number' 'datenum' '2Rt' '2Rt' '2Rt' '2Rt' 'degC' '2Rt' 'woce_9.4' 'psu' 
 %load files and store expected fields
 ld = 0;
 for fno = 1:length(salfiles)
-    [ds, hs] = m_load_samin([root_sal '/' salfiles{fno}], {'sampnum'});
+    [ds, hs] = m_load_samin(fullfile(root_sal, salfiles{fno}), {'sampnum'});
     ii = find(isnan(ds.sampnum)); ds(ii,:) = [];
     %change field names if necessary, for instance, sample1 to sample_1, etc.
     scriptname = mfilename; oopt = 'salnames'; get_cropt 

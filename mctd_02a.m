@@ -29,13 +29,13 @@ prefix = ['ctd_' mcruise '_'];
 %if the noctm file exists, assume we should start there
 %(and apply automatic edits to remove large spikes, and then apply
 %align/ctm and save as _raw)***reapplying align necessary???***
-infile1 = [root_ctd '/' prefix stn_string '_raw_noctm'];
-infile = [root_ctd '/' prefix stn_string '_raw'];
+infile1 = fullfile(root_ctd, [prefix stn_string '_raw_noctm']);
+infile = fullfile(root_ctd, [prefix stn_string '_raw']);
 if ~exist(m_add_nc(infile1), 'file');
     redoctm = 0;
 else
     redoctm = 1;
-    unix(['/bin/cp -p ' m_add_nc(infile1) ' ' m_add_nc(infile)]);
+    copyfile(m_add_nc(infile1), m_add_nc(infile));
     unix(['chmod 444 ' m_add_nc(infile1)]); % write protect raw_noctm file
 end
 unix(['chmod 644 ' m_add_nc(infile)]); % make file writeable
@@ -45,7 +45,7 @@ MEXEC_A.Mprog = mfilename;
 %change variable names and add units
 
 %get list of names and units
-renamefile = [root_templates '/ctd_renamelist.csv']; 
+renamefile = fullfile(root_templates, 'ctd_renamelist.csv'); 
 dsv = dataset('File', renamefile, 'Delimiter', ',');
 scriptname = mfilename; oopt = 'ctdvars'; get_cropt
 if length(ctdvars_add)>0

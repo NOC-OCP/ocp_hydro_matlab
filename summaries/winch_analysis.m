@@ -22,8 +22,8 @@ clear stn % so that it doesn't persist
 
 root_win = mgetdir('M_CTD_WIN');
 root_ctd = mgetdir('M_CTD');
-prefix1 = [root_win '/win_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
-prefix2 = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
+prefix1 = fullfile(root_win, ['win_' MEXEC_G.MSCRIPT_CRUISE_STRING '_']);
+prefix2 = fullfile(root_ctd, ['sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_']);
 
 infile1 = [prefix1 stn_string];
 infile2 = [prefix2 stn_string];

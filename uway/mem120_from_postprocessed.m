@@ -11,8 +11,8 @@ root_em120 = mgetdir('M_EM122');
 
 prefix1 = ['em122_' MEXEC_G.MSCRIPT_CRUISE_STRING '_'];
 
-infile1 = [root_em120 '/' MEXEC_G.MSCRIPT_CRUISE_STRING '_centrebeam.dat' ];
-otfile1 = [root_em120 '/' prefix1 'post'];
+infile1 = fullfile(root_em120, [MEXEC_G.MSCRIPT_CRUISE_STRING '_centrebeam.dat']);
+otfile1 = fullfile(root_em120, [prefix1 'post']);
 
 if ~exist(infile1, 'file')
     msg = ['Input file ' infile1 ' missing'];

@@ -23,10 +23,10 @@ end
 
 prefix2 = ['bst_' mcruise '_'];
 
-infile1 = [root_met '/' prefix1 '01'];
-infile2 = [root_pos '/' prefix2 '01'];
-otfile1 = [root_met '/' prefix1 'true'];
-otfile2 = [root_met '/' prefix1 'trueav'];
+infile1 = fullfile(root_met, [prefix1 '01']);
+infile2 = fullfile(root_pos, [prefix2 '01']);
+otfile1 = fullfile(root_met, [prefix1 'true']);
+otfile2 = fullfile(root_met, [prefix1 'trueav']);
 
 dstring = datestr(now,30);
 wscriptname = mfilename;
@@ -414,5 +414,5 @@ mmerge
 % clean up files
 %----------------------------------------
 
-unix(['/bin/rm wk*' wscriptname '*.nc'])
+delete(['wk*' wscriptname '*.nc']);
 

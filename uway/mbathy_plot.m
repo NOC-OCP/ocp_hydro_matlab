@@ -26,13 +26,13 @@ if length(emvar)>0
     ism = 1;
 end
 if iss
-    filesb = [mgetdir(simvar) '/' simvar '_' mcruise '_d' day_string '_edt_av.nc'];
+    filesb = fullfile(mgetdir(simvar), [simvar '_' mcruise '_d' day_string '_edt_av.nc']);
     if ~exist(filesb, 'file')
         iss = 0;
     end
 end
 if ism
-    filemb = [mgetdir(emvar) '/' emvar '_' mcruise '_d' day_string '_edt_av.nc'];
+    filemb = fullfile(mgetdir(emvar), [emvar '_' mcruise '_d' day_string '_edt_av.nc']);
     if ~exist(filemb, 'file')
         ism = 0;
     end

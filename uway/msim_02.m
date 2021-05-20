@@ -39,8 +39,8 @@ switch MEXEC_G.Mship % bak on jr281 march 2013; cook branch couldn't be tested o
 end
 
 prefix1 = ['sim_' mcruise '_'];
-infile1 = [root_sim '/' prefix1 'd' day_string '_edt'];
-infile2 = [root_em120 '/' prefix2 'd' day_string '_edt'];
+infile1 = fullfile(root_sim, [prefix1 'd' day_string '_edt']);
+infile2 = fullfile(root_em120, prefix2 'd' day_string '_edt']);
 
 infile1 = m_add_nc(infile1);
 infile2 = m_add_nc(infile2);
@@ -62,7 +62,7 @@ if exist(infile2,'file') ~= 2
       ' '
    };
    mcalc
-   unix(['/bin/mv ' wkfile ' ' infile1]);
+   movefile(m_add_nc(wkfile), m_add_nc(infile1));
 
 else
    h = m_read_header(infile1);
@@ -77,7 +77,7 @@ else
       'k'
    };
    mmerge
-   unix(['/bin/mv ' wkfile ' ' infile1]);
+   movefile(m_add_nc(wkfile), m_add_nc(infile1));
 
 end
 

@@ -18,7 +18,7 @@ root_nut = mgetdir('M_BOT_NUT');
 
 % load
 prefix1 = ['nut_' mcruise '_'];
-otfile2 = [root_nut '/' prefix1 stn_string];
+otfile2 = fullfile(root_nut, [prefix1 stn_string]);
 dataname = [prefix1 stn_string];
 clear stn % so that it doesn't persist
 oopt = 'nutcsv'; get_cropt

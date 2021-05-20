@@ -16,13 +16,13 @@ root_ctd = mgetdir('M_CTD');
 
 prefix1 = ['ctd_' mcruise '_'];
 
-infile1 = [root_ctd '/' prefix1 stn_string '_24hz'];
-infile2 = [root_ctd '/dcs_' mcruise '_' stn_string];
-otfile1 = [root_ctd '/' prefix1 stn_string '_psal'];
-otfile2d = [root_ctd '/' prefix1 stn_string '_2db'];
-otfile2u = [root_ctd '/' prefix1 stn_string '_2up'];
+infile1 = fullfile(root_ctd, [prefix1 stn_string '_24hz']);
+infile2 = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
+otfile1 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
+otfile2d = fullfile(root_ctd, [prefix1 stn_string '_2db']);
+otfile2u = fullfile(root_ctd, [prefix1 stn_string '_2up']);
 wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
-wkfile_dvars = [root_ctd '/wk_dvars_' mcruise '_' stn_string]; %this one persists through a later processing stage
+wkfile_dvars = fullfile(root_ctd ['wk_dvars_' mcruise '_' stn_string]); %this one persists through a later processing stage
 
 
 %identify preferred sensors for (T,C) and O on this station
@@ -172,4 +172,4 @@ if interp1hz
 end
 
 %tidy up
-unix(['/bin/rm ' m_add_nc(wkfile1)]);
+delete(m_add_nc(wkfile1));

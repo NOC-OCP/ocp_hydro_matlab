@@ -16,7 +16,7 @@ scriptname = mfilename; oopt = ['sam_ashore_' samtype]; get_cropt
 
 root_sam = mgetdir('M_CTD');
 
-samfile = [root_sam '/sam_' mcruise '_all'];
+samfile = fullfile(root_sam, ['sam_' mcruise '_all']);
 [d,h] = mloadq(samfile,'/');
 iibb = find(d.niskin_flag==4);
 

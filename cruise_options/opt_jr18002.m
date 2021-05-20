@@ -164,7 +164,7 @@ switch scriptname
     case 'msal_standardise_avg'
         switch oopt
             case 'salcsv'
-                d = dir([root_sal '/JR18002_sal*.csv']);
+                d = dir(fullfile(root_sal, 'JR18002_sal*.csv'));
                 d = struct2cell(d); sal_csv_files = d(1,:)';
             case 'check_sal_runs'
                 check_sal_runs = 0;
@@ -204,7 +204,7 @@ switch scriptname
     case 'moxy_01'
         switch oopt
             case 'oxycsv'
-                infile = [root_oxy '/Cast_' stn_string '.csv'];
+                infile = fullfile(root_oxy, ['Cast_' stn_string '.csv']);
             case 'oxysampnum'
                 ds_oxy.statnum = ds_oxy.Cast;
                 ds_oxy.niskin = ds_oxy.Niskin;
@@ -265,8 +265,7 @@ switch scriptname
     case 'mnut_01'
         switch oopt
             case 'nutcsv'
-                %infile = [root_nut '/' upper(mcruise) '_nuts.csv'];
-                infile = [root_nut '/74JC20181103.csv'];
+                infile = fullfile(root_nut, '74JC20181103.csv');
             case 'vars'
                 vars = {
                     'position'     'number'     'BTLNBR'%'niskin'
@@ -289,9 +288,9 @@ switch scriptname
     case 'mco2_01'
         switch oopt
             case 'infile'
-                load([root_co2 '/' mcruise '_alkalinity_hydro']);
+                load(fullfile(root_co2, [mcruise '_alkalinity_hydro']));
                 hydro.sampnum = hydro.stn*100 + hydro.nisk;
-                indata1 = dataset('File', [root_co2 '/DIC_data.csv'], 'Delimiter', ',');
+                indata1 = dataset('File', fullfile(root_co2, ['DIC_data.csv']), 'Delimiter', ',');
                 indata1.sampnum = indata1.station*100 + indata1.niskin;
                 indata.sampnum = unique([hydro.sampnum; indata1.sampnum]);
                 indata.talk = NaN+indata.sampnum; indata.QF_talk = 9+zeros(size(indata.sampnum));
@@ -437,7 +436,7 @@ switch scriptname
                 nocfc = 1;
                 d.cfc11(:) = NaN; d.cfc12(:) = NaN; d.f113(:) = NaN; d.ccl4(:) = NaN; d.sf6(:) = NaN; d.sf5cf3(:) = NaN;
             case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_' expocode];
+                outfile = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files', ['sr1b_' expocode]);
                 %if nocfc; outfile = [outfile '_no_cfc_values']; end
             case 'headstr'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];... %the last field specifies group, institution, initials
@@ -473,7 +472,7 @@ switch scriptname
                 expocode = '74JC20181103';
                 sect_id = 'SR1b';
             case 'outfile'
-                outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_' expocode '_ct1/sr1b_' expocode];
+                outfile = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files', ['sr1b_' expocode '_ct1'], ['sr1b_' expocode]);
             case 'headstr'
                 headstring = {['CTD,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];...
                     '#SHIP: James Clark Ross';...

@@ -90,10 +90,10 @@ for daynumber = days
         %update appended files
         if daynumber==days(1) & restart_uway_append
             if strcmp(MEXEC_G.Mshipdatasystem, 'scs')
-                unix(['rm -f ' root_u '/scs_mat/' udirs{sno}])
+                delete(fullfile(root_u,'scs_mat',udirs{sno}));
             end
             warning(['clobbering ' shortnames{sno} '_' mcruise '_01.nc'])
-            unix(['/bin/rm ' root_u '/' udirs{sno} '/' shortnames{sno} '_' mcruise '_01.nc']);
+            delete(fullfile(root_u, udirs{sno}, [shortnames{sno} '_' mcruise '_01.nc']));
         end
         mday_02(shortnames{sno}, daynumber);
     end

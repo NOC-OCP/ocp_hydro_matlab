@@ -40,15 +40,13 @@ mcsetd('M_CTD'); root = MEXEC_G.MEXEC_CWD; % bak 18 aug 2010
 % bak at noc 18 aug 2010
 % pick up wireout name from file
 mcsetd('M_CTD_WIN'); root_win = MEXEC_G.MEXEC_CWD;
-% [a b] = unix('ls /noc/ooc/drake/di346_temp/data/ctd/WINCH/win_di346_???.nc')
-[a b] = unix(['ls ' root_win '/' 'win_' MEXEC_G.MSCRIPT_CRUISE_STRING '_???.nc']);
-knc = strfind(b,'.nc');
-if isempty(knc)
+d = dir(fullfile(root_win, ['win_' MEXEC_G.MSCRIPT_CRUISE_STRING '_???.nc']));
+if isempty(d)
     m = 'No winch files found';
     fprintf(MEXEC_A.Mfider,'%s\n',m)
     return
 end
-fnwin = b(1:knc+2); % first winch file name
+fnwin = fullfile(root_win, d(1).name); % first winch file name
 
 % now scan files until a  matching var is found
 
@@ -111,13 +109,12 @@ for k = stnset
 
     vlist = 'press altimeter /';
 
-    fn2db = [root '/ctd_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr '_2db'];
-    fnpsal = [root '/ctd_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr '_psal'];
-    fndcs = [root '/dcs_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr '_pos'];
-    fndcs = [root '/dcs_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr ];
-    fnwin = [ rootwin '/' 'win_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr];
-%     fnwin = [root '/WINCH' '/' 'win_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr];
-    fnsam = [root '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr];
+    fn2db = fullfile(root, ['ctd_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr '_2db']);
+    fnpsal = fullfile(root, ['ctd_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr '_psal']);
+    fndcs = fullfile(root, ['dcs_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr '_pos']);
+    fndcs = fullfile(root, ['dcs_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr]);
+    fnwin = fullfile(rootwin, ['win_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr]);
+    fnsam = fullfile(root, ['sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_' stnstr];
 
     % bak on jc069  2 mar 2012;
     % test for existence of 2db file. if not there, skip. 
@@ -154,10 +151,6 @@ for k = stnset
 
     cordep(k) = h1.water_depth_metres;
         
-% % % % %     % bak on jc069 cludge
-% % % % %     load('/local/users/pstar/jc069/data/station_depths/bestdeps');
-% % % % %     cordep(k) = bestdeps(k);
-
     [ddcs h4] = mload(fndcs,'/');
     dns(k) = datenum(h4.data_time_origin) + ddcs.time_start/86400;
     dnb(k) = datenum(h4.data_time_origin) + ddcs.time_bot/86400;
@@ -552,117 +545,3 @@ msave
 %--------------------------------
 
 
-
-% % % % mcd M_CTD
-% % % %
-% % % % wdepall = load('wdeplist');
-% % % %
-% % % % [d h] = mload('dcs_jc032_all','/');
-% % % %
-% % % % nstat = length(d.statnum);
-% % % %
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n',' ');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','RRS James Cook Cruise JC032');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','Station list up to 20 March 2009');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','Principal Scientist B King, b.king@noc.soton.ac.uk');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n',' ');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','CTD parameters are');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n',' ');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','pressure');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','conductivity');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','temperature');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','dissolved oxygen');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','lowered ADCP');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n',' ');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','Discrete bottle samples will be analysed for');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n',' ');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','salinity');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','dissolved oxygen');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','nitrate');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','phosphate');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','silicate');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','total alkalinity');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','dissolved inorganic carbon');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','CFC-11');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','CFC-12');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','CFC-113');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','Carbon Tetrachloride');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n','Sulphur Hexafluoride');
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n',' ');
-% % % %
-% % % %
-% % % % % m1 = ['Stn Time_start        Lat          Lon         Water     Max'];
-% % % % % m2 = ['Stn Time_bottom       deg min      deg min     depth   pressure'];
-% % % % % m3 = ['Stn Time_end                                    (m)     (dbar)'];
-% % % % m1 = ['Stn Time_start        Lat          Lon         Water     Max'];
-% % % % m2 = ['Stn Time_bottom       deg min      deg min     depth  ctd depth'];
-% % % % m3 = ['Stn Time_end                                    (m)      (m)'];
-% % % %
-% % % % fprintf(MEXEC_A.Mfidterm,'%s\n%s\n%s\n\n',m1,m2,m3)
-% % % %
-% % % % posall = nan+zeros(nstat,2);
-% % % %
-% % % % for kstn = 1:nstat
-% % % %
-% % % %     % get water depth from listing extracted from ldeo software
-% % % %     k_ind = find(wdepall(:,1) == kstn);
-% % % %     wdep = wdepall(k_ind,2);
-% % % %
-% % % %
-% % % %     % obtain nav from dfinfo
-% % % %     vname = 'time_bot';
-% % % %     % allow for the possibility that the dcs file contains many stations
-% % % %     time_bot = d.time_bot(kstn);
-% % % %     [yyyy mo dd hh mm ss dayofyear] = m_time_to_ymdhms(vname,time_bot,h);
-% % % %     rvstime = sprintf('%02d%03d%02d%02d%02d',yyyy-2000,dayofyear,hh,mm,ss);
-% % % %     cmd = ['ssh pstar@' MEXEC_G.Mrsh_machine ' posinfo -t ' rvstime ' -d ' MEXEC_G.Mrvs_navfile];
-% % % %     [uMEXEC.status uresult] = unix(cmd);
-% % % %     %uresult =
-% % % %     %09 067 09:18:10  -36.330892  -53.498287
-% % % %     latstr = uresult(16:27); latbot = str2num(latstr);
-% % % %     lonstr = uresult(28:end); lonbot = str2num(lonstr);
-% % % %
-% % % %     posall(kstn,1:2) = [latbot lonbot];
-% % % %
-% % % %     m1 = sprintf('%03d',d.statnum(kstn));
-% % % %
-% % % %
-% % % %     %times
-% % % %     time_start = d.time_start(kstn);
-% % % %     [yyyy mo dd hh mm ss dayofyear] = m_time_to_ymdhms(vname,time_start,h);
-% % % %     m2 = sprintf('%04d%s%02d%s%02d %02d%s%02d',yyyy,'/',mo,'/',dd,hh,':',mm);
-% % % %     time_bot = d.time_bot(kstn);
-% % % %     [yyyy mo dd hh mm ss dayofyear] = m_time_to_ymdhms(vname,time_bot,h);
-% % % %     m3 = sprintf('%04d%s%02d%s%02d %02d%s%02d',yyyy,'/',mo,'/',dd,hh,':',mm);
-% % % %     time_end = d.time_end(kstn);
-% % % %     [yyyy mo dd hh mm ss dayofyear] = m_time_to_ymdhms(vname,time_end,h);
-% % % %     m4 = sprintf('%04d%s%02d%s%02d %02d%s%02d',yyyy,'/',mo,'/',dd,hh,':',mm);
-% % % %
-% % % %
-% % % %     %max pressure and depth
-% % % %     m5 = sprintf('    %4.0f',d.press_bot(kstn));
-% % % %     maxctddep = sw_dpth(d.press_bot(kstn),latbot);
-% % % %     m5a = sprintf('    %4.0f',maxctddep);
-% % % %
-% % % %     % reformat lat and lon
-% % % % %     lat = d.lat_bot(kstn);
-% % % %     lat = latbot;
-% % % %     latdeg = fix(lat);
-% % % %     latmin = abs(60*(lat-latdeg));
-% % % %     m6 = sprintf('%4d %6.3f',latdeg,latmin);
-% % % % %     lon = d.lon_bot(kstn);
-% % % %     lon = lonbot;
-% % % %     londeg = fix(lon);
-% % % %     lonmin = abs(60*(lon-londeg));
-% % % %     m7 = sprintf('%4d %6.3f',londeg,lonmin);
-% % % %
-% % % %
-% % % %     % format water depth
-% % % %     water_dep = wdep;
-% % % %     m8 = sprintf('  %4d',water_dep);
-% % % %
-% % % %     fprintf(MEXEC_A.Mfidterm,'%s %s\n',m1,m2)
-% % % %     fprintf(MEXEC_A.Mfidterm,'%s %s %s %s %s %s\n',m1,m3,m6,m7,m8,m5a)
-% % % %     fprintf(MEXEC_A.Mfidterm,'%s %s\n\n',m1,m4)
-% % % %
-% % % % end

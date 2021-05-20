@@ -144,7 +144,7 @@ switch scriptname
     case 'mbot_00'
         switch oopt
             case 'nbotfile'
-                botfile = [root_botcsv '/' prefix1 '001.csv']; % on jr281 have a single bottle input file
+                botfile = fullfile(root_botcsv, [prefix1 '001.csv']); % on jr281 have a single bottle input file
             case 'nispos'
                 if stnlocal>=74
                     nis(12:22) = 14:24;
@@ -183,7 +183,7 @@ switch scriptname
     case 'mcfc_02'
         switch oopt
             case 'infile1'
-                infile1 = [root_cfc '/' prefix1 stn_string];
+                infile1 = fullfile(root_cfc, [prefix1 stn_string]);
             case 'cfclist'
                 cfcinlist = 'sf6 sf6_flag cfc12 cfc12_flag cfc13 cfc13_flag sf5cf3 sf5cf3_flag';
                 cfcotlist = cfcinlist;
@@ -323,7 +323,7 @@ switch scriptname
     case 'populate_station_depths'
         switch oopt
             case 'depth_source'
-                fnintxt = [root_ctddep '/' cruise '_stn_depth.txt'];
+                fnintxt = fullfile(root_ctddep, [cruise '_stn_depth.txt']);
             case 'bestdeps'
                 bestdeps(35,2) = 3443; % from CTD deck unit log aborted cast
                 bestdeps(122,2) = 6059; % from CTD deck unit log cast did not go to full depth

@@ -8,7 +8,7 @@ stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.c
 %invocations of mctd_02b, because any necessary edits will have been
 %added to opt_cruise already (and to mplxyed_* file when mctd_rawedits is run)***
 root_ctd = mgetdir('M_CTD');
-[d, h] = mloadq([root_ctd '/ctd_' mcruise '_' stn_string '_raw'], 'press', ' ');
+[d, h] = mloadq(fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_raw']), 'press', ' ');
 if min(d.press)<=-1.495
     m = {['negative pressures in ctd_' mcruise '_' stn_string '_raw']
     ['check d.press (loaded from ctd_' mcruise '_' stn_string '_raw); if there are large']

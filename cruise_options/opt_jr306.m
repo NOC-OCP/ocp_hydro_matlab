@@ -33,7 +33,7 @@ switch scriptname
 	    expocode = '74JC20150110';
             sect_id = 'SR1b';
          case 'outfile'
-	    outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_' expocode];
+	    outfile = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files', ['sr1b_' expocode]);
 	 case 'headstr'
             headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];...
 	    '#SHIP: James Clark Ross';...
@@ -63,7 +63,7 @@ switch scriptname
 	    expocode = '74JC20150110';
             sect_id = 'SR1b';
          case 'outfile'
-	    outfile = [MEXEC_G.MEXEC_DATA_ROOT '/collected_files/sr1b_' expocode '_ct1/sr1b_' expocode];
+	    outfile = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'collected_files', ['sr1b_' expocode '_ct1'], ['sr1b_' expocode]);
 	 case 'headstr'
 	    headstring = {['CTD,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];...
 	    '#SHIP: James Clark Ross';...

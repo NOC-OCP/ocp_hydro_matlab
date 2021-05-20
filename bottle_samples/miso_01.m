@@ -15,7 +15,7 @@ mdocshow(scriptname, ['reads bottle del13C, Del14C, del18O data from .csv files 
 % resolve root directories for various file types
 root_iso = mgetdir('M_BOT_ISO');
 dataname = ['iso_' mcruise '_01'];
-otfile2 = [root_iso '/' dataname];
+otfile2 = fullfile(root_iso, dataname);
 
 oopt = 'files'; get_cropt
 

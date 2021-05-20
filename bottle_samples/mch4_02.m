@@ -7,8 +7,8 @@ root_ch4 = mgetdir('M_BOT_CH4');
 root_ctd = mgetdir('M_CTD');
 prefix1 = ['ch4_' mcruise '_'];
 prefix2 = ['sam_' mcruise '_'];
-infile1 = [root_ch4 '/' prefix1 stn_string];
-otfile2 = [root_ctd '/' prefix2 stn_string];
+infile1 = fullfile(root_ch4, [prefix1 stn_string]);
+otfile2 = fullfile(root_ctd, [prefix2 stn_string]);
 
 if ~exist(m_add_nc(infile1), 'file')
     mess = ['file ' m_add_nc(infile1) ' not found']; % bak on jc069 exit if file not in the right place

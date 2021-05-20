@@ -22,11 +22,11 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %find statnums with ctd data
-fn = dir([mgetdir('M_CTD') '/ctd_' mcruise '_*_raw.nc']);
+fn = dir(fullfile(mgetdir('M_CTD'), ['ctd_' mcruise '_*_raw.nc']));
 stns = struct2cell(fn); stns = cell2mat(stns(1,:)'); stns = str2num(stns(:,end-9:end-7));
 
 %output file of depths
-fnot = [mgetdir('M_CTD_DEP') '/station_depths_' mcruise '.mat'];
+fnot = fullfile(mgetdir('M_CTD_DEP'), 'station_depths_' mcruise '.mat']);
 
 %load this if it already exists and extend if necessary, otherwise set up empty array
 if exist(fnot, 'file')
@@ -107,7 +107,7 @@ switch depth_source
     case 'ctd' % calculate from CTD depth and altimeter
         
         for no = 1:length(iif) % try to fill these in from 1hz files
-            fn = sprintf('%s/ctd_%s_%03d_psal.nc', mgetdir('M_CTD'), mcruise, bestdeps(iif(no),1));
+            fn = fullfile(mgetdir('M_CTD'), sprintf('ctd_%s_%03d_psal.nc', mcruise, bestdeps(iif(no),1)));
             if exist(fn)
                 [d, h] = mloadq(fn, '/');
                 if ~isfield(d, 'depSM'); d.depSM = filter_bak(ones(1,21), sw_dpth(d.press, h.latitude)); end
@@ -126,9 +126,9 @@ switch depth_source
     case 'ladcp' % load from IX LADCP .mat files
         
         for no = 1:length(iif)
-            lf = sprintf('%s/DLUL_GPS/processed/%03d/%03d.mat', mgetdir('M_IX'),bestdeps(iif(no),1),bestdeps(iif(no),1));
+            lf = fullfile(mgetdir('M_IX'), 'DLUL_GPS', 'processed', sprintf('%03d', bestdeps(iif(no),1)), sprintf('%03d.mat',bestdeps(iif(no),1)));
             if ~exist(lf, 'file')
-                lf = sprintf('%s/DL_GPS/processed/%03d/%03d.mat', mgetdir('M_IX'),bestdeps(iif(no),1),bestdeps(iif(no),1));
+                lf = fullfile(mgetdir('M_IX'), 'DL_GPS', 'processed', sprintf('%03d', bestdeps(iif(no),1)), sprintf('%03d.mat',bestdeps(iif(no),1)));
             end
             if exist(lf, 'file')
                 load(lf, 'p');
@@ -140,11 +140,11 @@ switch depth_source
         
         simvar = mvarname_find({'ea600' 'sim'},MEXEC_G.MDIRLIST(:,1));
         if ~isempty(simvar)
-            fileb = [mgetdir(simvar) '/' simvar '_' mcruise '_01.nc'];
+            fileb = fullfile(mgetdir(simvar), [simvar '_' mcruise '_01.nc']);
             if exist(fileb,'file')
                 [db,hb] = mloadq(fileb,'/');
                 for no = 1:length(iif)
-                    fn = sprintf('%s/dcs_%s_%03d.nc',mgetdir('M_CTD'),mcruise,bestdeps(iif(no)));
+                    fn = fullfile(mgetdir('M_CTD'), sprintf('dcs_%s_%03d.nc',mcruise,bestdeps(iif(no))));
                     if exist(fn, 'file')
                         [ddcs,hdcs] = mloadq(fn,'/');
                         btim = m_commontime(db.time, hb.data_time_origin, hdcs.data_time_origin); %put into dcs file time origin

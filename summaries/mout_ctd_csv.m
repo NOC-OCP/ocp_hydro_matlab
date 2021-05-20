@@ -8,7 +8,7 @@ root_out = mgetdir('M_SUM');
 
 if ~exist('csuf'); csuf = '2db'; end %default to 2db downcast file
 
-fnin = [root_ctd '/ctd_' mcruise '_' stn_string '_' csuf '.nc'];
+fnin = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_' csuf '.nc']);
 if exist(fnin, 'file')
    [d, h] = mload(fnin, '/');
 else
@@ -25,7 +25,7 @@ switch csuf
     otherwise
         error('mout_ctd_csv does not contain a case for printing 24hz ctd data to an ascii file')
 end
-fnot = [root_out '/ctdlists/ctd_' mcruise '_' stn_string '_csv_list_' tsuf '.csv'];
+fnot = fullfile(root_out, 'ctdlists', ['ctd_' mcruise '_' stn_string '_csv_list_' tsuf '.csv']);
 
 if isfield(d, 'asal')
     d.dens = gsw_rho_t_exact(d.asal, d.temp, d.press);

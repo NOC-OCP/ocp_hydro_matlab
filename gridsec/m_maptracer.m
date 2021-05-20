@@ -13,7 +13,7 @@ scriptname = 'm_maptracer';
 
 
 root_ctd = mgetdir('M_CTD');
-samfn = [root_ctd '/sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all' ];
+samfn = fullfile(root_ctd, ['sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all']);
 oopt = 'samfn'; get_cropt; % bak jc191: choose sam_all or sam_all_nutkg
 
     MEXEC_A.MARGS_IN = MEXEC_A.MARGS_IN_LOCAL; % get back the queue of responses
@@ -165,20 +165,6 @@ switch action
         
         for kx = 1:size(pgrid,1)
             for ky = 1:size(pgrid,2)
-% % % % %             kstn = stnlist(kount);
-% % % % %             stnstr = sprintf('%03d',kstn);
-% % % % %             ctdfn = [root_ctd '/' 'ctd_jc032_' stnstr '_2db.nc']; % load ctd data for this station
-% % % % %                             %  ctd data are required so we know density at the target mapping point
-% % % % %             if exist(ctdfn,'file') ~=2; 
-% % % % %                 m = ['Required CTD file ' fn ' does not exist'];
-% % % % %                 fprintf(MEXEC_A.Mfider,'%s\n',' ',m,' ');
-% % % % %                 return; 
-% % % % %             end
-% % % % %             [dctd h] = mload(ctdfn,'press temp psal',' ');
-% % % % %             psal = interp1(dctd.press,dctd.psal,p);
-% % % % %             t = interp1(dctd.press,dctd.temp,p);
-% % % % %             yot = nan+p;
-% % % % %             for k = 1:length(p)
                 g.p = pgrid(kx,ky);
                 g.statnum = statnumgrid(kx,ky);
                 g.s = sgrid(kx,ky);
@@ -187,7 +173,6 @@ switch action
                 g = bakmap2(g,s);
                 yotall(kx,ky) = g.fit;
             end
-% % % % %             yotall(:,kount) = yot(:);
         end
         yot = yotall;
         ygrid =yot;

@@ -26,8 +26,7 @@ root_vmadcp = mgetdir('M_VMADCP');
 
 % construct input filename;
 prefix = [inst '_' mcruise];
-%infile = [root_vmadcp '/mproc/' prefix '_' cast '_' stn_string '_ave'];
-infile = [root_vmadcp '/mproc/' prefix '_' cast '_' stn_string]; % CV
+infile = fullfile(root_vmadcp, 'mproc', [prefix '_' cast '_' stn_string]); % CV
 
 if exist(m_add_nc(infile)) ~= 2; return; end
 
@@ -55,4 +54,4 @@ v_sadcp   = da.vabs*1e-2; % cm/s to m/s
 z_sadcp   = da.depth(:,1);
 % END ------- CV 2018/11/17
 
-save([root_vmadcp '/mproc/' inst '_' mcruise '_' cast '_' stn_string '_forladcp'], 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');
+save(fullfile(root_vmadcp, 'mproc', [inst '_' mcruise '_' cast '_' stn_string '_forladcp']), 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');

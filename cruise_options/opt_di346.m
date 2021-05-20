@@ -8,7 +8,7 @@ switch scriptname
                 switch abbrev
                     case 'surfmet'
                         if ~exist([otfile '.nc'])
-                            unix(['/bin/cp ' infile '.nc ' otfile '.nc']);
+                            copyfile(m_add_nc(infile), m_add_nc(otfile));
                         end
                         % CALIBRATION
                         A = -1.17483;
@@ -26,7 +26,7 @@ switch scriptname
                         Rd = 287.05;
                         g = 9.81;
                         % pickup temperature on mast from surfmet data
-                        dir_T = [MEXEC_G.MEXEC_DATA_ROOT '/met/surfmet/'];
+                        dir_T = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'met', 'surfmet');
                         ncfileT.name = [dir_T 'met_' cruise '_d' daystr '_' MEXEC.status '.nc'];
                         [dT1 hT1] = mload([ncfileT.name],'airtemp',' ');
                         T_today = getfield(dT1, 'airtemp');

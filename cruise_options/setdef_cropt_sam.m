@@ -18,8 +18,8 @@ switch scriptname
         switch oopt
             case 'nbotfile'
                 crhelp_str = {'Sets output file to which to write information about Niskins from the .bl file'
-                    'default: one file per station: [root_botcsv ''/bot_'' mcruise ''_'' stn_string ''.csv'']'};
-                botfile = [root_botcsv '/' prefix1 stn_string '.csv'];
+                    ['default: one file per station: ' fullfile(root_botcsv, ['bot_' mcruise '_' stn_string '.csv'])'};
+                botfile = fullfile(root_botcsv, [prefix1 stn_string '.csv']);
             case 'nispos'
                 crhelp_str = {'niskin gives the bottle numbers (e.g. serial numbers, if known) for niskins in '
                     'carousel positions 1 through nnisk. defaults to [1:24].'};
@@ -47,8 +47,8 @@ switch scriptname
             case 'salfiles'
                 crhelp_str = {'salfiles is a list of files to load, defaults to '
                     'all sal_cruise_*.csv files in BOTTLE_SAL directory'};
-                salfiles = struct2cell(dir([root_sal '/sal_' mcruise '_*.csv']));
-                salfiles = salfiles(1,:);
+                salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv']));
+                salfiles = {salfiles.name};
             case 'salnames'
                 crhelp_str = {'place to change fieldnames, combine fields, etc. after '
                     'loading'}; %per file
@@ -102,7 +102,7 @@ switch scriptname
                 crhelp_str = {'ofiles is a list of csv files containing oxygen data to be loaded;'
                     'defaults to all oxy_cruise_*.csv files in BOTTLE_OXY directory.'};
                 ofpat = ['/oxy_' mcruise '_*.csv'];
-ofiles = dir([root_oxy '/' ofpat]);
+                ofiles = dir(fullfile(root_oxy, ofpat));
             case 'oxy_parse'
                 crhelp_str = {'1) Variables to be passed to m_load_samin to identify column headers'
                     'and units: '
@@ -161,7 +161,7 @@ ofiles = dir([root_oxy '/' ofpat]);
     case 'mnut_01'
         switch oopt
             case 'nutcsv'
-                infile = [root_nut '/nut_' mcruise '_all.csv'];
+                infile = fullfile(root_nut, ['nut_' mcruise '_all.csv']);
             case 'sampnum_parse'
                 %default is not to get into this branch, but some cruises may require cases to parse station and niskin numbers out of strings (see opt_jc159 mnut_01 for example)
             case 'vars'
@@ -201,7 +201,7 @@ ofiles = dir([root_oxy '/' ofpat]);
     case 'mpig_01'
         switch oopt
             case 'pigcsv'
-                infile = [root_pig '/pig_' mcruise '_all.csv'];
+                infile = fullfile(root_pig, ['pig_' mcruise '_all.csv']);
             case 'sampnum_parse'
                 %default is not to get into this branch, but some cruises may require cases to parse station and niskin numbers out of strings (see opt_jc159 mpig_01 for example)
             case 'vars'
@@ -219,7 +219,7 @@ ofiles = dir([root_oxy '/' ofpat]);
     case 'mco2_01'
         switch oopt
             case 'infile'
-                input_file_name = [root_co2 '/co2_' mcruise '_01.mat'];
+                input_file_name = fullfile(root_co2, ['co2_' mcruise '_01.mat']);
             case 'varnames' %capitalisation is important!
                 varnames = {'alk' 'TA'
                     'alk_flag' 'TAflag'
@@ -235,7 +235,7 @@ ofiles = dir([root_oxy '/' ofpat]);
     case 'mcfc_01'
         switch oopt
             case 'inputs'
-                infile = [root_cfc '/cfc_' mcruise '_all.csv'];
+                infile = fullfile(root_cfc, ['cfc_' mcruise '_all.csv']);
                 %set varsunits:
                 %list of
                 %invar inunits outvar outunits scale_factor

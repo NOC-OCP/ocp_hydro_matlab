@@ -6,25 +6,25 @@ iim = find(strncmp('em12', shortnames, 4));
 iss = 0; ism = 0;
 
 if length(iis)>0
-    filesbin = [root_u '/' udirs{iis} '/' shortnames{iis} '_' mcruise '_d' daystr '_edt.nc'];
-    filesbot = [root_u '/' udirs{iis} '/' shortnames{iis} '_' mcruise '_d' daystr '_edt_av.nc'];
+    filesbin = fullfile(root_u, udirs{iis}, [shortnames{iis} '_' mcruise '_d' daystr '_edt.nc']);
+    filesbot = fullfile(root_u, udirs{iis}, [shortnames{iis} '_' mcruise '_d' daystr '_edt_av.nc']);
     if exist(filesbin,'file')
         wkfile = 'wkfile_bathyav1.nc';
         MEXEC_A.MARGS_IN = {filesbin; wkfile; '/'; 'time'; '-150,1e10,300'; '/'};
         mavmed
-        unix(['/bin/mv ' wkfile ' ' filesbot]);
+        movefile(wkfile, filesbot);
         iss = 1;
     end
 end
 
 if length(iim)>0
-    filembin = [root_u '/' udirs{iim} '/' shortnames{iim} '_' mcruise '_d' daystr '_edt.nc'];
-    filembot = [root_u '/' udirs{iim} '/' shortnames{iim} '_' mcruise '_d' daystr '_edt_av.nc'];
+    filembin = fullfile(root_u, udirs{iim}, [shortnames{iim} '_' mcruise '_d' daystr '_edt.nc']);
+    filembot = fullfile(root_u, udirs{iim}, [shortnames{iim} '_' mcruise '_d' daystr '_edt_av.nc']);
     if exist(filembin,'file')
         wkfile = 'wkfile_bathyav2.nc';
         MEXEC_A.MARGS_IN = {filembin; wkfile; '/'; 'time'; '-150,1e10,300'; '/'};
         mavmed
-        unix(['/bin/mv ' wkfile ' ' filembot]);
+        movefile(wkfile, filembot);
         ism = 1;
     end
 end

@@ -15,8 +15,8 @@ root_templates = mgetdir('M_TEMPLATES');
 root_ctd = mgetdir('M_CTD');
 
 % get bottom index
-infile1 = [root_ctd '/ctd_' mcruise '_' stn_string '_psal'];
-infile0 = [root_ctd '/ctd_' mcruise '_' stn_string '_24hz'];
+infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
+infile0 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
 [d1, h1] = mloadq(infile1,'time','scan','press',' ');
 d24 = mloadq(infile0,'scan',' ');
 scriptname = mfilename; oopt = 'kbot'; get_cropt
@@ -35,7 +35,7 @@ fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 
 % write
 dataname = ['dcs_' mcruise '_' stn_string];
-otfile = [root_ctd '/' dataname];
+otfile = fullfile(root_ctd, dataname);
 
 varnames = {'statnum' 'time_bot' 'dc_bot' 'scan_bot' 'press_bot' 'dc24_bot'};
 varunits = {'number' 'seconds' 'number' 'number' 'dbar' 'number'};

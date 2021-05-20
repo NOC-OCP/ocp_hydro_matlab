@@ -42,8 +42,8 @@ disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec']) %%%***add something 
 d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if length(ii)>0; d = d(1:ii-1); else; d = []; end
 mpath = {['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
          ['/noc/mpoc/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-         [d MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-         [d MEXEC.MSCRIPT_CRUISE_STRING];
+         fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING,'mcruise');
+         fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING);
 	 ['/local/users/pstar/cruise']};
 fp = 0; n=1;
 while fp==0 & n<length(mpath)
@@ -63,40 +63,40 @@ clear mpath d fp n
 disp(['MEXEC root: ' MEXEC.mstar_root])
 
 % Set path for mexec source
-MEXEC.mexec_source_root = [MEXEC.mstar_root '/sw/mexec'];
+MEXEC.mexec_source_root = fullfile(MEXEC.mstar_root,'sw','mexec');
 if length(which('m_common'))==0 % this is in msubs
    disp('adding mexec source to path')
    addpath(MEXEC.mexec_source_root) 
    % add paths below source
-   addpath([MEXEC.mexec_source_root '/pstar/subs'])
-   addpath([MEXEC.mexec_source_root '/pstar/progs'])
-   addpath([MEXEC.mexec_source_root '/source/mexec_snctools'])
-   addpath([MEXEC.mexec_source_root '/source/mextras'])
-   addpath([MEXEC.mexec_source_root '/source/mscs'])
-   addpath([MEXEC.mexec_source_root '/source/mstats'])
-   addpath([MEXEC.mexec_source_root '/source/msubs'])
-   addpath([MEXEC.mexec_source_root '/source/mtechsas'])
-   addpath([MEXEC.mexec_source_root '/source/unfinished'])
-   addpath([MEXEC.mexec_source_root '/source/mrvdas']) % addition on jc211; 28 jan 2021; use rvdas as main data acquisition
-   addpath([MEXEC.mexec_source_root '/source/mnew']) % addition on jc211; mfsave
+   addpath(fullfile(MEXEC.mexec_source_root,'pstar','subs'))
+   addpath(fullfile(MEXEC.mexec_source_root,'pstar','progs'))
+   addpath(fullfile(MEXEC.mexec_source_root,'source','mexec_snctools'))
+   addpath(fullfile(MEXEC.mexec_source_root,'source','mextras'))
+   addpath(fullfile(MEXEC.mexec_source_root,'source','mscs'))
+   addpath(fullfile(MEXEC.mexec_source_root,'source','mstats'))
+   addpath(fullfile(MEXEC.mexec_source_root,'source','msubs'))
+   addpath(fullfile(MEXEC.mexec_source_root,'source','mtechsas'))
+   addpath(fullfile(MEXEC.mexec_source_root,'source','unfinished'))
+   addpath(fullfile(MEXEC.mexec_source_root,'source','mrvdas')) % addition on jc211; 28 jan 2021; use rvdas as main data acquisition
+   addpath(fullfile(MEXEC.mexec_source_root,'source','mnew')) % addition on jc211; mfsave
 
    % paths to other useful libraries %%%***could make this search for whatever version is there? 
    if MEXEC.ix_ladcp
-       mpath = [MEXEC.mstar_root '/sw/general_sw/LDEO_IX_13'];
-       if exist(mpath)==7; addpath(mpath); addpath([mpath '/geomag']); end
+       mpath = fullfile(MEXEC.mstar_root, 'sw','general_sw','LDEO_IX_13');
+       if exist(mpath)==7; addpath(mpath); addpath(fullfile(mpath, 'geomag')); end
    end
-   mpath = [MEXEC.mstar_root '/sw/general_sw/m_map_v1_4'];
+   mpath = fullfile(MEXEC.mstar_root, 'sw','general_sw','m_map_v1_4');
    if exist(mpath)==7; addpath(mpath); end
-   %mpath = [MEXEC.mstar_root '/sw/general_sw/gamma_n_v3_05_10'];
+   %mpath = fullfile(MEXEC.mstar_root, 'sw','general_sw','gamma_n_v3_05_10');
    %if exist(mpath)==7; addpath(mpath); else; warning('could not add gamma_n to path'); end % only used in mcfc_03
-   mpath = [MEXEC.mstar_root '/sw/general_sw/seawater_ver3_2'];
+   mpath = fullfile(MEXEC.mstar_root, 'sw','general_sw','seawater_ver3_2');
    if exist(mpath)==7; addpath(mpath); end
-   mpath = [MEXEC.mstar_root '/sw/general_sw/gsw_matlab_v3_03'];
-   if exist(mpath)==7; addpath(mpath); addpath([mpath '/library']); addpath([mpath '/thermodynamics_from_t']); else; warning('could not add gsw to path'); end
+   mpath = fullfile(MEXEC.mstar_root, 'sw','general_sw','gsw_matlab_v3_03');
+   if exist(mpath)==7; addpath(mpath); addpath(fullfile(mpath,'library')); addpath(fullfile(mpath,'thermodynamics_from_t')); else; warning('could not add gsw to path'); end
 end
 
 % Set path for directory with housekeeping files (in subdirectories version and history)
-MEXEC.housekeeping_root = [MEXEC.mstar_root '/data/mexec_housekeeping'];  
+MEXEC.housekeeping_root = fullfile(MEXEC.mstar_root, 'data', 'mexec_housekeeping');  
 
 % declare MEXEC_G and MEXEC_A as global variables
 m_common
@@ -165,12 +165,12 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
         MEXEC_G.Mrsh_machine = 'jruj';  % remote machine for rvs datapup command
     case 'kn'
-        MEXEC_G.default_navstream = 'nav/gps'; %guess
-        MEXEC_G.default_hedstream = 'nav/gyro_s'; %guess
+        MEXEC_G.default_navstream = fullfile('nav','gps'); %guess
+        MEXEC_G.default_hedstream = fullfile('nav','gyro_s'); %guess
         MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
     otherwise
-        MEXEC_G.default_navstream = 'nav/gps'; %guess
-        MEXEC_G.default_hedstream = 'nav/gyro_s'; %guess
+        MEXEC_G.default_navstream = fullfile('nav','gps'); %guess
+        MEXEC_G.default_hedstream = fullfile('nav','gyro_s'); %guess
         merr = ['Ship ''' MEXEC_G.Mship ''' not recognised'];
         fprintf(2,'%s\n',merr);
         return
@@ -180,44 +180,44 @@ MEXEC_G.PLATFORM_TYPE= 'ship';
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normally be changed
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 
-MEXEC_G.MEXEC_DATA_ROOT = [MEXEC.mstar_root '/data']; 
-MEXEC.mexec_processing_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/mexec_processing_scripts']; 
+MEXEC_G.MEXEC_DATA_ROOT = fullfile(MEXEC.mstar_root, 'data'); 
+MEXEC.mexec_processing_scripts = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'mexec_processing_scripts'); 
 
 if length(which('get_cropt'))==0 % this function is in mexec_processing_scripts/cruise_options
    disp('adding mexec_processing_scripts subdirectories to path')
-   addpath([MEXEC.mexec_processing_scripts '/bottle_samples'])
-   addpath([MEXEC.mexec_processing_scripts '/cruise_options/'])
-   addpath([MEXEC.mexec_processing_scripts '/gridsec'])
-   addpath([MEXEC.mexec_processing_scripts '/ladcp_scripts'])
-   addpath([MEXEC.mexec_processing_scripts '/plots'])
-   addpath([MEXEC.mexec_processing_scripts '/summaries/'])
-   addpath([MEXEC.mexec_processing_scripts '/utilities/'])
-   addpath([MEXEC.mexec_processing_scripts '/uway/'])
-   addpath([MEXEC.mexec_processing_scripts '/varlists/'])
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'bottle_samples'))
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'cruise_options'))
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'gridsec'))
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'ladcp_scripts'))
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'plots'))
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'summaries'))
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'utilities'))
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'uway'))
+   addpath(fullfile(MEXEC.mexec_processing_scripts, 'varlists'))
 end
 
 %set data directories within MEXEC_G.MEXEC_DATA_ROOT
 MEXEC_G.MDIRLIST = {
     'M_CTD' 'ctd'
-    'M_CTD_CNV' 'ctd/ASCII_FILES'
-    'M_CTD_BOT' 'ctd/ASCII_FILES'
-    'M_CTD_WIN' 'ctd/WINCH'
+    'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
+    'M_CTD_BOT' fullfile('ctd','ASCII_FILES')
+    'M_CTD_WIN' fullfile('ctd','WINCH')
     'M_CTD_DEP' 'station_depths'
-    'M_BOT_SAL' 'ctd/BOTTLE_SAL'
-    'M_BOT_OXY' 'ctd/BOTTLE_OXY'
-    'M_BOT_NUT' 'ctd/BOTTLE_NUT'
-    'M_BOT_PIG' 'ctd/BOTTLE_PIG'
-    'M_BOT_CO2' 'ctd/BOTTLE_CO2'
-    'M_BOT_CFC' 'ctd/BOTTLE_CFC'
-    'M_BOT_CH4' 'ctd/BOTTLE_CH4'
-    'M_BOT_CHL' 'ctd/BOTTLE_SHORE'
-    'M_BOT_ISO' 'ctd/BOTTLE_SHORE'
+    'M_BOT_SAL' fullfile('ctd','BOTTLE_SAL')
+    'M_BOT_OXY' fullfile('ctd','BOTTLE_OXY')
+    'M_BOT_NUT' fullfile('ctd','BOTTLE_NUT')
+    'M_BOT_PIG' fullfile('ctd','BOTTLE_PIG')
+    'M_BOT_CO2' fullfile('ctd','BOTTLE_CO2')
+    'M_BOT_CFC' fullfile('ctd','BOTTLE_CFC')
+    'M_BOT_CH4' fullfile('ctd','BOTTLE_CH4')
+    'M_BOT_CHL' fullfile('ctd','BOTTLE_SHORE')
+    'M_BOT_ISO' fullfile('ctd','BOTTLE_SHORE')
     'M_SAM' 'ctd'
-    'M_TEMPLATES' 'mexec_processing_scripts/varlists'
+    'M_TEMPLATES' fullfile('mexec_processing_scripts','varlists')
     'M_VMADCP' 'vmadcp'
     'M_LADCP' 'ladcp'
-    'M_IX' 'ladcp/ix'
-    'M_SBE35' 'ctd/ASCII_FILES/SBE35'
+    'M_IX' fullfile('ladcp','ix')
+    'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
     'M_SUM' 'collected_files'
   };
 
@@ -225,14 +225,14 @@ MEXEC_G.MDIRLIST = {
 switch MEXEC_G.Mshipdatasystem
     case 'techsas'
         MEXEC_G.uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
-        MEXEC_G.uway_root = [MEXEC_G.MEXEC_DATA_ROOT '/techsas/netcdf_files_links'];
+        MEXEC_G.uway_root = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'techsas', 'netcdf_files_links');
         if strncmp(computer, 'MAC', 3); MEXEC_G.uway_root = [MEXEC_G.uway_root '_mac']; end
         MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_TECHSAS' 'techsas'}];
     case 'scs'
         MEXEC_G.uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
-        MEXEC_G.uway_root = [MEXEC_G.MEXEC_DATA_ROOT '/scs_raw']; % scs raw data on logger machine
-        MEXEC_G.uway_sed = [MEXEC_G.MEXEC_DATA_ROOT '/scs_sed']; % scs raw data on logger machine
-        MEXEC_G.uway_mat = [MEXEC_G.MEXEC_DATA_ROOT '/scs_mat']; % local directory for scs converted to matlab
+        MEXEC_G.uway_root = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'scs_raw'); % scs raw data on logger machine
+        MEXEC_G.uway_sed = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'scs_sed'); % scs raw data on logger machine
+        MEXEC_G.uway_mat = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'scs_mat'); % local directory for scs converted to matlab
         MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
             {'M_SCSRAW' 'scs_raw'}
             {'M_SCSMAT' 'scs_mat'}
@@ -240,7 +240,7 @@ switch MEXEC_G.Mshipdatasystem
             ];
     case 'rvdas'
         MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
-        MEXEC_G.RVDAS_CSVROOT = [MEXEC_G.MEXEC_DATA_ROOT '/rvdas/rvdas_csv_tmp/'];
+        MEXEC_G.RVDAS_CSVROOT = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'rvdas', 'rvdas_csv_tmp');
         MEXEC_G.RVDAS_MACHINE = ['rvdas.' MEXEC_G.Mship '.local'];
         MEXEC_G.RVDAS_USER = 'rvdas';
         MEXEC_G.RVDAS_DATABASE = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
@@ -258,7 +258,7 @@ while ud_is_current == 0 & ud_runs == 0 & ufail == 0
         end
     catch
         try
-            unix(['/bin/rm -f ' MEXEC.mexec_processing_scripts '/uway/m_udirs.m']);
+            delete(fullfile(MEXEC.mexec_processing_scripts, 'uway', 'm_udirs.m'));
             m_setudir
             sud_runs = 1;
             try
@@ -301,13 +301,13 @@ MEXEC.nl = strfind(MEXEC.uname,sprintf('\n')); %strip newlines out of unix respo
 if ~isempty(MEXEC.nl); MEXEC.uname(MEXEC.nl) = []; end
 MEXEC_G.MUSER = [MEXEC.uuser ' on ' MEXEC.uname];
 
-MEXEC.housekeeping_version = [MEXEC.housekeeping_root '/version'];
+MEXEC.housekeeping_version = fullfile(MEXEC.housekeeping_root, 'version');
 MEXEC_G.Mhousekeeping_version = MEXEC.housekeeping_version;
-MEXEC.housekeeping_history = [MEXEC.housekeeping_root '/history'];
+MEXEC.housekeeping_history = fullfile(MEXEC.housekeeping_root, 'history');
 
 % Make version file and lock file if version file doesn't already exist.
 % Should only happen once per cruise or data installation
-MEXEC_G.VERSION_FILE = [MEXEC.housekeeping_version '/' MEXEC.version_file_name];
+MEXEC_G.VERSION_FILE = fullfile(MEXEC.housekeeping_version, MEXEC.version_file_name);
 MEXEC.versfile = MEXEC_G.VERSION_FILE;
 MEXEC.simplelockfile = [MEXEC.versfile(1:end-4) '_lock'];
 if exist(MEXEC_G.VERSION_FILE,'file') ~= 2
