@@ -28,9 +28,6 @@
 
 
 % update all scs matlab files
-%[MEXEC.status currentdir] = unix('pwd');
-%mcd ('M_SCSMAT'); % change working directory
-
 ms_update_aco_to_mat('anemometer')
 ms_update_aco_to_mat('ashtech')
 ms_update_aco_to_mat('dopplerlog')
@@ -57,6 +54,3 @@ ms_update_aco_to_mat('seatex-zda')
 ms_update_aco_to_mat('tsshrp')
 ms_update_aco_to_mat('usbl-gga')
 ms_update_aco_to_mat('winch')
-
-
-%cmd = ['cd ' currentdir]; eval(cmd);

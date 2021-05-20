@@ -13,7 +13,7 @@ m_common
 
 ii = find(strcmp(M_ABBREV, MEXEC_G.MDIRLIST(:,1)) | strcmp(['M_' upper(M_ABBREV)], MEXEC_G.MDIRLIST(:,1)));
 if length(ii)==1
-   mpath = [MEXEC_G.MEXEC_DATA_ROOT '/' MEXEC_G.MDIRLIST{ii,2}];
+   mpath = fullfile(MEXEC_G.MEXEC_DATA_ROOT, MEXEC_G.MDIRLIST{ii,2});
 else
    warning([M_ABBREV ' set ' num2str(length(ii)) ' times in m_setup'])
    mpath = '';

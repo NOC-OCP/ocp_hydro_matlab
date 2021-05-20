@@ -66,7 +66,7 @@ for kl = 1:nlines
 end
 
 
-system(['/bin/rm ' csvname]);
+rmfile(csvname);
 
 
 return

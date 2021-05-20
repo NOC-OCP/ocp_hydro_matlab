@@ -65,8 +65,7 @@ if ~isnan(Mversionlock) % use lock file
     userlockfile = [MEXEC.simplelockfile '_' nowstr '_' userstr '_' randstr]; % this should be a unique string, including a time and a random number.
 
     while 1
-        cmd = ['mv ' MEXEC.simplelockfile ' ' userlockfile];
-        [us ur] = unix(cmd);
+        [us, ur] = movefile(MEXEC.simplelockfile, userlockfile);
         if us == 0 & exist(userlockfile,'file') == 2 % successful rename of lock file
             m = 'Version lock file moved to user lock file so version file is locked: OK';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m)
@@ -109,8 +108,7 @@ end
 versions(index) = new_version;
 save(MEXEC.versfile,'datanames','versions');
 if ~isnan(Mversionlock) % reset lock file
-    cmd = ['mv ' userlockfile ' ' MEXEC.simplelockfile];
-    [us ur] = unix(cmd);
+    [us ur] = movefile(userlockfile, MEXEC.simplelockfile);
 
     while 1
         if us == 0 & exist(MEXEC.simplelockfile,'file') == 2 & exist(userlockfile,'file') ~=2 % seems to be a successful rename of lock file
@@ -119,7 +117,7 @@ if ~isnan(Mversionlock) % reset lock file
             break
         elseif us ~=0
             m1 = 'There has been a problem restoring the version lock file in subroutine m_verson.m:';
-            m20 = 'The unix rename command returned a non-zero error return code';
+            m20 = 'movefile returned a non-zero error return code';
             m2 = 'This needs investigation and repair before any more processing is done';
             m3 = ' ';
             m4 = 'The intention in m_verson is that after updating the version file,';
@@ -144,7 +142,7 @@ if ~isnan(Mversionlock) % reset lock file
             break
         else
             % us is zero, but MEXEC.simplelockfile not there. This could be because another mstar
-            % program grabbed it between the unix rename and the check for success of rename
+            % program grabbed it between movefile and the check for success of rename
             % pause and then go round the loop again
             m = 'Rename of version lock file after updating version appeared to be successful,';
             m1 = 'but name check failed, possibly due to use by other program. pausing for recheck';

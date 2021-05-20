@@ -40,10 +40,6 @@ m_common
 MEXEC_A.Mprog = 'mcarter';
 m_proghd
 
-% fn = [MCARTER_DIRECTORY '/carter'];
-% d = load(fn); % load mat file.
-
-
 % error check on dimensions of input arguments; easiest check is to attempt
 % to add them and let matlab do the check for us.
 try

@@ -57,7 +57,6 @@ def = mrdefine;
 table = mrresolve_table(table); % table is now an RVDAS table name for sure.
 vdef = def.mrtables.(table);
 
-% rootcsv = '/local/users/pstar/jc211/mcruise/data/csv_gash/';
 rootcsv = MEXEC_G.RVDAS_CSVROOT;
 
 csvname = [rootcsv table '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv'];
@@ -88,7 +87,7 @@ if ncyc == 0;
     d.ncyc = ncyc;
     d.vdef = vdef;
     
-    system(['/bin/rm -f ' csvname]);
+    rmfile(csvname);
 
     return
     
@@ -113,7 +112,7 @@ if ~ischar(t)
     d.ncyc = 0;
     d.vdef = vdef;
     
-    system(['/bin/rm -f ' csvname]);
+    rmfile(csvname);
 
     return
 end
@@ -133,7 +132,7 @@ fclose(fid);
 dn2 = mrconverttime({t});
 
 
-system(['/bin/rm -f ' csvname]);
+rmfile(csvname);
 
 if isempty(qflag)
     fprintf(MEXEC_A.Mfidterm,'\n%s\n\n',table)

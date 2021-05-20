@@ -19,38 +19,11 @@ function tstreams = mtgetstreams
 %
 m_common
 
-% some users like to alias ls to have options that return extra chars at the
-% end of file names
-[MEXEC.status result] = unix(['/bin/ls -1 ' MEXEC_G.uway_root]);
+files = dir(fullfile(MEXEC_G.uway_root,'*.*'));
+fnames = {d.name};
+fnames = fnames(cellfun('length',fnames)>16); %just in case there are other files
 
-snl = sprintf('\n');
-scr = sprintf('\r');
+strpart = @(tfilename) tfilename(17:end) %cut off date and time characters
+streams = cellfun(strpart, fnames, 'UniformOutput', false); %stream name parts of file names
 
-% unpack the result which seems to be returned as a single string
-% containing (on unix) newline chars.
-
-delim = snl; % delimeter of unix result seems to be newline on nosea1 (linux) on jc032
-
-kd = strfind(result,delim);
-kfiles = 0;
-clear fnames
-while length(kd) > 0
-    kfiles = kfiles+1;
-    fnames{kfiles} = result(1:kd(1)-1);
-    result(1:kd(1)) = [];
-    kd = strfind(result,delim);
-end
-  
-nfiles = length(fnames);
-streams = cell(1,nfiles);
-
-for kf = 1:length(fnames) % sort out all the filenames
-    fn = fnames{kf};
-    streams{kf} = fn(17:end);
-end
-
-[ustreams ui uj] = unique(streams); % unique file/instrument streams
-
-tstreams = ustreams(:);
-
-return
+tstreams = unique(streams(:)); %unique file/instrument streams

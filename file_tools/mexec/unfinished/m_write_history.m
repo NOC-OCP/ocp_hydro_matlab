@@ -29,7 +29,7 @@ dnames_u = unique(dnames);
 
 for k = 1:length(dnames_u)
     % list all input and output filenames
-    MEXEC_A.Mhistory_filename = [history_directory '/' dnames_u{k}];
+    MEXEC_A.Mhistory_filename = fullfile(history_directory, dnames_u{k});
     fid = fopen(MEXEC_A.Mhistory_filename,'a');
     nlines = 0;
     % BAK 13 Nov 2009: Write the calling tree for the program, so we can

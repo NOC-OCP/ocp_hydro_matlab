@@ -49,9 +49,9 @@ tic; toco=toc; % start clock
 faco = [tstream '.ACO'];
 ftpl = [tstream '.TPL'];
 fmat = [tstream '.mat'];
-fullfaco = [MEXEC_G.uway_sed '/' faco];
-fullftpl = [MEXEC_G.uway_sed '/' ftpl];
-fullfmat = [MEXEC_G.uway_mat '/' fmat];
+fullfaco = fullfile(MEXEC_G.uway_sed,faco);
+fullftpl = fullfile(MEXEC_G.uway_sed,ftpl);
+fullfmat = fullfile(MEXEC_G.uway_mat,fmat);
 
 
 if exist(fullfmat,'file') == 2

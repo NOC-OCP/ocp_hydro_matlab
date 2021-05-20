@@ -34,7 +34,7 @@ tunder(strfind(tunder,'-')) = '_';
 tunder(strfind(tunder,'.')) = '_';
 
 root_template = mgetdir('M_TEMPLATES');
-fntemplatein = [root_template '/' MEXEC_G.Mshipdatasystem '_renamelist_' tunder '.csv'];
+fntemplatein = fullfile(root_template, [MEXEC_G.Mshipdatasystem '_renamelist_' tunder '.csv']);
 
 % clean up the translation table if needed. This code was lifted from
 % another script but should not be needed for this application.

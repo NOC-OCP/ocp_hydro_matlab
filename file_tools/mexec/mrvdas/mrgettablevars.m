@@ -49,7 +49,7 @@ system(psql_string);
 fid = fopen(csvname,'r');
 t = fgetl(fid);  % t is now the comma delimited list of variable names
 fclose(fid);
-system(['/bin/rm -f ' csvname]);
+rmfile(csvname);
 
 t = [',' t ','];
 kc = strfind(t,',');

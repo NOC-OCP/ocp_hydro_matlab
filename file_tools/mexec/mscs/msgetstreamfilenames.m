@@ -36,45 +36,25 @@ function matnames = msgetstreamfilenames(instream)
 m_common
 tstream = msresolve_stream(instream);
 
-% some users like to alias ls to have options that return extra chars at the
-% end of file names
-[MEXEC.status result] = unix(['/bin/ls -1 ' MEXEC_G.uway_sed '/' tstream '.ACO']);
+files = dir(fullfile(MEXEC_G.uway_sed, [tstream '.ACO']));
 
-snl = sprintf('\n');
-scr = sprintf('\r');
+if ~isempty(files)
 
-% unpack the result which seems to be returned as a single string
-% containing (on unix) newline chars.
+    fnames = {d.name};
+    filenames = fnames(cellfun('length',fnames)>4); %just in case there are other files
 
-delim = snl; % delimeter of unix result seems to be newline on nosea1 (linux) on jc032
+    strpart = @(tfilename) tfilename(1:end-4) %cut suffix
+    allstreams = cellfun(strpart, filenames, 'UniformOutput', false); %stream name parts of file names
 
-kd = strfind(result,delim);
-kfiles = 0;
-clear fnames
+    kmatch = strmatch(tstream,allstreams);
+    matnames = filenames(kmatch);
+    matnames = matnames(:);
 
-while length(kd) > 0
-    kfiles = kfiles+1;
-    fnames{kfiles} = result(1:kd(1)-1);
-    result(1:kd(1)) = [];
-    kd = strfind(result,delim);
+else
+
+    m = 'There appears to be a problem in msvars';
+    m2 = result;
+    fprintf(MEXEC_A.Mfider,'%s\n',' ',m,m2,' ')
+    return
+
 end
-
-nfiles = length(fnames);
-allstreams = cell(1,nfiles);
-filenames = allstreams;
-
-for kf = 1:length(fnames) % sort out all the filenames
-    fn = fnames{kf};
-    slashind = strfind(fn,'/'); % remove anything up to and including the last slash
-    if ~isempty(slashind); fn = fn(slashind(end)+1:end); end
-%     allstreams{kf} = fn(17:end); % line of code from techsas, in which
-%     date occurs at start of file name
-    allstreams{kf} = fn(1:end-4); % truncate '.ACO' form end of file
-    filenames{kf} = fn;
-end
-
-kmatch = strmatch(tstream,allstreams);
-matnames = filenames(kmatch);
-matnames = matnames(:);
-
-return

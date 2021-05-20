@@ -223,7 +223,7 @@ if isempty(qflag)
         fprintf(MEXEC_A.Mfidterm,'%d %s %s %s %s\n',size(ds,1),' data cycles loaded from ',datestr(dv1,'yyyy-mm-dd HH:MM:SS'), ' to ',datestr(dv2,'yyyy-mm-dd HH:MM:SS'));
     end
 end
-system(['/bin/rm ' fnin]);
+rmfile(fnin);
 clear ds
 
 switch nargout

@@ -44,13 +44,6 @@ if strncmp(tonly,'f',1) % faster option; don't count numdc in every file
     numtest = numbytes_file;
     fclose(fid);
 else
-% % % % %     [numlines_MEXEC.status numlines] = unix(['wc -l ' fullfn]); % use unix wc to count number of lines
-% % % % % 
-% % % % %     numlines = m_remove_outside_spaces(numlines);
-% % % % %     spindex = strfind(numlines,' ');
-% % % % %     numlines = numlines(1:spindex-1);
-% % % % %     numdc = str2double(numlines);
-% % % % %     numtest = numdc;
     fid = fopen(fullfn,'r'); % open file read only
     fseek(fid,0,1); % move to end of file
     numbytes_file = ftell(fid); % check the number of bytes at this instant

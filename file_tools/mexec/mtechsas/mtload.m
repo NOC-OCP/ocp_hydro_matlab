@@ -76,7 +76,7 @@ if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
 
 for kf = 1:nf
     fn = fnames{kf};
-    fullfn = [MEXEC_G.uway_root '/' fn];
+    fullfn = fullfile(MEXEC_G.uway_root, fn);
     [dc1(kf) dc2(kf)] = mtgetdcrange(fn,dn1,dn2);
     totdc = totdc + dc2(kf)-dc1(kf)+1;
 end
@@ -95,7 +95,7 @@ for kv = varnums
 
     for kf = 1:nf
         fn = fnames{kf};
-        fullfn = [MEXEC_G.uway_root '/' fn];
+        fullfn = fullfile(MEXEC_G.uway_root, fn);
         nk = dc2(kf)-dc1(kf)+1; % load this many data cycles on this operation
         vin = nc_varget(fullfn,vars{kv},dc1(kf)-1,nk);
         vuse(kount+1:kount+nk) = vin;

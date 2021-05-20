@@ -10,8 +10,7 @@ function [vars units] = msgetvars(instream)
 % 20090318-235958-SBE-SBE45.TSG
 % becomes SBE-SBE45.TSG
 % 
-% The var and units list is taken from the first matching file in a unix
-% ls command.
+% The var and units list is taken from the first matching file in a dir command
 %
 % The scs files are searched for in a directory MEXEC_G.uway_root defined in
 % the mexec setup. At sea, this will typically be a data area exported from a
@@ -27,32 +26,26 @@ function [vars units] = msgetvars(instream)
 m_common
 tstream = msresolve_stream(instream);
 
-% some users like to alias ls to have options that return extra chars at the
-% end of file names
-[MEXEC.status result] = unix(['/bin/ls -1 ' MEXEC_G.uway_sed '/' tstream '.TPL' ' | head -1']);
+files = dir(fullfile(MEXEC_G.uway_sed, [tstream '.TPL']));
 
-if MEXEC.status == 1
-    m = 'There appears to be a problem in mtvars';
+if ~isempty(files)
+
+    ncf.name = files(1).name;
+
+    techsas_varnames = m_unpack_varnames(ncf);
+
+    for k = 1:length(techsas_varnames)
+        techsas_units{k} = nc_attget(ncf.name,techsas_varnames{k},'units');
+    end
+
+    vars = techsas_varnames(:);
+    units = techsas_units(:);
+
+else
+
+    m = 'There appears to be a problem in msvars';
     m2 = result;
     fprintf(MEXEC_A.Mfider,'%s\n',' ',m,m2,' ')
     return
 end
 
-% remove any c/r or nl characters from the result
-snl = sprintf('\n'); knl = strfind(result,snl); result(knl) = [];
-scr = sprintf('\r'); kcr = strfind(result,scr); result(kcr) = [];
-
-
-scs_name = result;
-allcell = mtextdload(scs_name); % load the comma-delimited var names and units into a cell array
-numvarsfound = length(allcell);
-vars = cell(numvarsfound,1); % set up empty cells
-units = vars;
-
-for kloop = 1:numvarsfound
-    thisrow = allcell{kloop};
-    vars{kloop} = thisrow{2};
-    units{kloop} = thisrow{3};
-end
-
-return

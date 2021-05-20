@@ -54,7 +54,7 @@ else
 end
 
 
-MEXEC_G.MEXEC_CWD = [MEXEC_G.MEXEC_DATA_ROOT '/' dn]; % set current working directory
+MEXEC_G.MEXEC_CWD = fullfile(MEXEC_G.MEXEC_DATA_ROOT, dn); % set current working directory
 m2 = ['MEXEC_G.MEXEC_CWD set to : ' MEXEC_G.MEXEC_CWD];
 if nargin < 2
     if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m2); end

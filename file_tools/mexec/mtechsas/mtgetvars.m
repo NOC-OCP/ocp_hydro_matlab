@@ -10,8 +10,7 @@ function [vars units] = mtgetvars(instream)
 % 20090318-235958-SBE-SBE45.TSG
 % becomes SBE-SBE45.TSG
 % 
-% The var and units list is taken from the first matching file in a unix
-% ls command.
+% The var and units list is taken from the first matching file in a dir command.
 %
 % The techsas files are searched for in a directory MEXEC_G.uway_root defined in
 % the mexec setup. At sea, this will typically be a data area exported from a
@@ -20,30 +19,26 @@ function [vars units] = mtgetvars(instream)
 m_common
 tstream = mtresolve_stream(instream);
 
-% some users like to alias ls to have options that return extra chars at the
-% end of file names
-[MEXEC.status result] = unix(['/bin/ls -1 ' MEXEC_G.uway_root '/*' tstream ' | head -1']);
+files = dir(fullfile(MEXEC_G.uway_root, ['*' tstream]));
 
-if MEXEC.status == 1
+if ~isempty(files)
+
+    ncf.name = files(1).name;
+
+    techsas_varnames = m_unpack_varnames(ncf);
+
+    for k = 1:length(techsas_varnames)
+        techsas_units{k} = nc_attget(ncf.name,techsas_varnames{k},'units');
+    end
+
+    vars = techsas_varnames(:);
+    units = techsas_units(:);
+
+else
+
     m = 'There appears to be a problem in mtvars';
     m2 = result;
     fprintf(MEXEC_A.Mfider,'%s\n',' ',m,m2,' ')
     return
 end
 
-% remove any c/r or nl characters from the result
-snl = sprintf('\n'); knl = strfind(result,snl); result(knl) = [];
-scr = sprintf('\r'); kcr = strfind(result,scr); result(kcr) = [];
-
-
-ncf.name = result;
-
-techsas_varnames = m_unpack_varnames(ncf);
-
-for k = 1:length(techsas_varnames)
-    techsas_units{k} = nc_attget(ncf.name,techsas_varnames{k},'units');
-end
-
-vars = techsas_varnames(:);
-units = techsas_units(:);
-return
