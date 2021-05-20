@@ -60,13 +60,14 @@ if ~isnan(Mversionlock) % use lock file
     % of CR and NL in the userstr.
     userstr(strfind(userstr,char(13))) = []; % remove CR & NL
     userstr(strfind(userstr,char(10))) = []; % remove CR & NL
-
+    userstr(strfind(userstr,'\')) = []; %remove \
+    
     MEXEC.simplelockfile = [MEXEC.versfile(1:end-4) '_lock'];
     userlockfile = [MEXEC.simplelockfile '_' nowstr '_' userstr '_' randstr]; % this should be a unique string, including a time and a random number.
 
     while 1
         [us, ur] = movefile(MEXEC.simplelockfile, userlockfile);
-        if us == 0 & exist(userlockfile,'file') == 2 % successful rename of lock file
+        if us == 1 & exist(userlockfile,'file') == 2 % successful rename of lock file
             m = 'Version lock file moved to user lock file so version file is locked: OK';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m)
             break;
@@ -111,11 +112,11 @@ if ~isnan(Mversionlock) % reset lock file
     [us ur] = movefile(userlockfile, MEXEC.simplelockfile);
 
     while 1
-        if us == 0 & exist(MEXEC.simplelockfile,'file') == 2 & exist(userlockfile,'file') ~=2 % seems to be a successful rename of lock file
+        if us == 1 & exist(MEXEC.simplelockfile,'file') == 2 & exist(userlockfile,'file') ~=2 % seems to be a successful rename of lock file
             m = 'Version lock file restored to default so version file is unlocked: OK';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m);
             break
-        elseif us ~=0
+        elseif us ~=1
             m1 = 'There has been a problem restoring the version lock file in subroutine m_verson.m:';
             m20 = 'movefile returned a non-zero error return code';
             m2 = 'This needs investigation and repair before any more processing is done';
@@ -141,7 +142,7 @@ if ~isnan(Mversionlock) % reset lock file
             % assume the user has sorted the problem out; so exit loop
             break
         else
-            % us is zero, but MEXEC.simplelockfile not there. This could be because another mstar
+            % us is one, but MEXEC.simplelockfile not there. This could be because another mstar
             % program grabbed it between movefile and the check for success of rename
             % pause and then go round the loop again
             m = 'Rename of version lock file after updating version appeared to be successful,';
