@@ -18,7 +18,7 @@ if ~redoctm %default: operate on file which had the cell thermal mass correction
     otfile = fullfile(root_ctd, [dataname '_raw']);
 else %in some cases, operate on original file (to remove large spikes), then apply align and CTM in mexec
     infile = fullfile(root_cnv, [dataname '_noctm.cnv']); %align and ctm will be reapplied
-    otfile = fullfiel(root_ctd, [dataname '_raw_noctm']);
+    otfile = fullfile(root_ctd, [dataname '_raw_noctm']);
     disp('starting from noctm file')
 end
 

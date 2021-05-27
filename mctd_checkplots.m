@@ -268,8 +268,10 @@ for plotlist = cklist
                 hold on
                 
                 subplot(223)
-                plot(d2db{ks}.press,d2db{ks}.(oxyvars{2,2}),'linewidth',lwid,'color',lcolors(iic,:));
-                hold on
+                if nox>1
+                    plot(d2db{ks}.press,d2db{ks}.(oxyvars{2,2}),'linewidth',lwid,'color',lcolors(iic,:));
+                    hold on
+                end
                 
                 subplot(224)
                 plot(d2db{ks}.([saltype '2']),d2db{ks}.potemp2,'linewidth',lwid,'color',lcolors(iic,:));
@@ -386,10 +388,12 @@ for plotlist = cklist
                     kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                     koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot-oxy_align*24 & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 end
-                od = getfield(dpsal{ks},oxyvars{2,2});
-                plot(dpsal{ks}.press(kokd),od(kokd),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                plot(dpsal{ks}.press(koku),od(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                if nox>1
+                    od = getfield(dpsal{ks},oxyvars{2,2});
+                    plot(dpsal{ks}.press(kokd),od(kokd),'color',lcolors(iic,:),'linewidth',lwid);
+                    hold on
+                    plot(dpsal{ks}.press(koku),od(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                end
                 
                 subplot(224)
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
