@@ -13,11 +13,12 @@ root_ctd = mgetdir('M_CTD'); % change working directory
 dataname = ['ctd_' mcruise '_' stn_string];
 
 oopt = 'redoctm'; scriptname = mfilename; get_cropt
+oopt = 'cnvfilename'; scriptname = mfilename; get_cropt
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
-    infile = fullfile(root_cnv, [dataname '_align_ctm.cnv']);
+    infile = fullfile(root_cnv, infile);
     otfile = fullfile(root_ctd, [dataname '_raw']);
 else %in some cases, operate on original file (to remove large spikes), then apply align and CTM in mexec
-    infile = fullfile(root_cnv, [dataname '_noctm.cnv']); %align and ctm will be reapplied
+    infile = fullfile(root_cnv, infile); %align and ctm will be reapplied
     otfile = fullfile(root_ctd, [dataname '_raw_noctm']);
     disp('starting from noctm file')
 end
