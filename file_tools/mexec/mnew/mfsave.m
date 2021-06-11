@@ -134,7 +134,7 @@ else
     if isfield(h, 'dataname')
         h0.dataname = h.dataname;
     else
-        ii = strfind(filename,'/'); if isempty(ii); ii = 0; end
+        ii = strfind(filename,'/'); if isempty(ii); ii = strfind(filename,'\'); if isempty(ii); ii = 0; end; end
         h0.dataname = filename(ii(end)+1:end);
     end
     h0.fldnam = []; h0.fldunt = [];
