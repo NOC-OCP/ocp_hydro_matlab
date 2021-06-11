@@ -26,7 +26,7 @@ function [ds, hs] = m_load_samin(infile, hcpat, varargin)
 % supply the parameter-value pair 'chrows', N (where N<=length(hcpat))
 %
 % to also save column units found in the Pth row of the column header rows
-% as hs.colunt, supply the parameter-value pair 
+% as hs.colunt, supply the parameter-value pair
 % 'chunits', P
 %
 % examples:
@@ -68,6 +68,12 @@ function [ds, hs] = m_load_samin(infile, hcpat, varargin)
 % irregularities that break that, it doesn't seem worthwhile
 
 warning('off','all')
+mver = version('-release');
+if str2num(mver(1:4))>=2021 || strcmp(mver,'2020b')
+    pver = 1;
+else
+    pver = 0;
+end
 
 single_block = 0; chrows = length(hcpat); %defaults
 for no = 1:2:length(varargin)
@@ -86,7 +92,7 @@ for k = 1:nrows-length(hcpat)
     if ~ismember(k,kskip)
         %each row in hcpat describes what to search for in successive
         %rows of indata
-        hm = logical(ones(size(indata{k})));
+        hm = true(size(indata{k}));
         for hno = 1:length(hcpat)
             nc = min(length(indata{k}),length(indata{k+hno-1}));
             hm(1:nc) = (hm(1:nc) & strncmp(hcpat{hno}, indata{k+hno-1}(1:nc), length(hcpat{hno})));
@@ -99,11 +105,16 @@ for k = 1:nrows-length(hcpat)
                 ltype(k+[1:length(hcpat)-1]) = 1.5; %column header rows, but not new blocks
                 kskip = [kskip k+[1:length(hcpat)-1]];
             end
-            if single_block %now that we've found one set of column header rows, rest must be data
+            if single_block
+                %now that we've found one set of column header rows, rest must be data
                 ltype(k+length(hcpat):end) = 2;
+                %except possibly last row
+                if length(indata{end})<iih0 || isnan(str2double(indata{end}{iih0}))
+                    ltype(end) = 0;
+                end
                 break;
             end
-        elseif length(indata{k})>=iih0 & ~isempty(str2double(indata{k}{iih0})) %there's a number in the test column
+        elseif length(indata{k})>=iih0 && ~isnan(str2double(indata{k}{iih0})) %there's a number in the test column
             ltype(k) = 2; %data
         end
     end
@@ -111,7 +122,7 @@ end
 if ~single_block
     for k = nrows-length(hcpat)+1:nrows
         if ~ismember(k,kskip)
-            if length(indata{k})>=iih0 & ~isempty(str2double(indata{k}{iih0})) %there's a number in the test column
+            if length(indata{k})>=iih0 && ~isnan(str2double(indata{k}{iih0})) %there's a number in the test column
                 ltype(k) = 2; %data
             end
         end
@@ -142,10 +153,14 @@ end
 
 %units
 if exist('chunits','var') && ~isempty(chunits) && chunits>0
-   h = indata{ii1(chunits)};
-   for no = 1:length(h)
-     hs.colunit{no} = replace(h{no},whitespacePattern,'');
-   end
+    h = indata{ii1(chunits)};
+    for no = 1:length(h)
+        if pver
+            hs.colunit{no} = replace(h{no},whitespacePattern,''); %removes not only spaces but tabs
+        else
+            hs.colunit{no} = replace(h{no}," ",''); %removes spaces
+        end
+    end
 end
 
 %fieldnames
@@ -153,9 +168,11 @@ for no = 1:length(hs.colhead(1,:))
     a = hs.colhead(1:chrows,no);
     ch{no} = lower(sprintf('%s_', a{:}));
     %remove extra and trailing _
-    ch{no} = replace(ch{no},pattern('__'),'_');
-    ch{no} = ch{no}(1:end-1);
-    if isempty(ch{no}) | strcmp(ch{no},'_')
+    ch{no} = replace(ch{no},'__','_');
+    if strcmp(ch{no}(end), '_')
+        ch{no} = ch{no}(1:end-1);
+    end
+    if isempty(ch{no}) || strcmp(ch{no},'_')
         error(['header for column ' num2str(no) ' has no non-special characters; maybe you have excess empty columns in file ' infile])
     end
 end
@@ -163,7 +180,6 @@ end
 %initialise dataset and populate
 ds = dataset;
 iih = [find(ltype==1); nrows+1];
-nanpat = [pattern('#N/A'); pattern('N/A');pattern('#REF!')]; %***
 for rno = 1:length(iih)-1 %step through blocks
     
     %find the sample lines for this block
@@ -177,7 +193,7 @@ for rno = 1:length(iih)-1 %step through blocks
     
     ls = size(ds,1);
     for cno = 1:length(ch)
-        iic = logical(ones(1,size(h,2)));
+        iic = true(1,size(h,2));
         for crno = 1:chrows
             iic = iic & strcmpi(hs.colhead{crno,cno}, h(crno,:));
         end
@@ -188,18 +204,23 @@ for rno = 1:length(iih)-1 %step through blocks
             for sno = 1:length(iis)
                 dat = indata{iis(sno)}{iic};
                 if ~isempty(dat)
-                    datt = replace(replace(dat,nanpat,'NaN'),[pattern('/');pattern(':')],' ');
+                    datt = replace(replace(dat,{'N/A';'#N/A';'#REF!'},'NaN'),{'/';':'},' ');
                     datt = str2num(datt);
                     if length(datt)~=1
                         datt = indata{iis(sno)}(iic);
                     end
-                    try; ds.(ch{cno})(ls+sno,1) = datt; catch; disp('unrecognised field'); disp(datt); disp(infile); keyboard; end
+                    try
+                        ds.(ch{cno})(ls+sno,1) = datt;
+                    catch
+                        disp('unrecognised field'); disp(datt); disp(infile);
+                        keyboard
+                    end
                 end
             end
         else %this variable isn't present in this block; fill
-            ds.(ch{cno})(ls+[1:length(iis)],1) = repmat(NaN,length(iis),1);
+            ds.(ch{cno})(ls+[1:length(iis)],1) = NaN(length(iis),1);
         end
-                
+        
     end
     
 end
@@ -212,32 +233,29 @@ end
 warning('on','all')
 
 
-    function namecell = parse_vnames(namecell);
-        % function namecell = parse_vnames(namecell);
-        % remove leading and trailing whitespace, and replace internal whitespace
-        % and special characters with '_', for each element of namecell so that
-        % they can serve as variable names
-        
-        npat = whitespacePattern;
-        sc = '()+=-/:.?><][{}#~$%^&*!;';
-        for no = 1:length(sc)
-            npat = [npat; pattern(sc(no))];
-        end
-        
-        for no = 1:length(namecell)
-            
-            nc = namecell{no};
-            
-            %remove leading and trailing whitespace
-            iis = strfind(nc,' ');
-            if length(iis)>0 & length(iis)<length(nc)
-                iic = setdiff(1:length(nc),iis);
-                nc(iis(iis<iic(1) | iis>iic(end))) = [];
-            end
-            
-            %replace special characters and internal whitespace
-            nc = replace(nc, npat,'_');
-            
-            namecell{no} = nc;
-            
-        end
+function namecell = parse_vnames(namecell)
+% function namecell = parse_vnames(namecell);
+% remove leading and trailing whitespace, and replace internal whitespace
+% and special characters with '_', for each element of namecell so that
+% they can serve as variable names
+
+npat = cellstr(['()+=-/:.?><][{}#~$%^&*!;']');
+npat = [npat; ' '];
+
+for no = 1:length(namecell)
+    
+    nc = namecell{no};
+    
+    %remove leading and trailing whitespace
+    iis = strfind(nc,' ');
+    if ~isempty(iis) && length(iis)<length(nc)
+        iic = setdiff(1:length(nc),iis);
+        nc(iis(iis<iic(1) | iis>iic(end))) = [];
+    end
+    
+    %replace special characters and internal whitespace
+    nc = replace(nc, npat, '_');
+    
+    namecell{no} = nc;
+    
+end

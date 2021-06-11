@@ -130,14 +130,14 @@ if strcmp(sensname, 'temp')
 elseif strcmp(sensname, 'cond')
    rmod = [ones(length(d.statnum),1) d.statnum(:) d.upress(:)];
    for no = 1:n
-      b = regress(res(sensind{no}), rmod(sensind{no},:));
+      b = rmod(sensind{no},:)\res(sensind{no});
       sprintf('set %d: cond_{cal} = cond_{ctd}[1 + (%6.5f + %6.5fN + %6.5fP)/35]', no, b(1), b(2), b(3))
    end
    
 elseif strcmp(sensname, 'oxy')
    rmod = [ones(length(d.statnum),1) d.upress(:) ctddata d.statnum(:).*ctddata];
    for no = 1:n
-      b = regress(caldata(sensind{no}), rmod(sensind{no},:));
+      b = rmod(sensind{no},:)\caldata(sensind{no});
       sprintf('set %d: oxy_{cal} = oxy_{ctd}(%5.3f + %4.2fNx10^{-4}) + %4.2f + %4.2fPx10^{-3}', no, b(3), b(4)*1e4, b(1), b(2)*1e3)
    end
 
@@ -147,8 +147,8 @@ end
 %plots of the residual/ratio
 for no = 1:n
 
-   md = nanmedian(res(sensind{no})); ms = sqrt(nansum((res(sensind{no}))-md).^2)/(length(sensind{no})-1);
-   iid = intersect(sensind{no}, find(d.upress>=pdeep)); mdd = nanmedian(res(iid)); iqrd = iqr(res(iid));
+   md = m_nanmedian(res(sensind{no})); ms = sqrt(m_nansum((res(sensind{no}))-md).^2)/(length(sensind{no})-1);
+   iid = intersect(sensind{no}, find(d.upress>=pdeep)); mdd = m_nanmedian(res(iid)); iqrd = iqr(res(iid));
    figure((no-1)*10+2); clf
    subplot(5,5,[1:5])
    plot(d.statnum, ctdres, 'c.', d.statnum(sensind{no}), res(sensind{no}), '+k', d.statnum(iid), res(iid), 'xb'); grid

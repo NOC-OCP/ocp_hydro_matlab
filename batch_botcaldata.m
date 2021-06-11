@@ -1,4 +1,4 @@
-%load calibration and/or other bottle data into Mster files,
+%load calibration and/or other bottle data into Mstar files,
 %and update appended sample file
 %
 %this script takes one or more of several variations on klist,
@@ -32,7 +32,7 @@ for lno = 1:size(list_actions,1)
     if ~exist(list_actions{lno,1}, 'var')
         eval([list_actions{lno,1} ' = [];']);
     else
-        eval(['klist = ' list_actions{lno,1} '(:)';']);
+        eval(['klist = ' list_actions{lno,1} '(:)';]);
         klistall = [klistall klist];
         sprintf('Will %s from stations\n', list_actions{lno,2});
         disp(klist); pause(0.5)
@@ -43,7 +43,7 @@ klist = setdiff(klist, klist_exc); %remove non-CTD casts
 
 %first do steps that create concatenated (rather than per-station) mstar files
 
-if length(klisttemp)>0; msbe35_01; end %loads into concatenated file and sam file
+if length(klisttem)>0; msbe35_01; end %loads into concatenated file and sam file
 if length(klistsal)>0; msal_01; end %loads into concatenated file and sam file
 if length(klistoxy)>0; moxy_01; msam_oxykg; end %loads into concatenated file and sam file
 if length(klistco2)>0; mco2_01; end %loads alk and dic into concatenated co2 file

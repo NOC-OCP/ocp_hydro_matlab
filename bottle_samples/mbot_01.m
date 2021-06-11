@@ -16,7 +16,8 @@ mdocshow(mfilename, ['puts Niskin bottle information from .bl files and from opt
 
 % resolve root directories for various file types
 root_bot = mgetdir('M_CTD_BOT'); % the bottle file(s) is/are in the ascii files directory
-infile = fullfile(root_bot, ['ctd_' mcruise '_' stn_string '.bl']);
+scriptname = mfilename; oopt = 'blfilename'; get_cropt
+infile = fullfile(root_botraw, infile);
 
 arebottles = 0;
 

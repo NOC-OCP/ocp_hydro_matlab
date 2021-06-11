@@ -5,6 +5,7 @@
 %
 %   uses gsw: salinity = gsw_SP_salinometer((runavg+offset)/2, cellT);
 
+m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; 
 mdocshow(mfilename, ['loads bottle salinities from the file(s) specified in opt_' mcruise ' and writes ctd samples to sal_' mcruise '_01.nc and sam_' mcruise '_all.nc, and underway samples to tsg_' mcruise '_01.nc']);
 
@@ -14,10 +15,10 @@ std_samp_range = [1e5 1e7]; %sample numbers for ssw are in this range, e.g. 9990
 % resolve root directories for various file types, and set output files
 root_sal = mgetdir('M_BOT_SAL');
 dataname = ['sal_' mcruise '_01'];
-salfile = fullfile(root_sal, dataname);
-samfile = fullfile(mgetdir('M_CTD'), 'sam_' mcruise '_all']);
+salfile = fullfile(mgetdir('M_CTD'), [dataname '.nc']);
+samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
-tsgfile = fullfile(mgetdir(tsgpre), ['tsg_' mcruise '_all']);
+tsgfile = fullfile(mgetdir(tsgpre), ['tsg_' mcruise '_all.nc']);
 
 %get list of files to load
 scriptname = mfilename; oopt = 'salfiles'; get_cropt %list of files to load
@@ -155,7 +156,7 @@ ds_sal.salinity = gsw_SP_salinometer(ds_sal.runavg/2, ds_sal.cellt); %changed on
 if ~isempty(sal_off)
     ds_sal.salinity_adj = gsw_SP_salinometer((ds_sal.runavg+ds_sal.sal_off)/2, ds_sal.cellt);
     ds_sal.flag(isnan(ds_sal.salinity_adj) & ds_sal.flag<4) = 4;
-else
+elseif isfield(ds_sal, 'salinity_adj')
     ds_sal.salinity_adj = [];
 end
 
@@ -175,7 +176,13 @@ for no = 1:length(fn0)
 end
 d = rmfield(d,'junk');
 
-%get CTD samples and write to sal_ file
+%write all to sal_ file
+hc = h;
+hc.comment = ['salinity data from ; ' sal_adj_comment]; %***hc.comment
+mfsave(salfile, d, hc);
+
+%write some fields for CTD samples to sam_ file
+clear dsc
 iic = find(d.sampnum>0 & d.sampnum<900*100);
 % dsc = d(iic,:);
 % bak: jc211 20 feb 2021 the line above doesnt work because d is a structure. Here is a longhand
@@ -184,15 +191,6 @@ fnd = fieldnames(d);
 for no = 1:length(fnd)
     dsc.(fnd{no}) = d.(fnd{no})(iic,:);
 end
-dsc.statnum = floor(dsc.sampnum/100);
-dsc.position = dsc.sampnum - dsc.statnum*100;
-hc = h;
-hc.fldnam = [hc.fldnam 'statnum' 'position'];
-hc.fldunt = [hc.fldunt 'number' 'number'];
-hc.comment = ['salinity data from ; ' sal_adj_comment]; %***hc.comment
-mfsave(salfile, dsc, hc);
-
-%write some fields to sam_ file
 clear hnew
 hnew.fldnam = {'sampnum' 'botpsal' 'botpsal_flag'};
 hnew.fldunt = {'number' 'psu' 'woce_9.4'}; %***
@@ -208,28 +206,31 @@ end
 ds.botpsal_flag(isam) = dsc.flag(isal);
 mfsave(samfile, ds, hnew, '-merge', 'sampnum');
 
-%get TSG samples, figure out event numbers
-%either negative, dddhhmmss (where ddd is year-day starting at 1), or yyyyhhmmss
-iiu = find(d.sampnum<0 | d.sampnum>=1e7); 
-% dsu = d(iiu,:);
-% bak: same fix as for dsc above
-fnd = fieldnames(d);
-for no = 1:length(fnd)
-    dsu.(fnd{no}) = d.(fnd{no})(iiu,:);
+if exist('tsgpre', 'dir') && ~isempty(tsgfiles)
+    %get TSG samples, figure out event numbers
+    %either negative, dddhhmmss (where ddd is year-day starting at 1), or yyyyhhmmss
+    iiu = find(d.sampnum<0 | d.sampnum>=1e7);
+    if length(iiu)>0
+        
+        fnd = fieldnames(d);
+        for no = 1:length(fnd)
+            dsu.(fnd{no}) = d.(fnd{no})(iiu,:);
+        end
+        
+        scriptname = mfilename; oopt = 'tsgsampnum'; get_cropt
+        [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
+        dsu.time = NaN+dsu.sampnum;
+        dsu.time(ia) = 86400*(tsg.dnum(ib)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
+        if sum(isnan(dsu.time))>0
+            warning('missing times for tsg samples:')
+            disp(dsu.sampnum(isnan(dsu.time)))
+            keyboard
+        end
+        hu = h;
+        hu.fldnam = [hu.fldnam 'time'];
+        hu.fldunt = [hu.fldunt 'seconds'];
+        hu.comment = hc.comment;
+        mfsave(tsgfile, dsu, hu);
+    
+    end 
 end
-
-read_tsg_event_log %***put this and next in opt_jc211, add code for different cases
-load tsg_event_log_jc211_01.mat
-[c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
-dsu.time = NaN+dsu.sampnum; 
-dsu.time(ia) = 86400*(tsg.dnum(ib)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
-if sum(isnan(dsu.time))>0
-    warning('missing times for tsg samples:')
-    disp(dsu.sampnum(isnan(dsu.time)))
-    keyboard
-end
-hu = h;
-hu.fldnam = [hu.fldnam 'time'];
-hu.fldunt = [hu.fldunt 'seconds'];
-hu.comment = hc.comment;
-mfsave(tsgfile, dsu, hu);
