@@ -80,6 +80,7 @@ function mfsave(filename, d, varargin)
 %
 
 m_common %brings in MEXEC_G
+stn = 0; minit; %does something that initialises MEXEC_A.MARGS_IN_LOCAL?***
 
 %%%%% handle input arguments %%%%%
 
