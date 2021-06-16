@@ -144,6 +144,9 @@ if tempcal | condcal | oxygencal | fluorcal | transmittancecal
         
         %initialise
         [d0,h0] = mloadq(otfile, '/');
+        if ~isfield(d0, 'statnum')
+            d0.statnum = repmat(stnlocal, size(d0.scan));
+        end
         clear dcal hcal
         hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
         

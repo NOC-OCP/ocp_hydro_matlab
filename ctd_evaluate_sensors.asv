@@ -74,13 +74,8 @@ end
 
 if exist('precalo','var') & precalo
    if ~exist('precalt') | ~exist('precalc') | ~precalt | ~precalc; warning('you may want to calibrate temperature and conductivity before calibrating oxygen'); end
-   scriptname = 'mctd_02b'; oopt = 'ctdcals'; get_cropt
-   d0.press = d.upress; d0.statnum = d.statnum; d0.temp = d.utemp; d0.(['oxygen' sensstr]) = d.(['uoxygen' sensstr]);
-   ii = find(strncmp(calmsg,['oxygen' sensstr],length('oxygen')+length(sensstr)));
-   if length(ii)==1
-       eval(calstr{ii})
-       d.(['uoxygen' sensstr]) = dcal.(['oxygen' sensstr]);
-   end
+   fnm = ['uoxygen' sensstr];
+   d = setfield(d, fnm, oxy_apply_cal(sensnum, d.statnum, d.upress, d.time, d.utemp, getfield(d, fnm)));
 else
    precalo = 0;
 end
@@ -249,26 +244,18 @@ if sum(strcmp(sensname, {'temp';'cond';'oxy'})) & plotprof
 	       c = cond_apply_cal(sensnum, s(no), du.press, du.time, du.temp, c);
 	    end
 	 elseif strcmp(sensname, 'temp') & precalt
+	    b = temp_apply_cal(sensnum, s(no), d1.press, d1.time, b);
+	    c = temp_apply_cal(sensnum, s(no), du.press, du.time, c);
 	 elseif strcmp(sensname, 'oxy') & precalo
-            d0.press = d1.press; d0.statnum = repmat(s(no),size(d1.press)); d0.temp = d1.temp; d0.(['oxygen' sensstr]) = d1.(['oxygen' sensstr]);
-   ii = find(strncmp(calmsg,['oxygen' sensstr],length('oxygen')+length(sensstr)));
-   if length(ii)==1
-       eval(calstr{ii})
-       d1.(['oxygen' sensstr]) = dcal.(['oxygen' sensstr]);
-   end
-               d0.press = du.press; d0.statnum = repmat(s(no),size(du.press)); d0.temp = du.temp; d0.(['oxygen' sensstr]) = du.(['oxygen' sensstr]);
-   ii = find(strncmp(calmsg,['oxygen' sensstr],length('oxygen')+length(sensstr)));
-   if length(ii)==1
-       eval(calstr{ii})
-       du.(['oxygen' sensstr]) = dcal.(['oxygen' sensstr]);
-   end
+	    b = oxy_apply_cal(sensnum, s(no), d1.press, d1.time, d1.temp, b);
+	    c = oxy_apply_cal(sensnum, s(no), du.press, du.time, du.temp, c);
 	 end
          plot(b(iidu1), -d1.press(iidu1), 'c', c, -du.press, 'k--', ...
 	 caldata(iis), -d.upress(iis), 'r.', ...
      caldata(iisbf), -d.upress(iisbf), 'm.', ctddata(iis), -d.upress(iis), 'b.', ...
 	 caldata(iiq), -d.upress(iiq), 'or', ctddata(iiq), -d.upress(iiq), 'sb');
 	 grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',s(no)));
-	 mn = m_nanmean(c); st = m_nanstd(c); xl = [-st st]*5+mn; set(gca, 'xlim', xl);
+	 mn = nanmean(c); st = nanstd(c); xl = [-st st]*5+mn; set(gca, 'xlim', xl);
          text(repmat(st*4.5+mn,length(iiq),1), -d.upress(iiq), num2str(d.position(iiq)));
 	 for qno = 1:length(iiq)
             sprintf('%d %d %5.2f %d %d', s(no), d.position(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), d.niskin_flag(iiq(qno)))

@@ -89,17 +89,16 @@ else
     end
 end
 if sum(strcmp('flag',ds_oxy_fn))==0
-    ds_oxy.flag = 9+zeros(size(ds_oxy.sampnum));
+    dx_oxy.flag = 9+zeros(size(ds_oxy.sampnum));
     ds_oxy.flag(~isnan(ds_oxy.sample_titre)) = 2;
-    ds_oxy.flag(isnan(ds_oxy.sample_titre) & ~isnan(ds_oxy.fix_temp)) = 5;
 else
-    ds_oxy.flag(ds_oxy.flag==0) = NaN;
     if sum(isnan(ds_oxy.flag))>0
         ds_oxy.flag(isnan(ds_oxy.flag) & isnan(ds_oxy.sample_titre)) = 9;
-        ds_oxy.flag(isnan(ds_oxy.flag) & ~isnan(ds_oxy.sample_titre)) = 2;
-        ds_oxy.flag(isnan(ds_oxy.flag) & isnan(ds_oxy.sample_titre) & ~isnan(ds_oxy.fix_temp)) = 5;
-    end
-end
+        dx_oxy.flag(isnan(dx_oxy.flag) & ~isnan(ds_oxy.sample
+ds_oxy.flag(isnan(ds_oxy.flag)) = 9;
+ds_oxy.flag(ds_oxy.flag==9 f(~isnan(ds_oxy.sample_titre(iif))) = 2;
+f(isnan(ds_oxy.sample_titre(iif)) & ~isnan(ds_oxy.fix_temp(iif))) = 5;
+ds_oxy.flag(iif) = f;
 
 %compute bottle volumes at fixing temperature if not present
 if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0

@@ -154,7 +154,7 @@ switch scriptname
                     'previous cruise and accidentally applying the wrong calibration -- the second '
                     'column of calmsg optionally contains a string about how/when the calibration '
                     'function was selected, e.g. calmsg = {''temp1 jc211'' ''based on comparison with SBE35 from stations 1-30''}.'};
-                calstr = ''; calmsg = {};
+                calstr = {}; calmsg = {};
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
         
