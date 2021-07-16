@@ -20,11 +20,14 @@ end
 
 disp(['loading ' num2str(length(file_listc)) ' ctd files'])
 tic
-if isfield(info, 'statnum')
-    cdata = parse_load_hdata(file_listc, vnuc, 'predir', info.ctddir, 'badflags', info.cbadflags, 'statnums', info.statnum, 'expocode', info.expocode);
-else
-    cdata = parse_load_hdata(file_listc, vnuc, 'predir', info.ctddir, 'badflags', info.cbadflags, 'expocode', info.expocode);
+options = {'predir' info.ctddir 'badflags' info.cbadflags 'expocode' info.expocode};
+if isfield(info, 'ctd_hcpat')
+    options = [options 'hcpat' info.ctd_hcpat];
 end
+if isfield(info, 'statnum')
+    options = [options 'statnums' info.statnum];
+end
+cdata = parse_load_hdata(file_listc, vnuc, options);
 toc
 disp('ctd loaded')
 

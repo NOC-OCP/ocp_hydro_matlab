@@ -13,11 +13,11 @@ end
 if ~isempty(file_lists)
     disp(['loading ' num2str(length(file_lists)) ' sample files'])
     tic
+    options = {'predir' info.samdir 'badflags' info.sbadflags 'expocode' info.expocode 'single_block' 1};
     if isfield(info, 'sam_hcpat')
-        sdata = parse_load_hdata(file_lists, vnu, 'predir', info.samdir, 'badflags', info.sbadflags, 'expocode', info.expocode, 'single_block', 1, 'hcpats', info.sam_hcpat);
-    else
-        sdata = parse_load_hdata(file_lists, vnu, 'predir', info.samdir, 'badflags', info.sbadflags, 'expocode', info.expocode, 'single_block', 1);
+        options = [options 'hcpat' info.sam_hcpat];
     end
+    sdata = parse_load_hdata(file_lists, vnu, options);
     toc
     
     %make vars just list variables to map, not coordinate variables

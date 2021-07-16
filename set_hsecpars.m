@@ -2,21 +2,6 @@ predir1 = '~/projects/satl_box/hsections/';
 predir2 = '~/projects/Acruises/';
 predir3 = '~/projects/sr1b/matfiles/';
 
-%lookup for cruise name for decadal repeats (optional)
-if ~exist('cruise','var')
-    clear sc
-    sc.i06s = {'knox14'; 'soccom25'};
-    sc.andrex = {{'jc030' 'jr239'}; 'jr18005'};
-    sc.sr1b = {'jc031'; 'jr18002'};
-    sc.a095 = {'jc032'; 'jc159'};
-    if exist('section', 'var') && isfield(sc, section) && exist('crdec', var)
-        cruise = sc.(section){crdec};
-    else
-        sc
-        error('must specify either cruise or (section,crdec) where section is in sc (above) and crdec is 1 or 2');
-    end
-end
-
 %defaults
 clear info
 info.ctdout = 0; 
