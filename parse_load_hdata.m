@@ -79,7 +79,7 @@ for fno = 1:size(infile,1)
     %%%%% load, renaming variables and storing units %%%%%
     %%%%% either from file metadata/header or from varnamesunits %%%%%
     
-    clear data0 ds hs
+    clear data0 ds hs iicruise
     
     if contains(infile{fno}, '.mat') || ~contains(infile{fno}, '.')
         
@@ -93,20 +93,20 @@ for fno = 1:size(infile,1)
             if isfield(ds, 'G2cruise')
                 cruisevar = 'G2cruise';
             end
-            iic = strcmp(opts.expocode, ds.expocode);
+            iicruise = strcmp(opts.expocode, ds.expocode);
             if length(ds)>1
-                ds = ds(iic); iic = NaN;
+                ds = ds(iicruise); iicruise = NaN;
             elseif isfield(ds, 'expocodeno')
-                iic = find(ds.(cruisevar)==ds.expocodeno(iic));
+                iicruise = find(ds.(cruisevar)==ds.expocodeno(iicruise));
             else
-                iic = NaN;
+                iicruise = NaN;
             end
         elseif isfield(opts, 'cruisename')
             if isfield(ds, opts.cruisename)
                 ds = ds.(cruisename);
             elseif isfield(ds, 'cruise')
-                iic = strcmp(opts.cruisename, ds.cruise);
-                ds = ds(iic); iic = NaN;
+                iicruise = strcmp(opts.cruisename, ds.cruise);
+                ds = ds(iicruise); iicruise = NaN;
             end
         end
         %***lowercase fieldnames?
@@ -177,7 +177,11 @@ for fno = 1:size(infile,1)
     data0.vars = varnamesunits.hvar(iinv)';
     data0.unts = varnamesunits.hunt(iinv)';
     for vno = 1:length(iiv)
-        data0.(varnamesunits.hvar{iinv(vno)}) = ds.(vars{iiv(vno)});
+        if exist('iicruise', 'var')
+            data0.(varnamesunits.hvar{iinv(vno)}) = ds.(vars{iiv(vno)})(iicruise);
+        else
+            data0.(varnamesunits.hvar{iinv(vno)}) = ds.(vars{iiv(vno)});
+        end
         if exist('hs', 'var') && ~isempty(hs.colunit{iiv(vno)})
             data0.unts{vno} = hs.colunit{iiv(vno)};
         end
@@ -237,6 +241,8 @@ for fno = 1:size(infile,1)
         end
         data0.(data0.vars{vno}) = d(:);
     end
+    
+    %tile or calculate some other variables
     nd = length(data0.press);
     if size(data0.statnum,1)>1 && ~isempty(data0.lat) %***???
         data0.lat(length(data0.lat)+1:nd,1) = data0.lat(end);
