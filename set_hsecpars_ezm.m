@@ -31,7 +31,8 @@ switch cruise
         %info.ctdpat = '*_ctd.nc';
         info.samdir = fullfile(predir, '74JC20100319');
         info.sampat = [info.expocode '_hy1.csv'];
-        info.statind = [6:23 24:68]; %E to W station 1-3 are beteen islands and 6-23 are transit between islands
+        info.statind = [68:-1:6 4:-1:2]; %E to W, station 5 aborted cast
+        info.xstatnumgrid = [info.statind; [68:-1:24 [23:-1:6 4:-1:2]-1]]; %topography between 24 and 23, and 6 and 4 (station 5 aborted cast)
         
     case 'jc030'
         info.section = 'andrex';
@@ -55,7 +56,8 @@ switch cruise
         info.samdir = fullfile(predir1, '74JC20190221');
         info.sampat = [info.expocode '_hy1.csv'];
         info.sam_hcpat = {{'niskin'}};
-        info.statind = fliplr([3:63 66 69:73 75:98]); %E to W station 6-23 between islands 24-98 stations fliplr grids in oposite way to track
+        info.statind = [98:-1:75 73:-1:69 66 63:-1:3]; %E to W
+        info.xstatnumgrid = [info.statind; 98:-1:75 [73:-1:69 66 63:-1:24]+1 [23:-1:6] [5:-1:3]-1]; %no actual gap between 75 and 73 or 69, 66, 63, but topography between 24 and 23 and 6 and 5
         %ctdout = 1; samout = 1;
         
     case 'antix_2'
