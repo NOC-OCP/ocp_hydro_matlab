@@ -55,6 +55,9 @@ for vno = 1:size(varnamesunits,1)
     varnamesunits.invar = [varnamesunits.invar; {[varnamesunits.invar{vno} '_flag_w']}];
     varnamesunits.hvar{end} = [varnamesunits.hvar{vno} '_flag'];
     varnamesunits.hunt{end} = 'woce_flag';
+    varnamesunits.invar = [varnamesunits.invar; {[varnamesunits.invar{vno} '_QC']}];
+    varnamesunits.hvar{end} = [varnamesunits.hvar{vno} '_flag'];
+    varnamesunits.hunt{end} = 'woce_flag';
 end
 %add GLODAP names (and flags) to varnamesunits
 if ~strcmp('G2',varnamesunits{1,1}(1:2))
@@ -113,19 +116,22 @@ for fno = 1:size(infile,1)
         
     elseif contains(infile{fno}, '.nc')
         %%% netcdf (mstar or otherwise)
-        
+
+        %get list of variables and units
         a = ncinfo([opts.predir infile{fno}]);
-        iin = strcmp('Name',fieldnames(a.Variables));
-        iia = strcmp('Attributes',fieldnames(a.Variables));
-        b = struct2cell(a.Variables);
-        vars = squeeze(b(iin,:,:));
-        att = squeeze(b(iia,:,:));
-        d = struct2cell(att{1}); iiu = strcmpi('units',d(1,:));
-        for vno = nv+1:length(vars) %***nv?
-            d = struct2cell(att{vno});
-            unts{vno} = lower(d{2,iiu}); %***always 2? probably always Name, Value so yes
+        nv = length(a.Variables);
+        vars = cell(nv,1);
+        [vars{:}] = a.Variables.Name;
+        atts = cell(nv,1);
+        [atts{:}] = a.Variables.Attributes;
+        for vno = 1:nv
+            att = cell(length(atts{vno}),1);
+            [att{:}] = atts{vno}.Name;
+            iiu = strcmpi('units',att);
+            [att{:}] = atts{vno}.Value;
+            unts{vno} = lower(att{iiu});
         end
-        %for non-mstar files, what about scale factor, add offset, Fill_Value, missing_value***
+        %what about scale factor, add offset, Fill_Value, missing_value***
         [~,iiv,iinv] = intersect(vars, varnamesunits.invar);
         if length(unique(varnamesunits.hvar(iinv)))<length(varnamesunits.hvar(iinv))
             [~,ia,~] = intersect(varnamesunits.hvar(iinv),unique(varnamesunits.hvar(iinv)));
@@ -134,32 +140,43 @@ for fno = 1:size(infile,1)
             iinv = iinv(ia); iiv = iiv(ia);
         end
         for vno = 1:length(iiv)
-            ds.(varnamesunits.hvar{iinv(vno)}) = ncread([opts.predir infile{fno}], vars{iiv(vno)});
-            hs.colunit{iinv(vno)} = unts{iiv(vno)};
+            d = ncread([opts.predir infile{fno}], vars{iiv(vno)});
+            if ischar(d)
+                d = str2num(d(:)');
+            elseif isinteger(d);
+                d = double(d);
+            end
+            ds.(varnamesunits.hvar{iinv(vno)}) = d;
+            hs.colunit{vno} = unts{iiv(vno)};
         end
+        hs.colunit = replace(replace(hs.colunit, '?mol/kg', 'umol/kg'), '?c', 'degc');
         
     else
         %%% csv with single or multiple header lines %%%
         if isfield(opts, 'hcpats') && length(opts.hcpats)==size(infile,1)
-            opts.hcpat = opts.hcpats{fno};
-        end
-        if isfield(opts, 'hcpat')
-            if ~isfield(opts, 'chrows')
-                opts.chrows = 1; %default: variable names on single row
-            end
-            if ~isfield(opts, 'chunits')
-                opts.chunits = length(hcpat); %default: last row of header is units
-            end
-            [ds, hs] = m_load_samin([opts.predir infile{fno}], opts.hcpat, 'chrows', opts.chrows, 'chunits', opts.chunits);
+            hcpat = opts.hcpats{fno};
+        elseif isfield(opts, 'hcpat')
+            hcpat = opts.hcpat;
         else
-            try
-                %check if it's exchange format
-                hcpate = {'CTDPRS'; 'DBAR'};
-                [ds, hs] = m_load_samin([opts.predir infile{fno}], hcpate, 'chrows', 1, 'chunits', 2, 'single_block', 1);
-            catch
-                warning(['unknown file type or header not properly specified: ' infile{fno}])
-                keyboard
-            end
+            hcpat = {'CTDPRS';'DBAR'};
+            chrows = 1;
+            chunits = 2;
+        end
+        if isfield(opts, 'chrows')
+            chrows = opts.chrows;
+        else
+            chrows = 1; %default: variable names on single row
+        end
+        if isfield(opts, 'chunits')
+            chunits = opts.chunits;
+        else
+            chunits = length(hcpat); %default: last row of header is units
+        end
+        try
+            [ds, hs] = m_load_samin([opts.predir infile{fno}], hcpat, 'chrows', chrows, 'chunits', chunits);
+        catch
+            warning(['unknown file type or header not properly specified: ' infile{fno}])
+            keyboard
         end
         ds = dataset2struct(ds,'AsScalar',1);
         
@@ -273,7 +290,9 @@ for fno = 1:size(infile,1)
             data0.sampnum = data0.statnum*100 + data0.niskin;
         elseif isfield(data, 'press') && isfield(data0, 'press')
             data.sampnum = data.statnum*100 + round(data.press)/1e2;
+            try
             data0.sampnum = data0.statnum*100 + round(data0.press)/1e2;
+            catch; keyboard; end
         else
             warning('will not be able to merge multiple files without either niskin or pressure')
             keyboard

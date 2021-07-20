@@ -1,6 +1,7 @@
 predir1 = '~/projects/satl_box/hsections/';
 predir2 = '~/projects/Acruises/';
 predir3 = '~/projects/sr1b/matfiles/';
+predir = '~/projects/satl_box/hsections/';
 
 %defaults
 clear info
@@ -34,10 +35,10 @@ switch cruise
         info.section = 'i06s';
         info.season = '2018_2019';
         info.expocode = '325020190403';
-        info.ctddir = [predir1 'i06s/soccom25/' info.expocode '_ct1/'];
-        info.ctdpat = '*_ct1.csv';
-        %info.ctddir = [predir1 'i06s/soccom25/' info.expocode '_nc_ctd/'];
-        %info.ctdpat = '*_ctd.nc';
+        %info.ctddir = [predir1 'i06s/soccom25/' info.expocode '_ct1/'];
+        %info.ctdpat = '*_ct1.csv';
+        info.ctddir = [predir1 'i06s/soccom25/' info.expocode '_nc_ctd/'];
+        info.ctdpat = '*_ctd.nc';
         info.samdir = [predir1 'i06s/soccom25/'];
         info.sampat = [info.expocode '_hy1.csv'];
         info.statind = [46:54 45:-1:1]; %N to S

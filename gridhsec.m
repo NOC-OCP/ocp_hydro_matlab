@@ -26,7 +26,6 @@ function [mgrid, cdata, sdata] = gridhsec(cruise, varargin);
 %    xstatnumgrid***
 
 
-predir = '~/projects/satl_box/hsections/';
 readme = {};
 
 for no = 1:2:length(varargin)
@@ -35,25 +34,7 @@ end
 
 set_hsecpars
 
-%if statnum list not already specified, and opt_cruise exists, run to get statnum list(s)
-if isempty(which('get_cropt'))
-    addpath ~/programs/ocp/mexec_processing_scripts/cruise_options
-    addpath ~/programs/ocp/mexec_processing_scripts/utilities
-end
-if ~isfield(info, 'statind') && exist(['opt_' cruise '.m'], 'file')
-   scriptname = 'msec_run_mgridp';
-   if ~isfield(info,'section')
-       oopt = 'sections'; 
-       eval(['opt_' cruise]); 
-       info.section = sections{1}; 
-   end
-   if isfield(info,'section') && ~isfield(info,'statind')
-      oopt = 'kstns'; eval(['opt_' cruise])
-      eval(['info.statind = ' sstring ';'])
-   end
-end
-
-otfile = [predir info.section '_' cruise '_' info.season];
+otfile = fullfile(predir, [info.section '_' cruise '_' info.season]);
 
 if ~isfield(info, 'sbadflags')
     info.sbadflags = [3 4 9];

@@ -1,3 +1,5 @@
+predir = 'C:\Users\ezm\Documents\matlab\encore\import_ctd_and_bottle_data';
+
 %defaults
 clear info
 info.ctdout = 0;
