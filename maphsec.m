@@ -99,16 +99,15 @@ mgrid.lat = interp1(cdata.statnum, cdata.lat, mgrid.statnum);
 
 
 %mask below bottom
-mgrid.mask = zeros(ngz,ngx);
+mgrid.mask = ones(ngz,ngx);
 for xno = 1:ngx
     iix = find(cdata.x==mgrid.x(1,xno));
-    ii = max(find(~isnan(cdata.temp(:,iix))));
-    if length(ii)>0
-        ii = find(mgrid.z(:,1)>cdata.z(ii));
-        mgrid.mask(ii,xno) = 1;
+    iib = max(find(~isnan(cdata.temp(:,iix)))); %last good point
+    if length(iib)>0
+        ii = find(mgrid.z(:,1)<=cdata.z(iib));
+        mgrid.mask(ii,xno) = 0; %water points
     end
 end
-mgrid.mask(:,sum(~isnan(cdata.temp))==0) = 1;
 
 %%% map %%%
 disp(['gridding/mapping data using ' mgrid.method])

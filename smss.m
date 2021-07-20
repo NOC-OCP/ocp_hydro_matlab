@@ -69,14 +69,16 @@ if strncmp(smethod, 'lfit', 4) %same procedure except different xse
     for no = 1:length(xs)
         iix = find(x>=xse(no,1) & x<xse(no,2));
         if length(iix)>1
-            if bin_extrap
-                ii2 = 1:n(2);
-            else
-                ii2 = find(min(a(iix,:))<=xs(no) & max(a(iix,:))>=xs(no));
-            end
-            if length(ii2)>0
-                [b,c,r,f,v] = harmfit(y(iix, ii2).', x(iix), [1 1], 0.5); %pgood***
-                y_sm(no, ii2) = b(1,:)+b(2,:)*(xs(no)-mean(x(iix)));
+            for no2 = 1:n(2)
+                if bin_extrap
+                    iig = iix(find(~isnan(y(iix,no2))));
+                else
+                    iig = iix;
+                end
+                if sum(~isnan(y(iig,no2)))>0
+                    b = [ones(length(iig),1) x(iig)]\y(iig,no2);
+                    y_sm(no, no2) = b(1)+b(2)*xs(no);
+                end
             end
         end
     end

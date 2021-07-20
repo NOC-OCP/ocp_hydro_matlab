@@ -260,20 +260,22 @@ for fno = 1:size(infile,1)
     end
     
     %tile or calculate some other variables
-    nd = length(data0.press);
-    if size(data0.statnum,1)>1 && ~isempty(data0.lat) %***???
-        data0.lat(length(data0.lat)+1:nd,1) = data0.lat(end);
-        data0.lon(length(data0.lon)+1:nd,1) = data0.lon(end);
-    end
     if ~isfield(data0, 'press') && isfield(data0, 'depth') && isfield(data0, 'lat')
         data0.press = sw_pres(data0.depth, data0.lat);
     end
+    if isfield(data0, 'press')
+        nd = size(data0.press,1);
+    elseif isfield(data0, 'niskin')
+        nd = size(data0.niskin,1);
+    else
+        error(['must have press, depth, or niskin to merge file ' infile{fno}])
+    end
     if length(data0.statnum)==1 && isfield(data0, 'press')
-        data0.statnum = repmat(data0.statnum,length(unique(data0.press)),1);
+        data0.statnum = repmat(data0.statnum,nd,1);
     end
     if isfield(data0, 'lat') && length(data0.lat)==1
-        data0.lat = repmat(data0.lat,length(unique(data0.press)),1);
-        data0.lon = repmat(data0.lon,length(unique(data0.press)),1);
+        data0.lat = repmat(data0.lat,nd,1);
+        data0.lon = repmat(data0.lon,nd,1);
     end
     
     

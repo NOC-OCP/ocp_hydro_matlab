@@ -34,7 +34,7 @@ end
 
 set_hsecpars
 
-otfile = fullfile(predir, [info.section '_' cruise '_' info.season]);
+otfile = fullfile(predir, 'mapped', [info.section '_' cruise '_' info.season]);
 
 if ~isfield(info, 'sbadflags')
     info.sbadflags = [3 4 9];
@@ -108,8 +108,8 @@ end
 
 clear mgrid
 mgrid.cruise = cruise; mgrid.section = info.section;
-if strcmp(cruise,'soccom25')
-    mgrid.xstatnumgrid = [cdata.statnum; [1:45 [46:54]+21]];
+if isfield(info, 'xstatnumgrid')
+    mgrid.xstatnumgrid = info.xstatnumgrid;
 end
 
 mgrid.method = 'msec_maptracer'; %use defaults

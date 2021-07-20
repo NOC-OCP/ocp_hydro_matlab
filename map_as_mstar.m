@@ -31,29 +31,13 @@ nvars = length(sdata.vars);
 
 mgrid.vars = {}; mgrid.unts = {};
 
-%ctd data: weighted average (using midpoint of linear fit), then
-%interpolate in x to fill in missing profiles
+%ctd data: weighted average in vertical (using midpoint of linear fit), then
+%linearly interpolate in x to fill in missing profiles
 for vno = 1:length(cdata.vars)
-    data = smss(cdata.z, cdata.(cdata.vars{vno}), mgrid.z(:,1), 'smethod', 'lfitmid', 'init_extrap', 'surf', 'bin_extrap', 1);
+    data0 = smss(cdata.z, cdata.(cdata.vars{vno}), mgrid.z(:,1), 'smethod', 'lfitmid', 'init_extrap', 'surf', 'bin_extrap', 1);
+    data = interp1(cdata.x', data0.', mgrid.x(1,:)').';
     data(mgrid.mask==1) = NaN;
     m = double(isnan(data)); %might be NaNs in input ctdoxy; fill later
-    %fill in missing profiles
-    iimp = find(sum(~isnan(data))==0); 
-    iimp = iimp(iimp>1 & iimp<size(data,2)); 
-    if length(iimp)>0 %***stopgap!!! not a good thing to do for more than one profile in a row
-        iigp = find(sum(~isnan(data))>0);
-        data(:,iimp) = interp1(iigp, data(:,iigp)', iimp)';
-        data(mgrid.mask==1) = NaN;
-        m(m==1 & ~isnan(data)) = 0.5;
-    end
-    %%and repeat with nearest-neighbour
-    %iimp = find(sum(~isnan(data))==0); 
-    %if length(iimp)>0 %***stopgap!!! not a good thing to do for more than one profile in a row
-    %    iigp = find(sum(~isnan(data))>0);
-    %    data(:,iimp) = interp1(iigp, data(:,iigp)', iimp, 'nearest', 'extrap')';
-    %    data(mgrid.mask==1) = NaN;
-    %    m(m==1 & ~isnan(data)) = 0.5;
-    %end
     mgrid.(cdata.vars{vno}) = data;
     mgrid.datam(:,:,vno) = m;
     mgrid.vars = [mgrid.vars cdata.vars{vno}];
@@ -68,6 +52,8 @@ if isfield(sdata, 'ctdsal')
    sdata.psal = sdata.ctdsal;
 else
    sdata.psal = interp2(cdata.x, cdata.z, cdata.psal, sdata.x, sdata.z);
+   iib = find(isnan(sdata.psal));
+   sdata.psal(iib) = interp2(mgrid.x, mgrid.z, mgrid.psal, sdata.x(iib), sdata.z(iib));
 end
 if exist('psal0','var'); sdata.psal(isnan(sdata.psal)) = psal0(isnan(sdata.psal)); end
 if isfield(sdata, 'temp'); temp0 = sdata.temp; end
@@ -75,6 +61,8 @@ if isfield(sdata, 'ctdtmp')
    sdata.temp = sdata.ctdtmp;
 else
    sdata.temp = interp2(cdata.x, cdata.z, cdata.temp, sdata.x, sdata.z);
+   iib = find(isnan(sdata.temp));
+   sdata.temp(iib) = interp2(mgrid.x, mgrid.z, mgrid.temp, sdata.x(iib), sdata.z(iib));
 end
 if exist('temp0','var'); sdata.temp(isnan(sdata.temp)) = temp0(isnan(sdata.temp)); end
 

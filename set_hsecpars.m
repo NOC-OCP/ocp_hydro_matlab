@@ -23,11 +23,11 @@ switch cruise
         info.section = 'i06s';
         info.season = '2007_2008';
         info.expocode = '33RR20080204'; %354
-        info.ctddir = [predir1 'i06s/knox14/' info.expocode '_ct1/'];
+        info.ctddir = fullfile(predir1, 'i06s', 'knox14', [info.expocode '_ct1/']);
         info.ctdpat = '*_ct1.csv';
         %info.samdir = [predir1 'i06s/knox14/'];
         %info.sampat = [info.expocode '_hy1.csv'];
-        info.samdir = [predir1 '/'];
+        info.samdir = fullfile(predir1, 'multiple');
         info.sampat = 'GLODAPv2.2020_Merged_Master_File.mat';
         info.statind = [1:4 6:76 77:92];% 106:-1:100 99:-1:93]; %4 and 5 are very close but 4 is shallower dog-leg matches 2019 cruise, check what gavin used though
         readme = {'sample data from adjusted GLODAP file'};
@@ -37,12 +37,13 @@ switch cruise
         info.expocode = '325020190403';
         %info.ctddir = [predir1 'i06s/soccom25/' info.expocode '_ct1/'];
         %info.ctdpat = '*_ct1.csv';
-        info.ctddir = [predir1 'i06s/soccom25/' info.expocode '_nc_ctd/'];
+        info.ctddir = fullfile(predir1, 'i06s', 'soccom25', [info.expocode '_nc_ctd/']);
         info.ctdpat = '*_ctd.nc';
-        info.samdir = [predir1 'i06s/soccom25/'];
+        info.samdir = fullfile(predir1, 'i06s', 'soccom25');
         info.sampat = [info.expocode '_hy1.csv'];
         info.statind = [46:54 45:-1:1]; %N to S
-        
+        info.xstatnumgrid = [info.statind; [[54:-1:46]+21 45:-1:1]]; %gap between stations 54 and 45
+
     case 'jr239'
         info.section = 'andrex';
         info.expocode = '74JC20100319'; %703
@@ -51,9 +52,10 @@ switch cruise
         info.ctdpat = '*_ct1.csv';
         %info.samdir = [predir1 'andrex/jr239/'];
         %%info.sampat = [info.expocode '_hy1.csv'];
-        info.samdir = [predir1 '/'];
+        info.samdir = fullfile(predir1, 'multiple');
         info.sampat = 'GLODAPv2.2020_Merged_Master_File.mat';
-        info.statind = [68:-1:2]; %E to W
+        info.statind = [68:-1:6 4:-1:2]; %E to W, station 5 aborted cast
+        info.xstatnumgrid = [info.statind; [68:-1:24 [23:-1:6 4:-1:2]-1]]; %topography between 24 and 23, and 6 and 4 (station 5 aborted cast)
         readme = {'sample data from adjusted GLODAP file'};
     case 'jc030'
         info.section = 'andrex';
@@ -61,9 +63,9 @@ switch cruise
         info.season = '2008_2009';
         info.ctddir = [predir1 'andrex/jc030/740H20081226_ct1/'];
         info.ctdpat = '*_ct1.csv';
-        info.samdir = [predir1 '/'];
+        info.samdir = fullfile(predir1, 'multiple');
         info.sampat = 'GLODAPv2.2020_Merged_Master_File.mat';
-        info.statind = [2:27]; %E to W
+        info.statind = [1:27]; %E to W
         readme = {'sample data from adjusted GLODAP file'};
     case 'jr18005'
         info.section = 'andrex';
@@ -74,7 +76,8 @@ switch cruise
         info.samdir = [predir1 'andrex/jr18005/'];
         info.sampat = 'ANDREX_II_*BODC.csv'; %***need to convert xlsx to csv for dic, ph, talk, but wait for vas to fix?
         info.sam_hcpat = {{'niskin'}};
-        info.statind = fliplr([3:63 66 69:73 75:98]); %E to W
+        info.statind = [98:-1:75 73:-1:69 66 63:-1:3]; %E to W
+        info.xstatnumgrid = [info.statind; 98:-1:75 [73:-1:69 66 63:-1:24]+1 [23:-1:6] [5:-1:3]-1]; %no actual gap between 75 and 73 or 69, 66, 63, but topography between 24 and 23 and 6 and 5
         %ctdout = 1; samout = 1;
         
     case 'jc032'
@@ -85,7 +88,7 @@ switch cruise
         info.ctdpat = 'a095_*.csv';
         %info.samdir = [predir1 '24s/jc032/'];
         %info.sampat = [info.expocode '_hy1.csv'];
-        info.samdir = [predir1 '/'];
+        info.samdir = fullfile(predir1, 'multiple');
         info.sampat = 'GLODAPv2.2020_Merged_Master_File.mat';
         info.statind = [23:34 36:47 49:118]; %1:9 first BC section (farther south), 10:22 second (near 24S)
         %gavin loaded all files or at least 10-118, not sure if they were
@@ -102,7 +105,7 @@ switch cruise
         info.samdir = [predir1 '/'];
         info.sampat = 'GLODAPv2.2020_Merged_Master_File.mat';
         info.statind = [4:26 29:32 34:88 90:113 122:-1:114];
-                readme = {'sample data from adjusted GLODAP file'};
+        readme = {'sample data from adjusted GLODAP file'};
         
     case 'jr18002'
         info.section = 'sr1b';
@@ -122,7 +125,7 @@ switch cruise
         info.ctdpat = [info.expocode '*_ct1.csv'];
         %info.samdir = [predir1 '/sr1b/jc031/'];
         %info.sampat = [info.expocode '_hy1.csv'];
-        info.samdir = [predir1 '/'];
+        info.samdir = fullfile(predir1, 'multiple');
         info.sampat = 'GLODAPv2.2020_Merged_Master_File.mat';
         info.section = section;
         if strcmp(section, 'sr1b')
