@@ -124,6 +124,8 @@ if sum(strcmp('conc_o2',ds_oxy_fn))==0
     ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
     ds_oxy.conc_o2(isnan(ds_oxy.sample_titre+ds_oxy.bot_vol_tfix)) = NaN;
 end
+ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)) = max(ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)), 5);
+ds_oxy.flag(isnan(ds_oxy.conc_o2)) = max(ds_oxy.flag(isnan(ds_oxy.conc_o2)),4);
 ds_oxy.flag((isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2)) & ~isnan(ds_oxy.fix_temp)) = 5; %drawn but not analysed
 
 %now put into structure and output
@@ -168,7 +170,7 @@ end
 
 scriptname = mfilename; oopt = 'oxyflags'; get_cropt
 
-mfsave(fullfile(root_oxy, ['/oxy_' mcruise '_01.nc']), d, hnew);
+mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 
 % compute botoxy_per_kg (umol/kg) from botoxy (umol/L) and save to samfile
 clear dnew hnew

@@ -26,7 +26,7 @@ fn = dir(fullfile(mgetdir('M_CTD'), ['ctd_' mcruise '_*_raw.nc']));
 stns = struct2cell(fn); stns = cell2mat(stns(1,:)'); stns = str2num(stns(:,end-9:end-7));
 
 %output file of depths
-fnot = fullfile(mgetdir('M_CTD_DEP'), 'station_depths_' mcruise '.mat']);
+fnot = fullfile(mgetdir('M_CTD_DEP'), ['station_depths_' mcruise '.mat']);
 
 %load this if it already exists and extend if necessary, otherwise set up empty array
 if exist(fnot, 'file')
@@ -43,9 +43,6 @@ end
 
 %which stations need depths
 scriptname = mfilename; oopt = 'depth_recalc'; get_cropt
-if ~isempty(stnmiss)
-    bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
-end
 ii0 = find(isnan(bestdeps(:,2)));
 if ~isempty(recalcdepth_stns)
     ii0 = unique([ii0; find(ismember(bestdeps(:,1),recalcdepth_stns))]);
@@ -70,6 +67,9 @@ end
 
 %finally look to cruise options for any changes
 scriptname = mfilename; oopt = 'bestdeps'; get_cropt
+if ~isempty(stnmiss)
+    bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
+end
 if ~isempty(replacedeps)
     [~,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
     if length(ia)<size(replacedeps(:,1)); error(['replacedeps repeats stations; check opt_' mcruise]); end
@@ -115,9 +115,9 @@ switch depth_source
                 % Average altimeter and CTD depth for 30 seconds around max depth
                 ii = bot_ind-15:bot_ind+15;
                 if min(ii)>0 & max(ii)<=length(d.depSM)
-                    ctd_bot = nanmean(d.depSM(bot_ind-15:bot_ind+15));
+                    ctd_bot = m_nanmean(d.depSM(bot_ind-15:bot_ind+15));
                     % Eliminate altim readings >20m (unlikely when CTD at bottom)
-                    altim_select = d.altimeter(bot_ind-15:bot_ind+15); altim_select(altim_select>20) = NaN; alt_bot = nanmean(altim_select);
+                    altim_select = d.altimeter(bot_ind-15:bot_ind+15); altim_select(altim_select>20) = NaN; alt_bot = m_nanmean(altim_select);
                     bestdeps(iif(no),2) = alt_bot + ctd_bot;
                 end
             end

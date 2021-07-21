@@ -176,7 +176,8 @@ for no = 1:length(hs.colhead(1,:))
     end
 end
 if ~isempty(iiec)
-    hs.colhead(iiec) = []; hs.colunit(iiec) = [];
+    hs.colhead(iiec) = []; 
+    if isfield(hs, 'colunit'); hs.colunit(iiec) = []; end
     ch(iiec) = [];
     warning(sprintf('%d columns with empty headers being ignored',length(iiec)))
 end

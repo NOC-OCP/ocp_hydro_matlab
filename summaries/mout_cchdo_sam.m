@@ -98,7 +98,7 @@ vars(iie,:) = [];
 %%%%% write %%%%%
 
 scriptname = 'mout_cchdo'; oopt = 'woce_sam_headstr'; get_cropt
-fotname = sprintf('%s/%s_hy1.csv',mgetdir('sum'),expocode);
+fotname = fullfile(mgetdir('sum'), sprintf('%s_hy1.csv',expocode));
 fid = fopen(fotname, 'w');
 
 %header

@@ -579,6 +579,9 @@ switch scriptname
         %%%%%%%%%% mout_cchdo %%%%%%%%%%
     case 'mout_cchdo'
         switch oopt
+            case 'woce_expo'
+                expocode = '740H20210202';
+                sect_id = 'SR1b_A23';
             case 'woce_vars_exclude'
                 vars_exclude_ctd = {};
                 %vars_exclude_sam = {'upsal_flag'; 'uoxygen_flag'};

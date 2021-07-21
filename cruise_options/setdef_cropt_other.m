@@ -109,9 +109,9 @@ switch scriptname
         switch oopt
             case 'woce_expo'
                 crhelp_str = {'information for header of exchange-format csv files: '
-                    'expocode and sect_id (defaults: ''unknown'')'};
-                expocode = '740H20210202';
-                sect_id = 'SR1b_A23';
+                    'expocode and sect_id (defaults: ''unknown'' and empty, respectively)'};
+                expocode = 'unknown';
+                sect_id = '';
             case 'woce_ctd_flags';
                 crhelp_str = {'optional: change flag variables ctdflag (temp, sal) and ctoflag (oxygen) '
                     'from default of 2 where data present, 9 otherwise'};
@@ -122,8 +122,6 @@ switch scriptname
                     'Defaults: vars_exclude_ctd = {''fluor'' ''transmittance''}, vars_exclude_sam = {}.'};
                 vars_exclude_ctd = {'fluor' 'transmittance'};
                 vars_exclude_sam = {};
-            case 'woce_ctd_flags'
-                crhelp_str = {'Place to change values for ctdflag and ctoflag (from default of 2 where data present, 9 otherwise.'};
             case 'woce_file_flagonly'
                 crhelp_str = {'varsexclude is a cell array listing variables to NaN before printing to'
                     'exchange-format csv files (default: {})'};

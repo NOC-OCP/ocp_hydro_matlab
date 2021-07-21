@@ -8,7 +8,7 @@ if ~exist('klist','var')
     if ~exist('stn','var') %prompt
         minit
     end
-    klist = stn;
+    klist = stnlocal;
 else
 disp('Will process stations in klist: ')
 disp(klist)
