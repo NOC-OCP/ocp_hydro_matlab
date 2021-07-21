@@ -107,7 +107,9 @@ switch scriptname
             case 'rawedit_auto'
                 revars = {'press' -1.495 8000
                     };
-                if stnlocal==74
+                if stnlocal==23
+                    sevars = {'par_up' -inf inf};
+                elseif stnlocal==74
                     sevars = {'temp1' 1.13987e5 inf
                         'cond1' 1.13987e5 inf
                         'oxygen_sbe1' 1.13945e5 inf};
@@ -254,7 +256,7 @@ switch scriptname
                 end
                 ds.dnum = repmat(datenum([dat ' ' tim],'dd/mm/yy HHMM'),length(ds.cast_number),1);
                 %bottle volumes
-                ds_vol = dataset('File',fullfile(root_oxy, 'flask_vols.csv'),'Delimiter',',');
+                ds_vol = dataset('File',[root_oxy '/flask_vols.csv'],'Delimiter',',');
                 [~,ia,ib] = intersect(ds.bottle_no, ds_vol.Oxygen_bottle);
                 ds.bot_vol = NaN+ds.bottle_no;
                 ds.bot_vol(ia) = ds_vol.Vol(ib);
@@ -263,7 +265,7 @@ switch scriptname
                 ds_oxy.vol_std(:) = 5;
                 %load all blanks and standards records, average over runs
                 %storing weights for later averaging
-                ds_obs = dataset('File',fullfile(root_oxy, 'log_blanks_standards.csv'),'Delimiter',',');
+                ds_obs = dataset('File',[root_oxy '/log_blanks_standards.csv'],'Delimiter',',');
                 ds_obs.blanks = NaN+ds_obs.reag_batch; ds_obs.stds = ds_obs.blanks;
                 ds_obs.ns = zeros(size(ds_obs.stds)); ds_obs.nb = ds_obs.ns;
                 for rno = 1:size(ds_obs,1)
@@ -522,7 +524,7 @@ switch scriptname
         switch oopt
             case 'tsgsaladj'
                 root_tsg = mgetdir('tsg');
-                fnsm = fullfile(root_tsg, 'sdiffsm.mat');
+                fnsm = [root_tsg '/sdiffsm.mat'];
                 if exist(fnsm,'file') ~= 2
                     t = [-1e9 ; 1e9];
                     sdiffsm = [0 ; 0];
@@ -531,7 +533,7 @@ switch scriptname
                 if time==1 & salin==1
                     salout = 1;
                 else
-                    load(fnsm)
+                    load([root_tsg '/sdiffsm'])
                     kbad = find(isnan(t+sdiffsm)); % bak jc211 remove any points where t or sdiffsm are nan
                     t(kbad) = [];
                     sdiffsm(kbad) = [];

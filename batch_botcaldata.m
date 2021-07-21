@@ -32,7 +32,7 @@ for lno = 1:size(list_actions,1)
     if ~exist(list_actions{lno,1}, 'var')
         eval([list_actions{lno,1} ' = [];']);
     else
-        eval(['klist = ' list_actions{lno,1} '(:)';]);
+        eval(['klist = ' list_actions{lno,1} '(:);']);
         klistall = [klistall klist];
         sprintf('Will %s from stations\n', list_actions{lno,2});
         disp(klist); pause(0.5)
