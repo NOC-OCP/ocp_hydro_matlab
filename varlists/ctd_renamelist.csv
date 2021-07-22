@@ -5,6 +5,7 @@ t190C,temp2,degc90
 altM,altimeter,meters
 ptempC,pressure_temp,degc90
 timeS,time,seconds
+flECO_minus_AFL,fluor,mg/m^3
 flC,fluor,ug/l
 flECO_minus_AFL,fluor,ug/l
 scan,/,number

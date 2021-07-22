@@ -40,7 +40,7 @@ end
 root_ctd = mgetdir('ctd');
 root_sum = mgetdir('sum');
 
-d = dir(fullfile(root_ctd, ['ctd_' mcruise '_*_psal.nc'])); d = {d.name};
+d = dir(fullfile(root_ctd, ['ctd_' mcruise '_*_psal.nc'])); d = {d.name}; d = cell2mat(d(:));
 
 %which stations
 stnall = str2num(d(:,length(mcruise)+[6:8]));
