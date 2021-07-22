@@ -41,9 +41,9 @@ if ~strcmp(perm(3),'w')
 end
 
 
-depstr = sprintf('%010.3f',depth);
+depstr = sprintf('%10.3f',depth);
 
-odepstr = sprintf('%010.3f',olddep);
+odepstr = sprintf('%10.3f',olddep);
 
 m1 = ['mputdep: ' ncfile.name];
 

@@ -46,13 +46,10 @@ else
    for kfile = 1:length(fn)
        if exist(m_add_nc(fn{kfile}),'file')
            try
-               [s,r] = unix(['ls -l ' m_add_nc(fn{kfile})]);
-	   catch
-	       s = 0;
-	   end
-	   if s==0 %file is not a symlink
                mputdep(fn{kfile},bestdeps(bestdeps(:,1)==stnlocal,2))
-	   end
+           catch me
+               warning(me.message)
+           end
        end
    end
    

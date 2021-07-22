@@ -26,14 +26,14 @@ switch scriptname
                 nnisk = 24;
             case 'oxyvars'
                 crhelp_str = {'oxyvars (default: {''oxygen_sbe1''; ''oxygen_sbe2''}) is a cell array listing the name(s) of ';
-                    'oxygen variables in raw file (first column) and 24hz file (second, don''t change this). if you only have ';
+                    'oxygen variables in raw file (first column) and 24hz file (second, don''t change this). If you only have ';
                     'one oxygen sensor, keep just the first row; if you change templates/ctd_renamelist.csv, change the first ';
                     'column accordingly.'};
                 oxyvars = {'oxygen_sbe1' 'oxygen1';
                     'oxygen_sbe2' 'oxygen2'};
             case 'oxy_align'
                 crhelp_str = {'oxy_align (default 6) is the number of seconds by which oxygen has been shifted in'
-                    'SBE processing. set oxy_end (default 0) to 1 to remove this many seconds before end of cast '
+                    'SBE processing. Set oxy_end (default 0) to 1 to remove this many seconds before end of cast '
                     'selected in mdcs_03g.'};
                 oxy_align = 6;
                 oxy_end = 0;
@@ -42,6 +42,20 @@ switch scriptname
                     '(for which you would need to fill in depth in populate_station_depths,'
                     'and wouldn''t bother with the BT constraint on LADCP processing, etc.)'};
                 shortcasts = [];
+            case 'ctdsens_groups'
+                crhelp_str = {'ctdsens_groups is a structure with fields corresponding to the CTD sensors e.g.'
+                    'temp1, cond1, oxygen1, temp2, etc.; their values are Nx1 cell arrays listing stations '
+                    'for a given sensor/serial number, in case one or more sensors was changed during the cruise.'
+                    'all default to {1:999}, but, for instance, you could set ctdsens_groups.oxygen1 = {1:30 31:70} '
+                    'if the CTD1 oxygen sensor was changed between stations 30 and 31.'}; 
+                    ctdsens_groups.temp1 = {1:999};
+                    ctdsens_groups.cond1 = {1:999};
+                    ctdsens_groups.oxygen1 = {1:999};
+                    ctdsens_groups.temp2 = {1:999};
+                    ctdsens_groups.cond2 = {1:999};
+                    ctdsens_groups.oxygen2 = {1:999};
+                    ctdsens_groups.fluor = {1:999};
+                    ctdsens_groups.transmittance = {1:999};
         end
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
         
@@ -119,12 +133,12 @@ switch scriptname
                     'set in scriptname = ''ctdpars''; oopt = ''oxyvars'').'
                     'doturbV (default 0), if true, convert from turbidity volts to turbidity again (to correct for '
                     'precision problem), using parameters set in case ''turbVpars''. '
-                    'tempcal, condcal, oxygencal, fluorcal, transmittancecal (all default to 0) determine whether to'
-                    'apply calibrations specified under ''ctdcals'' below to these sensors.'};
+                    'Structure docal has fields temp, cond, oxygen, fluor, transmittance, all default to 0, set to'
+                    '1 to apply calibrations specified under ''ctdcals'' below to these sensor types.'};
                 dooxyrev = 0;
                 dooxyhyst = 1;
                 doturbV = 0;
-                tempcal = 0; condcal = 0; oxygencal = 0; fluorcal = 0; transmittancecal = 0;
+                docal.temp = 0; docal.cond = 0; docal.oxygen = 0; docal.fluor = 0; docal.transmittance = 0;
             case 'oxyrev'
                 crhelp_str = {'sets three parameters to pass to mcoxyhyst_rev; defaults to standard SBE processing values.'};
                 H1 = -0.033;
@@ -144,7 +158,7 @@ switch scriptname
                 turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
             case 'ctdcals'
                 crhelp_str = {'Set calibration functions to be applied to variables in _24hz file, if '
-                    'corresponding flags were set in ''raw_corrs'' case above, using: '
+                    'corresponding docal flags were set in ''raw_corrs'' case above. Use '
                     'calstr, a cell array (Nx1) of strings expressing the calibration functions between '
                     'fields in d0 and calibrated fields in dcal, e.g.:'
                     'calstr = {''dcal.temp1 = d0.temp1 - 1.2e-4*d0.statnum;''};'

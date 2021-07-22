@@ -30,9 +30,7 @@ switch scriptname
     case 'mctd_02b'
         switch oopt
             case 'raw_corrs'
-                tempcal = 1; 
-                condcal = 1;
-                oxygencal = 1;
+                docal.temp = 1; docal.cond = 1; docal.oxygen = 1;
             case 'oxyhyst'
                 h3tab =[
                     -10 700
@@ -45,49 +43,35 @@ switch scriptname
                 iib = find(isnan(d.press)); iig = find(~isnan(d.press));
                 H3(iib) = interp1(iig,H3(iig),iib); %***
             case 'ctdcals'
-                    calstr = {
-                        'dcal.temp1 = d0.temp1 - 0.001;'
-                        'dcal.temp2 = d0.temp2 - 0.0005*d0.press/4000;'
-                        };
-                    calms = 'from comparison with SBE35, stations 1-65';
-                    calmsg = {
-                        'temp1 jc211' calms
-                        'temp2 jc211' calms
-                        };
-                    % Original estimate
-                    %    'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  4000  8000],(1.0*[0.0 0.0 -2.0 -4.0 ] - 0.5)/1e3,d0.press)/35);'
-                    %    'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  4000  8000],(1.0*[0.0 0.0 -1.0 -2.0 ] + 1.2)/1e3,d0.press)/35);'
-                    if stnlocal <= 74  % revised estimate, original estimate didnt quite get deep part correct
-                        % the correction below combined the original
-                        % estimate with a small tweak, and is the total
-                        % adjustment to be applied
-                        calstr = [calstr;
-                            'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] - 0.5)/1e3,d0.press)/35);'
-                            'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press)/35);'
-                            ];
-                    else  % add 0.001 to cond1 for stns 75 and following
-                        % at end of cruise, add a ramped adjustment that
-                        % ramps up between stns 75 and 90. Need the calstr
-                        % to start with dcal.cond1 or dcal.cond2.
-                        calstr = [calstr;
-                            'dcal.cond1 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond1 = d0.cond1.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.5 -1.5 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] + 0.5)/1e3,d0.press))/35);'
-                            'dcal.cond2 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond2 = d0.cond2.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.0 -1.0 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press))/35);'
-                            ];
-                    end
-                    calms = 'from comparison with bottle salinities, stations 3-73';
-                    calmsg = [calmsg;
-                        {'cond1 jc211' calms}
-                        {'cond2 jc211' calms}
-                        ];
-                    calstr = [calstr;
-                        'dcal.oxygen1 = d0.oxygen1.*interp1([0 2000 4000 5000],[1.03 1.04 1.043 1.042],d0.press);'
-                        'dcal.oxygen2 = d0.oxygen2.*interp1([0 1500 4000 5000],[1.03 1.043 1.051 1.05],d0.press);'
-                        ];
-                    calms = 'from comparison with bottle oxygens, stations 3-39 and 62-95';
-                    calmsg = [calmsg;
-                        {'oxygen1 jc211' calms}
-                        {'oxygen2 jc211' calms}
-                        ];
+                calstr.temp1.jc211 = 'dcal.temp1 = d0.temp1 - 0.001;';
+                calstr.temp2.jc211 = 'dcal.temp2 = d0.temp2 - 0.0005*d0.press/4000;';
+                calms = 'from comparison with SBE35, stations 1-65';
+                calstr.temp1.calmsg = calms;
+                calstr.temp2.calmsg = calms;
+                % Original estimate
+                %    'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  4000  8000],(1.0*[0.0 0.0 -2.0 -4.0 ] - 0.5)/1e3,d0.press)/35);'
+                %    'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  4000  8000],(1.0*[0.0 0.0 -1.0 -2.0 ] + 1.2)/1e3,d0.press)/35);'
+                if stnlocal <= 74  % revised estimate, original estimate didnt quite get deep part correct
+                    % the correction below combined the original
+                    % estimate with a small tweak, and is the total
+                    % adjustment to be applied
+                    calstr.cond1.jc211 = 'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] - 0.5)/1e3,d0.press)/35);';
+                    calstr.cond2.jc211 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press)/35);';
+                else  % add 0.001 to cond1 for stns 75 and following
+                    % at end of cruise, add a ramped adjustment that
+                    % ramps up between stns 75 and 90. Need the calstr
+                    % to start with dcal.cond1 or dcal.cond2.
+                    calstr.cond1.jc211 = 'dcal.cond1 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond1 = d0.cond1.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.5 -1.5 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] + 0.5)/1e3,d0.press))/35);';
+                    calstr.cond2.jc211 = 'dcal.cond2 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond2 = d0.cond2.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.0 -1.0 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press))/35);';
+                end
+                calms = 'from comparison with bottle salinities, stations 3-73';
+                calstr.cond1.calmsg = calms;
+                calstr.cond2.calmsg = calms;
+                calstr.oxygen1.jc211 = 'dcal.oxygen1 = d0.oxygen1.*interp1([0 2000 4000 5000],[1.03 1.04 1.043 1.042],d0.press);';
+                calstr.oxygen2.jc211 = 'dcal.oxygen2 = d0.oxygen2.*interp1([0 1500 4000 5000],[1.03 1.043 1.051 1.05],d0.press);';
+                calms = 'from comparison with bottle oxygens, stations 3-39 and 62-95';
+                calstr.oxygen1.calmsg = calms;
+                calstr.oxygen2.calmsg = calms;
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
         
@@ -222,13 +206,13 @@ switch scriptname
                 chunits = 3;
                 mvar_fvar = {
                     'statnum',       'cast_number'
-                    'position',      'niskin_bottle'  
-                    'vol_blank',     'blank_titre'   
-                    'vol_std',       'std_vol'        
+                    'position',      'niskin_bottle'
+                    'vol_blank',     'blank_titre'
+                    'vol_std',       'std_vol'
                     'vol_titre_std', 'standard_titre'
-                    'fix_temp',      'fixing_temp'  
-                    'sample_titre',  'sample_titre'   
-                    'flag',          'flag' 
+                    'fix_temp',      'fixing_temp'
+                    'sample_titre',  'sample_titre'
+                    'flag',          'flag'
                     'oxy_bottle'     'bottle_no'
                     'bot_vol',       'bot_vol'
                     'date_titre',    'dnum'
@@ -271,28 +255,28 @@ switch scriptname
                 for rno = 1:size(ds_obs,1)
                     data = str2num(ds_obs.data{rno});
                     ds_obs.dday(rno) = datenum([str2num(ds_obs.datevec{rno}) 0]) - datenum(2021,1,1);
-                        switch ds_obs.type{rno}
-                            case 'bl'
-                                ds_obs.blanks(rno) = data(1)-mean(data(2:3));
-                                ds_obs.nb(rno) = 2;
-                            case 'std5'
-                                ds_obs.stds(rno) = mean(data);
-                                ds_obs.ns(rno) = length(data);
-                            case 'stdc'
-                                b = regress(data(2,:)',[ones(size(data,2),1) data(1,:)']);
-                                ds_obs.blanks(rno) = b(1);
-                                ds_obs.nb(rno) = size(data,2);
-                                ds_obs.stds(rno) = b(2)*5;
-                                ds_obs.ns(rno) = size(data,2);
-                        end
+                    switch ds_obs.type{rno}
+                        case 'bl'
+                            ds_obs.blanks(rno) = data(1)-mean(data(2:3));
+                            ds_obs.nb(rno) = 2;
+                        case 'std5'
+                            ds_obs.stds(rno) = mean(data);
+                            ds_obs.ns(rno) = length(data);
+                        case 'stdc'
+                            b = regress(data(2,:)',[ones(size(data,2),1) data(1,:)']);
+                            ds_obs.blanks(rno) = b(1);
+                            ds_obs.nb(rno) = size(data,2);
+                            ds_obs.stds(rno) = b(2)*5;
+                            ds_obs.ns(rno) = size(data,2);
+                    end
                 end
                 %carpenter method better than standard-curve according to
                 %go-ship manual. blanks on custard machine were bad (very
                 %high), also most blanks run by epa were high (to a lesser
                 %extent), likely under-stirred. assuming standards (and
-                %samples) on custard machine were okay. 
+                %samples) on custard machine were okay.
                 usevalb = strcmp('abc',ds_obs.machine_method) & ~strncmp('bad',ds_obs.comment,3) & strcmp(ds_obs.analyst,'ylf') & strcmp('bl',ds_obs.type);
-                ds_obs.nb(usevalb==0) = 0; 
+                ds_obs.nb(usevalb==0) = 0;
                 usevals = ~strncmp('bad',ds_obs.comment,3) & strcmp('std5',ds_obs.type); %assuming standards (and samples) were good on both machines
                 ds_obs.ns(usevals==0) = 0;
                 %average over good standards for each batch of titrant.
@@ -321,12 +305,12 @@ switch scriptname
                 d.botoxyb_flag(d.botoxyb_flag>10) = d.botoxyb_flag(d.botoxyb_flag>10)-10;
                 %duplicates differ by too much (>1 umol/L and they were run
                 %on the same machine)
-                iibd = [2003 6202 7904]; 
+                iibd = [2003 6202 7904];
                 d.botoxya_flag(ismember(d.sampnum,iibd)) = 3;
                 d.botoxyb_flag(ismember(d.sampnum,iibd)) = 3;
                 %questionable based on ctd comparison, although it could be samples are okay just in high gradient areas                %they're just in high gradient areas
                 iiq = [401 409 413 801 805 1406 2809 3212 3815 7014 7812 9002];
-                d.botoxya_flag(ismember(d.sampnum,iiq)) = 3; 
+                d.botoxya_flag(ismember(d.sampnum,iiq)) = 3;
                 %weird standards values, and bottle values are offset
                 %relative to others
                 iib = [2809 3113 3212];
@@ -335,7 +319,7 @@ switch scriptname
         end
         %%%%%%%%%% end moxy_01 %%%%%%%%%%
         
-
+        
         %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
     case 'mday_01_clean_av'
         switch oopt
@@ -424,7 +408,7 @@ switch scriptname
                 %POM, lugols?***
         end
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
-
+        
         %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
@@ -467,7 +451,7 @@ switch scriptname
         %%%%%%%%%% end station_summary %%%%%%%%%%
         
         %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
-    case 'batchactions'            
+    case 'batchactions'
         switch oopt
         end
         %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
@@ -475,7 +459,7 @@ switch scriptname
         %%%%%%%%%% set_cast_params_cfgstr %%%%%%%%%%
     case 'set_cast_params_cfgstr'
         switch oopt
-            case 'ladcpopts' 
+            case 'ladcpopts'
                 p.ambiguity = 3.3;
                 p.vlim = 3.3;
                 p.down_sn = 24466;
@@ -485,8 +469,8 @@ switch scriptname
                     p.up_sn = 15288;
                 end
                 p.ctdmaxlag=10; % our times are really closely synced - as long as we use the correct time reference!
-%                 ps.shear_weightmin=0.1; % default is 0.1 - EPA testing 20210224
-%                 ps.shear_stdf = 5; % default is 2 - EPA testing 20210224
+                %                 ps.shear_weightmin=0.1; % default is 0.1 - EPA testing 20210224
+                %                 ps.shear_stdf = 5; % default is 2 - EPA testing 20210224
         end
         %%%%%%%%%% end set_cast_params_cfgstr %%%%%%%%%%
         
@@ -512,7 +496,7 @@ switch scriptname
             case 'tsg_timebreaks'
                 tbreak = [
                     datenum([2021 2 20 12 30 00]) % pumps off Fl & Tr cleaned; TSG not cleaned
-                    datenum([2021 2 27 16 10 00]) % Fl, Tr and TSG cleaned. Day 058/1610                  
+                    datenum([2021 2 27 16 10 00]) % Fl, Tr and TSG cleaned. Day 058/1610
                     ];
             case 'tsg_sdiff'
                 sc1 = 0.5; sc2 = 0.01; %thresholds to use for smoothed series
@@ -542,7 +526,7 @@ switch scriptname
         end % check this
         %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
         
-                %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
+        %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
     case 'msec_run_mgridp'
         switch oopt
             case 'sections'
@@ -575,7 +559,7 @@ switch scriptname
                 bottle_depth_size = 3;
         end
         %%%%%%%%%% end msec_plot_contrs %%%%%%%%%%
-
+        
         %%%%%%%%%% mout_cchdo %%%%%%%%%%
     case 'mout_cchdo'
         switch oopt

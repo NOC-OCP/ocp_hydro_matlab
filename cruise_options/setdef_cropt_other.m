@@ -113,8 +113,8 @@ switch scriptname
                 expocode = 'unknown';
                 sect_id = '';
             case 'woce_ctd_flags';
-                crhelp_str = {'optional: change flag variables ctdflag (temp, sal) and ctoflag (oxygen) '
-                    'from default of 2 where data present, 9 otherwise'};
+                crhelp_str = {'optional: change flag variables ctdflag (temp, sal), ctoflag (oxygen), '
+                    'ctdfflag (fluor) from default of 2 where data present, 9 otherwise'};
             case 'woce_vars_exclude'
                 crhelp_str = {'vars_exclude_ctd and vars_exclude_sam are lists of mstar variable names'
                     'to exclude from woce exchange-format output files for submission to cchdo, even if '

@@ -50,6 +50,7 @@ end
 %flags default to 2 for data present but may be changed in opt_cruise
 ctdflag = 9+zeros(nsamp,1); ctdflag(~isnan(d.temp+d.psal)) = 2;
 ctoflag = 9+zeros(nsamp,1); ctoflag(~isnan(d.oxygen)) = 2;
+ctfflag = 9+zeros(nsamp,1); ctfflag(~isnan(d.fluor)) = 2;
 scriptname = 'mout_cchdo'; oopt = 'woce_ctd_flags'; get_cropt
 d.temp_flag = ctdflag; d.psal_flag = ctdflag; d.oxygen_flag = ctoflag;
 %other quantities?***

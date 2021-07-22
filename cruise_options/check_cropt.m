@@ -13,6 +13,42 @@ switch scriptname
                         disp(ii)
                     end
                 end
+            case 'ctdsens_groups'
+                iit = find(strcmp('temp1',ctdsens_groups(:,1)));
+                iis = find(strcmp('cond1',ctdsens_groups(:,1)));
+                iserr1 = 0;
+                if length(ctdsens_groups{iit,2})==length(ctdsens_groups{iis,2})
+                    for no = 1:length(ctdsens_groups{iit,2})
+                        if length(ctdsens_groups{iit,2}{no})~=length(ctdsens_groups{iis,2}{no}) || min(ctdsens_groups{iit,2}{no}==ctdsens_groups{iis,2}{no})==0
+                            iserr1 = 1;
+                        end
+                    end
+                else
+                    iserr1 = 1;
+                end
+                iit = find(strcmp('temp2',ctdsens_groups(:,1)));
+                iis = find(strcmp('cond2',ctdsens_groups(:,1)));
+                iserr2 = 0;
+                if length(ctdsens_groups{iit,2})==length(ctdsens_groups{iis,2})
+                    for no = 1:length(ctdsens_groups{iit,2})
+                        if length(ctdsens_groups{iit,2}{no})~=length(ctdsens_groups{iis,2}{no}) || min(ctdsens_groups{iit,2}{no}==ctdsens_groups{iis,2}{no})==0
+                            iserr2 = 1;
+                        end
+                    end
+                else
+                    iserr2 = 1;
+                end
+                errm = '';
+                if iserr1
+                    errm = [errm 'temp1 and cond1 sensor lists are not the same\n'];
+                end
+                if iserr2
+                    errm = [errm 'temp2 and cond2 sensor lists are not the same\n'];
+                end
+                if ~isempty(errm)
+                    errm = [errm 'check opt_cruise castpars, ctdsens_groups'];
+                    warning(errm)
+                end
         end
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
        
@@ -53,7 +89,7 @@ switch scriptname
                     warning(sprintf('mctd_02b found no calibration functions to apply in opt_%s', mcruise));
                     return
                 
-                else
+                elseif max(cell2mat(struct2cell(docal)))>0
                     
                     for sno = 1:size(calstr,1)
                         

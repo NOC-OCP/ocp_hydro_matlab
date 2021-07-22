@@ -31,9 +31,7 @@
 %
 %could add options for fluor as well but i don't know what its cal function should depend on
 
-scriptname = 'ctd_evaluate_sensors';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-oopt = '';
 
 okf = [2]; %only bother with good samples
 okf = [2 3]; %include good or questionable samples (useful for checking flags due to niskins)
@@ -85,11 +83,12 @@ else
    precalo = 0;
 end
 
+scriptname = 'castpars'; oopt = 'ctdsens_groups'; get_cropt
+
 %get data to compare, and sets of indices corresponding to different sensors
 if strcmp(sensname, 'temp')
    fnm = ['utemp' sensstr]; ctddata = getfield(d, fnm); ctddata = ctddata(:);
    caldata = d.sbe35temp(:); calflag = d.sbe35flag(:);
-   oopt = 'tsensind'; get_cropt ;
    res = (caldata - ctddata);
    if isfield(d, 'utemp1') & isfield(d, 'utemp2'); ctdres = (d.utemp2-d.utemp1); else; ctdres = NaN+ctddata; end
    rlabel = 'SBE35 T - CTD T (degC)'; rlim = [-10 10]*1e-3;
@@ -99,7 +98,6 @@ elseif strcmp(sensname, 'cond')
    fnm = ['ucond' sensstr]; ctddata = getfield(d, fnm); ctddata = ctddata(:);
    caldata = [gsw_C_from_SP(d.botpsal(:),d.utemp1(:),d.upress(:)) gsw_C_from_SP(d.botpsal(:),d.utemp2(:),d.upress(:))]; calflag = d.botpsal_flag(:);
    caldata = caldata(:,sensnum);
-   oopt = 'csensind'; get_cropt;
    res = (caldata./ctddata - 1)*35;
    if isfield(d, 'ucond1') & isfield(d, 'ucond2'); ctdres = (d.ucond2(:)./d.ucond1(:)-1)*35; else; ctdres = NaN+ctddata; end
    rlabel = 'C_{bot}/C_{ctd} (psu)'; rlim = [-10 10]*2e-3;
@@ -108,7 +106,6 @@ elseif strcmp(sensname, 'cond')
 elseif strcmp(sensname, 'oxy')
    fnm = ['uoxygen' sensstr]; ctddata = getfield(d, fnm); ctddata = ctddata(:);
    caldata = d.botoxya(:); calflag = d.botoxya_flag(:);
-   oopt = 'osensind'; get_cropt
    res = (caldata - ctddata);
    if isfield(d, 'uoxygen1') & isfield(d, 'uoxygen2'); ctdres = (d.uoxygen2(:)-d.uoxygen1(:)); else; ctdres = NaN+ctddata; end
    rlabel = 'O_{bot} - O_{ctd} (umol/kg)'; rlim = [-5 5];
@@ -122,6 +119,7 @@ statrange = [0 max(d.statnum(~isnan(caldata)))+1];
 
 %only compare points with certain flags
 iig = find(ismember(calflag, okf));
+sensind = ctdsens_groups.([sensname sensstr]);
 n = size(sensind,1);
 for no = 1:n
    sensind{no} = intersect(sensind{no},iig);
@@ -209,8 +207,10 @@ for no = 1:n
 end
 
 if sum(strcmp(sensname, {'temp';'cond';'oxy'})) & plotprof
-%profile plots to display off-scale differences profile-by-profile 
-%(to help pick bad or questionable samples and set their flags in opt_cruise msal_01 or moxy_01)
+    disp('to examine larger differences profile-by-profile to help pick bad or')
+    disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01,')
+    disp('press any key to continue')
+    pause
 
    %for any of the presently ok flagged samples, over all sets
    mres = abs(res)>rlim(2)/2; mres(d.upress>=pdeep) = abs(res(d.upress>=pdeep))>rlim(2)/4;

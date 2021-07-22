@@ -128,6 +128,8 @@ switch scriptname
             case 'woce_expo'
                 expocode = '74EQ20219999';
                 sect_id = 'PAP';
+            case 'woce_ctd_flags'
+                ctfflag(~isnan(d.fluor)) = 3; %questionable because uncalibrated
             case 'woce_vars_exclude'
                 vars_exclude_ctd = {};
             case 'woce_ctd_headstr'

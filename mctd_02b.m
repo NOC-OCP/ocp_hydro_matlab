@@ -136,10 +136,10 @@ end
 
 %%%%% sensor calibrations %%%%%
 
-if tempcal | condcal | oxygencal | fluorcal | transmittancecal
-    %if any are true, get whole list and test for which to apply below
-    scriptname = mfilename; oopt = 'ctdcals'; get_cropt
-    
+%if any are true, get whole list and test for which to apply below
+scriptname = mfilename; oopt = 'ctdcals'; get_cropt
+if docal.temp || docal.cond || docal.oxygen || docal.fluor || docal.transmittance
+
     if size(calstr,1)>0
         
         %initialise
