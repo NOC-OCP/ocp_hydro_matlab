@@ -112,7 +112,7 @@ switch scriptname
                     'expocode and sect_id (defaults: ''unknown'' and empty, respectively)'};
                 expocode = 'unknown';
                 sect_id = '';
-            case 'woce_ctd_flags';
+            case 'woce_ctd_flags'
                 crhelp_str = {'optional: change flag variables ctdflag (temp, sal), ctoflag (oxygen), '
                     'ctdfflag (fluor) from default of 2 where data present, 9 otherwise'};
             case 'woce_vars_exclude'

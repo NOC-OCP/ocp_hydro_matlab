@@ -62,12 +62,14 @@ if ~isempty(newvars)
     end
     
     [d,h] = mload(wkfile,'/');
-    dnew.scan = d.scan;
+    clear dnew hnew
+    hnew.fldnam = {}; hnew.fldunt = {};
     for no = 1:length(newvars)
-        dnew.(newvars{no}) = d.(newvars{no});
+        ii = find(strcmp(newvars{no},dsv.sbename));
+        dnew.(dsv.varname{ii}) = d.(newvars{no});
+        hnew.fldnam = [hnew.fldnam dsv.varname{ii}];
+        hnew.fldunt = [hnew.fldunt dsv.varunit{ii}];
     end
-    [hnew.fldnam,ii,~] = intersect(h.fldnam,fieldnames(dnew)); 
-    hnew.fldunt = h.fldunt(ii);
     unix(['chmod 644 ' m_add_nc(otfile)])
     mfsave(m_add_nc(otfile), dnew, hnew, '-addvars');
     unix(['chmod 444 ' m_add_nc(otfile)])
@@ -76,6 +78,19 @@ if ~isempty(newvars)
         unix(['chmod 644 ' m_add_nc(otfile)])
         mfsave(otfile, dnew, hnew, '-addvars');
         unix(['chmod 644 ' m_add_nc(otfile)])
+    end
+    
+    otfile = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz.nc']);
+%     h = m_read_header(otfile);
+%     [~, ii, ~] = intersect(hnew.fldnam, h.fldnam);
+%     for no = 1:length(ii)
+%         dnew = rmfield(dnew, hnew.fldnam{ii(no)});
+%     end
+%     warning('not overwriting existing variables in _24hz file:')
+%     hnew.fldnam(ii)
+%     hnew.fldnam(ii) = []; hnew.fldunt(ii) = [];
+    if ~isempty(hnew.fldnam)
+        mfsave(otfile, dnew, hnew, '-addvars');
     end
     
     delete(m_add_nc(wkfile))
