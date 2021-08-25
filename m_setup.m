@@ -286,7 +286,6 @@ end
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%   End of items to be edited on each site/cruise   %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -380,3 +379,5 @@ if exist(MEXEC_G.HISTORY_DIRECTORY) ~= 7
 end
 
 MEXEC = rmfield(MEXEC,{'nl'});
+clear sud_runs ufail ud_* mpath cdir am c ii matlist pdir nsecwait s udirs udcruise
+

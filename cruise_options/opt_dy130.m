@@ -175,4 +175,10 @@ switch scriptname
         end
         %%%%%%%%%% end mout_cchdo %%%%%%%%%%
         
+    case 'mctd_addvars'
+        switch oopt
+            case 'newvars'
+                newvars = {'flECO_minus_AFL'};
+        end
+        
 end

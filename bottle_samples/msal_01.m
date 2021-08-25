@@ -31,7 +31,13 @@ un0 = {'number' 'datenum' '2Rt' '2Rt' '2Rt' '2Rt' 'degC' '2Rt' 'woce_9.4' 'psu' 
 %load files and store expected fields
 ld = 0;
 for fno = 1:length(salfiles)
-    [ds, hs] = m_load_samin(fullfile(root_sal, salfiles{fno}), {'sampnum'});
+    try
+        [ds, hs] = m_load_samin(fullfile(root_sal, salfiles{fno}), {'sampnum'});
+    catch me
+        warning(me.message)
+        warning('moving on to next file')
+        continue
+    end
     ii = find(isnan(ds.sampnum)); ds(ii,:) = [];
     %change field names if necessary, for instance, sample1 to sample_1, etc.
     scriptname = mfilename; oopt = 'salnames'; get_cropt 
@@ -101,6 +107,10 @@ for fno = 1:length(salfiles)
     end
 
     ld = ld+ns;
+end
+
+if isempty(ds_sal)
+    error('no data loaded')
 end
 
 if sum(~isnan(ds_sal.cellt))==0; ds_sal.cellt = []; end

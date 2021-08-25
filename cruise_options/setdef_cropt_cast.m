@@ -357,5 +357,12 @@ switch scriptname
         end
         %%%%%%%%%% end ctd_evaluate_sensors %%%%%%%%%%
         
+    case 'mctd_addvars'
+        switch oopt
+            case 'newvars'
+                crhelp_str = {'list of (SBE) names for variables newly added to varlists/ctd_renamelist.csv,'
+                    'to be added to _raw and _raw_cleaned files'};
+                newvars = {};
+        end
         
 end

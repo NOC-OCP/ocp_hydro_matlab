@@ -39,7 +39,13 @@ ld = 0;
 for flno = 1:length(ofiles)
     
     %load
-    [ds, hs] = m_load_samin(fullfile(root_oxy, ofiles(flno).name), hcpat, 'chrows', chrows, 'chunits', chunits);
+    try
+        [ds, hs] = m_load_samin(fullfile(root_oxy, ofiles(flno).name), hcpat, 'chrows', chrows, 'chunits', chunits);
+    catch me
+        warning(me.message)
+        warning('moving on to next file')
+        continue
+    end
     ns = size(ds,1);
     iid = ld+[1:ns]';
     
@@ -74,6 +80,10 @@ for flno = 1:length(ofiles)
     
     ld = ld+ns;
     
+end
+
+if isempty(ds_oxy)
+    error('no data loaded')
 end
 
 %rearrange some fields

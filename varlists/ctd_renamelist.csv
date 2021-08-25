@@ -6,6 +6,7 @@ altM,altimeter,meters
 ptempC,pressure_temp,degc90
 timeS,time,seconds
 flC,fluor,ug/l
+flECO_minus_AFL,fluor,ug/l
 scan,/,number
 pumps,/,pump_status
 latitude,/,degrees
