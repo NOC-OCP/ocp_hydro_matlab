@@ -1,4 +1,4 @@
-function yi = m_interp(x,y,xi,e1,e2,mg)
+[function yi = m_interp(x,y,xi,e1,e2,mg)
 % function yi = m_interp(x,y,xi,e1,e2,mg)
 % 
 % Interpolate x,y onto xi.
