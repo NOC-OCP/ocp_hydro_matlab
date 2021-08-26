@@ -192,7 +192,6 @@ for rno = 1:length(iih)-1 %step through blocks
     %find the sample lines for this block
     iis = find(ltype==2);
     iis = iis(iis>iih(rno) & iis<iih(rno+1));
-    data = indata{iis};
     
     %find the column names for this block
     for crno = 1:chrows

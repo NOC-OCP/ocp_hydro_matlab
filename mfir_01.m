@@ -15,42 +15,20 @@ m = ['infile = ' infile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 dataname = ['fir_' mcruise '_' stn_string];
 otfile = fullfile(root_ctd, dataname);
 
-cellall = mtextdload(infile,','); % load all text
+cellall = mtextdload(infile,',',10); % load all text
+nr = size(cellall,1);
 
-krow = 0;
-kmax = 50; % preallocate space for 50; after that the arrays will grow in the loop
-position = nan+zeros(kmax,1);
-scan = position;
-
-for kline = 1:length(cellall)
-    cellrow = cellall{kline};
-    if length(cellrow) < 4
-        % header lines
-        continue
-    else % found a bottle line
-        krow = krow+1;
-        position(krow) = str2num(cellrow{2});
-        scan(krow) = str2num(cellrow{4});
+n = 1;
+position = NaN; scan = NaN;
+for kline = 1:nr
+    if ~isempty(cellall{kline,4})
+        position(n) = str2num(cellall{kline,2});
+        scan(n) = str2num(cellall{kline,4});
+        n = n+1;
     end
 end
 
 scriptname = mfilename; oopt = 'fixbl'; get_cropt
-
-if krow < kmax
-    position(krow+1:end) = [];
-    scan(krow+1:end) = [];
-end
-
-%bak 30 march 2013 jr281
-% if no bottles closed, eg on an aborted cast, the msave will crash if
-% there are no cycles
-% therefore create a sinle bottle entry, with nan for scan number
-% the follow-up scripts will all work, and merge nans onto the single row of
-% the bottle file.
-if (length(position) == 0)
-    position = nan;
-    scan = nan;
-end
 
 %--------------------------------
 comment = ['input data from ' infile];
