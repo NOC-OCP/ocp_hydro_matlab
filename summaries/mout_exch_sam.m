@@ -1,7 +1,7 @@
-% mout_cchdo_sam: write the sample data in sam_cruise_all.nc to CCHDO exchange file
-% Use: mout_cchdo_sam        
+% mout_exch_sam: write the sample data in sam_cruise_all.nc to CCHDO exchange file
+% Use: mout_exch_sam        
 %
-% variables to be written are listed in templates/cchdo_sam_varlist.csv, 
+% variables to be written are listed in templates/exch_sam_varlist.csv, 
 %    a comma-delimited list of vars to be renamed
 %    The format of each column is
 %    CCHDOname,CCHDOunits,mstarname,format string
@@ -22,7 +22,7 @@ iig = iig(:)';
 
 %%%%% add some fields that don't exist (or edit) %%%%%
 
-scriptname = 'mout_cchdo'; oopt = 'woce_expo'; get_cropt
+scriptname = 'mout_exch'; oopt = 'woce_expo'; get_cropt
 d.expocode = repmat(expocode,length(d.sampnum),1);
 d.sect_id = repmat(sect_id,length(d.sampnum),1);
 if isfield(d,'utime')
@@ -59,8 +59,8 @@ end
 
 %%%%% figure out which fields to write %%%%%
 
-vars = m_cchdo_vars_list(2);
-scriptname = 'mout_cchdo'; oopt = 'woce_vars_exclude'; get_cropt
+vars = m_exch_vars_list(2);
+scriptname = 'mout_exch'; oopt = 'woce_vars_exclude'; get_cropt
 iie = [];
 for no = 1:length(vars_exclude_sam)
     iie = [iie; find(strcmp(vars_exclude_sam{no},vars(:,3)))];
@@ -97,7 +97,7 @@ vars(iie,:) = [];
 
 %%%%% write %%%%%
 
-scriptname = 'mout_cchdo'; oopt = 'woce_sam_headstr'; get_cropt
+scriptname = 'mout_exch'; oopt = 'woce_sam_headstr'; get_cropt
 fotname = fullfile(mgetdir('sum'), sprintf('%s_hy1.csv',expocode));
 fid = fopen(fotname, 'w');
 

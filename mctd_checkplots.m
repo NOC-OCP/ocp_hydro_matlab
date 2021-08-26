@@ -57,7 +57,7 @@
 % will produce plot 6 last and in the front figure window.
 %
 
-minit
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['plots CTD data from station ' stn_string ' along with data from selected previous stations']);
 
 msg1 = '\n Type number of previous stations to view, a list of at least two station numbers, or return to quit\n';

@@ -9,7 +9,7 @@
 % don't like the one it has chosen
 
 
-minit; 
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['interactively select start and end of cast, written to dcs_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD'); % change working directory

@@ -104,8 +104,8 @@ switch scriptname
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         
-        %%%%%%%%%% mout_cchdo %%%%%%%%%%
-    case 'mout_cchdo'
+        %%%%%%%%%% mout_exch %%%%%%%%%%
+    case 'mout_exch'
         switch oopt
             case 'woce_expo'
                 crhelp_str = {'information for header of exchange-format csv files: '

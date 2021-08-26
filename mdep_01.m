@@ -7,7 +7,7 @@
 % Use: mdep_01        and then respond with station number, or for station 16
 %      stn = 16; mdep_01;
 
-minit; 
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['adds water depth from station_depths/station_depths_' mcruise '.mat to all the files for station ' stn_string]);
 
 % resolve root directories for various file types

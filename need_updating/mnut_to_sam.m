@@ -1,4 +1,4 @@
-% mnut_02: paste nut data into sam file
+% mnut_02: paste nut data into sam file, and add umol/kg versions***
 
 minit; scriptname = mfilename;
 mdocshow(scriptname, ['pastes bottle nutrient data into sam_' mcruise '_' stn_string '.nc']);
@@ -38,3 +38,19 @@ infile1
 };
 mpaste
 %--------------------------------
+
+scriptname = mfilename; oopt = 'nutlabtemp'; get_cropt
+
+nutvars = {'silc' 'phos' 'totnit' 'tn' 'tp' 'no2' 'don' 'dop'};
+[varlist, var_copystr, iiv] = mvars_in_file(nutvars, otfile2);
+[d,h] = mloadq(otfile2, ['sampnum uasal ' var_copystr]);
+clear dnew hnew
+dnew.sampnum = d.sampnum; 
+hnew.fldnam = {'sampnum'}; hnew.fldunt = {'number'};
+for no = 1:length(varlist)
+    nam = [varlist(no) '_per_kg'];
+    dnew.(nam) = d.(varlist(no))./gsw_rho_t_exact(d.uasal, repmat(labtemp,size(d.uasal)), 0)/1000;
+    hnew.fldnam = [hnew.fldnam nam];
+    hnew.fldunt = [hnew.fldunt 'umol/kg'];
+end
+mfsave(otfile2, dnew, hnew, '-merge', 'sampnum');

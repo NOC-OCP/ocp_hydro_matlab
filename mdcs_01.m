@@ -7,7 +7,7 @@
 %    is a comma-delimited list of vars and units to be added to under the
 %    header varname, varunit (but probably you don't need to edit)
 
-minit; 
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['finds scan number corresponding to bottom of cast, writes to dcs_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types

@@ -16,7 +16,7 @@
 %this allows you to read in bottle data from different possibly overlapping sets of
 %stations without calling msam_02b or msam_updateall more than necessary
 
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+ssd0 = MEXEC_G.ssd; MEXEC_G.ssd = 1;
 
 %get concatenated list of stations
 list_actions = {'klisttem' 'process sbe35 temperature';
@@ -82,3 +82,4 @@ end
 scriptname = 'batchactions'; oopt = 'sam'; get_cropt
 scriptname = 'batchactions'; oopt = 'sync'; get_cropt
 clear klist*
+MEXEC_G.ssd = ssd0;

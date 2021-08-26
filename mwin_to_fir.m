@@ -5,7 +5,7 @@
 %
 % formerly mwin_03
 
-minit;
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['adds winch data from bottle firing times to fir_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types

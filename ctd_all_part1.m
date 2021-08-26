@@ -1,6 +1,6 @@
-minit
+ssd0 = MEXEC_G.ssd; MEXEC_G.ssd = 1;
 
-stn = stnlocal; mctd_01; %read in sbe .cnv data to mstar
+mctd_01; %read in sbe .cnv data to mstar
 stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.csv
 
 %ylf added jc159: check for out-of-range pressures that will cause trouble
@@ -31,3 +31,4 @@ if MEXEC_G.ix_ladcp == 1
     mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
 end
 
+MEXEC_G.ssd = ssd0;

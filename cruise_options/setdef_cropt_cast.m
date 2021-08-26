@@ -17,6 +17,15 @@ switch scriptname
     case 'castpars'
         %parameters used by multiple scripts, related to CTD/LADCP casts
         switch oopt
+            case 'minit'
+                crhelp_str = {'stn_string (default: 3-digit form of stn) for filenames'
+                    'and moves stn to stnlocal'};
+                mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+                if ~exist('stn', 'var')
+                    stn = input('type stn number ');
+                end
+                stnlocal = stn; clear stn
+                stn_string = sprintf('%03d',stnlocal);
             case 'klist'
                 crhelp_str = {'klist_exc (default: []) lists casts with no CTD to exclude from klist for ';
                     'batch processing scripts'};
@@ -60,15 +69,6 @@ switch scriptname
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
         
         
-        %%%%%%%%%% minit %%%%%%%%%%
-    case 'minit'
-        switch oopt
-            case 'stn_string'
-                crhelp_str = 'stn_string (default: three-digit form of station number stn) is for filenames';
-                stn_string = sprintf('%03d',stn);
-        end
-        %%%%%%%%%% end minit %%%%%%%%%%
-                
         %%%%%%%%%% mctd_01 %%%%%%%%%%
     case 'mctd_01'
         switch oopt
@@ -132,13 +132,10 @@ switch scriptname
                     'that mctd_03 and subsequent processing stages are expecting (specified by second column of oxyvars '
                     'set in scriptname = ''ctdpars''; oopt = ''oxyvars'').'
                     'doturbV (default 0), if true, convert from turbidity volts to turbidity again (to correct for '
-                    'precision problem), using parameters set in case ''turbVpars''. '
-                    'Structure docal has fields temp, cond, oxygen, fluor, transmittance, all default to 0, set to'
-                    '1 to apply calibrations specified under ''ctdcals'' below to these sensor types.'};
+                    'precision problem), using parameters set in case ''turbVpars''. '};
                 dooxyrev = 0;
                 dooxyhyst = 1;
                 doturbV = 0;
-                docal.temp = 0; docal.cond = 0; docal.oxygen = 0; docal.fluor = 0; docal.transmittance = 0;
             case 'oxyrev'
                 crhelp_str = {'sets three parameters to pass to mcoxyhyst_rev; defaults to standard SBE processing values.'};
                 H1 = -0.033;
@@ -158,17 +155,16 @@ switch scriptname
                 turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
             case 'ctdcals'
                 crhelp_str = {'Set calibration functions to be applied to variables in _24hz file, if '
-                    'corresponding docal flags were set in ''raw_corrs'' case above. Use '
-                    'calstr, a cell array (Nx1) of strings expressing the calibration functions between '
-                    'fields in d0 and calibrated fields in dcal, e.g.:'
-                    'calstr = {''dcal.temp1 = d0.temp1 - 1.2e-4*d0.statnum;''};'
-                    'and calmsg, a cell array (Nx2) whose rows correspond to calstr, with the first column '
-                    'set to contain the varible to be calibrated, then a space, then the cruise name '
-                    '(lower case) -- this is used as a partial check against copy-pasting code from a '
-                    'previous cruise and accidentally applying the wrong calibration -- the second '
-                    'column of calmsg optionally contains a string about how/when the calibration '
-                    'function was selected, e.g. calmsg = {''temp1 jc211'' ''based on comparison with SBE35 from stations 1-30''}.'};
-                calstr = {}; calmsg = {};
+                    'corresponding flags are set to true. '
+                    'Functions are set in calstr, a structure whose fields are sensors (e.g. cond1, oxygen2),'
+                    'each of which itself has two fields, the cruise name containing the calibration function '
+                    'e.g. dcal.cond1 = d0.cond1.*(1+4e-4*d0.statnum/35),'
+                    'and ''msg'' a string containing information to be added to the file header along with'
+                    'the calibration function, e.g. ''using bottle salinities from stations 1-40 only''.'
+                    'Flags are set in structure docal, containing temp, cond, oxygen, fluor, transmittance.'
+                    'All default to 0 (no calibration).'};
+                docal.temp = 0; docal.cond = 0; docal.oxygen = 0; docal.fluor = 0; docal.transmittance = 0;
+                clear calstr
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
         

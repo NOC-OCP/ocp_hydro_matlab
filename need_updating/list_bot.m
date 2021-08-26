@@ -5,9 +5,8 @@
 % Use: list_botden        and then respond with station number, or for station 16
 %      stn = 16; list_botden;
 
-scriptname = 'list_bot';
-minit
-mdocshow(scriptname, ['add documentation string for ' scriptname])
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
+mdocshow(mfilename, ['add documentation string for ' scriptname])
 
 if exist('choice','var')
     m = ['Running script ' scriptname ' with choice ' sprintf('%s',choice)];

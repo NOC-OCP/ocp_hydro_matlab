@@ -6,9 +6,7 @@
 %linear station number drift + linear in pressure scaling for cond (approximately equivalent to an offset for sal)
 %linear station number drift + *** for oxy
 %
-%must set sensname to one of {'temp', 'cond', 'oxy'} to select which quantity to compare
-%
-%and set sensnum to 1, 2, or [] to indicate which sensor to use (i.e. temp1, temp2, oxygen1, oxygen)
+%set sensname to 'temp1' 'cond1' 'cond2' 'oxygen1' 'oxygen' etc.
 %
 %can also set precalt, precalc, or precalo to apply calibrations using temp_apply_cal, cond_apply_cal, oxy_apply_cal
 %for testing
@@ -32,6 +30,11 @@
 %could add options for fluor as well but i don't know what its cal function should depend on
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+if ~isempty(str2num(sensname(end)))
+    sensnum = sensname(end);
+else
+    sensnum = [];
+end
 
 okf = [2]; %only bother with good samples
 okf = [2 3]; %include good or questionable samples (useful for checking flags due to niskins)
@@ -40,86 +43,92 @@ printdir = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'plots');
 prstr = '';
 if ~exist('plotprof','var'); plotprof = 1; end %for cond or oxy, make profile plots to check how good samples are
 
-d = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['sam_' mcruise '_all']), '/');
 presrange = [-max(d.upress(~isnan(d.utemp))) 0];
 pdeep = 1500;
 
-if length(sensnum)>0; sensstr = num2str(sensnum); else; sensstr = ''; sensnum = 1; end
+d = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['sam_' mcruise '_all']), '/');
 
+%deal with sensor groups and applying calibrations
+scriptname = 'castpars'; oopt = 'ctdsens_groups'; get_cropt
+scriptname = 'mctd_02b'; oopt = 'ctdcals'; get_cropt
+for no = 1:length(ctdsens_groups.temp1)
+    iis = find(ismember(d.statnum, ctdsens_groups.temp1{no}));
+    if ~isempty(iis)
+    d0.statnum = d.statnum(iis); 
+    d0.position = d.position(iis);
+    d0.sampnum = d.sampnum(iis);
+    d0.press = d.press(iis);
+    d0.temp1 = d.temp1(iis);
+    d0.cond1 = d.cond1(iis);
 
-% apply calibration values first? (to test a calibration, or to use calibrated temperature or salinity in
-% subsequent conversions, even if the calibrations haven't yet been applied to files)
-
-if exist('precalt','var') & precalt
-   fnm = ['utemp' sensstr]; 
-   d = setfield(d, fnm, temp_apply_cal(sensnum, d.statnum, d.upress, d.time, getfield(d, fnm)));
+if exist('precalt','var') && precalt && isfield(calstr, 'temp1')
+    eval(calstr.temp1.(mcruise));
+end
+if exist('precalc','var') && precalc && isfield(calstr, 'cond1')
+    eval(calstr.cond1.(mcruise));
+end
+d.temp1(iis) = dcal.temp1(iis);
+   ii = find(strncmp('temp',calsens,4));
+   for no = 1:length(ii)
+       eval(calstr.(calsens{ii(no)}).(mcruise));
+       d0.(calsens{ii(no)}) = dcal.(calsens{ii(no)});
+   end
 else
    precalt = 0;
 end
-
 if exist('precalc','var') && precalc
    if ~precalt; warning('you may want to calibrate temperature before calibrating conductivity'); end
-   scriptname = 'mctd_02b'; oopt = 'ctdcals'; get_cropt
-   d0.press = d.upress; d0.statnum = d.statnum; d0.([sensname sensstr]) = d.(['u' sensname sensstr]);
-   ii = find(strncmp(calmsg,[sensname sensstr],length(sensname)+length(sensstr)));
-   if length(ii)==1
-       eval(calstr{ii})
-       d.(['u' sensname sensstr]) = dcal.([sensname sensstr]);
+   ii = find(strncmp('cond',calsens,4));
+   for no = 1:length(ii)
+       eval(calstr.(calsens{ii(no)}).(mcruise));
+       d0.(calsens{ii(no)}) = dcal.(calsens{ii(no)});
    end
 else
    precalc = 0;
 end
-
 if exist('precalo','var') & precalo
    if ~exist('precalt') | ~exist('precalc') | ~precalt | ~precalc; warning('you may want to calibrate temperature and conductivity before calibrating oxygen'); end
-   scriptname = 'mctd_02b'; oopt = 'ctdcals'; get_cropt
-   d0.press = d.upress; d0.statnum = d.statnum; d0.temp = d.utemp; d0.(['oxygen' sensstr]) = d.(['uoxygen' sensstr]);
-   ii = find(strncmp(calmsg,['oxygen' sensstr],length('oxygen')+length(sensstr)));
-   if length(ii)==1
-       eval(calstr{ii})
-       d.(['uoxygen' sensstr]) = dcal.(['oxygen' sensstr]);
+      ii = find(strncmp('oxygen',calsens,6));
+   for no = 1:length(ii)
+       eval(calstr.(calsens{ii(no)}).(mcruise));
+       d0.(calsens{ii(no)}) = dcal.(calsens{ii(no)});
    end
-else
-   precalo = 0;
 end
-
-scriptname = 'castpars'; oopt = 'ctdsens_groups'; get_cropt
 
 %get data to compare, and sets of indices corresponding to different sensors
-if strcmp(sensname, 'temp')
-   fnm = ['utemp' sensstr]; ctddata = getfield(d, fnm); ctddata = ctddata(:);
+cddata = d0.(['u' sensname]); ctddata = ctddata(:);
+if strncmp(sensname, 'temp', 4)
    caldata = d.sbe35temp(:); calflag = d.sbe35flag(:);
    res = (caldata - ctddata);
-   if isfield(d, 'utemp1') & isfield(d, 'utemp2'); ctdres = (d.utemp2-d.utemp1); else; ctdres = NaN+ctddata; end
+   if isfield(d, 'utemp1') && isfield(d, 'utemp2'); ctdres = (d.utemp2-d.utemp1); else; ctdres = NaN+ctddata; end
    rlabel = 'SBE35 T - CTD T (degC)'; rlim = [-10 10]*1e-3;
    vlim = [-2 32];
-   
 elseif strcmp(sensname, 'cond')
-   fnm = ['ucond' sensstr]; ctddata = getfield(d, fnm); ctddata = ctddata(:);
-   caldata = [gsw_C_from_SP(d.botpsal(:),d.utemp1(:),d.upress(:)) gsw_C_from_SP(d.botpsal(:),d.utemp2(:),d.upress(:))]; calflag = d.botpsal_flag(:);
-   caldata = caldata(:,sensnum);
+   caldata = gsw_C_from_SP(d.botpsal(:),d.(['utemp' sensnum])(:),d.upress(:)); calflag = d.botpsal_flag(:);
    res = (caldata./ctddata - 1)*35;
-   if isfield(d, 'ucond1') & isfield(d, 'ucond2'); ctdres = (d.ucond2(:)./d.ucond1(:)-1)*35; else; ctdres = NaN+ctddata; end
+   if isfield(d, 'ucond1') && isfield(d, 'ucond2'); ctdres = (d.ucond2(:)./d.ucond1(:)-1)*35; else; ctdres = NaN+ctddata; end
    rlabel = 'C_{bot}/C_{ctd} (psu)'; rlim = [-10 10]*2e-3;
    vlim = [25 60];
-   
-elseif strcmp(sensname, 'oxy')
-   fnm = ['uoxygen' sensstr]; ctddata = getfield(d, fnm); ctddata = ctddata(:);
+elseif strcmp(sensname, 'oxygen')
    caldata = d.botoxya(:); calflag = d.botoxya_flag(:);
    res = (caldata - ctddata);
-   if isfield(d, 'uoxygen1') & isfield(d, 'uoxygen2'); ctdres = (d.uoxygen2(:)-d.uoxygen1(:)); else; ctdres = NaN+ctddata; end
+   if isfield(d, 'uoxygen1') && isfield(d, 'uoxygen2'); ctdres = (d.uoxygen2(:)-d.uoxygen1(:)); else; ctdres = NaN+ctddata; end
    rlabel = 'O_{bot} - O_{ctd} (umol/kg)'; rlim = [-5 5];
    vlim = [50 450];
-   
 else
-   error('must set sensname to one of ''temp'', ''cond'', or ''oxy''')
+   error('sensname not recognised, add case for cal data for this variable type')
 end
+
 edges = [-1:.05:1]*rlim(2);
 statrange = [0 max(d.statnum(~isnan(caldata)))+1];
 
 %only compare points with certain flags
 iig = find(ismember(calflag, okf));
-sensind = ctdsens_groups.([sensname sensstr]);
+if exist('sensgroup', 'var')
+    iis = find(ismember(d0.statnum, sensgroup));
+    iig = intersect(iig,iis);
+end
+sensind = ctdsens_groups.(sens[sensname sensstr]);
 n = size(sensind,1);
 for no = 1:n
    sensind{no} = intersect(sensind{no},iig);

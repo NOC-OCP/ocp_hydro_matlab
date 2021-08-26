@@ -11,7 +11,8 @@
 %
 %======================================================================
 
-stnlocal = stn; m_global; minit; stn = stnlocal; stnstr = sprintf('%03d', stnlocal);
+m_global; m_common
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; stnstr = sprintf('%03d', stn); stnlocal = stn;
 cd(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ladcp', 'ix'));
 rawdir = 'raw';
 

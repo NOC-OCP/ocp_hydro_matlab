@@ -5,7 +5,7 @@
 % Use: mctd_04        and then respond with station number, or for station 16
 %      stn = 16; mctd_04;
 
-minit;
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['averages from 24 hz to 2 dbar in ctd_' mcruise '_' stn_string '_2db.nc (downcast) and _2up.nc (upcast)']);
 
 root_ctd = mgetdir('M_CTD');

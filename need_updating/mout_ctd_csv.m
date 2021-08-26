@@ -1,7 +1,7 @@
 %script to write out ctd 2dbar or 1hz data in a csv file
 %concatenates all the stations
 
-minit
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 
 root_ctd = mgetdir('M_CTD');
 root_out = mgetdir('M_SUM');

@@ -1,7 +1,7 @@
 % mcfc_03: create matlab file with merged cfc and physics bottle data
 % bak jc069 5 feb 2012
 
-minit; scriptname = mfilename;
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(scriptname, ['add documentation string for ' scriptname])
 
 % now edit to do all stations

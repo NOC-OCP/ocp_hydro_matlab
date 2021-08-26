@@ -12,7 +12,7 @@ function nsubs = msam_checkbottles_02(stn, varargin)
 %
 
 m_common
-minit; scriptname = mfilename;
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 
 %subplots will be psal (and botpsal), oxygen (and botoxygen), and potemp (and botoxytemp and sbe35temp [if avail]),
 %as well as the variable input names

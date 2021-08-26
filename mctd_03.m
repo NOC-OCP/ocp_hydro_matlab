@@ -9,7 +9,7 @@
 % input: _24hz
 % output: _psal
 
-minit; 
+scriptname = 'castpars'; oopt = 'minit'; get_cropt 
 mdocshow(mfilename, ['fills in choice of sensors, computes salinity, and averages to 1 hz in ctd_' mcruise '_' stn_string '_psal.nc']);
 
 root_ctd = mgetdir('M_CTD');

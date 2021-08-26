@@ -6,7 +6,7 @@
 %
 % uses parameters set in mexec_processing_scripts/cruise_options/opt_${cruise}
 
-minit;
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['makes corrections/conversions (for instance for oxygen hysteresis), as set in get_cropt and opt_' mcruise '.m) and writes to ctd_' mcruise '_' stn_string '_24hz.nc']);
 
 % resolve root directories for various file types
@@ -19,7 +19,7 @@ infile = fullfile(root_ctd, [prefix stn_string '_raw_cleaned']);
 if ~exist(m_add_nc(infile), 'file')
     infile = fullfile(root_ctd, [prefix stn_string '_raw']);
 end
-    
+
 otfile = fullfile(root_ctd, [prefix stn_string '_24hz']);
 copyfile(m_add_nc(infile), m_add_nc(otfile));
 unix(['chmod 644 ' m_add_nc(otfile)]); % make file writeable
@@ -32,7 +32,6 @@ nox = size(oxyvars,1);
 MEXEC_A.Mprog = mfilename;
 
 %%%%% oxygen hysteresis and/or renaming oxygen variables %%%%%
-
 if dooxyrev | dooxyhyst
     
     if dooxyrev
@@ -116,7 +115,6 @@ end
 
 
 %%%%% turbidity conversion from turbidity volts %%%%%
-
 if doturbV
     disp(['computing turbidity from turbidity volts for ' stn_string])
     scriptname = mfilename; oopt = 'turbVpars'; get_cropt
@@ -135,51 +133,47 @@ end
 
 
 %%%%% sensor calibrations %%%%%
-
-%if any are true, get whole list and test for which to apply below
 scriptname = mfilename; oopt = 'ctdcals'; get_cropt
-if docal.temp || docal.cond || docal.oxygen || docal.fluor || docal.transmittance
-
-    if size(calstr,1)>0
-        
-        %initialise
-        [d0,h0] = mloadq(otfile, '/');
-        if ~isfield(d0, 'statnum')
-            d0.statnum = repmat(stnlocal, size(d0.scan));
-        end
-        clear dcal hcal
-        hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
-        
-        for sno = 1:size(calstr,1)
-            
-            iis = strfind(calmsg{sno,1},[' ' mcruise]);
-            calsens = calmsg{sno,1}(1:iis-1);
-            
-            %figure out if this calstr should be applied, depending on flag set
-            %above in oopt = 'raw_corrs' call to get_cropt
-            if ~isempty(str2num(calsens(end)))
-                calvar = calsens(1:end-1);
-            else
-                calvar = calsens;
-            end
-            eval(['docal = ' calvar 'cal;'])
-            
-            if docal
-                %apply, and store in hcal
-                fprintf(1,'\n%s\n\n',calstr{sno})
-                eval([calstr{sno}]);
-                ii = find(strcmp(calsens,h0.fldnam));
-                hcal.fldnam = [hcal.fldnam calsens]; hcal.fldunt = [hcal.fldunt h0.fldunt(ii)];
-                hcal.comment = [hcal.comment sprintf('calibration (%s) applied to %s using %s\n', calmsg{sno,2}, calsens, calstr{sno})];
-            end
-            
-        end
-        
-        %if there were calibrations applied to any variables, save those back
-        %to 24hz file (overwriting uncalibrated versions)
-        if length(hcal.fldnam)>0
-            mfsave(otfile, dcal, hcal, '-addvars');
-        end
-%         
+if exist('calstr', 'var') && (docal.temp || docal.cond || docal.oxygen || docal.fluor || docal.transmittance)
+    
+    %load data and initialise
+    [d0,h0] = mloadq(otfile, '/');
+    if ~isfield(d0, 'statnum')
+        d0.statnum = repmat(stnlocal, size(d0.scan));
     end
+    clear dcal hcal
+    hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
+    
+    for sno = 1:length(calsens)
+        
+        %figure out if this calstr should be applied, depending on flag
+        if ~isempty(str2num(calsens{sno}(end)))
+            calvar = calsens{sno}(1:end-1);
+        else
+            calvar = calsens{sno};
+        end
+        
+        if docal.(calvar)
+            %apply, and store in hcal
+            calf = calstr.(calsens{sno}).(mcruise);
+            if isfield(calstr.(calsens{sno}), 'msg')
+                calms = calstr.(calsens{sno}).msg;
+            else
+                calms = '';
+            end
+            fprintf(1,'\n%s\n\n',calf)
+            eval(calf);
+            ii = find(strcmp(calsens{sno},h0.fldnam));
+            hcal.fldnam = [hcal.fldnam calsens{sno}]; hcal.fldunt = [hcal.fldunt h0.fldunt(ii)];
+            hcal.comment = [hcal.comment sprintf('calibration (%s) applied to %s using %s\n', calms, calsens{sno}, calf)];
+        end
+        
+    end
+    
+    %if there were calibrations applied to any variables, save those back
+    %to 24hz file (overwriting uncalibrated versions)
+    if length(hcal.fldnam)>0
+        mfsave(otfile, dcal, hcal, '-addvars');
+    end
+    
 end

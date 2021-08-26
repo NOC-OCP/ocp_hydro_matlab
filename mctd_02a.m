@@ -17,7 +17,7 @@
 %
 % After mheadr, the _raw.nc file is write protected
 
-minit;
+scriptname = mfilename; oopt = 'minit'; get_cropt 
 mdocshow(mfilename, ['renames variables in ctd_' mcruise '_' stn_string '_raw.nc (or _raw_noctm.nc) based on varlists/ctd_renamelist.csv, adds position from underway stream (if available), applies automatic edits and cellTM (if selected)']);
 
 % resolve root directories for various file types

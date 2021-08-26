@@ -23,7 +23,7 @@
 % oxy
 
 
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+ssd0 = MEXEC_G.ssd; MEXEC_G.ssd = 1;
 
 %get concatenated list of stations
 list_actions = {'klistraw' 'rerun mctd_02b, applying oxygen hysteresis (if set in opt_cruise) and regenerating _24hz from _raw';
@@ -116,3 +116,5 @@ scriptname = 'batchactions'; oopt = 'ctd'; get_cropt
 scriptname = 'batchactions'; oopt = 'sam'; get_cropt
 scriptname = 'batchactions'; oopt = 'sync'; get_cropt
 clear klist*
+
+MEXEC_G.ssd = ssd0;

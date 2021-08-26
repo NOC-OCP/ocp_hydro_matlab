@@ -188,13 +188,13 @@ switch scriptname
         end
         %%%%%%%%%% end mnut_01 %%%%%%%%%%
         
-        %%%%%%%%%% msam_nutkg %%%%%%%%%%
-    case 'msam_nutkg'
+        %%%%%%%%%% mnut_to_sam %%%%%%%%%%
+    case 'mnut_to_sam'
         switch oopt
-            case 'labtemp'
+            case 'nutlabtemp'
                 labtemp = 21;
         end
-        %%%%%%%%%% end msam_nutkg %%%%%%%%%%
+        %%%%%%%%%% end mnut_to_sam %%%%%%%%%%
         
         %%%%%%%%%% mpig_01 %%%%%%%%%%
     case 'mpig_01'

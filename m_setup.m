@@ -29,7 +29,7 @@ end
 MEXEC.MSCRIPT_CRUISE_STRING='dy130';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2021 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
-MEXEC.ssd = 1; %if true, print short documentation line to screen at beginning of scripts
+MEXEC.ssd = 0; %if true, print short documentation line to screen at beginning of scripts
 MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
 MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_athome']; % common suffixes '_atsea', '_atnoc', '_athome', '', etc. 
 MEXEC.ix_ladcp = 0; %set to 1 if processing LADCP data with LDEO IX

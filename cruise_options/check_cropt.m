@@ -85,55 +85,42 @@ switch scriptname
                     error(['oxygen hysteresis parameters have NaNs; check opt_' mcruise])
                 end
             case 'ctdcals'
-                if isempty(calstr)
-                    warning(sprintf('mctd_02b found no calibration functions to apply in opt_%s', mcruise));
-                    return
-                
-                elseif max(cell2mat(struct2cell(docal)))>0
-                    
-                    for sno = 1:size(calstr,1)
-                        
-                        %test for correct calmsg matching calstr
-                        iis = strfind(calmsg{sno,1},[' ' mcruise]);
-                        calsens_expect = calmsg{sno,1}(1:iis-1);
-                        if ~strncmp(['dcal.' calsens_expect], calstr{sno}, length(calsens_expect)+5)
-                            error(sprintf('based on calmsg, calstr row %d should start with %s; check opt_%s and try again',sno,calsens_expect,mcruise));
-                        end
-                        calmsg_expect = sprintf('%s %s',calsens_expect,mcruise);
-                        if ~strcmp(calmsg{sno,1}, calmsg_expect)
-                            error(sprintf('opt_%s calmsg row %d: %s does not match cruise expected: %s; check and try again',mcruise,sno,calmsg{sno,1},calmsg_expect))
-                        end
-                        
-                        if strncmp(calsens_expect, 'cond', 4)
-                            %check that if cond cal depends on temp it's from the same CTD
-                            csens = str2num(calsens_expect(end));
-                            if ~isempty(csens)
-                                iit = findstr('temp',calstr{sno});
-                                if length(iit)>0
-                                    tsens = str2num(calstr{sno}(iit+4)');
-                                    tsens(tsens==csens) = [];
-                                    if length(tsens)>0
-                                        error(sprintf('calibration of conductivity from CTD %d should not depend on temperature from CTD %d; check opt_%s and try again',csens,tsens,mcruise));
-                                    end
-                                end
-                            end
-                        elseif strncmp(calsens_expect, 'oxygen', 6)
-                            %check that ocal uses temp from same ctd, but don't require it
-                            osens = str2num(calsens_expect(end));
-                            if ~isempty(osens)
-                                iit = findstr('temp',calstr{sno});
-                                if length(iit)>0
-                                    tsens = str2num(calstr{sno}(iit+4)');
-                                    tsens(tsens==osens) = [];
-                                    if length(tsens)>0
-                                        warning(sprintf('calibration of oxygen sensor %d is being based on temperature from CTD %d'),osens,tsens)
-                                    end
-                                end
-                            end
-                        end
-                        
+                if ~exist('calstr', 'var')
+                    if sum(cell2mat(struct2cell(docal)))>0
+                        warning(sprintf('mctd_02b found no calibration functions to apply in opt_%s', mcruise));
                     end
-                    
+                else
+                    calsens = fieldnames(calstr);
+                    if length(unique(calsens))<length(calsens)
+                        error(['duplicate sensor calibration functions found, check opt_' mcruise 'mctd_02b case'])
+                    end
+                    for sno = 1:length(calsens)
+                        if ~isfield(calstr.(calsens{no}),mcruise)
+                            warning(['calibration for ' calsens{no} ' not from this cruise; skipping'])
+                        else
+                            calf = calstr.(calsens{no}).(mcruise);
+                            if strncmp(calsens{no}, 'cond', 4)
+                                sensnum = calsens{no}(5);
+                                iit = find(strcmp('temp', calf));
+                                if ~isempty(iit)
+                                    tnum = str2num(calf(iit+4)');
+                                    if sum(tnum~=sensnum)>0
+                                        error(['calibration for ' calsens{no} ' appears to depend on other CTD temp'])
+                                    end
+                                end
+                            elseif strncmp(calsens{no}, 'oxygen', 6)
+                                sensnum = calsens{no}(7);
+                                iit = find(strcmp('temp', calf));
+                                iit = [iit find(strcmp('cond', calf))];
+                                if ~isempty(iit)
+                                    tnum = str2num(calf(iit+4)');
+                                    if sum(tnum~=sensnum)>0
+                                        warning(['calibration for ' calsens{no} ' appears to depend on other CTD temp or cond'])
+                                    end
+                                end
+                            end
+                        end
+                    end                        
                 end
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%

@@ -73,33 +73,17 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
         
-        %%%%%%%%%% mctd_senscal %%%%%%%%%%
-    case 'mctd_senscal'
+        %%%%%%%%%% mctd_02b %%%%%%%%%%
+    case 'mctd_02b'
         switch oopt
-            case 'tempcal'
-                if senslocal==1
-                    calstr = 'temp1 = temp1 - 1.5e-5*statnum + interp1([0 5000],[0 -1.5]*1e-3, press) - 1.1e-4;';
-                    calmsg = {'temp1 dy113'};
-                elseif senslocal==2
-                    calstr = 'temp2 = temp2 - 1e-5*statnum - 3.8e-4';
-                    calmsg = {'temp2 dy113'};
-                end
-            case 'condcal'
-                if senslocal==1
-                    offstr = 'interp1([0 5000], [-1.8 -6.5], press)*1e-3 - 7.2e-4';
-                    calstr = ['cond1 = cond1.*(1 + ' offstr ')/35);'];
-                    calmsg = {'cond1 dy113'};
-                elseif senslocal==2
-                    calstr = 'cond2 = cond2.*(1 + (interp1([0 5000], [1.4 -2], press)*1e-3 - 7e-4)/35);';
-                    calmsg = {'cond2 dy113'};
-                end
-            case 'oxygencal'
-                if senslocal==1
-                    calstr = 'oxygen1 = 1.025*oxygen1 + interp1([0 5000], [1.8 12.8], press) - 1.5e-2*statnum';
-                    calmsg = {'oxygen1 dy113'};
-                elseif senslocal==2
-                    calstr = 'oxygen2 = 1.029*oxygen2 + interp1([0 500 5000], [0.5 0.8 9], press) + 1e-2*statnum;';
-                    calmsg = {'oxygen2 dy113'};
+            case 'ctdcals'
+                docal.temp = 1; docal.cond = 1; docal.oxygen = 1;
+                    calstr.temp1.dy113 = 'dcal.temp1 = d0.temp1 - 1.5e-5*d0.statnum + interp1([0 5000],[0 -1.5]*1e-3, d0.press) - 1.1e-4;';
+                    calstr.temp2.dy113 = 'dcal.temp2 = d0.temp2 - 1e-5*d0.statnum - 3.8e-4';
+                    calstr.cond1.dy113 = 'dcal.cond1 = d0.cond1.*(1 + (interp1([0 5000], [-1.8 -6.5], d0.press)*1e-3 - 7.2e-4)/35);';
+                    calstr.cond2.dy113 = 'dcal.cond2 = d0.cond2.*(1 + (interp1([0 5000], [1.4 -2], d0.press)*1e-3 - 7e-4)/35);';
+                    calstr.oxygen1.dy113 = 'dcal.oxygen1 = 1.025*d0.oxygen1 + interp1([0 5000], [1.8 12.8], d0.press) - 1.5e-2*d0.statnum';
+                    calstr.oxygen2.dy113 = 'dcal.oxygen2 = 1.029*d0.oxygen2 + interp1([0 500 5000], [0.5 0.8 9], d0.press) + 1e-2*d0.statnum;';
                 end
         end
         %%%%%%%%%% end mctd_senscal %%%%%%%%%%
@@ -586,8 +570,8 @@ switch scriptname
         %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
         
         
-        %%%%%%%%%% mout_cchdo %%%%%%%%%%
-    case 'mout_cchdo'
+        %%%%%%%%%% mout_exch %%%%%%%%%%
+    case 'mout_exch'
         switch oopt
             case 'woce_expo'
                 expocode = '74EQ20200203';

@@ -1,12 +1,13 @@
 switch scriptname
 
-
-    %%%%%%%%%% minit %%%%%%%%%%
-    case 'minit'
+    case 'castpars'
+        switch oopt
+            case 'minit'
         if stn>0
             stn_string = sprintf('%03dss', stn);
         elseif stn<0
             stn_string = sprintf('%03dt', -stn);
+        end
         end
 
         %%%%%%%%%% mvad_01 %%%%%%%%%%

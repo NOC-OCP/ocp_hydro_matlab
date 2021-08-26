@@ -1,7 +1,7 @@
 %script to write out ctd and bottle sample data in a csv file
 %in reverse niskin order
 
-stn = 0; minit
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 root_ctd = mgetdir('M_CTD');
 root_out = mgetdir('M_SUM');

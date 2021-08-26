@@ -1,13 +1,13 @@
-% mout_cchdo_ctd: write data from ctd_cruise_nnn_2db.nc to CCHDO exchange file
-% Use: mout_cchdo_ctd        
+% mout_exch_ctd: write data from ctd_cruise_nnn_2db.nc to CCHDO exchange file
+% Use: mout_exch_ctd        
 %
-% edit jc159 so that this can write a file for cchdo and also a file 
+% edit jc159 so that this can write a file for exch and also a file 
 % containing other uncalibrated ctd variables for internal use, if 
 % writeallctd exists and is set to 1. in this case it will get the template
 % from all_ctd_renamelist and write to outfileall rather than outfile (both
 % are set in opt_cruise)***
 
-minit
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 
 %%%%% load input data %%%%%
 
@@ -21,7 +21,7 @@ nsamp = length(d.press);
 %%%%% add some fields that don't exist (or edit), get header fields %%%%%
 
 clear dh
-scriptname = 'mout_cchdo'; oopt = 'woce_expo'; get_cropt
+scriptname = 'mout_exch'; oopt = 'woce_expo'; get_cropt
 dh.expocode = expocode;
 dh.sect_id = sect_id;
 dh.statnum = stnlocal;
@@ -41,7 +41,8 @@ if length(iis)==1
     dh.date = datestr(dn,'yyyymmdd');
     dh.time = datestr(dn,'HHMM');
 else 
-    %*** calculate from file if station_summary not updated yet?
+    %*** calculate from file if station_summary not updated yet? or at
+    %least take variables we don't have out of list to print out (before line 101)***
 end
 if ~isfield(d, 'castno')
     d.castno = ones(nsamp,1);
@@ -51,15 +52,15 @@ end
 ctdflag = 9+zeros(nsamp,1); ctdflag(~isnan(d.temp+d.psal)) = 2;
 ctoflag = 9+zeros(nsamp,1); ctoflag(~isnan(d.oxygen)) = 2;
 ctfflag = 9+zeros(nsamp,1); ctfflag(~isnan(d.fluor)) = 2;
-scriptname = 'mout_cchdo'; oopt = 'woce_ctd_flags'; get_cropt
+scriptname = 'mout_exch'; oopt = 'woce_ctd_flags'; get_cropt
 d.temp_flag = ctdflag; d.psal_flag = ctdflag; 
 d.oxygen_flag = ctoflag; d.fluor_flag = ctfflag;
 
 
 %%%%% figure out which fields to write %%%%%
 
-[vars, varsh] = m_cchdo_vars_list(1);
-scriptname = 'mout_cchdo'; oopt = 'woce_vars_exclude'; get_cropt
+[vars, varsh] = m_exch_vars_list(1);
+scriptname = 'mout_exch'; oopt = 'woce_vars_exclude'; get_cropt
 iie = [];
 for no = 1:length(vars_exclude_ctd)
     iie = [iie; find(strcmp(vars_exclude_ctd{no},vars(:,3)))];
@@ -86,7 +87,7 @@ vars(iie,:) = [];
 
 %%%%% write %%%%%
 
-scriptname = 'mout_cchdo'; oopt = 'woce_ctd_headstr'; get_cropt
+scriptname = 'mout_exch'; oopt = 'woce_ctd_headstr'; get_cropt
 fotname = fullfile(mgetdir('sum'),[expocode '_ct1'], sprintf('%s_%05d_0001_ct1.csv',expocode,stnlocal));
 fid = fopen(fotname, 'w');
 

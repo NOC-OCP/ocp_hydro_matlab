@@ -8,7 +8,8 @@ function mout_1hzasc(stn)
 
 m_common
 
-minit; scriptname = mfilename; mdocshow(scriptname, ['saves 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.' stn_string '.02.asc, and navstream to ladcp/gps/sm']);
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
+mdocshow(mfilename, ['saves 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.' stn_string '.02.asc, and navstream to ladcp/gps/sm']);
 
 %%%%%%%%% write ctd data %%%%%%%%%
 

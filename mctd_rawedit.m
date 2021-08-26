@@ -8,7 +8,7 @@
 %     stn = 16; rawedit_nogui = 1; mctd_rawedit
 % will just apply automatic edits
 
-minit;
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['applies despiking and other edits if set in opt_cruise; allows interactive selection of bad data cycles; writes cleaned data to ctd_' mcruise '_' stn_string '_raw_cleaned.nc']);
 
 % resolve root directories for various file types

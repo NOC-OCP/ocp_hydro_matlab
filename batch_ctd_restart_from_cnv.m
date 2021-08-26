@@ -14,7 +14,7 @@
 %
 %otherwise just go on to ctd_all_part2
 
-stn = 0; minit
+ssd0 = MEXEC_G.ssd; MEXEC_G.ssd = 1;
 
 if ~exist('klist', 'var')
     klist = input('list of stations to restart from scratch?');
@@ -25,7 +25,8 @@ root_hv = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'mexec_housekeeping');
 
 for no = 1:length(klist)
 
-    stn = klist; minit
+    stn = klist(no); 
+    scriptname = 'castpars'; oopt = 'minit'; get_cropt
     dataname = ['ctd_' mcruise '_' stn_string];
     
     disp(['removing files for station ' stn_string '; ok?']); pause
@@ -57,3 +58,4 @@ end
 disp('now carry on from mdcs_02 or ctd_all_part2')
 clear klist
 
+MEXEC_G.ssd = ssd0;

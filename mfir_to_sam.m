@@ -5,7 +5,7 @@
 %
 % formerly mfir_04
 
-minit; 
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['pastes CTD data at bottle firing times from fir_' mcruise '_' stn_string '.nc to sam_' mcruise '_all.nc']);
 
 root_ctd = mgetdir('M_CTD'); % change working directory

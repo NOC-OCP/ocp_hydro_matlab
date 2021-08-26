@@ -11,7 +11,7 @@
 %
 % YLF jr16002 and jc145 modified heavily to use database and cruise-specific options
 
-minit;
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['puts Niskin bottle information from .bl files and from opt_' mcruise ' into bot_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types

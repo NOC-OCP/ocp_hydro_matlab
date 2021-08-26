@@ -29,8 +29,6 @@ switch scriptname
         %%%%%%%%%% mctd_02b %%%%%%%%%%
     case 'mctd_02b'
         switch oopt
-            case 'raw_corrs'
-                docal.temp = 1; docal.cond = 1; docal.oxygen = 1;
             case 'oxyhyst'
                 h3tab =[
                     -10 700
@@ -43,11 +41,12 @@ switch scriptname
                 iib = find(isnan(d.press)); iig = find(~isnan(d.press));
                 H3(iib) = interp1(iig,H3(iig),iib); %***
             case 'ctdcals'
+                                docal.temp = 1; docal.cond = 1; docal.oxygen = 1;
                 calstr.temp1.jc211 = 'dcal.temp1 = d0.temp1 - 0.001;';
                 calstr.temp2.jc211 = 'dcal.temp2 = d0.temp2 - 0.0005*d0.press/4000;';
                 calms = 'from comparison with SBE35, stations 1-65';
-                calstr.temp1.calmsg = calms;
-                calstr.temp2.calmsg = calms;
+                calstr.temp1.msg = calms;
+                calstr.temp2.msg = calms;
                 % Original estimate
                 %    'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  4000  8000],(1.0*[0.0 0.0 -2.0 -4.0 ] - 0.5)/1e3,d0.press)/35);'
                 %    'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  4000  8000],(1.0*[0.0 0.0 -1.0 -2.0 ] + 1.2)/1e3,d0.press)/35);'
@@ -65,13 +64,13 @@ switch scriptname
                     calstr.cond2.jc211 = 'dcal.cond2 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond2 = d0.cond2.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.0 -1.0 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press))/35);';
                 end
                 calms = 'from comparison with bottle salinities, stations 3-73';
-                calstr.cond1.calmsg = calms;
-                calstr.cond2.calmsg = calms;
+                calstr.cond1.msg = calms;
+                calstr.cond2.msg = calms;
                 calstr.oxygen1.jc211 = 'dcal.oxygen1 = d0.oxygen1.*interp1([0 2000 4000 5000],[1.03 1.04 1.043 1.042],d0.press);';
                 calstr.oxygen2.jc211 = 'dcal.oxygen2 = d0.oxygen2.*interp1([0 1500 4000 5000],[1.03 1.043 1.051 1.05],d0.press);';
                 calms = 'from comparison with bottle oxygens, stations 3-39 and 62-95';
-                calstr.oxygen1.calmsg = calms;
-                calstr.oxygen2.calmsg = calms;
+                calstr.oxygen1.msg = calms;
+                calstr.oxygen2.msg = calms;
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
         
@@ -560,8 +559,8 @@ switch scriptname
         end
         %%%%%%%%%% end msec_plot_contrs %%%%%%%%%%
         
-        %%%%%%%%%% mout_cchdo %%%%%%%%%%
-    case 'mout_cchdo'
+        %%%%%%%%%% mout_exch %%%%%%%%%%
+    case 'mout_exch'
         switch oopt
             case 'woce_expo'
                 expocode = '740H20210202';

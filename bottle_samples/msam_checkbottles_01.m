@@ -35,8 +35,8 @@ end
 
 m_common
 stn = 0;
-minit; scriptname = mfilename;
-mdocshow(scriptname, ['plots bottle sample residuals (from ctd, or from gridded fields), allowing selection of outliers and identification of where flags need to be changed']);
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
+mdocshow(mfilename, ['plots bottle sample residuals (from ctd, or from gridded fields), allowing selection of outliers and identification of where flags need to be changed']);
 
 root_ctd = mgetdir('M_CTD'); % identify CTD directory
 root_asc = mgetdir('M_CTD_CNV'); %this is where the bottle data flags script will live
