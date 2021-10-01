@@ -34,16 +34,23 @@ function data = parse_load_hdata(infile, varnamesunits, varargin)
 
 
 %defaults and optional input arguments
-opts.predir = './';
-opts.badflags = [4 9];
-if length(varargin)==1 %supplied single cell array containing par-val pairs
-    varargin = varargin{:};
-end
-for na = 1:2:length(varargin)
-    opts.(varargin{na}) = varargin{na+1};
-end
-if opts.predir(end)~='/'
-    opts.predir = [opts.predir '/'];
+if length(varargin)==1 && isstruct(varargin{1})
+    opts = varargin{1};
+    if ~isfield(opts, 'predir')
+        opts.predir = './';
+    end
+    if ~isfield(opts, 'badflags')
+        opts.badflags = [4 9];
+    end
+else
+    opts.predir = './';
+    opts.badflags = [4 9];
+    if length(varargin)==1 %supplied single cell array containing par-val pairs
+        varargin = varargin{:};
+    end
+    for na = 1:2:length(varargin)
+        opts.(varargin{na}) = varargin{na+1};
+    end
 end
 
 warning off
@@ -87,7 +94,11 @@ for fno = 1:size(infile,1)
     if contains(infile{fno}, '.mat') || ~contains(infile{fno}, '.')
         
         %load, and get list of vars we have
-        ds = load([opts.predir infile{fno}], '-mat');
+        if isfield(opts, 'datavar')
+            ds = load(fullfile(opts.predir, infile{fno}), '-mat', opts.datavar);
+        else
+            ds = load(fullfile(opts.predir, infile{fno}), '-mat');
+        end
         if isfield(ds, 'data');
             ds = ds.data;
         end
@@ -118,7 +129,7 @@ for fno = 1:size(infile,1)
         %%% netcdf (mstar or otherwise)
 
         %get list of variables and units
-        a = ncinfo([opts.predir infile{fno}]);
+        a = ncinfo(fullfile(opts.predir, infile{fno}));
         nv = length(a.Variables);
         vars = cell(nv,1);
         [vars{:}] = a.Variables.Name;
@@ -140,7 +151,7 @@ for fno = 1:size(infile,1)
             iinv = iinv(ia); iiv = iiv(ia);
         end
         for vno = 1:length(iiv)
-            d = ncread([opts.predir infile{fno}], vars{iiv(vno)});
+            d = ncread(fullfile(opts.predir, infile{fno}), vars{iiv(vno)});
             if ischar(d)
                 d = str2num(d(:)');
             elseif isinteger(d);
@@ -173,7 +184,7 @@ for fno = 1:size(infile,1)
             chunits = length(hcpat); %default: last row of header is units
         end
         try
-            [ds, hs] = m_load_samin([opts.predir infile{fno}], hcpat, 'chrows', chrows, 'chunits', chunits);
+            [ds, hs] = m_load_samin(fullfile(opts.predir, infile{fno}), hcpat, 'chrows', chrows, 'chunits', chunits);
         catch
             warning(['unknown file type or header not properly specified: ' infile{fno}])
             keyboard

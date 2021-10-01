@@ -45,6 +45,9 @@ function mgrid = maphsec(cdata, sdata, mgrid);
 if ~isfield(mgrid, 'method')
     mgrid.method = 'msec_maptracer';
 end
+if ~isfield(mgrid, 'background');
+    mgrid.background = 'none';
+end
 
 %lengths
 if sum(strcmp(mgrid.method, 'msec_maptracer')) & ~isfield(mgrid, 'xlim')
@@ -111,6 +114,19 @@ end
 
 %%% map %%%
 disp(['gridding/mapping data using ' mgrid.method])
+
+switch mgrid.background
+    %%%%% fill in gaps in cdata using wghc climatology (for now) %%%%%
+    case 'wghc'
+    load clim_flux/wghc_hydro/wghc_satl %***
+    cdep = sw_depth(cdata.press, mean(cdata.lat));
+    bg.temp = interp3(lon, dep, lat, hdata.temp, cdata.lon, cdep, cdata.lat); %***
+    %psal, oxyg
+    %***nearest-fill to surf? deep? nearest in vertical or interp3 after
+    %converting lon, lat to distance? actually, do that above or not?
+    keyboard
+    
+end
 
 switch mgrid.method
     

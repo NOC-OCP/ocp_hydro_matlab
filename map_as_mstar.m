@@ -31,8 +31,9 @@ nvars = length(sdata.vars);
 
 mgrid.vars = {}; mgrid.unts = {};
 
-%ctd data: weighted average in vertical (using midpoint of linear fit), then
-%linearly interpolate in x to fill in missing profiles
+%ctd data: weighted average in vertical (using midpoint of linear fit),
+%including fill-to-surface,
+%then linearly interpolate in x to fill in missing profiles
 for vno = 1:length(cdata.vars)
     data0 = smss(cdata.z, cdata.(cdata.vars{vno}), mgrid.z(:,1), 'smethod', 'lfitmid', 'init_extrap', 'surf', 'bin_extrap', 1);
     data = interp1(cdata.x', data0.', mgrid.x(1,:)').';
