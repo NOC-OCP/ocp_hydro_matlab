@@ -99,8 +99,7 @@ for k = 1:length(dnames_u)
     % to the history files. This means that in order for processing to work
     % smoothly, all users who are working on a dataset will need to join
     % the relevant unix group.
-    cmd = ['chmod ug+rw ' MEXEC_A.Mhistory_filename];
-    [uMEXEC.status uresult] = unix(cmd);
+    [uMEXEC.status uresult] = system(['chmod ug+rw ' MEXEC_A.Mhistory_filename]);
     
     
     MEXEC_A.Mhistory_lastlines = nlines;

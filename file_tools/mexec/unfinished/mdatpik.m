@@ -134,8 +134,7 @@ while numcopy == 0
             var = sprintf('%d ',kmatch);
         end
         vlist = m_getvlist(var,h);
-        m = ['list is ' sprintf('%d ',vlist) ];
-        disp(m);
+        if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 
         % check all relevant variables have the same dimensions
         vlist_all = [vlist(:)' vlist_c(:)'];

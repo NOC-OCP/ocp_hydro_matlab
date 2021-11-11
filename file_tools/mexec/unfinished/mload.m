@@ -45,17 +45,9 @@ while endflag == 0
         endflag = 1; 
         continue; 
     end % h.noflds vars have been loaded so we assume that's all of them. No point asking for more names
-    %if (length(varargin)<2)
     m = sprintf('%s\n','Type variable names or numbers to load (0 or return to finish, ''/'' for all):');
-    %     if ~isempty(varg) > 0
-    %         var = varg{1}; varg(1) = [];
-    %     else
     var = m_getinput(m,'s');
-    %     end
-    %else 
-    %var=varargin{2};
-    %endflag=1;
-    %end
+
     if nargin == 2
       endflag = 1;
     end
@@ -63,8 +55,7 @@ while endflag == 0
     if strcmp('0',var) == 1; endflag = 1; continue; end
 
     vlist = m_getvlist(var,h);
-    m = ['list is ' sprintf('%d ',vlist) ];
-    disp(m);
+    if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 
 
     for k = 1:length(vlist)
@@ -72,8 +63,7 @@ while endflag == 0
         vname2 = m_check_nc_varname(vname);
         cmd = ['d.' vname2 ' = nc_varget(ncfile.name,vname);'];
         eval(cmd);
-        m = [sprintf('%15s',vname) ' loaded as d.' vname2];
-        disp(m)
+        if ~MEXEC_G.quiet; disp([sprintf('%15s',vname) ' loaded as d.' vname2]); end
     end
 
 end

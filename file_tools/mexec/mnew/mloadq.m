@@ -1,4 +1,4 @@
-function [d, h] = mload(varargin)
+function [d, h] = mloadq(varargin)
 
 % load data and header contents of mstar NetCDF file into structure
 % arrays
@@ -61,19 +61,14 @@ while endflag == 0
     if strcmp('0',var) == 1; endflag = 1; continue; end
     
     vlist = m_getvlist(var,h);
-    if ~MEXEC_G.quiet
-        m = ['list is ' sprintf('%d ',vlist) ];
-        disp(m);
-    end
+    if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
     
     for k = 1:length(vlist)
         vname = h.fldnam{vlist(k)};
         vname2 = m_check_nc_varname(vname);
         cmd = ['d.' vname2 ' = nc_varget(ncfile.name,vname);'];
         eval(cmd);
-        if ~MEXEC_G.quiet
-            m = [sprintf('%15s',vname) ' loaded as d.' vname2]; disp(m)
-        end
+        if ~MEXEC_G.quiet; disp([sprintf('%15s',vname) ' loaded as d.' vname2]); end
     end
     
 end

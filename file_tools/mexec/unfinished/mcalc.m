@@ -77,8 +77,7 @@ if strcmp(' ',var) == 1;
     vlist = [];
 else
     vlist = m_getvlist(var,h);
-    m = ['list is ' sprintf('%d ',vlist) ];
-    disp(m);
+    if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 end
 
 for k = vlist
@@ -88,8 +87,6 @@ for k = vlist
     m = ['Copying ' sprintf('%8d',numdc) ' datacycles for variable '  vname ];
     fprintf(MEXEC_A.Mfidterm,'%s\n',m);
     end
-    % bak jc191 remove tic and toc from next line
-%     tic; m_copy_variable(ncfile_in,vname,ncfile_ot,vname); if ~MEXEC_G.quiet; disp(toc); end
     m_copy_variable(ncfile_in,vname,ncfile_ot,vname);
 end
 
@@ -113,9 +110,6 @@ while endflag == 0
         m3a = 'in the header and choose a different set ';
         m4 = [' your variable list was ' sprintf('%d ',varnum) ' for the independent variables'];
         fprintf(MEXEC_A.Mfider,'%s\n',' ',m1,m2,m3,m3a,m4,' ');
-%         disp(m)
-%         continue % Warning only, becase you may wish to combine vars of
-%         differing diemnsion
     end
 
     nextx = 0;

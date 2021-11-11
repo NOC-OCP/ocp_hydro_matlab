@@ -103,8 +103,7 @@ if strcmp(' ',var) == 1;
     vlist = [];
 else
     vlist = m_getvlist(var,h);
-    m = ['list is ' sprintf('%d ',vlist) ];
-    disp(m);
+    if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 end
 
 ok = 0;

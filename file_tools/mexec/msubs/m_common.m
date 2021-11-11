@@ -9,3 +9,6 @@
 
 m_global
 m_global_args;
+if ~isempty(MEXEC_G)
+    mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+end

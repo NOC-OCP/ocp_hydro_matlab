@@ -24,7 +24,13 @@ if length(ok) < 2
     m = 'No interpolation performed because there were fewer than 2 good values';
     fprintf(MEXEC_A.Mfider,'%s\n',m);
     return
+elseif length(ok)==length(x)
+    yi = y;
+    m = 'No interpolation performed because there were no bad values';
+    fprintf(MEXEC_A.Mfider,'%s\n',m);
+    return
 end
+
 %keep bad values in too-long gaps so they won't be interpolated over
 d = diff(ok)-1;
 ii = find(d>mg);

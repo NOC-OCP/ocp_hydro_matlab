@@ -101,8 +101,7 @@ if strcmp(' ',var) == 1;
     var = '/';
 end
 vlist = m_getvlist(var,h);
-m = ['list is ' sprintf('%d ',vlist) ];
-disp(m);
+if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 
 m0 = ['Enter details of grid '];
 m1 = ['Enter START, STOP, STEP '];

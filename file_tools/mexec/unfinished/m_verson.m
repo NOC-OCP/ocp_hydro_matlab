@@ -52,7 +52,7 @@ if ~isnan(Mversionlock) % use lock file
     % to the version file
     nowstr = datestr(now,'yyyymmdd_HHMMSS_FFF');
     randstr = sprintf('%04d',floor(9999*rand));
-    [uMEXEC.status userstr] = unix('whoami'); userstr = userstr(1:end-1); % on nosea1 the whoami command is terminated with a c/r
+    [uMEXEC.status userstr] = system('whoami'); userstr = userstr(1:end-1); % on nosea1 the whoami command is terminated with a c/r
     % bak on di346 13 jan 2010. at least twice during the cruise it appears
     % that the user lock file ends wqith 'pstar' intsead of the random
     % number. I guess this is because the userstr still contains a c/r or

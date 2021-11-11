@@ -50,8 +50,7 @@ while 1 > 0
     if strcmp('/',var) == 1; var = ['1~' sprintf('%d',h.noflds)]; end
 
     vlist = m_getvlist(var,h);
-    m = ['list is ' sprintf('%d ',vlist) ];
-    disp(m);
+    if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 
     % check that we have selected vars with consistent dimensions
     vardims = h.dimsset(vlist);

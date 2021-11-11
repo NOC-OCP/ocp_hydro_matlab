@@ -4,10 +4,7 @@ function ncfile = msbe_to_mstar(varargin)
 %
 m_common
 m_margslocal
-%m_varargs
-if nargin>0
-    vars_save = varargin{1}(:)';
-end
+m_varargs
 
 MEXEC_A.Mprog = 'msbe_to_mstar';
 m_proghd
@@ -313,16 +310,12 @@ end
 for k = 1:noflds
     clear v
     v.name = m_check_nc_varname(varname{k});
-    if exist('vars_save', 'var') && ~ismember(v.name, vars_save)
-        continue
-    else
-        v.data = data1(k,:);
-        v.data(v.data == sbe_bad_flag) = nan; % set sbe bad data to nan
-        v.units = varunits{k};
-        m = ['writing data for variable ' v.name];
-        fprintf(MEXEC_A.Mfidterm,'%s\n',m);
-        m_write_variable(ncfile,v);
-    end
+    v.data = data1(k,:);
+    v.data(v.data == sbe_bad_flag) = nan; % set sbe bad data to nan
+    v.units = varunits{k};
+    m = ['writing data for variable ' v.name];
+    fprintf(MEXEC_A.Mfidterm,'%s\n',m);
+    m_write_variable(ncfile,v);
 end
 
 

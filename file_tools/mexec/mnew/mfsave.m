@@ -79,9 +79,8 @@ function mfsave(filename, d, varargin)
 % >> mfsave(filename, d, '-merge', 'sampnum');
 %
 
-m_common; %brings in MEXEC_G
-m_margslocal; %initialises MEXEC_A.MARGS_IN_LOCAL
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+m_common %brings in MEXEC_G
+stn = 0; minit; %does something that initialises MEXEC_A.MARGS_IN_LOCAL?***
 
 %%%%% handle input arguments %%%%%
 
@@ -171,8 +170,7 @@ if mergemode
         if length(d0.(indepvar))==length(d.(indepvar)) && max(abs(sort(d0.(indepvar)-d.(indepvar))))==0
             nosort = 1; %same contents though in different order, so put new vars into existing order
         end
-        [d0, h0] = mloadq(filename, '/');
-        [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort);
+        [d, hnew] = merge_mvars(filename, d, h, indepvar, nosort);
         
         %determine whether dimension has increased and we actually need a new file
         if length(d.(indepvar))~=max(h0.rowlength,h0.collength)
@@ -337,3 +335,73 @@ MEXEC_A.Mprog = 'mfsave';
 m_finis(ncfile); % need mfinis after setting MEXEC_A.Mhistory_in
 m_write_history;
 MEXEC_A.MARGS_OT = {};
+
+
+function [d, hnew] = merge_mvars(filename, d, h, indepvar, nosort)
+%%%%% merge_mvars: do the extra actions to merge variables %%%%%
+
+%load old data
+[d0, h0] = mloadq(filename, '/');
+
+clear hnew
+hnew.fldnam = h0.fldnam; hnew.fldunt = h0.fldunt;
+
+%check indepvars
+mvo = d0.(indepvar);
+if length(unique(mvo))<length(mvo)
+    error(['merge variable ' indepvar ' has non-unique values in file ' filename]);
+end
+mvn = d.(indepvar);
+if length(unique(mvn))<length(mvn)
+    error(['merge variable ' indepvar ' supplied in input d has non-unique values']);
+end
+
+%get combined indepvar
+if nosort
+    s = size(mvo);
+    mvnsub = mvn(~ismember(mvn, mvo)); %new ones that aren't in old
+    d.(indepvar) = [mvo(:); mvnsub(:)]; %append these, no sorting
+    s(s>1) = length(d.(indepvar));
+    d.(indepvar) = reshape(d.(indepvar),s); %row vs column vector
+else
+    s = size(mvo);
+    d.(indepvar) = unique([mvo(:); mvn(:)]);
+    s(s>1) = length(d.(indepvar));
+    d.(indepvar) = reshape(d.(indepvar),s); %row vs column vector
+end
+
+%place combined variables
+[~,iico,iio] = intersect(d.(indepvar), mvo);
+[~,iicn,iin] = intersect(d.(indepvar), mvn);
+vars = setdiff([h0.fldnam h.fldnam], indepvar);
+a = zeros(size(d.(indepvar))); %add fill value to pad
+for vno = 1:length(vars)
+    varname = vars{vno};
+    if length(varname)>4 && strcmp(varname(end-4:end),'flag')
+        data = 9+a;
+    else
+        data = NaN+a;
+    end
+    if isfield(d0, varname)
+        data(iico) = d0.(varname)(iio);
+    end
+    if isfield(d, varname)
+        data(iicn) = d.(varname)(iin);
+        if ~isfield(d0, varname)
+            nvno = find(strcmp(varname,h.fldnam));
+            hnew.fldnam = [hnew.fldnam h.fldnam{nvno}];
+            hnew.fldunt = [hnew.fldunt h.fldunt{nvno}];
+        end
+    end
+    d.(varname) = data;
+end
+
+%remake fields that shouldn't be filled with NaN or 9***
+if strcmp(indepvar,'sampnum') && isfield(d,'sampnum') && isfield(d,'statnum')
+    d.statnum = floor(d.sampnum/100); 
+    if isfield(d, 'position')
+        d.position = d.sampnum-d.statnum*100;
+    end
+end
+
+

@@ -41,8 +41,7 @@ if strcmp(' ',var) == 1;
     vlist = [];
 else
     vlist = m_getvlist(var,h);
-    m = ['list is ' sprintf('%d ',vlist) ];
-    disp(m);
+    if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 end
 
 for k = vlist
@@ -78,8 +77,7 @@ if strcmp(' ',var) == 1;
     vlist2 = [];
 else
     vlist2 = m_getvlist(var,h2);
-    m = ['list is ' sprintf('%d ',vlist2) ];
-    disp(m);
+    if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist2)]); end
 end
 
 for k = vlist2
