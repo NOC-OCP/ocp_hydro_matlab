@@ -102,8 +102,7 @@ if strcmp(' ',var) == 1;
 end
 vlist = m_getvlist(var,h);
 varlist = h.fldnam(vlist); % bak jc159 11 March 2018; keep a cell array of the variable names as well as the numerical index within h, so that we can later read by variable name not by number; previously it was necessary for all files to have the same variable numbers
-m = ['list is ' sprintf('%d ',vlist) ];
-disp(m);
+if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 
 m0 = ['Enter details of grid '];
 m1 = ['Enter START, STOP, STEP '];

@@ -1,6 +1,15 @@
 function mintrp2(varargin)
 
-% interpolate a set of variables to fill gaps up to a specified length
+% linearly interpolate a set of variables to fill gaps up to a specified length
+%
+% e.g.
+% >> MEXEC_A.MARGS_IN = {infile; 'y'; '/'; 'scan'; '24'; '0'; '0'};
+% >> mintrp2
+% will interpolate on scan to fill gaps up to 24 scans in all variables in
+% file infile, with no extrapolation at the ends
+%
+% calls m_interp to do the interpolation, including handling NaNs, max gap
+% length, and extrapolation
 
 m_common
 m_margslocal
@@ -35,17 +44,17 @@ MEXEC_A.Mhistory_in{1} = hist;
 
 ok = 0;
 while ok == 0
-
+    
     m = 'Type variable names or numbers of variables to interpolate (''/'' for all): ';
     m1 = sprintf('%s\n',m);
     var = m_getinput(m1,'s');
     varnum = m_getvlist(var,h);
-
+    
     mindim = nan+zeros(1,length(varnum));
     for k = 1:length(varnum)
         mindim(k) = min(h.dimrows(varnum(k)),h.dimcols(varnum(k)));
     end
-
+    
     if max(mindim) > 1
         % at least one variable is 2-D
         if max(mindim) > 1
@@ -62,7 +71,7 @@ while ok == 0
             end
         end
     end
-
+    
     ok = 0;
     while ok == 0
         m1 = sprintf('%s','Type name or number of control variable :');
@@ -81,11 +90,11 @@ while ok == 0
         end
         ok = 1;
     end
-
+    
     % if using a control variable, all dimensions must match those of control
     % var. If no control var, each variable handled separately, so
     % dimensions can be anything.
-
+    
     if vcontrol > 0
         vardims = h.dimsset([vcontrol varnum]);
         vardims_u = unique(vardims);
@@ -101,7 +110,7 @@ while ok == 0
     end
     
     ok = 1;
-
+    
 end
 
 m1 = 'Now set the maximum length of gap (points) to interpolate over.';
@@ -137,46 +146,48 @@ end
 
 for kint = 1:length(varnum);
     v = nc_varget(ncfile.name,h.fldnam{varnum(kint)});
-    m = ['Interpolating variable ' h.fldnam{varnum(kint)}];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m);
-    if m_numdims(v) > 1 % this var is 2-D, so rc will already have been set
-        if rc == 1 % interpolate down rows
+    if sum(isnan(v))>0
+        m = ['Interpolating variable ' h.fldnam{varnum(kint)}];
+        fprintf(MEXEC_A.Mfidterm,'%s\n',m);
+        if m_numdims(v) > 1 % this var is 2-D, so rc will already have been set
+            if rc == 1 % interpolate down rows
+                if vcontrol == 0;
+                    nrows = size(v,1); ncols = size(v,2);
+                    xr = (1:nrows); xr = xr(:); vc = repmat(xr,1,ncols);
+                end
+                
+                for k = 1:h.dimcols(varnum(kint))
+                    xi = vc(:,k);
+                    y = v(:,k);
+                    yi = m_interp(xi,y,xi,e1,e2,mg);
+                    v(:,k) = yi;
+                end
+            elseif rc == 2
+                if vcontrol == 0;
+                    nrows = size(v,1); ncols = size(v,2);
+                    xc = (1:ncols); xc = xc(:)'; vc = repmat(xc,nrows,1);
+                end
+                for k = 1:h.dimrows(varnum(kint))
+                    xi = vc(k,:);
+                    y = v(k,:);
+                    yi = m_interp(xi,y,xi,e1,e2,mg);
+                    v(k,:) = yi;
+                end
+                
+            end
+        else
+            % 1-D variable
             if vcontrol == 0;
-                nrows = size(v,1); ncols = size(v,2);
-                xr = (1:nrows); xr = xr(:); vc = repmat(xr,1,ncols);
+                vc = 1:length(v);
             end
-
-            for k = 1:h.dimcols(varnum(kint))
-                xi = vc(:,k);
-                y = v(:,k);
-                yi = m_interp(xi,y,xi,e1,e2,mg);
-                v(:,k) = yi;
-            end
-        elseif rc == 2
-            if vcontrol == 0;
-                nrows = size(v,1); ncols = size(v,2);
-                xc = (1:ncols); xc = xc(:)'; vc = repmat(xc,nrows,1);
-            end
-            for k = 1:h.dimrows(varnum(kint))
-                xi = vc(k,:);
-                y = v(k,:);
-                yi = m_interp(xi,y,xi,e1,e2,mg);
-                v(k,:) = yi;
-            end
-
+            xi = vc;
+            y = v;
+            yi = m_interp(xi,y,xi,e1,e2,mg);
+            v = reshape(yi,size(v));
         end
-    else
-        % 1-D variable
-        if vcontrol == 0;
-            vc = 1:length(v);
-        end
-        xi = vc;
-        y = v;
-        yi = m_interp(xi,y,xi,e1,e2,mg);
-        v = reshape(yi,size(v));
-    end
         nc_varput(ncfile.name,h.fldnam{varnum(kint)},v);
         m_uprlwr(ncfile,h.fldnam{varnum(kint)});
+    end
 end
 
 

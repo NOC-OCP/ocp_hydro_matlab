@@ -1,8 +1,7 @@
 % script to edit something
 
     vlist = m_getvlist([xname ' ' yname],h);
-    m = ['list is ' sprintf('%d ',vlist) ];
-    disp(m);
+    if ~MEXEC_G.quiet; disp(['list is ' sprintf('%d ',vlist)]); end
 
 
     ktime = zeros(1,length(vlist)); % This will be zero, or 1 if the variable is a time variable

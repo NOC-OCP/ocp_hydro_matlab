@@ -48,7 +48,9 @@ function vardata = nc_varget(ncfile , varname , varargin )
 % % NC_VARGET tries to be intelligent about retrieving the data.
 % % Since most general matlab operations are done in double precision,
 % % retrieved numeric data will be cast to double precision, while
-% % character data remains just character data.  %
+% % character data remains just character data.  
+%
+% % works for 2D data; doesn't handle 3D variables
 %
 %
 % bak jc191 6 Feb 2020
