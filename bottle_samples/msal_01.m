@@ -4,9 +4,23 @@
 % Use: msal_01 
 %
 %   uses gsw: salinity = gsw_SP_salinometer((runavg+offset)/2, cellT);
+%
+% the input files must include a column or field "sampnum" which takes the
+% form
+% sampnum = 100*statnum + position
+%     where statnum is the station and position the niskin position 
+%     ([1 24] or [1 36])
+%     for ctd samples,
+% sampnum = -yyyymmddhhmm
+%     for tsg samples,
+% and
+% sampnum = 999NNN
+%     for standards, where NNN increments sequentially as the standards
+%     were run
+%     (998NNN, 990NNN, etc. may be used for sub-standards)
+% 
 
 m_common
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; 
 mdocshow(mfilename, ['loads bottle salinities from the file(s) specified in opt_' mcruise ' and writes ctd samples to sal_' mcruise '_01.nc and sam_' mcruise '_all.nc, and underway samples to tsg_' mcruise '_01.nc']);
 
 std_samp_range = [1e5 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.

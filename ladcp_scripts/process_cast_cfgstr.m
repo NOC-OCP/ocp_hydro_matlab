@@ -96,7 +96,7 @@ function [] = process_cast_cfgstr(stn,varargin)
 %		 - made fignums 2-digit
 %
 % Jun 01, 2017: ylf add optional input parameter-value pairs to be passed to 
-%               set_cast_params to specify different settings to use:
+%               ix_cast_params to specify different settings to use:
 %               'orient' specifies downlooker ('DL', default), uplooker 
 %                  ('UL'), or both ('DL_UL')
 %               'constraints' is a cell array specifying whether to use 
@@ -121,7 +121,7 @@ if length(varargin)>0
    if isfield(cfg, 'eval_expr'); pcs.eval_expr = cfg.eval_expr; end
 end
 
-%defaults to pass to set_cast_params_cfgstr in cfg
+%defaults to pass to ix_cast_params in cfg
 if ~exist('cfg') | ~isfield(cfg, 'orient')
     cfg.orient = 'DL';
 end
@@ -137,8 +137,8 @@ default;                                % load default parameters
 
 p = setdefv(p,'checkpoints',[]);        % disable checkpointing by default
 
-%call set_cast_params_cfgstr to set fields of f and p as specified, and create directories if needed
-set_cast_params_cfgstr
+%call ix_cast_params to set fields of f and p as specified, and create directories if needed
+ix_cast_params %replaces set_cast_params
 
 close all
 openwindows;				% open all windows

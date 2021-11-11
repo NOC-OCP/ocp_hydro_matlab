@@ -95,12 +95,12 @@ dvad.shipdirn = 90-angle(dvad.uship+i*dvad.vship)/degrad;
 dvad.shipdirn = mcrange(dvad.shipdirn,0,360);
 
 dvad.refdnum = dvad.dnum(levsvad(1),:);
-dvad.refuabs = nanmean(dvad.uabs(levsvad,:),1);
-dvad.refvabs = nanmean(dvad.vabs(levsvad,:),1);
-dvad.refspeed = nanmean(dvad.speed(levsvad,:),1);
-dvad.refdirn = dvad.dirn(levsvad(1),:); % don't nanmean drection
-dvad.refshipspd = nanmean(dvad.shipspd(levsvad,:),1);
-dvad.refshipdirn = dvad.shipdirn(levsvad(1),:); % don't nanmean drection
+dvad.refuabs = m_nanmean(dvad.uabs(levsvad,:),1);
+dvad.refvabs = m_nanmean(dvad.vabs(levsvad,:),1);
+dvad.refspeed = m_nanmean(dvad.speed(levsvad,:),1);
+dvad.refdirn = dvad.dirn(levsvad(1),:); % don't m_nanmean drection
+dvad.refshipspd = m_nanmean(dvad.shipspd(levsvad,:),1);
+dvad.refshipdirn = dvad.shipdirn(levsvad(1),:); % don't m_nanmean drection
 dvad.shipchead = interp1(dnav.dnum,dnav.chead,dvad.refdnum);
 dvad.shiphead = mcrange(real(90-log(dvad.shipchead./abs(dvad.shipchead))/i/degrad),0,360);
 

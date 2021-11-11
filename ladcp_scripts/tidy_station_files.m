@@ -11,7 +11,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 pro = [MEXEC_G.MEXEC_DATA_ROOT '/ladcp/uh/pro/' ];
 prodir = [];
-cmd = ['ls ' pro]; [d1 d2] = unix(cmd);
+[d1 d2] = system(['ls ' pro]);
 % hope to get a single 6-char directory name
 d2 = d2(1:end-1); % truncate the LF (ascii 10) at end of d2.
 while exist(prodir,'dir') ~= 7

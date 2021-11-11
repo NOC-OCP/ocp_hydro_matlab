@@ -10,7 +10,7 @@ function stat = mplot_logged_data(file,plot_list)
 % matching file.
 m_setup;
 
-[stat, path]=unix(['find ' MEXEC_G.MEXEC_DATA_ROOT ' -name ' file]);
+[stat, path]=system(['find ' MEXEC_G.MEXEC_DATA_ROOT ' -name ' file]);
 
 path=strtrim(path)
 

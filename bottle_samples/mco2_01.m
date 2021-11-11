@@ -34,16 +34,15 @@
 % comments of the netcdf file that is output by this script?***
 %==========================================================================
 
-scriptname = 'mco2_01';
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING
-mdocshow(scriptname, ['add documentation string for ' scriptname])
+m_common
+mdocshow(mfilename, ['add documentation string for ' scriptname])
 
 % Resolve root directories for various file types
 root_co2 = mgetdir('M_BOT_CO2');
 root_ctd = mgetdir('M_CTD');
 
 % Set the name of the input file, and load into structure indata
-oopt = 'infile'; get_cropt
+scriptname = mfilename; oopt = 'infile'; get_cropt
 if ~exist('indata','var'); indata = load(input_file_name); end
 
 % Set up the output file name
@@ -52,7 +51,7 @@ dataname = [prefix1 '01'];
 otfile = fullfile(root_co2, [prefix1 '01']);
 
 % standardise the field names into structure data
-oopt = 'varnames'; get_cropt
+scriptname = mfilename; oopt = 'varnames'; get_cropt
 for no = 1:size(varnames,1)
    indata = setfield(indata, varnames{no,1}, getfield(indata, varnames{no,2}));
 end

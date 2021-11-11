@@ -20,7 +20,6 @@ switch scriptname
             case 'minit'
                 crhelp_str = {'stn_string (default: 3-digit form of stn) for filenames'
                     'and moves stn to stnlocal'};
-                mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
                 if ~exist('stn', 'var')
                     stn = input('type stn number ');
                 end
@@ -42,8 +41,8 @@ switch scriptname
                     'oxygen_sbe2' 'oxygen2'};
             case 'oxy_align'
                 crhelp_str = {'oxy_align (default 6) is the number of seconds by which oxygen has been shifted in'
-                    'SBE processing. Set oxy_end (default 0) to 1 to remove this many seconds before end of cast '
-                    'selected in mdcs_03g.'};
+                    'SBE processing. Set oxy_end (default 0) to 1 if you are selecteding end of cast (in mdcs_03g)'
+                    'based on T, S rather than oxygen'};
                 oxy_align = 6;
                 oxy_end = 0;
             case 'shortcasts'
@@ -53,18 +52,17 @@ switch scriptname
                 shortcasts = [];
             case 'ctdsens_groups'
                 crhelp_str = {'ctdsens_groups is a structure with fields corresponding to the CTD sensors e.g.'
-                    'temp1, cond1, oxygen1, temp2, etc.; their values are Nx1 cell arrays listing stations '
-                    'for a given sensor/serial number, in case one or more sensors was changed during the cruise.'
+                    'temp1, oxygen1, temp2, etc. (temp1 and cond1 are assumed the same); '
+                    'their values are Nx1 cell arrays listing stations for a given sensor/serial number, '
+                    'in case one or more sensors was changed during the cruise.'
                     'all default to {1:999}, but, for instance, you could set ctdsens_groups.oxygen1 = {1:30 31:70} '
-                    'if the CTD1 oxygen sensor was changed between stations 30 and 31.'}; 
-                    ctdsens_groups.temp1 = {1:999};
-                    ctdsens_groups.cond1 = {1:999};
-                    ctdsens_groups.oxygen1 = {1:999};
-                    ctdsens_groups.temp2 = {1:999};
-                    ctdsens_groups.cond2 = {1:999};
-                    ctdsens_groups.oxygen2 = {1:999};
-                    ctdsens_groups.fluor = {1:999};
-                    ctdsens_groups.transmittance = {1:999};
+                    'if the CTD1 oxygen sensor was changed between stations 30 and 31.'};
+                ctdsens_groups.temp1 = {1:999};
+                ctdsens_groups.oxygen1 = {1:999};
+                ctdsens_groups.temp2 = {1:999};
+                ctdsens_groups.oxygen2 = {1:999};
+                ctdsens_groups.fluor = {1:999};
+                ctdsens_groups.transmittance = {1:999};
         end
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
         
@@ -78,12 +76,6 @@ switch scriptname
                     'and subsequently apply ctm correction in mctd_02a.'
                     'suf is the .cnv file suffix in either case (defaults ''_align_ctm'' or ''_align_noctm'')'};
                 redoctm = 0;
-        end
-        %%%%%%%%%% end mctd_01 %%%%%%%%%%
-        
-        %%%%%%%%%% mctd_02a %%%%%%%%%%
-    case 'mctd_02a'
-        switch oopt
             case 'ctdvars' %***not updating past opt_cruise files (yet)
                 crhelp_str = {'Place to put additional (ctdvars_add) or replacement (ctdvars_replace)'
                     'triplets of SBE variable name, mstar variable name, mstar variable units to '
@@ -95,11 +87,18 @@ switch scriptname
                     'for given station(s); if applicable should be set in opt_cruise for selected stations '
                     '(variables that are never present should be removed from templates/ctd_renamelist.csv instead)'};
                 absentvars = {}; %default: don't skip any variables
-            case 'prectm_rawedit'
-                crhelp_str = {'edits to the raw data to be made before applying the cell thermal mass correction '
-                    '(that is, branch will be entered only if mctd_01 set redoctm to 1 and generated a _noctm raw file): '
+        end
+        %%%%%%%%%% end mctd_01 %%%%%%%%%%
+        
+        %%%%%%%%%% mctd_02 %%%%%%%%%%
+    case 'mctd_02'
+        switch oopt
+            case 'rawedit_auto'
+                crhelp_str = {'edits to the raw (or raw_cleaned, if that file already exists) data to be made in'
+                    'mctd_02 and in mctd_rawedit (before running the GUI)'
                     'pvars is a cell listing variables to NaN when pumps are off, with the second column '
                     'of the cell array setting the number of bad scans expected after pumps come back on; '
+                    'this branch only applies in mctd_02, if mctd_01 has been run with redoctm=1.'
                     'sevars is a list of variables for which to edit out scans between the limits given by the second '
                     'and third columns, inclusive (can use -inf or +inf); '
                     'revars is a list of variables to NaN values out of the ranges given by the 2nd (lower limits) '
@@ -114,13 +113,7 @@ switch scriptname
                 revars = {};
                 dsvars = {};
                 ovars = {}; %***specify in mctd_01 and here that the redoctm branch goes back before align too?***
-        end
-        %%%%%%%%%% end mctd_02a %%%%%%%%%%
-        
-        %%%%%%%%%% mctd_02b %%%%%%%%%%
-    case 'mctd_02b'
-        switch oopt
-            case 'raw_corrs'
+                   case 'raw_corrs'
                 crhelp_str = {'flags for optional corrections to apply to the raw file (in this order): '
                     'dooxyrev (default 0), if true, run moxyhyst_rev to undo the hysteresis '
                     'correction applied in SBE processing, using parameters set in case ''oxyrev''; '
@@ -241,7 +234,7 @@ switch scriptname
                 end
         end
         %%%%%%%%%% end mctd_04 %%%%%%%%%%
-
+        
         %%%%%%%%%% mfir_01 %%%%%%%%%%
     case 'mfir_01'
         switch oopt
@@ -261,9 +254,9 @@ switch scriptname
                     'if avi_opt==0, linearly interpolate to bottle firing scan; if avi_opt is a tuple, '
                     'it specifies the window of scans relative to firing scan over which to'
                     'compute the median. Note scans are 24-hz. Defaults are inf and 0.'};
-                    %***default fill any length gap???
+                %***default fill any length gap???
                 fillstr = inf;
-                avi_opt = 0; 
+                avi_opt = 0;
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
@@ -298,28 +291,7 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_checkplots %%%%%%%%%%
         
-        %%%%%%%%%% mctd_rawedit %%%%%%%%%%
-    case 'mctd_rawedit'
-        switch oopt
-            case 'rawedit_auto'
-                crhelp_str = {'edits to the raw (or raw_cleaned, if file already exists) data to be made before '
-                    'running the mctd_rawedit GUI to choose additional edits: '
-                    'oxy_end sets number of seconds to NaN off the end of the oxygen records, if you selected the '
-                    'end of the cast based on temperature and conductivity instead (default: 0); '
-                    'sevars is a list of variables for which to edit out scans between the limits given by the second '
-                    'and third columns, inclusive (can use -inf or +inf); '
-                    'revars is a list of variables to NaN values out of the ranges given by the 2nd (lower limits) '
-                    'and 3rd (upper limits) columns of the array; '
-                    'dsvars is a list of variables to despike using m_median_despike, with thresholds given columns 2:end;'
-                    'all default to empty (no automatic edits at this stage).'};
-                oxy_end = 0;
-                pvars = {};
-                sevars = {};
-                revars = {};
-                dsvars = {};
-        end
-        %%%%%%%%%% end mctd_rawedit %%%%%%%%%%
-        
+
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'
         switch oopt
@@ -359,6 +331,15 @@ switch scriptname
                 crhelp_str = {'list of (SBE) names for variables newly added to varlists/ctd_renamelist.csv,'
                     'to be added to _raw and _raw_cleaned files'};
                 newvars = {};
+        end
+        
+        
+    case 'mout_1hzasc'
+        switch oopt
+            case '1hz_fname'
+                crhelp_str = {'name, fnot, for text file of 1Hz CTD data (e.g. for IX LADCP processing'};
+                root_out = mgetdir('M_LADCP');
+                fnot = fullfile(root_out, 'CTD', ['ctd.' stn_string '.02.asc']);
         end
         
 end

@@ -8,7 +8,7 @@
 % If concentrations are not included in file or in the list of columns to
 % parse in opt_cruise, calls moxy_ccalc to compute them
 
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+m_common
 mdocshow(mfilename, ['loads bottle oxygens from file specified in opt_' mcruise ', optionally calls moxy_ccalc to compute concentration from titration, and writes to oxy_' mcruise '_01.nc']);
 
 % find list of files

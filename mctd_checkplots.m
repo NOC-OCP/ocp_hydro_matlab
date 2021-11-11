@@ -302,17 +302,15 @@ for plotlist = cklist
             
             for ks = 1:numused
                 iic = ks+length(lcolors)-numused;
-                
-                subplot(221)
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
+
+                subplot(221)
                 plot(dpsal{ks}.press(kokd),dpsal{ks}.temp1(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 plot(dpsal{ks}.press(koku),dpsal{ks}.temp1(koku),'color',lcolors(iic,:),'linewidth',lwid);
                 
                 subplot(222)
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 sd = getfield(dpsal{ks},[saltype '1']);
                 plot(dpsal{ks}.press(kokd),sd(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
@@ -320,20 +318,18 @@ for plotlist = cklist
                 
                 subplot(223)
                 if oxy_end
-                    kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot-oxy_align*24 & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    kokdo = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
+                    kokuo = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
                 else
-                    kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot-oxy_align*24 & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    kokdo = kokd;
+                    kokuo = koku;
                 end
                 od = getfield(dpsal{ks},oxyvars{1,2});
-                plot(dpsal{ks}.press(kokd),od(kokd),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(dpsal{ks}.press(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(koku),od(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid);
                 
                 subplot(224)
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 sd = getfield(dpsal{ks},[saltype '1']);
                 plot(sd(kokd),dpsal{ks}.potemp1(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
@@ -364,17 +360,15 @@ for plotlist = cklist
             
             for ks = 1:numused
                 iic = ks+length(lcolors)-numused;
-                
-                subplot(221)
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
+
+                subplot(221)
                 plot(dpsal{ks}.press(kokd),dpsal{ks}.temp2(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 plot(dpsal{ks}.press(koku),dpsal{ks}.temp2(koku),'color',lcolors(iic,:),'linewidth',lwid);
                 
                 subplot(222)
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 sd = getfield(dpsal{ks},[saltype '2']);
                 plot(dpsal{ks}.press(kokd),sd(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
@@ -382,22 +376,20 @@ for plotlist = cklist
                 
                 subplot(223)
                 if oxy_end
-                    kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot-oxy_align*24 & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    kokdo = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
+                    kokuo = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
                 else
-                    kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot-oxy_align*24 & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    kokdo = kokd;
+                    kokuo = koku;
                 end
                 if nox>1
                     od = getfield(dpsal{ks},oxyvars{2,2});
-                    plot(dpsal{ks}.press(kokd),od(kokd),'color',lcolors(iic,:),'linewidth',lwid);
+                    plot(dpsal{ks}.press(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
                     hold on
-                    plot(dpsal{ks}.press(koku),od(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                    plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid);
                 end
                 
                 subplot(224)
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 sd = getfield(dpsal{ks},[saltype '2']);
                 plot(sd(kokd),dpsal{ks}.potemp2(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
@@ -557,10 +549,10 @@ for plotlist = cklist
             for ks = numused
                 if oxy_end
                     kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot-oxy_align*24 & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
                 else
                     kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot-oxy_align*24 & dpsal{ks}.scan < ddcs{ks}.scan_end);
+                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 end
                 od = getfield(dpsal{ks},oxyvars{1,2});
                 plot(dpsal{ks}.press(kokd),od(kokd),['k' '-'],'linewidth',lwid);
@@ -709,24 +701,17 @@ for plotlist = cklist
                 plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),[cols(ks) '-'],'linewidth',lwid);
                 hold on
                 
+                if oxy_end
+                    kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
+                end
                 if nox>1
                     subplot(325)
-                    if oxy_end
-                        kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
-                    else
-                        kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                    end
                     kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
                     od1 = dpsal{ks}.(oxyvars{1,2}); od2 = dpsal{ks}.(oxyvars{2,2});
                     plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),[cols(ks) '-'],'linewidth',lwid);
                     hold on
                     
                     subplot(326) %zoomed version of above
-                    if oxy_end
-                        kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
-                    else
-                        kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                    end
                     kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
                     od1 = getfield(dpsal{ks},oxyvars{1,2}); od2 = getfield(dpsal{ks},oxyvars{2,2});
                     plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),[cols(ks) '-'],'linewidth',lwid);

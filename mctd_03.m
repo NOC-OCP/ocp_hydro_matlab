@@ -1,14 +1,29 @@
 % mctd_03:
-%   copy data from chosen sensors (set in opt_cruise) to temp, cond, and
-%   oxygen (if two oxygen sensors),
-%   and calculate psal, asal
-%   average to 1 hz and calculate potemp, contemp
+%
+% input: _24hz
+%
+%   apply automatic edits as set in opt_cruise, mctd_rawedit case; 
+%   copy data from sensors chosen in opt_cruise to temp, cond, and oxygen; 
+%   calculate psal, asal, potemp using GSW;
+%   average to 1 hz and fill gaps as set in opt_cruise
+%
+% outputs: _psal (1 hz, used for plots and ladcp)
+%          wk_dvars_ (24 hz, used by mctd_04 to average to 2 dbar)
 %
 % Use: mctd_03        and then respond with station number, or for station 16
 %      stn = 16; mctd_03;
-% input: _24hz
-% output: _psal
+%
+% calls: 
+%     mcalib2 (if sensors are being switched)
+%     maddvars
+%     mintrp2
+%     mloadq
+%     gsw functions
+%     mfsave
+% and via get_cropt:
+%      setdef_cropt_cast (castpars and mctd_03 cases)
 
+m_common; MEXEC_A.mprog = mfilename;
 scriptname = 'castpars'; oopt = 'minit'; get_cropt 
 mdocshow(mfilename, ['fills in choice of sensors, computes salinity, and averages to 1 hz in ctd_' mcruise '_' stn_string '_psal.nc']);
 
@@ -17,10 +32,7 @@ root_ctd = mgetdir('M_CTD');
 prefix1 = ['ctd_' mcruise '_'];
 
 infile1 = fullfile(root_ctd, [prefix1 stn_string '_24hz']);
-infile2 = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
 otfile1 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
-otfile2d = fullfile(root_ctd, [prefix1 stn_string '_2db']);
-otfile2u = fullfile(root_ctd, [prefix1 stn_string '_2up']);
 wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
 wkfile_dvars = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]); %this one persists through a later processing stage
 
@@ -39,9 +51,11 @@ if o_choice == 2 & ~sum(strcmp('oxygen2', h.fldnam))
    error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
 end
 
-MEXEC_A.Mprog = mfilename;
-
-%optional: edit out bad scans, or replace data from specified sensor with data from the other
+%optional: edit out bad scans, 
+%or even replace data from specified sensor with data from the other
+%you should almost never do the second one because it will produce
+%discontinuities; it's almost always better to switch the preferred sensor
+%for the whole cast
 scriptname = mfilename; oopt = '24hz_edit'; get_cropt
 if length(badscans24)+length(switchscans24)>0
     MEXEC_A.MARGS_IN = {infile1; 'y'};
@@ -86,7 +100,7 @@ maddvars
 
 %optional: interpolate over gaps 
 scriptname = mfilename; oopt = '24hz_interp'; get_cropt 
-if interp24 
+if interp24
     MEXEC_A.MARGS_IN = {
     wkfile1
     'y'
@@ -119,27 +133,34 @@ for no = 1:length(var_copycell)
     dnew.(var_copycell{no}) = d.(var_copycell{no});
 end
 hnew.fldnam = var_copycell;
-hnew.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '];
 
 %new variables
 hnew.fldnam = [hnew.fldnam 'psal' 'psal1' 'psal2' 'asal' 'asal1' 'asal2' 'potemp' 'potemp1' 'potemp2'];
 hnew.fldunt = [hnew.fldunt 'pss-78' 'pss-78' 'pss-78' 'g/kg' 'g/kg' 'g/kg' 'degc90' 'degc90' 'degc90'];
+hnew.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '];
 
-dnew.psal = gsw_SP_from_C(dnew.cond,dnew.temp,dnew.press);
-dnew.psal1 = gsw_SP_from_C(dnew.cond1,dnew.temp1,dnew.press);
-dnew.psal2 = gsw_SP_from_C(dnew.cond2,dnew.temp2,dnew.press);
-dnew.asal = gsw_SA_from_SP(dnew.psal,dnew.press,h.longitude,h.latitude);
-dnew.asal1 = gsw_SA_from_SP(dnew.psal1,dnew.press,h.longitude,h.latitude);
-dnew.asal2 = gsw_SA_from_SP(dnew.psal2,dnew.press,h.longitude,h.latitude);
-dnew.potemp = gsw_pt0_from_t(dnew.asal,dnew.temp,dnew.press);
-dnew.potemp1 = gsw_pt0_from_t(dnew.asal1,dnew.temp1,dnew.press);
-dnew.potemp2 = gsw_pt0_from_t(dnew.asal2,dnew.temp2,dnew.press);
+iig = find(dnew.press>-1.495); %gsw won't work on p<=-1.495
+if length(iig)<length(dnew.press)
+    m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points and'
+        'you may also want to check in mctd_rawedit and set revars under mctd_rawedit case in'
+        ['opt_' mcruise ' in case pressure spikes need to be edited out']};
+    warning(sprintf('%s\n',m{:}));
+end
+dnew.psal = NaN+dnew.cond; dnew.psal(iig) = gsw_SP_from_C(dnew.cond(iig),dnew.temp(iig),dnew.press(iig));
+dnew.psal1 = NaN+dnew.cond; dnew.psal1(iig) = gsw_SP_from_C(dnew.cond1(iig),dnew.temp1(iig),dnew.press(iig));
+dnew.psal2 = NaN+dnew.cond; dnew.psal2(iig) = gsw_SP_from_C(dnew.cond2(iig),dnew.temp2(iig),dnew.press(iig));
+dnew.asal =  NaN+dnew.cond; dnew.asal(iig) = gsw_SA_from_SP(dnew.psal(iig),dnew.press(iig),h.longitude(iig),h.latitude);
+dnew.asal1 = NaN+dnew.cond; dnew.asal1(iig) = gsw_SA_from_SP(dnew.psal1(iig),dnew.press(iig),h.longitude(iig),h.latitude);
+dnew.asal2 = NaN+dnew.cond; dnew.asal2(iig) = gsw_SA_from_SP(dnew.psal2(iig),dnew.press(iig),h.longitude(iig),h.latitude);
+dnew.potemp = NaN+dnew.cond; dnew.potemp(iig) = gsw_pt0_from_t(dnew.asal(iig),dnew.temp(iig),dnew.press(iig));
+dnew.potemp1 = NaN+dnew.cond; dnew.potemp1(iig) = gsw_pt0_from_t(dnew.asal1(iig),dnew.temp1(iig),dnew.press(iig));
+dnew.potemp2 = NaN+dnew.cond; dnew.potemp2(iig) = gsw_pt0_from_t(dnew.asal2(iig),dnew.temp2(iig),dnew.press(iig));
 
 % hnew.fldnam = [hnew.fldnam 'contemp' 'contemp1' 'contemp2'];
 % hnew.fldunt = [hnew.fldunt 'degc90' 'degc90' 'degc90'];
-% dnew.contemp = gsw_CT_from_t(dnew.asal,dnew.temp,dnew.press);
-% dnew.contemp1 = gsw_CT_from_t(dnew.asal1,dnew.temp1,dnew.press);
-% dnew.contemp2 = gsw_CT_from_t(dnew.asal2,dnew.temp2,dnew.press);
+% dnew.contemp = NaN+dnew.cond; dnew.contemp(iig) = gsw_CT_from_t(dnew.asal(iig),dnew.temp(iig),dnew.press(iig));
+% dnew.contemp1  NaN+dnew.cond; dnew.contemp1(iig) = gsw_CT_from_t(dnew.asal1(iig),dnew.temp1(iig),dnew.press(iig));
+% dnew.contemp2  NaN+dnew.cond; dnew.contemp2(iig) = gsw_CT_from_t(dnew.asal2(iig),dnew.temp2(iig),dnew.press(iig));
 
 %save
 mfsave(wkfile_dvars, dnew, hnew);

@@ -1,35 +1,49 @@
-% mctd_rawedit: display raw ctd data to check for spikes, apply automatic
-% and GUI-selected edits and produce raw_cleaned file
+% mctd_rawedit: 
+%
+% input: _raw.nc or (if it exists) _raw_cleaned.nc; dcs_
+%
+% apply automatic edits as set in opt_cruise: 
+%     edits based on scan range (sevars)
+%     edits based on variable range (revars)
+%     despiking (dsvars)
+% then display raw ctd data to check for and edit out spikes and other bad
+% data from individual sensors
+%
+%     to skip this step, set rawedit_nogui = 1;
+%
+% output: _raw_cleaned.nc
 %
 % Use: mctd_rawedit        and then respond with station number, or for station 16
 %      stn = 16; mctd_rawedit;
-%
-% to skip the GUI, set rawedit_nogui = 1
+% or to skip the GUI and only apply automatic edits
 %     stn = 16; rawedit_nogui = 1; mctd_rawedit
-% will just apply automatic edits
 
+m_common; MEXEC_A.mprog = mfilename;
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['applies despiking and other edits if set in opt_cruise; allows interactive selection of bad data cycles; writes cleaned data to ctd_' mcruise '_' stn_string '_raw_cleaned.nc']);
 
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');
 
-prefix1 = ['ctd_' mcruise '_'];
-prefix2 = ['dcs_' mcruise '_'];
+prefix1 = ['ctd_' mcruise '_' stn_string];
+prefix2 = ['dcs_' mcruise '_' stn_string];
 
-otfile = fullfile(root_ctd, [prefix1 stn_string '_raw_cleaned.nc']);
-infile = fullfile(root_ctd, [prefix1 stn_string '_raw.nc']);
-infiled = fullfile(root_ctd, [prefix2 stn_string '.nc']); % dcs file
+otfile = fullfile(root_ctd, [prefix1 '_raw_cleaned.nc']);
+infile = fullfile(root_ctd, [prefix1 '_raw.nc']);
+infiled = fullfile(root_ctd, [prefix2 '.nc']); % dcs file
 
 if ~exist(m_add_nc(otfile), 'file')
     copyfile(m_add_nc(infile), m_add_nc(otfile))
 end
-unix(['chmod 644 ' m_add_nc(otfile)])
+system(['chmod 644 ' m_add_nc(otfile)])
+
+
+%%%%% automatic edits %%%%%
 
 scriptname = mfilename; oopt = 'rawedit_auto'; get_cropt
 
 %scanedit (for additional bad scans)
-if exist('sevars','var') & length(sevars)>0
+if exist('sevars','var') && ~isempty(sevars)
     MEXEC_A.MARGS_IN = {otfile; 'y'};
     for no = 1:size(sevars,1)
         sestring = sprintf('y = x1; y(x2>=%d & x2<=%d) = NaN;', sevars{no,2}, sevars{no,3});
@@ -41,7 +55,7 @@ if exist('sevars','var') & length(sevars)>0
 end
 
 %remove out of range values
-if exist('revars','var') & length(revars)>0
+if exist('revars','var') && isempty(revars)
     MEXEC_A.MARGS_IN = {otfile; 'y'};
     for no = 1:size(revars,1)
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; revars{no,1}; sprintf('%f %f',revars{no,2},revars{no,3}); 'y'];
@@ -52,7 +66,7 @@ if exist('revars','var') & length(revars)>0
 end
 
 %despike
-if exist('dsvars','var') & length(dsvars)>0
+if exist('dsvars','var') && ~isempty(dsvars)
     nds = 2;
     while nds<=size(dsvars,2)
         MEXEC_A.MARGS_IN = {otfile; 'y'};
@@ -66,7 +80,7 @@ if exist('dsvars','var') & length(dsvars)>0
     end
 end
 
-if (exist('revars','var') & length(revars)>0 & sum(strncmp('temp', revars(:,1), 4))) | (exist('dsvars','var') & length(dsvars)>0 & sum(strncmp('temp', dsvars(:,1), 4)))
+if (exist('revars','var') && ~isempty(revars) && sum(strncmp('temp', revars(:,1), 4))) || (exist('dsvars','var') && ~isempty(dsvars) && sum(strncmp('temp', dsvars(:,1), 4)))
     warning('You have applied rangeedit or despike to temperature. If large spikes were removed,')
     warning(['you should set redoctm=1 in the mctd_01 case in opt_' mcruise ', add these editing '])
     warning(['instructions to the mctd_02a case in opt_' mcruise ', remove ctd_' mcruise '_' stn_string '*.nc,'])
@@ -77,18 +91,18 @@ end
 
 %%%%%%%%% now the GUI %%%%%%%%%
 
-if (exist('rawedit_nogui','var') & rawedit_nogui)
+if (exist('rawedit_nogui','var') && rawedit_nogui)
     clear rawedit_nogui
     return
 else
     
  %only plot the good part of the cast, chosen in mdcs_03g (not the on-deck or soak periods)
     if ~exist(m_add_nc(infiled), 'file')
-        unix(['chmod 444 ' m_add_nc(otfile)]);
+        system(['chmod 444 ' m_add_nc(otfile)]);
         warning('dcs file required for GUI editing; quitting'); return
     else
         
-        [ddcs hdcs]  = mloadq(infiled,'/');
+        [ddcs, hdcs]  = mloadq(infiled,'/');
         dcs_ts = ddcs.time_start(1);
         dcs_te = ddcs.time_end(1);
         dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
@@ -123,7 +137,7 @@ else
             
         end
         
-        unix(['chmod 444 ' m_add_nc(otfile)]);
+        system(['chmod 444 ' m_add_nc(otfile)]);
         
     end
     

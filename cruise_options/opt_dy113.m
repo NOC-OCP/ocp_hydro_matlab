@@ -89,8 +89,8 @@ switch scriptname
         %%%%%%%%%% end mctd_senscal %%%%%%%%%%
         
         
-        %%%%%%%%%% set_cast_params_cfgstr %%%%%%%%%%
-    case 'set_cast_params_cfgstr'
+        %%%%%%%%%% ix_cast_params %%%%%%%%%%
+    case 'ix_cast_params'
         switch oopt
             case 'ladcpopts'
                 if stnlocal>=5
@@ -101,7 +101,7 @@ switch scriptname
                     p.btrk_mode = 2; %calculate our own since for some reason the rdi bottom track didn't work
                 end
         end
-        %%%%%%%%%% end set_cast_params_cfgstr %%%%%%%%%%
+        %%%%%%%%%% end ix_cast_params %%%%%%%%%%
         
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'

@@ -103,7 +103,7 @@ for k = 1:size(time_today,2)
  ix = find((time_extended >= (start_time - (n*60)/2)) &...
                              (time_extended < (start_time + (n*60)/2))); 
  var_group = var_extended(ix);            % gather all airtemps n/2 minutes either side of the point being smoothed
- var_smoothed(k) = nanmedian(var_group);  % compute the median of this n minute group
+ var_smoothed(k) = m_nanmedian(var_group);  % compute the median of this n minute group
  clear ix var_group
 end
 

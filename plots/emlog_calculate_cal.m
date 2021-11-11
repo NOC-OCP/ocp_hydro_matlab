@@ -130,8 +130,8 @@ plot(ee3,vv3,'r-','linewidth',2)
 kok = find(~isnan(v.chfint+v.frel) & (v.time-t_0 > 0) & (v.time - t_1 < 0)); % seemed ok first 5 days of cruise, then drifts towards reading 2 knots too high. temperature depndent ?
 ecal = emlog_cal_jc069(v.chfint*scl);
 plot(ecal(kok),v.frel(kok)*scl,'k+');
-nanmean(v.frel(kok)*scl-ecal(kok))
-nanstd(v.frel(kok)*scl-ecal(kok))
+m_nanmean(v.frel(kok)*scl-ecal(kok))
+m_nanstd(v.frel(kok)*scl-ecal(kok))
 
 
 ee4 = [ee1 ee2];

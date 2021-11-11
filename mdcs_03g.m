@@ -160,8 +160,8 @@ while 1
         case 'se'
             % select upcast end scan
             disp('select end scan on any panel');
-            disp('you may want to select based on T and C, and add oxy_end in cruise');
-            disp('options file so that mctd_04 will truncate O when it goes bad (earlier)');
+            disp('you may want to select based on T and C, and add oxy_end in cruise options');
+            disp('file (under castpars, oxy_align) so that O will be truncated when it goes bad (earlier)');
             [x y] = ginput(1);
             scan_end = floor(x)
         case 'pp'

@@ -48,6 +48,6 @@ else
     m = (m<medav(1) | m>medav(2));
     for k = 1:size(y,2)
         z = repmat(y(:,k),1,length(xi)); z(m) = NaN;
-        ym(:,k) = nanmedian(z)';
+        ym(:,k) = m_nanmedian(z)';
     end
 end

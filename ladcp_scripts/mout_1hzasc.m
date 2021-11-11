@@ -14,7 +14,6 @@ mdocshow(mfilename, ['saves 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.' stn_string '
 %%%%%%%%% write ctd data %%%%%%%%%
 
 root_ctd = mgetdir('M_CTD');
-root_out = [mgetdir('M_LADCP')];
 %infile = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]);
 infile = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
 
@@ -35,7 +34,7 @@ dd.decday = datenum(dh.data_time_origin) + dd.time/86400 - datenum([dh.data_time
 
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
-fnot = fullfile(root_out, 'ctd', ['ctd.' stn_string '.02.asc']);
+scriptname = mfilename; oopt = '1hz_fname'; get_cropt
 fid = fopen(fnot,'w');
 for kl = 1:length(kok)
    fprintf(fid,'%10.2f %8.2f %8.4f %8.4f %11.6f %10.6f %12.7f\n', dd.time(kok(kl)), dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)), dd.decday(kok(kl))); 

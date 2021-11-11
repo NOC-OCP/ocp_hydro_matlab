@@ -210,16 +210,18 @@ switch scriptname
         end
         %%%%%%%%%% end set_clev_col %%%%%%%%%%
         
-                %%%%%%%%%% set_cast_params_cfgstr %%%%%%%%%%
-    case 'set_cast_params_cfgstr'
+                %%%%%%%%%% ix_cast_params %%%%%%%%%%
+    case 'ix_cast_params'
         switch oopt
             case 'ladcpopts'
                 crhelp_str = {'place to change parameters for IX ladcp processing that are set in'
-                    '(or can be set in) set_cast_params_cfgstr, for instance: '
-                    'ambiguity velocity, velocity limits, bottom track mode, instrument serial'
-                    'numbers, etc.'};
+                    '(or can be set in) ix_cast_params as fields of (existing) structure p,'
+                    'for instance: '
+                    'p.ambiguity (ambiguity velocity), p.vlim (velocity limits), '
+                    'p.btrk_mode (bottom track mode), p.up_sn and p.do_sn (instrument serial'
+                    'numbers), etc.; see ix_cast_params for more'};
         end
-        %%%%%%%%%% end set_cast_params_cfgstr %%%%%%%%%%
+        %%%%%%%%%% end ix_cast_params %%%%%%%%%%
 
         
 end

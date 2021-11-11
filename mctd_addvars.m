@@ -79,15 +79,15 @@ if ~isempty(newvars)
         hnew.fldnam = [hnew.fldnam dsv.varname{ii}];
         hnew.fldunt = [hnew.fldunt dsv.varunit{ii}];
     end
-    unix(['chmod 644 ' m_add_nc(otfile)]);
+    system(['chmod 644 ' m_add_nc(otfile)]);
     mfsave(m_add_nc(otfile), dnew, hnew, '-addvars');
-    unix(['chmod 444 ' m_add_nc(otfile)]);
+    system(['chmod 444 ' m_add_nc(otfile)]);
     otfile = [otfile '_cleaned.nc'];
     if exist(otfile, 'file')
         disp('writing to _raw_cleaned')
-        unix(['chmod 644 ' m_add_nc(otfile)]);
+        system(['chmod 644 ' m_add_nc(otfile)]);
         mfsave(otfile, dnew, hnew, '-addvars');
-        unix(['chmod 644 ' m_add_nc(otfile)]);
+        system(['chmod 644 ' m_add_nc(otfile)]);
     end
     
     %write to _24hz

@@ -54,22 +54,23 @@ if reload
     
     if sum(strcmp('maxw',vars(:,1)))
         %figure out winch variable
-        root_win = mgetdir('M_CTD_WIN');
-        d = dir(fullfile(root_win, ['win_' mcruise '_???.nc']));
-        if isempty(d)
-            m = 'No winch files found';
-            fprintf(MEXEC_A.Mfider,'%s\n',m)
-            return
-        end
-        fnwin = d(1).name; % first winch file name
-        h = m_read_header(fnwin);
-        cabname = mvarname_find({'cablout' 'cableout' 'winch_cable_out'},h.fldnam);
-        if isempty(cabname)
-            m1 = ['No match for winch cable out in file '];
-            m2 = [fnwin];
-            m3 = 'exiting';
-            fprintf(MEXEC_A.Mfider,'%s\n',m1,m2,m3)
-            return
+        d = []; cabname = [];
+        try
+            root_win = mgetdir('M_CTD_WIN');
+            d = dir(fullfile(root_win, ['win_' mcruise '_???.nc']));
+            fnwin = d(1).name; % first winch file name
+            h = m_read_header(fnwin);
+            cabname = mvarname_find({'cablout' 'cableout' 'winch_cable_out'},h.fldnam);
+        catch
+            if isempty(d)
+                m = 'No winch files found';
+                fprintf(MEXEC_A.Mfider,'%s\n',m)
+            elseif isempty(cabname)
+                m1 = ['No match for winch cable out in file '];
+                m2 = [fnwin];
+                m3 = 'exiting';
+                fprintf(MEXEC_A.Mfider,'%s\n',m1,m2,m3)
+            end
         end
     end
     

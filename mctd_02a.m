@@ -36,9 +36,9 @@ if ~exist(m_add_nc(infile1), 'file');
 else
     redoctm = 1;
     copyfile(m_add_nc(infile1), m_add_nc(infile));
-    unix(['chmod 444 ' m_add_nc(infile1)]); % write protect raw_noctm file
+    system(['chmod 444 ' m_add_nc(infile1)]); % write protect raw_noctm file
 end
-unix(['chmod 644 ' m_add_nc(infile)]); % make file writeable
+system(['chmod 644 ' m_add_nc(infile)]); % make file writeable
 
 MEXEC_A.Mprog = mfilename;
 
@@ -225,4 +225,4 @@ if redoctm
 end
 
 
-unix(['chmod 444 ' m_add_nc(infile)]); % write protect raw file
+system(['chmod 444 ' m_add_nc(infile)]); % write protect raw file

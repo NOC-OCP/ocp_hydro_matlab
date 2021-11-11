@@ -63,7 +63,7 @@ function [ds, hs] = m_load_samin(infile, hcpat, varargin)
 %     8,1,,1013,139.8594804,0.01394,5,0.4619,0.8,137.835634405743,1.445,0.001667,3.99406814224484E-05,289.218978780914,
 %     8,5,,25,137.8955138,0.01394,5,0.4619,0.8,135.87214308566,1.5295,0.001667,4.22990644253951E-05,310.755858165685,
 %
-% [ds, hs] = m_parse_samin(infile, {'Niksin'; 'Bottle'; 'Number'}, 'chrows', 2, 'chunits', 3);
+% [ds, hs] = m_load_samin(infile, {'Niksin'; 'Bottle'; 'Number'}, 'chrows', 2, 'chunits', 3);
 %
 %
 % in theory this could be done with tableread, but since files often have

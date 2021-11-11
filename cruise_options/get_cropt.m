@@ -80,13 +80,17 @@ if ~exist('help_cropt', 'var') | ~help_cropt %normal, use-in-scripts mode
     
 else %help mode
     
-    if ~exist('scriptname') | length(scriptname)==0
+    if ~isunix
+        clear help_cropt
+        error('help mode uses grep and does not currently work on windows')
+        
+    elseif ~exist('scriptname') | length(scriptname)==0
         %called to get list of scriptnames and oopts
         dm = which('m_setup'); dm = dm(1:end-9);
         dc = pwd;
         try
             cd(dm);
-            [st, slist] = unix('grep case cruise_options/setdef_cropt_*.m | grep -v switch');
+            [st, slist] = system('grep case cruise_options/setdef_cropt_*.m | grep -v switch');
             cd(dc);
             more on
             disp('these are the scriptnames and oopts (the latter indented) with settings under get_cropt')
@@ -128,9 +132,13 @@ else %help mode
         
         %get help messages from setdef_cropt
         setdef_cropt_cast
+        if exist('crhelp_str','var'); disp('defaults set in setdef_cropt_cast'); end
         setdef_cropt_sam
+        if exist('crhelp_str','var'); disp('defaults set in setdef_cropt_sam'); end
         setdef_cropt_uway
+        if exist('crhelp_str','var'); disp('defaults set in setdef_cropt_uway'); end
         setdef_cropt_other
+        if exist('crhelp_str','var'); disp('defaults set in setdef_cropt_other'); end
         dm = which('m_setup'); dm = dm(1:end-9);
         dc = pwd;
         try

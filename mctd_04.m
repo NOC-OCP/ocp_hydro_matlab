@@ -1,9 +1,30 @@
-% mctd_04: extract downcast and upcast data from 24hz file with derived vars
+% mctd_04: 
+%
+% inputs: wk_dvars_ (from mctd_03),
+%         dcs_
+%
+% extract downcast and upcast data from 24hz file with derived vars
 %          (psal etc.) using index information in dcs file;
-%          sort, average to 2dbar, interpolate gaps and recalculate potemp.
+%          optionally loopedit; 
+%          sort, average to 2 dbar;
+%          interpolate gaps;
+%          calculate depth and (re)calculate potemp.
+%
+% outputs: _2db, _2up: 2-dbar-averaged down- and upcast respectively
 %
 % Use: mctd_04        and then respond with station number, or for station 16
 %      stn = 16; mctd_04;
+%
+% calls: 
+%     mloadq
+%     mcalib2
+%     mcopya
+%     msort
+%     mavrg
+%     minterp
+%     mcalc
+% and via get_cropt:
+%     setdef_cropt_cast (castpars and mctd_04 cases)
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['averages from 24 hz to 2 dbar in ctd_' mcruise '_' stn_string '_2db.nc (downcast) and _2up.nc (upcast)']);
@@ -12,7 +33,7 @@ root_ctd = mgetdir('M_CTD');
 
 wscriptname = mfilename;
 wkfile_dvars = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]);
-infile2 = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
+dcsfile = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
 otfile1d = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2db']);
 otfile1u = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2up']);
 wkfile1d = ['wk1d_' wscriptname '_' datestr(now,30)];
@@ -32,7 +53,7 @@ MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[d h] = mloadq(infile2,'statnum','dc24_start','dc24_bot','dc24_end',' ');
+[d h] = mloadq(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end',' ');
 % allow for the possibility that the dcs file contains many stations
 kf = find(d.statnum == stnlocal);
 dcstart = d.dc24_start(kf);
@@ -64,7 +85,7 @@ var_copystr([1 end]) = [];
 scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
 if oxy_end==1
     scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
-    dd = mloadq(infile2,'scan_end');
+    dd = mloadq(dcsfile,'scan_end');
     MEXEC_A.MARGS_IN = {wkfile_dvars; 'y'};
     for no = 1:size(oxyvars,1)
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
@@ -216,55 +237,40 @@ if interp2db
     mintrp
 end
 
-%%%%% add potemp and contemp %%%%%
+%%%%% add potemp %%%%%
 
-MEXEC_A.MARGS_IN = {
-    wkfile3d
-    otfile1d
-    var_copystr
+margs_calc = {
     'press'
-    'y = -gsw_z_from_p(x1,h.latitude)'
+    'iig = find(x1>-1.495); y = NaN+x1; y(iig) = -gsw_z_from_p(x1(iig),h.latitude)'
     'depth'
     'metres'
     'asal temp press'
-    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'iig = find(x1>-1.495); y = NaN+x1; y(iig) = gsw_pt0_from_t(x1(iig),x2(iig),x3(iig))'
     'potemp'
     'degc90'
     'asal1 temp1 press'
-    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'iig = find(x1>-1.495); y = NaN+x1; y(iig) = gsw_pt0_from_t(x1(iig),x2(iig),x3(iig))'
     'potemp1'
     'degc90'
     'asal2 temp2 press'
-    'y = gsw_pt0_from_t(x1,x2,x3)'
+    'iig = find(x1>-1.495); y = NaN+x1; y(iig) = gsw_pt0_from_t(x1(iig),x2(iig),x3(iig))'
     'potemp2'
     'degc90'
     ' '
     };
-margsin = MEXEC_A.MARGS_IN;
+
+MEXEC_A.MARGS_IN = {
+    wkfile3d
+    otfile1d
+    var_copystr};
+MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; margs_calc];
 mcalc
 
 MEXEC_A.MARGS_IN = {
     wkfile3u
     otfile1u
-    var_copystr
-    'press'
-    'y = -gsw_z_from_p(x1,h.latitude)'
-    'depth'
-    'metres'
-    'asal temp press'
-    'y = gsw_pt0_from_t(x1,x2,x3)'
-    'potemp'
-    'degc90'
-    'asal1 temp1 press'
-    'y = gsw_pt0_from_t(x1,x2,x3)'
-    'potemp1'
-    'degc90'
-    'asal2 temp2 press'
-    'y = gsw_pt0_from_t(x1,x2,x3)'
-    'potemp2'
-    'degc90'
-    ' '
-    };
+    var_copystr};
+MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; margs_calc];
 mcalc
 
 delete(m_add_nc(wkfile1d));

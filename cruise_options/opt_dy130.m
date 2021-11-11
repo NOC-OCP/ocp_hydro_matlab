@@ -10,7 +10,7 @@ switch scriptname
                 end
         end
         
-    case 'mctd_02b'
+    case 'mctd_02'
         switch oopt
             case 'ctdcals'
                 docal.cond = 1;
@@ -26,7 +26,6 @@ switch scriptname
                 calstr.oxygen1.msg = calms;
                 calstr.oxygen2.msg = calms;
         end
-        %%%%%%%%%% end mctd_02b %%%%%%%%%%
    
     case 'mfir_01'
         switch oopt

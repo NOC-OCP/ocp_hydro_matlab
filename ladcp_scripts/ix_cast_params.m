@@ -33,13 +33,13 @@ ps.botfac = 0; ps.sadcpfac = 0;
 for no = 1:length(cfg.constraints)
    subdir = [subdir '_' cfg.constraints{no}];
 end
-if isempty(cfg.constraints)
+if length(cfg.constraints)==0
    subdir = [subdir 'SHR']; %***not sure this will work--what happens if f.ctd is not set?
 else
    if sum(strcmp(cfg.constraints, 'BT')); ps.botfac = 1; end
    if sum(strcmp(cfg.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
-if ps.sadcpfac && isfield(cfg, 'SADCP_inst')
+if ps.sadcpfac & isfield(cfg, 'SADCP_inst')
     subdir = fullfile(subdir, cfg.SADCP_inst);
 end
 pdir = fullfile(subdir, 'processed', stnstr);
@@ -91,8 +91,7 @@ else
     f.sadcp	= fullfile('SADCP', ['os75nb_' mcruise '_ctd_' stnstr '_forladcp.mat']);
 end
 
-scriptname = 'mout_1hzasc'; oopt = '1hz_fname'; get_cropt
-f.ctd = fnot;
+f.ctd = fullfile('CTD', ['ctd.' stnstr '.02.asc']);
 if exist(f.ctd,'file')
 	f.ctd_header_lines      = 0;		% file layout
 	f.ctd_fields_per_line	= 7;
@@ -131,6 +130,7 @@ if ismember(stnlocal, shortcasts)
     p.btrk_mode = 0;
 else
     p.btrk_mode = 2;
+    %p.btrk_ts = 30; 
 end
 
 p.edit_mask_dn_bins = [1]; %***is this what we want? it's to be used to account for 0 blanking distance but we don't usually set things that way!

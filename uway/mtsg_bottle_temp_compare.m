@@ -55,7 +55,7 @@ end
 scriptname = mfilename; oopt = 'dbbad'; get_cropt %NaN some of the db.salinity_adj points
 
 sdiff = db.salinity_adj-tsals; %offset is bottle minus tsg, so that it is correction to be added to tsg
-stdiff_std = nanstd(sdiff); sdiff_mean = nanmean(sdiff);
+stdiff_std = m_nanstd(sdiff); sdiff_mean = m_nanmean(sdiff);
 idx = find(abs(sdiff)>3*sdiff_std);
 % List and discard possible outliers
 if ~isempty(idx)
@@ -110,7 +110,7 @@ if nsp==4
 end
 
 disp('mean diff, median diff')
-[nanmean(sdiff) nanmedian(sdiff)]
+[m_nanmean(sdiff) m_nanmedian(sdiff)]
 disp('RMS of residuals:')
 rms_res = sqrt(sum(sdiff(~isnan(sdiff)).^2))
 disp('stderr:')

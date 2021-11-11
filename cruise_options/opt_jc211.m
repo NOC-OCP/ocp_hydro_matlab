@@ -262,7 +262,7 @@ switch scriptname
                             ds_obs.stds(rno) = mean(data);
                             ds_obs.ns(rno) = length(data);
                         case 'stdc'
-                            b = regress(data(2,:)',[ones(size(data,2),1) data(1,:)']);
+                            b = [ones(size(data,2),1) data(1,:)']\data(2,:)';
                             ds_obs.blanks(rno) = b(1);
                             ds_obs.nb(rno) = size(data,2);
                             ds_obs.stds(rno) = b(2)*5;
@@ -455,8 +455,8 @@ switch scriptname
         end
         %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
         
-        %%%%%%%%%% set_cast_params_cfgstr %%%%%%%%%%
-    case 'set_cast_params_cfgstr'
+        %%%%%%%%%% ix_cast_params %%%%%%%%%%
+    case 'ix_cast_params'
         switch oopt
             case 'ladcpopts'
                 p.ambiguity = 3.3;
@@ -471,7 +471,7 @@ switch scriptname
                 %                 ps.shear_weightmin=0.1; % default is 0.1 - EPA testing 20210224
                 %                 ps.shear_stdf = 5; % default is 2 - EPA testing 20210224
         end
-        %%%%%%%%%% end set_cast_params_cfgstr %%%%%%%%%%
+        %%%%%%%%%% end ix_cast_params %%%%%%%%%%
         
         %%%%%%%%%% mtsg_cleanup %%%%%%%%%%
     case 'mtsg_cleanup'
