@@ -85,7 +85,7 @@ for ks = 1:n_sentences
         funit = f.unit;
         fprintf(1,'%30s %30s\n',['''' fname ''''],['''' funit '''']);
         try
-            edit m; % will fail if sqlname or fname are invalid. Some graivity meter json files define names that are invalid matab names, eg with spaces and starting with a number
+            d.(sqlname).(fname) = funit; % will fail if sqlname or fname are invalid. Some graivity meter json files define names that are invalid matab names, eg with spaces and starting with a number
         catch
             % ignore failures
         end
