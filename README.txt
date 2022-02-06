@@ -1,5 +1,10 @@
 ./
   scripts for standard mexec processing and calibration of CTD data
+    m_setup.m sets paths and global variables -- run at start
+    batch_*.m may be run on a set of stations
+    ctd_all_*.m applies a set of steps to a single station
+    m???_*.m (and msbe35_01.m) perform calculations on a single station
+  see User Guide for more
 
 bottle_samples/
   scripts for standard mexec ingestion and processing of Niskin bottle sample data
@@ -13,16 +18,13 @@ gridsec/
 ladcp_scripts/
   scripts and functions for interfacing with LDEO IX and UH shear LADCP processing (external software)
 
-plots/
-  scripts and functions for making plots
-
-summaries/
-  scripts for outputting summaries of data in other formats e.g. WOCE exchange format
+plots_output/
+  scripts and functions for making plots and outputting summaries of data in other formats (e.g. WOCE exchange)
 
 utilities/
   functions for commonly-performed operations on mexec data or files
 
-uway/
+underway/
   scripts and functions for standard processing of underway data streams
   there are some extra functions for plotting still in here
 

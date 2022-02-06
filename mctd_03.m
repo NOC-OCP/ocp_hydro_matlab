@@ -39,7 +39,7 @@ wkfile_dvars = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]); %this o
 
 %identify preferred sensors for (T,C) and O on this station
 scriptname = mfilename; oopt = 's_choice'; get_cropt 
-if ismember(stnlocal, stns_alternate_s);
+if ismember(stnlocal, stns_alternate_s)
     s_choice = setdiff([1 2], s_choice);
 end
 scriptname = mfilename; oopt = 'o_choice'; get_cropt 
@@ -47,11 +47,12 @@ if ismember(stnlocal, stns_alternate_o)
    o_choice = setdiff([1 2],o_choice);
 end
 h = m_read_header(infile1);
-if o_choice == 2 & ~sum(strcmp('oxygen2', h.fldnam))
+if o_choice == 2 && ~sum(strcmp('oxygen2', h.fldnam))
    error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
 end
 
-%optional: edit out bad scans, 
+%optional: edit out bad scans, ***change this to remove from data to be
+%averaged, somehow***
 %or even replace data from specified sensor with data from the other
 %you should almost never do the second one because it will produce
 %discontinuities; it's almost always better to switch the preferred sensor
@@ -144,7 +145,7 @@ if length(iig)<length(dnew.press)
     m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points and'
         'you may also want to check in mctd_rawedit and set revars under mctd_rawedit case in'
         ['opt_' mcruise ' in case pressure spikes need to be edited out']};
-    warning(sprintf('%s\n',m{:}));
+    warning('%s\n',m{:});
 end
 dnew.psal = NaN+dnew.cond; dnew.psal(iig) = gsw_SP_from_C(dnew.cond(iig),dnew.temp(iig),dnew.press(iig));
 dnew.psal1 = NaN+dnew.cond; dnew.psal1(iig) = gsw_SP_from_C(dnew.cond1(iig),dnew.temp1(iig),dnew.press(iig));

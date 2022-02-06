@@ -108,58 +108,59 @@ switch scriptname
                     'all default to empty (no automatic edits at this stage) '
                     'however, if redoctm is true, it is presumably because you want to use at least one of '
                     'pvars, sevars, revars, dsvars to edit the raw data before reapplying the cell thermal mass correction'};
-                pvars = {};
-                sevars = [];
-                revars = {};
-                dsvars = {};
-                ovars = {}; %***specify in mctd_01 and here that the redoctm branch goes back before align too?***
-                   case 'raw_corrs'
+                castopts.pvars = {};
+                castopts.sevars = [];
+                castopts.revars = {};
+                castopts.dsvars = {};
+                castopts.ovars = {}; 
+            case 'raw_corrs'
                 crhelp_str = {'flags for optional corrections to apply to the raw file (in this order): '
                     'dooxyrev (default 0), if true, run moxyhyst_rev to undo the hysteresis '
                     'correction applied in SBE processing, using parameters set in case ''oxyrev''; '
                     'dooxyhyst (default 1), if true, run moxyhyst to apply a hysteresis correction, '
-                    'using parameters set in case ''oxyhyst'' '
+                    'using parameters set below '
                     '(note recommended path is to apply oxyhyst not in SBE processing but here, meaning'
                     'it does not have to be undone before applying revised parameters here if indicated);'
                     'note: if dooxyrev = 1 & dooxyhyst = 0, _24hz file will only have the oxygen_rev vars, not the ones '
                     'that mctd_03 and subsequent processing stages are expecting (specified by second column of oxyvars '
                     'set in scriptname = ''ctdpars''; oopt = ''oxyvars'').'
                     'doturbV (default 0), if true, convert from turbidity volts to turbidity again (to correct for '
-                    'precision problem), using parameters set in case ''turbVpars''. '};
-                dooxyrev = 0;
-                dooxyhyst = 1;
-                doturbV = 0;
-            case 'oxyrev'
+                    'precision problem), using parameters set below. '};
+                castopts.dooxyrev = 0;
+                castopts.dooxyhyst = 1;
+                castopts.doturbV = 0;
                 crhelp_str = {'sets three parameters to pass to mcoxyhyst_rev; defaults to standard SBE processing values.'};
-                H1 = -0.033;
-                H2 = 5000;
-                H3 = 1450;
-            case 'oxyhyst'
+                castopts.oxyrev.H1 = -0.033;
+                castopts.oxyrev.H2 = 5000;
+                castopts.oxyrev.H3 = 1450;
                 crhelp_str = {'sets three parameters to pass to mcoxyhyst; defaults to standard SBE processing values.'
                     'H1, H2, H3 can each be scalar, or you can use d.press to make any/all a vector dependent on pressure; '
                     'they can also be set differently for e.g. oxygen_sbe1 and oxygen_sbe2.'};
-                H1 = -0.033;
-                H2 = 5000;
-                H3 = 1450;
-                H_0 = [H1 H2 H3];
-            case 'turbVpars'
+                castopts.oxyhyst.H1 = -0.033;
+                castopts.oxyhyst.H2 = 5000;
+                castopts.oxyhyst.H3 = 1450;
+                castopts.oxyhyst.H_0 = [H1 H2 H3]; %this stores defaults for later reference; don't change!
                 crhelp_str = {'sets scale factor and offset to apply to turbidity volts to convert to turbidity, '
                     'defaults to the values from XMLCON for BBRTD-182, calibration date 6 Mar 17 (see your XMLCON file)'};
-                turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
-            case 'ctdcals'
+                castopts.turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
+            case 'ctd_cals'
                 crhelp_str = {'Set calibration functions to be applied to variables in _24hz file, if '
                     'corresponding flags are set to true. '
                     'Functions are set in calstr, a structure whose fields are sensors (e.g. cond1, oxygen2),'
                     'each of which itself has two fields, the cruise name containing the calibration function '
-                    'e.g. dcal.cond1 = d0.cond1.*(1+4e-4*d0.statnum/35),'
+                    'e.g. dcal.cond1 = d0.cond1.*(1+4e-4*d0.statnum)/35,'
                     'and ''msg'' a string containing information to be added to the file header along with'
                     'the calibration function, e.g. ''using bottle salinities from stations 1-40 only''.'
                     'Flags are set in structure docal, containing temp, cond, oxygen, fluor, transmittance.'
                     'All default to 0 (no calibration).'};
-                docal.temp = 0; docal.cond = 0; docal.oxygen = 0; docal.fluor = 0; docal.transmittance = 0;
-                clear calstr
+                castopts.docal.temp = 0; 
+                castopts.docal.cond = 0; 
+                castopts.docal.oxygen = 0; 
+                castopts.docal.fluor = 0; 
+                castopts.docal.transmittance = 0;
+                if isfield(castopts,'calstr'); castopts = rmfield(castopts,'calstr'); end
         end
-        %%%%%%%%%% end mctd_02b %%%%%%%%%%
+        %%%%%%%%%% end mctd_02 %%%%%%%%%%
         
         %%%%%%%%%% mctd_03 %%%%%%%%%%
     case 'mctd_03'
@@ -291,7 +292,7 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_checkplots %%%%%%%%%%
         
-
+        
         %%%%%%%%%% populate_station_depths %%%%%%%%%%
     case 'populate_station_depths'
         switch oopt

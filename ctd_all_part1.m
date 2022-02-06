@@ -1,7 +1,6 @@
 ssd0 = MEXEC_G.ssd; MEXEC_G.ssd = 1;
 
 mctd_01; %read in sbe .cnv data to mstar
-stn = stnlocal; mctd_02a; %rename variables following templates/ctd_renamelist.csv
 
 %ylf added jc159: check for out-of-range pressures that will cause trouble
 %in mctd_03. shouldn't be necessary to redo this before subsequent
@@ -33,7 +32,7 @@ elseif min(d.press)<=-1.495
     keyboard
 end
 %apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise
-stn = stnlocal; mctd_02b; 
+stn = stnlocal; mctd_02; 
 
 stn = stnlocal; mctd_03; %average to 1 hz, compute salinity
 

@@ -1,6 +1,6 @@
 ._*
 .DS_Store
-tmp_mchangelog.txt
+tmp_mchangelog.txt*
 *.asv
 */*.asv
 wk_*.nc

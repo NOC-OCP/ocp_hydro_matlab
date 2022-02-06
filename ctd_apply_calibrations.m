@@ -20,7 +20,7 @@ function [dcal, hcal] = ctd_apply_cals(d0, h0, docal, calstr);
 %  would output dcal containing adjusted temp1 and temp2 only
 %
 % if you want e.g. an oxygen calibration that is a function of temperature
-% as calibrated here, specify that in calstr, e.g. 
+% as calibrated here, specify that in calstr, e.g.
 %     calstr.oxygen1.jc200 = 'dcal.oxygen1 = d0.oxygen1*(1.005+1e-2*dcal.temp1)+d0.statnum/5;'
 % and make sure calstr.temp1 is set before calstr.oxygen1
 %
@@ -30,14 +30,19 @@ m_common
 
 hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
 
-calsens = fieldnames(calstr); 
+calsens = fieldnames(calstr);
+if length(unique(calsens))<length(calsens)
+    error('duplicate sensor calibration functions found, check opt_%s mctd_02b case', mcruise)
+end
+
 for sno = 1:length(calsens)
     
-    %figure out if this calstr should be applied, depending on flag
-    if ~isempty(str2num(calsens{sno}(end)))
+    if ~isempty(str2num(calsens{sno}(end))) %e.g. oxygen1, oxygen2
         calvar = calsens{sno}(1:end-1);
+        sensnum = calsens{sno}(end);
     else
-        calvar = calsens{sno};
+        calvar = calsens{sno}; %e.g. oxygen
+        sensnum = NaN;
     end
     
     if docal.(calvar)
@@ -45,18 +50,40 @@ for sno = 1:length(calsens)
         if ~isfield(calstr.(calsens{sno}),mcruise)
             error(['docal.' calvar ' and calstr.' calsens{sno} ' set but calstr.' calsens{sno} ' has no field ' mcruise ' for this cruise'])
         end
+        
         if ~isfield(d0, calsens{sno})
             warning(['no ' calsens{sno} ' in d0; skipping calibration'])
             return
             
         else
             
-            %apply to dcal
+            %calibration function as string expression
             calf = calstr.(calsens{sno}).(mcruise);
+            
+            %check for mixed sensors
+            if strcmp(calvar,'cond') && ~isnan(sensnum)
+                iit = find(strcmp('temp', calf));
+                if ~isempty(iit)
+                    tnum = str2num(calf(iit+4)');
+                    if ~isnan(tnum) && sum(tnum~=sensnum)>0
+                        error('calibration for %s appears to depend on other CTD temp', calsens{no})
+                    end
+                end
+            elseif strcmp(calvar,'oxygen')
+                iit = [find(strcmp('temp', calf)) find(strcmp('cond', calf))];
+                if ~isempty(iit)
+                    tnum = str2num(calf(iit+4)');
+                    if ~isnan(tnum) && sum(tnum~=sensnum)>0
+                        warning('calibration for %s appears to depend on other CTD temp or cond', calsens{no})
+                    end
+                end
+            end
+            
+            %apply calibration to dcal
             fprintf(1,'\n%s\n\n',calf)
             eval(calf);
             
-            %add to hcal
+            %add info to hcal
             if isfield(h0,'fldnam')
                 ii = find(strcmp(calsens{sno},h0.fldnam));
                 hcal.fldnam = [hcal.fldnam calsens{sno}]; hcal.fldunt = [hcal.fldunt h0.fldunt(ii)];

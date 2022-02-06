@@ -102,7 +102,7 @@ matlist(iim==0,:) = []; iim(iim==0) = [];
 %%%%%%% write m_udirs function using available underway streams %%%%%%%
 %%%%%%% and make directories as necessary %%%%%%%
 
-fid = fopen(fullfile(MEXEC.mexec_processing_scripts, 'uway', 'm_udirs.m'), 'w');
+fid = fopen(fullfile(MEXEC.mexec_processing_scripts, 'underway', 'm_udirs.m'), 'w');
 fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs();');
 fprintf(fid, 'udcruise = ''%s'';\n', MEXEC_G.MSCRIPT_CRUISE_STRING);
 fprintf(fid, '%s\n', 'udirs = {');

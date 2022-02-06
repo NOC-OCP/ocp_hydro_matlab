@@ -8,7 +8,7 @@ switch scriptname
                 cvnames = intersect(fieldnames(cal_stations1),fieldnames(cal_stations2));
                 for cvno = 1:length(cvnames)
                     ii = intersect(cal_stations1.(cvnames{cvno}),cal_stations2.(cvnames{cvno}));
-                    if length(ii)>0
+                    if ~isempty(ii)
                         warning([cvnames{cvno} ' calibrations set to be applied in both ctd_all_part1 and ctd_all_postedit to stations:'])
                         disp(ii)
                     end
@@ -51,7 +51,7 @@ switch scriptname
                 end
         end
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
-       
+        
         %%%%%%%%%% msam_01 %%%%%%%%%%
     case 'msam_01'
         switch oopt
@@ -61,67 +61,48 @@ switch scriptname
                 end
                 for vno = 1:length(samvars_use)
                     if sum(strcmp([ds_sam.varname; samvars_add(:,1)], samvars_use{vno}))==0
-                        error(sprintf('variable %s not found in either templates/sam_varlist.csv or in samvars_add from opt_%s', samvars_use{vno}, mcruise));
+                        error('variable %s not found in either templates/sam_varlist.csv or in samvars_add from opt_%s', samvars_use{vno}, mcruise);
                     end
                 end
         end
         %%%%%%%%%% end msam_01 %%%%%%%%%%
-
-        %%%%%%%%%% mctd_02a %%%%%%%%%%
-    case 'mctd_02a'
-        switch oopt
-            case 'prectm_rawedit'
-                if redoctm & length(pvars)+length(sevars)+length(revars)+length(dsvars)==0
-                    warning(['rerunning cell thermal mass correction on raw file for station ' stn_string 'but no raw edits are specified under mctd_02a, editraw in opt_' mcruise])
-                end
-        end
-        %%%%%%%%%% end mctd_02a %%%%%%%%%%
         
-        %%%%%%%%%% mctd_02b %%%%%%%%%%
-    case 'mctd_02b'
+        %%%%%%%%%% mctd_02a %%%%%%%%%%
+    case 'mctd_02'
         switch oopt
-            case {'oxyrev' 'oxyhyst'}
-                if sum(isnan(H1))+sum(isnan(H2))+sum(isnan(H3))>0
-                    error(['oxygen hysteresis parameters have NaNs; check opt_' mcruise])
+            case 'rawedit_auto'
+                if ~redoctm
+                    castopts.pvars = {};
+                else
+                    if isempty(castopts.pvars) && isempty(castopts.sevars) && isempty(castopts.revars) && isempty(castopts.sevars) && isempty(castopts.dsvars)
+                        warning(['rerunning cell thermal mass correction on raw file for station ' stn_string 'but no raw edits are specified under mctd_02, editraw in opt_' mcruise])
+                    end
                 end
-            case 'ctdcals'
-                if ~exist('calstr', 'var')
-                    if sum(cell2mat(struct2cell(docal)))>0
-                        warning(sprintf('mctd_02b found no calibration functions to apply in opt_%s', mcruise));
+            case 'raw_corrs'
+                if castopts.dooxyrev
+                    if sum(sum(isnan(cell2mat(struct2cell(castopts.oxyrev)))))>0
+                        error('oxygen hysteresis reversal parameters have NaNs; check opt_%s', mcruise)
                     end
                 else
-                    calsens = fieldnames(calstr);
-                    if length(unique(calsens))<length(calsens)
-                        error(['duplicate sensor calibration functions found, check opt_' mcruise 'mctd_02b case'])
-                    end
-                    for sno = 1:length(calsens)
-                        if ~isfield(calstr.(calsens{no}),mcruise)
-                            warning(['calibration for ' calsens{no} ' not from this cruise; skipping'])
-                        else
-                            calf = calstr.(calsens{no}).(mcruise);
-                            if strncmp(calsens{no}, 'cond', 4)
-                                sensnum = calsens{no}(5);
-                                iit = find(strcmp('temp', calf));
-                                if ~isempty(iit)
-                                    tnum = str2num(calf(iit+4)');
-                                    if sum(tnum~=sensnum)>0
-                                        error(['calibration for ' calsens{no} ' appears to depend on other CTD temp'])
-                                    end
-                                end
-                            elseif strncmp(calsens{no}, 'oxygen', 6)
-                                sensnum = calsens{no}(7);
-                                iit = find(strcmp('temp', calf));
-                                iit = [iit find(strcmp('cond', calf))];
-                                if ~isempty(iit)
-                                    tnum = str2num(calf(iit+4)');
-                                    if sum(tnum~=sensnum)>0
-                                        warning(['calibration for ' calsens{no} ' appears to depend on other CTD temp or cond'])
-                                    end
-                                end
-                            end
-                        end
-                    end                        
+                    castopts = rmfield(castopts,'oxyrev');
                 end
+                if castopts.dooxyhyst
+                    if sum(sum(isnan(cell2mat(struct2cell(castopts.oxyhyst)))))>0
+                        error('oxygen hysteresis parameters have NaNs; check opt_%s', mcruise)
+                    end
+                else
+                    castopts = rmfield(castopts,'oxyhyst');
+                end
+                if ~castopts.doturbV
+                    castopts = rmfield(castopts,'turbVpars');
+                end
+            case 'ctd_cals'
+                if sum(cell2mat(struct2cell(castopts.docal)))>0
+                    if ~isfield(castopts, 'calstr')
+                        warning('mctd_02b found no calibration functions to apply in opt_%s', mcruise)
+                    end
+                end
+                %other checking done in ctd_apply_calibrations
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
         
@@ -129,7 +110,7 @@ switch scriptname
     case 'mctd_03'
         switch oopt
             case '24hz_edit'
-                if length(switchscans24)>0 & sum(strcmp('temp', switchscans24(:,1))) + sum(strcmp('cond', switchscans24(:,1))) == 1
+                if ~isempty(switchscans24) && sum(strcmp('temp', switchscans24(:,1))) + sum(strcmp('cond', switchscans24(:,1))) == 1
                     warning('you have chosen to switch primary and secondary for either cond or temp but not both')
                     error('using T and C from different CTDs will lead to erroneous salinity; revise opt_cruise file ''mctd_03'', ''24hz_edit'' case')
                 end
@@ -140,24 +121,24 @@ switch scriptname
     case 'msal_standardise_avg'
         switch oopt
             case 'plot_stations'
-                if ~exist('iistno'); iistno = [1:length(stnos)]; end
+                if ~exist('iistno','var'); iistno = [1:length(stnos)]; end
             case 'std2use'
-                if ~exist('std2use'); disp('set autosal standards readings to use for this cruise'); keyboard; end
+                if ~exist('std2use','var'); disp('set autosal standards readings to use for this cruise'); keyboard; end
             case 'sam2use'
-                if ~exist('sam2use'); disp('set salinity sample readings to use for this cruise'); keyboard; end
+                if ~exist('sam2use','var'); disp('set salinity sample readings to use for this cruise'); keyboard; end
         end
         %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
         
         %%%%%%%%%% miso_02 %%%%%%%%%%
     case 'miso_02'
-        if ~exist('cvars'); warning(['must set cvars, list of isotope variable names to write, in miso_02 options']); end
+        if ~exist('cvars','var'); warning(['must set cvars, list of isotope variable names to write, in miso_02 options']); end
         %%%%%%%%%% end miso_02 %%%%%%%%%%
         
         %%%%%%%%%% mday_01_fcal %%%%%%%%%%
     case 'mday_01_fcal'
         switch oopt
             case 'uway_factory_cal'
-                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'})) & length(sensors_to_cal)==0
+                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'})) && isempty(sensors_to_cal)
                     warning('do factory calibrations need to be applied to your datastream? for techsas and scs surfmet, probably so')
                 end
         end

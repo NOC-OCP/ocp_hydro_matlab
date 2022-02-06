@@ -117,10 +117,9 @@ if isempty(which('get_cropt')) % this function is in mexec_processing_scripts/cr
     addpath(fullfile(mps_pre, 'cruise_options'))
     addpath(fullfile(mps_pre, 'gridsec'))
     addpath(fullfile(mps_pre, 'ladcp_scripts'))
-    addpath(fullfile(mps_pre, 'plots'))
-    addpath(fullfile(mps_pre, 'summaries'))
+    addpath(fullfile(mps_pre, 'plots_output'))
     addpath(fullfile(mps_pre, 'utilities'))
-    addpath(fullfile(mps_pre, 'uway'))
+    addpath(fullfile(mps_pre, 'underway'))
     addpath(fullfile(mps_pre, 'varlists'))
 end
 
@@ -129,14 +128,15 @@ end
 ld = cell2table({'' '' '' {} ''}, 'VariableNames', {'predir' 'lib' 'exmfile' 'subdirs' 'verstr'});
 ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'seawater', 'sw_dpth' {} '_ver3_2'} ];
 ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'm_map' 'm_gshhs_i' {} '_v1_4'} ];
-ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'gamma_n' 'gamma_n' {} '_v3_05_10'} ];
+%ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'gamma_n' 'gamma_n' {} '_v3_05_10'} ];
+ld = [ld; {fullfile(MEXEC.mstar_root,'sw','others') 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' {'library'} ''} ];
 ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'gsw_matlab', 'gsw_SA_from_SP' {'library'; 'thermodynamics_from_t'} '_v3_03'} ];
 if MEXEC_G.ix_ladcp
     ld = [ ld; fullfile(MEXEC.mstar_root,'sw','others') 'LDEO_IX' 'loadrdi' {'geomag'} '_13' ];
 end
-ld = ld(2:end,:);
-sw_vers(ld, '-end'); %to find highest version in directory
-%sw_vers(ld, 'nochange', '-end'); %to use specified versions
+ld = sw_vers(ld(2:end,:)); %replace verstr with highest version of each library found in mstar_root
+%add to path, recording which version was used (in MEXEC_G)
+sw_addpath(ld);
 clear ld
 
 

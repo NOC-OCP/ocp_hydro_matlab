@@ -1,25 +1,25 @@
-% mctd_02: 
+% mctd_02:
 %
-% input: _raw_cleaned if it exists; otherwise _raw_noctm if it exists;
-%     otherwise _raw
-%
-% apply automatic edits to raw file;
-% apply align and celltm corrections if set in opt_cruise; 
-% apply oxygen hysteresis and other corrections to raw file (or
-% raw_cleaned file)
+% apply automatic edits to raw file (_raw_cleaned if it exists, otherwise
+% _raw_noctm, otherwise _raw),
+% apply align and celltm corrections if set in opt_cruise,
+% apply oxygen hysteresis and other corrections to raw (or raw_cleaned)
+% file
 %
 % output: _raw_cleaned and _24hz
 %
-% Use: mctd_02b        and then respond with station number, or for station 16
+% Use: mctd_02        and then respond with station number, or for station 16
 %      stn = 16; mctd_02;
 %
-% calls: 
+% calls:
 %     mcalib2
 %     mctd_rawedit
 %     m_write_variable
 %     m_add_comment
 %     mheadr
 %     mfsave
+
+%%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
@@ -30,14 +30,13 @@ root_ctd = mgetdir('M_CTD');
 
 prefix = ['ctd_' mcruise '_' stn_string];
 
-infile = fullfile(root_ctd, [prefix '_raw_cleaned.nc']);
+cleanfile = fullfile(root_ctd, [prefix '_raw_cleaned.nc']);
 infile1 = fullfile(root_ctd, [prefix '_raw.nc']);
 infile0 = fullfile(root_ctd, [prefix '_raw_noctm.nc']);
-otfile1 = infile;
-otfile2 = fullfile(root_ctd, [prefix stn_string '_24hz']);
+otfile24 = fullfile(root_ctd, [prefix stn_string '_24hz']);
 
 %figure out which file to start from
-if exist(infile, 'file') && exist(infile0, 'file')
+if exist(cleanfile, 'file') && exist(infile0, 'file')
     m = {'both _raw_noctm and _raw_cleaned exist, so will start from _raw_cleaned;'
         'if mctd_01 has just been rerun with redoctm set, remove _raw_cleaned file'
         'now to start from _raw_noctm instead.'
@@ -45,164 +44,74 @@ if exist(infile, 'file') && exist(infile0, 'file')
     fprintf(MEXEC_A.Mfider,'%s\n',m{:})
     pause
 end
-redoctm = 0; isrc = 1;
-if ~exist(infile,'file')
-    isrc = 0;
-    if ~exist(infile0,'file')
+redoctm = 0;
+if ~exist(cleanfile, 'file')
+    if ~exist(infile0, 'file')
         infile = infile1; %start from _raw
     else
         infile = infile0; %start from _raw_noctm
         redoctm = 1;
     end
-end    
+    copyfile(m_add_nc(infile), m_add_nc(cleanfile));
+    system(['chmod 644 ' m_add_nc(cleanfile)]);
+    didedits = 0;
+else
+    infile = cleanfile; %start from _raw_cleaned
+    didedits = 1; %record: have already done some before (e.g. in mctd_rawedit?***)
+end
 
-copyfile(m_add_nc(infile), m_add_nc(otfile1));
-system(['chmod 644 ' m_add_nc(otfile1)]);
 
+%%%%% automatic edits, producing or modifying _raw_cleaned file %%%%%
 
-%do automatic edits
 scriptname = mfilename; oopt = 'rawedit_auto'; get_cropt
-if redoctm
-    %edit out scans when pumps are off, plus expected recovery times
-    if length(pvars)>0
-        MEXEC_A.MARGS_IN = {otfile1; 'y'};
-        for no = 1:size(pvars,1)
-            pmstring = sprintf('y = x1; pmsk = repmat([1:length(x2)], %d+1, 1)+repmat([-%d:0]'', 1, length(x2)); pmsk(pmsk<1) = 1; pmsk = sum(1-x2(pmsk),1); y(find(pmsk)) = NaN;', pvars{no,2}, pvars{no,2});
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; pvars{no,1}; [pvars{no,1} ' pumps']; pmstring; ' '; ' '];
-            disp(['will edit out pumps off times plus ' num2str(pvars{no,2}) ' scans from ' pvars{no}])
-        end
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-        mcalib2; end
-end
-if ~isrc && (~isempty(sevars) || ~isempty(revars) || ~isempty(dsvars))
-    warning('you appear to be applying automatic edits without having inspected the raw file')
-    %pause
-end
-rawedit_nogui = 1; mctd_rawedit %all the rest: sevars, revars, dsvars
+didedits = didedits + ctd_apply_autoedits(cleanfile, castopts);
 MEXEC_A.Mprog = mfilename; %reset
-
-%align and celltm if necessary
-if redoctm
-    MEXEC_A.MARGS_IN = {
-        otfile1
-        'y'
-        'cond1'
-        'time temp1 cond1'
-        'y = ctd_apply_celltm(x1,x2,x3);'
-        ' '
-        ' '
-        'cond2'
-        'time temp2 cond2'
-        'y = ctd_apply_celltm(x1,x2,x3);'
-        ' '
-        ' '
-        };
-    scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
-    for no = 1:length(ovars)
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-            ovars{no}
-            ['time ' ovars{no}]
-            sprintf('y = interp1(x1,x2,x1+%d);',oxy_align)
-            ' '
-            ' '
-            ];
+if didedits==0
+    delete(m_add_nc(cleanfile))
+    filename = infile1;
+    if redoctm
+        copyfile(m_add_nc(infile0), m_add_nc(infile1))
     end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    mcalib2
+else
+    filename = cleanfile;
 end
 
-%%%%% end of work on _raw* file %%%%%
+%if we were editing _noctm file, apply align and celltm corrections now
+if redoctm
+    ctd_apply_align_celltm(filename);
+    MEXEC_A.Mprog = mfilename;
+end
+
+system(['chmod 444 ' m_add_nc(filename)]);
 
 
 %%%%% now do corrections to produce _24hz file %%%%%
 
-copyfile(m_add_nc(otfile1), m_add_nc(otfile2));
+copyfile(m_add_nc(filename), m_add_nc(otfile24));
 
 %which corrections to do?
 scriptname = mfilename; oopt = 'raw_corrs'; get_cropt
-scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
-nox = size(oxyvars,1);
-
-MEXEC_A.Mprog = mfilename;
 
 %%%%% oxygen hysteresis and/or renaming oxygen variables %%%%%
-if dooxyrev | dooxyhyst
-    
-    if dooxyrev
-        %calculate oxy_rev, the oxygen hysteresis reversed variables, and
-        %add to otfile
-        scriptname = mfilename; oopt = 'oxyrev'; get_cropt
-        varsin = [];
-        for no = 1:nox
-            varsin = [varsin ' ' oxyvars{no,1}];
-        end
-        varsin = ['press time' varsin];
-        [d,hcal] = mloadq(otfile2, varsin);
-        scriptname = mfilename; oopt = 'oxyrev'; get_cropt
-        otfilestruct=struct('name',[otfile2 '.nc']);
-        disp(['reversing oxy hyst for ' stn_string ', output to _rev'])
-        for no = 1:nox
-            oxy_unhyst = mcoxyhyst_reverse(getfield(d, oxyvars{no,1}), d.time, d.press, H1, H2, H3);
-            vind = find(strcmp(oxyvars{no,1}, hcal.fldnam)); %same units
-            datastruct = struct('name',[oxyvars{no,1} '_rev'], 'units',hcal.fldunt{vind}, 'data',oxy_unhyst);
-            m_write_variable(otfilestruct, datastruct);
-        end
-        revstring = '_rev'; %if dooxyhyst will apply to _rev variables
-    else
-        revstring = ''; %if dooxyhyst will apply to original variables
-    end
-    
-    if dooxyhyst
-        %calculate the variables with oxygen hysteresis applied, and add to
-        %otfile
-        varsin = [];
-        for no = 1:nox
-            %start from reversed variables if set above, otherwise
-            %(revstring is empty) start from sbe variables
-            varsin = [varsin ' ' oxyvars{no,1} revstring];
-        end
-        varsin = ['press time' varsin];
-        [d,hcal] = mloadq(otfile2,varsin);
-        scriptname = mfilename; oopt = 'oxyhyst'; get_cropt
-        %record whether a non-default calibration is set, for mstar comment
-        if length(H1)>1 | length(H2)>1 | length(H3)>1
-            ohtyp = 2;
-        elseif max(abs(H_0-[H1 H2 H3]))>0
-            ohtyp = 1;
-        else
-            ohtyp = 0;
-        end
-        otfilestruct=struct('name',[otfile2 '.nc']);
-        disp(['applying oxy_hyst for ' stn_string ', output to'])
-        disp(sprintf('%s ',oxyvars{:,2}))
-        for no = 1:nox
-            oxy_out = mcoxyhyst(getfield(d, [oxyvars{no,1} revstring]), d.time, d.press, H1, H2, H3);
-            vind = find(strcmp(oxyvars{no,1}, hcal.fldnam)); %same units
-            datastruct = struct('name',oxyvars{no,2}, 'units',hcal.fldunt{vind}, 'data',oxy_out);
-            m_write_variable(otfilestruct, datastruct);
-        end
-        if ohtyp>0
-            %and add comments to file
-            comment = 'oxygen hysteresis correction different from SBE default applied';
-            if ohtyp == 2
-                comment = [comment ' (depth-varying)'];
-            end
-            m_add_comment(otfilestruct, comment);
-        end
-        
-    end
-    
+if dooxyrev || dooxyhyst
+    ctd_apply_oxyhyst(otfile24, castopts)
+    MEXEC_A.Mprog = mfilename;
 else
+    scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
+    nox = size(oxyvars,1);
     %just rename oxyvars(:,1) to oxyvars(:,2)
     hin = m_read_header(otfile2); % get var names and units in file
-    snames_units = {};
+    snames_units = cell(3,nox);
+    n = 0;
     for no = 1:nox
-        kmatch = strmatch(oxyvars{no,1},hin.fldnam,'exact'); %to use the same units
+        kmatch = strcmp(oxyvars{no,1},hin.fldnam); %to use the same units
         if length(kmatch)==1
-            snames_units = [snames_units; oxyvars{no,1}; oxyvars{no,2}; hin.fldunt{kmatch}];
+            n = n+1;
+            snames_units(:,n) = {oxyvars{no,1}; oxyvars{no,2}; hin.fldunt{kmatch}};
         end
     end
-    MEXEC_A.MARGS_IN = {otfile2; 'y'; '8'; snames_units; '-1'; '-1'}; %***check this is correct
+    snames_units = snames_units(:,1:n);
+    MEXEC_A.MARGS_IN = {otfile24; 'y'; '8'; snames_units(:); '-1'; '-1'}; %***check this is correct
     mheadr
     
 end
@@ -213,7 +122,7 @@ if doturbV
     disp(['computing turbidity from turbidity volts for ' stn_string])
     scriptname = mfilename; oopt = 'turbVpars'; get_cropt
     MEXEC_A.MARGS_IN = {
-        otfile2
+        otfile24
         'y'
         'turbidity'
         'turbidityV'
@@ -228,21 +137,21 @@ end
 
 %%%%% sensor calibrations %%%%%
 scriptname = mfilename; oopt = 'ctdcals'; get_cropt
-if exist('calstr', 'var') && (docal.temp || docal.cond || docal.oxygen || docal.fluor || docal.transmittance)
+if isfield(castopts, 'calstr') && sum(cell2mat(struct2cell(castopts.docal)))
     
     %load data and initialise
-    [d0,h0] = mloadq(otfile2, '/');
+    [d0,h0] = mloadq(otfile24, '/');
     if ~isfield(d0, 'statnum')
         d0.statnum = repmat(stnlocal, size(d0.scan));
     end
     
     %apply calibrations %***t first etc?
-    [dcal, hcal] = ctd_apply_cal(d0, h0, docal, calstr);
+    [dcal, hcal] = ctd_apply_cals(d0, h0, castopts.docal, castopts.calstr);
     
     %if there were calibrations applied to any variables, save those back
     %to 24hz file (overwriting uncalibrated versions)
-    if length(hcal.fldnam)>0
-        mfsave(otfile2, dcal, hcal, '-addvars');
+    if ~isempty(hcal.fldnam)
+        mfsave(otfile24, dcal, hcal, '-addvars');
     end
     
 end

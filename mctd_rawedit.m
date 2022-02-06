@@ -40,53 +40,8 @@ system(['chmod 644 ' m_add_nc(otfile)])
 
 %%%%% automatic edits %%%%%
 
-scriptname = mfilename; oopt = 'rawedit_auto'; get_cropt
-
-%scanedit (for additional bad scans)
-if exist('sevars','var') && ~isempty(sevars)
-    MEXEC_A.MARGS_IN = {otfile; 'y'};
-    for no = 1:size(sevars,1)
-        sestring = sprintf('y = x1; y(x2>=%d & x2<=%d) = NaN;', sevars{no,2}, sevars{no,3});
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; sevars{no,1}; [sevars{no,1} ' scan']; sestring; ' '; ' '];
-        disp(['will edit out scans from ' sevars{no,1} ' with ' sestring])
-    end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    mcalib2
-end
-
-%remove out of range values
-if exist('revars','var') && isempty(revars)
-    MEXEC_A.MARGS_IN = {otfile; 'y'};
-    for no = 1:size(revars,1)
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; revars{no,1}; sprintf('%f %f',revars{no,2},revars{no,3}); 'y'];
-        disp(['will edit values out of range [' sprintf('%f %f',revars{no,2},revars{no,3}) '] from ' revars{no,1}])
-    end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    medita
-end
-
-%despike
-if exist('dsvars','var') && ~isempty(dsvars)
-    nds = 2;
-    while nds<=size(dsvars,2)
-        MEXEC_A.MARGS_IN = {otfile; 'y'};
-        for no = 1:size(dsvars,1)
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; dsvars{no,1}; dsvars{no,1}; sprintf('y = m_median_despike(x1, %f);', dsvars{no,nds}); ' '; ' '];
-            disp(['will despike ' dsvars{no,1} ' using threshold ' sprintf('%f', dsvars{no,nds})])
-        end
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-        mcalib2
-        nds = nds+1;
-    end
-end
-
-if (exist('revars','var') && ~isempty(revars) && sum(strncmp('temp', revars(:,1), 4))) || (exist('dsvars','var') && ~isempty(dsvars) && sum(strncmp('temp', dsvars(:,1), 4)))
-    warning('You have applied rangeedit or despike to temperature. If large spikes were removed,')
-    warning(['you should set redoctm=1 in the mctd_01 case in opt_' mcruise ', add these editing '])
-    warning(['instructions to the mctd_02a case in opt_' mcruise ', remove ctd_' mcruise '_' stn_string '*.nc,'])
-    warning('and rerun mexec processing steps from the beginning')
-    warning('(otherwise conductivity will be contaminated).') %***what about oxygen?
-end
+ctd_apply_autoedits(otfile);
+MEXEC_A.Mprog = mfilename; %reset
 
 
 %%%%%%%%% now the GUI %%%%%%%%%
