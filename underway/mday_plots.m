@@ -16,7 +16,7 @@ function mday_plots(day,stream)
 %bak on jc069
 % revised for ship options on jr281 bak march 2013
 m_setup
-pdfsroot = [MEXEC_G.MEXEC_DATA_ROOT '/plots/uway'];
+pdfsroot = [MEXEC_G.mexec_data_root '/plots/uway'];
 day_string = sprintf('%03d',day);
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 

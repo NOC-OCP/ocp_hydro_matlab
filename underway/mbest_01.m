@@ -24,9 +24,9 @@ tav2 = round(tave_period/2);
 [d h] = mload(infile,'time',' ');
 
 lat_choices = {'lat' 'latitude'}; % find either
-latvar = mvarname_find(lat_choices, h.fldnam);
+latvar = varname_find(lat_choices, h.fldnam);
 lon_choices = {'lon' 'long' 'longitude'}; % find any
-lonvar = mvarname_find(lon_choices, h.fldnam);
+lonvar = varname_find(lon_choices, h.fldnam);
 
 MEXEC_A.MARGS_IN = {
 infile

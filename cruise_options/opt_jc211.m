@@ -26,10 +26,10 @@ switch scriptname
         end
         %%%%%%%%%% end mbot_01 %%%%%%%%%%
         
-        %%%%%%%%%% mctd_02b %%%%%%%%%%
-    case 'mctd_02b'
+        %%%%%%%%%% mctd_02 %%%%%%%%%%
+    case 'mctd_02'
         switch oopt
-            case 'oxyhyst'
+            case 'raw_corrs'
                 h3tab =[
                     -10 700
                     1000 700
@@ -37,16 +37,16 @@ switch scriptname
                     2500 1000
                     2501 1450
                     9000 1450];
-                H3 = interp1(h3tab(:,1),h3tab(:,2),d.press);
+                castopts.oxyhyst.H3 = interp1(h3tab(:,1),h3tab(:,2),d.press);
                 iib = find(isnan(d.press)); iig = find(~isnan(d.press));
-                H3(iib) = interp1(iig,H3(iig),iib); %***
+                castops.oxyhyst.H3(iib) = interp1(iig,H3(iig),iib); %***
             case 'ctdcals'
-                                docal.temp = 1; docal.cond = 1; docal.oxygen = 1;
-                calstr.temp1.jc211 = 'dcal.temp1 = d0.temp1 - 0.001;';
-                calstr.temp2.jc211 = 'dcal.temp2 = d0.temp2 - 0.0005*d0.press/4000;';
+                castopts.docal.temp = 1; castopts.docal.cond = 1; castopts.docal.oxygen = 1;
+                castopts.calstr.temp1.jc211 = 'dcal.temp1 = d0.temp1 - 0.001;';
+                castopts.calstr.temp2.jc211 = 'dcal.temp2 = d0.temp2 - 0.0005*d0.press/4000;';
                 calms = 'from comparison with SBE35, stations 1-65';
-                calstr.temp1.msg = calms;
-                calstr.temp2.msg = calms;
+                castopts.calstr.temp1.msg = calms;
+                castopts.calstr.temp2.msg = calms;
                 % Original estimate
                 %    'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  4000  8000],(1.0*[0.0 0.0 -2.0 -4.0 ] - 0.5)/1e3,d0.press)/35);'
                 %    'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  4000  8000],(1.0*[0.0 0.0 -1.0 -2.0 ] + 1.2)/1e3,d0.press)/35);'
@@ -54,25 +54,25 @@ switch scriptname
                     % the correction below combined the original
                     % estimate with a small tweak, and is the total
                     % adjustment to be applied
-                    calstr.cond1.jc211 = 'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] - 0.5)/1e3,d0.press)/35);';
-                    calstr.cond2.jc211 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press)/35);';
+                    castopts.calstr.cond1.jc211 = 'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] - 0.5)/1e3,d0.press)/35);';
+                    castopts.calstr.cond2.jc211 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press)/35);';
                 else  % add 0.001 to cond1 for stns 75 and following
                     % at end of cruise, add a ramped adjustment that
                     % ramps up between stns 75 and 90. Need the calstr
                     % to start with dcal.cond1 or dcal.cond2.
-                    calstr.cond1.jc211 = 'dcal.cond1 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond1 = d0.cond1.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.5 -1.5 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] + 0.5)/1e3,d0.press))/35);';
-                    calstr.cond2.jc211 = 'dcal.cond2 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond2 = d0.cond2.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.0 -1.0 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press))/35);';
+                    castopts.calstr.cond1.jc211 = 'dcal.cond1 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond1 = d0.cond1.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.5 -1.5 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] + 0.5)/1e3,d0.press))/35);';
+                    castopts.calstr.cond2.jc211 = 'dcal.cond2 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond2 = d0.cond2.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.0 -1.0 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press))/35);';
                 end
                 calms = 'from comparison with bottle salinities, stations 3-73';
-                calstr.cond1.msg = calms;
-                calstr.cond2.msg = calms;
-                calstr.oxygen1.jc211 = 'dcal.oxygen1 = d0.oxygen1.*interp1([0 2000 4000 5000],[1.03 1.04 1.043 1.042],d0.press);';
-                calstr.oxygen2.jc211 = 'dcal.oxygen2 = d0.oxygen2.*interp1([0 1500 4000 5000],[1.03 1.043 1.051 1.05],d0.press);';
+                castopts.calstr.cond1.msg = calms;
+                castopts.calstr.cond2.msg = calms;
+                castopts.calstr.oxygen1.jc211 = 'dcal.oxygen1 = d0.oxygen1.*interp1([0 2000 4000 5000],[1.03 1.04 1.043 1.042],d0.press);';
+                castopts.calstr.oxygen2.jc211 = 'dcal.oxygen2 = d0.oxygen2.*interp1([0 1500 4000 5000],[1.03 1.043 1.051 1.05],d0.press);';
                 calms = 'from comparison with bottle oxygens, stations 3-39 and 62-95';
-                calstr.oxygen1.msg = calms;
-                calstr.oxygen2.msg = calms;
+                castopts.calstr.oxygen1.msg = calms;
+                castopts.calstr.oxygen2.msg = calms;
         end
-        %%%%%%%%%% end mctd_02b %%%%%%%%%%
+        %%%%%%%%%% end mctd_02 %%%%%%%%%%
         
         %%%%%%%%%% mctd_03 %%%%%%%%%%
     case 'mctd_03'

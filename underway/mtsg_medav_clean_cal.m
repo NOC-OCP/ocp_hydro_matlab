@@ -65,7 +65,7 @@ scriptname = 'tsgsal_apply_cal'; salin = 1; time = 1; oopt = 'tsgsaladj'; get_cr
 %apply it if there is one
 if exist('salout','var')
 
-   salvar = mvarname_find({'salinity' 'psal' 'salinity_raw'},h.fldnam);
+   salvar = varname_find({'salinity' 'psal' 'salinity_raw'},h.fldnam);
    salinline = ['y = tsgsal_apply_cal(x1,x2)'];
    
    switch salvar
@@ -100,7 +100,7 @@ if exist('tempout','var')
       wkfile1=otfile1;
    end
 
-   tempvar = mvarname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
+   tempvar = varname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
    tempinline = ['y = tsgsal_apply_temp_cal(x1,x2)'];
 
    MEXEC_A.MARGS_IN = {

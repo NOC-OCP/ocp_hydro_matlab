@@ -3,6 +3,7 @@ function didedits = ctd_apply_autoedits(filename, castopts)
 m_common; MEXEC_A.mprog = mfilename;
 
 [st,ii] = dbstack;
+isinspec = 0;
 
 didedits = 0;
 
@@ -17,11 +18,6 @@ if ~isempty(castopts.pvars)
     MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
     mcalib2;
     didedits = 1;
-end
-
-if ~isrc && (~isempty(castopts.sevars) || ~isempty(castopts.revars) || ~isempty(castopts.castopts.dsvars))
-    warning('you appear to be applying automatic edits without having inspected the raw file')
-    %pause
 end
 
 %scanedit (for additional bad scans)
@@ -39,6 +35,10 @@ end
 
 %remove out of range values
 if ~isempty(castopts.revars)
+    if ~isinspec && ~castopts.redoctm && sum(strncmp('temp',castopts.revars(:,1),4))
+        warning('you appear to be range editing temperature without having inspected the raw file')
+        warning('are you sure you do not need to go back to mctd_01 with redoctm?')
+    end
     MEXEC_A.MARGS_IN = {filename; 'y'};
     for no = 1:size(castopts.revars,1)
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; castopts.revars{no,1}; sprintf('%f %f',castopts.revars{no,2},castopts.revars{no,3}); 'y'];
@@ -51,6 +51,10 @@ end
 
 %despike
 if ~isempty(castopts.dsvars)
+    if ~isinspec && ~castopts.redoctm && sum(strncmp('temp',castopts.dsvars(:,1),4))
+        warning('you appear to be despiking temperature without having inspected the raw file')
+        warning('are you sure you do not need to go back to mctd_01 with redoctm?')
+    end
     nds = 2;
     while nds<=size(castopts.dsvars,2)
         MEXEC_A.MARGS_IN = {filename; 'y'};
@@ -63,11 +67,4 @@ if ~isempty(castopts.dsvars)
         nds = nds+1;
     end
     didedits = 1;
-end
-
-if (~isempty(castopts.revars) && sum(strncmp('temp', castopts.revars(:,1), 4))) || (~isempty(castopts.dsvars) && sum(strncmp('temp', castopts.dsvars(:,1), 4)))
-    warning('You are applying rangeedit or despike to temperature. If large spikes were removed,')
-    warning(['you should set redoctm=1 in the mctd_01 case in opt_' mcruise ', remove ' filename ','])
-    warning('and rerun mexec processing steps from the beginning')
-    warning('(otherwise conductivity will be contaminated).')
 end

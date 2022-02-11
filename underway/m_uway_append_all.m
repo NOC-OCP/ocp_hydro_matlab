@@ -37,7 +37,7 @@ udirs(iie, :) = [];
 year = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
 
 %loop through mday_02 for days up to yesterday
-cd(MEXEC_G.MEXEC_DATA_ROOT)
+cd(MEXEC_G.mexec_data_root)
 day0 = 41;
 for daynumber = day0:floor(datenum(now)-datenum(year,1,1));
 
@@ -46,7 +46,7 @@ for daynumber = day0:floor(datenum(now)-datenum(year,1,1));
    %update appended files
    for sno = 1:size(udirs, 1)
       if daynumber==day0
-         cd(MEXEC_G.MEXEC_DATA_ROOT)
+         cd(MEXEC_G.mexec_data_root)
          delete(fullfile(udirs{sno,3}, [udirs{sno,1} '_' mcruise '_01.nc']));
       end
       mday_02(udirs{sno,2}, udirs{sno,1}, daynumber);

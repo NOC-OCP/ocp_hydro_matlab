@@ -18,9 +18,9 @@ else
     tsgfn = [root_tsg '/' prefix '_' mcruise '_01_medav_clean']; % median averaged file
 end
 [dt, ht] = mload(tsgfn, '/');
-salvar = mvarname_find({'salinity' 'psal' 'salinity_raw'},ht.fldnam);
-tempsst = mvarname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
-condvar = mvarname_find({'conductivity' 'cond'},ht.fldnam);
+salvar = varname_find({'salinity' 'psal' 'salinity_raw'},ht.fldnam);
+tempsst = varname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
+condvar = varname_find({'conductivity' 'cond'},ht.fldnam);
 
 if usecallocal
     switch salvar

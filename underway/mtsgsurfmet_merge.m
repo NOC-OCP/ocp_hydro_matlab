@@ -25,8 +25,8 @@ for no = 1:length(metnames)
                             havevars = 1;
                             condvars = {'cond' 'conductivity' 'conductivity_raw'};
                             tempvars = {'tstemp' 'temp_h' 'temp_m' 'temp_housing_raw' 'temp_housing'};
-                            condvar = mvarname_find(condvars, h.fldnam);
-                            tempvar = mvarname_find(tempvars, h.fldnam);
+                            condvar = varname_find(condvars, h.fldnam);
+                            tempvar = varname_find(tempvars, h.fldnam);
                             if length(condvar)>0 & length(tempvar)>0
                                 dt.psal = gsw_SP_from_C(10*dt.(condvar),dt.(tempvar),0)'; %we have S/m, gsw wants mS/cm
                                 ht.fldnam = [ht.fldnam 'psal'];
@@ -57,8 +57,8 @@ for no = 1:length(metnames)
                         [ds, hs] = mloadq(filesa, '/'); 
                         ds.timec = ds.time/3600/24+datenum(hs.data_time_origin);
                         
-                        windsin = mvarname_find({'windspeed_raw' 'wind_speed_ms' 'relwind_spd_raw'}, hs.fldnam);
-                        winddin = mvarname_find({'winddirection_raw' 'direct' 'wind_dir' 'relwind_dirship_raw'}, hs.fldnam);
+                        windsin = varname_find({'windspeed_raw' 'wind_speed_ms' 'relwind_spd_raw'}, hs.fldnam);
+                        winddin = varname_find({'winddirection_raw' 'direct' 'wind_dir' 'relwind_dirship_raw'}, hs.fldnam);
                         windssa = [windsin '_sonic']; winddsa = [winddin '_sonic'];
                         data = interp1(ds.timec, ds.(windsin).*exp(sqrt(-1)*ds.(winddin)/180*pi), dm.timec);
                         dm.(windssa) = abs(data); dm.(winddsa) = mod(angle(data)*180/pi,360);

@@ -5,6 +5,7 @@
 % apply align and celltm corrections if set in opt_cruise,
 % apply oxygen hysteresis and other corrections to raw (or raw_cleaned)
 % file
+% and applies calibrations if set in opt_cruise
 %
 % output: _raw_cleaned and _24hz
 %
@@ -44,13 +45,13 @@ if exist(cleanfile, 'file') && exist(infile0, 'file')
     fprintf(MEXEC_A.Mfider,'%s\n',m{:})
     pause
 end
-redoctm = 0;
+castopts.redoctm = 0;
 if ~exist(cleanfile, 'file')
     if ~exist(infile0, 'file')
         infile = infile1; %start from _raw
     else
         infile = infile0; %start from _raw_noctm
-        redoctm = 1;
+        castopts.redoctm = 1;
     end
     copyfile(m_add_nc(infile), m_add_nc(cleanfile));
     system(['chmod 644 ' m_add_nc(cleanfile)]);
@@ -69,7 +70,7 @@ MEXEC_A.Mprog = mfilename; %reset
 if didedits==0
     delete(m_add_nc(cleanfile))
     filename = infile1;
-    if redoctm
+    if castopts.redoctm
         copyfile(m_add_nc(infile0), m_add_nc(infile1))
     end
 else
@@ -77,7 +78,7 @@ else
 end
 
 %if we were editing _noctm file, apply align and celltm corrections now
-if redoctm
+if castopts.redoctm
     ctd_apply_align_celltm(filename);
     MEXEC_A.Mprog = mfilename;
 end
@@ -115,7 +116,6 @@ else
     mheadr
     
 end
-
 
 %%%%% turbidity conversion from turbidity volts %%%%%
 if doturbV

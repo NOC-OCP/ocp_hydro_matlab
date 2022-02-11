@@ -132,12 +132,12 @@ muvsd
 % bak jc211, all the cases replaced by the following code
 hwk2 = m_read_header(wkfile2); 
 relwind_speed_ms_choices = {'windspeed_raw' 'wind_speed_ms' 'relwind_spd_raw'}; % rvdas = windspeed_raw; jcr & techsas probably = wind_speed_ms;
-relwind_speed_ms = mvarname_find(relwind_speed_ms_choices, hwk2.fldnam);
+relwind_speed_ms = varname_find(relwind_speed_ms_choices, hwk2.fldnam);
 if length(relwind_speed_ms)==0
     error('windspeed raw not found uniquely in input file; error in mtruew_01.m')
 end
 relwind_dir_choices = {'winddirection_raw' 'direct' 'wind_dir' 'relwind_dirship_raw'}; % rvdas = winddirection_raw; jcr & techsas direct or wind_dir
-relwind_dir = mvarname_find(relwind_dir_choices, hwk2.fldnam);
+relwind_dir = varname_find(relwind_dir_choices, hwk2.fldnam);
 if length(relwind_dir)==0
     error('wind direction raw not found uniquely in input file; error in mtruew_01.m')
 end
@@ -242,12 +242,12 @@ muvsd
 % prepare to re-average interpolated ship heading
 hot1 = m_read_header(otfile1); % find any lat or lon string; bak on jc211
 lat_choices = {'lat' 'latitude'}; % find either
-latstr = mvarname_find(lat_choices, hot1.fldnam);
+latstr = varname_find(lat_choices, hot1.fldnam);
 if length(latstr)==0
     error('lat not found uniquely in input file; error in mtruew_01.m')
 end
 lon_choices = {'lon' 'long' 'longitude'}; % find any
-lonstr = mvarname_find(lon_choices, hot1.fldnam);
+lonstr = varname_find(lon_choices, hot1.fldnam);
 if length(lonstr)==0
     error('lon not found uniquely in input file; error in mtruew_01.m')
 end
@@ -383,12 +383,12 @@ mcopya
 % re-merge navigation
 hin2 = m_read_header(infile2); % find any lat or lon string; bak on jc211
 lat_choices = {'lat' 'latitude'}; % find either
-latstr = mvarname_find(lat_choices, hin2.fldnam);
+latstr = varname_find(lat_choices, hin2.fldnam);
 if length(latstr)==0
     error('lat not found uniquely in input file; error in mtruew_01.m')
 end
 lon_choices = {'lon' 'long' 'longitude'}; % find any
-lonstr = mvarname_find(lon_choices, hin2.fldnam);
+lonstr = varname_find(lon_choices, hin2.fldnam);
 if length(lonstr)==0
     error('lon not found uniquely in input file; error in mtruew_01.m')
 end

@@ -1,9 +1,9 @@
 switch scriptname
     
-    %%%%%%%%%% mctd_02a %%%%%%%%%%
-    case 'mctd_02a'
+    %%%%%%%%%% mctd_02 %%%%%%%%%%
+    case 'mctd_02'
         switch oopt
-            case 'prectm_rawedit'
+            case 'rawedit_auto'
                 % pvars is a list of variables to NaN when pumps are off, with the
                 % second column setting the number of additional scans after the
                 % pumps come back on to also NaN
@@ -33,9 +33,9 @@ switch scriptname
                     'oxygen_sbe1' 3 2 2
                     'pressure_temp' 0.1 0.1 0.1
                     };
-                % Align (5 scans)
-                ovars = {['oxygen_sbe1'
-                    'oxygen_sbe2']};
+            case 'raw_corrs'
+                %default parameters applied on cruise but DAS updated Jan 2022
+                castopts.oxyhyst.H1 = {-0.035; -0.038}; %oxygen_sbe1 and oxygen_sbe2
         end
         %%%%%%%%%% end mctd_02a %%%%%%%%%%
         

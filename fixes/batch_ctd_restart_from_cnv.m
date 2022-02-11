@@ -21,7 +21,7 @@ if ~exist('klist', 'var')
 end
 
 root_ctd = mgetdir('M_CTD');
-root_hv = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'mexec_housekeeping');
+root_hv = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
 
 for no = 1:length(klist)
 

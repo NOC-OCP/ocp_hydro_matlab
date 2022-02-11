@@ -17,11 +17,11 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %find files
 [udirs, udcruise] = m_udirs;
-simvar = mvarname_find({'ea600' 'sim'},udirs(:,1));
+simvar = varname_find({'ea600' 'sim'},udirs(:,1));
 if length(simvar)>0
     iss = 1;
 end
-emvar = mvarname_find({'em120' 'em122'},udirs(:,1));
+emvar = varname_find({'em120' 'em122'},udirs(:,1));
 if length(emvar)>0
     ism = 1;
 end
@@ -69,8 +69,8 @@ if ~isfield(dnav,'dnum'); dnav.dnum = dnav.time + MEXEC_G.uway_torg; end
 dt = 300; 
 % dnav.time = dnav.time(1:dt:end); %about 5 minutes % bak dnav.time not
 % needed
-latvar = mvarname_find({'lat' 'latitude' 'seatex_gll_lat'},fieldnames(dnav));
-lonvar = mvarname_find({'lon' 'long' 'longitude' 'seatex_gll_lon'},fieldnames(dnav));
+latvar = varname_find({'lat' 'latitude' 'seatex_gll_lat'},fieldnames(dnav));
+lonvar = varname_find({'lon' 'long' 'longitude' 'seatex_gll_lon'},fieldnames(dnav));
 
 scriptname = 'bathy'; oopt = 'bathy_grid'; get_cropt
 if mean(dnav.(lonvar))<0 & mean(top.lon)>0; top.lon = top.lon-360; end

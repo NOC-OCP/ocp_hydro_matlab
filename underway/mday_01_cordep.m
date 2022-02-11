@@ -12,12 +12,12 @@ if exist(navfile)
     
     [dn,hn] = mload(navfile,'/');
     lat_choices = {'lat' 'latitude'}; % find either
-    latstr = mvarname_find(lat_choices, hn.fldnam);
+    latstr = varname_find(lat_choices, hn.fldnam);
     if length(latstr)==0
         error('lat not found uniquely in input file; error in mday_01_cordep.m')
     end
     lon_choices = {'lon' 'long' 'longitude'}; % find any
-    lonstr = mvarname_find(lon_choices, hn.fldnam);
+    lonstr = varname_find(lon_choices, hn.fldnam);
     if length(lonstr)==0
         error('lon not found uniquely in input file; error in mday_01_cordep.m')
     end

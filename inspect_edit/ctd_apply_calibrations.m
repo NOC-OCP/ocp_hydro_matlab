@@ -66,7 +66,7 @@ for sno = 1:length(calsens)
                 if ~isempty(iit)
                     tnum = str2num(calf(iit+4)');
                     if ~isnan(tnum) && sum(tnum~=sensnum)>0
-                        error('calibration for %s appears to depend on other CTD temp', calsens{no})
+                        error('calibration for %s appears to depend on other CTD temp', calsens{sno})
                     end
                 end
             elseif strcmp(calvar,'oxygen')
@@ -74,7 +74,7 @@ for sno = 1:length(calsens)
                 if ~isempty(iit)
                     tnum = str2num(calf(iit+4)');
                     if ~isnan(tnum) && sum(tnum~=sensnum)>0
-                        warning('calibration for %s appears to depend on other CTD temp or cond', calsens{no})
+                        warning('calibration for %s appears to depend on other CTD temp or cond', calsens{sno})
                     end
                 end
             end
@@ -87,7 +87,7 @@ for sno = 1:length(calsens)
             if isfield(h0,'fldnam')
                 ii = find(strcmp(calsens{sno},h0.fldnam));
                 hcal.fldnam = [hcal.fldnam calsens{sno}]; hcal.fldunt = [hcal.fldunt h0.fldunt(ii)];
-                if isfield(calstr.(calsens{sno}), 'msg')
+                if isfield(calstr.(calsens{sno}), 'msg') && ~isempty(calstr.(calsens{sno}).msg)
                     calms = calstr.(calsens{sno}).msg;
                     hcal.comment = [hcal.comment sprintf('calibration (%s) applied to %s using %s\n', calms, calsens{sno}, calf)];
                 else

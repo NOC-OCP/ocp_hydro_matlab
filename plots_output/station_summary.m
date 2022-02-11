@@ -60,7 +60,7 @@ if reload
             d = dir(fullfile(root_win, ['win_' mcruise '_???.nc']));
             fnwin = d(1).name; % first winch file name
             h = m_read_header(fnwin);
-            cabname = mvarname_find({'cablout' 'cableout' 'winch_cable_out'},h.fldnam);
+            cabname = varname_find({'cablout' 'cableout' 'winch_cable_out'},h.fldnam);
         catch
             if isempty(d)
                 m = 'No winch files found';

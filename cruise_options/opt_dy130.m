@@ -13,18 +13,18 @@ switch scriptname
     case 'mctd_02'
         switch oopt
             case 'ctdcals'
-                docal.cond = 1;
-                docal.oxygen = 1;
-                calstr.cond2.dy130 = 'dcal.cond2 = d0.cond2.*(1 + (3.8e-4 - 3.9e-4*d0.statnum + interp1([0 5000],[0 3e-3],d0.press))/35);';
-                calstr.cond1.dy130 = 'dcal.cond1 = d0.cond1.*(1 + (2.5e-3 - 2.7e-4*d0.statnum)/35);';
+                castopts.docal.cond = 1;
+                castopts.docal.oxygen = 1;
+                castopts.calstr.cond2.dy130 = 'dcal.cond2 = d0.cond2.*(1 + (3.8e-4 - 3.9e-4*d0.statnum + interp1([0 5000],[0 3e-3],d0.press))/35);';
+                castopts.calstr.cond1.dy130 = 'dcal.cond1 = d0.cond1.*(1 + (2.5e-3 - 2.7e-4*d0.statnum)/35);';
                 calms = 'from comparison with bottle salinities, stations 1-14';
-                calstr.cond2.msg = calms;
-                calstr.cond1.msg = calms;
-                calstr.oxygen1.dy130 = 'dcal.oxygen1 = d0.oxygen1 + interp1([0 2000 5000],[1.8 3.5 4],d0.press) + interp1([1 14 ],[-1 1],d0.statnum);';
-                calstr.oxygen2.dy130 = 'dcal.oxygen2 = d0.oxygen2*0.95 + 4 + interp1([1 14],[-1 3],d0.statnum);';
+                castopts.calstr.cond2.msg = calms;
+                castopts.calstr.cond1.msg = calms;
+                castopts.calstr.oxygen1.dy130 = 'dcal.oxygen1 = d0.oxygen1 + interp1([0 2000 5000],[1.8 3.5 4],d0.press) + interp1([1 14 ],[-1 1],d0.statnum);';
+                castopts.calstr.oxygen2.dy130 = 'dcal.oxygen2 = d0.oxygen2*0.95 + 4 + interp1([1 14],[-1 3],d0.statnum);';
                 calms = 'oxygen stations 1-14';
-                calstr.oxygen1.msg = calms;
-                calstr.oxygen2.msg = calms;
+                castopts.calstr.oxygen1.msg = calms;
+                castopts.calstr.oxygen2.msg = calms;
         end
    
     case 'mfir_01'

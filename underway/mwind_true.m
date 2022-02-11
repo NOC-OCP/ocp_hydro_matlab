@@ -144,12 +144,12 @@ muvsd
 % prepare to re-average interpolated ship heading
 hot1 = m_read_header(otfile1); % find any lat or lon string; bak on jc211
 lat_choices = {'lat' 'latitude'}; % find either
-latstr = mvarname_find(lat_choices, hot1.fldnam);
+latstr = varname_find(lat_choices, hot1.fldnam);
 if length(latstr)==0
     error('lat not found uniquely in input file; error in mtruew_01.m')
 end
 lon_choices = {'lon' 'long' 'longitude'}; % find any
-lonstr = mvarname_find(lon_choices, hot1.fldnam);
+lonstr = varname_find(lon_choices, hot1.fldnam);
 if length(lonstr)==0
     error('lon not found uniquely in input file; error in mtruew_01.m')
 end
@@ -285,12 +285,12 @@ mcopya
 % re-merge navigation
 hin2 = m_read_header(infile2); % find any lat or lon string; bak on jc211
 lat_choices = {'lat' 'latitude'}; % find either
-latstr = mvarname_find(lat_choices, hot1.fldnam);
+latstr = varname_find(lat_choices, hot1.fldnam);
 if length(latstr)==0
     error('lat not found uniquely in input file; error in mtruew_01.m')
 end
 lon_choices = {'lon' 'long' 'longitude'}; % find any
-lonstr = mvarname_find(lon_choices, hot1.fldnam);
+lonstr = varname_find(lon_choices, hot1.fldnam);
 if length(lonstr)==0
     error('lon not found uniquely in input file; error in mtruew_01.m')
 end

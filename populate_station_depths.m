@@ -138,7 +138,7 @@ switch depth_source
         
     case 'bathy'
         
-        simvar = mvarname_find({'ea600' 'sim'},MEXEC_G.MDIRLIST(:,1));
+        simvar = varname_find({'ea600' 'sim'},MEXEC_G.MDIRLIST(:,1));
         if ~isempty(simvar)
             fileb = fullfile(mgetdir(simvar), [simvar '_' mcruise '_01.nc']);
             if exist(fileb,'file')

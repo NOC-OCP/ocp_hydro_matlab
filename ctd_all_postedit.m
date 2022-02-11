@@ -18,7 +18,7 @@ klist = klist(:)';
 
 for kloop = klist
 
-    stn = kloop; mctd_02b
+    stn = kloop; mctd_02
 
     stn = kloop; mctd_03;
     if MEXEC_G.ix_ladcp==1

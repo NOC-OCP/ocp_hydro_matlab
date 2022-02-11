@@ -73,7 +73,7 @@ for fno = 1:length(salfiles)
         ds_sal.runtime(iid,1) = NaN+a0;
     end
     
-    snamep = mvarname_find({'sample1' 'sample_1' 'reading1' 'reading_1' 'r1'},fn);
+   snamep = varname_find({'sample1' 'sample_1' 'reading1' 'reading_1' 'r1'},fn);
     if isempty(snamep)
         error(['unknown name for sample data in file ' salfiles{fno}])
     else

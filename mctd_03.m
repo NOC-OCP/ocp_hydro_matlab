@@ -2,7 +2,6 @@
 %
 % input: _24hz
 %
-%   apply automatic edits as set in opt_cruise, mctd_rawedit case; 
 %   copy data from sensors chosen in opt_cruise to temp, cond, and oxygen; 
 %   calculate psal, asal, potemp using GSW;
 %   average to 1 hz and fill gaps as set in opt_cruise
@@ -51,40 +50,6 @@ if o_choice == 2 && ~sum(strcmp('oxygen2', h.fldnam))
    error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
 end
 
-%optional: edit out bad scans, ***change this to remove from data to be
-%averaged, somehow***
-%or even replace data from specified sensor with data from the other
-%you should almost never do the second one because it will produce
-%discontinuities; it's almost always better to switch the preferred sensor
-%for the whole cast
-scriptname = mfilename; oopt = '24hz_edit'; get_cropt
-if length(badscans24)+length(switchscans24)>0
-    MEXEC_A.MARGS_IN = {infile1; 'y'};
-    for no = 1:size(badscans24,1)
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-            badscans24{no,1};
-            sprintf('%s scan', badscans24{no,1});
-            sprintf('y = x1; kbad = find(x2 >= %d & x2 <= %d); y(kbad) = NaN;', badscans24{no,2}, badscans24{no,3});
-            ' ';
-            ' '];
-    end
-    if sum(strcmp(switchscans24{no,1},{'cond','temp'}))
-        sens1 = s_choice;
-    elseif strncmp(switchscans24{no,1},'oxy',3)
-        sens1 = o_choice;
-    end
-    sens2 = setdiff([1 2],sens1);
-    for no = 1:size(switchscans24)
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-            switchscans24{no,1};
-            sprintf('%s%d %s%d scan', switchscans24{no,1}, sens1, switchscans24{no,1}, sens2)
-            sprintf('y = x1; kbad = find(x3 >= %d & x3 <= %d); y(kbad) = x2(kbad);', switchscans24{no,2}, switchscans24{no,3});
-            ' '
-            ' '];
-    end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    mcalib2
-end
 
 %copy selected sensor to new names without sensor number
 MEXEC_A.MARGS_IN = {

@@ -32,21 +32,21 @@ pdf.time_scale=3
  pdf.ylist='cond'
  pdf.yax = [5.0 5.8]
  pdf.plotorg=[5 11]
- pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surftsg/met_tsg_' cruise '_d'...
+ pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surftsg/met_tsg_' cruise '_d'...
                                     daystr ext '.nc'])
 % 
  pdf.newfigure='none'
  pdf.ylist='fluo'
  pdf.yax=[0.0 0.2]
  pdf.plotorg=[22,11]
- pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surftsg/met_tsg_' cruise '_d'...
+ pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surftsg/met_tsg_' cruise '_d'...
                                    daystr ext '.nc'])
 % 
  pdf.newfigure='none'
  pdf.ylist='trans'
  pdf.yax=[0.0 5.0]
  pdf.plotorg=[5,2]
- pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surftsg/met_tsg_' cruise '_d'...
+ pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surftsg/met_tsg_' cruise '_d'...
                                   daystr ext '.nc'])
 %
 
@@ -58,7 +58,7 @@ pdf.time_scale=3
  pdf.ylist='temp_h'
  pdf.yax=[18 23]
  pdf.plotorg=[5,2]
- pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surftsg/met_tsg_' cruise '_d'...
+ pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surftsg/met_tsg_' cruise '_d'...
                                   daystr ext '.nc'])
 
  
@@ -67,6 +67,6 @@ pdf.time_scale=3
  pdf.ylist='temp_r'
  pdf.yax=[18 23]
  pdf.plotorg=[22,2]
- pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surftsg/met_tsg_' cruise '_d'...
+ pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surftsg/met_tsg_' cruise '_d'...
                                    daystr ext '.nc'])
 

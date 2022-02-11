@@ -74,7 +74,7 @@ end
 
 
 %load data
-d = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['sam_' mcruise '_all']), '/');
+d = mloadq(fullfile(MEXEC_G.MEXEC_mexec_data_root, 'ctd', ['sam_' mcruise '_all']), '/');
 
 %apply calibrations to data from all stations
 if precalt || precalc || precalo
@@ -87,7 +87,7 @@ end
 edges = [-1:.05:1]*rlim(2);
 presrange = [-max(d.upress(~isnan(d.(sensname)))) 0];
 statrange = [0 max(d.statnum(~isnan(d.(sensname))))+1];
-printdir = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'plots');
+printdir = fullfile(MEXEC_G.MEXEC_mexec_data_root, 'plots');
 
 %get sensor groups
 scriptname = 'castpars'; oopt = 'ctdsens_groups'; get_cropt
@@ -211,49 +211,42 @@ for gno = 1:ng
             stn_string = sprintf('%03d', stnlocal);
             
             %load and calibrate 1 hz and 2 dbar upcast profiles
-            [d1, h1] = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
+            [d1, h1] = mloadq(fullfile(MEXEC_G.MEXEC_mexec_data_root, 'ctd', ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
             iidu1 = find(d1.press==max(d1.press)); iidu1 = iidu1:length(d1.press);
-            [du, hu] = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
-            
+            [du, hu] = mloadq(fullfile(MEXEC_G.MEXEC_mexec_data_root, 'ctd', ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
+            scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
+           
             if precalt || precalc || precalo
-                if cropt_cal
-                    scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
-                end
-                [dc1, ~] = ctd_apply_cals(d1, [], docal, calstr);
-                [dcu, ~] = ctd_apply_cals(du, [], docal, calstr);
+                %overwrite docal flags
+                castopts.docal.temp = precalt;
+                castopts.docal.cond = precalc;
+                castopts.docal.oxygen = precalo;
+                [dc1, ~] = ctd_apply_calibrations(d1, [], castopts.docal, castopts.calstr);
+                [dcu, ~] = ctd_apply_calibrations(du, [], castopts.docal, castopts.calstr);
                 if precalt
-                    if sensnum==1
                         d1.temp1 = dc1.temp1;
                         du.temp1 = dcu.temp1;
-                    elseif sensnum==2
                         d1.temp2 = dc1.temp2;
                         du.temp2 = dcu.temp2;
-                    end
                 end
                 if precalc
-                    if sensnum==1
                         d1.cond1 = dc1.cond1;
                         du.cond1 = dcu.cond1;
-                    elseif sensnum==2
                         d1.cond2 = dc1.cond2;
                         du.cond2 = dcu.cond2;
-                    end
                 end
                 if precalo
-                    if sensnum==1
                         d1.oxygen1 = dc1.oxygen1;
                         du.oxygen1 = dcu.oxygen1;
-                    elseif sensnum==2
                         d1.oxygen1 = dc1.oxygen1;
                         du.oxygen1 = dcu.oxygen1;
-                    end
                 end
             end
-            
+
             iis = find(d.statnum(:)==s(no));
             iisbf = find(d.statnum(:)==s(no) & ~ismember(calflag, okf));
             iiq = find(d.statnum(:)==s(no) & mres & ismember(calflag, okf));
-            
+
             plot(d1.(sensname)(iidu1), -d1.press(iidu1), 'c', du.(sensname), -du.press, 'k--', ...
                 caldata(iis), -d.upress(iis), 'r.', caldata(iisbf), -d.upress(iisbf), 'm.', ctddata(iis), -d.upress(iis), 'b.', ...
                 caldata(iiq), -d.upress(iiq), 'or', ctddata(iiq), -d.upress(iiq), 'sb');
@@ -264,7 +257,8 @@ for gno = 1:ng
                 sprintf('%d %d %5.2f %d %d', s(no), d.position(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), d.niskin_flag(iiq(qno)))
             end
             keyboard
-            
+
+
         end
     end
     
@@ -287,7 +281,7 @@ for sno = stns(:)'
     iig = find(d.statnum==stnlocal);
     
     if cropt_cal
-        scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
+        scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
     end
     
     d0.statnum = d.statnum(iig);
@@ -303,7 +297,7 @@ for sno = stns(:)'
         d0.oxygen2 = d.oxygen2(iig);
     end
     
-    [dcal, ~] = ctd_apply_cals(d0, [], docal, calstr);
+    [dcal, ~] = ctd_apply_calibrations(d0, [], docal, calstr);
     if precalt
         d.temp1(iig) = dcal.temp1;
         d.temp2(iig) = dcal.temp2;

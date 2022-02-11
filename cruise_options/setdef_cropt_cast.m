@@ -51,18 +51,20 @@ switch scriptname
                     'and wouldn''t bother with the BT constraint on LADCP processing, etc.)'};
                 shortcasts = [];
             case 'ctdsens_groups'
-                crhelp_str = {'ctdsens_groups is a structure with fields corresponding to the CTD sensors e.g.'
-                    'temp1, oxygen1, temp2, etc. (temp1 and cond1 are assumed the same); '
-                    'their values are Nx1 cell arrays listing stations for a given sensor/serial number, '
+                                crhelp_str = {'ctdsens is a structure with fields corresponding to the CTD sensors e.g.'
+                    'temp1, oxygen1, temp2, etc. (temp1 applies to both tmep1 and cond1); '
+                    'their values are 2xN cell arrays listing stations and corresponding sensor/serial number, '
                     'in case one or more sensors was changed during the cruise.'
-                    'all default to {1:999}, but, for instance, you could set ctdsens_groups.oxygen1 = {1:30 31:70} '
-                    'if the CTD1 oxygen sensor was changed between stations 30 and 31.'};
-                ctdsens_groups.temp1 = {1:999};
-                ctdsens_groups.oxygen1 = {1:999};
-                ctdsens_groups.temp2 = {1:999};
-                ctdsens_groups.oxygen2 = {1:999};
-                ctdsens_groups.fluor = {1:999};
-                ctdsens_groups.transmittance = {1:999};
+                    'all default to [1:999] in the first row and 1 in the second (no change of sensors), '
+                    'but, for example, you could set ctdsens.oxygen1 = [1:30; [ones(1,8) ones(2,22)];'
+                    'if the CTD1 oxygen sensor was changed between stations 8 and 9.'};
+                a = [1:999; ones(1,999)];
+                ctdsens.temp1 = a;
+                ctdsens.oxygen1 = a;
+                ctdsens.temp2 = a;
+                ctdsens.oxygen2 = a;
+                ctdsens.fluor = a;
+                ctdsens.transmittance = a;
         end
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
         
@@ -76,7 +78,14 @@ switch scriptname
                     'and subsequently apply ctm correction in mctd_02a.'
                     'suf is the .cnv file suffix in either case (defaults ''_align_ctm'' or ''_align_noctm'')'};
                 redoctm = 0;
-            case 'ctdvars' %***not updating past opt_cruise files (yet)
+            case 'cnvfilename'
+                crhelp_str = {'infile is the name of the .cnv file to read in'};
+                if redoctm
+                    infile = sprintf('%s_%03d.cnv', upper(mcruise), stnlocal);
+                else
+                    infile = sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal);
+                end
+            case 'ctdvars'
                 crhelp_str = {'Place to put additional (ctdvars_add) or replacement (ctdvars_replace)'
                     'triplets of SBE variable name, mstar variable name, mstar variable units to '
                     'supplement those in templates/ctd_renamelist.csv. Default is both empty.'};

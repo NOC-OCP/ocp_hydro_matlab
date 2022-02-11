@@ -4,7 +4,7 @@ mcd M_CTD;
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 % some hardwiring from jc032 removed di346
-root_scripts = [MEXEC_G.MEXEC_DATA_ROOT '/MEXEC.mexec_processing_scripts'];
+root_scripts = [MEXEC_G.mexec_data_root '/MEXEC.mexec_processing_scripts'];
 % load([root_scripts '/cdfs'],'clog')
 % load([root_scripts '/cdfs'])
 

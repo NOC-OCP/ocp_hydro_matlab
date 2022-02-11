@@ -110,8 +110,8 @@ fprintf(fid, '%s\n', 'udirs = {');
 for sno = 1:size(matlist,1)
     iid = iim(sno);
     fprintf(fid, '''%s''    ''%s''    ''%s'';\n', udirs{iid,1}, udirs{iid,2}, matlist{sno,end});
-    if ~exist(fullfile(MEXEC_G.MEXEC_DATA_ROOT, udirs{iid,2}), 'dir')
-        mkdir(fullfile(MEXEC_G.MEXEC_DATA_ROOT, udirs{iid,2}));
+    if ~exist(fullfile(MEXEC_G.mexec_data_root, udirs{iid,2}), 'dir')
+        mkdir(fullfile(MEXEC_G.mexec_data_root, udirs{iid,2}));
     end
 end
 

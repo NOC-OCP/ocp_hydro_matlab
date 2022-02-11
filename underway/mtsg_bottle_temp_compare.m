@@ -17,9 +17,9 @@ if usecallocal
     tsgfn = [tsgfn '_cal'];
 end
 [dt, ht] = mload(tsgfn, '/');
-tempvar = mvarname_find({'housingtemp' 'temp_h' 'tstemp'},ht.fldnam);
-salvar = mvarname_find({'salinity' 'psal'},ht.fldnam);
-tempsst = mvarname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
+tempvar = varname_find({'housingtemp' 'temp_h' 'tstemp'},ht.fldnam);
+salvar = varname_find({'salinity' 'psal'},ht.fldnam);
+tempsst = varname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
 
 if usecallocal
     tempvar = [tempvar '_cal'];

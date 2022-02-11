@@ -38,7 +38,7 @@ tavstring = [sprintf('%d',t1) ' 1e10 ' sprintf('%d',tave_period)];
 toffstring = ['y = x + ' sprintf('%d',tav2)];
 
 head_choices = {'head' 'heading' 'head_gyr'}; 
-headvar = mvarname_find(head_choices, h.fldnam);
+headvar = varname_find(head_choices, h.fldnam);
 
 MEXEC_A.MARGS_IN = {
     infile

@@ -21,9 +21,9 @@ wkfile1 = ['wk1_' scriptname '_' datestr(now,30)];
 wkfile2 = ['wk2_' scriptname '_' datestr(now,30)];
 
 lat_choices = {'lat' 'latitude'}; % find either
-latvar = mvarname_find(lat_choices, h.fldnam);
+latvar = varname_find(lat_choices, h.fldnam);
 lon_choices = {'lon' 'long' 'longitude'}; % find any
-lonvar = mvarname_find(lon_choices, h.fldnam);
+lonvar = varname_find(lon_choices, h.fldnam);
 
 MEXEC_A.MARGS_IN = {
 infile

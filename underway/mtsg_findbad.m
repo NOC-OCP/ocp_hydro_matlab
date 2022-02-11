@@ -26,15 +26,15 @@ infile1 = fullfile(roottsg, [abbrev '_' mcruise '_01_medav_clean']);
 scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt
 
 [d h] = mload(infile1,'/');
-salvar = mvarname_find({'salinity' 'psal'},h.fldnam);
+salvar = varname_find({'salinity' 'psal'},h.fldnam);
 if length(salvar)>0; issal = 1; else; issal = 0; end
-tempsst = mvarname_find({'remotetemp' 'temp_4' 'sstemp'},h.fldnam);
+tempsst = varname_find({'remotetemp' 'temp_4' 'sstemp'},h.fldnam);
 if length(tempsst)>0; issst = 1; else; isst = 0; end
-condvar = mvarname_find({'conductivity' 'cond'},h.fldnam);
+condvar = varname_find({'conductivity' 'cond'},h.fldnam);
 if length(condvar)>0; iscond = 1; else; iscond = 0; end
-tempvar = mvarname_find({'housingtemp' 'temp_h' 'tstemp'},h.fldnam);
+tempvar = varname_find({'housingtemp' 'temp_h' 'tstemp'},h.fldnam);
 if length(tempvar)>0; istemp = 1; else; istemp = 0; end
-flowvar = mvarname_find({'flow' 'flow1'},h.fldnam);
+flowvar = varname_find({'flow' 'flow1'},h.fldnam);
 if length(flowvar)>0; isflow = 1; else; isflow = 0; end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part

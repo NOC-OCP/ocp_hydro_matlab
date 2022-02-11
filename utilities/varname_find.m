@@ -1,5 +1,5 @@
-function varname = mvarname_find(varname_choices, namelist);
-% function varname = mvarname_find(varname_choices, namelist);
+function varname = varname_find(varname_choices, namelist);
+% function varname = varname_find(varname_choices, namelist);
 % find matches to varname_choices (cell array) in cell array namelist
 
 cmatch = intersect(varname_choices,namelist);

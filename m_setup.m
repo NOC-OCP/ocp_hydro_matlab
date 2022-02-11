@@ -16,13 +16,14 @@
 %
 
 MEXEC.mexec_version = 'v3';
-MEXEC.MSCRIPT_CRUISE_STRING='dy130';
-MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2021 1 1 0 0 0];
+MEXEC.MSCRIPT_CRUISE_STRING='dy146';
+MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 0; %if true, print short documentation line to screen at beginning of scripts
 MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
-MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_athome']; % common suffixes '_atsea', '_atnoc', '_athome', '', etc.
-MEXEC.ix_ladcp = 1; %set to 1 if processing LADCP data with LDEO IX software
+MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_athome', '', etc.
+MEXEC.ix_ladcp = 0; %set to 1 if processing LADCP data with LDEO IX software
+MEXEC.force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
@@ -30,13 +31,14 @@ disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec '])
 
 %look for mexec base directory
 d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if ~isempty(ii); d = d(1:ii-1); else; d = []; end
-mpath = {['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+mpath = {['/local/users/pstar/cruise'];
+    ['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
     ['/noc/mpoc/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+    ['/local/users/pstar/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
     fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING,'mcruise');
-    fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING);
-    ['/local/users/pstar/cruise']};
+    fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING)};
 fp = 0; n=1;
-while fp==0 && n<length(mpath)
+while fp==0 && n<=length(mpath)
     if exist(mpath{n},'dir')==7
         MEXEC.mstar_root = mpath{n};
         fp = 1;
@@ -71,15 +73,7 @@ if isempty(which('m_common')) % this is in msubs
     % add paths below source
     addpath(fullfile(MEXEC.mexec_source_root,'pstar','subs'))
     addpath(fullfile(MEXEC.mexec_source_root,'pstar','progs'))
-    addpath(fullfile(MEXEC.mexec_source_root,'source','mexec_snctools'))
-    addpath(fullfile(MEXEC.mexec_source_root,'source','mextras'))
-    addpath(fullfile(MEXEC.mexec_source_root,'source','mscs'))
-    addpath(fullfile(MEXEC.mexec_source_root,'source','mstats'))
-    addpath(fullfile(MEXEC.mexec_source_root,'source','msubs'))
-    addpath(fullfile(MEXEC.mexec_source_root,'source','mtechsas'))
-    addpath(fullfile(MEXEC.mexec_source_root,'source','unfinished'))
-    addpath(fullfile(MEXEC.mexec_source_root,'source','mrvdas')) % addition on jc211; 28 jan 2021; use rvdas as main data acquisition
-    addpath(fullfile(MEXEC.mexec_source_root,'source','mnew')) % addition on jc211; mfsave
+    addpath(genpath(fullfile(MEXEC.mexec_source_root,'source')))
 end
 
 
@@ -113,18 +107,12 @@ clear s c
 % add mexec_processing_scripts subdirectories to path
 if isempty(which('get_cropt')) % this function is in mexec_processing_scripts/cruise_options
     disp(['adding mexec_processing_scripts '  MEXEC_G.mexec_version ' subdirectories to path'])
-    addpath(fullfile(mps_pre, 'bottle_samples'))
-    addpath(fullfile(mps_pre, 'cruise_options'))
-    addpath(fullfile(mps_pre, 'gridsec'))
-    addpath(fullfile(mps_pre, 'ladcp_scripts'))
-    addpath(fullfile(mps_pre, 'plots_output'))
-    addpath(fullfile(mps_pre, 'utilities'))
-    addpath(fullfile(mps_pre, 'underway'))
-    addpath(fullfile(mps_pre, 'varlists'))
+    addpath(genpath(mps_pre))
 end
 
 
 % find and add (append) paths to other useful libraries
+[~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
 ld = cell2table({'' '' '' {} ''}, 'VariableNames', {'predir' 'lib' 'exmfile' 'subdirs' 'verstr'});
 ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'seawater', 'sw_dpth' {} '_ver3_2'} ];
 ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'm_map' 'm_gshhs_i' {} '_v1_4'} ];
@@ -134,8 +122,10 @@ ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'gsw_matlab', 'gsw_SA_from_
 if MEXEC_G.ix_ladcp
     ld = [ ld; fullfile(MEXEC.mstar_root,'sw','others') 'LDEO_IX' 'loadrdi' {'geomag'} '_13' ];
 end
-ld = sw_vers(ld(2:end,:)); %replace verstr with highest version of each library found in mstar_root
-%add to path, recording which version was used (in MEXEC_G)
+if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~MEXEC.force_ext_software_versions
+    ld = sw_vers(ld(2:end,:)); %replace verstr with highest version of each library found in mstar_root
+    %add to path, recording which version was used (in MEXEC_G)
+end
 sw_addpath(ld);
 clear ld
 
@@ -302,8 +292,13 @@ clear sud_runs ufail ud_* udirs udcruise mps_pre
 if MEXEC.status ~= 0; MEXEC.uuser = 'user_not_identified'; end
 [MEXEC.status, MEXEC.uname] = system('uname -n');
 if MEXEC.status ~= 0; MEXEC.uname = 'unixname_not_identified'; end
-MEXEC.uuser = replace(MEXEC.uuser,newline,''); %strip newlines out of unix response
-MEXEC.uname = replace(MEXEC.uname,newline,''); %strip newlines out of unix response
+if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1)
+    MEXEC.uuser = replace(MEXEC.uuser,newline,''); %strip newlines out of unix response
+    MEXEC.uname = replace(MEXEC.uname,newline,''); %strip newlines out of unix response
+else
+    MEXEC.uuser = MEXEC.uuser(1:end-1);
+    MEXEC.uname = MEXEC.uname(1:end-1);
+end
 MEXEC_G.MUSER = [MEXEC.uuser ' on ' MEXEC.uname];
 
 MEXEC_G.Mhousekeeping_version = fullfile(MEXEC_G.housekeeping_root, 'version');

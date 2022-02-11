@@ -25,7 +25,7 @@ end
 if ~exist('restart_uway_append','var'); restart_uway_append = 0; end
 if restart_uway_append; warning(['will delete appended file and start from ' num2str(days(1))]); end
 
-root_u = MEXEC_G.MEXEC_DATA_ROOT;
+root_u = MEXEC_G.mexec_data_root;
 
 %%%%% get list of underway streams to process %%%%%
 [udirs, udcruise] = m_udirs;
