@@ -220,9 +220,9 @@ switch scriptname
                 %extra flags for inter-machine comparison***temporary
                 if sum(strcmp('notes',ds.Properties.VarNames))
                     ii = find(strncmp('ABC',ds.notes,3));
-                    if length(ii)>0; ds.flag(ii) = ds.flag(ii)+10; end
+                    if ~isempty(ii); ds.flag(ii) = ds.flag(ii)+10; end
                     ii = find(strncmp('CUSTARD',ds.notes,7));
-                    if length(ii)>0; ds.flag(ii) = ds.flag(ii)+20; end
+                    if ~isempty(ii); ds.flag(ii) = ds.flag(ii)+20; end
                 end
                 %analysis date and time (start)
                 iic = strfind(hs.header,',');
@@ -513,7 +513,7 @@ switch scriptname
                     sdiffsm = [0 ; 0];
                     save(fnsm,'t','sdiffsm')
                 end
-                if time==1 & salin==1
+                if time==1 && salin==1
                     salout = 1;
                 else
                     load([root_tsg '/sdiffsm'])

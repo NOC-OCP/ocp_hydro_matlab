@@ -13,111 +13,111 @@
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+% bak jc211 ship_data_sys_names sets metpre and tsgpre
 
-% bak jc211 ship_data_sys_names sets metpre and tsgpre. In this scripts we
-% want tsgpre
-prefix = tsgpre;
+mdocshow(mfilename, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' tsgpre '_' mcruise '_01_medav_clean.nc'])
+mdocshow(mfilename, ['calls m_apply_calibration to apply sal and temp calibrations set in opt_' mcruise ', writing to ' tsgpre '_' mcruise '_01_medav_clean_cal.nc'])
 
-mdocshow(mfilename, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' prefix '_' mcruise '_01_medav_clean.nc; calls tsgsal_apply_cal to apply salinity calibration set in opt_' mcruise ', writing to ' prefix '_' mcruise '_01_medav_clean_cal.nc'])
-
-
-root_dir = mgetdir(prefix);
-infile1 = fullfile(root_dir, [prefix '_' mcruise '_01']);
-otfile1 = fullfile(root_dir, [prefix '_' mcruise '_01_medav_clean']); % 1-minute median data
-otfile2 = fullfile(root_dir, [prefix '_' mcruise '_01_medav_clean_cal']); % 1-minute median data
-wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
+root_dir = mgetdir(tsgpre);
+infile1 = fullfile(root_dir, [tsgpre '_' mcruise '_01']);
+otfile1 = fullfile(root_dir, [tsgpre '_' mcruise '_01_medav_clean']); % 1-minute median data
+otfile2 = fullfile(root_dir, [tsgpre '_' mcruise '_01_medav_clean_cal']); % 1-minute median data
 
 if ~exist(m_add_nc(infile1),'file')
     error(['no tsg file ' infile1])
     return
 end
 
-%average
-MEXEC_A.MARGS_IN = {
-    infile1
-    otfile1
-    ' '
-    'time'
-    '30 1e10 60'
-    'b'
-    };
-mavmed
+scriptname = mfilename; oopt = 'tsg_editvars'; get_cropt
+scriptname = mfilename; oopt = 'tsg_badlims'; get_cropt
+h = m_read_header(infile1);
+editvars = intersect(editvars, h.fldnam);
 
-%cut out bad times
+if ~isempty(kbadlims) && ~isempty(editvars)
     
-h = m_read_header(otfile1);
-torg = datenum(h.data_time_origin);
-
-MEXEC_A.MARGS_IN = {otfile1; 'y'};
-for no = 1:length(h.fldnam)
-   var = h.fldnam{no};
-   if ~strcmp(var, 'time') & ~strcmp(var, 'deltat')
-      vline = ['y = mtsg_cleanup(' sprintf('%20.10f',torg) ',x1,x2,''' var ''')'];
-      MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; var; ['time ' var]; vline; ' '; ' '];
-   end
+    %average
+    MEXEC_A.MARGS_IN = {
+        infile1
+        otfile1
+        ' '
+        'time'
+        '30 1e10 60'
+        'b'
+        };
+    mavmed
+    
+    %remove badtimes and save
+    [d,h] = mloadq(otfile1, '/');
+    torg = datenum(h.data_time_origin);
+    d.time = m_commontime(d.time,h.data_time_origin,0)/86400; %convert to matlab datenum
+    clear dnew hnew
+    hnew.fldnam = {}; hnew.fldunt = {}; hnew.comment = 'TSG bad time ranges removed';
+    iib = [];
+    if iscell(kbadlims)
+        for kb = 1:size(kbadlims,1)
+            iib = [iib find(d.time>=datenum(kbadlims{kb,1}) & d.time<=datenum(kbadlims{kb,2}))];
+        end
+    else
+        for kb = 1:size(kbadlims,1)
+            iib = [iib find(d.time>=kbadlims(kb,1) & d.time<=kbadlims(kb,2))];
+        end
+    end
+    for vno = 1:length(editvars)
+        dnew.(editvars{vno}) = d.(editvars{vno});
+        dnew.(editvars{vno})(iib) = NaN;
+        hnew.fldnam = [hnew.fldnam editvars{vno}];
+        thisvar = strcmp(editvars{vno}, h.fldnam);
+        hnew.fldunt = [hnew.fldunt h.fldunt(thisvar)];
+    end
+    %***necessary to calculate salinity using temp_housing?
+    mfsave(otfile1, dnew, hnew, '-addvars');
+    
+else
+    disp('no editvars found in file or no kbadlims set; skipping')
+    return
 end
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-mcalib2
 
-%determine if there is a tsg salinity calibration
-scriptname = 'tsgsal_apply_cal'; salin = 1; time = 1; oopt = 'tsgsaladj'; get_cropt; %eval(['opt_' mcruise])
 
-%apply it if there is one
-if exist('salout','var')
-
-   salvar = varname_find({'salinity' 'psal' 'salinity_raw'},h.fldnam);
-   salinline = ['y = tsgsal_apply_cal(x1,x2)'];
-   
-   switch salvar
-       case 'salinity_raw'
-           salcalvar = 'salinity_cal';
-       otherwise
-           salcalvar = [salvar '_cal'];
-   end
-
-   MEXEC_A.MARGS_IN = {
-      otfile1
-      otfile2
-      '/'
-      ['time ' salvar]
-      salinline
-      salcalvar % [salvar '_cal']
-      'pss-78'
-      ' '
-      };
-  mcalc
-end
-
-%determine if there is a tsg temperature adjustment
-scriptname = 'tsgsal_apply_cal'; tempin = 1; time = 1; oopt = 'tempadj'; eval(['opt_' mcruise])
-
-%apply it if there is one
-if exist('tempout','var')
-
-   if exist(m_add_nc(otfile2),'file')
-      movefile(m_add_nc(otfile2), m_add_nc(wkfile1));
-   else
-      wkfile1=otfile1;
-   end
-
-   tempvar = varname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
-   tempinline = ['y = tsgsal_apply_temp_cal(x1,x2)'];
-
-   MEXEC_A.MARGS_IN = {
-      wkfile1
-      otfile2
-      '/'
-      ['time ' tempvar]
-      tempinline
-      [tempvar '_adj']
-      'degree_Celsius'
-      ' '
-      };
-  mcalc
-  
-  if ~strcmp(otfile1,wkfile1)
-     delete(m_add_nc(wkfile1));
-  end
-
+%get calibrations to use
+scriptname = mfilename; oopt = 'tsgcals'; get_cropt
+%if found, apply
+if isfield(tsgopts, 'calstr')
+    calstr = select_calibrations(tsgopts.docal, tsgopts.calstr);
+    if ~isempty(calstr)
+        %load data
+        [d,h] = mloadq(otfile1, '/');
+        %apply calibrations
+        [dcal, hcal] = apply_calibrations(d, h, calstr);
+        if ~isempty(hcal.fldnam)
+            %rename
+            for vno = 1:length(hcal.fldnam)
+                ii = strfind('_raw',hcal.fldnam{vno});
+                if isempty(ii)
+                    hcal.fldnam{vno} = [hcal.fldnam{vno} '_cal'];
+                else
+                    hcal.fldnam{vno} = hcal.fldnam{vno}(1:ii-1);
+                end
+            end
+            if ~exist(m_add_nc(otfile2), 'file')
+                mfsave(otfile2, d, h);
+            end
+            %recalculate salinity? probably not going to be able to
+            %calibrate housing temperature
+            %sometimes need to calculate salinity at earlier stage
+            %(scs)?***
+            if 0
+                condvars = {'cond' 'conductivity' 'conductivity_raw'};
+                tempvars = {'tstemp' 'temp_h' 'temp_m' 'temp_housing_raw' 'temp_housing'};
+                condvar = varname_find(condvars, h.fldnam);
+                tempvar = varname_find(tempvars, h.fldnam);
+                if ~isempty(condvar) && ~isempty(tempvar)
+                    dt.psal = gsw_SP_from_C(10*dt.(condvar),dt.(tempvar),0)'; %we have S/m, gsw wants mS/cm
+                    ht.fldnam = [ht.fldnam 'psal'];
+                    ht.fldunt = [ht.fldunt 'pss-78'];
+                end
+            end
+            mfsave(otfile2, dcal, hcal, '-addvars');
+        end
+    end
 end
 

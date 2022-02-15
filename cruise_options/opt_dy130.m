@@ -12,7 +12,7 @@ switch scriptname
         
     case 'mctd_02'
         switch oopt
-            case 'ctdcals'
+            case 'ctd_cals'
                 castopts.docal.cond = 1;
                 castopts.docal.oxygen = 1;
                 castopts.calstr.cond2.dy130 = 'dcal.cond2 = d0.cond2.*(1 + (3.8e-4 - 3.9e-4*d0.statnum + interp1([0 5000],[0 3e-3],d0.press))/35);';

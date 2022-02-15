@@ -1,11 +1,11 @@
-% mctd_04: 
+% mctd_04:
 %
 % inputs: wk_dvars_ (from mctd_03),
 %         dcs_
 %
 % extract downcast and upcast data from 24hz file with derived vars
 %          (psal etc.) using index information in dcs file;
-%          optionally loopedit; 
+%          optionally loopedit;
 %          sort, average to 2 dbar;
 %          interpolate gaps;
 %          calculate depth and (re)calculate potemp.
@@ -15,7 +15,7 @@
 % Use: mctd_04        and then respond with station number, or for station 16
 %      stn = 16; mctd_04;
 %
-% calls: 
+% calls:
 %     mloadq
 %     mcalib2
 %     mcopya
@@ -67,19 +67,11 @@ copystrup = {[sprintf('%d',round(dcbot)) ' ' sprintf('%d',round(dcend))]};
 %%%%% copy those from wkfile4 (24 hz data with added vars) to working files %%%%%
 %%%%% for downcast and upcast %%%%%
 
-var_copycell = mcvars_list(1);
-% remove any vars from copy list that aren't available in the input file
-numcopy = length(var_copycell);
-h_input = m_read_header(wkfile_dvars);
-var_copystr = ' ';
-for kloop_scr = numcopy:-1:1
-    if length(strmatch(var_copycell{kloop_scr},h_input.fldnam,'exact'))>0
-        var_copystr = [var_copystr var_copycell{kloop_scr} ' '];
-    else
-        var_copycell(kloop_scr) = [];
-    end
-end
-var_copystr([1 end]) = [];
+h = m_read_header(wkfile_dvars);
+[var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
+
+%working on temporary files
+MEXEC_A.Mhistory_skip = 1;
 
 %use oxy_end to NaN that many seconds before dcs scan_start
 scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
@@ -106,177 +98,88 @@ if oxy_end==1
     mcalib2
 end
 
-%might have to remove some contaminated data or substitute upcast data before averaging
-%although the former you should probably do in mctd_03 (case 'interp24') instead
-scriptname = mfilename; oopt = 'pre_2_treat'; get_cropt
+%%%%% separate downcast and upcast ranges %%%%%
+[d,h] = mload(wkfile_dvars, '/');
+clear dn up hn
+hn.fldnam = {}; hn.fldunt = {};
+for vno = 1:length(var_copycell)
+    dn.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_start:dd.dc24_bot);
+    up.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_bot:dd.dc24_end);
+    hn.fldnam = [hn.fldnam var_copycel{vno}];
+    hn.fldunt = [hn.fldunt h.fldunt{iiv(vno)}];
+end
 
-%%%%%% copy downcast and upcast ranges to new files %%%%%%
-
-MEXEC_A.MARGS_IN = {
-    wkfile_dvars
-    wkfile1d
-    var_copystr
-    };
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-    copystr
-    ];
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-    ' '
-    ' '
-    ];
-margsin = MEXEC_A.MARGS_IN;
-mcopya
-
-MEXEC_A.MARGS_IN = {
-    wkfile_dvars
-    wkfile1u
-    var_copystr
-    };
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-    copystrup
-    ];
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-    ' '
-    ' '
-    ];
-mcopya
-
+vars_other = setdiff(var_copycell, {'press'});
 
 %%%%% optionally loopedit downcast %%%%%
 scriptname = mfilename; oopt = 'doloopedit'; get_cropt
 if doloopedit
     disp(['applying loopediting for ' otfile1d])
-    %loopedit involves a big matrix so to save time, NaN pressure first,
-    %then use to NaN other fields
-    MEXEC_A.MARGS_IN = {wkfile1d
-        'y'
-        'press'
-        'press'
-        sprintf('y = m_loopedit(x1, %f);', ptol);
-        ' '
-        ' '
-        ' '};
-    mcalib2
-    MEXEC_A.MARGS_IN = {wkfile1d; 'y'};
-    for kloop_scr = 1:length(var_copycell)
-        if ~strcmp(var_copycell{kloop_scr},'press')
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN
-                var_copycell{kloop_scr}
-                [var_copycell{kloop_scr} ' press']
-                'y = x1; y(isnan(x2)) = NaN;'
-                ' '
-                ' '];
-        end
+    dn.press = m_loopedit(dn.press, 'ptol', ptol, 'spdtol', spdtol);
+    for vno = 1:length(vars_other)
+        dn.(vars_other{vno})(isnan(dn.press)) = NaN;
+        commentd = sprintf('loopediting applied to downcast using ptol %f, spdtol %f\n',ptol,spdtol);
     end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    mcalib2
+else
+    commentd = '';
 end
 
+%%%%% sort by pressure and average to 2 dbar %%%%%
+pedges = [0:2:1e4];
+dn2 = grid_cast_segment(dn, 'press', pedges);
+up2 = grid_cast_segment(up, 'press', pedges);
+hn.comment = 'bin averaged to 2 dbar using grid_cast_segment\n';
 
-%%%%% sort by pressure %%%%%
-
-MEXEC_A.MARGS_IN = {
-    wkfile1d
-    wkfile2d
-    'press'
-    };
-msort
-
-MEXEC_A.MARGS_IN = {
-    wkfile1u
-    wkfile2u
-    'press'
-    };
-msort
-
-%%%%% average to 2 dbar %%%%%
-
-MEXEC_A.MARGS_IN = {
-    wkfile2d
-    wkfile3d
-    '/'
-    'press'
-    '0 10000 2'
-    'b'
-    };
-mavrge
-
-MEXEC_A.MARGS_IN = {
-    wkfile2u
-    wkfile3u
-    '/'
-    'press'
-    '0 10000 2'
-    'b'
-    };
-mavrge
-
-%%%%%interpolate to fill in gaps %%%%%
-
+%%%%% interpolate to fill in gaps %%%%%
 scriptname = mfilename; oopt = 'interp2db'; get_cropt
-
 if interp2db
-    MEXEC_A.MARGS_IN = {
-        wkfile3d
-        'y'
-        '/'
-        'press'
-        '0'
-        '0'
-        };
-    mintrp
-    
-    MEXEC_A.MARGS_IN = {
-        wkfile3u
-        'y'
-        '/'
-        'press'
-        '0'
-        '0'
-        };
-    mintrp
+    nd = length(dn2.press);
+    nu = length(up2.press);
+    for vno = 1:length(vars_other)
+        iig = find(~isnan(dn2.(vars_other{vno}))); iib = setdiff(1:nd,iig);
+        dn2.(vars_other{vno})(iib) = interp1(dn2.press(iig), dn2.(vars_other{vno})(iig), dn2.press(iib));
+        iig = find(~isnan(up2.(vars_other{vno}))); iib = setdiff(1:nu,iig);
+        up2.(vars_other{vno})(iib) = interp1(up2.press(iig), up2.(vars_other{vno})(iig), up2.press(iib));
+    end
+    hn.comment = [hn.comment 'gaps in 2 dbar filled using linear interpolation\n'];
 end
 
 %%%%% add potemp %%%%%
 
-margs_calc = {
-    'press'
-    'iig = find(x1>-1.495); y = NaN+x1; y(iig) = -gsw_z_from_p(x1(iig),h.latitude)'
-    'depth'
-    'metres'
-    'asal temp press'
-    'iig = find(x1>-1.495); y = NaN+x1; y(iig) = gsw_pt0_from_t(x1(iig),x2(iig),x3(iig))'
-    'potemp'
-    'degc90'
-    'asal1 temp1 press'
-    'iig = find(x1>-1.495); y = NaN+x1; y(iig) = gsw_pt0_from_t(x1(iig),x2(iig),x3(iig))'
-    'potemp1'
-    'degc90'
-    'asal2 temp2 press'
-    'iig = find(x1>-1.495); y = NaN+x1; y(iig) = gsw_pt0_from_t(x1(iig),x2(iig),x3(iig))'
-    'potemp2'
-    'degc90'
-    ' '
-    };
+iigd = find(dn2.press>-1.495);
+iigu = find(up2.press>-1.495);
 
-MEXEC_A.MARGS_IN = {
-    wkfile3d
-    otfile1d
-    var_copystr};
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; margs_calc];
-mcalc
+dn2.depth = NaN+dn2.press; dn2.depth(iigd) = -gsw_z_from_p(dn2.press(iigd),h.latitude);
+up2.depth = NaN+up2.press; up2.depth(iigu) = -gsw_z_from_p(up2.press(iigu),h.latitude);
+hn.fldnam = [hn.fldnam 'depth']; hn.fldunt = [hn.fldunt 'metres'];
 
-MEXEC_A.MARGS_IN = {
-    wkfile3u
-    otfile1u
-    var_copystr};
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; margs_calc];
-mcalc
+dn2.potemp = NaN+dn2.press; dn2.potemp(iigd) = gsw_pt0_from_t(dn2.asal(iigd), dn2.temp(iigd), dn2.press(iigd));
+up2.potemp = NaN+up2.press; up2.potemp(iigu) = gsw_pt0_from_t(up2.asal(iigu), up2.temp(iigu), up2.press(iigu));
+hn.fldnam = [hn.fldnam 'potemp']; hn.fldunt = [hn.fldunt 'degc90'];
 
-delete(m_add_nc(wkfile1d));
-delete(m_add_nc(wkfile2d));
-delete(m_add_nc(wkfile3d));
-delete(m_add_nc(wkfile1u));
-delete(m_add_nc(wkfile2u));
-delete(m_add_nc(wkfile3u));
+dn2.potemp1 = NaN+dn2.press; dn2.potemp1(iigd) = gsw_pt0_from_t(dn2.asal1(iigd), dn2.temp1(iigd), dn2.press(iigd));
+up2.potemp2 = NaN+up2.press; up2.potemp2(iigu) = gsw_pt0_from_t(up2.asal2(iigu), up2.temp2(iigu), up2.press(iigu));
+hn.fldnam = [hn.fldnam 'potemp1']; hn.fldunt = [hn.fldunt 'degc90'];
+
+dn2.potemp2 = NaN+dn2.press; dn2.potemp2(iigd) = gsw_pt0_from_t(dn2.asal2(iigd), dn2.temp2(iigd), dn2.press(iigd));
+up2.potemp1 = NaN+up2.press; up2.potemp1(iigu) = gsw_pt0_from_t(up2.asal1(iigu), up2.temp1(iigu), up2.press(iigu));
+hn.fldnam = [hn.fldnam 'potemp2']; hn.fldunt = [hn.fldunt 'degc90'];
+
+hn.comment = [hn.comment 'depth and potemp calculated using gsw\n'];
+
+%%%%% save %%%%%
+
+%now working on files to keep
+MEXEC_A.Mhistory_skip = 0;
+
+hnd = hn;
+if ~isempty(commentd)
+    hnd.comment = [commentd hnd.commentd];
+end
+mfsave(otfile1, dn2, hnd);
+
+hnu = hn;
+mfsave(otfile2, up2, hnu);
+
+
 delete(m_add_nc(wkfile_dvars));

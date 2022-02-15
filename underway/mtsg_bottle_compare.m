@@ -10,7 +10,7 @@ usecallocal = usecal; clear usecal
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 prefix = tsgpre;
 root_tsg = mgetdir(tsgpre);
-root_bot = mgetdir('tsg');
+root_bot = mgetdir('M_BOT_SAL');
 
 tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01_medav_clean']); % median averaged file
 if usecallocal
@@ -18,6 +18,7 @@ if usecallocal
 end
 [dt, ht] = mload(tsgfn, '/');
 salvar = varname_find({'salinity' 'psal' 'salinity_raw'},ht.fldnam);
+tempvar = varname_find({'housingtemp' 'temp_h' 'tstemp' 'temp_raw'},ht.fldnam);
 tempsst = varname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
 condvar = varname_find({'conductivity' 'cond'},ht.fldnam);
 
@@ -28,12 +29,20 @@ if usecallocal
         otherwise
             salvar = [salvar '_cal'];
     end
+    switch tempvar
+        case 'temp_raw'
+            tempvar = 'temperature_cal';
+        otherwise
+            tempvar = [tempvar '_cal'];
+    end
     calstr = 'cal';
 else
     calstr = 'uncal';
 end
 
-botfn = fullfile(root_bot, ['tsg_' mcruise '_all']);
+%***add code for temperature, other variables (fluo?)
+
+botfn = fullfile(root_bot, ['tsgsal_' mcruise '_all']);
 [db, hb] = mload(botfn, '/');
 db.time = m_commontime(db.time, hb.data_time_origin, ht.data_time_origin);
 %sort all variables

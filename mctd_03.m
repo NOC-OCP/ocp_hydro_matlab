@@ -50,6 +50,8 @@ if o_choice == 2 && ~sum(strcmp('oxygen2', h.fldnam))
    error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
 end
 
+%working on temporary workfiles
+MEXEC_A.Mhistory_skip = 1;
 
 %copy selected sensor to new names without sensor number
 MEXEC_A.MARGS_IN = {
@@ -107,9 +109,10 @@ hnew.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '
 
 iig = find(dnew.press>-1.495); %gsw won't work on p<=-1.495
 if length(iig)<length(dnew.press)
-    m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points and'
-        'you may also want to check in mctd_rawedit and set revars under mctd_rawedit case in'
-        ['opt_' mcruise ' in case pressure spikes need to be edited out']};
+    m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points'};
+    if min(dnew.press<-10)
+        m = [m; 'you may also want to check in mctd_rawshow and set rangelim under mctd_02';
+            'case in opt_' mcruise ' in case pressure spikes need to be edited out'];
     warning('%s\n',m{:});
 end
 dnew.psal = NaN+dnew.cond; dnew.psal(iig) = gsw_SP_from_C(dnew.cond(iig),dnew.temp(iig),dnew.press(iig));
@@ -130,6 +133,9 @@ dnew.potemp2 = NaN+dnew.cond; dnew.potemp2(iig) = gsw_pt0_from_t(dnew.asal2(iig)
 
 %save
 mfsave(wkfile_dvars, dnew, hnew);
+
+%now working on output files to keep
+MEXEC_A.Mhistory_skip = 0;
 
 % average to 1hz, output to _psal file
 MEXEC_A.MARGS_IN = {

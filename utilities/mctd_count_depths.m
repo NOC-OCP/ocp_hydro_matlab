@@ -17,29 +17,17 @@ function ndepths = mctd_count_depths(dsam,searchlim)
 wireout = dsam.wireout;
 upress = dsam.upress;
 
+kn = isnan(wireout) & isnan(upress);
+wireout(kn) = [];
+upress(kn) = [];
 
-num = length(wireout);
-
-knan = [];
 wokeep = [];
 upkeep = [];
 
-% remove if both of wireout and upress are nan
-for kl = 1:num
-    if isnan(wireout(kl)) && isnan(upress(kl))
-        knan = [knan; kl];
-    end
-end
-wireout(knan) = [];
-upress(knan) = [];
-
-num = length(wireout);
-
-
-while length(wireout) > 0
+while ~isempty(wireout)
     wo = wireout(1);
     up = upress(1);
-    kdup = find(abs(wireout-wo) <= searchlim | abs(upress-up) <= searchlim); % cycles that match current test value if wireout or upress
+    kdup = (abs(wireout-wo) <= searchlim | abs(upress-up) <= searchlim); % cycles that match current test value if wireout or upress
     wireout(kdup) = [];
     upress(kdup) = [];
     wokeep = [wokeep; wo];

@@ -103,25 +103,27 @@ switch scriptname
     case 'mctd_02'
         switch oopt
             case 'rawedit_auto'
-                crhelp_str = {'edits to the raw (or raw_cleaned, if that file already exists) data to be made in'
-                    'mctd_02 and in mctd_rawedit (before running the GUI)'
-                    'pvars is a cell listing variables to NaN when pumps are off, with the second column '
-                    'of the cell array setting the number of bad scans expected after pumps come back on; '
-                    'this branch only applies in mctd_02, if mctd_01 has been run with redoctm=1.'
-                    'sevars is a list of variables for which to edit out scans between the limits given by the second '
-                    'and third columns, inclusive (can use -inf or +inf); '
-                    'revars is a list of variables to NaN values out of the ranges given by the 2nd (lower limits) '
-                    'and 3rd (upper limits) columns of the array; '
-                    'dsvars is a list of variables to despike using m_median_despike, with thresholds given columns 2:end;'
-                    'ovars is a list of oxygen variables to which to apply alignment correction (*** all of them presumably?)'
-                    'all default to empty (no automatic edits at this stage) '
-                    'however, if redoctm is true, it is presumably because you want to use at least one of '
-                    'pvars, sevars, revars, dsvars to edit the raw data before reapplying the cell thermal mass correction'};
-                castopts.pvars = {};
-                castopts.sevars = [];
-                castopts.revars = {};
-                castopts.dsvars = {};
-                castopts.ovars = {}; 
+                crhelp_str = {'Edits to the raw (or raw_cleaned, if that file already exists) data to be made in'
+                    'mctd_02 and in mctd_rawedit (before running the GUI):'
+                    'castopts.pumpsNaN.var1 = N gives the number of bad scans N expected for variable var1'
+                    'after pumps come back on;'
+                    'castopts.badscans.var1 = [S1 S2] gives the range of scans over which to NaN variable var1;'
+                    'castopts.rangelim.var1 = [V1 V2] gives the range of acceptable values for variable var1;'
+                    'castopts.despike.var1 = [T1 ... Tn] gives the successive thresholds T1 to Tn for '
+                    'applying median despiking to variable var1.'
+                    'e.g.:'
+                    'castopts.pumpsNaN.temp1 = 12; '
+                    'castopts.pumpsNaN.cond1 = 12; '
+                    'castopts.pumpsNaN.sbe_oxygen2 = 8*24'
+                    'castopts.rangelim.press = [-10 8000];'
+                    'castopts.despike.fluor = [0.3 0.2 0.2];'
+                    'All default to not set (no action).'};
+                if exist('castopts','var')
+                    if isfield(castopts,'pumpsNaN'); castopts = rmfield(castopts,'pumpsNaN'); end
+                    if isfield(castopts,'badscans'); castopts = rmfield(castopts,'badscans'); end
+                    if isfield(castopts,'rangelim'); castopts = rmfield(castopts,'rangelim'); end
+                    if isfield(castopts,'despike'); castopts = rmfield(castopts,'despike'); end
+                end
             case 'raw_corrs'
                 crhelp_str = {'flags for optional corrections to apply to the raw file (in this order): '
                     'dooxyrev (default 0), if true, run moxyhyst_rev to undo the hysteresis '
@@ -144,7 +146,7 @@ switch scriptname
                 castopts.oxyrev.H3 = 1450;
                 crhelp_str = {'sets three parameters to pass to mcoxyhyst; defaults to standard SBE processing values.'
                     'H1, H2, H3 can each be scalar, or you can use d.press to make any/all a vector dependent on pressure; '
-                    'they can also be set differently for e.g. oxygen_sbe1 and oxygen_sbe2.'};
+                    'to use different parameters for e.g. oxygen_sbe1 and oxygen_sbe2, use cell arrays'};
                 castopts.oxyhyst.H1 = -0.033;
                 castopts.oxyhyst.H2 = 5000;
                 castopts.oxyhyst.H3 = 1450;
@@ -167,7 +169,10 @@ switch scriptname
                 castopts.docal.oxygen = 0; 
                 castopts.docal.fluor = 0; 
                 castopts.docal.transmittance = 0;
-                if isfield(castopts,'calstr'); castopts = rmfield(castopts,'calstr'); end
+                if isfield(castopts,'calstr')
+                    %no default
+                    castopts = rmfield(castopts,'calstr'); 
+                end
         end
         %%%%%%%%%% end mctd_02 %%%%%%%%%%
         
@@ -186,20 +191,11 @@ switch scriptname
                     'if there is only one oxygen sensor, keep the default (1).'};
                 o_choice = 1;
                 stns_alternate_o = [];
-            case '24hz_edit'
-                crhelp_str = {'for each row of cell array badscans24 ({''variable'' scanlo scanhi}, default {}), '
-                    'NaN variable between scanlo and scanhi (inclusive); '
-                    'for each row of switchscans24 (same form and default), paste secondary sensor values for '
-                    'that variable into primary sensor variable between scanlo and scanhi (inclusive). if you '
-                    'list cond you must also list temp and vice versa. if the switchscans24 variable has only one '
-                    'sensor, it is ignored.'};
-                badscans24 = {};
-                switchscans24 = {};
             case '24hz_interp'
                 crhelp_str = {'flag interp24 sets whether to interpolate over gaps in 24 hz data; if 1, variable '
                     'maxgap (default: 12) is required to set maximum number of missing scans to fill. interp24 defaults to 0 for '
                     'pre-dy113 cruises, jc191/192, and dy120/129, and 1 for dy113, jc211, and subsequent cruises'};
-                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 | sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191';'jc192';'dy120';'dy129'}))
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 || sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191';'jc192';'dy120';'dy129'}))
                     interp24 = 0;
                 else
                     interp24 = 1; maxgap = 12;
@@ -215,9 +211,8 @@ switch scriptname
     case 'mdcs_01'
         switch oopt
             case 'kbot'
-                crhelp_str = {'kbot sets the index of the bottom; it defaults to the first index where '
-                    'p==max(p), where p is pressure from the 1hz _psal file.'};
-                kbot = min(find(d1.press==max(d1.press)));
+                crhelp_str = {'place to overwrite kbot, the index of the bottom of cast'
+                    '(defaults to max(press))'};
         end
         %%%%%%%%%% end mdcs_01 %%%%%%%%%%
         
@@ -233,11 +228,12 @@ switch scriptname
                     'ignore/tolerate if so.'};
                 doloopedit = 0;
                 ptol = 0.08; %default is not to apply, but this would be the default value if you did
+                spdtol = 0.24; %default value from SBE program
             case 'interp2db'
                 crhelp_str = {'flag interp2db determines whether to fill gaps in 2 dbar averaged data or not. for cruises '
                     'before 2020, and for jc191/192 and dy120/129 it defaulted to 1; for dy113 and subsequent cruises it defaults '
                     'to 0, as short gaps are instead filled in 24hz data (and large gaps shouldn''t be filled)'};
-                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 | sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191','jc192','dy120','dy129'}))
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 || sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191','jc192','dy120','dy129'}))
                     interp2db = 1; %filling gaps in 2dbar data used to be standard
                 else
                     interp2db = 0;
@@ -302,8 +298,8 @@ switch scriptname
         %%%%%%%%%% end mctd_checkplots %%%%%%%%%%
         
         
-        %%%%%%%%%% populate_station_depths %%%%%%%%%%
-    case 'populate_station_depths'
+        %%%%%%%%%% best_station_depths %%%%%%%%%%
+    case 'best_station_depths'
         switch oopt
             case 'depth_recalc'
                 crhelp_str = {'recalcdepth_stns (default []) lists stations for which to recalculate depths '
@@ -323,18 +319,9 @@ switch scriptname
                 replacedeps = [];
                 stnmiss = [];
         end
-        %%%%%%%%%% end populate_station_depths %%%%%%%%%%
+        %%%%%%%%%% end best_station_depths %%%%%%%%%%
         
-        
-        %%%%%%%%%% ctd_evaluate_sensors %%%%%%%%%%
-    case 'ctd_evaluate_sensors'
-        switch oopt
-            case {'tsensind','csensind','osensind'}
-                %***
-                sensind = {1:length(d.statnum)}; %default: no sensors changed out
-        end
-        %%%%%%%%%% end ctd_evaluate_sensors %%%%%%%%%%
-        
+                
     case 'mctd_addvars'
         switch oopt
             case 'newvars'

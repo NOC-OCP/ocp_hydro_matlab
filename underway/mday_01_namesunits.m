@@ -25,6 +25,7 @@ switch MEXEC_G.Mshipdatasystem
     case 'rvdas'
         nn.em120.new = {'swath_depth'}; nn.em120.old = {'waterdepth'};
         nn.ea600.new = {'depth_uncor'}; nn.ea600.old = {'waterdepth'};
+        nn.singleb.new = {'depth_uncor'}; nn.singleb.old = {'waterdepth'};
         nn.surfmet.old = {'windspeed_raw';'winddirection_raw'}; nn.surfmet.new = {'relwind_spd_raw';'relwind_dirship_raw'};
         nu.surfmet.name = {'relwind_dirship'}; nu.surfmet.unit = {'degrees relative to ship 0 = from bow'};
 end

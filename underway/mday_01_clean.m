@@ -37,7 +37,7 @@ mdocshow(mfilename, ['performs any automatic cleaning/editing/averaging from ' a
 
 prefix = [abbrev '_' mcruise '_d' day_string];
 infile = fullfile(root_out, [prefix '_raw']);
-otfile = fullfile(root_out, prefix '_edt']);
+otfile = fullfile(root_out, [prefix '_edt']);
 wkfile = ['wk_' prefix '_' mfilename '_' datestr(now,30)];
 
 
@@ -60,7 +60,7 @@ if exist([infile '.nc']) %only if there is a raw file for this day
        
    % apply adjustments
    mday_01_fcal %factory calibrations as specified in opt_cruise
-   if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600'}))
+   if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb'}))
        mday_01_cordep %carter table soundspeed correction, go from depth_uncor to depth
    end
     

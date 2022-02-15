@@ -1,11 +1,10 @@
-%median average bathymetry, then add data from one file to another by
-%interpolation for comparison and editing
+%median average bathymetry
 
-iis = find(strcmp('sim', shortnames) | strncmp('ea6',shortnames,3));
-iim = find(strncmp('em12', shortnames, 4));
+[~,iis,~] = intersect(shortnames,{'sim' 'ea600' 'ea640' 'singleb'});
+[~,iim,~] = intersect(shortnames,{'em120' 'em122' 'multib'});
 iss = 0; ism = 0;
 
-if length(iis)>0
+if ~isempty(iis)
     filesbin = fullfile(root_u, udirs{iis}, [shortnames{iis} '_' mcruise '_d' daystr '_edt.nc']);
     filesbot = fullfile(root_u, udirs{iis}, [shortnames{iis} '_' mcruise '_d' daystr '_edt_av.nc']);
     if exist(filesbin,'file')
@@ -17,7 +16,7 @@ if length(iis)>0
     end
 end
 
-if length(iim)>0
+if ~isempty(iim)
     filembin = fullfile(root_u, udirs{iim}, [shortnames{iim} '_' mcruise '_d' daystr '_edt.nc']);
     filembot = fullfile(root_u, udirs{iim}, [shortnames{iim} '_' mcruise '_d' daystr '_edt_av.nc']);
     if exist(filembin,'file')
@@ -30,6 +29,6 @@ if length(iim)>0
 end
 
 docstr = ['5-minute median average bathymetry streams'];
-if iss | ism
+if iss || ism
     mdocshow(mfilename, docstr);
 end

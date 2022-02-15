@@ -1,5 +1,8 @@
-function udirs = mtsdirs();
+function udirs = muwaydirs(Mshipdatasystem)
 
+switch Mshipdatasystem
+
+    case {'scs' 'techsas'}
 %nav streams
 udirsn = {
      'adupos'              'nav/adu'
@@ -86,3 +89,40 @@ udirso = {
         };
 
 udirs = [udirsn; udirso]; clear udirsn udirso
+
+    case 'rvdas'
+
+            udirs = {
+        'dopcnav'    fullfile('nav','cnav')
+        'poscnav'    fullfile('nav','cnav')
+        'vtgcnav'    fullfile('nav','cnav')
+        'posfugro'   fullfile('nav','fugro')
+        'hdtgyro'    fullfile('nav','gyro')
+        'attpmv'     fullfile('nav','pmv')
+        'hdtpmv'     fullfile('nav','pmv')
+        'pospmv'     fullfile('nav','pmv')
+        'vtgpmv'     fullfile('nav','pmv')
+        'posranger'  fullfile('nav','ranger')
+        'attsea'     fullfile('nav','sea')
+        'hdtsea'     fullfile('nav','sea')
+        'possea'     fullfile('nav','sea')
+        'dopsea'     fullfile('nav','sea')
+        'vtgsea'     fullfile('nav','sea')
+        'tsg'        fullfile('met','tsg')
+        'surfmet'    fullfile('met','surfmet')
+        'windsonic'  fullfile('met','sonic')
+        'winch'      fullfile('ctd','WINCH')
+        'ea600'      fullfile('bathy','ea600')
+        'em120'      fullfile('bathy','em120')
+        'singleb'    fullfile('bathy','singleb')
+        'singleb_t'  fullfile('bathy','singleb')
+        'multib'     fullfile('bathy','multib')
+        'multib_t'   fullfile('bathy','multib')
+        'envhumid'   fullfile('uother','env')
+        'envtemp'    fullfile('uother','env')
+        'gravity'    fullfile('uother','gravity')
+        'logchf'     fullfile('uother','chf')
+        'logskip'    fullfile('uother','skip')
+        'mag'        fullfile('uother','mag')
+        };
+end

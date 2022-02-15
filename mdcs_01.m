@@ -1,34 +1,49 @@
-% mdcs_01: create empty data cycles file, if one does not already exist
+% mdcs_01: find bottom of cast
 %
 % Use: mdcs_01        and then respond with station number, or for station 16
 %      stn = 16; mdcs_01;
 %
-% The input list of variable names, example filename dcs_varlist.csv
-%    is a comma-delimited list of vars and units to be added to under the
-%    header varname, varunit (but probably you don't need to edit)
+% dy146 ylf added start of cast estimate
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['finds scan number corresponding to bottom of cast, writes to dcs_' mcruise '_' stn_string '.nc']);
 
 % resolve root directories for various file types
-root_templates = mgetdir('M_TEMPLATES');
 root_ctd = mgetdir('M_CTD');
 
-% get bottom index
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
 infile0 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
+
+% guess bottom index: max 1hz pressure
 [d1, h1] = mloadq(infile1,'time','scan','press',' ');
-d24 = mloadq(infile0,'scan',' ');
+kbot = find(d1.press==max(d1.press),1,'first');
+% or as set in cruise options file
 scriptname = mfilename; oopt = 'kbot'; get_cropt
 
-%get variables to save
-clear ds statnum dc_bot scan_bot press_bot time_bot dc24_bot
+% guess start index: point farthest above previous max pressure
+pressd = d1.press(1:min(kbot,3600)); %for deep casts, square matrix for whole downcast would be too big, so limit search to first hour
+pressd = pressd(:);
+p_minus_maxprev = pressd' - max(triu(repmat(pressd,1,kbot))));
+[mnd, kstart] = min(p_minus_maxprev);
+% or as set in cruise options file
+scriptname = mfilename; oopt = 'kstart'; get_cropt
+
+%variables to save
+clear ds hnew
 ds.statnum = stnlocal;
 ds.dc_bot = kbot;
 ds.scan_bot = floor(d1.scan(ds.dc_bot));
 ds.press_bot = d1.press(ds.dc_bot);
 ds.time_bot = d1.time(ds.dc_bot);
-ds.dc24_bot = min(find(d24.scan >= ds.scan_bot));
+ds.dc_start = kstart;
+ds.scan_start = floor(d1.scan(ds.dc_start));
+ds.press_start = d1.press(ds.dc_start);
+ds.time_start = d1.time(ds.dc_start);
+
+%corresponding indices in 24hz file
+d24 = mloadq(infile0,'scan',' ');
+ds.dc24_bot = find(abs(d24.scan-ds.scan_bot),1,'first');
+ds.dc24_start = find(abs(d24.scan-ds.scan_start),1,'first');
 
 m = ['Bottom of cast is at dc ' sprintf('%d',ds.dc_bot) ' pressure ' sprintf('%8.1f',ds.press_bot) ' and scan ' sprintf('%d',ds.scan_bot)];
 fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
@@ -37,8 +52,12 @@ fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 dataname = ['dcs_' mcruise '_' stn_string];
 otfile = fullfile(root_ctd, dataname);
 
-varnames = {'statnum' 'time_bot' 'dc_bot' 'scan_bot' 'press_bot' 'dc24_bot'};
-varunits = {'number' 'seconds' 'number' 'number' 'dbar' 'number'};
+varnames = fieldnames(ds);
+varunits = repmat({'number'},size(varnames));
+istime = strncmp('time', varnames, 4);
+varunits(istime) = {'seconds'};
+ispress = strncmp('press', varnames, 5);
+varunits(ispress) = {'dbar'};
 
 MEXEC_A.Mprog = mfilename;
 if exist(m_add_nc(otfile),'file')

@@ -38,7 +38,7 @@ switch scriptname
                 end
         end
         %%%%%%%%%% end ship (not a script) %%%%%%%%%%
-
+        
         %%%%%%%%%% bathy (not a script) %%%%%%%%%%
     case 'bathy'
         switch oopt
@@ -47,7 +47,7 @@ switch scriptname
         end
         %%%%%%%%%% end bathy (not a script) %%%%%%%%%%
         
-                
+        
         %%%%%%%%%% m_daily_proc %%%%%%%%%%
     case 'm_daily_proc'
         switch oopt
@@ -62,26 +62,22 @@ switch scriptname
                         uway_excludes = {'gravity';'mag';'winch'};
                 end
             case 'comb_uvars'
-                crhelp_str = {'umtypes lists types of operations to perform combining multiple '
-                    'appended underway files. Default is {''bathy''}, to interpolate the swath '
-                    'centre beam depth into the single-beam file, and vice versa; for techsas, '
-                    'and curently for rvdas, default also includes ''tsgmet'', to combine the '
-                    'tsg and surfmet variables (techsas) or the digital sonic anemometer and surfmet '
-                    'variables (rvdas) in a single file.'};
-                umtypes = {'bathy'};
-                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'}))
-                    umtypes = [umtypes 'tsgsurfmet'];
-                end
+                crhelp_str = {'umtypes lists types underway files to combine'
+                    'Default is {''bathy'' ''tsgsurfmet''}, to interpolate the swath centre'
+                    'beam depth into the single-beam file, and vice versa; and to'
+                    'add the tsg (and for rvdas windsonic) variables into the surfmet file,'
+                    '(re)calculating salinity from conductivity and housing temperature.'}; 
+                umtypes = {'bathy' 'tsgsurfmet'};
         end
         %%%%%%%%%% end m_daily_proc %%%%%%%%%%
         
-                 %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
-     case 'mday_01_clean_av'
-         switch oopt
-             case 'pre_edit_uway'
-crhelp_str = {'place to do specific edits like patching in data from another source'};
-         end
-         %%%%%%%%%% end mday_01_clean_av %%%%%%%%%%
+        %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
+    case 'mday_01_clean_av'
+        switch oopt
+            case 'pre_edit_uway'
+                crhelp_str = {'place to do specific edits like patching in data from another source'};
+        end
+        %%%%%%%%%% end mday_01_clean_av %%%%%%%%%%
         
         %%%%%%%%%% mday_01_fcal %%%%%%%%%%
     case 'mday_01_fcal'
@@ -89,11 +85,16 @@ crhelp_str = {'place to do specific edits like patching in data from another sou
         switch oopt
             case 'uway_factory_cal'
                 crhelp_str = {'this is a place to include factory calibration coefficients to'
-                    'be applied to underway sensors: sensors_to_cal is a cell array list of sensors,'
-                    'and sensorcals is a corresponding list of calibration equations ***'
+                    'be applied to underway sensors: sensorcals is a structure giving'
+                    'calibration equations, as strings, for each variable e.g. '
+                    'sensorcals.fluo = ''y=(x1-0.082)*04.9;'';'
                     'sensorunits gives the corresponding units for data once the cals have been applied.'
-                    'sensors_to_cal defaults to empty ({}) meaning no action.s'};
-                        sensors_to_cal={};
+                    'xducer_offset gives the depth of the transducer for converting e.g.'
+                    'multib_t to multib (if not present; if multib already exists it will not be overwritten).'
+                    'both sensors_to_cal (and sensorcals and sensorunits) and xducer_offset'
+                    'should be set within a switch-case on abbrev. there are no default settings'};
+                clear sensorcals
+                xducer_offset = [];
         end
         %%%%%%%%%% end mday_01_fcal %%%%%%%%%%
         
@@ -130,7 +131,7 @@ crhelp_str = {'place to do specific edits like patching in data from another sou
                 crhelp_str = {'If usecal has not been set before calling mtsg_bottle_compare,'
                     'set here (default 0) to determine whether to inspect the calibrated (1) or'
                     'uncalibrated (0) salinities.'};
-                if ~exist('usecal'); usecal = 0; end
+                if ~exist('usecal','var'); usecal = 0; end
             case 'tsg_badsal'
                 crhelp_str = {'Place to NaN some of the bottle salinity points.'};
             case 'tsg_timebreaks'
@@ -144,8 +145,8 @@ crhelp_str = {'place to do specific edits like patching in data from another sou
         end
         %%%%%%%%%% end mtsg_bottle_compare %%%%%%%%%%
         
-        %%%%%%%%%% mtsg_cleanup %%%%%%%%%%
-    case 'mtsg_cleanup'
+        %%%%%%%%%% mtsg_medav_clean_cal %%%%%%%%%%
+    case 'mtsg_medav_clean_cal'
         switch oopt
             case 'tsg_editvars'
                 crhelp_str = {'editvars is a list of possible variables to edit (where they exist)'
@@ -158,30 +159,21 @@ crhelp_str = {'place to do specific edits like patching in data from another sou
             case 'tsg_badlims'
                 crhelp_str = 'kbadlims (default []) is an Nx2 vector of start and end datenums of bad times to NaN';
                 kbadlims = [];
-            case 'tsg_moreedit'
-                crhelp_str = {'Place to specify non-time-range based edits to tsg data.'};
-        end
-        %%%%%%%%%% end mtsg_cleanup %%%%%%%%%%
-        
-        
-        %%%%%%%%%% mtsg_medav_clean_cal %%%%%%%%%
-    case 'mtsg_medav_clean_cal'
-        switch oopt
+            case 'tsgcals'
+                crhelp_str = {'Set calibration functions to be applied to tsg variables, if'
+                    'corresponding flags are set to true. See help for mctd_02, ctdcals (in setdef_cropt_uway.m).'};
+                tsgopts.docal.temp = 0;
+                tsgopts.docal.cond = 0;
+                tsgopts.docal.fluor = 0;
+                if isfield(tsgopts,'calstr')
+                    %no default
+                    tsgopts = rmfield(tsgopts,'calstr');
+                end
         end
         %%%%%%%%%% end mtsg_medav_clean_cal %%%%%%%%%%
         
-        %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
-    case 'tsgsal_apply_cal'
-        switch oopt
-            case 'tsgsaladj'
-                crhelp_str = {'Place to set salout, adjusted tsg salinity, based on salin,'
-                    'existing tsg salinity. Default is salout = salin.'};
-                salout = salin;
-        end
-        %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
-        
         %%%%%%%%%% mtsg_merge_and_listing %%%%%%%%%%
-    case 'mtsg_merge_and_listing'
+    case 'mtsg_merge_and_listing' %***is this mtsgsurfmet_merge?
         switch oopt
             case 'tsgmetfiles'
                 tsgfile = fullfile(root_tsg, ['tsg_' mcruise '_01_medav_clean_cal.nc']);

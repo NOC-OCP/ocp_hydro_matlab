@@ -138,8 +138,8 @@ switch scriptname
     case 'mday_01_fcal'
         switch oopt
             case 'uway_factory_cal'
-                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'})) && isempty(sensors_to_cal)
-                    warning('do factory calibrations need to be applied to your datastream? for techsas and scs surfmet, probably so')
+                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'})) && ~exist('sensorcals','var')
+                    warning('do factory calibrations need to be applied to your datastream? for techsas or rvdas surfmet, probably so')
                 end
         end
         %%%%%%%%%% end mday_01_fcal %%%%%%%%%%

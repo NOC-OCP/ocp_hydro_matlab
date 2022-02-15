@@ -19,7 +19,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 year = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
 
 if ~exist('days','var')
-    days = floor(datenum(now)-datenum(year,1,1)); %default: yesterday
+    days = floor(now-datenum(year,1,1)); %default: yesterday
 end
 
 if ~exist('restart_uway_append','var'); restart_uway_append = 0; end
@@ -33,96 +33,72 @@ root_u = MEXEC_G.mexec_data_root;
 scriptname = mfilename; oopt = 'excludestreams'; get_cropt
 
 if exist('uway_proc_list', 'var') %only from this list
-    iik = [];
-    for sno = 1:size(uway_proc_list,1)
-        ii = find(strcmp(uway_proc_list{sno}, udirs(:,1))); iik = [iik; ii];
+    [~,iik,~] = intersect(udirs(:,1),uway_proc_list);
+    udirs = udirs(iik,:);
+else
+    if exist('uway_excludes','var')
+    [~,iie,~] = intersect(udirs(:,1), uway_excludes);
+    udirs(iie,:) = [];
     end
-    udirs = udirs(iik, :);
-    
-elseif exist('uway_excludes','var') | exist('uway_excludep','var') %whole list except excluded
-    iie = [];
-    for sno = 1:size(udirs,1)
-        if exist('uway_excludes','var') & sum(strcmp(udirs{sno,1}, uway_excludes))
-            iie = [iie; sno];
-        end
-        if exist('uway_excludep', 'var')
-            for no = 1:size(uway_excludep,1)
-                if length(strfind(udirs{sno,1}, uway_excludep{no}))>0; iie = [iie; sno]; end
-            end
+    if exist('uway_excludep','var')
+        iie = [];
+        for no = 1:size(uway_excludep,1)
+            if ~isempty(strfind(udirs{sno,1}, uway_excludep{no})); iie = [iie; sno]; end
         end
     end
-    udirs(iie, :) = [];
-    
+    udirs(iie,:) = [];
 end
 shortnames = udirs(:,1); streamnames = udirs(:,3); udirs = udirs(:,2);
 
-%merging variables from one file into another
-scriptname = mfilename; oopt = 'comb_uvars'; get_cropt 
-
 %%%%% loop through processing steps for list of days %%%%%
+
+%which variables to merge from one file into another
+scriptname = mfilename; oopt = 'comb_uvars'; get_cropt 
 
 for daynumber = days
     daystr = sprintf('%03d', daynumber);
     
+    loadstatus = zeros(1,length(shortnames));
     for sno = 1:length(shortnames)
         
         %load
-        mday_01(streamnames{sno}, shortnames{sno}, daynumber, year);
+        loadstatus(sno) = mday_01(streamnames{sno}, shortnames{sno}, daynumber, year);
+        if loadstatus(sno)==1 
+            %did not find directory in MEXEC_G.MDIRLIST, go to next shortname after single warning
+            continue
+        end
         
         %apply additional processing and cleaning for some streams
         mday_01_clean(shortnames{sno}, daynumber);
         
     end
     
-    %merge bathymetry streams with each other
+    %merge bathymetry streams with each other; they are edited day by day,
+    %so do merge at this stage
     if sum(strcmp('bathy', umtypes))
         mbathy_av
         mbathy_merge
     end
     
-    % compute salinity and add to tsg file
-    if sum(strcmp('tsgsal', umtypes))
-        mday_01_tsgsal %***selection of temperature variable to use?
-    end
-    
-    for sno = 1:length(shortnames)
-        
-        %update appended files
-        if daynumber==days(1) & restart_uway_append
-            if strcmp(MEXEC_G.Mshipdatasystem, 'scs')
-                delete(fullfile(root_u,'scs_mat',udirs{sno}));
-            end
-            warning(['clobbering ' shortnames{sno} '_' mcruise '_01.nc'])
-            delete(fullfile(root_u, udirs{sno}, [shortnames{sno} '_' mcruise '_01.nc']));
-        end
-        mday_02(shortnames{sno}, daynumber);
-    end
-    
 end
-clear restart_uway_append
 
-return
+%append to _01 files
+m_uway_append(shortnames, udirs, days, restart_uway_append)
+clear restart_uway_append
 
 %%%%% further processing %%%%%
 
-mbest_all %get best nav stream into bst_ file
+mnav_best %get best nav stream into bst_ file
 
-%add data from one file to another by interpolation for comparison and
-%editing, as specified in cruise options
+try
+    mtsg_medav_clean_cal
+catch
+end
+
+%merge other related files into surfmet; tsg files are edited for the
+%appended series, so do merge on appended files
 if sum(strcmp('tsgsurfmet', umtypes))
     mtsgsurfmet_merge
 end
 
 mtruew_01
-% % % % % % % % % % 
-% % % % % % % % % % try
-% % % % % % % % % %     mtsg_medav_clean_cal
-% % % % % % % % % % catch
-% % % % % % % % % %     warning('no tsg file, not running mtsg_medav_clean_cal')
-% % % % % % % % % % end
-% % % % % % % % % % 
-% % % % % % % % % % switch MEXEC_G.Mshipdatasystem
-% % % % % % % % % %     case 'scs'
-% % % % % % % % % %         scriptname = mfilename; oopt = 'uwayallmat'; get_cropt
-% % % % % % % % % %         if allmat; update_allmat; end
-% % % % % % % % % % end

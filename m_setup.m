@@ -24,6 +24,7 @@ MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will writ
 MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_athome', '', etc.
 MEXEC.ix_ladcp = 0; %set to 1 if processing LADCP data with LDEO IX software
 MEXEC.force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
+MEXEC.rvdas_ip = '192.168.62.12';
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
@@ -31,7 +32,7 @@ disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec '])
 
 %look for mexec base directory
 d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if ~isempty(ii); d = d(1:ii-1); else; d = []; end
-mpath = {['/local/users/pstar/cruise'];
+mpath = {'/local/users/pstar/cruise';
     ['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
     ['/noc/mpoc/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
     ['/local/users/pstar/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
@@ -236,7 +237,7 @@ switch MEXEC_G.Mshipdatasystem
     case 'rvdas'
         MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
         MEXEC_G.RVDAS_CSVROOT = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-        MEXEC_G.RVDAS_MACHINE = ['rvdas.' MEXEC_G.Mship '.local'];
+        MEXEC_G.RVDAS_MACHINE = MEXEC.rvdas_ip;
         MEXEC_G.RVDAS_USER = 'rvdas';
         MEXEC_G.RVDAS_DATABASE = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
 end

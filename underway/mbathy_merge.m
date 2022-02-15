@@ -1,7 +1,7 @@
-%median average bathymetry, then add data from one file to another by
+%add data from one file to another by
 %interpolation for comparison and editing
 
-if exist(filesbot,'file') & exist(filembot,'file')
+if ism && iss
     
     docstr = ['merge swath_depth and single-beam depth onto each other''s files'];
     mdocshow(mfilename, docstr);

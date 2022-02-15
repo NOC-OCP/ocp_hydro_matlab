@@ -1,34 +1,47 @@
-function [dcal, hcal] = ctd_apply_cals(d0, h0, docal, calstr);
-% [dcal, hcal] = ctd_apply_cals(d0, h0, docal, calstr);
+function [dcal, hcal] = m_apply_calibrations(d0, h0, calstr)
+% [dcal, hcal] = m_apply_calibrations(d0, h0, calstr);
 %
 % d0 and h0 are the uncalibrated data and header loaded from mstar file
 % using mload
-% docal is a structure with fields indicating which variables to calibrate
-% calstr is a structure with fields giving (in string form) calibrations
-% for each sensor for this cruise, as well as (optionally) a message for
-% the comment field
+% calstr is a structure:
+%     fieldnames indicate sensors to be calibrated
+%     each field of calstr has 1-2 fields:
+%         required: cruisename gives calibration function, as a string,
+%         setting dcal.(sensor) as a function of d0.(sensor) and possibly
+%             other fields in d0 or dcal
+%         optional: msg gives information on the source of calibration
 % e.g.
-%     docal.temp = 1;
-%     docal.cond = 0;
-%     calstr.temp1.jc200 = 'dcal.temp1 = d0.temp1+1e-3;'
-%     calstr.temp1.msg = 'from SBE35 comparison stations 1-30';
-%     calstr.temp2.jc200 = 'dcal.temp1 = d0.temp1-1e-4*d0.statnum;'
-%     calstr.temp2.msg = 'from SBE35 comparison stations 1-30';
-%     calstr.cond1.jc200 = 'dcal.cond1 = d0.cond1.*(1+2.5e-3)/35;'
-%     calstr.cond1.msg = 'from bottle salinity stations 1-22';
-%     [dcal, hcal] = ctd_apply_cals(d0, h0, docal, calstr);
-%  would output dcal containing adjusted temp1 and temp2 only
+%   >>  calstr.temp1.jc200 = 'dcal.temp1 = d0.temp1+1e-3;'
+%   >>  calstr.temp1.msg = 'from SBE35 comparison stations 1-30';
+%   >>  calstr.temp2.jc200 = 'dcal.temp1 = d0.temp1-1e-4*d0.statnum;'
+%   >>  calstr.temp2.msg = 'from SBE35 comparison stations 1-30';
+%   >>  calstr.cond1.jc200 = 'dcal.cond1 = d0.cond1.*(1+2.5e-3)/35;'
+%   >>  calstr.cond1.msg = 'from bottle salinity stations 1-22';
+%   >>  calstr.oxygen1.jc200 = 'dcal.oxygen1 = d0.oxygen1.*(1.005+1e-2*dcal.temp1)+d0.statnum/5;';
+%   >>  [dcal, hcal] = ctd_apply_cals(d0, h0, docal, calstr);
+% would output dcal containing adjusted temp1, temp2, cond1, and oxygen1
+%     only, and
+% hcal containing dcal fieldnames and units, plus a comment field
+%     incorporating the msg information from all these sensors
+% note that in this example the oxygen calibration depends on *calibrated*
+%     temperature; to do this it is necessary that temp1 comes before
+%     oxygen1 in calstr, as calibrations will be applied and fields of
+%     dcal created sequentially
 %
-% if you want e.g. an oxygen calibration that is a function of temperature
-% as calibrated here, specify that in calstr, e.g.
-%     calstr.oxygen1.jc200 = 'dcal.oxygen1 = d0.oxygen1*(1.005+1e-2*dcal.temp1)+d0.statnum/5;'
-% and make sure calstr.temp1 is set before calstr.oxygen1
-%
-% see mctd_02
+% see mctd_02, ctd_evaluate_sensors, and mtsg_medav_clean_cal for calling
+%     examples; 
+% see mctd_02 case in setdef_cropt_cast or opt_* and mtsg_medav_clean_cal
+%     case in setdef_cropt_uway or opt_* for calstr setting examples
 
 m_common
 
 hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
+
+if ~isstruct(calstr) || isempty(calstr)
+    dcal = []; hcal = [];
+    warning('no calibrations to apply, returning empty')
+    return
+end
 
 calsens = fieldnames(calstr);
 if length(unique(calsens))<length(calsens)
@@ -37,7 +50,7 @@ end
 
 for sno = 1:length(calsens)
     
-    if ~isempty(str2num(calsens{sno}(end))) %e.g. oxygen1, oxygen2
+    if ~isempty(str2double(calsens{sno}(end))) %e.g. oxygen1, oxygen2
         calvar = calsens{sno}(1:end-1);
         sensnum = calsens{sno}(end);
     else

@@ -1,5 +1,6 @@
-% mdcs_03: find scan number corresponding to start and end of file
-%          use this to populate the file dcs_[cruise]_[station]
+% mdcs_03g: graphical user interface to check scan numbers corresponding to
+% start and bottom of cast (estimated in mdcs_01) and find scan number
+% corresponding to end of cast
 %
 % Use: mdcs_03        and then respond with station number, or for station 16
 %      stn = 16; mdcs_03;
@@ -7,10 +8,10 @@
 % jc159 ylf added circle for bottom scan/pressure
 % jc159 3 April2018 bak add option to identify bottom pressure scan if you
 % don't like the one it has chosen
-
+% dy146 ylf treat start of cast the same
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['interactively select start and end of cast, written to dcs_' mcruise '_' stn_string '.nc']);
+mdocshow(mfilename, ['interactively select (or confirm) start, bottom, and end of cast, written to dcs_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 
@@ -18,16 +19,10 @@ infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
 infile0 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
 otfile = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
 
-% pik data near surface for inspection
-hinctd = m_read_header(infile1);
-vnames = hinctd.fldnam;
-vnum = strmatch('press',vnames,'exact');
-if isempty (vnum)
-    m = 'press not found';
-    error(m)
+[d, h] = mloadq(infile1,'/');
+if ~sum(strcmp('press',h.fldnam))
+    error('press not found in 1hz file')
 end
-
-[d h] = mloadq(infile1,'/');
 d24 = mloadq(infile0, 'scan', 'time', 'press', ' ');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
@@ -46,23 +41,19 @@ pb = .1;
 pw = .8;
 ph = .13;
 
-%start here
-scan_start = 1;
-h = m_read_header(otfile);
-if sum(strcmp('scan_start',h.fldnam))
-    d0 = mloadq(otfile,'scan_start',' ');
-    if d0.scan_start>1
-        scan_start = d0.scan_start;
-    end
+%initial estimates
+scan_start = NaN;
+scan_bot = NaN;
+scan_end = NaN;
+dd = mloadq(otfile, '/');
+if isfield(dd, 'scan_start')
+    scan_start = dd.scan_start;
 end
-scan_bot = nan; kbot = nan;
-db = mloadq(otfile, 'scan_bot', 'press_bot', ' ');
-scan_end = max(d.scan);
-if sum(strcmp('scan_end',h.fldnam))
-    d0 = mloadq(otfile,'scan_end',' ');
-    if d0.scan_end<max(d.scan)
-        scan_end = d0.scan_end;
-    end
+if isfield(dd, 'scan_bot')
+    scan_bot = dd.scan_bot;
+end
+if isfield(dd, 'scan_end')
+    scan_end = dd.scan_end;
 end
 
 kfirst = 1;
@@ -94,25 +85,26 @@ while 1
             subplot('position',[pl pb+4*ph pw 2*ph])
             if isfield(d, 'pumps'); ii = find(d.pumps<1); else; ii = []; end %overplotting red if pumps not on. bak and ylf jr306, jan2015.
             plot(d.scan,-d.press,'k+-',d.scan(ii),-d.press(ii),'r+');
-            hold on ;grid on
-            plot(db.scan_bot,-db.press_bot,'co','markersize',10,'markerfacecolor','c');
+            hold on; grid on
+            plot(scan_bot,-d.press(d.scan==scan_bot),'cp','markersize',10,'markerfacecolor','c');
+            plot(scan_start,-d.press(d.scan==scan_start),'c>','markersize',10,'markerfacecolor','c');
+            plot(scan_end,-d.press(d.scan==scan_end),'c<','markersize',10,'markerfacecolor','c');
             ha(1) = gca;
             if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('-press'); end
             %             set(gca,'ylim',plims);
-            ht = get(ha(1),'title'); %handle for title
-            set(ht,'string',infile1);
-            set(ht,'interpreter','none');
+            ht = get(ha(1),'title');
+            set(ht,'string',infile1,'interpreter','none');
             
             subplot('position',[pl pb+3*ph pw ph])
             plot(d.scan,d.cond1,'k+-');
-            hold on ;grid on
+            hold on; grid on
             plot(d.scan,d.cond2,'r+-');
             ha(2) = gca; set(ha(2),'YAxisLocation','right');
             ylabel('cond');
             
             subplot('position',[pl pb+2*ph pw ph])
             plot(d.scan,d.psal1,'k+-');
-            hold on ;grid on
+            hold on; grid on
             plot(d.scan,d.psal2,'r+-');
             ha(3) = gca;
             ylabel('psal')
@@ -148,13 +140,13 @@ while 1
         case 'ss'
             % select downcast start scan
             disp('select start scan on any panel');
-            [x y] = ginput(1);
+            [x, y] = ginput(1);
             scan_start = ceil(x)
             
         case 'sb'
             disp('select bottom scan on any panel');
             % select bottom scan
-            [x y] = ginput(1);
+            [x, y] = ginput(1);
             scan_bot = round(x)
             
         case 'se'
@@ -162,7 +154,7 @@ while 1
             disp('select end scan on any panel');
             disp('you may want to select based on T and C, and add oxy_end in cruise options');
             disp('file (under castpars, oxy_align) so that O will be truncated when it goes bad (earlier)');
-            [x y] = ginput(1);
+            [x, y] = ginput(1);
             scan_end = floor(x)
         case 'pp'
             kok = find(d.scan > scan_start & d.scan < scan_end);
@@ -173,7 +165,7 @@ while 1
             if isfield(d, 'pumps'); ii = find(d.pumps(kok)<1); else; ii = []; end %overplotting red if pumps not on. bak and ylf jr306, jan2015.
             plot(d.scan(kok),-d.press(kok),'k+-',d.scan(kok(ii)),-d.press(kok(ii)),'r+');
             hold on ;grid on
-            plot(db.scan_bot,-db.press_bot,'pc');
+            plot(scan_bot,-d.press(d.scan==scan_bot),'pc');
             ha(1) = gca;
             if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('press'); end
             %             ylabel('press');
@@ -219,47 +211,38 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%% end graphical part
 
 % find the data cycle numbers and other parameters
-scan = d.scan;
-clear ds
+clear ds hnew
 
-ds.dc_start = min(find(scan >= scan_start - 1));
-ds.scan_start = floor(d.scan(ds.dc_start));
-ds.press_start = d.press(ds.dc_start);
-ds.time_start = d.time(ds.dc_start);
+if isfinite(scan_start) && scan_start~=dd.scan_start
+    ds.dc_start = find(d.scan >= scan_start - 1, 1);
+    ds.scan_start = floor(d.scan(ds.dc_start));
+    ds.press_start = d.press(ds.dc_start);
+    ds.time_start = d.time(ds.dc_start);
+    ds.dc24_start = find(d24.scan >= scan_start - 1, 1);
+end
 
-ds.dc_end = max(find(scan <= scan_end + 1));
-ds.scan_end = floor(d.scan(ds.dc_end));
-ds.press_end = d.press(ds.dc_end);
-ds.time_end = d.time(ds.dc_end);
+if isfinite(scan_end) && scan_end~=dd.scan_end
+    ds.dc_end = find(d.scan <= scan_end + 1, 1, 'last');
+    ds.scan_end = floor(d.scan(ds.dc_end));
+    ds.press_end = d.press(ds.dc_end);
+    ds.time_end = d.time(ds.dc_end);
+    ds.dc24_end = find(d24.scan <= scan_end + 1, 1, 'last');
+end
 
-ds.dc24_start = min(find(d24.scan >= scan_start - 1));
-ds.dc24_end = max(find(d24.scan <= scan_end + 1));
-
-if isfinite(scan_bot)
-    ds.dc_bot = min(find(scan >= scan_bot));
+if isfinite(scan_bot) && scan_bot~=dd.scan_bot
+    ds.dc_bot = find(d.scan >= scan_bot, 1);
     ds.scan_bot = floor(d.scan(ds.dc_bot));
     ds.press_bot = d.press(ds.dc_bot);
     ds.time_bot = d.time(ds.dc_bot);
-    ds.dc24_bot = min(find(d24.scan >= scan_bot));
+    ds.dc24_bot = find(d24.scan >= scan_bot, 1);
 end
 
-clear hnew
 hnew.fldnam = fieldnames(ds)'; 
-hnew.fldunt = hnew.fldnam;
-for no = 1:length(hnew.fldnam)
-    ii = strfind(hnew.fldnam{no},'_');
-    pre = hnew.fldnam{no}(1:ii-1);
-    switch pre
-        case {'dc' 'dc24' 'scan'}
-            hnew.fldunt{no} = 'number';
-        case 'press'
-            hnew.fldunt{no} = 'dbar';
-        case 'time'
-            hnew.fldunt{no} = 'seconds';
-        otherwise
-            error('unknown dcs variable type');
-    end
-end
+hnew.fldunt = repmat({' '},size(hnew.fldnam));
+hnew.fldunt(strncmp('dc',hnew.fldnam,2)) = 'number';
+hnew.fldunt(strncmp('scan',hnew.fldnam,2)) = 'number';
+hnew.fldunt(strncmp('press',hnew.fldnam,5)) = 'dbar';
+hnew.fldunt(strncmp('time',hnew.fldnam,4)) = 'seconds';
 
 MEXEC_A.Mprog = mfilename;
 mfsave(otfile, ds, hnew, '-addvars');

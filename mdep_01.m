@@ -1,5 +1,5 @@
-% mdep_01: read water depth for ctd cast from station_depths_cruise.mat file
-%     produced by populate_station_depths based on (as specified by
+% mdep_01: read water depth for ctd cast from station_summary_cruise_all.nc
+%     produced by best_station_depths based on (as specified by
 %     opt_cruise) some or all of ldeo ladcp, combined ctd altimeter and
 %     depth readings, or depths noted in text file or specified in
 %     opt_cruise
@@ -14,11 +14,11 @@ mdocshow(mfilename, ['adds water depth from station_depths/station_depths_' mcru
 root_win = mgetdir('M_CTD_WIN');
 root_sal = mgetdir('M_BOT_SAL');
 root_ctd = mgetdir('M_CTD');
-root_dep = mgetdir('M_CTD_DEP');
+root_sum = mgetdir('sum');
 
-deps_fn = fullfile(root_dep, ['station_depths_' mcruise '.mat']);
-load(deps_fn);
-iis = find(bestdeps(:,1)==stnlocal);
+deps_fn = fullfile(root_sum, ['station_summary_' mcruise '_all.nc']);
+[d,h] = mloadq(deps_fn,'/');
+iis = find(d.statnum==stnlocal);
 
 if length(iis)==0
     warning([deps_fn ' does not contain depth for station ' stn_string '; not adding depth to any .nc files'])
@@ -46,7 +46,7 @@ else
    for kfile = 1:length(fn)
        if exist(m_add_nc(fn{kfile}),'file')
            try
-               mputdep(fn{kfile},bestdeps(bestdeps(:,1)==stnlocal,2))
+               mputdep(fn{kfile},d.cordep(iis))
            catch me
                warning(me.message)
            end

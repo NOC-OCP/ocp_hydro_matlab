@@ -1,22 +1,22 @@
-function bestdeps = populate_station_depths()
-% function bestdeps = populate_station_depths()
-% Prepare a .mat file with station depths for use in mdep_01
-% bak on jr281 April 2013%
+function bestdeps = best_station_depths(varargin)
+% function bestdeps = best_station_depths(stns,depth_source)
+% function bestdeps = best_station_depths(stns)
+% function bestdeps = best_station_depths(depth_source)
+% function bestdeps = best_station_depths()
 %
-% populate a file called 'station_depths_cruise.mat' with a single
-% array, bestdeps = [statnum depth]. Missing stations have a NaN as a
-% placeholder
+% find station depths for stations stns (default: all with a ctd*raw.nc
+%     file, or as specified in opt_cruise)
+% using specified depth source or sources (cell array) (default: from
+%     opt_cruise)
+%     depth_source = 'file': load from a text file
+%         either csv with column headers including statnum and depth
+%         or two columns no header, first column is statnum, second depth
+%     depth_source = 'ctd': calculate from CTD depth and altimeter reading
+%     depth_source = 'ladcp': load from IX LADCP .mat files
+%     depth_source = 'bathy': load from sim/ea600 bathymetry file
 %
-% tries to do this using specified depth_source
-%
-% depth_source = 'file': load from a text file
-%     either csv with column headers including statnum and depth
-%     or two columns no header, first column is statnum, second depth
-% depth_source = 'ctd': calculate from CTD depth and altimeter reading (will load and update station_depths.mat)
-% depth_source = 'ladcp': load from IX LADCP .mat file, creating or updating existing station_depths .mat file
-% depth_source = 'bathy': load from sim/ea600 bathymetry file
-%
-% Best results are from LADCP processing (depth_source=4) combining LADCP and CTD data
+% Where LADCP data are available and processed in combination with CTD
+%     data, that gives the best results 
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
@@ -24,37 +24,34 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 %find statnums with ctd data
 fn = dir(fullfile(mgetdir('M_CTD'), ['ctd_' mcruise '_*_raw.nc']));
 stns = struct2cell(fn); stns = cell2mat(stns(1,:)'); stns = str2num(stns(:,end-9:end-7));
-
-%output file of depths
-fnot = fullfile(mgetdir('M_CTD_DEP'), ['station_depths_' mcruise '.mat']);
-
-%load this if it already exists and extend if necessary, otherwise set up empty array
-if exist(fnot, 'file')
-    disp(['loading ' fnot]); load(fnot, 'bestdeps');
-    stnn = setdiff(stns, bestdeps(:,1));
-    if ~isempty(stnn)
-        bestdeps = [bestdeps; [stnn NaN+zeros(length(stnn),1)]];
-        [~,ii] = sort(bestdeps(:,1));
-        bestdeps = bestdeps(ii,:);
-    end
-else
-    bestdeps = [stns NaN+zeros(length(stns),2)];
-end
-
 %which stations need depths
 scriptname = mfilename; oopt = 'depth_recalc'; get_cropt
-ii0 = find(isnan(bestdeps(:,2)));
 if ~isempty(recalcdepth_stns)
-    ii0 = unique([ii0; find(ismember(bestdeps(:,1),recalcdepth_stns))]);
+    stns = intersect(stns, recalcdepth_stns);
 end
-bestdeps(ii0,2:3) = NaN;
 
 %preferred method(s) for calculating depths
 scriptname = mfilename; oopt = 'depth_source'; get_cropt
 
+%override with optional inputs if specified
+for no = 1:length(varargin)
+    if ischar(varargin{no}) || iscell(varargin{no})
+        depth_source = varargin{no};
+    elseif isnumeric(varargin{no})
+        stns = intersect(stns, varargin{no});
+    end
+end
+
+if ~iscell(depth_source)
+    depth_source = {depth_source};
+end
+
+%set up
+bestdeps = [stns NaN+zeros(length(stns),2)];
+
 %apply in order
 for sno = 1:length(depth_source)
-    if (strcmp(depth_source{sno},'file') & exist(fnintxt, 'file'))
+    if (strcmp(depth_source{sno},'file') && exist(fnintxt, 'file'))
         fnin = fnintxt;
     else
         fnin = [];
@@ -75,8 +72,6 @@ if ~isempty(replacedeps)
     if length(ia)<size(replacedeps(:,1)); error(['replacedeps repeats stations; check opt_' mcruise]); end
     bestdeps(ib,2) = replacedeps(ia,2);
 end
-
-save(fnot, 'bestdeps')
 
 
 function bestdeps = get_deps(bestdeps, depth_source, fnin)

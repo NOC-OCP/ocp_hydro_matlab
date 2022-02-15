@@ -16,44 +16,7 @@
 % first the names and directories list
 % several short names may correspond to the same data directories, but it is not likely that
 % more than 1-2 (besides quality message streams) will be in use on a given ship/cruise
-
-
-%%%%%% list streams with directories %%%%%%%
-
-if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'scs'}))
-    udirs = mtsdirs();
-else
-    %nav streams
-    udirs = {
-        'attpmv'     fullfile('nav','pmv')
-        'attsea'     fullfile('nav','sea')
-        'dopcnav'    fullfile('nav','cnav')
-        'dopsea'     fullfile('nav','sea')
-        'ea600'      fullfile('bathy','ea600')
-        'em120'      fullfile('bathy','em120')
-        'envhumid'   fullfile('uother','env')
-        'envtemp'    fullfile('uother','env')
-        'gravity'    fullfile('uother','gravity')
-        'hdtgyro'    fullfile('nav','gyro')
-        'hdtpmv'     fullfile('nav','pmv')
-        'hdtsea'     fullfile('nav','sea')
-        'logchf'     fullfile('uother','chf')
-        'logskip'    fullfile('uother','skip')
-        'mag'        fullfile('uother','mag')
-        'poscnav'    fullfile('nav','cnav')
-        'posdps'     fullfile('nav','dps')
-        'pospmv'     fullfile('nav','pmv')
-        'posranger'  fullfile('nav','ranger')
-        'possea'     fullfile('nav','sea')
-        'surfmet'    fullfile('met','surfmet')
-        'tsg'        fullfile('met','tsg')
-        'vtgcnav'    fullfile('nav','cnav')
-        'vtgpmv'     fullfile('nav','pmv')
-        'vtgsea'     fullfile('nav','sea')
-        'winch'      fullfile('ctd','WINCH')
-        'windsonic'  fullfile('met','sonic')
-        };
-end
+udirs = muwaydirs(MEXEC_G.Mshipdatasystem);
 
 
 %%%%%%% test that underway streams present match what's expected %%%%%%%
@@ -95,27 +58,28 @@ for kl = 1:length(am)
     end
 end
 fprintf(1,'\n%s\n\n','End of list')
-matlist(iim==0,:) = []; iim(iim==0) = [];
-
 
 
 %%%%%%% write m_udirs function using available underway streams %%%%%%%
 %%%%%%% and make directories as necessary %%%%%%%
 
-fid = fopen(fullfile(MEXEC.mexec_processing_scripts, 'underway', 'm_udirs.m'), 'w');
+upath = fileparts(mfilename('fullpath'));
+fid = fopen(fullfile(upath, 'm_udirs.m'), 'w');
 fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs();');
 fprintf(fid, 'udcruise = ''%s'';\n', MEXEC_G.MSCRIPT_CRUISE_STRING);
 fprintf(fid, '%s\n', 'udirs = {');
 
 for sno = 1:size(matlist,1)
     iid = iim(sno);
-    fprintf(fid, '''%s''    ''%s''    ''%s'';\n', udirs{iid,1}, udirs{iid,2}, matlist{sno,end});
-    if ~exist(fullfile(MEXEC_G.mexec_data_root, udirs{iid,2}), 'dir')
-        mkdir(fullfile(MEXEC_G.mexec_data_root, udirs{iid,2}));
+    if iid>0
+        fprintf(fid, '''%s''    ''%s''    ''%s'';\n', udirs{iid,1}, udirs{iid,2}, matlist{sno,end});
+        if ~exist(fullfile(MEXEC_G.mexec_data_root, udirs{iid,2}), 'dir')
+            mkdir(fullfile(MEXEC_G.mexec_data_root, udirs{iid,2}));
+        end
     end
 end
+matlist = matlist(iim>0,:);
 
 %wrap up
 fprintf(fid, '%s\n', '};');
 fclose(fid);
-addpath([MEXEC.mexec_processing_scripts])

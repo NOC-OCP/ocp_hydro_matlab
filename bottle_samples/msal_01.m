@@ -1,5 +1,5 @@
 % msal_01: read in the bottle salinities from digitized autosal log(s)
-% and save to sal_cruise_01.nc and sam_cruise_01.nc
+% and save to sal_cruise_01.nc, tsgsal_cruise_01.nc, and sam_cruise_01.nc
 %
 % Use: msal_01 
 %
@@ -32,7 +32,7 @@ dataname = ['sal_' mcruise '_01'];
 salfile = fullfile(mgetdir('M_CTD'), [dataname '.nc']);
 samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
-tsgfile = fullfile(mgetdir(tsgpre), ['tsg_' mcruise '_all.nc']);
+tsgfile = fullfile(mgetdir(tsgpre), ['tsgsal_' mcruise '_all.nc']);
 
 %get list of files to load
 scriptname = mfilename; oopt = 'salfiles'; get_cropt %list of files to load

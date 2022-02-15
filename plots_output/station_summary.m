@@ -24,6 +24,9 @@
 % picked up from file.
 %
 % ylf jc145 revised to set non-standard sample names and how to count them in opt_cruise
+%
+% ylf dy146 revised for optional input (list) stations_to_reload 
+% and to run best_station_depths (formerly populate_station_depths)
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
@@ -48,9 +51,12 @@ scriptname = mfilename; oopt = 'sum_stn_list'; get_cropt
 stnset = setdiff(stnall,stnmiss); stnset = stnset(:)'; %these are stations to include with ctd data
 stnall = unique([stnset(:); stnadd(:)]); stnall = stnall(:)'; %these are stations to include with or without ctd data
 
+if exist('stations_to_reload','var')
+    stnall = intersect(stnall, stations_to_reload);
+end
+
 %%%%% load data and save to mstar file %%%%%
-if ~exist('reload','var'); reload = 1; end
-if reload
+if ~isempty(stnall)
     
     if sum(strcmp('maxw',vars(:,1)))
         %figure out winch variable
@@ -93,7 +99,7 @@ if reload
     for k = stnset
         stnstr = sprintf('%03d',k);
         
-        %lat, lon, depths and altimeter
+        %lat, lon, ctd depths and altimeter
         fnsal = fullfile(root_ctd, ['ctd_' mcruise '_' stnstr '_psal']);
         [dpsal, hpsal] = mloadq(fnsal,'/');
         lat(k) = hpsal.latitude;
@@ -162,7 +168,7 @@ if reload
     scriptname = mfilename; oopt = 'sum_edit'; get_cropt; %edit depths, times, etc. not captured from CTD data
     
     %when not close enough to bottom to detect on altimeter
-    load(fullfile(mgetdir('ctd_dep'), ['station_depths_' mcruise]));
+    bestdeps = best_station_depths(stnall);
     [~,ia,ib] = intersect(statnum,bestdeps(:,1));
     cordep(ia) = bestdeps(ib,2);
     minalt((cordep-maxd)>99) = -9;
@@ -188,9 +194,6 @@ if reload
     ds.time_end = (ds.time_end - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
     mfsave(otfile2, ds, hnew);
     
-    %other info, like event number, station names, comments
-    scriptname = mfilename; oopt = 'sum_extras'; get_cropt
-    
 else
     
     disp('not regenerating station_summary file, just loading and printing table; clear reload or set to 0 to change this');
@@ -201,6 +204,10 @@ else
     end
     
 end
+
+%other info, like event number, station names, comments (strings can't
+%be saved as mstar variables)
+scriptname = mfilename; oopt = 'sum_extras'; get_cropt
 
 
 %%%%% write to ascii file %%%%%
