@@ -1,2 +1,4 @@
+*.asv
+*.swp
 ._*
 .DS_Store
