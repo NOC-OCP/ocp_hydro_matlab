@@ -80,7 +80,6 @@ function mfsave(filename, d, varargin)
 %
 
 m_common %brings in MEXEC_G
-stn = 0; minit; %does something that initialises MEXEC_A.MARGS_IN_LOCAL?***
 
 %%%%% handle input arguments %%%%%
 
@@ -150,9 +149,6 @@ if mergemode
     
     if ~exist('indepvar','var')
         error('mergemode=1 requires the name of the variable to merge on to be supplied');
-    elseif sum(strcmp(indepvar,{'sampnum','scan','time','utime'}))==0
-        msg = ['merge variable %s is an unusual choice; note there is no \n interpolation, so the new %s will contain all the values in d and in file \n %s \n thus merge variable should usually be discrete like sampnum or scan; \n if you want to interpolate, do that first then call with ''-append'''];
-        warning(msg,indepvar,indepvar,filename);
     end
     if ~isfield(d, indepvar) || sum(isfinite(d.(indepvar)))==0
         error(['merge variable ' indepvar ' has no good values in input data structure']);
@@ -312,7 +308,7 @@ end
 m_add_comment(ncfile,[comstring '  at ' datestr(now,31) '  by ' MEXEC_G.MUSER]);
 
 %write history
-if writenew & ~oldheader
+if writenew && ~oldheader
     %fake input file details for write_history
     hist0.filename = [];
     hist0.dataname = [];
@@ -321,6 +317,7 @@ if writenew & ~oldheader
 else
     hist0.filename = ncfile.name;
 end
+m_common %***otherwise when it gets to m_finis it seems to complain about MEXEC_A not having MARGS_IN_LOCAL
 MEXEC_A.Mhistory_in{1} = hist0;
 hist = m_read_header(ncfile);
 hist.filename = ncfile.name;

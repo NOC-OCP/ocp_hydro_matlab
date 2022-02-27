@@ -54,6 +54,9 @@ m_common
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
 table = argot.table;
 qflag = argot.qflag;
+if isempty(table)
+    error('none of the input arguments matches an rvdas table name or its mexec short equivalent (see mrdefine.m)')
+end
 
 if length(argot.otherstrings) < 1
     varstring = '';
@@ -82,15 +85,33 @@ dv2 = datevec(datenum(dv2));
 % sort out the table name
 table = mrresolve_table(table); % table is now an RVDAS table name for sure.
 tablemap = def.tablemap;
-ktable = find(strcmp(table,tablemap(:,2)));
+ktable = strcmp(table,tablemap(:,2));
 mtable = tablemap{ktable,1}; % mtable is the mexec tablename
 
 
 [sqlcom, fncsv, units] = mr_make_psql(table,dv1,dv2,varstring); % it should be fine if varstring is empty
 
 fnin = fncsv;
+% fncom = [fncsv(1:end-4) '_com.txt'];
+% fidcom = fopen(fncom,'w');
+% fprintf(fidcom,'%s\n','#! /bin/csh -f');
+% fprintf(fidcom,'%s\n','unsetenv LD_LIBRARY_PATH');
+% fprintf(fidcom,'%s\n',sqlcom);
+% fclose(fidcom);
+% system(['chmod 755 ' fncom]);
+% 
+% [stat, res] = system(fncom);
 
-[stat, res] = system(sqlcom);
+% delete(fncom);
+
+try
+    [stat, ~] = system(sqlcom);
+    if stat~=0
+        error('LD_LIBRARY_PATH?')
+    end
+catch
+    [~, ~] = system(['unsetenv LD_LIBRARY_PATH; ' sqlcom]);
+end
 
 clear ds dd 
 ds = dataset('file',fnin,'delimiter',',');
@@ -102,7 +123,7 @@ names = names(:);
 % now fix variable names in the dataset, so variables have the correct names
 % when moved to a structure.
 
-if ~isempty(find(strcmp(table,def.renametables_list))) % some vars to be renamed for this table
+if ~isempty(find(strcmp(table,def.renametables_list), 1)) % some vars to be renamed for this table
     rlist = def.renametables.(table); % rlist now has the list of renaming to be done
     for kl = 1:size(rlist,1)
         nold = rlist{kl,1};
@@ -121,7 +142,7 @@ end
 
 % now fix variable names for variables that will be named raw
 
-if ~isempty(find(strcmp(table,def.rawlist))) % this table has all variabls renamed raw
+if ~isempty(find(strcmp(table,def.rawlist), 1)) % this table has all variabls renamed raw
     nvars = size(ds,2);
     for kv = 2:nvars % no need to rename time, which is always first
         dsname = ds.Properties.VarNames{kv};
@@ -168,7 +189,7 @@ units = [units; {'matlab_datenum'}];
 
 klat1 = find(strncmp('latdegm',names,7));
 klat2 = find(strncmp('latdir',names,6));
-if ~isempty(klat1) & ~isempty(klat2) % latitude variables found
+if ~isempty(klat1) && ~isempty(klat2) % latitude variables found
         lat1 = dd.(names{klat1});
         lath = dd.(names{klat2});
         deg = floor(lat1/100);
@@ -190,7 +211,7 @@ end
 
 klon1 = find(strncmp('londegm',names,7));
 klon2 = find(strncmp('londir',names,6));
-if ~isempty(klon1) & ~isempty(klon2) % longitude variables found
+if ~isempty(klon1) && ~isempty(klon2) % longitude variables found
         lon1 = dd.(names{klon1}); % use dynamic field names
         lonh = dd.(names{klon2});
         deg = floor(lon1/100);
@@ -223,7 +244,9 @@ if isempty(qflag)
         fprintf(MEXEC_A.Mfidterm,'%d %s %s %s %s\n',size(ds,1),' data cycles loaded from ',datestr(dv1,'yyyy-mm-dd HH:MM:SS'), ' to ',datestr(dv2,'yyyy-mm-dd HH:MM:SS'));
     end
 end
-rmfile(fnin);
+
+delete(fnin);
+
 clear ds
 
 switch nargout

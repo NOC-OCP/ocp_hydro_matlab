@@ -13,8 +13,10 @@ MEXEC_A.MARGS_IN_LOCAL = {}; %clean up MEXEC_A.MARGS_IN_LOCAL in case there are 
 
 if nargin == 1; version_increment = 1; end
 
+if ~MEXEC_G.quiet
 disp(' ')
 disp('Finishing up')
+end
 
 m_verson(ncfile,version_increment); %advance the version
 m_add_history(ncfile);

@@ -27,15 +27,25 @@ function rvdas_tables = mrgettables
 
 m_common
 
-rootcsv = MEXEC_G.RVDAS_CSVROOT;
+rootcsv = [MEXEC_G.RVDAS_CSVROOT '/'];
 
 csvname = [rootcsv 'table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv'];
 
-%eg psql_string = ['psql -h rvdas.cook.local -U rvdas -d "JC211" -c "' sqltext '"'];
-sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-psql_string = [sqlroot ' -c "\dt" >! ' csvname];  % need to pick up database info from MEXEC_G: cruise and rvdas computer name
 
-[stat,res] = system(psql_string);
+sqltext = ['"\dt" >! ' csvname];
+
+sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
+% sqlroot = ['psql -h ' '192.168.62.12' ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
+psql_string = [sqlroot ' -c ' sqltext ];  
+
+try
+    [s1, ~] = system(psql_string);
+    if stat~=0
+        error('LD_LIBRARY_PATH?')
+    end
+catch
+    [s1, ~] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
+end
 
 fid = fopen(csvname,'r');
 tl = cell(0);
@@ -66,7 +76,7 @@ for kl = 1:nlines
 end
 
 
-rmfile(csvname);
+delete(csvname);
 
 
 return

@@ -57,7 +57,7 @@ end
 % end of JC032 mod
 
 %unpack scan interval eg
-%# interval = seconds: 0.0416667
+%  # interval = seconds: 0.0416667
 index = strmatch('# interval',head);
 if ~isempty(index)
     st = head{index};
@@ -297,7 +297,7 @@ nc_attput(ncfile.name,nc_global,'data_time_origin',h.data_time_origin);
 
 disp('reading data');
 
-data1 = fscanf(fid,'%f',[noflds,inf]); % read data in, number of rows is noflds
+data1 = fscanf(fid,'%f',[noflds,inf]); % read data in, number of rows (variables) is noflds
 fclose(fid);
 numcycles = size(data1,2);
 
@@ -310,7 +310,7 @@ end
 for k = 1:noflds
     clear v
     v.name = m_check_nc_varname(varname{k});
-    v.data = data1(k,:);
+    v.data = data1(k,:)';
     v.data(v.data == sbe_bad_flag) = nan; % set sbe bad data to nan
     v.units = varunits{k};
     m = ['writing data for variable ' v.name];
@@ -320,7 +320,7 @@ end
 
 
 %pack remainder of header in comments
-while length(head) > 0
+while ~isempty(head)
     clear c;
     c = [];
     for k = 1:min(4,length(head))

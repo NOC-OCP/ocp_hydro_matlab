@@ -36,7 +36,7 @@ m_proghd
 % m_getinput takes input from MEXEC_A.MARGS_IN via varargin if present
 
 m1 = 'Set a directory as the mexec current working directory';
-m2 = ['This will be below the MEXEC_G.MEXEC_DATA_ROOT : ' MEXEC_G.MEXEC_DATA_ROOT];
+m2 = ['This will be below the MEXEC_G.mexec_data_root : ' MEXEC_G.mexec_data_root];
 m = sprintf('%s\n',m1,m2);
 if nargin == 2; m = ''; end
 dn = m_getinput(m,'s');
@@ -54,7 +54,7 @@ else
 end
 
 
-MEXEC_G.MEXEC_CWD = fullfile(MEXEC_G.MEXEC_DATA_ROOT, dn); % set current working directory
+MEXEC_G.MEXEC_CWD = fullfile(MEXEC_G.mexec_data_root, dn); % set current working directory
 m2 = ['MEXEC_G.MEXEC_CWD set to : ' MEXEC_G.MEXEC_CWD];
 if nargin < 2
     if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m2); end
