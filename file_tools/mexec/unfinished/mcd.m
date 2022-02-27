@@ -4,7 +4,7 @@ function newdir = mcd(varargin)
 % function to change directory to the directory stored in global variable MEXEC_G.MEXEC_CWD
 %
 %  The target directory can be identified either as 
-%    a simple character string, which is searched for under MEXEC_G.MEXEC_DATA_ROOT
+%    a simple character string, which is searched for under MEXEC_G.mexec_data_root
 %    eg 'ctd' or 'nav/gps'
 %  or
 %    a directory abbreviation, which is resolved using to the list MEXEC_G.MDIRLIST

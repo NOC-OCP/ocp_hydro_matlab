@@ -68,7 +68,7 @@ else
     varstring = argot.otherstrings{1};
 end
 
-rootcsv = MEXEC_G.RVDAS_CSVROOT;
+rootcsv = [MEXEC_G.RVDAS_CSVROOT '/'];
 
 def = mrdefine;
 
@@ -160,10 +160,10 @@ end
 
 % where time between '2021-01-25' and '2021-01-27'
 
-sqltext = ['\copy (select ' sqlvars ' from ' sqlname ' where time between ''' dv1str ''' and ''' dv2str ''' order by time asc) to ''' csvname ''' csv header'];
+sqltext = ['"\copy (select ' sqlvars ' from ' sqlname ' where time between ''' dv1str ''' and ''' dv2str ''' order by time asc) to ''' csvname ''' csv header"'];
 
-% psql_string = ['psql -h rvdas.cook.local -U rvdas -d "preJC211_2" -c "' sqltext '"'];
 sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-psql_string = [sqlroot ' -c "' sqltext '"'];  
+% sqlroot = ['psql -h ' '192.168.62.12' ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
+psql_string = [sqlroot ' -c ' sqltext];  
 
 return

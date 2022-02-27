@@ -17,7 +17,7 @@ function [rtables,rtables_list] = mrtables_from_json
 % There are around 70 possible rvdas tables, and we are only interested in some
 % of those tables, and only interested in some of the variables in each table.
 %
-% The rtables created in this script will define which varaibles are loaded
+% The rtables created in this script will define which variables are loaded
 % when a table is loaded from rvdas. At the time of writing, units are not
 % stored in rvdas, so they have been collected from the matlab version of
 % the json files.
@@ -421,7 +421,7 @@ rtables.em640_depth_sddbs = {  % from ea640_depth-dy.json
     %     'waterDepthFeetFromSurface'                        'feets'
     %     'feetFlag'                             ''
     'waterDepthMeterFromSurface'                       'metres'
-    'meterFlag'                             ''
+    %     'meterFlag'                             ''
     %     'waterDepthFathomFromSurface'                       'fathom'
     %     'fathomFlag'                             ''
     };
@@ -686,12 +686,12 @@ rtables.phins_att_hehdt = {  % from phins_att-dy.json
 % % %     'mode'                             ''
 % % %     };
 
-% % % %"PIXSE,ATITUD – Roll, Pitch"
-% % % rtables.phins_att_pixseatitud = {  % from phins_att-dy.json
-% % %     'phins_att_pixseatitud'  2  % fields
-% % %     'roll'                      'degrees'
-% % %     'pitch'                      'degrees'
-% % %     };
+%"PIXSE,ATITUD – Roll, Pitch"
+rtables.phins_att_pixseatitud = {  % from phins_att-dy.json
+    'phins_att_pixseatitud'  2  % fields
+    'roll'                      'degrees'
+    'pitch'                      'degrees'
+    };
 
 % % % %"PIXSE,POSITI – lat lon altitude"
 % % % rtables.phins_att_pixsepositi = {  % from phins_att-dy.json
@@ -806,45 +806,45 @@ rtables.phins_att_pixsegpsin0 = {  % from phins_att-dy.json
 
 %posmv_att  8  sentences
 
-%"GPGGA – Global Positioning Fix Data"
-rtables.posmv_att_gpgga = {  % from posmv_att.json
-    'posmv_att_gpgga' 14  % fields
-    'utcTime'                             ''
-    'latitude'  'degrees and decimal minutes'
-    'latDir'                             ''
-    'longitude'  'degrees and decimal minutes'
-    'lonDir'                             ''
-    'ggaQual'                             ''
-    'numSat'                             ''
-    'hdop'                             ''
-    'altitude'                             ''
-    %     'unitsOfMeasureAntenna'                             ''
-    %     'geoidAltitude'                             ''
-    %     'unitsOfMeasureGeoid'                             ''
-    %     'diffcAge'                      'seconds'
-    %     'dgnssRefId'                             ''
-    };
+% % % %"GPGGA – Global Positioning Fix Data"
+% % % rtables.posmv_att_gpgga = {  % from posmv_att.json
+% % %     'posmv_att_gpgga' 14  % fields
+% % %     'utcTime'                             ''
+% % %     'latitude'  'degrees and decimal minutes'
+% % %     'latDir'                             ''
+% % %     'longitude'  'degrees and decimal minutes'
+% % %     'lonDir'                             ''
+% % %     'ggaQual'                             ''
+% % %     'numSat'                             ''
+% % %     'hdop'                             ''
+% % %     'altitude'                             ''
+% % %     %     'unitsOfMeasureAntenna'                             ''
+% % %     %     'geoidAltitude'                             ''
+% % %     %     'unitsOfMeasureGeoid'                             ''
+% % %     %     'diffcAge'                      'seconds'
+% % %     %     'dgnssRefId'                             ''
+% % %     };
 
-%"GPHDT – Heading – True Data"
-rtables.posmv_att_gphdt = {  % from posmv_att.json
-    'posmv_att_gphdt'  2  % fields
-    'headingTrue'                      'degrees'
-    %     'trueHeading'                             ''
-    };
+% % % %"GPHDT – Heading – True Data"
+% % % rtables.posmv_att_gphdt = {  % from posmv_att.json
+% % %     'posmv_att_gphdt'  2  % fields
+% % %     'headingTrue'                      'degrees'
+% % %     %     'trueHeading'                             ''
+% % %     };
 
-%"GPVTG – Course Over Ground and Ground Speed Data"
-rtables.posmv_att_gpvtg = {  % from posmv_att.json
-    'posmv_att_gpvtg'  9  % fields
-    'courseTrue'                      'degrees'
-    %     'trueCourse'                             ''
-    %     'magneticTrack'                      'degrees'
-    %     'mFlag'                             ''
-    'speedKnots'                        'knots'
-    %     'nFlag'                             ''
-    %     'speedKmph'                         'km/h'
-    %     'kFlag'                             ''
-    %     'positioningMode'                             ''
-    };
+% % % %"GPVTG – Course Over Ground and Ground Speed Data"
+% % % rtables.posmv_att_gpvtg = {  % from posmv_att.json
+% % %     'posmv_att_gpvtg'  9  % fields
+% % %     'courseTrue'                      'degrees'
+% % %     %     'trueCourse'                             ''
+% % %     %     'magneticTrack'                      'degrees'
+% % %     %     'mFlag'                             ''
+% % %     'speedKnots'                        'knots'
+% % %     %     'nFlag'                             ''
+% % %     %     'speedKmph'                         'km/h'
+% % %     %     'kFlag'                             ''
+% % %     %     'positioningMode'                             ''
+% % %     };
 
 % % % %"GPRMC – RMC navigation data"
 % % % rtables.posmv_att_gprmc = {  % from posmv_att.json
@@ -863,32 +863,32 @@ rtables.posmv_att_gpvtg = {  % from posmv_att.json
 % % %     'positioningMode'                             ''
 % % %     };
 
-%"GPZDA – Time and Date"
-rtables.posmv_att_gpzda = {  % from posmv_att.json
-    'posmv_att_gpzda'  6  % fields
-    'utcTime'                             ''
-    'day'                             ''
-    'month'                             ''
-    'year'                             ''
-    'zoneHour'                        'hours'
-    'zoneMinutes'                      'minutes'
-    };
+% % % %"GPZDA – Time and Date"
+% % % rtables.posmv_att_gpzda = {  % from posmv_att.json
+% % %     'posmv_att_gpzda'  6  % fields
+% % %     'utcTime'                             ''
+% % %     'day'                             ''
+% % %     'month'                             ''
+% % %     'year'                             ''
+% % %     'zoneHour'                        'hours'
+% % %     'zoneMinutes'                      'minutes'
+% % %     };
 
-%"PASHR – Attitude Data"
-rtables.posmv_att_pashr = {  % from posmv_att.json
-    'posmv_att_pashr' 11  % fields
-    'utcTime'                             ''
-    'heading'                      'degrees'
-    %     'trueFlag'                             ''
-    'roll'                      'degrees'
-    'pitch'                      'degrees'
-    'heave'                       'metres'
-    %     'rollAccuracy'                      'degrees'
-    %     'pitchAccuracy'                      'degrees'
-    %     'headingAccuracy'                      'degrees'
-    %     'headingAccuracyFlag'                             ''
-    %     'imuFlag'                             ''
-    };
+% % % %"PASHR – Attitude Data"
+% % % rtables.posmv_att_pashr = {  % from posmv_att.json
+% % %     'posmv_att_pashr' 11  % fields
+% % %     'utcTime'                             ''
+% % %     'heading'                      'degrees'
+% % %     %     'trueFlag'                             ''
+% % %     'roll'                      'degrees'
+% % %     'pitch'                      'degrees'
+% % %     'heave'                       'metres'
+% % %     %     'rollAccuracy'                      'degrees'
+% % %     %     'pitchAccuracy'                      'degrees'
+% % %     %     'headingAccuracy'                      'degrees'
+% % %     %     'headingAccuracyFlag'                             ''
+% % %     %     'imuFlag'                             ''
+% % %     };
 
 % % % %"GPGLL – Position data: Position fix, time of position fix and status"
 % % % rtables.posmv_att_gpgll = {  % from posmv_att.json
@@ -918,45 +918,45 @@ rtables.posmv_att_pashr = {  % from posmv_att.json
 
 %posmv_gyro  8  sentences
 
-%"GPGGA – Global Positioning Fix Data"
-rtables.posmv_gyro_gpgga = {  % from posmv_gyro.json
-    'posmv_gyro_gpgga' 14  % fields
-    'utcTime'                             ''
-    'latitude'  'degrees and decimal minutes'
-    'latDir'                             ''
-    'longitude'  'degrees and decimal minutes'
-    'lonDir'                             ''
-    'ggaQual'                             ''
-    'numSat'                             ''
-    'hdop'                             ''
-    'altitude'                             ''
-    %     'unitsOfMeasureAntenna'                             ''
-    %     'geoidAltitude'                             ''
-    %     'unitsOfMeasureGeoid'                             ''
-    %     'diffcAge'                      'seconds'
-    %     'dgnssRefId'                             ''
-    };
+% % % %"GPGGA – Global Positioning Fix Data"
+% % % rtables.posmv_gyro_gpgga = {  % from posmv_gyro.json
+% % %     'posmv_gyro_gpgga' 14  % fields
+% % %     'utcTime'                             ''
+% % %     'latitude'  'degrees and decimal minutes'
+% % %     'latDir'                             ''
+% % %     'longitude'  'degrees and decimal minutes'
+% % %     'lonDir'                             ''
+% % %     'ggaQual'                             ''
+% % %     'numSat'                             ''
+% % %     'hdop'                             ''
+% % %     'altitude'                             ''
+% % %     %     'unitsOfMeasureAntenna'                             ''
+% % %     %     'geoidAltitude'                             ''
+% % %     %     'unitsOfMeasureGeoid'                             ''
+% % %     %     'diffcAge'                      'seconds'
+% % %     %     'dgnssRefId'                             ''
+% % %     };
 
-%"GPHDT – Heading – True Data"
-rtables.posmv_gyro_gphdt = {  % from posmv_gyro.json
-    'posmv_gyro_gphdt'  2  % fields
-    'headingTrue'                      'degrees'
-    %     'trueHeading'                             ''
-    };
+% % % % % % %"GPHDT – Heading – True Data"
+% % % rtables.posmv_gyro_gphdt = {  % from posmv_gyro.json
+% % %     'posmv_gyro_gphdt'  2  % fields
+% % %     'headingTrue'                      'degrees'
+% % %     %     'trueHeading'                             ''
+% % %     };
 
-%"GPVTG – Course Over Ground and Ground Speed Data"
-rtables.posmv_gyro_gpvtg = {  % from posmv_gyro.json
-    'posmv_gyro_gpvtg'  9  % fields
-    'courseTrue'                      'degrees'
-    %     'trueCourse'                             ''
-    %     'magneticTrack'                      'degrees'
-    %     'mFlag'                             ''
-    'speedKnots'                        'knots'
-    %     'nFlag'                             ''
-    %     'speedKmph'                         'km/h'
-    %     'kFlag'                             ''
-    %     'positioningMode'                             ''
-    };
+% % % %"GPVTG – Course Over Ground and Ground Speed Data"
+% % % rtables.posmv_gyro_gpvtg = {  % from posmv_gyro.json
+% % %     'posmv_gyro_gpvtg'  9  % fields
+% % %     'courseTrue'                      'degrees'
+% % %     %     'trueCourse'                             ''
+% % %     %     'magneticTrack'                      'degrees'
+% % %     %     'mFlag'                             ''
+% % %     'speedKnots'                        'knots'
+% % %     %     'nFlag'                             ''
+% % %     %     'speedKmph'                         'km/h'
+% % %     %     'kFlag'                             ''
+% % %     %     'positioningMode'                             ''
+% % %     };
 
 % % % %"GPRMC – RMC navigation data"
 % % % rtables.posmv_gyro_gprmc = {  % from posmv_gyro.json
@@ -975,32 +975,32 @@ rtables.posmv_gyro_gpvtg = {  % from posmv_gyro.json
 % % %     'positioningMode'                             ''
 % % %     };
 
-%"GPZDA – Time and Date"
-rtables.posmv_gyro_gpzda = {  % from posmv_gyro.json
-    'posmv_gyro_gpzda'  6  % fields
-    'utcTime'                             ''
-    'day'                             ''
-    'month'                             ''
-    'year'                             ''
-    'zoneHour'                        'hours'
-    'zoneMinutes'                      'minutes'
-    };
+% % % %"GPZDA – Time and Date"
+% % % rtables.posmv_gyro_gpzda = {  % from posmv_gyro.json
+% % %     'posmv_gyro_gpzda'  6  % fields
+% % %     'utcTime'                             ''
+% % %     'day'                             ''
+% % %     'month'                             ''
+% % %     'year'                             ''
+% % %     'zoneHour'                        'hours'
+% % %     'zoneMinutes'                      'minutes'
+% % %     };
 
-%"PASHR – Attitude Data"
-rtables.posmv_gyro_pashr = {  % from posmv_gyro.json
-    'posmv_gyro_pashr' 11  % fields
-    'utcTime'                             ''
-    'heading'                      'degrees'
-    %     'trueFlag'                             ''
-    'roll'                      'degrees'
-    'pitch'                      'degrees'
-    'heave'                       'metres'
-    %     'rollAccuracy'                      'degrees'
-    %     'pitchAccuracy'                      'degrees'
-    %     'headingAccuracy'                      'degrees'
-    %     'headingAccuracyFlag'                             ''
-    %     'imuFlag'                             ''
-    };
+% % % %"PASHR – Attitude Data"
+% % % rtables.posmv_gyro_pashr = {  % from posmv_gyro.json
+% % %     'posmv_gyro_pashr' 11  % fields
+% % %     'utcTime'                             ''
+% % %     'heading'                      'degrees'
+% % %     %     'trueFlag'                             ''
+% % %     'roll'                      'degrees'
+% % %     'pitch'                      'degrees'
+% % %     'heave'                       'metres'
+% % %     %     'rollAccuracy'                      'degrees'
+% % %     %     'pitchAccuracy'                      'degrees'
+% % %     %     'headingAccuracy'                      'degrees'
+% % %     %     'headingAccuracyFlag'                             ''
+% % %     %     'imuFlag'                             ''
+% % %     };
 
 % % % %"GPGLL – Position data: Position fix, time of position fix and status"
 % % % rtables.posmv_gyro_gpgll = {  % from posmv_gyro.json
@@ -1087,16 +1087,16 @@ rtables.posmv_pos_gpvtg = {  % from posmv_pos-dy.json
 % % %     'positioningMode'                             ''
 % % %     };
 
-%"GPZDA – Time and Date"
-rtables.posmv_pos_gpzda = {  % from posmv_pos-dy.json
-    'posmv_pos_gpzda'  6  % fields
-    'utcTime'                             ''
-    'day'                             ''
-    'month'                             ''
-    'year'                             ''
-    'zoneHour'                        'hours'
-    'zoneMinutes'                      'minutes'
-    };
+% % % %"GPZDA – Time and Date"
+% % % rtables.posmv_pos_gpzda = {  % from posmv_pos-dy.json
+% % %     'posmv_pos_gpzda'  6  % fields
+% % %     'utcTime'                             ''
+% % %     'day'                             ''
+% % %     'month'                             ''
+% % %     'year'                             ''
+% % %     'zoneHour'                        'hours'
+% % %     'zoneMinutes'                      'minutes'
+% % %     };
 
 %"PASHR – Attitude Data"
 rtables.posmv_pos_pashr = {  % from posmv_pos-dy.json
@@ -1167,8 +1167,8 @@ rtables.ranger2_usbl_gpgga = {  % from ranger2_usbl-dy.json
 %"PRAMR – REX WAVERADAR Output Data"
 rtables.rex2_wave_pramr = {  % from rex_wave-dy.json
     'rex2_wave_pramr' 10  % fields
-    'dateTimeFromWVC'                    'timestamp'
-    'julienDay'                         'days'
+%     'dateTimeFromWVC'                    'timestamp'  % not numeric
+%     'julienDay'                         'days'
     'SSE_mean_m'                        'meter'
     'h4rms'                        'meter'
     'tz_s'                      'seconds'
@@ -1303,16 +1303,16 @@ rtables.seapath_pos_invtg = {  % from seapath_pos-dy.json
 % % %     'positioningMode'                             ''
 % % %     };
 
-%"INZDA – Time and Date"
-rtables.seapath_pos_inzda = {  % from seapath_pos-dy.json
-    'seapath_pos_inzda'  6  % fields
-    'utcTime'                             ''
-    'day'                             ''
-    'month'                             ''
-    'year'                             ''
-    'zoneHour'                        'hours'
-    'zoneMinutes'                      'minutes'
-    };
+% % % %"INZDA – Time and Date"
+% % % rtables.seapath_pos_inzda = {  % from seapath_pos-dy.json
+% % %     'seapath_pos_inzda'  6  % fields
+% % %     'utcTime'                             ''
+% % %     'day'                             ''
+% % %     'month'                             ''
+% % %     'year'                             ''
+% % %     'zoneHour'                        'hours'
+% % %     'zoneMinutes'                      'minutes'
+% % %     };
 
 % % % %"GNGST – GPS Pseudorange Noise Statistics"
 % % % rtables.seapath_pos_gngst = {  % from seapath_pos-dy.json

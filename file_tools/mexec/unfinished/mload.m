@@ -29,10 +29,12 @@ ncfile = m_ismstar(ncfile); %check it is an mstar file and that it is not open
 h = m_read_header(ncfile);
 if ~MEXEC_G.quiet; m_print_header(h); end
 
+if ~MEXEC_G.quiet
 if nargout == 0
     fprintf(MEXEC_A.Mfider,'\n%s\n',' warning: data will be saved as variable ''ans'' in calling program unless called with at least one argument');
 elseif nargout == 1
     fprintf(MEXEC_A.Mfider,'\n%s\n',' warning: header won''t be saved in calling program unless called with at least two arguments');
+end
 end
 
 endflag = 0;
