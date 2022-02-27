@@ -674,11 +674,11 @@ renametables.phins_att_hehdt = {  % from phins_att-dy.json
 % % %     'verticalSpeedStd'                            'm'
 % % %     };
 
-% % % %"PIXSE,UTCIN_ – received time UTC"
-% % % renametables.phins_att_pixseutcin0 = {  % from phins_att-dy.json
-% % %     'phins_att_pixseutcin0'  1  % fields
-% % %     'UTCTime'                'hhmmss.ssssss'
-% % %     };
+%"PIXSE,UTCIN_ – received time UTC"
+renametables.phins_att_pixseutcin0 = {  % from phins_att-dy.json
+%     'phins_att_pixseutcin0'  1  % fields
+    'UTCTime'                'hhmmss.ssssss' 'utctime' 'hhmmss.sssss'
+    };
 
 %"PIXSE,GPSIN_ – lat lon altitude UTCTime, qualityFlag"
 renametables.phins_att_pixsegpsin0 = {  % from phins_att-dy.json
@@ -744,8 +744,8 @@ renametables.posmv_att_gpgga = {  % from posmv_att.json
 
 %"GPHDT – Heading – True Data"
 renametables.posmv_att_gphdt = {  % from posmv_att.json
-    'posmv_att_gphdt'  2  % fields
-    'headingTrue'                      'degrees'
+%     'posmv_att_gphdt'  2  % fields
+    'headingTrue'                      'degrees' 'heading' 'degrees'
     %     'trueHeading'                             ''
     };
 
@@ -1184,8 +1184,8 @@ renametables.seapath_pos_ingga = {  % from seapath_pos-dy.json
 
 %"INHDT – Heading – True Data"
 renametables.seapath_pos_inhdt = {  % from seapath_pos-dy.json
-    'seapath_pos_inhdt'  2  % fields
-    'headingTrue'                      'degrees'
+%     'seapath_pos_inhdt'  2  % fields
+    'headingTrue'                      'degrees' 'heading' 'degrees'
     %     'trueHeading'                             ''
     };
 
@@ -1457,7 +1457,7 @@ renametables_list = fieldnames(renametables);
 for kt = 1:length(renametables_list)
     tname = renametables_list{kt};
     vlist = renametables.(tname);
-    vlist(:,3) = lower(vlist(:,3));
+    try ; vlist(:,3) = lower(vlist(:,3)); catch; keyboard; end
     renametables.(tname) = vlist;
 end
 

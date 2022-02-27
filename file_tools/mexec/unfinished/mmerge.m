@@ -17,7 +17,7 @@ m_varargs
 MEXEC_A.Mprog = 'mmerge';
 m_proghd
 
-if length(MEXEC_A.MARGS_IN_LOCAL)==0
+if isempty(MEXEC_A.MARGS_IN_LOCAL)
    fprintf(MEXEC_A.Mfidterm,'%s\n','Enter name of output disc file')
    ncfile_ot.name = m_getfilename;
 else
@@ -25,7 +25,7 @@ else
 end
 ncfile_ot = m_openot(ncfile_ot);
 
-if length(MEXEC_A.MARGS_IN_LOCAL)==0
+if isempty(MEXEC_A.MARGS_IN_LOCAL)
    fprintf(MEXEC_A.Mfidterm,'%s\n','Enter name of input disc file')
    ncfile_in.name = m_getfilename;
 else
@@ -50,7 +50,7 @@ m_write_header(ncfile_ot,h);
 %copy selected vars from the infile
 m = sprintf('%s\n','Type variable names or numbers to copy (return for none, ''/'' for all): ');
 var = m_getinput(m,'s');
-if strcmp(' ',var) == 1;
+if strcmp(' ',var) == 1
     vlist = [];
 else
     vlist = m_getvlist(var,h);
@@ -68,10 +68,10 @@ for k = vlist
 end
 
 ok = 0;
-while ok == 0;
+while ok == 0
     m = sprintf('%s\n','Type variable name or number for control variable for merge : ');
     var = m_getinput(m,'s');
-    if strcmp(' ',var) == 1;
+    if strcmp(' ',var) == 1
         vlistc = [];
     else
         vlistc = m_getvlist(var,h);
@@ -91,7 +91,7 @@ vname_c_1 = h.fldnam{vcontrol};
 data_c_1 = nc_varget(ncfile_in.name,vname_c_1);
 
 
-if length(MEXEC_A.MARGS_IN_LOCAL)==0
+if isempty(MEXEC_A.MARGS_IN_LOCAL)
    m = 'Now get details of next input file ';
    fprintf(MEXEC_A.Mfidterm,'%s\n',m)
    fprintf(MEXEC_A.Mfidterm,'%s\n','Enter name of input disc file')
@@ -110,10 +110,10 @@ MEXEC_A.Mhistory_in{2} = hist;
 
 
 ok = 0;
-while ok == 0;
+while ok == 0
     m = sprintf('%s\n','Type variable name or number for control variable for merge : ');
     var = m_getinput(m,'s');
-    if strcmp(' ',var) == 1;
+    if strcmp(' ',var) == 1
         vlistc2 = [];
     else
         vlistc2 = m_getvlist(var,h2);
@@ -141,7 +141,7 @@ if numdims_c == 2
     m2 = 'as the independent variable for the interpolation ?';
     fprintf(MEXEC_A.Mfidterm,'%s\n',m,m2);
     ok = 0;
-    while ok == 0;
+    while ok == 0
         m3 = sprintf('%s','type r for row, c for column :  ');
         reply = m_getinput(m3,'s');
         if strcmp(reply,'r'); rc = 2; break; end % ind var is a row; colindex varies
@@ -158,7 +158,7 @@ if numdims_c == 2
     fprintf(MEXEC_A.Mfidterm,'%s\n',m1,m2);
     maxd = size(data_c_2,1);
     ok = 0;
-    while ok == 0;
+    while ok == 0
         m3 = sprintf('%s',['type number in range 1 (default) to ' sprintf('%d',maxd) '  ']);
         reply = m_getinput(m3,'s');
         if strcmp(reply,' '); contindex = 1; break; end
@@ -172,7 +172,7 @@ if numdims_c == 2
     fprintf(MEXEC_A.Mfidterm,'%s\n',m1);
     maxd = size(data_c_2,1);
     ok = 0;
-    while ok == 0;
+    while ok == 0
         m3 = sprintf('%s',['reply no (n, default) or yes (y)  ']);
         reply = m_getinput(m3,'s');
         if strcmp(reply,' '); contmerge = 0; break; end
@@ -195,7 +195,7 @@ xdm = min(diff(x));
 if xdm <= 0
     m = 'Control variable was not monotonic; it will be sorted';
     fprintf(MEXEC_A.Mfider,'%s\n',m)
-    [xsort ksort] = sort(x);
+    [xsort, ksort] = sort(x);
 else
     xsort = x; ksort = 1:length(x);
 end
@@ -216,7 +216,7 @@ unit_c_1 = h.fldunt(vlistc);
 vname_c_2 = h2.fldnam{vcontrol2};
 unit_c_2 = h2.fldunt{vcontrol2};
 
-if (m_isvartime(vname_c_1) == 1) & (m_isvartime(vname_c_2) == 1)
+if (m_isvartime(vname_c_1) == 1) && (m_isvartime(vname_c_2) == 1)
     % both recognised as time variables
     if m_isunitsecs(unit_c_2) == 1
         if m_isunitdays(unit_c_1) == 1
@@ -251,7 +251,7 @@ end
 
 m = sprintf('%s\n','Type variable names or numbers for variables for merge (return for none, ''/'' for all with matching dimensions): ');
 var = m_getinput(m,'s');
-if strcmp(' ',var) == 1;
+if strcmp(' ',var) == 1
     vlist2 = [];
 else
     vlist2 = m_getvlist(var,h2);
@@ -262,13 +262,13 @@ ok = 0;
 m1 = sprintf('%s','If NaNs are found in the merging variable, do you want them filled first (f or inf, default)');
 m2 = sprintf('%s','or kept in place (k or 0) or only filled for gaps up to a certain length so that NaNs may appear in the output ?');
 m3 = sprintf('%s','reply ''f'', inf or return for fill; ''k'' or 0 for keep; \nor an integer for the maximum number of NaNs to be filled : ');
-while ok == 0;
+while ok == 0
     reply = m_getinput([m1 '\n' m2 '\n' m3],'s');
     if strcmp(reply,' '); absfill = inf; break; end
     if strcmp(reply,'f'); absfill = inf; break; end
     if strcmp(reply,'k'); absfill = 0; break; end
     try
-        absfill = str2num(reply);
+        absfill = str2double(reply);
         if(~isempty(absfill)); break; end
     catch
     end
@@ -282,8 +282,8 @@ nrows = h2.dimrows;
 ncols = h2.dimcols;
 ncycles = nrows.*ncols;
 
-if ccols == 1; rc = 1; end; % only one col so use it as independent var;
-if crows == 1; rc = 2; end; % only one row so use it as independent var;
+if ccols == 1; rc = 1; end % only one col so use it as independent var;
+if crows == 1; rc = 2; end % only one row so use it as independent var;
 
 if(rc == 1) % we're working down columns
     kmat = find(nrows == crows);
@@ -299,7 +299,7 @@ kmat = intersect(kmat,vlist2); % find vars that are in user's list and have suit
 if contmerge == 0; kmat = setdiff(kmat,vcontrol2); end % remove control var from action list
 %leave control var in if contmerge == 1
 
-if rc == 2;
+if rc == 2
     % need to transpose so that interp1 works on gridded data
     xsort = xsort';
 end
@@ -316,10 +316,10 @@ for k = 1:length(kmat)
         fprintf(MEXEC_A.Mfider,'%s\n',m1,m2,m3)
 
         ok = 0;
-        while ok == 0;
+        while ok == 0
             m3 = sprintf('%s',['type new variable name for output :              ']);
             newname = m_getinput(m3,'s');
-            if strcmp(newname,' ') | strcmp(newname,'/');
+            if strcmp(newname,' ') || strcmp(newname,'/')
                 m = 'try again';
                 fprintf(MEXEC_A.Mfider,'%s\n',m)
                 continue
@@ -339,16 +339,16 @@ for k = 1:length(kmat)
     z = nc_varget(ncfile_in2.name,h2.fldnam{kmat(k)});
     if m_isvartime(h2.fldnam{kmat(k)}); z = m_adjtime(h2.fldnam{kmat(k)},z,h2,h); end % adjust time to data time origin of first input file
     % rearrange data according to sort of control variable
-    if rc == 2;
+    if rc == 2
         % need to transpose so that interp1 works on gridded data
         z = z';
     end
     zsort = z(ksort,:);
     zsort(xbad,:) = [];
     
-if absfill > 0;
+if absfill > 0
     % fill any nans in z by interpolation
-    for kfill = 1:size(zsort,2);
+    for kfill = 1:size(zsort,2)
         ok = ~isnan(zsort(:,kfill));
         if sum(ok) < 2 ; continue; end % not enough good data to fill with interp1
         if sum(ok) == size(zsort,1); continue; end % all data are good; skip interp1
@@ -374,7 +374,7 @@ if absfill > 0;
     end
 end
     
-    [dontcare iuni juni]=unique(xsort);
+    [~, iuni , ~]=unique(xsort);
     zi = interp1(xsort(iuni),zsort(iuni),data_c_1); % zi has same dimensions as  data_c_1
     % yi = interp1(x,y,xi)
     % if y is 2-D then yi is always a column, so we need to fix its shape

@@ -9,13 +9,13 @@ MEXEC_A.Mprog = 'mavrge';
 m_proghd
 
 
-if length(MEXEC_A.MARGS_IN_LOCAL)==0
+if isempty(MEXEC_A.MARGS_IN_LOCAL)
    fprintf(MEXEC_A.Mfidterm,'%s','Enter name of input disc file  ')
    ncfile_in.name = m_getfilename;
 else
    ncfile_in.name = m_getfilename(MEXEC_A.MARGS_IN_LOCAL{1}); MEXEC_A.MARGS_IN_LOCAL(1) = [];
 end
-if length(MEXEC_A.MARGS_IN_LOCAL)==0
+if isempty(MEXEC_A.MARGS_IN_LOCAL)
    fprintf(MEXEC_A.Mfidterm,'%s','Enter name of output disc file  ')
    ncfile_ot.name = m_getfilename;
 else
@@ -178,9 +178,9 @@ m = ['number of output bins for averaging is ' sprintf('%d',nbins-1)];
 fprintf(MEXEC_A.Mfidterm,'%s\n',m);
 end
 
-[xsort ksort] = sort(x);
+[xsort, ksort] = sort(x);
 
-[klo khi] = m_assign_to_bins(xsort,bins);
+[klo, khi] = m_assign_to_bins(xsort,bins);
 
 % tile the control variable if it started as 2-D;
 if rc == 1; tile = [1 ccols]; bins = bins(:); end
@@ -225,8 +225,8 @@ for k = 1:length(kmat)
     end
 
     for k2 = 1:lenav
-        if ~isnan(klo(k2)) & ~isnan(khi(k2))
-            if rc == 1;
+        if ~isnan(klo(k2)) && ~isnan(khi(k2))
+            if rc == 1
                 zsub = zsort(klo(k2):khi(k2),:);
                 zav(k2,:) = m_nanmean(zsub,rc); % average in direction controlled by rc
                 if fullstats == 1

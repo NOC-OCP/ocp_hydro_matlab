@@ -31,12 +31,16 @@ function mrtable = mrresolve_table(tablein)
 
 m_common
 
+if isempty(tablein)
+    error('Must specify non-empty tablein to lookup')
+end
+
 def = mrdefine;
 
 tmap_mexec = def.tablemap(:,1);
 tmap_rvdas = def.tablemap(:,2);
 
-krvdas = find(strcmp(tablein,tmap_rvdas));
+krvdas = find(strcmp(tablein,tmap_rvdas), 1);
 kmexec = find(strcmp(tablein,tmap_mexec));
 
 if ~isempty(krvdas)

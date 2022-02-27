@@ -11,14 +11,12 @@ hist.filename = ncfile.name;
 MEXEC_A.Mhistory_ot_local{1} = hist;
 
 
-if isfield(MEXEC_A,'Mhistory_skip') == 1;
-    if MEXEC_A.Mhistory_skip ~= 0;
+if isfield(MEXEC_A,'Mhistory_skip') && MEXEC_A.Mhistory_skip~=0
         m1 = ' *********** ';
         m2 = [' Skipping write of history from program            ' MEXEC_A.Mprog];
         m3 = [' To restart history ensure global variable MEXEC_A.Mhistory_skip = 0'];
-        fprintf(MEXEC_A.Mfider,'%s\n',m1,m1,m2,m3,m1,m1)
-        return;
-    end
+        fprintf(MEXEC_A.Mfider,'%s\n',m1,m2,m3,m1)
+        return
 end
 
 

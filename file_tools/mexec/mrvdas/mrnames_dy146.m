@@ -47,56 +47,52 @@ end
 
 
 tablemap = {
-    'hdtgyro'      'ships_gyro_hehdt'
+
     'winch'        'nmf_winch_winch'
-    'hdtpmv'       'posmv_gyro_gphdt'
-    'pospmvg'      'posmv_gyro_gpgga'
-    'vtgpmvg'      'posmv_gyro_gpvtg'
-    'zdapmvg'      'posmv_gyro_gpzda'
-    'attpmvg'      'posmv_gyro_pashr'
-    'attpmv'       'posmv_att_pashr'
+%
+    'hdtgyro'      'ships_gyro_hehdt'
+%
+    'attpmv'       'posmv_pos_pashr'
+    'hdtpmv'       'posmv_pos_gphdt'
     'pospmv'       'posmv_pos_gpgga'
     'vtgpmv'       'posmv_pos_gpvtg'
-    'hdtpmvp'      'posmv_pos_gphdt'
-    'zdapmvp'      'posmv_pos_gpzda'
-    'attpmvp'      'posmv_pos_pashr'
-    'pospmva'      'posmv_att_gpgga'
-    'hdtpmva'      'posmv_att_gphdt'
-    'vtgpmva'      'posmv_att_gpvtg'
-    'zdapmva'      'posmv_att_gpzda'
-    'posfugro'     'fugro_gps_gpsgga'
+%
+    'posfugro'     'fugro_gps_gpgga'
     'vtgfugro'     'fugro_gps_gpvtg'
     'dopfugro'     'fugro_gps_gngsa'
+%
     'attphins'     'phins_att_pashr'
-    'prdphins'     'phins_at_prdid'
     'hdtphins'     'phins_att_hehdt'
-    'hssphins'     'phins_att_pixseheave0'
-    'llaphins'     'phins_att_pixsegpsin0'
-    'surfmet'      'nmf_surfmet_gpxsm'
-%     'windsonic'    'windsonic_nmea_iimwv'
+    'posphins'     'phins_att_pixsegpsin0' % phins lat and lon
+    'hssphins'     'phins_att_pixseheave0' % phins surge sway heave
+    'prophins'     'phins_att_pixseatitud' % phins pitch and roll
+    'prdphins'     'phins_att_prdid'
+%
     'poscnav'      'cnav_gps_gngga'
     'vtgcnav'      'cnav_gps_gnvtg'
-%     'dopcnav'      'cnav_gps_gngsa'
-%     'posdps'       'dps116_gps_gpgga'
-%     'em120'        'em120_depth_kidpt'
-    'em120'        'em122_depth_kidpt'
-%     'ea600'        'em600_depth_sddbs'
-    'ea600'        'em640_depth_sddbs'
-    'ea640t'        'em640_depth_sddpt'
-% %     'sim'         'em600_depth_sddbs'
+%     'dopcnav'      'cnav_gps_gngsa'  % available on jc211
+
+%     'posdps'       'dps116_gps_gpgga' % available on jc211
+   
+    'posranger'    'ranger2_usbl_gpgga'
+%
+    'attsea'       'seapath_att_psxn23'
+    'hdtsea'       'seapath_pos_inhdt'
+    'possea'       'seapath_pos_ingga'
+    'vtgsea'       'seapath_pos_invtg'
+%     'dopsea'       'seapath_pos_ingsa'  % available on jc211
+%
+    'surfmet'      'nmf_surfmet_gpxsm'
+%     'windsonic'    'windsonic_nmea_iimwv'
+    'multib_t'     'em122_depth_kidpt'  %     'em120'        'em120_depth_kidpt'    on jc211
+    'singleb'      'em640_depth_sddbs'  %     'ea600'        'em600_depth_sddbs'    on jc211
+    'singleb_t'    'em640_depth_sddpt'
     'envtemp'      'env_temp_wimta'
     'envhumid'     'env_temp_wimhu'
-    'posranger'    'ranger2_usbl_gpgga'
     'rex2wave'     'rex2_wave_pramr'
     'wamos'        'wamos_wave_pwam'
     'tsg'          'sbe45_tsg_nanan'
-    'hdtsea'       'seapath_pos_inhdt'
-    'possea'       'seapath_pos_ingga'
-%     'dopsea'       'seapath_pos_ingsa'
-    'vtgsea'       'seapath_pos_invtg'
-    'attsea'       'seapath_att_psxn23'
-    'zdasea'       'seapath_pos_inzda'
-%     'logchf'       'ships_chernikeef_vmvbw'
+%     'logchf'       'ships_chernikeef_vmvbw'  % available on jc211
     'logskip'      'ships_skipperlog_vdvbw'
     'gravity'      'u12_at1m_uw'
     'mag'          'seaspy_mag_inmag'

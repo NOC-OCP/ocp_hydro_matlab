@@ -75,7 +75,11 @@ for ks = 1:n_sentences
     fprintf(1,'%s\n',str);
     fprintf(1,'%s %2d %s\n',['''' sqlname ''''],noflds,' % fields');
     for kf = 1:noflds
-        sf = s.field(kf);
+        sf = s.field(kf); 
+        % bak comment: 9 feb 2022. If all the fields are of the same type 
+        % (eg all numbers, eg dy146 em640 sentence 1, water depth below transducer) 
+        % this will be an ordinary array. If the fields are of multiple types (eg numbers and flags) 
+        % it will be a cell array. This is a choice made by jsondecode, and is not affected by how the json is written.
         if iscell(sf)
             f = s.field{kf};
         else
@@ -85,7 +89,7 @@ for ks = 1:n_sentences
         funit = f.unit;
         fprintf(1,'%30s %30s\n',['''' fname ''''],['''' funit '''']);
         try
-            d.(sqlname).(fname) = funit; % will fail if sqlname or fname are invalid. Some graivity meter json files define names that are invalid matab names, eg with spaces and starting with a number
+            edit m; % will fail if sqlname or fname are invalid. Some graivity meter json files define names that are invalid matab names, eg with spaces and starting with a number
         catch
             % ignore failures
         end
