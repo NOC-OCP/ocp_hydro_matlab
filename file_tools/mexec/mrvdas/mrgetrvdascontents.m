@@ -40,9 +40,10 @@ function rvdas_contents = mrgetrvdascontents
 %  fieldnames(rvdas_contents.cnav_gps_gngga)
 
 m_common
-rootcsv = MEXEC_G.RVDAS_CSVROOT;
+rootcsv = [MEXEC_G.RVDAS_CSVROOT '/'];
 csvname = [rootcsv 'table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv'];
 sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
+% sqlroot = ['psql -h ' '192.168.62.12' ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
 
 rvdas_tables = mrgettables;
 rvdas_tables_list = fieldnames(rvdas_tables);

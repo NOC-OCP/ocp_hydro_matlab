@@ -5,13 +5,13 @@ function argot = mrparseargs(argsin)
 % mexec interface for RVDAS data acquisition
 % First drafts of scripts for start jc211 28 jan 2021, alongside in Stanley
 %
-% Evolution on that cruise by bak, ylf, pa
+% Evolution on that cruise by bak, ylf, epa
 % *************************************************************************
 %
 % This function parses arguments to mrvdas functions. The intention is that
 % mrvdas functions can be called from a matlab command prompt with arguments
 % on the command line, or within a script with arguments as function
-% arguments in the usal way.
+% arguments in the usual way.
 %
 % eg
 %  >> mrload tsg now-1 now q;
@@ -20,7 +20,7 @@ function argot = mrparseargs(argsin)
 % or
 %  >> d = mrload('tsg',now-1,now,'q');
 %
-% The order of arguments is unimportant for this fucntion, except that
+% The order of arguments is unimportant for this function, except that
 % dnums, othernums and otherstrings will appear in the output structure
 % in the same order as they appear in the input cell array.
 % Some calling functions will need to process those numbers and strings in
@@ -48,7 +48,7 @@ function argot = mrparseargs(argsin)
 %   'q', and numbers corresponding to the values of now-1 and now.
 %
 % The function attempts to convert strings to numbers with str2num
-%   If the character string is a simple char representation of a number , it
+%   If the character string is a simple char representation of a number, it
 %   will succeed. eg '10' '7200' '[2021 1 28]'
 % If there is no conversion, the result is an empty double, and the
 %   argument is then processed as a string.
@@ -60,8 +60,8 @@ function argot = mrparseargs(argsin)
 %
 % A string that matches an rvdas table name or its mexec short equivalent,
 %   returned in argot.table
-% The string 'q', returned with argot.qflag = 'q'. argot.qflag = ''
-%   otherwise
+% The string 'q', returned with argot.qflag = 'q' 
+%   (otherwise, argot.qflag = '')
 % A string beginning with 'now' which is evaluated as a datenum
 % Any other datenum/datevec format, described below, converted to a
 %   datenum. Any large number, greater that 693959 = datenum([1899 12 29]) is

@@ -47,7 +47,7 @@ ncfile = m_openin(ncfile); % check we have found a valid mstar file name
 pdfot.ncfile = ncfile;
 
 h = m_read_header(pdfot.ncfile);
-if ~MEXEC_G.quiet; m_print_header(h); end
+m_print_header(h);
 
 % sort out colors
 if isfield(pdfin,'cols')
@@ -92,8 +92,8 @@ else
 end
 
 
-
 % sort out xlist and ylist
+
 if ~isfield(pdfin,'xlist')
     ok = 0;
     while ok == 0
@@ -133,20 +133,13 @@ ynumlist = m_getvlist(pdfot.ylist,h);
 
 xnum = xnumlist(1);
 xname = h.fldnam{xnum};
-% x = nc_varget(ncfile.name,xname);
-% x = reshape(x,1,numel(x)); % reshape to row
 
 numy = length(ynumlist);
 yname = {}; y = [];
 for k =1:numy
     ykname = h.fldnam{ynumlist(k)};
     yname = [yname ; ykname];
-%     yk = nc_varget(ncfile.name,ykname);
-%     yk = reshape(yk,1,numel(yk)); % reshape to rows
-%     y = [y; yk];
 end
-
-
 
 
 % start and stop dcs and time options if present
@@ -161,6 +154,12 @@ end
 if isfield(pdfin,'stopdc')
     stopdc = pdfin.stopdc;
 end
+if isfield(pdfin,'startdcv')
+    startdcv = pdfin.startdcv;
+end
+if isfield(pdfin,'stopdcv')
+    stopdcv = pdfin.stopdcv;
+end
 if isfield(pdfin,'time_scale')
     time_scale = pdfin.time_scale;
 end
@@ -171,7 +170,7 @@ if isfield(pdfin,'dctime')
     dctime = pdfin.dctime;
 end
 
-    
+
 
 % figure out the availability of a time variable
 % if a variable is specified in time_var use that to select data
@@ -214,34 +213,9 @@ if tvarnum > 0
 else
     dctime = 0;
 end
-    
+
 
 % figure out the start and stop data cycles
-if length(startdc) == 1
-    % assume these are data cycle numbers; if they're nan default to first
-    % and last data cycles
-    if isnan(startdc); startdc = 1; end
-    x1 = startdc;
-    if tvarnum > 0
-%         time_start_do = datenum(time(startdc)); % datenum relative to data_time_origin 
-%         time_stop_do = datenum(time(stopdc));
-        time_start_do = time(startdc); % datenum relative to data_time_origin 
-        time_start = time_start_do + datenum(h.data_time_origin); % matlab datenum of startdc
-    end
-end
-if length(stopdc) == 1
-    % assume these are data cycle numbers; if they're nan default to first
-    % and last data cycles
-    if isnan(stopdc); stopdc = h.dimrows(xnum)*h.dimcols(xnum); end
-    x2 = stopdc;
-    if tvarnum > 0
-%         time_start_do = datenum(time(startdc)); % datenum relative to data_time_origin 
-%         time_stop_do = datenum(time(stopdc));
-        time_stop_do = time(stopdc);
-        time_stop = time_stop_do + datenum(h.data_time_origin);
-    end
-end
-
 if (length(startdc) > 1 | length(stopdc) > 1 ) & isnan(tvarnum)
     m1 = 'Based on the startdc settings you appear to be trying ';
     m2 = 'to use time to select data cycles but no time variable was found, and ';
@@ -249,48 +223,16 @@ if (length(startdc) > 1 | length(stopdc) > 1 ) & isnan(tvarnum)
     m = sprintf('%s\n',m1,m2,m3);
     error(m)
 end
-
-if length(startdc) > 1
-    if length(startdc) == 4
-        % specified as day of year and hh mm ss
-        % the mapping from day number to time depends on leap years or not
-        % assume the year is the year of the first data cycle in the time
-        % variable
-        t0 = datevec(datenum(h.data_time_origin) + time(1));
-        y0 = t0(1);
-        time_start = (startdc(1)-1) + datenum([y0 1 1 startdc(2:4)]); % matlab datenum of 'startdc'
-    elseif length(startdc) == 6
-        time_start = datenum(startdc); % matlab datenum of 'startdc'
-    else
-        m = 'Time format for startdc not recognised as having 1,4, or 6 elements';
-        fprintf(MEXEC_A.Mfider,'%s\n',m);
-        error(' ');
-    end
-
-    time_start_do = time_start - datenum(h.data_time_origin); % datenum relative to data_time_origin
-    x1 = min(find(time >= time_start_do));
+if ~exist('startdcv','var')
+    startdcv = [];
 end
-
-if length(stopdc) > 1
-    if length(stopdc) == 4
-        % specified as day of year and hh mm ss
-        % the mapping from day number to time depends on leap years or not
-        % assume the year is the year of the first data cycle in the time
-        % variable
-        t0 = datevec(datenum(h.data_time_origin) + time(1));
-        y0 = t0(1);
-        time_stop = (stopdc(1)-1) + datenum([y0 1 1 stopdc(2:4)]);
-    elseif length(stopdc) == 6
-        time_stop = datenum(stopdc);
-    else
-        m = 'Time format for stopdc not recognised as having 1,4, or 6 elements';
-        fprintf(MEXEC_A.Mfider,'%s\n',m);
-        error(' ');
-    end
-
-    time_stop_do = time_stop - datenum(h.data_time_origin);
-    x2 = max(find(time <= time_stop_do));
+[x1, x1v, time_start_do, time_start] = parse_dc_time(startdc, startdcv, 1, tvarnum, time, h.data_time_origin);
+if ~exist('stopdcv','var')
+    stopdcv = [];
 end
+[x2, x2v, time_stop_do, time_stop] = parse_dc_time(stopdc, stopdcv, h.dimrows(xnum)*h.dimcols(xnum), tvarnum, time, h.data_time_origin);
+
+
 
 % now load precisely the data required to plot
 [r1 c1] = m_index_to_rowcol(x1,h,xnum);
@@ -313,10 +255,15 @@ for k =1:numy
     ykname = h.fldnam{ynumlist(k)};
     yname = [yname ; ykname];
     yk = nc_varget(ncfile.name,ykname,[r1-1 c1-1],[r2-r1+1,c2-c1+1]);
+    if ~isempty(x1v) && isfield(x1v,ykname) && x1v.(ykname)>x1
+        yk(1:x1v.(ykname)-1) = NaN;
+    end
+    if ~isempty(x2v) && isfield(x2v,ykname) && ~isempty(x2v.(ykname)) && x2v.(ykname)<x2
+        yk(end-(x2-x2v.(ykname)-1):end) = NaN;
+    end
     yk = reshape(yk,1,numel(yk)); % reshape to rows
     y = [y; yk];
 end
-
 
 % sort out data and units for xlabel
 xscale = 1;
@@ -337,7 +284,7 @@ else
         end
         xraw = x;
         if issecs == 1; x = x/86400; xscale = 1/86400; end % convert to days relative to data_time_origin
-
+        
         if isnan(time_scale)
             time_scale = 2; % default: minutes after start time
             pdfot.time_scale = time_scale;
@@ -347,8 +294,8 @@ end
 
 
 switch time_scale
-    % recall that 
-    % x contains the data in days after the data_time_origin; 
+    % recall that
+    % x contains the data in days after the data_time_origin;
     % time_start_do is the time of the start time in days after the data_time_origin
     % case 0 is when x is not a time variable
     % In other cases x is a time variable and we control the scaling of x
@@ -381,20 +328,6 @@ if exist('time_start_do','var')fstruct.time_start_do = time_start_do; end
 if exist('time_start','var')fstruct.time_start = time_start; end
 if exist('xscale','var')fstruct.xscale = xscale; end
 
-% % % % fiddle by sga to get a sort of overxy
-% % % % before first plot set pdfin.hold
-% % % % pass this pdf into the second and subsequent plots
-% % % 
-% % % if isfield(pdfin,'fighandle')
-% % %   figure(pdfin.fighandle);
-% % %   hold on
-% % % else
-% % %   m_figure
-% % %   if isfield(pdfin,'hold')
-% % %     pdfot.fighandle = gcf;
-% % %   end
-% % % end
-
 % Version of overxy on JC032, exploiting SGA's idea from JC031
 if isfield(pdfin,'axeshandle') & isfield(pdfin,'over')
     if pdfin.over ~= 1
@@ -408,7 +341,7 @@ else
     pdfot.over = 0;
 end
 over = pdfot.over;
- 
+
 % Addition by BAK on JC032; adapted from mcontr to allow many plots on one
 % page, controlled by pdfin.newfigure
 if isfield(pdfin,'newfigure')
@@ -418,39 +351,20 @@ else
 end
 pdfot.newfigure = newfigure;
 
-% % % paperh = 29.6774; % A4 papersize
-% % % paperw = 20.984;
-% % % paperm = 0.25*2.54; % margin 0.635 cm = 0.25 inch
-% Note on orientation, example using papertype usletter, 11 inches by 8.5:
-% orient landscape: paperposition gives plot area 10.5 wide 8 high
-% orient portrait:, the paper is now upright, but the plot area is still
-% 'horizontal', ie 8 wide, 6 high
-%
-% so you need orient tall, to get a plot area 8 wide and 10.5 high.
-%
 if strncmp(newfigure,'l',1)
     m_figure
     set(gcf,'PaperType','a4');
     orient landscape
-%     set(gcf,'PaperUnits','centimeters')
-%     set(gcf,'PaperSize',[paperh paperw])
-%     set(gcf,'PaperType','a4')
-%     set(gcf,'PaperPosition',[paperm paperm paperh-2*paperm paperw-2*paperm])
 elseif strncmp(newfigure,'p',1)
     m_figure
     set(gcf,'PaperType','a4');
-%     orient portrait
     orient tall
-%     set(gcf,'PaperUnits','centimeters')
-%     set(gcf,'PaperSize',[paperw paperh])
-%     set(gcf,'PaperType','a4');
-%     set(gcf,'PaperPosition',[paperm paperm paperw-2*paperm paperh-2*paperm])
 else
     newfigure = 'none';
     hold on
-     % no new figure; allows new plots in same figure
+    % no new figure; allows new plots in same figure
 end
-    
+
 % sort out axes & ticks
 if isfield(pdfin,'xax')
     xax = pdfin.xax;
@@ -461,7 +375,10 @@ if isfield(pdfin,'xax')
     end
 else
     % use a simple plot to detect limits and ticks for x
-    plot(x,y(1,:));
+    %     plot(x,y(1,:)); bak on jc211 1 mar 2021. Previously if y(1,:) was
+    %     largely absent, then the xlim found might not be wide enough to plot
+    %     all vars. Now ensure all vars appear within xlim.
+    plot(x,m_nansum(y,1));
     h0 = gca;
     xax = get(h0,'xlim');
     xt = get(h0,'xtick');
@@ -474,9 +391,9 @@ pdfot.ntick(1) = nxt;
 
 % nyt is always defined by pdfin or default
 if isfield(pdfin,'ntick')
-        nyt = pdfin.ntick(2);
-    else
-        nyt = ntickdef(2);
+    nyt = pdfin.ntick(2);
+else
+    nyt = ntickdef(2);
 end
 if isfield(pdfin,'yax')
     yax = pdfin.yax;
@@ -505,7 +422,7 @@ for k = 1:numy
 end
 
 xnorm = (x-xax(1))/xr;
-ynorm = nan+y; 
+ynorm = nan+y;
 for k = 1:numy
     ynorm(k,:) = (y(k,:) - yax(k,1))./yr(k); % normalised y data in range 0 to 1; corresponds to axis min to axis max
 end
@@ -534,7 +451,7 @@ if isfield(pdfin,'plotsize')
     plotsize = pdfin.plotsize;
 else
     plotsize = [18 12]; % default plot size
-    plotsize = pplotsize; % Added by DAS set at 
+    plotsize = pplotsize; % Added by DAS set at
 end
 pdfot.plotsize = plotsize;
 pw = plotsize(1);
@@ -561,7 +478,7 @@ for kv = 1:numy
     widthindex = mod(kv,length(widths));
     if widthindex == 0; widthindex = length(widths); end
     lines{kv} = [cols(colindex) symbols{symindex} styles{styleindex}];
-
+    
     % construct y tick labels
     % remove trailing 0 or decimal point
     for k = 1:length(yt)
@@ -573,13 +490,13 @@ for kv = 1:numy
         while strcmp(str(1),' ') == 1
             str(1) = [];
         end
-
+        
         latex_str = ['\color{' colstrings{colindex} '}'];
         str = [latex_str str];
         ytstr{kv,k} = str;
     end
-
-    if kv == 1; 
+    
+    if kv == 1;
         if over == 0
             % open plot of required size
             ha = axes('position',[0 0 .01 .01]);
@@ -592,10 +509,9 @@ for kv = 1:numy
         pdfot.axeshandle = ha;
         
         % plot first data
-
+        
         hplot(kv) = plot(ha,xnorm,ynorm(1,:),lines{1},'linewidth',widths(1));
-%         ha = gca; % removed on JC032; now set elsewhere
-%         set(ha,'position',[.1 .15 .7 .7]);
+        
         axis([0 1 0 1]);
         set(ha,'xtick',xt);
         set(ha,'ytick',yt);
@@ -611,12 +527,9 @@ for kv = 1:numy
         set(ha,'yticklabel',empty);
         hold on; grid on;
         
-%         set(gca,'units','centimeters'); % removed on JC032; now set elsewhere
         set(gcf,'defaultaxesfontsize',fontsize)
         set(gcf,'defaulttextfontsize',fontsize)
-
-%         posnew = [posaxes]; % removed on JC032; now set elsewhere
-%         set(gca,'position',posnew);
+        
     else
         hplot(kv) = plot(ha,xnorm,ynorm(kv,:),lines{kv},'linewidth',widths(widthindex));
     end
@@ -633,15 +546,15 @@ xposall = [-t1 pw+t1:tw:2*pw]; % first yticks at left; next set at right and the
 for k = 1:length(yt)
     xpos2 = xposall;
     xpos = xpos2(1);
-%     xpos_data = xax(1) + xr * xpos;
+    %     xpos_data = xax(1) + xr * xpos;
     ytl = ytlabel{k};
     while length(ytl) > 0
-
+        
         % ngroup = 3
         ngroup = 2; % number of y variable annotations to display before moving to a new column
         n = min(ngroup,length(ytl));
         ytuse = ytl(1:n);
-
+        
         ht = text(xpos,yt(k),ytuse);
         set(ht,'units','centimeters')
         pp = get(ht,'position');
@@ -649,7 +562,7 @@ for k = 1:length(yt)
         set(ht,'position',pp)
         if xpos < 0.5; set(ht,'HorizontalAlignment','right'); end
         if xpos > 0.5; set(ht,'HorizontalAlignment','left'); end
-
+        
         xpos2(1) = [];
         xpos = xpos2(1);
         ytl(1:n) = [];
@@ -693,28 +606,6 @@ set(hh,'VerticalAlignment','bottom')
 pdfot.handle_title_2 = hh; % save to pdfot so that title can be reset after end of plotting
 
 
-% % % %Date string
-% % % str = datestr(now,31);
-% % % dateposx = 0;
-% % % dateposy = 1.02;
-% % % hh = text(dateposx,dateposy,str); %position normalised on xax and yax scales
-% % % set(hh,'units','centimeters')
-% % % set(hh,'position',[-0.9*ox,ph+th]);
-% % % set(hh,'HorizontalAlignment','left')
-% % % set(hh,'VerticalAlignment','bottom')
-% % % set(hh,'fontsize',max(4,fontsize-4));
-
-% % % %Prog string
-% % % str = MEXEC_A.Mprog;
-% % % progposx = 0;
-% % % progposy = 1.1;
-% % % hh = text(progposx,progposy,str); %position normalised on xax and yax scales
-% % % set(hh,'units','centimeters')
-% % % set(hh,'position',[-0.9*ox,ph+th+th]);
-% % % set(hh,'HorizontalAlignment','left')
-% % % set(hh,'VerticalAlignment','bottom')
-% % % set(hh,'fontsize',max(4,fontsize-4));
-
 %Prog & date string combined and rotated
 str = [MEXEC_A.Mprog '  ' datestr(now,31)];
 progposx = 0;
@@ -722,6 +613,7 @@ progposy = 1.1;
 hh = text(progposx,progposy,str); %position normalised on xax and yax scales
 set(hh,'units','centimeters')
 set(hh,'position',[-0.9*ox,ph+t1+th]);
+if plotorg(1) > 10; set(hh,'position',[-3,ph+t1+th]); end
 set(hh,'HorizontalAlignment','right')
 set(hh,'VerticalAlignment','top')
 set(hh,'Rotation',90);
@@ -752,6 +644,7 @@ startposy = -0.06;
 hh = text(startposx,startposy,strstart); %position normalised on xax and yax scales
 set(hh,'units','centimeters')
 set(hh,'position',[-0.9*ox,-t1-th]);
+if plotorg(1) > 10; set(hh,'position',[-3,-t1-th]); end
 set(hh,'HorizontalAlignment','left')
 set(hh,'VerticalAlignment','top')
 set(hh,'fontsize',max(4,fontsize-2));
@@ -762,6 +655,7 @@ stopposy = -0.12;
 hh = text(stopposx,stopposy,strstop); %position normalised on xax and yax scales
 set(hh,'units','centimeters')
 set(hh,'position',[-0.9*ox,-t1-th-th]);
+if plotorg(1) > 10; set(hh,'position',[-3,-t1-th-th]); end
 set(hh,'HorizontalAlignment','left')
 set(hh,'VerticalAlignment','top')
 set(hh,'fontsize',max(4,fontsize-2));
@@ -802,9 +696,9 @@ yshift = [ph ph/2 yshift];
 for kv = 1:numy
     colindex = mod(kv,length(cols));
     if colindex == 0; colindex = length(cols); end
-%     latex_str = ['\color{' colstrings{colindex} '}'];
+    %     latex_str = ['\color{' colstrings{colindex} '}'];
     str = [yname{kv} ' (' m_remove_outside_spaces(h.fldunt{ynumlist(kv)}) ')'];
-%     str = [latex_str str];
+    %     str = [latex_str str];
     ystr{kv} = str;
     hh = text(xshift(kv),yshift(kv),ystr{kv});
     if kv < 3
@@ -826,17 +720,6 @@ for kv = 1:numy
     end
 end
 
-% % set(gca,'units','centimeters');
-% % posaxes = get(gca,'position');
-% % if isfield(pdfin,'plotsize')
-% %     plotsize = pdfin.plotsize;
-% % else
-% %     plotsize = [18 12];
-% % end
-% % pdfot.plotsize = plotsize;
-% % posnew = [posaxes(1) posaxes(2) plotsize(1) plotsize(2)];
-% % set(gca,'position',posnew);
-
 % need to review all labelling;
 % consider the detailed location and scaling; use mm instead of scaled values;
 % need xtick labels
@@ -845,48 +728,93 @@ end
 set(gcf,'units','centimeters');
 set(gcf,'position',pfigsize);
 
-return
 
 
-% % % % % % xax = pdf.xax;
-% % % % % % yax = pdf.yax;
-% % % % % ntdef = 0; % record whether number of ticks was default
-% % % % % if isfield(pdf,'ntick')
-% % % % %     ntick = pdf.ntick;
-% % % % % else
-% % % % %     ntick = [10 10];
-% % % % %     ntdef = 1; % note that the number of ticks comes form default
-% % % % %     pdf.ntick = ntick;
-% % % % % end
-% % % % % 
-
-% % % % % nxt = ntick(1);
-% % % % % nyt = ntick(2);
-% % % % % 
-% % % % % 
-% % % % % %read header
-% % % % % % h = m_read_header(ncfile);
-% % % % % % m_print_header(h);
-% % % % % 
-% % % % % %turn x and y var lists to numbers
-% % % % % xnumlist = m_getvlist(pdf.xlist,h);
-% % % % % ynumlist = m_getvlist(pdf.ylist,h);
-% % % % % 
-% % % % % xnum = xnumlist(1);
-% % % % % xname = h.fldnam{xnum};
-% % % % % % x = nc_varget(ncfile.name,xname);
-% % % % % % x = reshape(x,1,numel(x)); % reshape to row
-% % % % % 
-% % % % % numy = length(ynumlist);
-% % % % % yname = {}; y = [];
-% % % % % for k =1:numy
-% % % % %     ykname = h.fldnam{ynumlist(k)};
-% % % % %     yname = [yname ; ykname];
-% % % % % %     yk = nc_varget(ncfile.name,ykname);
-% % % % % %     yk = reshape(yk,1,numel(yk)); % reshape to rows
-% % % % % %     y = [y; yk];
-% % % % % end
-% % % % % 
-
-
-
+    function [x, xv, time_do, time_out] = parse_dc_time(dc, dcv, dtdefaultval, tvarnum, time, data_time_origin);
+        
+        if isstruct(dcv)
+            fn = fieldnames(dcv);
+        else
+            xv = [];
+        end
+        
+        if length(dc) == 1
+            % assume these are data cycle numbers; if they're nan default to first
+            % and last data cycles
+            if isnan(dc)
+                x = dtdefaultval;
+            else
+                x = dc;
+            end
+            if isstruct(dcv)
+                xv = dcv;
+            end
+            if tvarnum > 0
+                %                 time_do = time(dc); % datenum relative to data_time_origin
+                % bak on jc211 The line above doesn't work, if dc is nan. I'm not sure how
+                % long it has been like this without being discovered.
+                time_do = time(x); % datenum relative to data_time_origin  
+                time_out = time_do + datenum(data_time_origin); % matlab datenum of startdc
+            end
+            
+        else
+            
+            if length(dc)==4
+                % specified as day of year and hh mm ss
+                % the mapping from day number to time depends on leap years or not
+                % assume the year is the year of the first data cycle in the time
+                % variable
+                t0 = datevec(datenum(data_time_origin) + time(1));
+                y0 = t0(1);
+                time_out = (dc(1)-1) + datenum([y0 1 1 dc(2:4)]);
+                time_do = time_out - datenum(data_time_origin); % datenum relative to data_time_origin
+                if dtdefaultval==1
+                    x = min(find(time >= time_do));
+                else
+                    x = max(find(time <= time_do));
+                end
+                if isstruct(dcv)
+                    for no = 1:length(fn)
+                        to = (dcv.(fn{no})(1)-1) + datenum([y0 1 1 dcv.(fn{no})]);
+                        td = to - datenum(data_time_origin);
+                        if dtdefaultval==1
+                            xv.(fn{no}) = min(find(time >= td));
+                        else
+                            xv.(fn{no}) = max(find(time <= td));
+                        end
+                    end
+                end
+                
+            elseif length(dc) == 6
+                % [yyyy mm dd HH MM SS]
+                time_out = datenum(dc);
+                time_do = time_out - datenum(data_time_origin); % datenum relative to data_time_origin
+                if dtdefaultval==1
+                    x = min(find(time >= time_do));
+                else
+                    x = max(find(time <= time_do));
+                end
+                if isstruct(dcv)
+                    fn = fieldnames(dcv);
+                    for no = 1:length(fn)
+                        to = datenum(dcv.(fn{no}));
+                        td = to - datenum(data_time_origin);
+                        if dtdefaultval==1
+                            xv.(fn{no}) = min(find(time >= td));
+                        else
+                            xv.(fn{no}) = max(find(time <= td));
+                        end
+                    end
+                end
+                
+            else
+                m = 'Time format for startdc not recognised as having 1,4, or 6 elements';
+                fprintf(MEXEC_A.Mfider,'%s\n',m);
+                error(' ');
+            end
+            
+        end
+        
+        
+        
+        

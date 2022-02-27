@@ -57,27 +57,35 @@ def = mrdefine;
 table = mrresolve_table(table); % table is now an RVDAS table name for sure.
 vdef = def.mrtables.(table);
 
-rootcsv = MEXEC_G.RVDAS_CSVROOT;
+rootcsv = [MEXEC_G.RVDAS_CSVROOT '/'];
 
 csvname = [rootcsv table '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv'];
 
 sqlname = vdef{1,1};
 
 sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
+sqlroot = ['psql -h ' '192.168.62.12' ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
 
 % Number of cycles. Skip if fastflag is set to 'f'
 
 if ~strcmp('f',fastflag)
     sqltext = ['\copy (select count(*) from ' sqlname ' ) to ''' csvname ''' csv '];
     psql_string = [sqlroot ' -c "' sqltext '"'];
-    system(psql_string);
-    
+    try
+        [s1, ~] = system(psql_string);
+        if s1~=0
+            error('LD_LIBRARY_PATH?')
+        end
+    catch
+        [s1, ~] = system(['unsetenv LD_LIBRARY_PATH ; ' psql_string]);
+    end
+
     ncyc = load(csvname); % Should just load a number
 else
     ncyc = -1;
 end
 
-if ncyc == 0;
+if isempty(ncyc) || ncyc == 0
     dn1 = nan;
     dn2 = nan;
 %     fprintf(MEXEC_A.Mfidterm,'\n%s\n\n',table)
@@ -87,18 +95,26 @@ if ncyc == 0;
     d.ncyc = ncyc;
     d.vdef = vdef;
     
-    rmfile(csvname);
+    delete(csvname);
 
     return
     
 end
 
 
+
 % Earliest time
 
 sqltext = ['\copy (select time from ' sqlname ' order by time asc limit 1) to ''' csvname ''' csv '];
 psql_string = [sqlroot ' -c "' sqltext '"'];
-system(psql_string);
+try
+    [s1, ~] = system(psql_string);
+    if s1~=0
+        error('LD_LIBRARY_PATH?')
+    end
+catch
+    [s1, ~] = system(['unsetenv LD_LIBRARY_PATH ; ' psql_string]);
+end
 fid = fopen(csvname,'r');
 t = fgetl(fid);  % t is now a RVDAS time string
 fclose(fid);
@@ -112,7 +128,7 @@ if ~ischar(t)
     d.ncyc = 0;
     d.vdef = vdef;
     
-    rmfile(csvname);
+    delete(csvname);
 
     return
 end
@@ -124,7 +140,14 @@ dn1 = mrconverttime({t});
 
 sqltext = ['\copy (select time from ' sqlname ' order by time desc limit 1) to ''' csvname ''' csv '];
 psql_string = [sqlroot ' -c "' sqltext '"'];
-system(psql_string);
+try
+    [s1, ~] = system(psql_string);
+    if s1~=0
+        error('LD_LIBRARY_PATH?')
+    end
+catch
+    [s1, ~] = system(['unsetenv LD_LIBRARY_PATH ; ' psql_string]);
+end
 fid = fopen(csvname,'r');
 t = fgetl(fid);
 fclose(fid);
@@ -132,7 +155,7 @@ fclose(fid);
 dn2 = mrconverttime({t});
 
 
-rmfile(csvname);
+delete(csvname);
 
 if isempty(qflag)
     fprintf(MEXEC_A.Mfidterm,'\n%s\n\n',table)

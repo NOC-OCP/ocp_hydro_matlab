@@ -63,13 +63,15 @@ sortlist = sort(mrtables_list);
 
 ntables = length(sortlist);
 
+
 for kl = 1:ntables
     table = sortlist{kl};
     ktable = find(strcmp(table,tablemap(:,2)));
-    mtable = tablemap{ktable,1};
+    try; mtable = tablemap{ktable,1};catch; keyboard; end
     mtablepad = [mtable '                          '];
     mtablepad = mtablepad(1:12); % mexec table, padded to length 12;
     d = mrdfinfo(table,'q',fastflag);
+    nowsave = now; % bak on dy146 13 feb 2022; save the now time which will be used as a test for whether to print in red
     dn1 = d.dn1;
     dn2 = d.dn2;
     nc = d.ncyc;
@@ -104,6 +106,12 @@ for kl = 1:ntables
     warning_times = { % set other warning times in seconds, for mexec table names
         'em120' 20
         'ea600' 20
+        'multib' 20
+        'multib_t' 20
+        'singleb' 20
+        'singleb_t' 20
+        'rex2_wave' 300
+        'wamos' 300
         };
     if isempty(warning_times); warning_times = cell(0,2); end
     kt = find(strcmp(mtable,warning_times(:,1)));
@@ -111,8 +119,8 @@ for kl = 1:ntables
         warn = warning_times{kt,2};
     end
     
-    if nc ~= 0 & now-dn2 > warn/86400
-        % print to err fid if end time was more than 2 minutes ago. But
+    if nc ~= 0 & nowsave-dn2 > warn/86400
+        % print to err fid if end time was more than 'warn' seconds ago. But
         % only for tables with at least some data. This limit could be set
         % differently for each table, dpeending on the expected refresh
         % rate.
@@ -120,11 +128,11 @@ for kl = 1:ntables
     end
     
     if nc > 0
-        fprintf(fidprint,'%10d   %s   %s %s  %s  %s %s   %s   %s \n',nc,s1,s2,s3,'to',s5,s4,s6,[mtablepad table]);
+        fprintf(fidprint,'%10d   %s   %s %s  %s  %s %s   %s   %s \n',nc,s1,s2,s3,'to',s5,s6,s4,[mtablepad table]);
     elseif nc == 0
         fprintf(fidprint,'%10d   %8s   %3s %8s  %2s  %3s %8s   %8s   %s \n',nc,' ',' ',' ',' ',' ',' ',' ',[mtablepad table]);
     else
-        fprintf(fidprint,'%10s   %s   %s %s  %s  %s %s   %s   %s \n',' ',s1,s2,s3,'to',s5,s4,s6,[mtablepad table]);
+        fprintf(fidprint,'%10s   %s   %s %s  %s  %s %s   %s   %s \n',' ',s1,s2,s3,'to',s5,s6,s4,[mtablepad table]);
     end
     
     
