@@ -1,26 +1,18 @@
 %%%%% apply carter table soundspeed correction to single-beam bathymetry %%%%%
 
 %work on the latest file, which may already be an edited version; always output to otfile
-if ~exist([otfile '.nc'])
+if ~exist([otfile '.nc'],'file')
     copyfile(m_add_nc(infile1), m_add_nc(otfile));
 end
 [d,h] = mload(otfile,'time','depth_uncor',' ');
 
 navname = MEXEC_G.default_navstream; navdir = mgetdir(navname);
 navfile = fullfile(navdir, [navname '_' mcruise '_d' day_string '_raw.nc']);
-if exist(navfile)
+if exist(navfile,'file')
     
     [dn,hn] = mload(navfile,'/');
-    lat_choices = {'lat' 'latitude'}; % find either
-    latstr = varname_find(lat_choices, hn.fldnam);
-    if length(latstr)==0
-        error('lat not found uniquely in input file; error in mday_01_cordep.m')
-    end
-    lon_choices = {'lon' 'long' 'longitude'}; % find any
-    lonstr = varname_find(lon_choices, hn.fldnam);
-    if length(lonstr)==0
-        error('lon not found uniquely in input file; error in mday_01_cordep.m')
-    end
+    latstr = munderway_varname('latvar', hn.fldnam, 1, 's');
+    lonstr = munderway_varname('lonvar', hn.fldnam, 1, 's');
     lon = dn.(lonstr);
     lat = dn.(latstr);
 

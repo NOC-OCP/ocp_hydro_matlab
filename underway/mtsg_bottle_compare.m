@@ -17,10 +17,10 @@ if usecallocal
     tsgfn = [tsgfn '_cal'];
 end
 [dt, ht] = mload(tsgfn, '/');
-salvar = varname_find({'salinity' 'psal' 'salinity_raw'},ht.fldnam);
-tempvar = varname_find({'housingtemp' 'temp_h' 'tstemp' 'temp_raw'},ht.fldnam);
-tempsst = varname_find({'remotetemp' 'temp_4' 'sstemp'},ht.fldnam);
-condvar = varname_find({'conductivity' 'cond'},ht.fldnam);
+salvar = munderway_varname('salvar',ht.fldnam,1,'s');
+tempvar = munderway_varname('tempvar',ht.fldnam,1,'s');
+tempsst = munderway_varname('sstvar',ht.fldnam,1,'s');
+condvar = munderway_varname('condvar',ht.fldnam,1,'s');
 
 if usecallocal
     switch salvar

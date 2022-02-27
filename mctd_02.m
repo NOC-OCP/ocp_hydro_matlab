@@ -34,7 +34,7 @@ prefix = ['ctd_' mcruise '_' stn_string];
 cleanfile = fullfile(root_ctd, [prefix '_raw_cleaned.nc']);
 infile1 = fullfile(root_ctd, [prefix '_raw.nc']);
 infile0 = fullfile(root_ctd, [prefix '_raw_noctm.nc']);
-otfile24 = fullfile(root_ctd, [prefix stn_string '_24hz']);
+otfile24 = fullfile(root_ctd, [prefix '_24hz']);
 
 %figure out which file to start from
 if exist(cleanfile, 'file') && exist(infile0, 'file')
@@ -85,20 +85,21 @@ end
 
 if didedits
     mfsave(cleanfile, d, h);
-    filename = cleanfile;
+    rawfile_use = cleanfile;
 else
-    filename = infile;
+    rawfile_use = infile;
 end
 
 %%%%% now do corrections to produce _24hz file %%%%%
 
-copyfile(m_add_nc(filename), m_add_nc(otfile24));
+copyfile(m_add_nc(rawfile_use), m_add_nc(otfile24));
+system(['chmod 644 ' m_add_nc(otfile24)]) %in case this was _raw (not _raw_cleaned, which is not write-protected)
 
 %which corrections to do?
 scriptname = mfilename; oopt = 'raw_corrs'; get_cropt
 
 %%%%% oxygen hysteresis and/or renaming oxygen variables %%%%%
-[d, h] = mloadq(filename, '/');
+[d, h] = mloadq(rawfile_use, '/');
 if castopts.dooxyrev || castopts.dooxyhyst
     [dnew, hnew] = ctd_apply_oxyhyst(d, h, castopts);
 else

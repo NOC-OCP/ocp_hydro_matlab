@@ -13,26 +13,12 @@
 
 switch scriptname
     
-        %%%%%%%%%% mbot_01 %%%%%%%%%%
-    case 'mbot_01'
-        switch oopt
-            case 'nbotfile'
-                crhelp_str = {'Sets output file to which to write information about Niskins from the .bl file'
-                    ['default: one file per station: ' fullfile(root_botcsv, ['bot_' mcruise '_' stn_string '.csv'])]'};
-                botfile = fullfile(root_botcsv, [prefix1 stn_string '.csv']);
-            case 'nispos'
-                crhelp_str = {'niskin gives the bottle numbers (e.g. serial numbers, if known) for niskins in '
-                    'carousel positions 1 through nnisk. defaults to [1:24].'};
-                niskin = [1:24];
-            case 'botflags'
-                crhelp_str = {'Optional: edit niskin_flag, the vector of quality flags for Niskin bottle firing'
-                    'for each station.'};
-        end
-        %%%%%%%%%% end mbot_01 %%%%%%%%%%
-        
         %%%%%%%%%% msbe35_01 %%%%%%%%%%
     case 'msbe35_01'
         switch oopt
+            case 'sbe35file'
+                crhelp_str = {'Filename pattern for SBE35 files (including wildcard).'};
+                sbe35file = sprintf('%s_SBE35_CTD*.asc', upper(mcruise));
             case 'sbe35_datetime_adj'
                 crhelp_str = {'Place to modify SBE35 file dates/times, as date is sometimes '
                     'not reset correctly before deployment'};
@@ -57,43 +43,14 @@ switch scriptname
             case 'sal_off'
                 crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive) for ranges '
                     'of sampnum, or leave empty (default) to run msal_standardise_avg to calculate and plot.'
-                    'Also must set sal_off_base to specify how to match them to samples. Optionally set '
+                    'Also must set sal_off_base (default ''sampnum_run'') to specify how to match them to samples. Optionally set '
                     'sal_adj_comment here to give information on how standards offsets were chosen (if'
                     'not chosen using msal_standardise_avg).'};
                 sal_off = [];
-                sal_off_base = '';
+                sal_off_base = 'sampnum_run';
                 sal_adj_comment = '';
         end
         %%%%%%%%%% end msal_01 %%%%%%%%%%
-        
-        %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
-    case 'msal_standardise_avg'
-        switch oopt
-            case 'salcsv'
-                sal_csv_file = ['sal_' mcruise '_01.csv'];
-                sal_mat_file = ['sal_' mcruise '_01.mat'];
-            case 'offset'
-                %set offset if standards or offset are not in database
-            case 'check_sal_runs'
-                calc_offset = 1; %default is to calculate offset from standards readings - 2*K15
-                check_sal_runs = 1; %default is to plot standards and sample runs to compare before averaging
-                plot_all_stations = 0;
-            case 'k15'
-                %no default for this
-            case 'std2use'
-                std2use = ones(size(offs));
-            case 'fillstd'
-                %by default, interpolate offsets between standards points just using index
-                %(this works if there is a standard at the beginning and end of each crate)
-                xoff = 1:length(ds_sal.sampnum);
-                %can also fill in missing values in ds_sal.offset here
-            case 'cellT'
-                %set cellT if it is not in database
-            case 'sam2use'
-                sam2use = ones(size(sams));
-                salbotqf = 2+zeros(length(iisam),1);
-        end
-        %%%%%%%%%% end msal_standardise_avg %%%%%%%%%%
         
         %%%%%%%%%% moxy_01 %%%%%%%%%%
     case 'moxy_01'
@@ -150,12 +107,7 @@ switch scriptname
                 crhelp_str = {'Place to change flags, ds_oxy.botoxya_flag, ds_oxy.botoxyb_flag.'};
         end
         %%%%%%%%%% end moxy_01 %%%%%%%%%%
-        
-        %%%%%%%%%% msam_oxykg %%%%%%%%%%
-    case 'msam_oxykg'
-        iib = '[]'; %just have botoxy = botoxya, etc.
-        %%%%%%%%%% end msam_oxykg %%%%%%%%%%
-        
+                
         %%%%%%%%%% mnut_01 %%%%%%%%%%
     case 'mnut_01'
         switch oopt
@@ -184,17 +136,11 @@ switch scriptname
                     'nh4_flag'	  'woceflag'
                     };
                 vars(:,3) = vars(:,1);
-            case 'flags'
-        end
-        %%%%%%%%%% end mnut_01 %%%%%%%%%%
-        
-        %%%%%%%%%% mnut_to_sam %%%%%%%%%%
-    case 'mnut_to_sam'
-        switch oopt
+            case 'flags'            
             case 'nutlabtemp'
                 labtemp = 21;
         end
-        %%%%%%%%%% end mnut_to_sam %%%%%%%%%%
+        %%%%%%%%%% end mnut_01 %%%%%%%%%%
         
         %%%%%%%%%% mpig_01 %%%%%%%%%%
     case 'mpig_01'
@@ -257,7 +203,7 @@ switch scriptname
     case 'msam_ashore_flag'
         crhelp_str = {'set fnin, the file from which to load information on samples collected'
             'for analysis ashore;'
-            'varnames (Mx1 cell array), a list of flag field names for sam_cruise_all file;'
+            'flagvars (Mx1 cell array), a list of flag field names for sam_cruise_all file;'
             'sampnums (MxN cell array), lists of sample numbers, and'
             'flagvals (1xN vector), the values to assign to flag variables for these sets of sampnums.'
             'in most cases flagvals = 1 and sampnums has a single column. sampnums not specified default'

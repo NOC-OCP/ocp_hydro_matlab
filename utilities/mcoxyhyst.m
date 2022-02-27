@@ -21,7 +21,7 @@ if length(H2)<length(zz); H2 = H2 + zz; end
 if length(H3)<length(zz); H3 = H3 + zz; end
 
 press(press<0) = 0; %***
-iig = find(isfinite(press+oxygen_sbe));
+iig = find(isfinite(press+oxygen_sbe)); iig = iig(:)';
 kfirst = min(iig);
 
 %initialise

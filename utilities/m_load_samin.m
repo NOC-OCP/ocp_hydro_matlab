@@ -81,7 +81,7 @@ for no = 1:2:length(varargin)
 end
 
 %load as MxN cell array
-maxcol = 1e3;
+maxcol = 2e3;
 indata = mtextdload(infile, ',', maxcol);
 maxcol = size(indata, 2);
 
@@ -98,7 +98,7 @@ while k<=nrows
     %rows of indata
     iih = [];
     if k<=nrows-length(hcpat)+1
-        hm = logical(ones(1,maxcol));
+        hm = true(1,maxcol);
         for hno = 1:length(hcpat)
             hm = hm & strcmp(hcpat{hno}, indata(k+hno-1,:));
         end
@@ -171,7 +171,7 @@ for no = 1:length(hs.colhead(1,:))
     %remove extra and trailing _
     ch{no} = replace(ch{no},'__','_');
     ch{no} = ch{no}(1:end-1);
-    if isempty(ch{no}) | strcmp(ch{no},'_')
+    if isempty(ch{no}) || strcmp(ch{no},'_')
         iiec = [iiec no];
     end
 end
@@ -206,7 +206,7 @@ for rno = 1:length(iih)-1 %step through blocks
             iic = cno;
         else
             %find which column this variable is in in this block
-            iic = logical(ones(1,size(h,2)));
+            iic = true(1,size(h,2));
             for crno = 1:chrows
                 iic = iic & strcmpi(hs.colhead{crno,cno}, h(crno,:));
             end
@@ -233,7 +233,7 @@ for rno = 1:length(iih)-1 %step through blocks
                 end
             end
         else %this variable isn't present in this block (or is repeated!); NaN
-            ds.(ch{cno})(ls+[1:length(iis)],1) = repmat(NaN,length(iis),1);
+            ds.(ch{cno})(ls+[1:length(iis)],1) = NaN(length(iis),1);
         end
                 
     end
@@ -248,7 +248,7 @@ end
 warning('on','all')
 
 
-    function namecell = parse_vnames(namecell);
+    function namecell = parse_vnames(namecell)
         % function namecell = parse_vnames(namecell);
         % remove leading and trailing whitespace, and replace internal whitespace
         % and special characters with '_', for each element of namecell so that
@@ -268,7 +268,7 @@ warning('on','all')
             
             %remove leading and trailing whitespace
             iis = strfind(nc,' ');
-            if length(iis)>0 & length(iis)<length(nc)
+            if ~isempty(iis) && length(iis)<length(nc)
                 iic = setdiff(1:length(nc),iis);
                 nc(iis(iis<iic(1) | iis>iic(end))) = [];
             end

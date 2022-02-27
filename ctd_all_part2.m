@@ -10,6 +10,7 @@ stn = stnlocal; mwin_to_fir;
 
 stn = stnlocal; mfir_to_sam;
 
-stn = stnlocal; mbot_01;
+stations_to_reload = stnlocal; station_summary
+stn = stnlocal; mdep_01
 
 MEXEC_G.ssd = ssd0;

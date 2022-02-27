@@ -34,27 +34,25 @@ mdocshow(mfilename, ['average 1-Hz navigation stream from ' infile ' to 30 s in 
 mdocshow(mfilename, ['average 1-Hz navigation stream from ' infileh ' to 30 s in ' avfileh, ' merge onto 30 s averaged speed from ' spdfile ' into ' bstfile]);
 
 
-tave_period = 30; % seconds
-tave_period = round(tave_period);
+scriptname = 'ship'; oopt = 'avtime'; get_cropt
+tave_period = round(avnav); % seconds
 tav2 = round(tave_period/2);
 
 
 %%%%% create 30-second nav file from 1-Hz positions %%%%%
 
 [d, h] = mloadq(infile,'time',' ');
-lat_choices = {'lat' 'latitude'}; % find either
-latvar = varname_find(lat_choices, h.fldnam);
-lon_choices = {'lon' 'long' 'longitude'}; % find any
-lonvar = varname_find(lon_choices, h.fldnam);
+latvar = munderway_varname('latvar', h.fldnam, 1 ,'s');
+lonvar = munderway_varname('lonvar', h.fldnam, 1, 's');
 
 MEXEC_A.MARGS_IN = {
-infile
-wkfile{1}
-['time ' latvar ' ' lonvar]
-' '
-' '
-' '
-};
+    infile
+    wkfile{1}
+    ['time ' latvar ' ' lonvar]
+    ' '
+    ' '
+    ' '
+    };
 mcopya
 
 t1 = min(d.time);
@@ -63,52 +61,52 @@ t1 = tdays*86400;
 t1 = t1-tav2;
 tavstring = [sprintf('%d',t1) ' 1e10 ' sprintf('%d',tave_period)];
 MEXEC_A.MARGS_IN = {
-wkfile{1}
-avfile
-'/'
-'time'
-tavstring
-'b'
-};
+    wkfile{1}
+    avfile
+    '/'
+    'time'
+    tavstring
+    'b'
+    };
 msmoothnav
 
 
 %%%%% calculate speed, course, distrun from the 30-s averages %%%%%
 
 MEXEC_A.MARGS_IN = {
-avfile
-wkfile{2}
-['time ' latvar ' ' lonvar]
-['time ' latvar ' ' lonvar]
-'m'
-'ve'
-'vn'
-};
+    avfile
+    wkfile{2}
+    ['time ' latvar ' ' lonvar]
+    ['time ' latvar ' ' lonvar]
+    'm'
+    've'
+    'vn'
+    };
 mposspd
 
 MEXEC_A.MARGS_IN = {
-wkfile{2}
-wkfile{3}
-'/'
-'1'
-'ve vn'
-'smg'
-' '
-'cmg'
-' '
-};
+    wkfile{2}
+    wkfile{3}
+    '/'
+    '1'
+    've vn'
+    'smg'
+    ' '
+    'cmg'
+    ' '
+    };
 muvsd
 
 MEXEC_A.MARGS_IN = {
-wkfile{3}
-spdfile
-'/'
-[latvar ' ' lonvar]
-'y = m_nancumsum(sw_dist(x1,x2,''km'')); y(2:length(y)+1) = y; y(1) = 0;'
-'distrun'
-'km'
-' '
-};
+    wkfile{3}
+    spdfile
+    '/'
+    [latvar ' ' lonvar]
+    'y = m_nancumsum(sw_dist(x1,x2,''km'')); y(2:length(y)+1) = y; y(1) = 0;'
+    'distrun'
+    'km'
+    ' '
+    };
 mcalc
 
 %%%%% create 30-second heading file from 1-Hz positions %%%%%
@@ -121,8 +119,7 @@ t1 = tdays*86400;
 % unlike positions files, make gyro average be vector average of period ending on final timestamp, not centered on timestamp.
 tavstring = [sprintf('%d',t1) ' 1e10 ' sprintf('%d',tave_period)];
 toffstring = ['y = x + ' sprintf('%d',tav2)];
-head_choices = {'head' 'heading' 'head_gyr'}; 
-headvar = varname_find(head_choices, h.fldnam);
+headvar = munderway_varname('headvar', h.fldnam, 1, 's');
 
 MEXEC_A.MARGS_IN = {
     infileh
@@ -150,37 +147,37 @@ MEXEC_A.MARGS_IN = {
 muvsd
 
 MEXEC_A.MARGS_IN = {
-wkfile{5}
-wkfile{6}
-'/'
-'1'
-tavstring
-'b'
-};
+    wkfile{5}
+    wkfile{6}
+    '/'
+    '1'
+    tavstring
+    'b'
+    };
 mavrge
 
 MEXEC_A.MARGS_IN = {
-wkfile{6}
-avfileh
-'time'
-'1'
-'dum_e dum_n'
-'dumspd'
-' '
-'heading_av'
-' '
-};
+    wkfile{6}
+    avfileh
+    'time'
+    '1'
+    'dum_e dum_n'
+    'dumspd'
+    ' '
+    'heading_av'
+    ' '
+    };
 muvsd
 
 MEXEC_A.MARGS_IN = {
-avfileh
-'y'
-'time'
-toffstring
-' '
-' '
-' '
-};
+    avfileh
+    'y'
+    'time'
+    toffstring
+    ' '
+    ' '
+    ' '
+    };
 mcalib
 
 
@@ -209,7 +206,7 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         root_ash = mgetdir('M_ASH'); infile4 = fullfile(root_ash, ['ash_' mcruise '_01']);
         calcvar = 'heading_av a_minus_g';
         calcstr = ['y = mcrange(x1+x2,0,360);']; % prepare to add a_minus_g on discovery
-
+        
         %--------------------------------
         % merge in the a-minus-g heading correction from the ashtech file into the
         % bestnav file
@@ -224,26 +221,25 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
             'k'
             };
         mmerge
-        %--------------------------------
+        
+        %calculate the corrected heading <heading_av_corrected> using the a-minus-g
+        %heading correction. mcrange is used to ensure that this heading variable
+        %is always between 0 and 360 degrees.
+        % bak on jr281: on cook and jcr, there correction is zero because heading
+        % comes from an absolute source instead of the gyro.
+        MEXEC_A.MARGS_IN = {
+            wkfile{7}
+            bstfile
+            '/'
+            calcvar
+            calcstr
+            'heading_av_corrected'
+            'degrees'
+            ' '
+            };
+        mcalc
+        
 end
-%--------------------------------
-%calculate the corrected heading <heading_av_corrected> using the a-minus-g
-%heading correction. mcrange is used to ensure that this heading variable
-%is always between 0 and 360 degrees.
-% bak on jr281: on cook and jcr, there correction is zero because heading
-% comes from an absolute source instead of the gyro.
-MEXEC_A.MARGS_IN = {
-    wkfile{7}
-    bstfile
-    '/'
-    calcvar
-    calcstr
-    'heading_av_corrected'
-    'degrees'
-    ' '
-    };
-mcalc
-%--------------------------------
 
 for no = 1:length(wkfile)
     delete(m_add_nc(wkfile{no}))

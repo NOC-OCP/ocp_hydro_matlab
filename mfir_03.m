@@ -7,37 +7,27 @@ scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['adds CTD upcast data at bottle firing times to fir_' mcruise '_' stn_string '.nc']);
 
 root_ctd = mgetdir('M_CTD');
-infile1 = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
+infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
 %not using 24hz because we want at least some averaging
-infile2 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); 
+infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); 
 
 var_copycell = mcvars_list(2);
 % remove any vars from copy list that aren't available in the input file
-[var_copycell, var_copystr] = mvars_in_file(var_copycell, infile2);
+[var_copycell, var_copystr] = mvars_in_file(var_copycell, infile1);
+if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
 scriptname = mfilename; oopt = 'fir_fill'; get_cropt
-if strcmp(fillstr,'f')
-    absfill = inf;
-elseif strcmp(fillstr,'k')
-    absfill = 0;
-else
-    absfill = fillstr;
-end
 
-[dfir, hfir] = mloadq(infile1,'scan',' ');
-[dc, hc] = mloadq(infile2,'/');
+[dfir, hfir] = mloadq(infilef,'scan',' ');
+[dc, hc] = mloadq(infile1, var_copystr);
+dc = grid_profile(dc, 'scan', dfir.scan, firmethod, firopts);
 clear dnew hnew
 hnew.fldnam = {}; hnew.fldunt = {};
-data = NaN+zeros(length(dc.scan),length(var_copycell));
 for no = 1:length(var_copycell)
     ii = find(strcmp(var_copycell{no}, hc.fldnam));
     hnew.fldnam = [hnew.fldnam ['u' var_copycell{no}]];
     hnew.fldunt = [hnew.fldunt hc.fldunt{ii}];
-    data(:,no) = dc.(var_copycell{no});
-end
-data = merge_avmed(dc.scan, data, dfir.scan, avi_opt, absfill);
-for no = 1:length(var_copycell)
-    dnew.(['u' var_copycell{no}]) = data(:,no);
+    dnew.(['u' var_copycell{no}]) = dc.(var_copycell{no});
 end
 % bak: need to fix time offset
 dnew.utime = m_commontime(dnew.utime,hc.data_time_origin,hfir.data_time_origin);
@@ -45,5 +35,5 @@ dnew.utime = m_commontime(dnew.utime,hc.data_time_origin,hfir.data_time_origin);
 hnew.latitude = hc.latitude; hnew.longitude = hc.longitude; hnew.water_depth_metres = hc.water_depth_metres;
 
 MEXEC_A.Mprog = mfilename;
-mfsave(infile1, dnew, hnew, '-addvars');
+mfsave(infilef, dnew, hnew, '-addvars');
 

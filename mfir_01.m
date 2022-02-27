@@ -10,33 +10,47 @@ mdocshow(mfilename, ['reads in .bl file to fir_' mcruise '_' stn_string '.nc']);
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
 scriptname = mfilename; oopt = 'blinfile'; get_cropt
-infile = fullfile(root_botraw, infile);
-m = ['infile = ' infile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
+blinfile = fullfile(root_botraw, blinfile);
+m = ['infile = ' blinfile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 dataname = ['fir_' mcruise '_' stn_string];
 otfile = fullfile(root_ctd, dataname);
 
-cellall = mtextdload(infile,',',10); % load all text
+cellall = mtextdload(blinfile,',',10); % load all text
 nr = size(cellall,1);
 
 n = 1;
-position = NaN; scan = NaN;
+pos = NaN; scn = NaN;
 for kline = 1:nr
     if ~isempty(cellall{kline,4})
-        position(n) = str2num(cellall{kline,2});
-        scan(n) = str2num(cellall{kline,4});
+        pos(n) = str2num(cellall{kline,2});
+        scn(n) = str2num(cellall{kline,4});
         n = n+1;
     end
 end
+pos = pos(:);
+scn = scn(:);
 
-scriptname = mfilename; oopt = 'fixbl'; get_cropt
+scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
+scriptname = mfilename; oopt = 'nispos'; get_cropt
+niskc = niskc(:);
+niskin = niskn(:);
+[~,ia,ib] = intersect(pos,niskc);
+position = niskc;
+scan = NaN+niskc;
+scan(ib) = scn(ia);
+niskin_flag = 9+zeros(nnisk,1); %default flag 9 means not closed
+niskin_flag(ib) = 2; %if bottle closed, defaults to 2
+scriptname = mfilename; oopt = 'botflags'; get_cropt %change flags here
 
 %--------------------------------
-comment = ['input data from ' infile];
+comment = ['input data from ' blinfile];
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
 MEXEC_A.MARGS_IN = {
     otfile
     'scan'
     'position'
+    'niskin'
+    'niskin_flag'
     ' '
     ' '
     '1'
@@ -62,6 +76,12 @@ MEXEC_A.MARGS_IN = {
     'position'
     '/'
     'on.rosette'
+    'niskin'
+    '/'
+    'number'
+    'niskin_flag'
+    '/'
+    'woce table 4.8'
     '-1'
     '-1'
     };

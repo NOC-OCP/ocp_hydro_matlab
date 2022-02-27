@@ -10,7 +10,7 @@ wkfile2 = ['wk2_' prefix '_' mfilename '_' datestr(now,30)];
 
 switch abbrev
     
-    case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet' 'possea' 'dopsea' 'vtgsea' 'attsea' 'dopcnav' 'hdtsea' 'ea600' 'logskip' 'posranger'}
+    case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet' 'possea' 'dopsea' 'vtgsea' 'attsea' 'dopcnav' 'hdtsea' 'ea600' 'logskip' 'posranger' 'hdtgyro'}
         %work on the latest file, which already be an edited version; always output to otfile
         if exist([otfile '.nc'])
             movefile(m_add_nc(otfile), m_add_nc(wkfile1)); infile1 = wkfile1;

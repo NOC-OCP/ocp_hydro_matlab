@@ -213,11 +213,9 @@ switch scriptname
     case 'msal_01'
         switch oopt
             case 'salflags'
-                flagval = [4; 5];
-                flagsamps = {[2001 2017 2902 3112]; % bad (Woce table 4.9)
-                    [1317 1517 1810 3014 4515]}; % not reported (Woce table 4.9)
-                flag = flags_set(flag, sampnum, flagval, flagsamps);
-                %flag = flags_set(flag, ds_sal.sampnum, flagval, flagsamps);
+                flag(ismember(sampnum,[1317 1517 1810 3014 4515])) = 5; % not reported (Woce table 4.9)
+                flag(ismember(sampnum,[2001 2017 2902 3112])) = 4; % bad (Woce table 4.9)
+
         end
         %%%%%%%%%% end msal_01 %%%%%%%%%%
         

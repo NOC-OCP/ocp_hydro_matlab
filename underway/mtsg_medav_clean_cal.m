@@ -33,6 +33,9 @@ scriptname = mfilename; oopt = 'tsg_badlims'; get_cropt
 h = m_read_header(infile1);
 editvars = intersect(editvars, h.fldnam);
 
+scriptname = 'ship'; oopt = 'avtime'; get_cropt
+avtsg = round(avtsg);
+
 if ~isempty(kbadlims) && ~isempty(editvars)
     
     %average
@@ -41,7 +44,7 @@ if ~isempty(kbadlims) && ~isempty(editvars)
         otfile1
         ' '
         'time'
-        '30 1e10 60'
+        sprintf('%d 1e10 60',avtsg)
         'b'
         };
     mavmed
@@ -106,10 +109,8 @@ if isfield(tsgopts, 'calstr')
             %sometimes need to calculate salinity at earlier stage
             %(scs)?***
             if 0
-                condvars = {'cond' 'conductivity' 'conductivity_raw'};
-                tempvars = {'tstemp' 'temp_h' 'temp_m' 'temp_housing_raw' 'temp_housing'};
-                condvar = varname_find(condvars, h.fldnam);
-                tempvar = varname_find(tempvars, h.fldnam);
+                condvar = munderway_varname('condvar', h.fldnam, 1);
+                tempvar = munderway_varname('tempvar', h.fldnam, 1);
                 if ~isempty(condvar) && ~isempty(tempvar)
                     dt.psal = gsw_SP_from_C(10*dt.(condvar),dt.(tempvar),0)'; %we have S/m, gsw wants mS/cm
                     ht.fldnam = [ht.fldnam 'psal'];

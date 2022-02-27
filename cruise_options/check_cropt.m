@@ -13,30 +13,16 @@ switch scriptname
                         disp(ii)
                     end
                 end
-            case 'ctdsens_groups'
-                iit = find(strcmp('temp1',ctdsens_groups(:,1)));
-                iis = find(strcmp('cond1',ctdsens_groups(:,1)));
-                iserr1 = 0;
-                if length(ctdsens_groups{iit,2})==length(ctdsens_groups{iis,2})
-                    for no = 1:length(ctdsens_groups{iit,2})
-                        if length(ctdsens_groups{iit,2}{no})~=length(ctdsens_groups{iis,2}{no}) || min(ctdsens_groups{iit,2}{no}==ctdsens_groups{iis,2}{no})==0
-                            iserr1 = 1;
-                        end
+                iserr1 = 0; iserr2 = 0;
+                if isfield(ctdsens,'cond1')
+                    if sum(size(ctdsens.temp1)~=size(ctdsens.cond1)) || sum(ctdsens.temp1(:)~=ctdsens.cond1(:))
+                        iserr1 = 1;
                     end
-                else
-                    iserr1 = 1;
                 end
-                iit = find(strcmp('temp2',ctdsens_groups(:,1)));
-                iis = find(strcmp('cond2',ctdsens_groups(:,1)));
-                iserr2 = 0;
-                if length(ctdsens_groups{iit,2})==length(ctdsens_groups{iis,2})
-                    for no = 1:length(ctdsens_groups{iit,2})
-                        if length(ctdsens_groups{iit,2}{no})~=length(ctdsens_groups{iis,2}{no}) || min(ctdsens_groups{iit,2}{no}==ctdsens_groups{iis,2}{no})==0
-                            iserr2 = 1;
-                        end
+                if isfield(ctdens,'cond2')
+                    if sum(size(ctdsens.temp2)~=size(ctdsens.cond2)) || sum(ctdsens.temp2(:)~=ctdsens.cond2(:))
+                        iserr2 = 1;
                     end
-                else
-                    iserr2 = 1;
                 end
                 errm = '';
                 if iserr1
@@ -46,7 +32,7 @@ switch scriptname
                     errm = [errm 'temp2 and cond2 sensor lists are not the same\n'];
                 end
                 if ~isempty(errm)
-                    errm = [errm 'check opt_cruise castpars, ctdsens_groups'];
+                    errm = [errm 'check opt_cruise castpars, ctdsens'];
                     warning(errm)
                 end
         end
@@ -67,13 +53,11 @@ switch scriptname
         end
         %%%%%%%%%% end msam_01 %%%%%%%%%%
         
-        %%%%%%%%%% mctd_02a %%%%%%%%%%
+        %%%%%%%%%% mctd_02 %%%%%%%%%%
     case 'mctd_02'
         switch oopt
             case 'rawedit_auto'
-                if ~redoctm
-                    castopts.pvars = {};
-                else
+                if castopts.redoctm
                     if isempty(castopts.pvars) && isempty(castopts.sevars) && isempty(castopts.revars) && isempty(castopts.sevars) && isempty(castopts.dsvars)
                         warning(['rerunning cell thermal mass correction on raw file for station ' stn_string 'but no raw edits are specified under mctd_02, editraw in opt_' mcruise])
                     end
@@ -87,8 +71,12 @@ switch scriptname
                     castopts = rmfield(castopts,'oxyrev');
                 end
                 if castopts.dooxyhyst
-                    if sum(sum(isnan(cell2mat(struct2cell(castopts.oxyhyst)))))>0
-                        error('oxygen hysteresis parameters have NaNs; check opt_%s', mcruise)
+                    try
+                        a = sum(sum(isnan(cell2mat(castopts.oxyhyst.H1)))) || sum(sum(isnan(cell2mat(castopts.oxyhyst.H2)))) || sum(sum(isnan(cell2mat(castopts.oxyhyst.H3))));
+                        if a
+                            error('oxygen hysteresis parameters have NaNs; check opt_%s', mcruise)
+                        end
+                    catch
                     end
                 else
                     castopts = rmfield(castopts,'oxyhyst');
@@ -138,7 +126,7 @@ switch scriptname
     case 'mday_01_fcal'
         switch oopt
             case 'uway_factory_cal'
-                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'})) && ~exist('sensorcals','var')
+                if sum(strcmp(MEXEC_G.Mshipdatasystem,{'techsas' 'rvdas'})) && strcmp(abbrev,'surfmet') && ~exist('sensorcals','var')
                     warning('do factory calibrations need to be applied to your datastream? for techsas or rvdas surfmet, probably so')
                 end
         end

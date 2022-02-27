@@ -34,7 +34,7 @@ if nargin>=2
 end
 
 if dim>0 %initialise
-    nline1 = 1e3;
+    nline1 = 2e3;
     c = repmat({''}, nline1, dim); %adding more rows shouldn't be a problem
     maxcol = 0;
 end

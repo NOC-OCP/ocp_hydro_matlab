@@ -50,6 +50,7 @@ end
 bestdeps = [stns NaN+zeros(length(stns),2)];
 
 %apply in order
+ii0 = 1:length(stns); %first try filling all rows using depth_source{1}
 for sno = 1:length(depth_source)
     if (strcmp(depth_source{sno},'file') && exist(fnintxt, 'file'))
         fnin = fnintxt;
@@ -58,8 +59,8 @@ for sno = 1:length(depth_source)
     end
     bestdeps(ii0,:) = get_deps(bestdeps(ii0,:), depth_source{sno}, fnin);
     ii00 = ii0;
-    ii0 = find(isnan(bestdeps(:,2)));
-    ii = setdiff(ii00, ii0); bestdeps(ii,3) = sno;
+    ii0 = find(isnan(bestdeps(:,2))); %these didn't get a value, so try next depth_source
+    ii = setdiff(ii00, ii0); bestdeps(ii,3) = sno; %mark the ones that did work
 end
 
 %finally look to cruise options for any changes
@@ -69,7 +70,6 @@ if ~isempty(stnmiss)
 end
 if ~isempty(replacedeps)
     [~,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
-    if length(ia)<size(replacedeps(:,1)); error(['replacedeps repeats stations; check opt_' mcruise]); end
     bestdeps(ib,2) = replacedeps(ia,2);
 end
 
@@ -105,6 +105,7 @@ switch depth_source
             fn = fullfile(mgetdir('M_CTD'), sprintf('ctd_%s_%03d_psal.nc', mcruise, bestdeps(iif(no),1)));
             if exist(fn)
                 [d, h] = mloadq(fn, '/');
+                if ~isfield(d,'altimeter'); warning(['no altimeter record in ' fn]); continue; end
                 if ~isfield(d, 'depSM'); d.depSM = filter_bak(ones(1,21), sw_dpth(d.press, h.latitude)); end
                 [~,bot_ind] = max(d.depSM); % Find cast max depth
                 % Average altimeter and CTD depth for 30 seconds around max depth
@@ -133,7 +134,7 @@ switch depth_source
         
     case 'bathy'
         
-        simvar = varname_find({'ea600' 'sim'},MEXEC_G.MDIRLIST(:,1));
+        simvar = munderway_varname('singlebvar',MEXEC_G.MDIRLIST(:,1)',1,'s');
         if ~isempty(simvar)
             fileb = fullfile(mgetdir(simvar), [simvar '_' mcruise '_01.nc']);
             if exist(fileb,'file')

@@ -1,5 +1,5 @@
-function mctd_evaluate_sensors(sensname, testcal, varargin)
-% mctd_evaluate_sensors(sensname, testcal)
+function mctd_evaluate_sensors(sensname, varargin)
+% mctd_evaluate_sensors(sensname)
 % mctd_evaluate_sensors(sensname, testcal, varargin)
 %
 %compare CTD temperature, conductivity, or oxygen to calibration values
@@ -15,14 +15,14 @@ function mctd_evaluate_sensors(sensname, testcal, varargin)
 % can also set testcal, structure whose fieldnames are variables (temp,
 % cond, etc.) and values are 1 to apply calibrations or 0 (or missing) to
 % not (default: empty; no action)
-% and, if testcal is set, calstr, otherwise it defaults to getting calstr
+% and, if testcal is set, calstr0, otherwise it defaults to getting calstr
 % from opt_cruise
 %
 % for instance if sensname = 'temp' and docal.temp = 1, it would test
 % calibrations coded into the mctd_02 case in opt_cruise (for both temp1
 % and temp2)
 % if sensname = 'cond' and docal.temp=1 and docal.cond=1, it would apply
-% the temperature calibration coded into the temp_apply_cal case in
+% the temperature calibration coded into the mctd_02, cal_ctd case in
 % opt_cruise to temperature first before converting from bottle salinity to
 % conductivity (generally this is a good idea)
 %
@@ -46,13 +46,14 @@ m_common
 
 %defaults and optional input arguments
 testcal.temp = 0; testcal.cond = 0; testcal.oxygen = 0; testcal.fluor = 0;
+usedn = 0; %use upcast not downcast ctd data
 calstr0 = []; %get calibration from opt_cruise -- but may depend on station number
 okf = [2 3]; %include good or questionable samples (useful for checking niskin flags)
 pdeep = 1500; %cutoff for "deep" samples
 uselegend = 1;
 printform = '-dpdf';
 plotprof = 1; %for cond or oxy, make profile plots to check how good samples are
-printdir = fullfile(MEXEC_G.MEXEC_mexec_data_root, 'plots');
+printdir = fullfile(MEXEC_G.mexec_data_root, 'plots');
 if strncmp(sensname, 'temp', 4)
     rlabel = 'SBE35 T - CTD T (degC)';
     rlim = [-10 10]*1e-3;
@@ -81,8 +82,26 @@ else
     sensnum = [];
 end
 
+dirstr = '';
+if usedn; dirstr = '_dn'; end
+
+rootdir = mgetdir('ctd');
 %load data
-d = mloadq(fullfile(MEXEC_G.MEXEC_mexec_data_root, 'ctd', ['sam_' mcruise '_all']), '/');
+[d, h] = mloadq(fullfile(rootdir, ['sam_' mcruise '_all']), '/');
+%and turn utemp etc into temp etc. so apply_calibrations will work
+uflds = {'press' 'temp1' 'temp2' 'psal1' 'psal2' 'cond1' 'cond2'};
+scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
+for no = 1:size(oxyvars,1)
+    uflds = [uflds oxyvars(no,2)];
+end
+for no = 1:length(uflds)
+    if ~usedn
+        d.(uflds{no}) = d.(['u' uflds{no}]);
+    else
+        d.(uflds{no}) = d.(['d' uflds{no}]);
+    end
+end
+uflds = [uflds 'statnum' 'position' 'niskin_flag'];
 
 %apply calibrations (may vary by station)
 if sum(cell2mat(struct2cell(testcal)))
@@ -95,65 +114,79 @@ if sum(cell2mat(struct2cell(testcal)))
         stnlocal = stns(sno);
         %get only the calibration functions we want to test here
         if cropt_cal %didn't specify as input, get from opt_cruise
-            scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
+            scriptname = 'mctd_02'; oopt = 'ctd_cal'; get_cropt
             calstr0 = castopts.calstr;
         end
         calstr = select_calibrations(testcal, calstr0);
         %and apply them
-        [dcal, hcal] = apply_calibrations(d, h, calstr);
-        %put calibrated data from this station only back into d
+        clear d0
         iig = find(d.statnum==stnlocal);
+        for vno = 1:length(uflds)
+            d0.(uflds{vno}) = d.(uflds{vno})(iig);
+        end
+        [dcal, hcal] = apply_calibrations(d0, h, calstr);
+        %put calibrated data from this station only back into d
         for vno = 1:length(hcal.fldnam)
-            d.(hcal.fldnam{vno})(iig) = dcal.(hcal.fldnam{vno})(iig);
+            d.(hcal.fldnam{vno})(iig) = dcal.(hcal.fldnam{vno});
         end
     end
     
 end
 
 edges = [-1:.05:1]*rlim(2);
-presrange = [-max(d.upress(~isnan(d.(sensname)))) 0];
+presrange = [-max(d.press(~isnan(d.(sensname)))) 0];
 statrange = [0 max(d.statnum(~isnan(d.(sensname))))+1];
 
 %get sensor groups
 scriptname = 'castpars'; oopt = 'ctdsens_groups'; get_cropt
-ctdsens_groups.cond1 = ctdsens_groups.temp1;
-ctdsens_groups.cond2 = ctdsens_groups.temp2;
-sensind = ctdsens_groups.(sensname);
-ng = length(sensind);
+ctdsens.cond1 = ctdsens.temp1;
+ctdsens.cond2 = ctdsens.temp2;
+sensind = ctdsens.(sensname);
+sensg = unique(sensind(2,:));
 
 %loop through data from different sensor S/Ns
-for gno = 1:ng
-    iig = find(ismember(d.statnum, sensind{gno}));
+for gno = 1:length(sensg)
+    iig = find(ismember(d.statnum, sensind(1,sensind(2,:)==sensg(gno))));
     
     %data to compare
-    ctddata = d.(['u' sensname])(iig);
+    ctddata = d.(sensname)(iig);
     if strncmp(sensname, 'temp', 4)
-        caldata = d.sbe35temp(:); 
+        caldata = d.sbe35temp(iig); 
         calflag = d.sbe35flag(iig);
+        ii = find(ismember(calflag,okf));
+        caldata = caldata(ii); calflag = calflag(ii); ctddata = ctddata(ii);
+        iig = iig(ii);
         res = (caldata - ctddata);
-        if isfield(d, 'utemp1') && isfield(d, 'utemp2')
-            ctdres = (d.utemp2(iig)-d.utemp1(iig)); 
+        if isfield(d, 'temp1') && isfield(d, 'temp2')
+            ctdres = (d.temp2(iig)-d.temp1(iig)); 
             clabel = 'ctd temp2 - temp1';
         else
             ctdres = NaN+ctddata; 
             clabel = '';
         end
     elseif strncmp(sensname, 'cond', 4)
-        caldata = gsw_C_from_SP(d.botpsal(iig),d.(['utemp' sensnum])(iig),d.upress(iig)); 
+        caldata = gsw_C_from_SP(d.botpsal(iig),d.(['temp' sensnum])(iig),d.press(iig)); 
         calflag = d.botpsal_flag(iig);
+        ii = find(ismember(calflag,okf));
+        caldata = caldata(ii); calflag = calflag(ii); ctddata = ctddata(ii);
+        iig = iig(ii);
         res = (caldata./ctddata - 1)*35;
-        if isfield(d, 'ucond1') && isfield(d, 'ucond2')
-            ctdres = (d.ucond2(iig)./d.ucond1(iig)-1)*35; 
+        if isfield(d, 'cond1') && isfield(d, 'cond2')
+            ctdres = (d.cond2(iig)./d.cond1(iig)-1)*35; 
             clabel = 'ctd cond2/cond1';
         else
             ctdres = NaN+ctddata; 
             clabel = '';
         end
     elseif strncmp(sensname, 'oxygen', 6)
-        caldata = d.botoxya(:); calflag = d.botoxya_flag(iig);
+        caldata = d.botoxy(:); 
+        calflag = d.botoxy_flag(iig);
+        ii = find(ismember(calflag,okf));
+        caldata = caldata(ii); calflag = calflag(ii); ctddata = ctddata(ii);
+        iig = iig(ii);
         res = (caldata - ctddata);
-        if isfield(d, 'uoxygen1') && isfield(d, 'uoxygen2')
-            ctdres = (d.uoxygen2(iig)-d.uoxygen1(iig)); 
+        if isfield(d, 'oxygen1') && isfield(d, 'oxygen2')
+            ctdres = (d.oxygen2(iig)-d.oxygen1(iig)); 
             clabel = 'ctd oxygen2 - oxygen1';
         else
             ctdres = NaN+ctddata; 
@@ -161,30 +194,43 @@ for gno = 1:ng
         end
     end
     
-    %limit to flag values we want to consider
-    ii = find(ismember(calflag,okf));
-    caldata = caldata(ii); calflag = calflag(ii);
-    ctddata = ctddata(ii); ctdres = ctdres(ii);
-    iig = iig(ii);
-    stn = d.statnum(iig); nisk = d.position(iig); niskf = d.niskin_flag(iig);
+    %get other quantities we might use
+    stn = d.statnum(iig); 
+    nisk = d.position(iig); niskf = d.niskin_flag(iig);
     press = d.upress(iig); ctemp = d.utemp(iig);
-       
+
+    %fit model
+    if strncmp(sensname,'temp',4)
+        model = [ones(size(caldata)) d.press d.statnum];
+        modform = 'tempcal = temp + C1 + C2(press) + C3(stn)';
+        C = regress(res,model);
+    elseif strncmp(sensname,'cond',4)
+        model = [ctddata ctddata.*press ctddata.*stn];
+        modform = 'condcal = cond*(C1 + C2(press) + C3(stn))';
+        C = regress(caldata,model);
+    elseif strncmp(sensname,'oxygen',6)
+        model = [ones(size(ctddata)) press press.^2 ctddata ctddata.*press ctddata.*press.^2];
+        modform = 'oxycal = C1 + C2(press) + C3(press^2) + (C4 + C5(press) + C6(press^2))(oxy)';
+        C = regress(caldata,model);
+    end
+    disp(modform); format long; disp(C); format
+
     %stats
     md = m_nanmedian(res); ms = sqrt(m_nansum((res)-md).^2)/(length(iig)-1);
-    iid = find(d.upress(iis)>=pdeep));
-    mdd = m_nanmedian(res(iid));
+    deep = d.upress(iig)>=pdeep;
+    mdd = m_nanmedian(res(deep));
     try
-        iqrd = iqr(res(iid));
+        iqrd = iqr(res(deep));
     catch
-        c = sort(res(iid));
+        c = sort(res(deep));
         ii = [round(length(c)/4) round(length(c)*3/4)];
         iqrd = c(ii(2))-c(ii(1));
     end
     
     %plot residual or ratio vs statnum, pressure, and histogram
-    figure((no-1)*10+2); clf; orient tall
+    figure((gno-1)*10+2); clf; orient tall
     subplot(5,5,[1:5])
-    plot(stn, ctdres, 'c.', stn, res, '+k', stn(iid), res(iid), 'xb'); grid
+    plot(stn, ctdres, 'c.', stn, res, '+k', stn(deep), res(deep), 'xb'); grid
     if uselegend
         legend(clabel,'ctd-cal diff',['ctd-cal diff, p>' num2str(pdeep)])
     end
@@ -194,7 +240,7 @@ for gno = 1:ng
     plot(ctdres, -press, 'c.', res, -press, '+k', [0 0], presrange, 'r'); grid
     ylabel('press'); ylim(presrange); xlim(rlim); xlabel(rlabel)
     subplot(5,5,[6:8 11:13])
-    plot(caldata, ctddata, 'o-k', caldata(iif), ctddata(iif), 'sb', caldata, caldata); grid;
+    plot(caldata, ctddata, 'o-k', caldata(deep), ctddata(deep), 'sb', caldata, caldata); grid;
     axis image; xlabel(['cal ' sensname]); ylabel(['ctd ' sensname]);
     subplot(5,5,[16:18 21:23])
     nh = histc(res, edges);
@@ -210,7 +256,7 @@ for gno = 1:ng
     end
     
     %plot residual or ratio in color vs 2 of statnum, press, temp, oxygen
-    figure((no-1)*10+3); clf; orient portrait
+    figure((gno-1)*10+3); clf; orient portrait
     load cmap_bo2; colormap(cmap_bo2)
     subplot(1,8,1:2); scatter(ctemp, -press, 16, res, 'filled'); grid; set(gca,'color',[.8 .8 .8])
     xlabel('temp'); xlim([min(ctemp) max(ctemp)])
@@ -246,10 +292,10 @@ for gno = 1:ng
             stn_string = sprintf('%03d', stnlocal);
             
             %load and calibrate 1 hz and 2 dbar upcast profiles
-            [d1, h1] = mloadq(fullfile(MEXEC_G.mexec_data_root, 'ctd', ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
-            [dcs, ~] = mloadq(fullfile(MEXEC_G.mexec_data_root, 'ctd', ['dcs_' mcruise '_' stn_string '.nc']), '/');
+            [d1, h1] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
+            [dcs, ~] = mloadq(fullfile(rootdir, ['dcs_' mcruise '_' stn_string '.nc']), '/');
             ii1u = find(d1.scan>=dcs.scan_bot & d1.scan<=dcs.scan_end);
-            [du, hu] = mloadq(fullfile(MEXEC_G.mexec_data_root, 'ctd', ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
+            [du, hu] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
             scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
             
             if exist('cropt_cal','var')

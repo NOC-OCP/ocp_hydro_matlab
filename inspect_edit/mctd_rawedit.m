@@ -40,8 +40,9 @@ system(['chmod 644 ' m_add_nc(otfile)])
 
 %%%%% automatic edits %%%%%
 
-ctd_apply_autoedits(otfile);
-MEXEC_A.Mprog = mfilename; %reset
+%scriptname = 'mctd_02'; oopt = 'rawedit_auto'; get_cropt
+%[d, h] = mloadq(infile, '/');
+%[d, comment] = ctd_apply_autoedits(d, castopts);
 
 
 %%%%%%%%% now the GUI %%%%%%%%%

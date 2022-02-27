@@ -24,9 +24,14 @@ if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     dwin.time = m_commontime(dwin.time,hwin.data_time_origin,hf.data_time_origin);
     
     % scan input file to extract winch cable out variable name
-    cabvar = varname_find({'cableout' 'cab' 'cable' 'wireout' 'out'}, hwin.fldnam);
-    if length(cabvar)==0
-        error(['Winch cable/wireout variable not found uniquely in input file'])
+    cabvar = intersect({'cableout' 'cab' 'cable' 'wireout' 'out'}, hwin.fldnam);
+    if isempty(cabvar)
+        error(['Winch cable/wireout variable not found in input file'])
+    else
+        if length(cabvar)>1
+            warning(['Winch cable/wireout variable: more than one option found'])
+        end
+        cabvar = cabvar{1};
     end
     
     %interpolate

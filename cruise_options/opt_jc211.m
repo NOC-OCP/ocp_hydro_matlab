@@ -108,7 +108,7 @@ switch scriptname
     case 'mfir_03'
         switch oopt
             case 'fir_fill'
-                %avi_opt = [0 121/24]-1/24; %average over 5 s to match .ros file used in BASproc
+                firmethod = 'linterp';
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         

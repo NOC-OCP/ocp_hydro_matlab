@@ -20,7 +20,7 @@ deps_fn = fullfile(root_sum, ['station_summary_' mcruise '_all.nc']);
 [d,h] = mloadq(deps_fn,'/');
 iis = find(d.statnum==stnlocal);
 
-if length(iis)==0
+if isempty(iis)
     warning([deps_fn ' does not contain depth for station ' stn_string '; not adding depth to any .nc files'])
 else
     if length(iis)>1 & length(unique(bestdeps(iis,2)))>1

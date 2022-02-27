@@ -32,9 +32,6 @@ prefix1 = ['ctd_' mcruise '_'];
 
 infile1 = fullfile(root_ctd, [prefix1 stn_string '_24hz']);
 otfile1 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
-wkfile1 = ['wk1_' mfilename '_' datestr(now,30)];
-wkfile_dvars = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]); %this one persists through a later processing stage
-
 
 %identify preferred sensors for (T,C) and O on this station
 scriptname = mfilename; oopt = 's_choice'; get_cropt 
@@ -50,45 +47,57 @@ if o_choice == 2 && ~sum(strcmp('oxygen2', h.fldnam))
    error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
 end
 
-%working on temporary workfiles
-MEXEC_A.Mhistory_skip = 1;
-
 %copy selected sensor to new names without sensor number
-MEXEC_A.MARGS_IN = {
-infile1
-wkfile1
-'/'
-infile1
-sprintf('temp%d cond%d oxygen%d', s_choice, s_choice, o_choice);
-'temp'
-'cond'
-'oxygen'
-};
-maddvars
-
-%optional: interpolate over gaps 
-scriptname = mfilename; oopt = '24hz_interp'; get_cropt 
-if interp24
-    MEXEC_A.MARGS_IN = {
-    wkfile1
-    'y'
-    '/'
-    'scan'
-    num2str(maxgap)
-    '0'
-    '0'
-    };
-    mintrp2
+[d, h] = mloadq(infile1,'/');
+vars = {'temp' 'cond' 'oxygen'};
+for vno = 1:length(vars)
+    name0 = [vars{vno} num2str(s_choice)];
+    ii = find(strcmp(name0,h.fldnam));
+    if ~isempty(ii)
+        d.(vars{vno}) = d.(name0);
+        h.fldnam = [h.fldnam vars{vno}];
+        h.fldunt = [h.fldunt h.fldunt{ii}];
+    end
 end
 
+%calculate derived variables
+iig = find(d.press>-1.495); %gsw won't work on p<=-1.495
+if length(iig)<length(d.press)
+    m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points'};
+    if min(d.press<-10)
+        m = [m; 'you may also want to check in mctd_rawshow and set rangelim under mctd_02';
+            'case in opt_' mcruise ' in case pressure spikes need to be edited out'];
+        warning('%s\n',m{:});
+    end
+end
+d.psal = NaN+d.cond; d.psal(iig) = gsw_SP_from_C(d.cond(iig),d.temp(iig),d.press(iig));
+d.psal1 = NaN+d.cond; d.psal1(iig) = gsw_SP_from_C(d.cond1(iig),d.temp1(iig),d.press(iig));
+d.psal2 = NaN+d.cond; d.psal2(iig) = gsw_SP_from_C(d.cond2(iig),d.temp2(iig),d.press(iig));
+d.asal =  NaN+d.cond; d.asal(iig) = gsw_SA_from_SP(d.psal(iig),d.press(iig),h.longitude,h.latitude);
+d.asal1 = NaN+d.cond; d.asal1(iig) = gsw_SA_from_SP(d.psal1(iig),d.press(iig),h.longitude,h.latitude);
+d.asal2 = NaN+d.cond; d.asal2(iig) = gsw_SA_from_SP(d.psal2(iig),d.press(iig),h.longitude,h.latitude);
+d.potemp = NaN+d.cond; d.potemp(iig) = gsw_pt0_from_t(d.asal(iig),d.temp(iig),d.press(iig));
+d.potemp1 = NaN+d.cond; d.potemp1(iig) = gsw_pt0_from_t(d.asal1(iig),d.temp1(iig),d.press(iig));
+d.potemp2 = NaN+d.cond; d.potemp2(iig) = gsw_pt0_from_t(d.asal2(iig),d.temp2(iig),d.press(iig));
+% h.fldnam = [hnew.fldnam 'contemp' 'contemp1' 'contemp2'];
+% h.fldunt = [hnew.fldunt 'degc90' 'degc90' 'degc90'];
+% d.contemp = NaN+d.cond; d.contemp(iig) = gsw_CT_from_t(d.asal(iig),d.temp(iig),d.press(iig));
+% d.contemp1  NaN+d.cond; d.contemp1(iig) = gsw_CT_from_t(d.asal1(iig),d.temp1(iig),d.press(iig));
+% d.contemp2  NaN+d.cond; d.contemp2(iig) = gsw_CT_from_t(d.asal2(iig),d.temp2(iig),d.press(iig));
 
-%calculate derived variables and make 1 hz averaged file, _psal.nc
-%now done in workspace
+%new variable names and units
+h.fldnam = [h.fldnam 'psal' 'psal1' 'psal2' 'asal' 'asal1' 'asal2' 'potemp' 'potemp1' 'potemp2'];
+h.fldunt = [h.fldunt 'pss-78' 'pss-78' 'pss-78' 'g/kg' 'g/kg' 'g/kg' 'degc90' 'degc90' 'degc90'];
+h.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '];
+
+%save to _24hz file
+mfsave(infile1, d, h);
+
 
 %find variables to copy, that are in both mcvars_list and the input file
 var_copycell = mcvars_list(1);
-[var_copycell, var_copystr] = mvars_in_file(var_copycell, wkfile1);
-[d,h] = mloadq(wkfile1,var_copystr);
+[var_copycell, var_copystr] = mvars_in_file(var_copycell, infile1);
+[d, h] = mloadq(infile1,var_copystr);
 clear hnew dnew
 hnew.data_time_origin = h.data_time_origin; 
 hnew.dataname = h.dataname;
@@ -102,67 +111,8 @@ for no = 1:length(var_copycell)
 end
 hnew.fldnam = var_copycell;
 
-%new variables
-hnew.fldnam = [hnew.fldnam 'psal' 'psal1' 'psal2' 'asal' 'asal1' 'asal2' 'potemp' 'potemp1' 'potemp2'];
-hnew.fldunt = [hnew.fldunt 'pss-78' 'pss-78' 'pss-78' 'g/kg' 'g/kg' 'g/kg' 'degc90' 'degc90' 'degc90'];
-hnew.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '];
-
-iig = find(dnew.press>-1.495); %gsw won't work on p<=-1.495
-if length(iig)<length(dnew.press)
-    m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points'};
-    if min(dnew.press<-10)
-        m = [m; 'you may also want to check in mctd_rawshow and set rangelim under mctd_02';
-            'case in opt_' mcruise ' in case pressure spikes need to be edited out'];
-    warning('%s\n',m{:});
-end
-dnew.psal = NaN+dnew.cond; dnew.psal(iig) = gsw_SP_from_C(dnew.cond(iig),dnew.temp(iig),dnew.press(iig));
-dnew.psal1 = NaN+dnew.cond; dnew.psal1(iig) = gsw_SP_from_C(dnew.cond1(iig),dnew.temp1(iig),dnew.press(iig));
-dnew.psal2 = NaN+dnew.cond; dnew.psal2(iig) = gsw_SP_from_C(dnew.cond2(iig),dnew.temp2(iig),dnew.press(iig));
-dnew.asal =  NaN+dnew.cond; dnew.asal(iig) = gsw_SA_from_SP(dnew.psal(iig),dnew.press(iig),h.longitude(iig),h.latitude);
-dnew.asal1 = NaN+dnew.cond; dnew.asal1(iig) = gsw_SA_from_SP(dnew.psal1(iig),dnew.press(iig),h.longitude(iig),h.latitude);
-dnew.asal2 = NaN+dnew.cond; dnew.asal2(iig) = gsw_SA_from_SP(dnew.psal2(iig),dnew.press(iig),h.longitude(iig),h.latitude);
-dnew.potemp = NaN+dnew.cond; dnew.potemp(iig) = gsw_pt0_from_t(dnew.asal(iig),dnew.temp(iig),dnew.press(iig));
-dnew.potemp1 = NaN+dnew.cond; dnew.potemp1(iig) = gsw_pt0_from_t(dnew.asal1(iig),dnew.temp1(iig),dnew.press(iig));
-dnew.potemp2 = NaN+dnew.cond; dnew.potemp2(iig) = gsw_pt0_from_t(dnew.asal2(iig),dnew.temp2(iig),dnew.press(iig));
-
-% hnew.fldnam = [hnew.fldnam 'contemp' 'contemp1' 'contemp2'];
-% hnew.fldunt = [hnew.fldunt 'degc90' 'degc90' 'degc90'];
-% dnew.contemp = NaN+dnew.cond; dnew.contemp(iig) = gsw_CT_from_t(dnew.asal(iig),dnew.temp(iig),dnew.press(iig));
-% dnew.contemp1  NaN+dnew.cond; dnew.contemp1(iig) = gsw_CT_from_t(dnew.asal1(iig),dnew.temp1(iig),dnew.press(iig));
-% dnew.contemp2  NaN+dnew.cond; dnew.contemp2(iig) = gsw_CT_from_t(dnew.asal2(iig),dnew.temp2(iig),dnew.press(iig));
-
-%save
-mfsave(wkfile_dvars, dnew, hnew);
-
-%now working on output files to keep
-MEXEC_A.Mhistory_skip = 0;
-
-% average to 1hz, output to _psal file
-MEXEC_A.MARGS_IN = {
-wkfile_dvars
-otfile1
-'/'
-'time'
-'-1e10 1e10 1'
-'b'
-};
-mavrge
-
-%optional: interpolate over gaps in 1hz file
-%optional: interpolate over gaps 
-scriptname = mfilename; oopt = '1hz_interp'; get_cropt 
-if interp1hz 
-    MEXEC_A.MARGS_IN = {
-    otfile1
-    'y'
-    '/'
-    'scan'
-    num2str(maxgap1)
-    '0'
-    '0'
-    };
-    mintrp2
-end
-
-%tidy up
-delete(m_add_nc(wkfile1));
+%average to 1hz, output to _psal file
+scriptname = mfilename; oopt = '1hz_interp'; get_cropt
+tg = dnew.time(1):dnew.time(end)+1; %end will be truncated anyway by setting grid_extrap to 0
+dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_extrap', [0 0], 'postfill', maxfill1);
+mfsave(otfile1, dnew, hnew);

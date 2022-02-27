@@ -57,8 +57,14 @@
 %         'only one CTD, keep the default (1).'
 
 
-
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+if ~exist('MEXEC_G','var')
+    if exist('m_common.m','file')
+        m_common
+    end
+end
+if exist('MEXEC_G','var')
+    mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+end
 
 if ~exist('help_cropt', 'var') | ~help_cropt %normal, use-in-scripts mode
     

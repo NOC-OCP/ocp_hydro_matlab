@@ -41,7 +41,7 @@ switch scriptname
                     'oxygen_sbe2' 'oxygen2'};
             case 'oxy_align'
                 crhelp_str = {'oxy_align (default 6) is the number of seconds by which oxygen has been shifted in'
-                    'SBE processing. Set oxy_end (default 0) to 1 if you are selecteding end of cast (in mdcs_03g)'
+                    'SBE processing. Set oxy_end (default 0) to 1 if you are selecting end of cast (in mdcs_03g)'
                     'based on T, S rather than oxygen'};
                 oxy_align = 6;
                 oxy_end = 0;
@@ -52,7 +52,7 @@ switch scriptname
                 shortcasts = [];
             case 'ctdsens_groups'
                                 crhelp_str = {'ctdsens is a structure with fields corresponding to the CTD sensors e.g.'
-                    'temp1, oxygen1, temp2, etc. (temp1 applies to both tmep1 and cond1); '
+                    'temp1, oxygen1, temp2, etc. (temp1 applies to both temp1 and cond1); '
                     'their values are 2xN cell arrays listing stations and corresponding sensor/serial number, '
                     'in case one or more sensors was changed during the cruise.'
                     'all default to [1:999] in the first row and 1 in the second (no change of sensors), '
@@ -81,9 +81,9 @@ switch scriptname
             case 'cnvfilename'
                 crhelp_str = {'infile is the name of the .cnv file to read in'};
                 if redoctm
-                    infile = sprintf('%s_%03d.cnv', upper(mcruise), stnlocal);
+                    cnvfile = sprintf('%s_%03d.cnv', upper(mcruise), stnlocal);
                 else
-                    infile = sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal);
+                    cnvfile = sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal);
                 end
             case 'ctdvars'
                 crhelp_str = {'Place to put additional (ctdvars_add) or replacement (ctdvars_replace)'
@@ -141,16 +141,18 @@ switch scriptname
                 castopts.dooxyhyst = 1;
                 castopts.doturbV = 0;
                 crhelp_str = {'sets three parameters to pass to mcoxyhyst_rev; defaults to standard SBE processing values.'};
+                if isfield(castopts,'oxyrev'); castopts = rmfield(castopts,'oxyrev'); end
                 castopts.oxyrev.H1 = -0.033;
                 castopts.oxyrev.H2 = 5000;
                 castopts.oxyrev.H3 = 1450;
                 crhelp_str = {'sets three parameters to pass to mcoxyhyst; defaults to standard SBE processing values.'
                     'H1, H2, H3 can each be scalar, or you can use d.press to make any/all a vector dependent on pressure; '
                     'to use different parameters for e.g. oxygen_sbe1 and oxygen_sbe2, use cell arrays'};
+                if isfield(castopts,'oxyhyst'); castopts = rmfield(castopts,'oxyhyst'); end
                 castopts.oxyhyst.H1 = -0.033;
                 castopts.oxyhyst.H2 = 5000;
                 castopts.oxyhyst.H3 = 1450;
-                castopts.oxyhyst.H_0 = [H1 H2 H3]; %this stores defaults for later reference; don't change!
+                castopts.H_0 = [castopts.oxyhyst.H1 castopts.oxyhyst.H2 castopts.oxyhyst.H3]; %this stores defaults for later reference; don't change!
                 crhelp_str = {'sets scale factor and offset to apply to turbidity volts to convert to turbidity, '
                     'defaults to the values from XMLCON for BBRTD-182, calibration date 6 Mar 17 (see your XMLCON file)'};
                 castopts.turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
@@ -191,19 +193,12 @@ switch scriptname
                     'if there is only one oxygen sensor, keep the default (1).'};
                 o_choice = 1;
                 stns_alternate_o = [];
-            case '24hz_interp'
-                crhelp_str = {'flag interp24 sets whether to interpolate over gaps in 24 hz data; if 1, variable '
-                    'maxgap (default: 12) is required to set maximum number of missing scans to fill. interp24 defaults to 0 for '
-                    'pre-dy113 cruises, jc191/192, and dy120/129, and 1 for dy113, jc211, and subsequent cruises'};
-                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 || sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191';'jc192';'dy120';'dy129'}))
-                    interp24 = 0;
-                else
-                    interp24 = 1; maxgap = 12;
-                end
             case '1hz_interp'
-                crhelp_str = {'flag interp1hz sets whether to interpolate over gaps in 1 hz data (in _psal file): '
-                    'defaults to 0; if 1, you must also specificy maxgap1 to interpolate gaps up to maxgap1 points.'};
-                interp1hz = 0;
+                crhelp_str = {'maxfill24 sets maximum gap time (seconds, default: 0) to be filled by linear'
+                    'interpolation before averaging 24hz to 1hz; maxfill1 sets maximum gap time (seconds, default: 2)'
+                    'to be filled by linear interpolation after averging to 1 hz.'};
+                maxfill24 = 0;
+                maxfill1 = 2;
         end
         %%%%%%%%%% end mctd_03 %%%%%%%%%%
         
@@ -219,9 +214,6 @@ switch scriptname
         %%%%%%%%%% mctd_04 %%%%%%%%%%
     case 'mctd_04'
         switch oopt
-            case 'pre_2_treat'
-                crhelp_str = {'edit data (24 hz data including derived variables) in dvars file before averaging '
-                    'to 2 dbar. this has generally been done by modifying copystr (see prevous opt_cruise file for examples).'};
             case 'doloopedit'
                 crhelp_str = {'flag doloopedit (default 0) determines whether to apply automatic loop editing'
                     'using m_loopedit, and scalar ptol (default 0.08) sets the size of pressure loops to '
@@ -230,23 +222,26 @@ switch scriptname
                 ptol = 0.08; %default is not to apply, but this would be the default value if you did
                 spdtol = 0.24; %default value from SBE program
             case 'interp2db'
-                crhelp_str = {'flag interp2db determines whether to fill gaps in 2 dbar averaged data or not. for cruises '
-                    'before 2020, and for jc191/192 and dy120/129 it defaulted to 1; for dy113 and subsequent cruises it defaults '
-                    'to 0, as short gaps are instead filled in 24hz data (and large gaps shouldn''t be filled)'};
-                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<=2019 || sum(strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc191','jc192','dy120','dy129'}))
-                    interp2db = 1; %filling gaps in 2dbar data used to be standard
-                else
-                    interp2db = 0;
-                end
+                crhelp_str = {'maxgap2db determines maximum length of gaps in 2 dbar averaged data'
+                    'to fill by linear interpolation (in dbar; default 0 though pre-dy113 default was inf).'};
+                maxfill2db = 0;
         end
         %%%%%%%%%% end mctd_04 %%%%%%%%%%
         
         %%%%%%%%%% mfir_01 %%%%%%%%%%
     case 'mfir_01'
         switch oopt
-            case 'fixbl'
-                crhelp_str = {'place to edit information about the bottle positions if it was wrong '
-                    'in the .bl and/or .btl file(s). rarely needed.'};
+            case 'blinfile'
+                blinfile = sprintf('%s_%03d.bl', upper(mcruise), stnlocal);
+            case 'nispos'
+                crhelp_str = {'niskc gives the carousel positions and niskn the bottle numbers'
+                    '(e.g. serial numbers, if known). both should be length = nnisk (set in castpars)'
+                    'both default to [1:nnisk]''.'};
+                niskc = [1:nnisk]';
+                niskn = [1:nnisk]';
+            case 'botflags'
+                crhelp_str = {'Optional: edit niskin_flag, the vector of quality flags for Niskin bottle firing'
+                    'for this station (use variable position to identify Niskins).'};
         end
         %%%%%%%%%% end mfir_01 %%%%%%%%%%
         
@@ -254,15 +249,16 @@ switch scriptname
     case 'mfir_03'
         switch oopt
             case 'fir_fill'
-                crhelp_str = {'fillstr determines how many NaNs to fill in 1hz data before interpolation '
-                    'to bottle firing scans: ''f'' or inf for any number, 0 or ''k'' for not at all, or '
-                    'an integer (as a string, e.g. ''10'') to fill that number of points (seconds). '
-                    'if avi_opt==0, linearly interpolate to bottle firing scan; if avi_opt is a tuple, '
-                    'it specifies the window of scans relative to firing scan over which to'
-                    'compute the median. Note scans are 24-hz. Defaults are inf and 0.'};
-                %***default fill any length gap???
-                fillstr = inf;
-                avi_opt = 0;
+                crhelp_str = {'firmethod and firopts determine how to get CTD data at Niskin firing times:'
+                    'firmethod = ''medint'' to take median average over a scan interval around '
+                    'firing scans set by firopts.int (e.g. [-1 120] for just before to 5 s after); or'
+                    'firmethod = ''linterp'' (default) to linearly interpolate.'
+                    'Additional fields of firopts set whether to fill gaps of any length (firopts.prefill = inf),'
+                    'up to set length N (firopts.prefill = N; default 120), or not at all (firopts.prefill = 0)'
+                    'by linear interpolation, before averaging or interpolating.'};
+                firmethod = 'linterp'; 
+                clear firopts;
+                firopts.prefill = 24*5; %fill gaps up to 5 s first
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
@@ -297,31 +293,7 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_checkplots %%%%%%%%%%
         
-        
-        %%%%%%%%%% best_station_depths %%%%%%%%%%
-    case 'best_station_depths'
-        switch oopt
-            case 'depth_recalc'
-                crhelp_str = {'recalcdepth_stns (default []) lists stations for which to recalculate depths '
-                    'even if they already have values in station_depths mat-file'};
-                recalcdepth_stns = [];
-            case 'depth_source'
-                crhelp_str = {'depth_source (default: {''file'', ''ctd''}) determines preferred method(s), '
-                    'in order, for finding station depths. Other option is ''ladcp''. If one of the methods '
-                    'is ''file'', fnintxt specifies name of ascii (csv or two-column text) file of [stations, depths].'};
-                depth_source = {'file', 'ctd'}; %load from two-column text file, then fill with ctd press+altimeter
-                fnintxt = [mgetdir('M_CTD_DEP') '/station_depths_' mcruise '.txt'];
-            case 'bestdeps'
-                crhelp_str = {'Place to edit those station depths that were not correctly filled in by '
-                    'the chosen depmeth, either directly by editing bestdeps (a list of [station, depth]), '
-                    'or by setting replacedeps, a list of [station, depth] only containing the pairs to edit.'
-                    'Also can set stnmiss, a list of stations not to include in bestdeps list.'};
-                replacedeps = [];
-                stnmiss = [];
-        end
-        %%%%%%%%%% end best_station_depths %%%%%%%%%%
-        
-                
+                        
     case 'mctd_addvars'
         switch oopt
             case 'newvars'

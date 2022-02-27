@@ -11,7 +11,10 @@
 %     where statnum is the station and position the niskin position 
 %     ([1 24] or [1 36])
 %     for ctd samples,
-% sampnum = -yyyymmddhhmm
+% and
+% sampnum = yyyymmddhhmm
+% or
+% sampnum = -dddhhmm (where ddd is year-day)
 %     for tsg samples,
 % and
 % sampnum = 999NNN
@@ -23,7 +26,7 @@
 m_common
 mdocshow(mfilename, ['loads bottle salinities from the file(s) specified in opt_' mcruise ' and writes ctd samples to sal_' mcruise '_01.nc and sam_' mcruise '_all.nc, and underway samples to tsg_' mcruise '_01.nc']);
 
-std_samp_range = [1e5 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
+std_samp_range = [9e5 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
 %ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
 
 % resolve root directories for various file types, and set output files
@@ -64,7 +67,7 @@ for fno = 1:length(salfiles)
 
     if sum(strcmp('runtime',fn))
         ds_sal.runtime(iid,1) = ds.runtime; %***assume datenum already?
-    elseif sum(strcmp('date',fn)) & sum(strcmp('time',fn))
+    elseif sum(strcmp('date',fn)) && sum(strcmp('time',fn))
         tim = datevec(ds.time,'HH:MM:SS'); 
         dat = datevec(ds.date,'dd/mm/yyyy'); 
         dv = [dat(:,1:3) tim(:,4:6)];
@@ -73,11 +76,11 @@ for fno = 1:length(salfiles)
         ds_sal.runtime(iid,1) = NaN+a0;
     end
     
-   snamep = varname_find({'sample1' 'sample_1' 'reading1' 'reading_1' 'r1'},fn);
+    snamep = intersect({'sample1' 'sample_1' 'reading1' 'reading_1' 'r1'},fn);
     if isempty(snamep)
         error(['unknown name for sample data in file ' salfiles{fno}])
     else
-        snamep = snamep(1:end-1);
+        snamep = snamep{1}(1:end-1);
         for sno = 1:3
             sname = sprintf('sample_%d',sno);
             sname0 = sprintf([snamep '%d'],sno);
@@ -100,7 +103,7 @@ for fno = 1:length(salfiles)
         ii2 = ii2(ii2>ii1);
         t = hs.header(ii2(1):ii2(2)); te = [];
         for tno = 1:length(t)
-            if ~isempty(str2num(t(tno))); te = [te t(tno)]; end
+            if ~isnan(str2double(t(tno))); te = [te t(tno)]; end
         end
         te = str2num(te);
         if ~isempty(te)
@@ -136,7 +139,7 @@ scriptname = mfilename; oopt = 'salflags'; get_cropt %run this both before and a
 %check for offsets in cruise options, if not found, run
 %msal_standardise_avg to set them. also set things like cellt, k15 here
 scriptname = mfilename; oopt = 'sal_off'; get_cropt
-if isempty(sal_adj_comment)==0 & ~isempty(sal_off)
+if isempty(sal_adj_comment) && ~isempty(sal_off)
     sal_adj_comment = ['Adjustments specified in opt_' mcruise];
 end
 if isempty(sal_off)
@@ -149,7 +152,7 @@ elseif length(sal_off)==1
 elseif length(sal_off)==length(ds_sal.sampnum)
     ds_sal.sal_off = sal_off;
 else
-    iistd = find(ds_sal.sampnum>=9e4 & ds_sal.sampnum<1e7);
+    iistd = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<std_samp_range(2));
     iis = setdiff(1:length(ds_sal.sampnum),iistd);
     switch sal_off_base
         case 'sampnum_run' %offsets given using standards sampnums; interpolate between them using runtime or order
@@ -157,8 +160,8 @@ else
             dt(dt<0) = NaN; [dt1,ii1] = min(dt);
             dt = ds_sal.runtime(iis)'-ds_sal.runtime(iistd);
             dt(dt>0) = NaN; [dt2,ii2] = max(dt); dt2 = -dt2;
-            iiw = find(min(dt1,dt2)>1/24 | max(dt1,dt2)>3/24); %***
-            warning(sprintf('%s\n','these samples are not near any standard; if a standard was not run','on either side of each crate, sampnum_run may not be the best method: '));
+            iiw = (min(dt1,dt2)>1/24 | max(dt1,dt2)>3/24); %***
+            warning('%s\n','these samples are not near any standard; if a standard was not run','on either side of each crate, sampnum_run may not be the best method: ');
             disp(ds_sal.sampnum(iiw))
             [c,ia,ib] = intersect(sal_off(:,1),ds_sal.sampnum);
             ds_sal.sal_off = NaN+zeros(size(ds_sal.sampnum));
@@ -170,8 +173,6 @@ else
             end
         case 'sampnum_list' %offsets given using sample sampnums
             ds_sal.sal_off(iis) = sal_off; %***
-        case 'statnum' %offsets given using lists of statnums***what about tsg
-            %***
     end
 end
 
@@ -179,7 +180,8 @@ end
 ds_sal.salinity = gsw_SP_salinometer(ds_sal.runavg/2, ds_sal.cellt); %changed on JC103 in rapid branch, after JR16002 in JCR branch
 if ~isempty(sal_off)
     ds_sal.salinity_adj = gsw_SP_salinometer((ds_sal.runavg+ds_sal.sal_off)/2, ds_sal.cellt);
-    ds_sal.flag(isnan(ds_sal.salinity_adj) & ds_sal.flag<4) = 4;
+    iin = find(isnan(ds_sal.salinity_adj));
+    ds_sal.flag(iin) = max(4,ds_sal.flag(iin));
 elseif isfield(ds_sal, 'salinity_adj')
     ds_sal.salinity_adj = [];
 end
@@ -206,35 +208,31 @@ hc.comment = ['salinity data from ; ' sal_adj_comment]; %***hc.comment
 mfsave(salfile, d, hc);
 
 %write some fields for CTD samples to sam_ file
-clear dsc
-iic = find(d.sampnum>0 & d.sampnum<900*100);
-% dsc = d(iic,:);
-% bak: jc211 20 feb 2021 the line above doesnt work because d is a structure. Here is a longhand
-% way fo doing what seems to be intended
-fnd = fieldnames(d);
-for no = 1:length(fnd)
-    dsc.(fnd{no}) = d.(fnd{no})(iic,:);
-end
 clear hnew
 hnew.fldnam = {'sampnum' 'botpsal' 'botpsal_flag'};
 hnew.fldunt = {'number' 'psu' 'woce_9.4'}; %***
 hnew.comment = ['salinity data from sal_' mcruise '_01.nc. ' sal_adj_comment];
-ds = mloadq(samfile, 'sampnum', ' ');
-[~,isam,isal] = intersect(ds.sampnum,dsc.sampnum);
+ds = mloadq(samfile, 'sampnum', 'niskin_flag', ' ');
+[~,isam,isal] = intersect(ds.sampnum,d.sampnum);
 ds.botpsal = NaN+ds.sampnum; ds.botpsal_flag = 9+zeros(size(ds.sampnum));
-if isfield(dsc, 'salinity_adj')
-    ds.botpsal(isam) = dsc.salinity_adj(isal);
+if isfield(d, 'salinity_adj')
+    ds.botpsal(isam) = d.salinity_adj(isal);
 else
-    ds.botpsal(isam) = dsc.salinity(isal);
+    ds.botpsal(isam) = d.salinity(isal);
 end
-ds.botpsal_flag(isam) = dsc.flag(isal);
+ds.botpsal_flag(isam) = d.flag(isal);
+%apply niskin flags (and also confirm consistency between sample and flag)
+ds = hdata_flagnan(ds, [4 9]);
+%don't need to rewrite them though
+ds = rmfield(ds,'niskin_flag');
+%save
 mfsave(samfile, ds, hnew, '-merge', 'sampnum');
 
 if exist('tsgpre', 'dir') && ~isempty(tsgfiles)
     %get TSG samples, figure out event numbers
-    %either negative, dddhhmmss (where ddd is year-day starting at 1), or yyyyhhmmss
+    %either negative, dddhhmmss (where ddd is year-day starting at 1), or yyyymmddhhmmss
     iiu = find(d.sampnum<0 | d.sampnum>=1e7);
-    if length(iiu)>0
+    if ~isempty(iiu)
         
         fnd = fieldnames(d);
         for no = 1:length(fnd)

@@ -1,4 +1,4 @@
-%input: 1 Hz pressure (or 1 Hz plus start and end scans)
+% input: 1 Hz pressure (or 1 Hz plus start and end scans)
 % min_stop (minimum length of stops in seconds)
 % delp (max range of pressure stops)
 

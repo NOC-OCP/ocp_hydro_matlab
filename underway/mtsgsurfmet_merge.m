@@ -4,6 +4,7 @@
 %for rvdas, add tsg and windsonic data to met data
 
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+clear dnew hnew
 
 filemet = [mgetdir(metpre) '/' metpre '_' mcruise '_01.nc'];
 if exist(filemet, 'file')
@@ -31,14 +32,7 @@ if exist(filemet, 'file')
         dt.timec = dt.time/3600/24+datenum(ht.data_time_origin);
         
         %add tsg variables to structure to save into file
-        switch MEXEC_G.Mshipdatasystem
-            case 'techsas'
-                addvars = {'psal' 'temp_r' 'temp_h' 'cond' 'sndspeed'};
-            case 'rvdas'
-                addvars = {'temp_housing' 'conductivity' 'salinity' 'soundvelocity' 'temp_remote'};
-            case 'scs'
-                %***
-        end
+        addvars = munderway_varname({'salvar' 'tempvar' 'condvar' 'sstvar' 'svelvar'}, ht.fldnam, 's');
         for vno = 1:length(addvars)
             ii = find(strcmp(addvars{vno}, ht.fldnam));
             if ~isempty(ii)
@@ -65,11 +59,11 @@ if exist(filemet, 'file')
                 [ds, hs] = mloadq(filesa, '/');
                 ds.timec = ds.time/3600/24+datenum(hs.data_time_origin);
                 
-                windsin = varname_find({'windspeed_raw' 'wind_speed_ms' 'relwind_spd_raw'}, hs.fldnam);
-                winddin = varname_find({'winddirection_raw' 'direct' 'wind_dir' 'relwind_dirship_raw'}, hs.fldnam);
+                windsin = munderway_varname('windsvar', hs.fldnam, 1, 's');
+                winddin = munderway_varname('winddvar', hs.fldnam, 1, 's');
                 windssa = [windsin '_sonic']; winddsa = [winddin '_sonic'];
                 data = interp1(ds.timec, ds.(windsin).*exp(sqrt(-1)*ds.(winddin)/180*pi), dm.timec);
-                dm.(windssa) = abs(data); dm.(winddsa) = mod(angle(data)*180/pi,360);
+                dnew.(windssa) = abs(data); dnew.(winddsa) = mod(angle(data)*180/pi,360);
                 hnew.fldnam = [hnew.fldnam windssa winddsa];
                 hnew.fldunt = [hnew.fldunt 'm/s' 'degrees'];
                 hnew.comment = sprintf('variables interpolated from windsonic_%s_01.nc:', mcruise);
@@ -79,7 +73,6 @@ if exist(filemet, 'file')
     
     %save
     if ~isempty(hnew.fldnam) %we did find something to do
-        dm = rmfield(dm, 'timec');
         mfsave(filemet, dnew, hnew, '-addvars');
     end
     

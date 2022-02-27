@@ -245,14 +245,13 @@ switch scriptname
     case 'msal_01'
         switch oopt
             case 'salflags'
-                flagval = [3; 4; 5];
-                flagsamps = {[3123 5620 8122 9209];
-                    [0308 1916 3513 3716 ...
+                flag(ismember(sampnum,[3123 5620 8122 9209])) = 3;
+                flag4 = [0308 1916 3513 3716 ...
                     4002 4117 4513 5117 5118 5222 5415 5416 5417 6101 6522 ...
                     7101 7118 7204 7308 7309 7320 7802 7811 7813 7902 ...
                     8007 8008 8102 8523 8816 8701];
-                    [10823]};
-                flag = flags_set(flag, sampnum, flagval, flagsampnums);
+                flag(ismember(sampnum,flag4)) = 4;
+                flag(sampnum==10823) = 5;
                 
         end
         %%%%%%%%%% end msal_01 %%%%%%%%%%

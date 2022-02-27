@@ -1,7 +1,5 @@
 function m_uway_append(shortnames, udirs, days, restartu)
 
-%  GNU nano 2.0.6                       File: Downloads/m_uway_append_all.m                                                    
-
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 root_u = MEXEC_G.mexec_data_root;

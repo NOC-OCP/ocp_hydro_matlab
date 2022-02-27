@@ -34,16 +34,16 @@ dataname = ['ctd_' mcruise '_' stn_string];
 scriptname = mfilename; oopt = 'redoctm'; get_cropt
 scriptname = mfilename; oopt = 'cnvfilename'; get_cropt
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
-    infile = fullfile(root_cnv, infile);
+    cnvfile = fullfile(root_cnv, cnvfile);
     otfile = fullfile(root_ctd, [dataname '_raw.nc']);
 else %in some cases, operate on original file (to remove large spikes), then apply align and CTM
-    infile = fullfile(root_cnv, infile); %align and ctm will be reapplied
+    cnvfile = fullfile(root_cnv, cnvfile); %align and ctm will be reapplied
     otfile = fullfile(root_ctd, [dataname '_raw_noctm.nc']);
     disp('starting from noctm file')
 end
 
-if ~exist(infile,'file')
-    warning(['file ' infile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
+if ~exist(cnvfile,'file')
+    warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
     pause
 end
 
@@ -62,7 +62,7 @@ end
 
 %generate file
 MEXEC_A.MARGS_IN = {
-    infile
+    cnvfile
     'y'
     'y'
     otfile
@@ -101,7 +101,7 @@ end
 if length(unique(dsv.sbename))<length(dsv.sbename)
     error(['There is a duplicate name in the list of variables to rename; use ctdvars_replace rather than ctdvars_add in opt_' mcruise]);
 end
-[varnames, junk, iiv] = mvars_in_file(dsv.sbename, infile);
+[varnames, junk, iiv] = mvars_in_file(dsv.sbename, otfile);
 dsv = dsv(iiv,:);
 varnames_units = cell(3,length(dsv));
 for vno = 1:length(dsv)
@@ -121,7 +121,7 @@ varnames_units = varnames_units(:);
 
 %edit file names and units in header
 MEXEC_A.MARGS_IN_1 = {
-    infile
+    otfile
     'y'
     '8'
     };
@@ -136,7 +136,7 @@ mheadr
 % create NaN variables that are in mcvars_list but not present for this station
 scriptname = mfilename; oopt = 'absentvars'; get_cropt
 if ~isempty(absentvars)
-    MEXEC_A.MARGS_IN = {infile; 'y'};
+    MEXEC_A.MARGS_IN = {otfile; 'y'};
     for kabs = 1:length(absentvars)
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
             absentvars{kabs}
@@ -150,13 +150,13 @@ end
 
 % Get position at bottom of cast either from ctd-logged nmea lat, lon or
 % from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
-h = m_read_header(infile);
+h = m_read_header(otfile);
 if sum(strcmp('latitude',h.fldnam)) && sum(strcmp('longitude',h.fldnam))
-    d = mloadq(infile,'press','latitude','longitude',' ');
+    d = mloadq(otfile,'press','latitude','longitude',' ');
     kbot = find(d.press == max(d.press), 1 );
     botlat = d.latitude(kbot); botlon = d.longitude(kbot);
 else
-    [d, h] = mloadq(infile,'time','press',' ');
+    [d, h] = mloadq(otfile,'time','press',' ');
     kbot = find(d.press == max(d.press), 1 );
     tbot = d.time(kbot);
     tbotmat = datenum(h.data_time_origin) + tbot/86400; % bottom time as matlab datenum
@@ -171,11 +171,11 @@ else
             botlat = []; botlon = [];
     end
 end
-if ~isempty(botlat>0)
+if ~isempty(botlat)
     latstr = sprintf('%14.8f',botlat);
     lonstr = sprintf('%14.8f',botlon);
     MEXEC_A.MARGS_IN = {
-        infile
+        otfile
         'y'
         '5'
         latstr
@@ -186,5 +186,5 @@ if ~isempty(botlat>0)
     mheadr
 end
 
-system(['chmod 444 ' m_add_nc(otfile)])
+system(['chmod 444 ' m_add_nc(otfile)]);
 

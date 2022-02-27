@@ -60,7 +60,7 @@
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
 mdocshow(mfilename, ['plots CTD data from station ' stn_string ' along with data from selected previous stations']);
 
-msg1 = '\n Type number of previous stations to view, a list of at least two station numbers, or return to quit\n';
+msg1 = '\n Type number of previous stations to view,\n a list of at least two station numbers,\n or return to quit\n';
 nump = input(msg1);
 
 if numel(nump)>1
@@ -96,7 +96,7 @@ ddcs = {};
 hdcs = {};
 infiles = {};
 sused = [];
-for ks = [slist(:)' stnlocal];
+for ks = [slist(:)' stnlocal]
     sstring = sprintf('%03d',ks);
     infile1 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2db']));
     infile2 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2up']));
@@ -117,13 +117,13 @@ for ks = [slist(:)' stnlocal];
     infiles{2,ks1} = infile2;
     infiles{3,ks1} = infile3;
     infiles{4,ks1} = infile4;
-    [d h] = mloadq(infile1,'/');
+    [d, h] = mloadq(infile1,'/');
     d2db = [d2db d];
     h2db = [h2db h];
-    [d h] = mloadq(infile2,'/');
+    [d, h] = mloadq(infile2,'/');
     d2up = [d2up d];
     h2up = [h2up h];
-    [d h] = mloadq(infile3,'/');
+    [d, h] = mloadq(infile3,'/');
     dpsal = [dpsal d];
     hpsal = [hpsal h];
     [d h] = mloadq(infile4,'/');
@@ -184,8 +184,8 @@ for plotlist = cklist
             clear pf1;
             pf1.xlist = 'time';
             pf1.ylist = ['press temp ' saltype ' oxygen'];
-            first = min(find(dpsal{end}.scan > ddcs{end}.scan_start));
-            last = max(find(dpsal{end}.scan < ddcs{end}.scan_end));
+            first = find(dpsal{end}.scan > ddcs{end}.scan_start, 1 );
+            last = find(dpsal{end}.scan < ddcs{end}.scan_end, 1, 'last' );
             pf1.startdc = first; % good data only
             pf1.stopdc = last;
             if oxy_end

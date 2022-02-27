@@ -25,17 +25,14 @@ infile1 = fullfile(roottsg, [abbrev '_' mcruise '_01_medav_clean']);
 %get previous limits
 scriptname = 'mtsg_cleanup'; oopt = 'kbadlims'; get_cropt
 
-[d h] = mload(infile1,'/');
-salvar = varname_find({'salinity' 'psal'},h.fldnam);
-if length(salvar)>0; issal = 1; else; issal = 0; end
-tempsst = varname_find({'remotetemp' 'temp_4' 'sstemp'},h.fldnam);
-if length(tempsst)>0; issst = 1; else; isst = 0; end
-condvar = varname_find({'conductivity' 'cond'},h.fldnam);
-if length(condvar)>0; iscond = 1; else; iscond = 0; end
-tempvar = varname_find({'housingtemp' 'temp_h' 'tstemp'},h.fldnam);
-if length(tempvar)>0; istemp = 1; else; istemp = 0; end
-flowvar = varname_find({'flow' 'flow1'},h.fldnam);
-if length(flowvar)>0; isflow = 1; else; isflow = 0; end
+[d, h] = mload(infile1,'/');
+
+%figure out variable names
+cats = {'salvar' 'sstvar' 'tempvar' 'condvar' 'flowvar'};
+vars = munderway_varname(cats,h.fldnam,1);
+for no = 1:length(cats)
+    eval([cats{no} ' = vars{no};'])
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
 
@@ -54,16 +51,16 @@ clear yporgs yptops
 
 % first count how many plots we will have, so we can get the size
 
-if issal
+if ~isempty(salvar)
     np = np+1;
 end
-if iscond
+if ~isempty(condvar)
     np = np+1;
 end
-if issst | istemp
+if ~isempty(sstvar) || ~isempty(tempvar)
     np = np+1;
 end
-if isflow
+if ~isempty(flowvar)
     np = np+1;
 end
 
@@ -117,7 +114,7 @@ while 1
                 iib = [iib find(decday>=kbadlims1(no,1) & decday<=kbadlims1(no,2))];
             end
             
-            if issal
+            if ~isempty(salvar)
                 kount = kount+1;
                 subplot('position',[pl pb+(np-1)*(ph+pb) pw ph*2])
                 plot(decday,d.(salvar),'k+-',decday(iib),d.(salvar)(iib),'c+');
@@ -129,7 +126,7 @@ while 1
                 set(ht,'interpreter','none');
             end
             
-            if iscond
+            if ~isempty(condvar)
                 kount = kount+1;
                 subplot('position',[pl pb+(np-2)*(ph+pb) pw ph])
                 plot(decday,d.(condvar),'k+-',decday(iib),d.(condvar)(iib),'c+');
@@ -138,14 +135,14 @@ while 1
                 ylabel('cond');
             end
             
-            if issst | istemp
+            if ~isempty(sstvar) || ~isempty(tempvar)
                 kount = kount+1;
                 subplot('position',[pl pb+(np-3)*(ph+pb) pw ph])
-                if issst
+                if ~isempty(sstvar)
                     plot(decday,d.(tempvar),'k+-',decday(iib),d.(tempvar)(iib),'c+');
                     hold on; grid on
                 end
-                if istemp
+                if ~isempty(tempvar)
                     plot(decday,d.(tempsst),'r+-',decday(iib),d.(tempsst)(iib),'c+');
                     hold on ;grid on
                 end
@@ -153,7 +150,7 @@ while 1
                 ylabel('temp')
             end
             
-            if isflow
+            if ~isempty(flowvar)
                 kount = kount+1;
                 subplot('position',[pl pb+(np-4)*(ph+pb) pw ph])
                 plot(decday,d.(flowvar),'k+-',decday(iib),d.(flowvar)(iib),'c+');
@@ -184,18 +181,18 @@ while 1
             end
         case 'ss'
             % select  start scan
-            [x y] = ginput(1);
+            [x, y] = ginput(1);
             dn_startbad = min(decday(decday>=x));
             
         case 'se'
             % select  end scan
-            [x y] = ginput(1);
+            [x, y] = ginput(1);
             dn_endbad = max(decday(decday<=x));
             
         case 'n'
             alltimes = [alltimes; [dn_startbad dn_endbad]];
         case 'w'
-            if ~(alltimes(end,1)==dn_startbad & alltimes(end,2)==dn_endbad)
+            if ~(alltimes(end,1)==dn_startbad && alltimes(end,2)==dn_endbad)
                 alltimes = [alltimes; [dn_startbad dn_endbad]];
             end
             break

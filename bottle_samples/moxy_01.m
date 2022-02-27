@@ -14,7 +14,7 @@ mdocshow(mfilename, ['loads bottle oxygens from file specified in opt_' mcruise 
 % find list of files
 root_oxy = mgetdir('M_BOT_OXY');
 scriptname = mfilename; oopt = 'oxy_files'; get_cropt
-if length(ofiles)==0
+if isempty(ofiles)
     warning(['no files matching ' ofpat ' found in ' root_oxy '; skipping'])
     return
 end
@@ -53,9 +53,9 @@ for flno = 1:length(ofiles)
     if chunits>0
         for fno = 1:size(fn_unt_expect,1)
             ii1 = find(strcmp(fn_unt_expect{fno,1},mvar_fvar(:,1)));
-            if length(ii1)>0
+            if ~isempty(ii1)
                 ii = find(strcmp(mvar_fvar{ii1,2},fn));
-                if length(ii)>0 && ~sum(strcmp(lower(hs.colunit{ii}),fn_unt_expect{fno,2}))
+                if ~isempty(ii) && ~sum(strcmpi(hs.colunit{ii},fn_unt_expect{fno,2}))
                     warning([ofiles(fno).name ' unit corresponding to ' fn_unt_expect{fno,1} ', ' hs.colunit{ii} ', does not match expected:'])
                     disp(fn_unt_expect{fno,2})
                 end
@@ -183,32 +183,50 @@ scriptname = mfilename; oopt = 'oxyflags'; get_cropt
 mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 
 % compute botoxy_per_kg (umol/kg) from botoxy (umol/L) and save to samfile
-clear dnew hnew
+clear hnew
 samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
-[ds,hs] = mloadq(samfile,'sampnum','uasal',' ');
-[c,iio,iis] = intersect(d.sampnum, ds.sampnum);
-dnew.sampnum = ds.sampnum;
-hnew.fldnam = {'sampnum'}; 
+[ds,hs] = mloadq(samfile,'sampnum','niskin_flag','uasal',' ');
+[~,iis,iio] = intersect(ds.sampnum,d.sampnum);
+hnew.fldnam = {'sampnum'};
 hnew.fldunt = {'number'};
 
+%convert to umol/kg
 dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxya_temp(iio),0),0);
-dnew.botoxya = NaN+ds.sampnum; dnew.botoxya_temp = dnew.botoxya; dnew.botoxya_flag = 9+zeros(size(ds.sampnum));
-dnew.botoxya(iis) = d.botoxya_per_l(iio)./(dens/1000);
-dnew.botoxya_temp(iis) = d.botoxya_temp(iio);
-dnew.botoxya_flag(iis) = d.botoxya_flag(iio);
-hnew.fldnam = [hnew.fldnam 'botoxya' 'botoxya_temp' 'botoxya_flag'];
-hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
-
-if isfield(d,'botoxyb_per_l')
+botoxya = d.botoxya_per_l(iio)./(dens/1000);
+if isfield(d, 'botoxyb_per_l')
     dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxyb_temp(iio),0),0);
-    dnew.botoxyb = NaN+ds.sampnum; dnew.botoxyb_temp = dnew.botoxyb; dnew.botoxyb_flag = 9+zeros(size(ds.sampnum));
-    dnew.botoxyb(iis) = d.botoxyb_per_l(iio)./(dens/1000);
-    dnew.botoxyb_temp(iis) = d.botoxyb_temp(iio);
-    dnew.botoxyb_flag(iis) = d.botoxyb_flag(iio);
-    hnew.fldnam = [hnew.fldnam 'botoxyb' 'botoxyb_temp' 'botoxyb_flag'];
-    hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
+    botoxyb = d.botoxyb_per_l(iio)./(dens/1000);
 end
 
-mfsave(samfile, dnew, hnew, '-addvars');
+ds.botoxy = NaN+ds.sampnum;
+ds.botoxy_flag = 9+zeros(size(ds.sampnum));
+if isfield(d, 'botoxyb_per_l')
+    %for sam file, average 'a' and 'b' samples depending on flag
+    av = find(d.botoxya_flag(iio)==d.botoxyb_flag(iio));
+    ds.botoxy(iis(av)) = .5*(botoxya(av)+botoxyb(av));
+    ds.botoxy_flag(iis(av)) = 6;
+    a = find(d.botoxya_flag(iio)<d.botoxyb_flag(iio));
+    ds.botoxy(iis(a)) = botoxya(a);
+    ds.botoxy_flag(iis(a)) = d.botoxya_flag(iio(a));
+    b = find(d.botoxyb_flag(iio)<d.botoxya_flag(iio));
+    ds.botoxy(iis(b)) = botoxyb(b);
+    ds.botoxy_flag(iis(b)) = d.botoxyb_flag(iio(b));
+else
+    %only 'a' samples
+    ds.botoxy(iis) = botoxya;
+    ds.botoxy_flag(iis) = d.botoxya_flag(iio);
+end
+%for temperature it's not meaningful to average, just report botoxya
+%temp as diagnostic of good bottle closing
+ds.botoxya_temp = NaN+ds.sampnum;
+ds.botoxya_temp(iis) = d.botoxya_temp(iio);
+hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxya_temp' 'botoxy_flag'];
+hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
 
-%station 14, 1034 --> 1.034
+%apply niskin flags (and also confirm consistency between sample and flag)
+ds = hdata_flagnan(ds, [4 9]);
+%don't need to rewrite them though, nor uasal
+ds = rmfield(ds, {'niskin_flag', 'uasal'});
+
+%save
+mfsave(samfile, ds, hnew, '-merge', 'sampnum');

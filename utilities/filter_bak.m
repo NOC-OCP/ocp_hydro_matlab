@@ -92,7 +92,7 @@ switch filttype
             xpart = xe(kx:kx+2*n);
             y(kx) = m_nanmedian(xpart);
         end
-    case {'default' 'nonorm' 'cont'}
+    case {'default' 'cont'}
         for kx = 1:nx
             xpart = xe(kx:kx+2*n);
             w = b;

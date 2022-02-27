@@ -17,12 +17,12 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %find files
 [udirs, udcruise] = m_udirs;
-simvar = varname_find({'ea600' 'sim'},udirs(:,1));
-if length(simvar)>0
+simvar = munderway_varname('singlebvar',udirs(:,1),1,'s');
+if ~isempty(simvar)
     iss = 1;
 end
-emvar = varname_find({'em120' 'em122'},udirs(:,1));
-if length(emvar)>0
+emvar = munderway_varname('multibvar',udirs(:,1),1,'s');
+if ~isempty(emvar)
     ism = 1;
 end
 if iss
@@ -38,7 +38,7 @@ if ism
     end
 end
 
-if ~iss & ~ism
+if ~iss && ~ism
     disp(['no bathymetry to edit on day ' num2str(daylocal)])
     return
 end
@@ -69,11 +69,11 @@ if ~isfield(dnav,'dnum'); dnav.dnum = dnav.time + MEXEC_G.uway_torg; end
 dt = 300; 
 % dnav.time = dnav.time(1:dt:end); %about 5 minutes % bak dnav.time not
 % needed
-latvar = varname_find({'lat' 'latitude' 'seatex_gll_lat'},fieldnames(dnav));
-lonvar = varname_find({'lon' 'long' 'longitude' 'seatex_gll_lon'},fieldnames(dnav));
+latvar = munderway_varname('latvar',fieldnames(dnav),1,'s');
+lonvar = munderway_varname('lonvar',fieldnames(dnav),1,'s');
 
 scriptname = 'bathy'; oopt = 'bathy_grid'; get_cropt
-if mean(dnav.(lonvar))<0 & mean(top.lon)>0; top.lon = top.lon-360; end
+if mean(dnav.(lonvar))<0 && mean(top.lon)>0; top.lon = top.lon-360; end
 iix = find(top.lon>=min(dnav.(lonvar))-1 & top.lon<=max(dnav.(lonvar))+1); iiy = find(top.lat>=min(dnav.(latvar))-1 & top.lat<=max(dnav.(latvar))+1);
 ssdeps = -interp2(top.lon(iix), top.lat(iiy)', top.depth(iiy,iix), dnav.(lonvar)(1:dt:end), dnav.(latvar)(1:dt:end));
 
@@ -144,7 +144,7 @@ for fno = 1:length(files)
 end
 
 %re-merge edited data
-if iss & ism
+if iss && ism
     filesbot = filesb;
     filembot = filemb;
     mbathy_merge

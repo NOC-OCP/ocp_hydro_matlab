@@ -114,14 +114,14 @@ end
 
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
-ld = cell2table({'' '' '' {} ''}, 'VariableNames', {'predir' 'lib' 'exmfile' 'subdirs' 'verstr'});
-ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'seawater', 'sw_dpth' {} '_ver3_2'} ];
-ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'm_map' 'm_gshhs_i' {} '_v1_4'} ];
-%ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'gamma_n' 'gamma_n' {} '_v3_05_10'} ];
-ld = [ld; {fullfile(MEXEC.mstar_root,'sw','others') 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' {'library'} ''} ];
-ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'gsw_matlab', 'gsw_SA_from_SP' {'library'; 'thermodynamics_from_t'} '_v3_03'} ];
+ld = cell2table({'' '' '' ''}, 'VariableNames', {'predir' 'lib' 'exmfile' 'verstr'});
+ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'seawater', 'sw_dpth' '_ver3_2'} ];
+ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'm_map' 'm_gshhs_i' '_v1_4'} ];
+ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'gamma_n' 'gamma_n' '_v3_05_10'} ];
+%ld = [ld; {fullfile(MEXEC.mstar_root,'sw','others') 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''} ];
+ld = [ ld; {fullfile(MEXEC.mstar_root,'sw','others') 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'} ];
 if MEXEC_G.ix_ladcp
-    ld = [ ld; fullfile(MEXEC.mstar_root,'sw','others') 'LDEO_IX' 'loadrdi' {'geomag'} '_13' ];
+    ld = [ ld; fullfile(MEXEC.mstar_root,'sw','others') 'LDEO_IX' 'loadrdi' '_13' ];
 end
 if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~MEXEC.force_ext_software_versions
     ld = sw_vers(ld(2:end,:)); %replace verstr with highest version of each library found in mstar_root

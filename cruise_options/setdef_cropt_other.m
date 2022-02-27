@@ -103,6 +103,29 @@ switch scriptname
                 end
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
+
+                %%%%%%%%%% best_station_depths %%%%%%%%%%
+    case 'best_station_depths'
+        switch oopt
+            case 'depth_recalc'
+                crhelp_str = {'recalcdepth_stns (default []) lists stations for which to recalculate depths '
+                    'even if they already have values in station_depths mat-file'};
+                recalcdepth_stns = [];
+            case 'depth_source'
+                crhelp_str = {'depth_source (default: {''ladcp'', ''ctd''}) determines preferred method(s), '
+                    'in order, for finding station depths. Other option is ''file''; if this is set, must also'
+                    'specify fnintxt, the name of the ascii (csv or two-column text) file of [stations, depths].'};
+                depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
+            case 'bestdeps'
+                crhelp_str = {'Place to edit those station depths that were not correctly filled in by '
+                    'the chosen depmeth, either directly by editing bestdeps (a list of [station, depth]), '
+                    'or by setting replacedeps, a list of [station, depth] only containing the pairs to edit.'
+                    'Also can set stnmiss, a list of stations not to include in bestdeps list.'};
+                replacedeps = [];
+                stnmiss = [];
+        end
+        %%%%%%%%%% end best_station_depths %%%%%%%%%%
+        
         
         %%%%%%%%%% mout_exch %%%%%%%%%%
     case 'mout_exch'
@@ -133,7 +156,7 @@ switch scriptname
                 crhelp_str = {'optional headstring is a cell array of strings to add to header of '
                     'exchange-format csv file of sample data (default: empty)'};
         end
-        %%%%%%%%%% end mout_cchdo %%%%%%%%%%
+        %%%%%%%%%% end mout_exch %%%%%%%%%%
         
         %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
     case 'msec_run_mgridp'

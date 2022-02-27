@@ -1,4 +1,4 @@
-function [dnew, hnew] = mctd_apply_oxyhyst(d, h, castopts)
+function [dnew, hnew] = ctd_apply_oxyhyst(d, h, castopts)
 %reverse and/or apply oxygen hysteresis correction to _raw_cleaned file,
 %producing _24hz file
 
@@ -32,19 +32,16 @@ if castopts.dooxyrev
 else
     revstring = ''; %if dooxyhyst will apply to original variables
 end
-if exist(hnew,'var')
-    nvar = length(hnew.fldnam);
-end
 
-if dooxyhyst
+if castopts.dooxyhyst
     %calculate the variables with oxygen hysteresis applied
-    if ~iscell(castopts.oxyrev.H1)
+    if ~iscell(castopts.oxyhyst.H1)
         castopts.oxyhyst.H1 = repmat({castopts.oxyhyst.H1},nox,1);
     end
-    if ~iscell(castopts.oxyrev.H2)
+    if ~iscell(castopts.oxyhyst.H2)
         castopts.oxyhyst.H2 = repmat({castopts.oxyhyst.H2},nox,1);
     end
-    if ~iscell(castopts.oxyrev.H3)
+    if ~iscell(castopts.oxyhyst.H3)
         castopts.oxyhyst.H3 = repmat({castopts.oxyhyst.H3},nox,1);
     end
     for no = 1:nox
@@ -56,7 +53,7 @@ if dooxyhyst
         %record whether a non-default calibration is set, for mstar comment
         if length(castopts.oxyhyst.H1{no})>1 || length(castopts.oxyhyst.H2{no})>1 || length(castopts.oxyhyst.H3{no})>1
             ohtyp(no) = 2;
-        elseif max(abs(castopts.oxyhyst.H_0-[castopts.oxyhyst.H1{no} castopts.oxyhyst.H2{no} castopts.oxyhyst.H3{no}]))>0
+        elseif max(abs(castopts.H_0-[castopts.oxyhyst.H1{no} castopts.oxyhyst.H2{no} castopts.oxyhyst.H3{no}]))>0
             ohtyp(no) = 1;
         else
             ohtyp(no) = 0;

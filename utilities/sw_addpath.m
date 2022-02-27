@@ -8,22 +8,12 @@ for lno = 1:size(ld,1)
     
     mpath = fullfile(ld.predir{lno}, [ld.lib{lno} ld.verstr{lno}]);
     if exist(mpath,'dir')==7 %presume subdirectories will also be present
-        
-        disp('adding to path: ')
-        disp(mpath)
-        addpath(mpath, '-end')
-        MEXEC_G.exsw_paths = [MEXEC_G.exsw_paths; mpath];
 
-        %subdirectories
-        s = ld.subdirs{lno};
-        if ischar(s)
-            disp(fullfile(mpath,s))
-            addpath(fullfile(mpath,s), '-end')
-        else
-            for sno = 1:length(s)
-                disp(fullfile(mpath,s{sno}))
-                addpath(fullfile(mpath,s{sno}), '-end')
-            end
+        if isempty(ld.exmfile{lno}) || isempty(which(ld.exmfile{lno}))
+            disp('adding to path: ')
+            disp(mpath)
+            addpath(genpath(mpath), '-end')
+            MEXEC_G.exsw_paths = [MEXEC_G.exsw_paths; mpath];
         end
         
     else

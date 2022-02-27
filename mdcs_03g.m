@@ -86,9 +86,15 @@ while 1
             if isfield(d, 'pumps'); ii = find(d.pumps<1); else; ii = []; end %overplotting red if pumps not on. bak and ylf jr306, jan2015.
             plot(d.scan,-d.press,'k+-',d.scan(ii),-d.press(ii),'r+');
             hold on; grid on
-            plot(scan_bot,-d.press(d.scan==scan_bot),'cp','markersize',10,'markerfacecolor','c');
-            plot(scan_start,-d.press(d.scan==scan_start),'c>','markersize',10,'markerfacecolor','c');
-            plot(scan_end,-d.press(d.scan==scan_end),'c<','markersize',10,'markerfacecolor','c');
+            if ~isnan(scan_bot)
+                plot(scan_bot,-d.press(d.scan==scan_bot),'cp','markersize',10,'markerfacecolor','c');
+            end
+            if ~isnan(scan_start)
+                plot(scan_start,-d.press(d.scan==scan_start),'c>','markersize',10,'markerfacecolor','c');
+            end
+            if ~isnan(scan_end)
+                plot(scan_end,-d.press(d.scan==scan_end),'c<','markersize',10,'markerfacecolor','c');
+            end
             ha(1) = gca;
             if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('-press'); end
             %             set(gca,'ylim',plims);
@@ -141,13 +147,15 @@ while 1
             % select downcast start scan
             disp('select start scan on any panel');
             [x, y] = ginput(1);
-            scan_start = ceil(x)
+            [~,k] = min(abs(d.scan-x));
+            scan_start = d.scan(k);
             
         case 'sb'
             disp('select bottom scan on any panel');
             % select bottom scan
             [x, y] = ginput(1);
-            scan_bot = round(x)
+            [~,k] = min(abs(d.scan-x));
+            scan_bot = d.scan(k);
             
         case 'se'
             % select upcast end scan
@@ -155,9 +163,20 @@ while 1
             disp('you may want to select based on T and C, and add oxy_end in cruise options');
             disp('file (under castpars, oxy_align) so that O will be truncated when it goes bad (earlier)');
             [x, y] = ginput(1);
-            scan_end = floor(x)
+            [~,k] = min(abs(d.scan-x));
+            scan_end = d.scan(k);
         case 'pp'
-            kok = find(d.scan > scan_start & d.scan < scan_end);
+            if ~isnan(scan_start+scan_end)
+                kok = find(d.scan>=scan_start & d.scan<=scan_end);
+            else
+                if ~isnan(scan_start)
+                    kok = find(d.scan >= scan_start);
+                elseif ~isnan(scan_end)
+                    kok = find(d.scan <= scan_end);
+                else
+                    kok = [];
+                end
+            end
             clear ha
             clf
             
@@ -215,18 +234,18 @@ clear ds hnew
 
 if isfinite(scan_start) && scan_start~=dd.scan_start
     ds.dc_start = find(d.scan >= scan_start - 1, 1);
-    ds.scan_start = floor(d.scan(ds.dc_start));
+    ds.scan_start = d.scan(ds.dc_start);
     ds.press_start = d.press(ds.dc_start);
     ds.time_start = d.time(ds.dc_start);
-    ds.dc24_start = find(d24.scan >= scan_start - 1, 1);
+    [~,ds.dc24_start] = min(abs(d24.scan-ds.scan_start));
 end
 
-if isfinite(scan_end) && scan_end~=dd.scan_end
+if isfinite(scan_end) && (~isfield(dd, 'scan_end') || scan_end~=dd.scan_end)
     ds.dc_end = find(d.scan <= scan_end + 1, 1, 'last');
-    ds.scan_end = floor(d.scan(ds.dc_end));
+    ds.scan_end = d.scan(ds.dc_end);
     ds.press_end = d.press(ds.dc_end);
     ds.time_end = d.time(ds.dc_end);
-    ds.dc24_end = find(d24.scan <= scan_end + 1, 1, 'last');
+    [~,ds.dc24_end] = min(abs(d24.scan-ds.scan_end));
 end
 
 if isfinite(scan_bot) && scan_bot~=dd.scan_bot
@@ -234,15 +253,15 @@ if isfinite(scan_bot) && scan_bot~=dd.scan_bot
     ds.scan_bot = floor(d.scan(ds.dc_bot));
     ds.press_bot = d.press(ds.dc_bot);
     ds.time_bot = d.time(ds.dc_bot);
-    ds.dc24_bot = find(d24.scan >= scan_bot, 1);
+    [~,ds.dc24_bot] = min(abs(d24.scan-ds.scan_bot));
 end
 
 hnew.fldnam = fieldnames(ds)'; 
 hnew.fldunt = repmat({' '},size(hnew.fldnam));
-hnew.fldunt(strncmp('dc',hnew.fldnam,2)) = 'number';
-hnew.fldunt(strncmp('scan',hnew.fldnam,2)) = 'number';
-hnew.fldunt(strncmp('press',hnew.fldnam,5)) = 'dbar';
-hnew.fldunt(strncmp('time',hnew.fldnam,4)) = 'seconds';
+hnew.fldunt(strncmp('dc',hnew.fldnam,2)) = {'number'};
+hnew.fldunt(strncmp('scan',hnew.fldnam,2)) = {'number'};
+hnew.fldunt(strncmp('press',hnew.fldnam,5)) = {'dbar'};
+hnew.fldunt(strncmp('time',hnew.fldnam,4)) = {'seconds'};
 
 MEXEC_A.Mprog = mfilename;
 mfsave(otfile, ds, hnew, '-addvars');

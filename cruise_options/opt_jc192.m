@@ -134,9 +134,7 @@ switch scriptname
     case 'msal_01'
         switch oopt
             case 'salflags'
-                flagval = [4];
-                flagsamps = {[1111]}; %Sample 1111 so far out - prob wrong bottle
-                flag = flags_set(flag, sampnum, flagval, flagsamps);
+                flag(sampnum==[1111]) = 4; %Sample 1111 so far out - prob wrong bottle
         end
         %%%%%%%%%% end msal_01 %%%%%%%%%%
         

@@ -17,7 +17,8 @@ switch scriptname
     case 'mfir_03'
         switch oopt
             case 'fir_fill'
-                avi_opt = [0 121/24]-1/24; %average over 5 s to match .ros file used in BASproc
+                firmethod = 'medint';
+                firopts.int = [-1 120]; %average over 5 s to match .ros file used in BASproc
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
@@ -38,9 +39,9 @@ switch scriptname
                 flag4 = [flag4; 59 24; 62 1; 62 9; 67 9; 69 9; 72 9; 87 2; 89 9; 101 14]; %bad (end cap not closed)
                 flag4 = [flag4; 1 1; 8 2; 22 13]; %sample data very suspicious
                 flag9 = [13 4; 21 4; 25 4; 26, 4; 41 5; 51 12]; %did not fire
-                iif = find(flag3(:,1)==stnlocal); if length(iif)>0; niskin_flag(flag3(iif,2)) = 3; end
-                iif = find(flag4(:,1)==stnlocal); if length(iif)>0; niskin_flag(flag4(iif,2)) = 4; end
-                iif = find(flag9(:,1)==stnlocal); if length(iif)>0; niskin_flag(flag9(iif,2)) = 9; end
+                iif = find(flag3(:,1)==stnlocal); if ~isempty(iif); niskin_flag(flag3(iif,2)) = 3; end
+                iif = find(flag4(:,1)==stnlocal); if ~isempty(iif); niskin_flag(flag4(iif,2)) = 4; end
+                iif = find(flag9(:,1)==stnlocal); if ~isempty(iif); niskin_flag(flag9(iif,2)) = 9; end
                 %cast 45: some question about niskins closing at wrong
                 %depth if damaged by slack wire but probably ok
         end

@@ -31,7 +31,7 @@
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %variables, units, how to group samples for counting
-scriptname = mfilename; oopt = 'sum_varsams'; get_cropt %set vars, snames, sgrps, sashore, snames_shore
+scriptname = mfilename; oopt = 'sum_varsams'; get_cropt %set vars, snames, sgrps
 for no = 1:length(snames)
     if contains(snames{no},'_shore')
         vars = [vars; {snames{no} 'number' 0 snames{no}(1:end-6) '  %2d'}];
@@ -63,10 +63,10 @@ if ~isempty(stnall)
         d = []; cabname = [];
         try
             root_win = mgetdir('M_CTD_WIN');
-            d = dir(fullfile(root_win, ['win_' mcruise '_???.nc']));
+            d = dir(fullfile(root_win, ['win_' mcruise '_*.nc']));
             fnwin = d(1).name; % first winch file name
-            h = m_read_header(fnwin);
-            cabname = varname_find({'cablout' 'cableout' 'winch_cable_out'},h.fldnam);
+            h = m_read_header(fullfile(root_win,fnwin));
+            cabname = munderway_varname('cabvar',h.fldnam,1,'s');
         catch
             if isempty(d)
                 m = 'No winch files found';
@@ -81,13 +81,13 @@ if ~isempty(stnall)
     end
     
     %initialise
-    a = zeros(max(stnall),1); % bak on jc159 30 March 2018 has to be max (stnset) not size(stnset) so we can address by station number
+    a = zeros(size(stnall));
     for no = 1:size(vars,1)
         if isnumeric(vars{no,3})
             eval(sprintf('%s = a+%f;', vars{no,1}, vars{no,3}));
         end
     end
-    statnum(stnall) = stnall;
+    statnum = stnall;
     
     %get information from files
     disp('loading')
@@ -96,11 +96,12 @@ if ~isempty(stnall)
     if exist(m_add_nc(fnsam),'file') == 2
         dsam0 = mloadq(fnsam,'/');
     end
-    for k = stnset
-        stnstr = sprintf('%03d',k);
+    for k = 1:length(statnum)
+        stnstr = sprintf('%03d',statnum(k));
         
         %lat, lon, ctd depths and altimeter
         fnsal = fullfile(root_ctd, ['ctd_' mcruise '_' stnstr '_psal']);
+        if exist(m_add_nc(fnsal),'file')
         [dpsal, hpsal] = mloadq(fnsal,'/');
         lat(k) = hpsal.latitude;
         lon(k) = hpsal.longitude;
@@ -111,7 +112,8 @@ if ~isempty(stnall)
         else
             minalt(k) = NaN;
         end
-        
+        end
+
         %winch
         fnwin = fullfile(root_win, ['win_' mcruise '_' stnstr]);
         if exist(m_add_nc(fnwin),'file') == 2
@@ -121,14 +123,16 @@ if ~isempty(stnall)
         
         %cast start, bottom, end times
         fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' stnstr]);
+        if exist(m_add_nc(fndcs),'file')
         [ddcs, h4] = mloadq(fndcs,'/');
         time_start(k) = datenum(h4.data_time_origin) + ddcs.time_start/86400;
         time_bottom(k) = datenum(h4.data_time_origin) + ddcs.time_bot/86400;
         time_end(k) = datenum(h4.data_time_origin) + ddcs.time_end/86400;
-        
+        end
+
         %samples
         if exist('dsam0','var')
-            iis = find(dsam0.statnum==k);
+            iis = find(dsam0.statnum==statnum(k));
             dsam.upress = dsam0.upress(iis);
             if isfield(dsam0,'wireout')
                 dsam.wireout = dsam0.wireout(iis);
@@ -151,7 +155,7 @@ if ~isempty(stnall)
                         a = NaN;
                     end
                     log_all = [log_all sum(a(:))];
-                    if sum(isnan(log_all))>0; 
+                    if sum(isnan(log_all))>0
                         warning(['not all sample types in sgrps found for ' snames{sgno}]); 
                     end
                     log_all = max(log_all);
@@ -162,7 +166,7 @@ if ~isempty(stnall)
             end
         end
         
-        disp(k)
+        disp(stnall(k))
     end
     
     scriptname = mfilename; oopt = 'sum_edit'; get_cropt; %edit depths, times, etc. not captured from CTD data
@@ -192,7 +196,7 @@ if ~isempty(stnall)
     ds.time_start = (ds.time_start - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
     ds.time_bottom = (ds.time_bottom - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
     ds.time_end = (ds.time_end - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
-    mfsave(otfile2, ds, hnew);
+    mfsave(otfile2, ds, hnew, '-merge', 'statnum');
     
 else
     
@@ -212,6 +216,9 @@ scriptname = mfilename; oopt = 'sum_extras'; get_cropt
 
 %%%%% write to ascii file %%%%%
 
+%reload file in case we only added some stations in workspace
+[ds,hs] = mloadq(otfile2,'/');
+
 stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.txt']);
 fid = fopen(stnlistname,'w');
 
@@ -223,7 +230,7 @@ for cno = 1:length(vars)
 end
 fprintf(fid, '%s\n', ' ');
 
-for k = stnall
+for k = 1:length(stnall)
     
     extraline = 0;
     for cno = 1:length(vars)
@@ -241,7 +248,7 @@ for k = stnall
                 scriptname = mfilename; oopt = 'sum_special_print'; get_cropt
                 fprintf(fid, '%s ', svar);
             else
-                eval(['dk = ' vars{cno,1} '(k);'])
+                eval(['dk = ds.' vars{cno,1} '(k);'])
                 if iscell(dk)
                     fprintf(fid, [vars{cno,5} ' '], dk{:});
                 else

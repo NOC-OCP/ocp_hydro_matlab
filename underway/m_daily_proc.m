@@ -9,10 +9,9 @@
 %by default it will process yesterday's data, unless you specify days, a
 %vector of year-days to process
 %
-%by default it appends the days processed to existing _01 files, unless you
+%by default it appends the days processed to existing _01 files (and overwrites them if they are already there), unless you
 %set restart_uway_append to 1, in which case it deletes the appended files
-%and starts over***need better way to do this, including merging data into the
-%middle***
+%and starts over
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
@@ -23,32 +22,12 @@ if ~exist('days','var')
 end
 
 if ~exist('restart_uway_append','var'); restart_uway_append = 0; end
-if restart_uway_append; warning(['will delete appended file and start from ' num2str(days(1))]); end
+if restart_uway_append; warning(['will delete appended file and start from ' num2str(days(1)) '; this is probably not necessary']); end
 
 root_u = MEXEC_G.mexec_data_root;
 
 %%%%% get list of underway streams to process %%%%%
-[udirs, udcruise] = m_udirs;
-
-scriptname = mfilename; oopt = 'excludestreams'; get_cropt
-
-if exist('uway_proc_list', 'var') %only from this list
-    [~,iik,~] = intersect(udirs(:,1),uway_proc_list);
-    udirs = udirs(iik,:);
-else
-    if exist('uway_excludes','var')
-    [~,iie,~] = intersect(udirs(:,1), uway_excludes);
-    udirs(iie,:) = [];
-    end
-    if exist('uway_excludep','var')
-        iie = [];
-        for no = 1:size(uway_excludep,1)
-            if ~isempty(strfind(udirs{sno,1}, uway_excludep{no})); iie = [iie; sno]; end
-        end
-    end
-    udirs(iie,:) = [];
-end
-shortnames = udirs(:,1); streamnames = udirs(:,3); udirs = udirs(:,2);
+uway_set_streams
 
 %%%%% loop through processing steps for list of days %%%%%
 
@@ -90,6 +69,8 @@ clear restart_uway_append
 
 mnav_best %get best nav stream into bst_ file
 
+mwind_true %combine nav with met wind to make true wind
+
 try
     mtsg_medav_clean_cal
 catch
@@ -100,5 +81,3 @@ end
 if sum(strcmp('tsgsurfmet', umtypes))
     mtsgsurfmet_merge
 end
-
-mtruew_01

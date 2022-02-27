@@ -1,4 +1,4 @@
-function calstr = m_select_calstrs(docal, calstr0)
+function calstr = select_calibrations(docal, calstr0)
 % take only the calibration structures for variables
 % set to 1 in structure docal
 % from calstr0 and put into calstr
@@ -17,7 +17,7 @@ cflag = fieldnames(docal);
 csens = fieldnames(calstr0);
 for vno = 1:length(cflag) %loop through variables
     if docal.(cflag{vno})==1
-        thisvar = strncmp(cflag{vno}, csens, length(cflag{vno}));
+        thisvar = find(strncmp(cflag{vno}, csens, length(cflag{vno})));
         for sno = 1:length(thisvar)
             calstr.(csens{thisvar(sno)}) = calstr0.(csens{thisvar(sno)});
         end
@@ -27,3 +27,4 @@ end
 if ~exist('calstr','var')
     calstr = [];
 end
+return

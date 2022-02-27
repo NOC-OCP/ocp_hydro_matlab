@@ -19,12 +19,7 @@ switch scriptname
         switch oopt
             case 'ship_data_sys_names'
                 crhelp_str = {'Datasystem- (and possibly ship-) specific list of mexec directory names '
-                    'and variable names for certain categories: tsg variables, met/surfmet file, '
-                    'lat, lon, heading, and wind variables. Presently there are defaults for '
-                    'tsgpre and metpre (mexec directory names), salvar, condvar, tempvar, tempsst '
-                    '(tsg file variable names for salinity, conductivity, tsg housing temperature, and '
-                    'remote [intake] temperature), latvar, lonvar, headvar (for lat, lon, heading), and '
-                    'winds and windd (variable names for wind speed and direction).'};
+                    'for tsg file (tsgpre) and surfmet file (metpre).'};
                 switch MEXEC_G.Mshipdatasystem
                     case 'rvdas'
                         tsgpre = 'tsg';
@@ -36,6 +31,11 @@ switch scriptname
                         tsgpre = 'oceanlogger';
                         metpre = 'met';
                 end
+            case 'avtime'
+                crhelp_str = {'Number of seconds over which to average nav, met, and tsg measurements'};
+                avnav = 30;
+                avmet = 60;
+                avtsg = 60;
         end
         %%%%%%%%%% end ship (not a script) %%%%%%%%%%
         
@@ -113,17 +113,7 @@ switch scriptname
                 bfile = '/local/users/pstar/topo/s_atlantic';
         end
         %%%%%%%%%% end mem120_plot %%%%%%%%%%
-        
-        %%%%%%%%%% mtsg_01 %%%%%%%%%%
-    case 'mtsg_01'
-        switch oopt
-            case 'indata'
-                sal_mat_file = ['sal_' mcruise '_01.mat'];
-            case 'flag'
-                %set bottle/bottle reading flags
-        end
-        %%%%%%%%%% end mtsg_01 %%%%%%%%%%
-        
+                
         %%%%%%%%%% mtsg_bottle_compare %%%%%%%%%%
     case 'mtsg_bottle_compare'
         switch oopt
@@ -171,17 +161,6 @@ switch scriptname
                 end
         end
         %%%%%%%%%% end mtsg_medav_clean_cal %%%%%%%%%%
-        
-        %%%%%%%%%% mtsg_merge_and_listing %%%%%%%%%%
-    case 'mtsg_merge_and_listing' %***is this mtsgsurfmet_merge?
-        switch oopt
-            case 'tsgmetfiles'
-                tsgfile = fullfile(root_tsg, ['tsg_' mcruise '_01_medav_clean_cal.nc']);
-                metfile = fullfile(root_met, ['met_tsg_' mcruise '_01.nc']);
-                metlightfile = fullfile(root_metlight, 'met', 'surflight', ['met_light_' mcruise '_01.nc']);
-                posfile = fullfile(root_pos, ['bst_nav_' mcruise '_01.nc']);
-        end
-        %%%%%%%%%% end mtsg_merge_and_listing %%%%%%%%%%
-        
+                
         
 end
