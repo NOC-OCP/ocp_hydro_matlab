@@ -317,7 +317,10 @@ if writenew && ~oldheader
 else
     hist0.filename = ncfile.name;
 end
-m_common %***otherwise when it gets to m_finis it seems to complain about MEXEC_A not having MARGS_IN_LOCAL
+m_common
+if ~isfield(MEXEC_A,'MARGS_IN_LOCAL')
+    MEXEC_A.MARGS_IN_LOCAL = {};
+end
 MEXEC_A.Mhistory_in{1} = hist0;
 hist = m_read_header(ncfile);
 hist.filename = ncfile.name;
@@ -374,7 +377,7 @@ vars = setdiff([h0.fldnam h.fldnam], indepvar);
 a = zeros(size(d.(indepvar))); %add fill value to pad
 for vno = 1:length(vars)
     varname = vars{vno};
-    if length(varname)>4 && strcmp(varname(end-4:end),'flag')
+    if length(varname)>4 && strcmp(varname(end-3:end),'flag')
         data = 9+a;
     else
         data = NaN+a;
@@ -393,7 +396,7 @@ for vno = 1:length(vars)
     d.(varname) = data;
 end
 
-%remake fields that shouldn't be filled with NaN or 9***
+%remake fields that shouldn't be filled with NaN or 9
 if strcmp(indepvar,'sampnum') && isfield(d,'sampnum') && isfield(d,'statnum')
     d.statnum = floor(d.sampnum/100); 
     if isfield(d, 'position')
