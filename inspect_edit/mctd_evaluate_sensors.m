@@ -46,6 +46,7 @@ m_common
 
 %defaults and optional input arguments
 testcal.temp = 0; testcal.cond = 0; testcal.oxygen = 0; testcal.fluor = 0;
+useoxyratio = 0;
 usedn = 0; %use upcast not downcast ctd data
 calstr0 = []; %get calibration from opt_cruise -- but may depend on station number
 okf = [2 3]; %include good or questionable samples (useful for checking niskin flags)
@@ -59,7 +60,7 @@ if strncmp(sensname, 'temp', 4)
     rlim = [-10 10]*1e-3;
     vrlim = [-2 32];
 elseif strncmp(sensname, 'cond', 4)
-    rlabel = 'C_{bot}/C_{ctd} (psu)';
+    rlabel = 'C_{bot}/C_{ctd} (equiv. psu)';
     rlim = [-10 10]*2e-3;
     vlim = [25 60];
 elseif strncmp(sensname, 'oxy', 3)
@@ -78,12 +79,20 @@ end
 
 if ~isempty(str2double(sensname(end)))
     sensnum = sensname(end);
+    sensor = sensname(1:end-1);
 else
     sensnum = [];
+    sensor = sensname;
 end
 
 dirstr = '';
 if usedn; dirstr = '_dn'; end
+
+if strncmp(sensname, 'oxy', 3) && useoxyratio
+    rlabel = 'O_{bot}/O_{ctd}';
+    rlim = [-1 1]*1.5;
+    llim = [rlim(2)/2 rlim(2)/4];
+end
 
 rootdir = mgetdir('ctd');
 %load data
@@ -144,6 +153,8 @@ ctdsens.cond2 = ctdsens.temp2;
 sensind = ctdsens.(sensname);
 sensg = unique(sensind(2,:));
 
+sensother = num2str(setdiff([1 2],str2num(sensnum)));
+
 %loop through data from different sensor S/Ns
 for gno = 1:length(sensg)
     iig = find(ismember(d.statnum, sensind(1,sensind(2,:)==sensg(gno))));
@@ -151,43 +162,58 @@ for gno = 1:length(sensg)
     %data to compare
     ctddata = d.(sensname)(iig);
     if strncmp(sensname, 'temp', 4)
-        caldata = d.sbe35temp(iig); 
+        caldata = d.sbe35temp(iig);
         calflag = d.sbe35flag(iig);
         ii = find(ismember(calflag,okf));
         caldata = caldata(ii); calflag = calflag(ii); ctddata = ctddata(ii);
         iig = iig(ii);
         res = (caldata - ctddata);
         if isfield(d, 'temp1') && isfield(d, 'temp2')
-            ctdres = (d.temp2(iig)-d.temp1(iig)); 
-            clabel = 'ctd temp2 - temp1';
+            ctdres = d.(['temp' sensother])(iig) - ctddata;
+            clabel = ['ctd temp' sensother ' - ' sensname];
         else
             ctdres = NaN+ctddata; 
             clabel = '';
         end
+        isratio = 0;
     elseif strncmp(sensname, 'cond', 4)
-        caldata = gsw_C_from_SP(d.botpsal(iig),d.(['temp' sensnum])(iig),d.press(iig)); 
+        caldata = gsw_C_from_SP(d.botpsal(iig),d.(['temp' sensnum])(iig),d.press(iig)); %cond at CTD temp
         calflag = d.botpsal_flag(iig);
         ii = find(ismember(calflag,okf));
         caldata = caldata(ii); calflag = calflag(ii); ctddata = ctddata(ii);
         iig = iig(ii);
         res = (caldata./ctddata - 1)*35;
         if isfield(d, 'cond1') && isfield(d, 'cond2')
-            ctdres = (d.cond2(iig)./d.cond1(iig)-1)*35; 
-            clabel = 'ctd cond2/cond1';
+            sother = gsw_SP_from_C(d.(['cond' sensother])(iig),d.(['temp' sensother])(iig),d.press(iig)); %sal from other CTD
+            cother_tempsens = gsw_C_from_SP(sother,d.(['temp' sensnum])(iig),d.press(iig)); %cond from this sal at CTD temp
+            ctdres = (cother_tempsens./ctddata-1)*35; %ratio reflecting sal differences only (not temp differences)
+            clabel = ['ctd (cond' sensother ' at temp' sensnum ')/' sensname];
         else
             ctdres = NaN+ctddata; 
             clabel = '';
         end
+        isratio = 1;
     elseif strncmp(sensname, 'oxygen', 6)
         caldata = d.botoxy(:); 
         calflag = d.botoxy_flag(iig);
         ii = find(ismember(calflag,okf));
         caldata = caldata(ii); calflag = calflag(ii); ctddata = ctddata(ii);
         iig = iig(ii);
-        res = (caldata - ctddata);
+        if useoxyratio
+            res = caldata./ctddata;
+            isratio = 1;
+        else
+            res = (caldata - ctddata);
+            isratio = 0;
+        end
         if isfield(d, 'oxygen1') && isfield(d, 'oxygen2')
-            ctdres = (d.oxygen2(iig)-d.oxygen1(iig)); 
-            clabel = 'ctd oxygen2 - oxygen1';
+            if useoxyratio
+                ctdres = d.(['oxygen' sensother])(iig)./ctddata;
+                clabel = ['ctd oxygen' sensother '/' sensname];
+            else
+                ctdres = d.(['oxygen' sensother])(iig) - ctddata;
+                clabel = ['ctd oxygen' sensother ' - ' sensname];
+            end
         else
             ctdres = NaN+ctddata; 
             clabel = '';
@@ -232,7 +258,11 @@ for gno = 1:length(sensg)
     subplot(5,5,[1:5])
     plot(stn, ctdres, 'c.', stn, res, '+k', stn(deep), res(deep), 'xb'); grid
     if uselegend
-        legend(clabel,'ctd-cal diff',['ctd-cal diff, p>' num2str(pdeep)])
+        if isratio
+            legend(clabel,'cal/ctd',['cal/ctd, p>' num2str(pdeep)])
+        else
+            legend(clabel,'cal-ctd',['cal-ctd, p>' num2str(pdeep)])
+        end
     end
     xlabel('statnum'); xlim(statrange); ylim(rlim); ylabel(rlabel)
     title([mcruise])
@@ -291,20 +321,19 @@ for gno = 1:length(sensg)
             stnlocal = s(no);
             stn_string = sprintf('%03d', stnlocal);
             
-            %load and calibrate 1 hz and 2 dbar upcast profiles
+            %load 1 and 2 dbar upcast profiles
             [d1, h1] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
             [dcs, ~] = mloadq(fullfile(rootdir, ['dcs_' mcruise '_' stn_string '.nc']), '/');
             ii1u = find(d1.scan>=dcs.scan_bot & d1.scan<=dcs.scan_end);
             [du, hu] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
             scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
-            
+            %calibrate them
             if exist('cropt_cal','var')
                 if cropt_cal
                     scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
                     calstr0 = castopts.calstr;
                 end
                 calstr = select_calibrations(testcal, calstr0);
-                %and apply them
                 [dcal1, hcal1] = apply_calibrations(d1, h1, calstr);
                 [dcalu, hcalu] = apply_calibrations(du, hu, calstr);
                 %put calibrated fields back into d1 and du

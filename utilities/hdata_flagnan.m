@@ -1,4 +1,4 @@
-function data = hdata_flagnan(data, varargin);
+function data = hdata_flagnan(data, varargin)
 % function data = hdata_flagnan(data);
 % function data = hdata_flagnan(data, badflags);
 % function data = hdata_flagnan(data, badflags, 'notwoce');

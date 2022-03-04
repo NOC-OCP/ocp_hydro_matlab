@@ -11,83 +11,47 @@
 m_common
 mdocshow(mfilename, ['loads bottle oxygens from file specified in opt_' mcruise ', optionally calls moxy_ccalc to compute concentration from titration, and writes to oxy_' mcruise '_01.nc']);
 
-% find list of files
+% find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');
-scriptname = mfilename; oopt = 'oxy_files'; get_cropt
+scriptname = mfilename; oopt = 'oxy_files_parse'; get_cropt 
 if isempty(ofiles)
     warning(['no files matching ' ofpat ' found in ' root_oxy '; skipping'])
     return
+else
+    for flno = 1:length(ofiles)
+        ofiles{flno} = fullfile(root_oxy,ofiles{flno});
+    end
 end
 
-%initialise
-ds_oxy = dataset;
-
-%information on header format and identification, and mapping between
-%column headers and standard fieldnames
-scriptname = mfilename; oopt = 'oxy_parse'; get_cropt
-
-fn_unt_expect = {'vol_blank' {'ml' 'mls'}
-    'vol_std' {'ml' 'mls'}
-    'vol_titre_std' {'ml' 'mls'}
-    'bot_vol_tfix' {'ml' 'mls'}
-    'sample_titre' {'ml' 'mls'}
-    'fix_temp' {'c' 'degc' 'deg_c'}
-    'conc_o2' {'umol/l' 'umol_per_l' 'umols_per_l'}};
-
-%load and store fields
-ld = 0;
-for flno = 1:length(ofiles)
-    
-    %load
-    try
-        [ds, hs] = m_load_samin(fullfile(root_oxy, ofiles(flno).name), hcpat, 'chrows', chrows, 'chunits', chunits);
-    catch me
-        warning(me.message)
-        warning('moving on to next file')
-        continue
-    end
-    ns = size(ds,1);
-    iid = ld+[1:ns]';
-    
-    fn = ds.Properties.VarNames;
-    if chunits>0
-        for fno = 1:size(fn_unt_expect,1)
-            ii1 = find(strcmp(fn_unt_expect{fno,1},mvar_fvar(:,1)));
-            if ~isempty(ii1)
-                ii = find(strcmp(mvar_fvar{ii1,2},fn));
-                if ~isempty(ii) && ~sum(strcmpi(hs.colunit{ii},fn_unt_expect{fno,2}))
-                    warning([ofiles(fno).name ' unit corresponding to ' fn_unt_expect{fno,1} ', ' hs.colunit{ii} ', does not match expected:'])
-                    disp(fn_unt_expect{fno,2})
-                end
-            end
-        end
-    end
-    
-    scriptname = mfilename; oopt = 'oxy_parse_files'; get_cropt
-    
-    warning('off','all')
-    for vno = 1:size(mvar_fvar,1)
-        if sum(strcmp(mvar_fvar{vno,2},ds.Properties.VarNames))
-            ds_oxy.(mvar_fvar{vno,1})(iid,1) = ds.(mvar_fvar{vno,2});
-        else
-            ds_oxy.(mvar_fvar{vno,1})(iid,1) = NaN;
-        end
-    end
-    if sum(strcmp('notes',ds.Properties.VarNames))
-        ds_oxy.comment(iid,1) = ds.notes;
-    end
-    warning('on','all')
-    
-    ld = ld+ns;
-    
-end
-
+%load data
+[ds_oxy, oxyhead] = load_samdata(ofiles, hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets);
 if isempty(ds_oxy)
     error('no data loaded')
 end
+%special code, for instance to get information from header
+cellT = 25; %default
+scriptname = mfilename; oopt = 'oxy_parse_files'; get_cropt
 
-%rearrange some fields
-ds_oxy_fn = ds_oxy.Properties.VarNames;
+%rename according to lookup table
+ds_oxy_fn = ds_oxy.Properties.VariableNames;
+[~,ia,ib] = intersect(oxyvarmap(:,2)',ds_oxy_fn);
+ds_oxy_fn(ib) = oxyvarmap(ia,1)';
+ds_oxy.Properties.VariableNames = ds_oxy_fn;
+
+%check units
+clear oxyunits
+oxyunits.vol_blank = {'ml' 'mls'};
+oxyunits.vol_std = {'ml' 'mls'};
+oxyunits.vol_titre_std = {'ml' 'mls'};
+oxyunits.bot_vol_tfix = {'ml' 'mls'};
+oxyunits.sample_titre = {'ml' 'mls'};
+oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
+oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
+if ~isempty(chunits)
+    check_table_units(ds_oxy, oxyunits)
+end
+
+%compute or fill some fields
 if sum(strcmp('sampnum',ds_oxy_fn))==0
     ds_oxy.sampnum = 100*ds_oxy.statnum + ds_oxy.position;
 else
@@ -114,7 +78,7 @@ end
 %compute bottle volumes at fixing temperature if not present
 if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0
     if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
-        ds_oxy.bot_cal_temp = 25+zeros(size(ds_oxy.sampnum)); %assume*** put in cruise options
+        ds_oxy.bot_cal_temp = cellT+zeros(size(ds_oxy.sampnum));
     end
     ds_oxy.bot_vol_tfix = ds_oxy.bot_vol.*(1+9.75e-5*(ds_oxy.fix_temp-ds_oxy.bot_cal_temp));
 end
@@ -132,8 +96,8 @@ if sum(strcmp('conc_o2',ds_oxy_fn))==0
     % concentration of O2 in sample, accounting for concentration in pickling reagents
     a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
     ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
-    ds_oxy.conc_o2(isnan(ds_oxy.sample_titre+ds_oxy.bot_vol_tfix)) = NaN;
 end
+ds_oxy.conc_o2(isnan(ds_oxy.sample_titre+ds_oxy.bot_vol_tfix)) = NaN;
 ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)) = max(ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)), 5);
 ds_oxy.flag(isnan(ds_oxy.conc_o2)) = max(ds_oxy.flag(isnan(ds_oxy.conc_o2)),4);
 ds_oxy.flag((isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2)) & ~isnan(ds_oxy.fix_temp)) = 5; %drawn but not analysed
@@ -164,8 +128,8 @@ if ~isempty(iib) %***do something different for different input, like duplicates
     d.botoxyb_flag(iid) = ds_oxy.flag(iib(ii));
     hnew.fldnam = [hnew.fldnam 'botoxyb_per_l' 'botoxyb_temp' 'botoxyb_flag'];
     hnew.fldunt = [hnew.fldunt 'umol/L' 'degC' 'woce_9.4'];
-    if length(ii)<length(iib)
-        iic = setdiff(1:length(ds_oxy.sampnum),[iia(:); iib(:)]);
+    iic = setdiff(1:length(ds_oxy.sampnum),[iia' iib(ii)]);
+    if ~isempty(iic)
         d.botoxyc_per_l = NaN+d.botoxya_per_l;
         d.botoxyc_temp = d.botoxyc_per_l;
         d.botoxyc_flag = 9+zeros(size(d.sampnum));

@@ -64,6 +64,16 @@ switch scriptname
                     001 -4
                     002 -6
                     003 -2
+                    004 +3
+                    005 +2
+                    006 +3
+                    007 -1
+                    008 +4
+                    009 +1
+                    010 +1
+                    011 +2
+                    012 +1
+                    013 +1
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
@@ -118,11 +128,13 @@ end
 
     case 'moxy_01'
         switch oopt
-            case 'oxy_files'
-                %ofiles.name = fullfile(root_oxy,'oxygen_calculation_sheet.xlsx');
-            case 'oxy_parse'
+            case 'oxy_files_parse'
+                clear ofiles
+                ofiles = {'oxygen_calculation_newflasks_dy146.xlsx'};
+                sheets = 1:30; %ok if this is longer than number of data sheets
+                chrows = 1:2;
                 chunits = 3;
-                mvar_fvar = {
+                oxyvarmap = {
                     'statnum',       'cast_number'
                     'position',      'niskin_bottle'
                     'vol_blank',     'blank_titre'
@@ -136,27 +148,24 @@ end
                     'bot_vol_tfix'   'botvol_at_tfix'
                     'conc_o2'        'c_o2_'
                     }; %not including conc_o2, recalculating instead
-%             case 'oxycalcpars'
-%                 [num,~,raw] = xlsread(fullfile(mgetdir('ctd'),'BOTTLE_OXY/Logsheet-Blanks&Standards DY146.xlsx'));
-%                 num = [NaN+zeros(2,size(num,2)); num];
-%                 ii1 = find(strncmp('After bubbles',raw(:,4),13));
-%                 iib = find(strncmp('B',raw(1:size(num,1),1),1) & ~isnan(num(:,2)) & ~isnan(num(:,3))); 
-%                 iib = iib(iib>ii1);
-%                 bl = num(iib,2:5); %bll = raw(iib,1);
-%                 bl_av = bl(:,1)-(bl(:,2)+bl(:,3))/2;
-%                 bl(bl(:,4)==bl_av,4) = NaN;
-%                 bl_av_all = bl(:,1)-m_nanmean(bl(:,2:4),2);
-%                 bl_av_all(isnan(bl_av)) = NaN;
-%                 gb = abs(round(bl_av_all*1e4)/10)<=4;
-%                 blank = mean(bl_av_all(gb));
-%                 iis = find(strncmp('S',raw(1:size(num,1),8),1) & ~isnan(num(:,9))); iis = iis(iis>ii1);
-%                 st = num(iis,9); %stl = [raw(iis7,7); raw(iis8,8)];
-%                 m = st<0.48;
-%                 disp([blank sum(gb)/sum(~isnan(bl_av_all))*100 mean(st(m)) std(st(m))/mean(st(m))])
-%                 %blank: .0027 or .0032 if negative value excluded
-%                 %(currently using: .0027, .0032
-%                 %std, excluding outliers, daily: .4741; .4704
-%                 %(currently using: .474, .4208, 
+            case 'oxycalcpars'
+                [num,~,raw] = xlsread(fullfile(mgetdir('M_BOT_OXY'),'Logsheet-Blanks&Standards_DY146.xlsx'));
+                num = [NaN+zeros(2,size(num,2)); num];
+                ii1 = find(strncmp('After bubbles',raw(:,4),13));
+                iib = find(strncmp('B',raw(1:size(num,1),1),1) & ~isnan(num(:,2)) & ~isnan(num(:,3))); 
+                iib = iib(iib>ii1);
+                bl = num(iib,2:5); %bll = raw(iib,1);
+                bl_av = bl(:,1)-(bl(:,2)+bl(:,3))/2;
+                bl_av(isnan(bl(:,3))) = NaN;
+                bl(bl(:,4)==bl_av,4) = NaN;
+                bl_av_all = bl(:,1)-m_nanmean(bl(:,2:4),2);
+                bl_av_all(isnan(bl_av)) = NaN;
+                gb = abs(round(bl_av_all*1e4)/10)<=4;
+                blank = mean(bl_av_all(gb));
+                iis = find(strncmp('S',raw(1:size(num,1),8),1) & ~isnan(num(:,9))); iis = iis(iis>ii1);
+                st = num(iis,9); %stl = [raw(iis7,7); raw(iis8,8)];
+                m = st<0.48 & st>=0.47;
+                disp([blank sum(gb)/sum(~isnan(bl_av_all))*100 mean(st(m)) std(st(m))/mean(st(m)) sum(m)/sum(~isnan(st))*100])
                 
         end
 
@@ -186,8 +195,11 @@ end
                     16 3235
                     17 3295
                     18 3333
-                    19 3235
-                    20 -9
+                    19 3236
+                    20 3153
+                    21 1440
+                    22 1439
+                    23 1103
                     ];
         end
 

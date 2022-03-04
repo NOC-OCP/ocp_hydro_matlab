@@ -48,7 +48,7 @@ headav_n = interp1(dn.timew, headav_n, dw.time);
 relwind_direarth = mcrange(180+(dw.(wd)+merged_heading), 0, 360);
 
 %vector wind relative to ship (in earth coordinates)
-[relwind_e, relwind_n] = uvsd(dw.(ws), relwind_direarth);
+[relwind_e, relwind_n] = uvsd(dw.(ws), relwind_direarth,'sduv');
 
 %ship velocity
 [shipv_e, shipv_n] = uvsd(dn.smg, dn.cmg, 'sduv');
@@ -70,11 +70,36 @@ hnew.comment = sprintf('truwind calculated using %d-second average nav and headi
 copyfile(m_add_nc(infilew), m_add_nc(otfile1))
 mfsave(otfile1, dnew, hnew, '-addvars');
 
-%average everything
-[d, h] = mloadq(otfile1, '/');
-time_edges = min(d.time)-round(tave_period/2):tave_period:1e10;
+[~, h] = mloadq(otfile1, '/');
+tstart = datenum([1900 1 1])-round(tave_period/2)/86400;
+tend = datenum([2100 1 1]);
+torg = datenum(h.data_time_origin);
+tstart_secs = round((tstart-torg)*86400);
+tend_secs = round((tend-torg)*86400);
+tavstring = sprintf('%13.0f %13.0f %d',tstart_secs,tend_secs,tave_period);
+%--------------------------------
+MEXEC_A.MARGS_IN = {
+otfile1
+otfile2
+'/'
+'1'
+tavstring
+'/'
+};
+mavrge
+%--------------------------------
+
+% % %average everything
+% % [d, h] = mloadq(otfile1, '/');
+% % time_edges = min(d.time)-round(tave_period/2):tave_period:1e10;
+% % %recalculate wind speed and direction from averaged vectors
+% % [d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
+
+[d, h] = mloadq(otfile2, '/');
 %recalculate wind speed and direction from averaged vectors
 [d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
+
+
 
 %save
 clear hnew
