@@ -27,6 +27,7 @@ if exist(m_add_nc(infile),'file') == 2
         d.utime = m_commontime(d.utime,h.data_time_origin,h0.data_time_origin);
         h.data_time_origin = h0.data_time_origin;
         h.comment = []; % BAK fixing comment problem: Don't pass in this comment string
+        h.dataname = ['sam_' mcruise '_all'];
         MEXEC_A.Mprog = mfilename;
         mfsave(otfile, d, h, '-merge', 'sampnum');
     end

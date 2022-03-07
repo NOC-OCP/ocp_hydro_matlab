@@ -125,7 +125,7 @@ if MEXEC_G.ix_ladcp
     ld(n,:) = {fullfile(MEXEC.mstar_root,'sw','others') 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
 end
 if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~MEXEC.force_ext_software_versions
-    ld = sw_vers(ld(2:end,:)); %replace verstr with highest version of each library found in mstar_root
+    ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root
     %add to path, recording which version was used (in MEXEC_G)
 end
 sw_addpath(ld);

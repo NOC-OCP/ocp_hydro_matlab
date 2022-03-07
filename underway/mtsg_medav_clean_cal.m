@@ -58,11 +58,11 @@ if ~isempty(kbadlims) && ~isempty(editvars)
     iib = [];
     if iscell(kbadlims)
         for kb = 1:size(kbadlims,1)
-            iib = [iib find(d.time>=datenum(kbadlims{kb,1}) & d.time<=datenum(kbadlims{kb,2}))];
+            iib = [iib; find(d.time>=datenum(kbadlims{kb,1}) & d.time<=datenum(kbadlims{kb,2}))];
         end
     else
         for kb = 1:size(kbadlims,1)
-            iib = [iib find(d.time>=kbadlims(kb,1) & d.time<=kbadlims(kb,2))];
+            iib = [iib; find(d.time>=kbadlims(kb,1) & d.time<=kbadlims(kb,2))];
         end
     end
     for vno = 1:length(editvars)
@@ -84,41 +84,13 @@ end
 %get calibrations to use
 scriptname = mfilename; oopt = 'tsgcals'; get_cropt
 %if found, apply
-if isfield(tsgopts, 'calstr')
-    calstr = select_calibrations(tsgopts.docal, tsgopts.calstr);
-    if ~isempty(calstr)
-        %load data
-        [d,h] = mloadq(otfile1, '/');
-        %apply calibrations
-        [dcal, hcal] = apply_calibrations(d, h, calstr);
-        if ~isempty(hcal.fldnam)
-            %rename
-            for vno = 1:length(hcal.fldnam)
-                ii = strfind('_raw',hcal.fldnam{vno});
-                if isempty(ii)
-                    hcal.fldnam{vno} = [hcal.fldnam{vno} '_cal'];
-                else
-                    hcal.fldnam{vno} = hcal.fldnam{vno}(1:ii-1);
-                end
-            end
-            if ~exist(m_add_nc(otfile2), 'file')
-                mfsave(otfile2, d, h);
-            end
-            %recalculate salinity? probably not going to be able to
-            %calibrate housing temperature
-            %sometimes need to calculate salinity at earlier stage
-            %(scs)?***
-            if 0
-                condvar = munderway_varname('condvar', h.fldnam, 1);
-                tempvar = munderway_varname('tempvar', h.fldnam, 1);
-                if ~isempty(condvar) && ~isempty(tempvar)
-                    dt.psal = gsw_SP_from_C(10*dt.(condvar),dt.(tempvar),0)'; %we have S/m, gsw wants mS/cm
-                    ht.fldnam = [ht.fldnam 'psal'];
-                    ht.fldunt = [ht.fldunt 'pss-78'];
-                end
-            end
-            mfsave(otfile2, dcal, hcal, '-addvars');
-        end
-    end
+if isfield(tsgopts, 'calstr') && isfield(tsgopts, 'docal') && tsgopts.docal.salinity
+    cmd = ['!/bin/cp -p ' otfile1 '.nc ' otfile2 '.nc']; eval(cmd)
+    d.time = (d.time-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1))+1; %year-day
+    clear dcal hcal
+    eval([tsgopts.calstr.salinity.(mcruise)])
+    hcal.fldnam = {'salinity_cal'};
+    hcal.fldunt = {'psu'};
+    mfsave(otfile2, dcal, hcal, '-addvars');
 end
 

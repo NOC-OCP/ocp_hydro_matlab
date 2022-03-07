@@ -88,7 +88,11 @@ vars(iie,:) = [];
 %%%%% write %%%%%
 
 scriptname = 'mout_exch'; oopt = 'woce_ctd_headstr'; get_cropt
-fotname = fullfile(mgetdir('sum'),[expocode '_ct1'], sprintf('%s_%05d_0001_ct1.csv',expocode,stnlocal));
+basedir = fullfile(mgetdir('sum'),[expocode '_ct1']);
+if ~exist(basedir,'dir')
+    mkdir(basedir)
+end
+fotname = fullfile(basedir, sprintf('%s_%05d_0001_ct1.csv',expocode,stnlocal));
 fid = fopen(fotname, 'w');
 
 %header

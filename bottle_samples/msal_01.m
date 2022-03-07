@@ -220,7 +220,6 @@ ds = rmfield(ds,'niskin_flag');
 %save
 mfsave(samfile, ds, hnew, '-merge', 'sampnum');
 
-if exist('tsgpre', 'dir') && ~isempty(tsgfiles)
     %get TSG samples, figure out event numbers
     %either negative, dddhhmmss (where ddd is year-day starting at 1), or yyyymmddhhmmss
     iiu = find(d.sampnum<0 | d.sampnum>=1e7);
@@ -240,7 +239,7 @@ if exist('tsgpre', 'dir') && ~isempty(tsgfiles)
             disp(dsu.sampnum(isnan(dsu.time)))
             keyboard
         end
-        hu = h;
+        hu = hc;
         hu.fldnam = [hu.fldnam 'time'];
         hu.fldunt = [hu.fldunt 'seconds'];
         hu.comment = hc.comment;
@@ -248,4 +247,3 @@ if exist('tsgpre', 'dir') && ~isempty(tsgfiles)
         mfsave(tsgfile, dsu, hu);
     
     end 
-end

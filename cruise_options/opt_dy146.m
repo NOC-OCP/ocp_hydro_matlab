@@ -32,9 +32,36 @@ switch scriptname
     case 'mtsg_medav_clean_cal'
         switch oopt
             case 'tsg_badlims'
-                kbadlims = datenum(2022,1,1) + [-inf 39+19/24]; %start of cruise, TSG on during decimal day 39
+                kbadlims = [
+%                     datenum(2022,1,1) + [-inf 39+19/24]; %start of cruise, TSG on during decimal day 39
+                    datenum([2020 01 01 00 00 00]) datenum([2022 02 09 19 00 00]) % start of cruise
+                    datenum([2022 02 10 08 58 00]) datenum([2022 02 10 09 05 00])
+                    datenum([2022 02 21 13 18 00]) datenum([2022 02 21 13 27 00])
+                    datenum([2022 03 04 12 38 00]) datenum([2023 01 01 00 00 00]) % end of TSG logging in international waters
+                    ];
+       case 'tsgcals'
+tsgopts.docal.salinity = 1;
+load(fullfile(root_dir,'sdiffsm'))
+kbad = find(isnan(t+sdiffsm)); t(kbad) = []; sdiffsm(kbad) = [];
+tsgopts.calstr.salinity.dy146 = 'dcal.salinity_cal = dnew.salinity_raw + interp1([-1e10; t; 1e10],sdiffsm([1 1:end end]),d.time);';
+ end
+
+        %%%%%%%%%% mtsg_bottle_compare %%%%%%%%%%
+    case 'mtsg_bottle_compare'
+        switch oopt
+            case 'tsg_usecal'
+                usecal = 1;
+            case 'tsg_timebreaks'
+                tbreak = [
+%                     datenum([2021 2 20 12 30 00]) % pumps off Fl & Tr cleaned; TSG not cleaned
+%                     datenum([2021 2 27 16 10 00]) % Fl, Tr and TSG cleaned. Day 058/1610
+                    ];
+            case 'tsg_sdiff'
+                sc1 = 0.5; sc2 = 0.01; %thresholds to use for smoothed series
         end
-        
+        %%%%%%%%%% end mtsg_bottle_compare %%%%%%%%%%
+ 
+
     case 'castpars'
         switch oopt
             case 'nnisk'
@@ -74,10 +101,23 @@ switch scriptname
                     011 +2
                     012 +1
                     013 +1
+                    014 +2
+                    015 +5
+                    016 +6
+                    017 +5
+                    018 +6
+                    019 +2
+                    020 +6
+                    021 +5
+                    022 +5
+                    023 +3
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
                 sal_off_base = 'sampnum_run';
+case 'tsgsampnum'
+tsg.sampnum = dsu.sampnum;
+tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');
         end
 
     case 'mctd_02'
@@ -87,12 +127,18 @@ switch scriptname
                 castopts.oxyhyst.H2 = {5000    5000};
                 castopts.oxyhyst.H3 = {4000   4000};
                 h3tab1 =[
-                    -10 4000
-                    9000 4000];
+                    -10 500
+                    2000 500
+                    2001 3000
+                    9000 3000
+                    ];
                 h3tab2 =[
-                    -10 4000
-                    9000 4000];
-                
+                    -10 500
+                    2000 500
+                    2001 3000
+                    9000 3000
+                    ];
+
                 castopts.oxyhyst.H3{1} = interp1(h3tab1(:,1),h3tab1(:,2),d.press);
                 iib = find(isnan(d.press)); iig = find(~isnan(d.press));
                 if ~isempty(iib); castopts.oxyhyst.H3{1}(iib) = interp1(iig,castopts.oxyhyst.H3{1}(iig),iib); end
@@ -100,31 +146,42 @@ switch scriptname
                 iib = find(isnan(d.press)); iig = find(~isnan(d.press));
                 if ~isempty(iib); castopts.oxyhyst.H3{2}(iib) = interp1(iig,castopts.oxyhyst.H3{2}(iig),iib); end
             case 'ctdcals'
-%                 castopts.docal.temp = 1; 
-%                 castopts.docal.cond = 1; 
+                castopts.docal.temp = 1;
+                castopts.docal.cond = 1;
                 castopts.docal.oxygen = 1;
-%                 if stnlocal <= 74  % revised estimate, original estimate didnt quite get deep part correct
-%                     % the correction below combined the original
-%                     % estimate with a small tweak, and is the total
-%                     % adjustment to be applied
-%                     castopts.calstr.cond1.jc211 = 'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] - 0.5)/1e3,d0.press)/35);';
-%                     castopts.calstr.cond2.jc211 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press)/35);';
-%                 else  % add 0.001 to cond1 for stns 75 and following
-%                     % at end of cruise, add a ramped adjustment that
-%                     % ramps up between stns 75 and 90. Need the calstr
-%                     % to start with dcal.cond1 or dcal.cond2.
-%                     castopts.calstr.cond1.jc211 = 'dcal.cond1 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond1 = d0.cond1.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.5 -1.5 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -1.25  -1.0  -1.0 ] + 0.5)/1e3,d0.press))/35);';
-%                     castopts.calstr.cond2.jc211 = 'dcal.cond2 = []; stnfac = (min(stnlocal,90)-75)/(90-75); dcal.cond2 = d0.cond2.*(1 + (stnfac*interp1([-10 0  1000  5000],(1*[-1.0 -1.0 -0.5 -0.5] - 0.0)/1e3,d0.press) + interp1([-10 0  2500  5000  8000],(1.0*[0.0 0.0 -0.625 +0.25 +0.25 ] + 1.2)/1e3,d0.press))/35);';
-%                 end
-%                 calms = 'from comparison with bottle salinities, stations 3-73';
-%                 castopts.calstr.cond1.msg = calms;
-%                 castopts.calstr.cond2.msg = calms;
-                castopts.calstr.oxygen1.dy146 = 'dcal.oxygen1 = d0.oxygen1.*interp1([-10 0 800 3000 5400 6000],[1.012 1.012 1.005 1.040 1.067 1.067],d0.press);';
-                castopts.calstr.oxygen2.dy146 = 'dcal.oxygen2 = d0.oxygen2.*interp1([-10 0 800 2500 5400 6000],[1.037 1.037 1.032 1.057 1.084 1.084],d0.press);';
-                calms = 'from comparison with bottle oxygens, stations 1-5';
+
+                castopts.calstr.temp1.dy146 = 'dcal.temp1 = d0.temp1 + interp1([-10 0 2000 4500 6000],[ 5  5  5 0 0]/1e4,d0.press);';
+                castopts.calstr.temp2.dy146 = 'dcal.temp2 = d0.temp2 + interp1([-10 0 2000 4500 6000],[-4 -4 -4 4 4]/1e4,d0.press);';
+                calms = 'from comparison with SBE35, stations 1-25 (all)';
+                castopts.calstr.temp1.msg = calms;
+                castopts.calstr.temp2.msg = calms;
+
+                castopts.calstr.cond1.dy146 = 'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0 500 1000 2000 3500 4500 8000],1*[-12 -12   0  10 18 4 -5 -5]/1e4,d0.press)/35);';
+                castopts.calstr.cond2.dy146 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0 500 1000 2000 3500 4500 8000],1*[-35 -35 -17  -6  6 2 -5 -5]/1e4,d0.press)/35);';
+                calms = 'from comparison with bottle salinity, stations 1-25 (all)';
+                castopts.calstr.cond1.msg = calms;
+                castopts.calstr.cond2.msg = calms;
+
+                castopts.calstr.oxygen1.dy146 = ['dcal.oxygen1 = d0.oxygen1.*'...
+                    'interp1([-10      0    1000    3000  5400   6000],[1.027 1.027  1.033   1.038 1.055 1.055],d0.press).*'...
+                    'interp1([1 5 25],[0.988 1 1],d0.statnum);'];
+                castopts.calstr.oxygen2.dy146 = ['dcal.oxygen2 = d0.oxygen2.*'...
+                    'interp1([-10      0    1000    3000  5400   6000],[1.045 1.045  1.052   1.062 1.075 1.075],d0.press).*'...
+                    'interp1([1 5 25],[.992  1 1],d0.statnum);'];
+                calms = 'from comparison with bottle oxygens, stations 1-25 (all)';
                 castopts.calstr.oxygen1.msg = calms;
                 castopts.calstr.oxygen2.msg = calms;
-end
+
+        end
+        %%%%%%%%%% mctd_03 %%%%%%%%%%
+    case 'mctd_03'
+        switch oopt
+            case 's_choice'
+                stns_alternate_s = [1:8 10:99]; % station 9 has a big gap on the secondary cells on downcast
+            case 'o_choice'
+                stns_alternate_o = [1:8 10:99];
+        end
+        %%%%%%%%%% end mctd_03 %%%%%%%%%%
 
     case 'moxy_01'
         switch oopt
@@ -146,9 +203,9 @@ end
                     'oxy_bottle'     'bottle_no'
                     'date_titre',    'dnum'
                     'bot_vol_tfix'   'botvol_at_tfix'
-                    'conc_o2'        'c_o2_'
-                    }; %not including conc_o2, recalculating instead
+                    'conc_o2',       'c_o2_'}; %not including conc_o2, recalculating instead
             case 'oxycalcpars'
+if 0
                 [num,~,raw] = xlsread(fullfile(mgetdir('M_BOT_OXY'),'Logsheet-Blanks&Standards_DY146.xlsx'));
                 num = [NaN+zeros(2,size(num,2)); num];
                 ii1 = find(strncmp('After bubbles',raw(:,4),13));
@@ -166,8 +223,19 @@ end
                 st = num(iis,9); %stl = [raw(iis7,7); raw(iis8,8)];
                 m = st<0.48 & st>=0.47;
                 disp([blank sum(gb)/sum(~isnan(bl_av_all))*100 mean(st(m)) std(st(m))/mean(st(m)) sum(m)/sum(~isnan(st))*100])
-                
-        end
+    end
+ds_oxy.blank_titre = repmat(0.003,size(ds_oxy.sampnum,1),1);
+ds_oxy.std_titre = repmat(0.4735,size(ds_oxy.sampnum,1),1);            
+ds_oxy.std_titre(ismember(ds_oxy.statnum,3:5)) = 0.4725;
+ds_oxy.std_titre(ismember(ds_oxy.statnum,6:22)) = 0.475;
+ds_oxy.std_titre(ismember(ds_oxy.statnum,23:25)) = 0.4765;
+vol_reag_tot = 1.97;
+case 'oxyflags'
+m = ismember(d.sampnum,[109 201 209 211 605 1201]);
+d.botoxya_flag(m) = max(d.botoxya_flag(m),3);
+d.botoxyb_flag(m) = max(d.botoxyb_flag(m),3);
+d.botoxyc_flag(m) = max(d.botoxyc_flag(m),3);
+end
 
            %%%%%%%%%% best_station_depths %%%%%%%%%%
  case 'best_station_depths'
@@ -200,6 +268,8 @@ end
                     21 1440
                     22 1439
                     23 1103
+                    24 4442
+                    25 4240
                     ];
         end
 
@@ -243,6 +313,52 @@ end
                 end
         end
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
+        
+        %%%%%%%%%% mout_exch %%%%%%%%%%
+    case 'mout_exch'
+        switch oopt
+            case 'woce_expo'
+                expocode = '74EQ20220209';
+                sect_id = 'RAPID-East';
+            case 'woce_vars_exclude'
+                vars_exclude_ctd = {};
+                %vars_exclude_sam = {'upsal_flag'; 'uoxygen_flag'};
+            case 'woce_ctd_headstr'
+                headstring = {['CTD,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];...
+                    '#SHIP: Discovery';...
+                    '#Cruise DY146; RAPID Eastern Boundary';...
+                    '#Region: Eastern North Atlantic (subtropical)';...
+                    ['#EXPOCODE: ' expocode];...
+                    '#DATES: 20220209 - 20220309';...
+                    '#Chief Scientist: D. G. Evans, NOC';...
+                    %'#Supported by NERC National Capability NE/N018095/1 (ORCHESTRA)';...
+                    '#25 stations with 12-place rosette';...
+                    '#CTD: Who - B. King; Status - final';...
+                    '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                    '# DEPTH_TYPE   : COR';...
+                    %'#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
+                    };
+            case 'woce_sam_headstr'
+                headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];... %the last field specifies group, institution, initials
+                    '#SHIP: Discovery';...
+                    '#Cruise DY146; RAPID Eastern Boundary';...
+                    '#Region: Eastern North Atlantic (subtropical)';...
+                    ['#EXPOCODE: ' expocode];...
+                    '#DATES: 20220209 - 20220309';...
+                    '#Chief Scientist: D. G. Evans, NOC';...
+                    %'#Supported by NERC National Capability NE/N018095/1 (ORCHESTRA)';...
+                    '#25 stations with 12-place rosette';...
+                    '#CTD: Who - B. King; Status - final';...
+                    '#Notes: Includes CTDSAL, CTDOXY, SBE35';...
+                    '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                    '#Salinity: Who - B. King; Status - final';...
+                    '#Oxygen: Who - Y. Firing and B. King; Status - final';...
+                    '#Nutrients: Who - E. Mawji; Status - not yet analysed';...
+                    '#Carbon: Who - P. Brown; Status - not yet analysed';...
+                    %'#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
+                    };
+        end
+        %%%%%%%%%% end mout_cchdo %%%%%%%%%%
 
 
 end

@@ -27,7 +27,8 @@ if usecallocal
         case 'salinity_raw'
             salvar = 'salinity_cal';
         otherwise
-            salvar = [salvar '_cal'];
+%             salvar = [salvar '_cal']; % variable is already called
+%             salinity_cal
     end
     switch tempvar
         case 'temp_raw'
@@ -68,7 +69,7 @@ scriptname = mfilename; oopt = 'tsg_bad'; get_cropt %NaN some of the db.salinity
 
 sdiff = db.salinity_adj-tsals; %offset is bottle minus tsg, so that it is correction to be added to tsg
 sdiff_std = m_nanstd(sdiff); sdiff_mean = m_nanmean(sdiff);
-idx = find(abs(sdiff)>3*sdiff_std);
+idx = find(abs(sdiff-sdiff_mean)>3*sdiff_std); % bak dy146 sdiff-sdiff_mean ?
 % List and discard possible outliers
 if ~isempty(idx)
 	fprintf(1,'\n Std deviation of bottle tsg - differnces is %7.3f \n',sdiff_std)
@@ -120,7 +121,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
         sdiff(abs(sdiff-sdiffsm) > sc1) = NaN;
         sdiffsm = filter_bak(ones(1,21),sdiff); % harsh filter to determine smooth adjustment
         sdiff(abs(sdiff-sdiffsm) > sc2) = NaN;
-        sdiffsm = filter_bak(ones(1,41),sdiff); % harsh filter to determine smooth adjustment
+        sdiffsm = filter_bak(ones(1,21),sdiff); % harsh filter to determine smooth adjustment
         sdiffsm_all = [sdiffsm_all; sdiffsm];
         sdiffsm = sdiffsm_all; % rename back to sdfiff and t for saving, but _all vars are the aggregated ones over all segments
         t_all = [t_all; t];
@@ -139,22 +140,22 @@ figure(1); clf
 subplot(nsp,1,1)
 hl = plot(dt.time, tsal, db.time, db.salinity, '.y', db.time, db.salinity_adj, 'o', db.time, tsals, '<'); grid
 legend(hl([1 3 4]), 'TSG','bottle','TSG')
-ylabel('Salinity (psu)'); xlabel('yearday')
+ylabel('Salinity (psu)'); xlabel('yearday, noon on 1 Jan = 1.5')
 title([calstr ' TSG'])
 xlim(dt.time([1 end]))
 subplot(nsp,1,2)
 plot(db.time, sdiffall, 'r+-',t_all+1, sdiffsm,' kx-'); grid
-ylabel([calstr ' bottle minus TSG salinity (psu)']); xlabel('yearday')
+ylabel([calstr ' bottle minus TSG salinity (psu)']); xlabel('yearday, noon on 1 Jan = 1.5')
 xlim(dt.time([1 end]))
 ylim([-.02 .04])
 if nsp==4
     subplot(nsp,1,3)
-    plot(tssts, sdiffall, 'r+', tssts, sdiffsm, 'kx'); grid
+    plot(tssts, sdiffall, 'r+', tssts, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
     xlabel('Sea Surface Temperature (^\circC)')
     ylabel([calstr ' TSG salinity - bottle salinity (psu)'])
     legend('Total Difference', 'Smoothed Difference');
     subplot(nsp,1,4)
-    plot(tsals, sdiffall, 'r+', tsals, sdiffsm, 'kx'); grid
+    plot(tsals, sdiffall, 'r+', tsals, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
     xlabel([calstr ' TSG salinity (psu)'])
     ylabel([calstr ' TSG salinity - bottle salinity (psu)'])
 end
@@ -162,9 +163,9 @@ end
 disp('mean diff, median diff')
 [m_nanmean(sdiff) m_nanmedian(sdiff)]
 disp('RMS of residuals:')
-rms_res = sqrt(sum(sdiff(~isnan(sdiff)).^2))
-disp('stderr:')
-stde = sqrt(sum(sdiff(~isnan(sdiff)).^2)/(sum(~isnan(sdiff))-1))
+rms_res = sqrt(sum(sdiff(~isnan(sdiff)).^2)/sum(~isnan(sdiff)))
+% disp('stderr:')
+% stde = sqrt(sum(sdiff(~isnan(sdiff)).^2)/(sum(~isnan(sdiff))-1)) % not output by bak on dy146; not sure this is helpful
 
 if ~usecallocal
     disp(['choose a constant or simple time-dependent correction for TSG, add to tsgsal_apply_cal case of opt_' mcruise])
