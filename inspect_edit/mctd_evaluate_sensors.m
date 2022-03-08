@@ -316,7 +316,7 @@ for gno = 1:length(sensg)
         pause
                 
         figure(1); clf
-        s = unique(mres(1,:)); s = s(s>=stn0);
+        s = unique(stn(ii)); s = s(s>=stn0);
         for no = 1:length(s)
             stnlocal = s(no);
             stn_string = sprintf('%03d', stnlocal);
@@ -346,21 +346,18 @@ for gno = 1:length(sensg)
             end
             
             %bottle samples and niskin data for this station
-            iis = find(d.statnum(:)==s(no));
-            iisbf = find(d.statnum(:)==s(no) & ~ismember(calflag, okf));
-            iiq = find(d.statnum(:)==s(no) & mres & ismember(calflag, okf));
+            iis = find(stn==s(no));
+            iisbf = find(stn==s(no) & ~ismember(calflag, okf));
+            iiq = find(stn==s(no) & abs(res)>llim(2) & ismember(calflag, okf));
             
             plot(d1.(sensname)(ii1u), -d1.press(ii1u), 'c', du.(sensname), -du.press, 'k--', ...
                 caldata(iis), -d.upress(iis), 'r.', caldata(iisbf), -d.upress(iisbf), 'm.', ctddata(iis), -d.upress(iis), 'b.', ...
                 caldata(iiq), -d.upress(iiq), 'or', ctddata(iiq), -d.upress(iiq), 'sb');
             grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',s(no)));
-            mn = m_nanmean(c); st = m_nanstd(c); xl = [-st st]*5+mn; set(gca, 'xlim', xl);
-            text(repmat(st*4.5+mn,length(iiq),1), -d.upress(iiq), num2str(d.position(iiq)));
             for qno = 1:length(iiq)
-                sprintf('%d %d %5.2f %d %d', s(no), d.position(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), d.niskin_flag(iiq(qno)))
+                sprintf('%d %d %5.2f %d %d %d', s(no), nisk(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), niskf(iiq(qno)), round(press(iiq(qno))))
             end
             keyboard
-            
             
         end
     end

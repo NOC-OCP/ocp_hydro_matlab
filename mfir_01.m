@@ -10,7 +10,6 @@ mdocshow(mfilename, ['reads in .bl file to fir_' mcruise '_' stn_string '.nc']);
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
 scriptname = mfilename; oopt = 'blinfile'; get_cropt
-blinfile = fullfile(root_botraw, blinfile);
 m = ['infile = ' blinfile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 dataname = ['fir_' mcruise '_' stn_string];
 otfile = fullfile(root_ctd, dataname);

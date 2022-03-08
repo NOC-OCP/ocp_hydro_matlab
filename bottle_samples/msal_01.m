@@ -44,7 +44,7 @@ for flno = 1:length(salfiles)
 end
 
 %load
-[ds_sal, salhead] = load_samdata(salfiles, {'sampnum'});
+[ds_sal, salhead] = load_samdata(salfiles, hcpat, 'chrows', chrows, 'chunits', chunits);
 if isempty(ds_sal)
     error('no data loaded')
 end
@@ -108,7 +108,7 @@ end
 
 ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3],2);
 
-scriptname = mfilename; oopt = 'salflags'; get_cropt %run this both before and after msal_standardise_avg, in case new onees are added
+scriptname = mfilename; oopt = 'salflags'; get_cropt
 
 %check for offsets in cruise options, also set things like cellT, K15
 scriptname = mfilename; oopt = 'sal_off'; get_cropt

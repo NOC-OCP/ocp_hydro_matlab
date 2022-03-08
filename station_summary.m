@@ -74,7 +74,7 @@ if ~isempty(stnall)
             elseif isempty(cabname)
                 m1 = ['No match for winch cable out in file '];
                 m2 = [fnwin];
-                m3 = 'exiting';
+                m3 = 'skipping';
                 fprintf(MEXEC_A.Mfider,'%s\n',m1,m2,m3)
             end
         end
@@ -116,7 +116,7 @@ if ~isempty(stnall)
 
         %winch
         fnwin = fullfile(root_win, ['win_' mcruise '_' stnstr]);
-        if exist(m_add_nc(fnwin),'file') == 2
+        if exist(m_add_nc(fnwin),'file') == 2 && ~isempty(cabname)
             [dwin, h3] = mloadq(fnwin,cabname,'/');
             maxw(k) = max(dwin.(cabname));
         end

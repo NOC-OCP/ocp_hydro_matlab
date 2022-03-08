@@ -37,6 +37,7 @@ switch scriptname
                 salfiles = {salfiles.name};
                 hcpat = {'sampnum'};
                 chrows = 1;
+                chunits = [];
             case 'salnames'
                 crhelp_str = {'place to change fieldnames, combine fields, etc. after '
                     'loading; also to specify datform (default: ''dd/mm/yyyy'') and timform'

@@ -150,6 +150,8 @@ mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 clear hnew
 samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
 [ds,hs] = mloadq(samfile,'sampnum','niskin_flag','uasal',' ');
+m = ds.niskin_flag<9;
+ds.sampnum = ds.sampnum(m); ds.niskin_flag = ds.niskin_flag(m); ds.uasal = ds.uasal(m);
 [~,iis,iio] = intersect(ds.sampnum,d.sampnum);
 hnew.fldnam = {'sampnum'};
 hnew.fldunt = {'number'};

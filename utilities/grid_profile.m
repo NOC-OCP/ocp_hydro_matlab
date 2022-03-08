@@ -94,7 +94,7 @@ end
 
 %variables to grid
 fn = fieldnames(d);
-if sum(strcmp(method, {'lfitbin' 'medint' 'meanint' 'linterp' 'smhan'}))
+if sum(strcmp(method, {'lfitbin' 'medint' 'meanint' 'linterp' 'smhan' 'meannum'}))
     %skip fitting to self (set as centers later)
     fn = setdiff(fn, gridvar);
 end
@@ -170,6 +170,8 @@ switch method
             gridvec(iie) = [];
         end
         dg.(gridvar) = gridvec;
+    case 'meannum'
+        dg.(gridvar) = mean(reshape(d.(gridvar)(1:num*nav),[num nav]));
 end
 ngv = length(gridvec);
 

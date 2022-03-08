@@ -25,10 +25,10 @@ iig = find(isfinite(press+oxygen_sbe)); iig = iig(:)';
 kfirst = min(iig);
 
 %initialise
-oxygen_out = NaN + zz; 
+oxygen_out = nan(size(oxygen_sbe));
 oxygen_out(kfirst) = oxygen_sbe(kfirst);
 klastgood = kfirst; % keep track of most recent good cycle
-Cvec = NaN + zz; Dvec = Cvec;
+Cvec = nan(size(oxygen_sbe)); Dvec = Cvec;
 
 for k=iig(2:end)
     

@@ -232,7 +232,7 @@ switch scriptname
     case 'mfir_01'
         switch oopt
             case 'blinfile'
-                blinfile = sprintf('%s_%03d.bl', upper(mcruise), stnlocal);
+                blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stnlocal));
             case 'nispos'
                 crhelp_str = {'niskc gives the carousel positions and niskn the bottle numbers'
                     '(e.g. serial numbers, if known). both should be length = nnisk (set in castpars)'

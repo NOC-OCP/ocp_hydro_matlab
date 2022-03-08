@@ -88,6 +88,8 @@ d.potemp2 = NaN+d.cond; d.potemp2(iig) = gsw_pt0_from_t(d.asal2(iig),d.temp2(iig
 %new variable names and units
 h.fldnam = [h.fldnam 'psal' 'psal1' 'psal2' 'asal' 'asal1' 'asal2' 'potemp' 'potemp1' 'potemp2'];
 h.fldunt = [h.fldunt 'pss-78' 'pss-78' 'pss-78' 'g/kg' 'g/kg' 'g/kg' 'degc90' 'degc90' 'degc90'];
+[h.fldnam, ii] = unique(h.fldnam);
+h.fldunt = h.fldunt(ii);
 h.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '];
 
 %save to _24hz file

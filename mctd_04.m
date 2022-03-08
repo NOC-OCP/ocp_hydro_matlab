@@ -40,7 +40,9 @@ MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
+h = m_read_header(dcsfile);
 [dd, ~] = mloadq(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
+%***code to calculate dc24 from dc and scan if there is no dc24?***
 % allow for the possibility that the dcs file contains many stations
 kf = find(dd.statnum == stnlocal);
 dcstart = dd.dc24_start(kf);

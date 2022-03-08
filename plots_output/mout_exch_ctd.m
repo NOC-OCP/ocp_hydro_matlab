@@ -51,11 +51,15 @@ end
 %flags default to 2 for data present but may be changed in opt_cruise
 ctdflag = 9+zeros(nsamp,1); ctdflag(~isnan(d.temp+d.psal)) = 2;
 ctoflag = 9+zeros(nsamp,1); ctoflag(~isnan(d.oxygen)) = 2;
+if isfield(d,'fluor')
 ctfflag = 9+zeros(nsamp,1); ctfflag(~isnan(d.fluor)) = 2;
+end
 scriptname = 'mout_exch'; oopt = 'woce_ctd_flags'; get_cropt
 d.temp_flag = ctdflag; d.psal_flag = ctdflag; 
-d.oxygen_flag = ctoflag; d.fluor_flag = ctfflag;
-
+d.oxygen_flag = ctoflag; 
+if isfield(d,'fluor')
+    d.fluor_flag = ctfflag;
+end
 
 %%%%% figure out which fields to write %%%%%
 

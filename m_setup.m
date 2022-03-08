@@ -18,10 +18,18 @@
 MEXEC.mexec_version = 'v3';
 MEXEC.MSCRIPT_CRUISE_STRING='dy146';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
+%  MEXEC.MSCRIPT_CRUISE_STRING = 'dy039';
+%  MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2015 1 1 0 0 0];
+%  MEXEC.MSCRIPT_CRUISE_STRING = 'jc103';
+%  MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2014 1 1 0 0 0];
+%     MEXEC.mstar_root = ['/local/users/pstar/rpdmoc/users/rapid_oxygen/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise']; %set this if you have a /local/users/pstar/cruise but that is not the cruise directory you want, for instance if reprocessing old cruise data
+%     skipunderway = 1; %if reprocessing data not including underway data from an old cruise
+%     MEXEC.mexec_source_root = '/local/users/pstar/programs/mexec/'; %set this if you don't want to make links in mstar_root
+%     MEXEC.other_programs_root = '/local/users/pstar/programs/others/'; %as above
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
 MEXEC.ssd = 0; %if true, print short documentation line to screen at beginning of scripts
 MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
-MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_athome', '', etc.
+MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_later']; % common suffixes '_atsea', '_athome', '', etc.
 MEXEC.ix_ladcp = 0; %set to 1 if processing LADCP data with LDEO IX software
 MEXEC.force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC.rvdas_ip = '192.168.62.12';
@@ -31,33 +39,37 @@ MEXEC.rvdas_ip = '192.168.62.12';
 disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec '])
 
 %look for mexec base directory
-d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if ~isempty(ii); d = d(1:ii-1); else; d = []; end
-mpath = {'/local/users/pstar/cruise';
-    ['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-    ['/noc/mpoc/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-    ['/local/users/pstar/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-    fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING,'mcruise');
-    fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING)};
-fp = 0; n=1;
-while fp==0 && n<=length(mpath)
-    if exist(mpath{n},'dir')==7
-        MEXEC.mstar_root = mpath{n};
-        fp = 1;
+if ~isfield(MEXEC,'mstar_root')
+    d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if ~isempty(ii); d = d(1:ii-1); else; d = []; end
+    mpath = {'/local/users/pstar/cruise';
+        ['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+        ['/noc/mpoc/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+        ['/local/users/pstar/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
+        fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING,'mcruise');
+        fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING)};
+    fp = 0; n=1;
+    while fp==0 && n<=length(mpath)
+        if exist(mpath{n},'dir')==7
+            MEXEC.mstar_root = mpath{n};
+            fp = 1;
+        end
+        n=n+1;
     end
-    n=n+1;
+    if fp==0 %none found; query
+        disp('enter full path of cruise directory')
+        disp('e.g. /local/users/pstar/cruise')
+        MEXEC.mstar_root = input('  ', 's');
+        disp('you may want to modify m_setup.m to hard-code this directory for future calls')
+    else
+        disp(['MEXEC root: ' MEXEC.mstar_root])
+    end
+    clear mpath d fp n ii
 end
-if fp==0 %none found; query
-    disp('enter full path of cruise directory')
-    disp('e.g. /local/users/pstar/cruise')
-    MEXEC.mstar_root = input('  ', 's');
-    disp('you may want to modify m_setup.m to hard-code this directory for future calls')
-else
-    disp(['MEXEC root: ' MEXEC.mstar_root])
-end
-clear mpath d fp n ii
 
 % Set path for mexec source
-MEXEC.mexec_source_root = fullfile(MEXEC.mstar_root,'sw','mexec');
+if ~isfield(MEXEC,'mexec_source_root')
+    MEXEC.mexec_source_root = fullfile(MEXEC.mstar_root,'sw','mexec');
+end
 if isempty(which('m_common')) % this is in msubs
     cdir = pwd; pdir = MEXEC.mexec_source_root;
     cd(pdir)
@@ -114,15 +126,18 @@ end
 
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
+if ~isfield(MEXEC,'other_programs_root')
+    MEXEC.other_programs_root = fullfile(MEXEC.mstar_root,'sw','others');
+end
 ld = table('Size', [1 4], 'VariableTypes', {'string' 'string' 'string' 'string'}, 'VariableNames', {'predir' 'lib' 'exmfile' 'verstr'});
 n = 1;
-ld(n,:) = {fullfile(MEXEC.mstar_root,'sw','others') 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
-ld(n,:) = {fullfile(MEXEC.mstar_root,'sw','others') 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
-ld(n,:) = {fullfile(MEXEC.mstar_root,'sw','others') 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
-%ld(n,:) = {fullfile(MEXEC.mstar_root,'sw','others') 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
-ld(n,:) = {fullfile(MEXEC.mstar_root,'sw','others') 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
+ld(n,:) = {MEXEC.other_programs_root 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
+ld(n,:) = {MEXEC.other_programs_root 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
+ld(n,:) = {MEXEC.other_programs_root 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
+%ld(n,:) = {MEXEC.other_programs_root 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
+ld(n,:) = {MEXEC.other_programs_root 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
 if MEXEC_G.ix_ladcp
-    ld(n,:) = {fullfile(MEXEC.mstar_root,'sw','others') 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
+    ld(n,:) = {MEXEC.other_programs_root 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
 end
 if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~MEXEC.force_ext_software_versions
     ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root
@@ -245,45 +260,47 @@ end
 
 %create file connecting underway data directories and stream names
 %and create underway data directories (for processed data)
-ud_is_current = 0; ud_runs = 0; sud_runs = 0; ufail = 0;
-while ud_is_current == 0 && ud_runs == 0 && ufail == 0
-    try
-        [udirs, udcruise] = m_udirs;
-        if strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
-            ud_is_current = 1;
-        else
-            error('')
-        end
-    catch
+if ~exist('skipunderway','var') || ~skipunderway
+    ud_is_current = 0; ud_runs = 0; sud_runs = 0; ufail = 0;
+    while ud_is_current == 0 && ud_runs == 0 && ufail == 0
         try
-            ufile = fullfile(mps_pre, 'uway', 'm_udirs.m');
-            if exist(ufile,'file'); delete(ufile); end
-            m_setudir
-            sud_runs = 1;
+            [udirs, udcruise] = m_udirs;
+            if strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
+                ud_is_current = 1;
+            else
+                error('')
+            end
+        catch
             try
-                [udirs, ~] = m_udirs;
-                ud_runs = 1;
+                ufile = fullfile(mps_pre, 'underway', 'm_udirs.m');
+                if exist(ufile,'file'); delete(ufile); end
+                m_setudir
+                sud_runs = 1;
+                try
+                    [udirs, ~] = m_udirs;
+                    ud_runs = 1;
+                catch
+                    ufail = 1;
+                end
             catch
                 ufail = 1;
             end
-        catch
-            ufail = 1;
         end
     end
-end
-if ufail
-    if ~sud_runs
-        warning('no underway directories yet, m_setudir failed, rerun when they are available/linked')
-    elseif ~ud_runs
-        warning('no underway directories yet, m_udirs failed, rerun m_setudir when they are available/linked')
+    if ufail
+        if ~sud_runs
+            warning('no underway directories yet, m_setudir failed, rerun when they are available/linked')
+        elseif ~ud_runs
+            warning('no underway directories yet, m_udirs failed, rerun m_setudir when they are available/linked')
+        end
+    elseif ~isempty(udirs)
+        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,1:2)];
+        a = mgetdir(MEXEC_G.default_navstream); l = length(MEXEC_G.mexec_data_root);
+        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
     end
-elseif ~isempty(udirs)
-    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,1:2)];
-    a = mgetdir(MEXEC_G.default_navstream); l = length(MEXEC_G.mexec_data_root);
-    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
+    clear sud_runs ufail ud_* udirs udcruise mps_pre
 end
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
-clear sud_runs ufail ud_* udirs udcruise mps_pre
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -303,30 +320,30 @@ else
 end
 MEXEC_G.MUSER = [MEXEC.uuser ' on ' MEXEC.uname];
 
-MEXEC_G.Mhousekeeping_version = fullfile(MEXEC_G.housekeeping_root, 'version');
-MEXEC_G.HISTORY_DIRECTORY = fullfile(MEXEC_G.housekeeping_root, 'history');
-
-% Make version file and lock file if version file doesn't already exist.
-% Should only happen once per cruise or data installation
-MEXEC_G.VERSION_FILE = fullfile(MEXEC_G.Mhousekeeping_version, MEXEC_G.version_file_name);
-MEXEC.versfile = MEXEC_G.VERSION_FILE;
-MEXEC.simplelockfile = [MEXEC.versfile(1:end-4) '_lock'];
-if exist(MEXEC_G.VERSION_FILE,'file') ~= 2
-    disp('Version file does not seem to exist; will create version file and version lock file')
-    datanames = {};
-    versions = [];
-    save(MEXEC_G.VERSION_FILE,'datanames','versions');
-    [us,~] = system(['touch ' MEXEC.simplelockfile]);
-    if us == 0 && exist(MEXEC.simplelockfile,'file') == 2 % seems to be a successful create of lock file
-        m = 'Version lock file touched successfully';
-        fprintf(MEXEC_A.Mfidterm,'%s\n',m)
-    end
-end
-clear us
-
 % Check existence and availability of version lock file, if it is set to be used
 if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
-    
+    % Make version file and lock file if version file doesn't already exist.
+    % Should only happen once per cruise or data installation
+    MEXEC_G.Mhousekeeping_version = fullfile(MEXEC_G.housekeeping_root, 'version');
+    if ~exist(MEXEC_G.Mhousekeeping_version,'dir')
+        mkdir(MEXEC_G.Mhousekeeping_version);
+    end
+    MEXEC_G.VERSION_FILE = fullfile(MEXEC_G.Mhousekeeping_version, MEXEC_G.version_file_name);
+    MEXEC.versfile = MEXEC_G.VERSION_FILE;
+    MEXEC.simplelockfile = [MEXEC.versfile(1:end-4) '_lock'];
+    if exist(MEXEC_G.VERSION_FILE,'file') ~= 2
+        disp('Version file does not seem to exist; will create version file and version lock file')
+        datanames = {};
+        versions = [];
+        save(MEXEC_G.VERSION_FILE,'datanames','versions');
+        [us,~] = system(['touch ' MEXEC.simplelockfile]);
+        if us == 0 && exist(MEXEC.simplelockfile,'file') == 2 % seems to be a successful create of lock file
+            m = 'Version lock file touched successfully';
+            fprintf(MEXEC_A.Mfidterm,'%s\n',m)
+        end
+    end
+    clear us
+
     % might have to wait a bit to find it
     nsecwait = 0;
     while exist(MEXEC.simplelockfile,'file') ~= 2 && nsecwait<40
@@ -374,6 +391,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
 end
 
 % Check existence of history directory and make if necessary
+MEXEC_G.HISTORY_DIRECTORY = fullfile(MEXEC_G.housekeeping_root, 'history');
 if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     disp('history directory does not seem to exist; will create it');
     cmd = ['!mkdir ' MEXEC_G.HISTORY_DIRECTORY];
