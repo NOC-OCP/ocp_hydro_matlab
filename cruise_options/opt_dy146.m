@@ -17,7 +17,6 @@ switch scriptname
                         sensorcals.parstbd = 'y=x1/1.029;'; % stb? PAR: s/n SKE510 28562 cal 29 Mar 2021 %muV/Wm-2
                         sensorcals.tirport = 'y=x1/1.181;'; % port TIR: s/n 973135 cal 6 Apr 2021
                         sensorcals.tirstbd = 'y=x1/1.009;'; % stb TIR: s/n 962276 cal 18 Aug 2021
-                        % the surfmet instrument box is outputting in V*1e-5 for PAR/TIR already***check this is true on dy as well
                         sensorunits.fluo = 'ug/l';
                         sensorunits.trans = 'percent';
                         sensorunits.parport = 'W/m2';
@@ -33,7 +32,6 @@ switch scriptname
         switch oopt
             case 'tsg_badlims'
                 kbadlims = [
-%                     datenum(2022,1,1) + [-inf 39+19/24]; %start of cruise, TSG on during decimal day 39
                     datenum([2020 01 01 00 00 00]) datenum([2022 02 09 19 00 00]) % start of cruise
                     datenum([2022 02 10 08 58 00]) datenum([2022 02 10 09 05 00])
                     datenum([2022 02 21 13 18 00]) datenum([2022 02 21 13 27 00])
@@ -53,8 +51,6 @@ tsgopts.calstr.salinity.dy146 = 'dcal.salinity_cal = dnew.salinity_raw + interp1
                 usecal = 1;
             case 'tsg_timebreaks'
                 tbreak = [
-%                     datenum([2021 2 20 12 30 00]) % pumps off Fl & Tr cleaned; TSG not cleaned
-%                     datenum([2021 2 27 16 10 00]) % Fl, Tr and TSG cleaned. Day 058/1610
                     ];
             case 'tsg_sdiff'
                 sc1 = 0.5; sc2 = 0.01; %thresholds to use for smoothed series
@@ -336,7 +332,6 @@ end
                     '#CTD: Who - B. King; Status - final';...
                     '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                     '# DEPTH_TYPE   : COR';...
-                    %'#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
                     };
             case 'woce_sam_headstr'
                 headstring = {['BOTTLE,' datestr(now,'yyyymmdd') 'OCPNOCYLF'];... %the last field specifies group, institution, initials
@@ -355,7 +350,6 @@ end
                     '#Oxygen: Who - Y. Firing and B. King; Status - final';...
                     '#Nutrients: Who - E. Mawji; Status - not yet analysed';...
                     '#Carbon: Who - P. Brown; Status - not yet analysed';...
-                    %'#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
                     };
         end
         %%%%%%%%%% end mout_cchdo %%%%%%%%%%

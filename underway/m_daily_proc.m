@@ -69,8 +69,6 @@ clear restart_uway_append
 
 mnav_best %get best nav stream into bst_ file
 
-mwind_true %combine nav with met wind to make true wind
-
 try
     mtsg_medav_clean_cal
 catch
@@ -81,3 +79,5 @@ end
 if sum(strcmp('tsgsurfmet', umtypes))
     mtsgsurfmet_merge
 end
+
+mwind_true % combine nav and met to get truewind, in surfmet file
