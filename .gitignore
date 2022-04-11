@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ._*
 .DS_Store
 *tmp_mchangelog.txt*
@@ -6,3 +7,9 @@
 */*.asv
 wk_*.nc
 
+=======
+*.asv
+*.swp
+._*
+.DS_Store
+>>>>>>> mexec/master
