@@ -1,0 +1,1 @@
+MATLAB scripts for a) at-sea processing, integration and primary quality control of CTD, water sample, and shipboard underway (via SCS, TECHSAS, or RVDAS systems) and integration with other data sources (e.g. ADCP); b) comparing and secondary QC, gridding/mapping, and plotting of hydrographic (CTD and bottle) data.
