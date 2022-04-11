@@ -1,0 +1,8 @@
+furuno_rmc_time,inst_time,HHMMSS
+furuno_rmc_status,status,number
+furuno_rmc_lat,lat,degrees
+furuno_rmc_lon,lon,degrees
+furuno_rmc_sog,sog,knots
+furuno_rmc_track_angle,track_angle,degrees
+furuno_rmc_date,date,DDMMYY
+furuno_rmc_magnetic_var,magnetic_var,degrees

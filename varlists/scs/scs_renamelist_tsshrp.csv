@@ -1,0 +1,6 @@
+tsshrp_hacc,hacc,cm/s^2
+tsshrp_vacc,vacc,cm/s^2
+tsshrp_heave,heave,cm
+tsshrp_status,status,
+tsshrp_roll,roll,hndths deg
+tsshrp_pitch,pitch,hndths deg

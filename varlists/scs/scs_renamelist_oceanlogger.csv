@@ -1,0 +1,23 @@
+oceanlogger_sampletimeyyyy,sampletimeyyyy,YYYY
+oceanlogger_sampletimeddd,sampletimeddd,DDD
+oceanlogger_sampletimehhmmss,sampletimehhmmss,HH:MM:SS
+oceanlogger_airtemp1,airtemp1,celsius
+oceanlogger_humidity1,humidity1,%RH
+oceanlogger_par1,par1,umol/S.m2
+oceanlogger_tir1,tir1,W/m2
+oceanlogger_airtemp2,airtemp2,celsius
+oceanlogger_humidity2,humidity2,%RH
+oceanlogger_par2,par2,umol/S.m2
+oceanlogger_tir2,tir2,W/m2
+oceanlogger_baro1,baro1,hPa
+oceanlogger_baro2,baro2,hPa
+oceanlogger_tstemp,tstemp,celsius
+oceanlogger_conductivity,conductivity,S/ma
+oceanlogger_salinity,salinity,psu
+oceanlogger_sound_velocity,sound_velocity,m/sa
+oceanlogger_chlorophyll,chlorophyll,ug/l
+oceanlogger_sampletemp,sampletemp,celsius
+oceanlogger_flowrate,flowrate,l/min
+oceanlogger_sstemp,sstemp,celsius
+oceanlogger_trans,trans,0 < Tr < 1
+oceanlogger_sstemp2,sstemp2,celsius

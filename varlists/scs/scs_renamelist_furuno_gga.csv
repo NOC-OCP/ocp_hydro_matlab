@@ -1,0 +1,10 @@
+furuno_gga_time,inst_time,HHMMSS
+furuno_gga_lat,lat,degrees
+furuno_gga_lon,lon,degrees
+furuno_gga_gq,gq,number
+furuno_gga_svc,svc,number
+furuno_gga_hdop,hdop,number
+furuno_gga_msl,msl,m
+furuno_gga_geo_height,geo_height,m
+furuno_gga_dage,dage,s
+furuno_gga_dbase,dbase,number

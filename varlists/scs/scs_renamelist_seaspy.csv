@@ -1,0 +1,3 @@
+seaspy_magnetic_field,magnetic_field,nT
+seaspy_signal_strength,signal_strength,number
+seaspy_depth,depth,m

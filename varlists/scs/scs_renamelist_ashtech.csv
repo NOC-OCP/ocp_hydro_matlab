@@ -1,0 +1,10 @@
+ashtech_time,inst_time,HHMMSS.SS
+ashtech_lat,lat,degrees
+ashtech_lon,lon,degrees
+ashtech_altitude,altitude,m
+ashtech_heading,heading,degrees
+ashtech_pitch,pitch,degrees
+ashtech_roll,roll,degrees
+ashtech_mrms,mrms,m
+ashtech_brms,brms,m
+ashtech_aq,aq,number

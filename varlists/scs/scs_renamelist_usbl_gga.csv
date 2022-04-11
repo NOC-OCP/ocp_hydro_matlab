@@ -1,0 +1,9 @@
+usbl_gga_time,inst_time,HHMMSS.SS
+usbl_gga_lat,lat,degrees
+usbl_gga_lon,lon,degrees
+usbl_gga_gq,gq,number
+usbl_gga_svc,svc,number
+usbl_gga_hdop,hdop,number
+usbl_gga_altitude,altitude,m
+usbl_gga_dage,dage,s
+usbl_gga_dbase,dbase,number

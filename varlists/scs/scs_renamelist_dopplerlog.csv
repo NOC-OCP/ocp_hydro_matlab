@@ -1,0 +1,6 @@
+dopplerlog_velocity_f_a,velocity_f_a,knots
+dopplerlog_velocity_p_s,velocity_p_s,knots
+dopplerlog_water_speed_status,water_speed_status,number
+dopplerlog_ground_speed_longitudinal,ground_speed_longitudinal,knots
+dopplerlog_ground_speed_transverse,ground_speed_transverse,knots
+dopplerlog_ground_speed_status,ground_speed_status,number

@@ -1,0 +1,4 @@
+seatex_gll_lat,lat,degrees
+seatex_gll_lon,lon,degrees
+seatex_gll_time,inst_time,HHMMSS.SS
+seatex_gll_status,status,number

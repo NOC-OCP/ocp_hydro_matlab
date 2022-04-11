@@ -1,0 +1,13 @@
+netmonitor_flow,flow,msec
+netmonitor_depth,depth,m
+netmonitor_pitch,pitch,degrees
+netmonitor_roll,roll,degrees
+netmonitor_cond,cond,number
+netmonitor_spare,spare,number
+netmonitor_par,par,mV
+netmonitor_fluor,fluor,number
+netmonitor_altitude,altitude,m
+netmonitor_temp,temp,celsius
+netmonitor_mot0,mot0,number
+netmonitor_mot1,mot1,number
+netmonitor_cmd,cmd,number
