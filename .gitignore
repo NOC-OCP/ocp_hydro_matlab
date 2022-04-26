@@ -1,15 +1,5 @@
-<<<<<<< HEAD
 ._*
 .DS_Store
-*tmp_mchangelog.txt*
-*notes_for_*.txt*
 *.asv
-*/*.asv
 wk_*.nc
-
-=======
-*.asv
 *.swp
-._*
-.DS_Store
->>>>>>> mexec/master
