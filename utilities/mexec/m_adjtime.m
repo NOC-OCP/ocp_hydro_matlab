@@ -26,8 +26,7 @@ end
 
 unit = h1.fldunt{tvarnum};
 
-isdays = m_isunitdays(unit);
-issecs = m_isunitsecs(unit);
+[isdays,issecs] = m_parseunit_time(unit);
 
 % if unit not recognised, assume it is seconds
 

@@ -19,6 +19,7 @@ MEXEC.MSCRIPT_CRUISE_STRING='dy146';
 MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
 MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_later']; % common suffixes '_atsea', '_athome', '', etc.
 % MEXEC.mstar_root = ['/local/users/pstar/rpdmoc/users/rapid_oxygen/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise']; %set this if you have a /local/users/pstar/cruise but that is not the cruise directory you want, for instance if reprocessing old cruise data
+MEXEC.mexec_source_root = '~/programs/ocp_hydro_matlab/';
 MEXEC.other_programs_root = '~/programs/others/';
 MEXEC.force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
@@ -60,22 +61,25 @@ if ~isfield(MEXEC,'mstar_root')
     clear mpath d fp n ii
 end
 
-%record code version
-MEXEC.mexec_source_root = fileparts(which('m_setup'));
-cdir = pwd; pdir = MEXEC.mexec_source_root;
-cd(pdir)
-[s,c] = system('git log -1 | head -1');
-if s==0 && length(c)>=15 && ~strncmp('fatal:', c, 6)
-    MEXEC.version = ['last_' c(1:6) '_' c(8:15)];
-else
-    d = dir('./');
-    MEXEC.version = ['from_' d(1).date];
-end
-cd(cdir); clear cdir pdir c s d
 %add ocp_hydro_tools and external software to path
 if isempty(which('m_common')) || isempty(which('get_cropt')) % these are in file_tools/mexec/msubs and mexec_processing_scripts/cruise_options
     %add all the ocp_hydro_matlab code to path
-    disp(['adding mexec source' MEXEC.version ' to path'])
+    if ~isfield(MEXEC,'mexec_source_root')
+        MEXEC.mexec_source_root = fullfile(MEXEC.mstar_root,'sw','mexec');
+    end
+    %record code version
+    cdir = pwd; pdir = MEXEC.mexec_source_root;
+    cd(pdir)
+    [s,c] = system('git log -1 | head -1');
+    if s==0 && length(c)>=15 && ~strncmp('fatal:', c, 6)
+        mexecs_version = [' last_' c(1:6) '_' c(8:15)];
+    else
+        mexecs_version = '';
+    end
+    cd(cdir)
+    disp(['adding mexec source' mexecs_version ' to path'])
+    clear mexecs_version s c cdir pdir
+    % add paths below source
     addpath(genpath(MEXEC.mexec_source_root))
 end
 
@@ -92,19 +96,38 @@ MEXEC_G.ssd = MEXEC.ssd;
 MEXEC_G.ix_ladcp = MEXEC.ix_ladcp;
 MEXEC_G.uway_writeempty = MEXEC.uway_writeempty;
 
-% mexec working directory
+% mexec working directory and mexec_processing_scripts
 MEXEC_G.mexec_data_root = fullfile(MEXEC.mstar_root, 'data');
 
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
-MEXEC_G = sw_addpath(MEXEC_G,MEXEC.force_ext_software_versions)
+if ~isfield(MEXEC,'other_programs_root')
+    MEXEC.other_programs_root = fullfile(MEXEC.mstar_root,'sw','others');
+end
+ld = table('Size', [1 4], 'VariableTypes', {'string' 'string' 'string' 'string'}, 'VariableNames', {'predir' 'lib' 'exmfile' 'verstr'});
+n = 1;
+ld(n,:) = {MEXEC.other_programs_root 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
+ld(n,:) = {MEXEC.other_programs_root 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
+ld(n,:) = {MEXEC.other_programs_root 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
+%ld(n,:) = {MEXEC.other_programs_root 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
+ld(n,:) = {MEXEC.other_programs_root 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
+if MEXEC_G.ix_ladcp
+    ld(n,:) = {MEXEC.other_programs_root 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
+end
+if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~MEXEC.force_ext_software_versions
+    ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root
+    %add to path, recording which version was used (in MEXEC_G)
+end
+sw_addpath(ld);
+clear ld
+
 
 % Set path for directory with housekeeping files (in subdirectories version and history)
 MEXEC_G.housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
 MEXEC_G.version_file_name = ['mstar_versionfile_' MEXEC_G.SITE '.mat'];  % This setting should not normally be changed
 
 % set things about the ship
-MEXEC_G.PLATFORM_NUMBER = ['Cruise ' MEXEC_G.MSCRIPT_CRUISE_STRING];%don't know why this stripped the ship letters before
+MEXEC_G.PLATFORM_NUMBER = ['Cruise ' MEXEC_G.MSCRIPT_CRUISE_STRING(3:end)];%***why not maintain ship letters??
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     case 'di'
         MEXEC_G.Mship = 'discovery';
