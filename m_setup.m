@@ -11,14 +11,14 @@
 
 clear MEXEC_G
 global MEXEC_G
-MEXEC_G.MSCRIPT_CRUISE_STRING='dy113';
+MEXEC_G.MSCRIPT_CRUISE_STRING='jc238';
 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
-MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_later']; % common suffixes '_atsea', '_athome', '', etc.
+MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_athome', '', etc.
 %next line set if you have a /local/users/pstar/cruise but that is not the
 %one you want (e.g. if reprocessing old cruise on seagoing computer);
 %otherwise code will search for cruise directory
 %MEXEC_G.mexec_data_root = ['/local/users/pstar/rpdmoc/users/rapid_oxygen/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise/data']; 
-MEXEC_G.mexec_source_root = '~/programs/ocp_hydro_matlab/';
+MEXEC_G.mexec_source_root = '~/programs/ocp/ocp_hydro_matlab/';
 MEXEC_G.other_programs_root = '~/programs/others/';
 force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 1; %if untrue, mexec_v3/source programs are verbose
@@ -66,8 +66,8 @@ if isempty(which('m_common')) || isempty(which('get_cropt')) || ~isfield(MEXEC_G
     cdir = pwd; pdir = MEXEC_G.mexec_source_root;
     cd(pdir)
     [s,c] = system('git log -1 | head -1');
-    if s==0 && length(c)>=15 && ~strncmp('fatal:', c, 6)
-        mexecs_version = [' last_' c(1:6) '_' c(8:15)];
+    if s==0 && length(c)>=15 && ~contains(c, 'fatal:') && strcmp(c(1:6),'commit')
+        mexecs_version = [' last_commit_' c(8:15)];
     else
         mexecs_version = '';
     end
