@@ -48,6 +48,7 @@ elseif typ==2 % this is for comparing with bottle samples
         'SAMPNO', ' ', 'position', '%2d'
         'BTLNBR', ' ', 'niskin', '%d'
         'BTLNBR_FLAG_W', ' ', 'niskin_flag', '%d'
+        'BTLNBR_FLAG_W', ' ', 'bottle_qc_flag', '%d'
         'DATE', ' ', 'date', '%s'
         'TIME', ' ', 'time', '%s'
         'LATITUDE', ' ', 'ulatitude', '%9.5f'

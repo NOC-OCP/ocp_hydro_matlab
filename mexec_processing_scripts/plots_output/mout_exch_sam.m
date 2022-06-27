@@ -52,9 +52,6 @@ if ~isfield(d, 'depth') || sum(~isnan(d.depth))==0
         end
     end
 end
-if ~isfield(d,'sbe35temp_flag') && isfield(d,'sbe35flag')
-    d.sbe35temp_flag = d.sbe35flag;
-end
 
 
 %%%%% figure out which fields to write %%%%%
@@ -67,16 +64,28 @@ for no = 1:length(vars_exclude_sam)
 end
 vars(iie,:) = [];
 
-%add columns of NaNs for samples not yet analysed but which have flag fields
-%and columns of 2s for missing flag fields
+%flags
 for vno = 1:size(vars,1)
-    if isfield(d, vars{vno,3})
-        if endsWith(vars{vno,3},'_flag') && ~isfield(d, vars{vno,3}(1:end-5))
+    if endsWith(vars{vno,3}, '_flag')
+        varn = vars{vno,3}(1:end-5);
+        %first some backwards compatibility on flag names
+        if ~isfield(d, vars{vno,3}) && isfield(d, [varn 'flag'])
+            %used to not have an underscore
+            d.(vars{vno,3}) = d.([varn 'flag']);
+        elseif strcmp(vars{vno,3},'sbe35temp_flag') && isfield(d, 'sbe35flag')
+            %special case
+            d.sbe35temp_flag = d.sbe35flag;
+        end
+        %now add column of NaNs for samples with flags but no data yet
+        if isfield(d, vars{vno,3}) && ~isfield(d, varn)
+            %add column of NaNs for samples with flags but no data yet
             d.(vars{vno,3}(1:end-5)) = NaN+d.(vars{vno,3});
         end
-    elseif endsWith(vars{vno,3},'_flag') && isfield(d, vars{vno,3}(1:end-5))
-        d.(vars{vno,3}) = 2+zeros(size(d.(vars{vno,3}(1:end-5))));
-        d.(vars{vno,3})(isnan(d.(vars{vno,3}(1:end-5)))) = 4;
+        %and for samples with data but no flags, create flag variable
+        if ~isfield(d, vars{vno,3}) && isfield(d, varn)
+            d.(vars{vno,3}) = 2+zeros(size(d.(varn)));
+            d.(vars{vno,3})(isnan(d.(vars{vno,3}(1:end-5)))) = 4;
+        end
     end
 end
 
@@ -94,6 +103,10 @@ for vno = 1:size(vars,1)
 end
 vars(iie,:) = [];
 
+%make sure there are no duplicate column headers by selecting first
+[~,ia,~] = unique(vars(:,1));
+vars = vars(sort(ia),:);
+    
 
 %%%%% write %%%%%
 

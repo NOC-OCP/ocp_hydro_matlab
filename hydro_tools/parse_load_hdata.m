@@ -14,7 +14,7 @@ function data = parse_load_hdata(infile, varnamesunits, varargin)
 %     predir, directory for input file(s) (default './')
 %     badflags, list of flag values which NaN corresponding variables (default [4 9])
 %     hcpat, chrows, chunits (no defaults)
-%         for csv files, information on column header (see help for m_load_samin)
+%         for csv files, information on column header (see help for load_samdata)
 %     cruisename (no default)
 %         for matlab files, if the file contains multiple cruises in
 %         structures by cruise name (e.g. a23), or in one multi-element
@@ -184,7 +184,7 @@ for fno = 1:size(infile,1)
             chunits = length(hcpat); %default: last row of header is units
         end
         try
-            [ds, hs] = m_load_samin(fullfile(opts.predir, infile{fno}), hcpat, 'chrows', chrows, 'chunits', chunits);
+            [ds, hs] = load_samdata(fullfile(opts.predir, infile{fno}), hcpat, 'chrows', chrows, 'chunits', chunits);
         catch
             warning(['unknown file type or header not properly specified: ' infile{fno}])
             keyboard

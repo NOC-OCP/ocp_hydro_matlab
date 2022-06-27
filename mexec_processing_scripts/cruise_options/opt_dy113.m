@@ -23,29 +23,31 @@ switch scriptname
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
         
-        %%%%%%%%%% mbot_01 %%%%%%%%%%
-    case 'mbot_01'
+        %%%%%%%%%% mfir_01 %%%%%%%%%%
+        %transferred from mbot_01, and some flag 4 changed to 3, 20220429,
+        %other flags revised 20220617
+            case 'mfir_01'
         switch oopt
-            case 'nispos'
+            case 'nnisk'
                 %inventory/serial numbers of the niskins in order of 1 to 24
-                niskin = [2754:2774 2776:2778]'; %250002754:250002778
+                niskn = [2754:2774 2776:2778]'; %250002754:250002778
             case 'botflags'
                 flag3 = []; flag4 = []; flag9 = []; %[station niskin]
                 flag3 = [1 1; 1 20; 2 1; 6 9; 7 5; 7 8; 13 18; 17 9; 22 13; 24 7;...
                     26 9; 29 9; 32 12; 56 12; 62 8; 70 5]; % (possibly) leaking or questionable based on visual
-                flag3 = [flag3; 6 14; 20 2; 22 13; 24 17; 24 19]; %sample data suspicious
-                flag4 = [1 17; 5 15; 7 6; 7 9; 8 4; 8 7; 14 15; 16 4; ...
-                    17 1; 17 4; 19 4; 23 15; 25 2; 25 7; 27 7; 32 5; 33 9; 42 22; 45 9];
-                flag4 = [flag4; 59 24; 62 1; 62 9; 67 9; 69 9; 72 9; 87 2; 89 9; 101 14]; %bad (end cap not closed)
-                flag4 = [flag4; 1 1; 8 2; 22 13]; %sample data very suspicious
-                flag9 = [13 4; 21 4; 25 4; 26, 4; 41 5; 51 12]; %did not fire
-                iif = find(flag3(:,1)==stnlocal); if ~isempty(iif); niskin_flag(flag3(iif,2)) = 3; end
-                iif = find(flag4(:,1)==stnlocal); if ~isempty(iif); niskin_flag(flag4(iif,2)) = 4; end
-                iif = find(flag9(:,1)==stnlocal); if ~isempty(iif); niskin_flag(flag9(iif,2)) = 9; end
+                flag3 = [flag3; 6 14; 20 2; 22 13; 24 17; 24 19]; %sample data suspicious, suspect leak
+                flag9 = [flag9; 1 17; 5 15; 7 6; 7 9; 8 4; 8 7; 14 15; 16 4; ...
+                    17 1; 17 4; 19 4; 23 15; 25 2; 25 7; 27 7; 32 5; 33 9; 42 22; 45 9; ...
+                    59 24; 62 1; 62 9; 67 9; 69 9; 72 9; 87 2; 89 9; 101 14]; %leaking (end cap not closed) revised 17062022 from 4 to 9
+                flag4 = [flag4; 1 1; 8 2; 22 13]; %sample data very suspicious, suspect tripped/closed at wrong depth
+                flag4 = [flag4; 13 4; 21 4; 25 4; 26 4; 41 5; 51 12]; %did not fire (did not trip correctly) revised from 9 17062022
+                iif = find(flag3(:,1)==stnlocal); if ~isempty(iif); niskin_flag(ismember(position,flag3(iif,2))) = 3; end
+                iif = find(flag4(:,1)==stnlocal); if ~isempty(iif); niskin_flag(ismember(position,flag4(iif,2))) = 4; end
+                iif = find(flag9(:,1)==stnlocal); if ~isempty(iif); niskin_flag(ismember(position,flag9(iif,2))) = 9; end
                 %cast 45: some question about niskins closing at wrong
                 %depth if damaged by slack wire but probably ok
         end
-        %%%%%%%%%% end mbot_01 %%%%%%%%%%
+        %%%%%%%%%% end mfir_01 %%%%%%%%%%
         
         %%%%%%%%%% mctd_checkplots %%%%%%%%%%
     case 'mctd_checkplots'
@@ -85,7 +87,6 @@ switch scriptname
                     calstr.cond2.dy113 = 'dcal.cond2 = d0.cond2.*(1 + (interp1([0 5000], [1.4 -2], d0.press)*1e-3 - 7e-4)/35);';
                     calstr.oxygen1.dy113 = 'dcal.oxygen1 = 1.025*d0.oxygen1 + interp1([0 5000], [1.8 12.8], d0.press) - 1.5e-2*d0.statnum';
                     calstr.oxygen2.dy113 = 'dcal.oxygen2 = 1.029*d0.oxygen2 + interp1([0 500 5000], [0.5 0.8 9], d0.press) + 1e-2*d0.statnum;';
-                end
         end
         %%%%%%%%%% end mctd_senscal %%%%%%%%%%
         

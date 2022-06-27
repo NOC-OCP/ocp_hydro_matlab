@@ -10,6 +10,9 @@ mdocshow(mfilename, ['pastes CTD data at bottle firing times from fir_' mcruise 
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 infile = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
+if ~exist(infile, 'file')
+    infile = [infile '_ctd'];
+end
 otfile = fullfile(root_ctd, ['sam_' mcruise '_all']);
 
 if exist(otfile,'file')

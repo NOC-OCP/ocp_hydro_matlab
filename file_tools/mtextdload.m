@@ -2,8 +2,9 @@ function c = mtextdload(infile,varargin)
 %
 % Use: c = mtextdload(infile,[delim],[dim])
 %
-% mtextdload: load text rows in file, and divide according to delimiter
-%           matlab version of csvread only handles numeric data
+% mtextdload: read delimited-text file into matlab
+%    load text rows in file, and divide according to delimiter
+%    (improves on matlab csvread, which only handles numeric data)
 %
 % infile is any file name; contents must be rows of text
 % delim is a text delimiter used to divide input lines of textN into

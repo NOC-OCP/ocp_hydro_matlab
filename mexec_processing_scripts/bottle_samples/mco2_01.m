@@ -28,10 +28,8 @@
 % BAK & SFG on jr302 - 17 June 2014 changes to data flow/naming.
 %   overhaul for Eithne Tynan CO2 data.
 % SFG on jr302 - 18 June 2014 - more changes to naming, commenting.
+% ylf on dy146 - Mar 2022 - use mfsave
 %
-% EXTENSIONS:
-% Is there any way to pass the name of the data source file into the
-% comments of the netcdf file that is output by this script?***
 %==========================================================================
 
 m_common
@@ -69,7 +67,7 @@ end
 %=========================================
 
 if ~isfield(indata, 'sampnum')
-   if ~isfield(indata, 'statnum') | ~isfield(indata, 'niskin')
+   if ~isfield(indata, 'statnum') || ~isfield(indata, 'niskin')
       numval = length(indata.sample_id);    % Number of reported observations in input file.
       indata.statnum = NaN+zeros(numval,1); indata.niskin = indata.statnum;
       indata.end_char = cell(numval,1); % Initialize the list of characters at the end of each sample ID.
@@ -78,125 +76,55 @@ if ~isfield(indata, 'sampnum')
          thisid = indata.sample_id{kl};             % Get the ID for this obs.
          indata.statnum(kl) = str2num(thisid(5:7));    % Get station num from ID
          indata.nisnum(kl) = str2num(thisid(9:10));    % Get niskin num from ID
-         if length(thisid) > 10;                % For stations with a terminating
+         if length(thisid) > 10              % For stations with a terminating
             indata.end_char{kl} = thisid(11:end);     % character, get that character.
          end
       end
    end
    indata.sampnum = indata.statnum*100 + indata.niskin;
 end
-%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-% NOTE: Currently nothing is done with the end characters.
-% No character -> single observation for this niskin
-% A and B -> replicates from the same sample bottle from single niskin
-% C -> if machine jams during processing an A or B.  The bad A or B will
-%      be filled with NaN and its flag will be 4.
-% D -> duplicate sample bottle taken from single niskin.
-% R -> rerun if machine jams on single observation or on a D.  Again, the
-%      value of the jamming observation will be NaN with flag of 4.
-%
-% Note that below, any NaN values (observations during which the machine
-% jammed) will be retained as NaN and their flags will be reset from 4 to 9.
-%!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 %initialize output variables
+clear d
 nbot = 24; nsta = max(indata.statnum)-min(indata.statnum)+1;
-sampnum = repmat([min(indata.statnum):max(indata.statnum)],nbot,1)*100 + repmat([1:nbot]',1,nsta); sampnum = sampnum(:);
-alk = NaN+sampnum; dic = alk;
-alk_flag = 9+zeros(size(sampnum)); dic_flag = alk_flag;
+d.sampnum = repmat([min(indata.statnum):max(indata.statnum)],nbot,1)*100 + repmat([1:nbot]',1,nsta); 
+d.sampnum = d.sampnum(:);
+d.alk = NaN+d.sampnum; d.dic = d.alk;
+d.alk_flag = 9+zeros(size(sampnum)); d.dic_flag = d.alk_flag;
 
-%fill, averaging duplicates according to flags
+%average duplicates according to flags
+d = sam_dupl(indata, {'alk' 'dic'}, 'good');
 
-if isfield(indata, 'alk')
-   for k = 1:length(sampnum)
-      iis = find(indata.sampnum==sampnum(k));
-      iisv = intersect(iis, find(indata.alk_flag>1 & indata.alk_flag<9));
-      if length(iisv)>0
-	     d = indata.alk(iisv); f = indata.alk_flag(iisv);
-         best_flag = min(f);
-         alk(k) = mean(d(f==best_flag)); %if there are 2s, average those; if only 3s, average those; etc.
-	     alk_flag(k) = best_flag;
-         alk_flag(isnan(alk)) = 9; %***temporary until we have flags to input
-	     if isnan(alk(k)) & alk_flag(k)<5
-            warning(['no value for sampnum ' num2str(sampnum(k)) ' despite flag of ' num2str(alk_flag(k))]); 
-         end
-      elseif length(iis)>0
-         alk(k) = NaN; alk_flag(k) = min(indata.alk_flag(iis)); %either 1 or 9
-      end
-   end
-end
+scriptname = mfilename; oopt = 'flags'; get_cropt
 
-if isfield(indata, 'dic')
-   for k = 1:length(sampnum)
-      iis = find(indata.sampnum==sampnum(k));
-      iisv = intersect(iis, find(indata.dic_flag>1 & indata.dic_flag<9));
-      if length(iisv)>0
-	     d = indata.dic(iisv); f = indata.dic_flag(iisv);
-         best_flag = min(f);
-         dic(k) = mean(d(f==best_flag)); %if there are 2s, average those; if only 3s, average those; etc.
-	     dic_flag(k) = best_flag;
-         dic_flag(isnan(dic)) = 9; %***temporary until we have flags to input
-	     if isnan(dic(k)) & dic_flag(k)<5
-            warning(['no value for sampnum ' num2str(sampnum(k)) ' despite flag of ' num2str(dic_flag(k))]); 
-         end
-      elseif length(iis)>0
-         dic(k) = NaN; dic_flag(k) = min(indata.dic_flag(iis)); %either 1 or 9
-      end
-   end
-end
-
-oopt = 'flags'; get_cropt
+%and check for flags matching NaNs
+d = hdata_flagnan(d);
 
 % Some simple QC
-kbad = find(dic < 1);
-dic(kbad) = nan; dic_flag(kbad) = 9;
-kbad = find(alk < 1 | alk > 5000);
-alk(kbad) = nan; alk_flag(kbad) = 9;
-dic_flag(dic < 1000 | dic > 3000) = 4;
-alk_flag(alk < 1000 | alk > 3000) = 4;
-dic_flag(isnan(dic) & isnan(dic_flag)) = 9;
-alk_flag(isnan(alk) & isnan(alk_flag)) = 9;
+kbad = (d.dic < 1);
+d.dic(kbad) = nan; d.dic_flag(kbad) = 9;
+kbad = (d.alk < 1 | d.alk > 5000);
+d.alk(kbad) = nan; d.alk_flag(kbad) = 9;
+d.dic_flag(d.dic < 1000 | d.dic > 3000) = 4;
+d.alk_flag(d.alk < 1000 | d.alk > 3000) = 4;
 
-% Set some basic metadata
-timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
-varnames = {'sampnum' 'alk' 'alk_flag' 'dic' 'dic_flag'};
-varunits = {'number' 'umol/kg' 'woce_table_4.9' 'umol/kg' 'woce_table_4.9'};
-
-% Sorting out units for msave
-varnames_units = {};
-for k = 1:length(varnames)
-    varnames_units = [varnames_units; varnames(k)];
-    varnames_units = [varnames_units; {'/'}];
-    varnames_units = [varnames_units; varunits(k)];
+% put into structure to save
+clear dnew hnew
+hnew.dataname = ['co2_' mcruise '_01'];
+if iscell(input_file_name)
+    hnew.comment = sprintf('co2 loaded from %s,' input_file_name{:});
+else
+    hnew.comment = sprintf('co2 loaded from %s',input_file_name);
+end
+hnew.fldnam = {'sampnum' 'alk' 'alk_flag' 'dic' 'dic_flag'};
+hnew.fldunt = {'number' 'umol/kg' 'woce_table_4.9' 'umol/kg' 'woce_table_4.9'};
+for no = 1:length(hnew.fldnam)
+    dnew.(hnew.fldnam{no}) = d.(hnew.fldnam{no});
 end
 
-%--------------------------------
-MEXEC_A.MARGS_IN_1 = {
-    otfile
-    };
-MEXEC_A.MARGS_IN_2 = varnames(:);
-MEXEC_A.MARGS_IN_3 = {
-    ' '
-    ' '
-    '1'
-    dataname
-    '/'
-    '2'
-    MEXEC_G.PLATFORM_TYPE
-    MEXEC_G.PLATFORM_IDENTIFIER
-    MEXEC_G.PLATFORM_NUMBER
-    '/'
-    '4'
-    timestring
-    '/'
-    '8'
-    };
-MEXEC_A.MARGS_IN_4 = varnames_units(:);
-MEXEC_A.MARGS_IN_5 = {
-    '-1'
-    '-1'
-    };
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
-msave
-%--------------------------------
+%save
+mfsave(otfile, dnew, hnew)
 
+%now add to sam file
+samfile = fullfile(root_ctd, ['sam_' mcruise '_all']);
+mfsave(samfile, dnew, hnew, '-merge', 'sampnum')

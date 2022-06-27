@@ -6,84 +6,70 @@ m_common
 m_margslocal
 m_varargs
 
-MEXEC_A.Mprog = 'msbe_to_mstar';
+MEXEC_A.Mprog = mfilename;
 m_proghd
 
 m = 'Type name of sbe file ';
 sfile = m_getinput(m,'s');
 % sfile = '94ctd12_ctm.cnv';
 
-% mstar_fn = m_getfilename; % file name found later on
-
 fid = fopen(sfile,'r');
-shead_all = {};
-e = 0;
-while e == 0
+head = {};
+while 1
     s = fgets(fid);
-    knl = strfind(s,sprintf('\n')); s(knl) = []; % strip out newline chars
-    kcr = strfind(s,sprintf('\r')); s(kcr) = []; % strip out carriage return chars
-    shead_all = [shead_all s];
-    if strncmp('*END*',s,5); e = 1; end
+    if strncmp('*END*',s,5); break; end
+    %knl = strfind(s,newline); s(knl) = []; % strip out newline chars
+    %kcr = strfind(s,sprintf('\r')); s(kcr) = []; % strip out carriage return chars
+    s = replace(replace(s,newline,''),'\r',''); % strip out newline and carriage return chars
+    head = [head s];
 end
-
-head = shead_all;
 
 % unpack data time origin eg
 % # start_time = Dec 12 2003 17:30:06
-% * NMEA Latitude = 23 59.95 S
-% * NMEA Longitude = 027 01.98 W
 % * NMEA UTC (Time) = Mar 29 2009  02:25:31
 %   BAK & GDM on JC032 29 March 2009; parse NMEA start time if present
-index = strmatch('* NMEA UTC',head);
-% index = strmatch('* System UpLoad Time',head);% GDM dummy argument jc064
-if ~isempty(index)
-    % parse NMEA start time string
-    st = head{index};
-    isp = strfind(st,' ');
-    string = st(1+isp(5):end);
-    dnum = datenum(string,'mmm dd yyyy  HH:MM:SS');
-    h.data_time_origin = datevec(dnum);
-    head(index) = [];
-else
+index = strncmp('* NMEA UTC',head,10);
+if sum(index)==0
     % parse for "start time" string instead
-    index = strmatch('# start_time',head);
-    st = head{index};
-    isp = strfind(st,' ');
-    string = st(1+isp(3):end);
-    dnum = datenum(string,'mmm dd yyyy HH:MM:SS');
-    h.data_time_origin = datevec(dnum);
-    head(index) = [];
+    index = strncmp('# start_time',head,12);
 end
-% end of JC032 mod
+if sum(index)
+% parse NMEA start time string
+st = head{index};
+isp = strfind(st,'=');
+string = st(isp+2:end);
+dnum = datenum(string,'mmm dd yyyy  HH:MM:SS');
+h.data_time_origin = datevec(dnum);
+head(index) = [];
+end
 
-%unpack scan interval eg
+%unpack scan interval e.g.
 %  # interval = seconds: 0.0416667
-index = strmatch('# interval',head);
-if ~isempty(index)
+index = strncmp('# interval',head,10);
+if sum(index)
     st = head{index};
-    isp = strfind(st,' ');
-    string = st(1+isp(3):end);
+    isp = strfind(st,'=');
+    string = st(isp+2:end);
     h.recording_interval = string;
-    int =  str2num(st(1+isp(4):end));
     head(index) = [];
 end
 
 %unpack number of expected cycles eg
 % # nvalues = 220423
-index = strmatch('# nvalues',head);
+index = strncmp('# nvalues',head,9);
 st = head{index};
-isp = strfind(st,' ');
-string = st(1+isp(3):end);
-num_expected =  str2num(string);
+isp = strfind(st,'=');
+string = st(isp+2:end);
+num_expected = str2double(string);
 head(index) = [];
 
 %unpack bad flag eg
 % # bad_flag = -9.990e-29
-index = strmatch('# bad_flag',head);
+index = strncmp('# bad_flag',head,10);
 st = head{index};
-isp = strfind(st,' ');
-string = st(1+isp(3):end);
-sbe_bad_flag =  str2num(string);
+isp = strfind(st,'=');
+string = st(isp+2:end);
+sbe_bad_flag =  str2double(string);
 head(index) = [];
 
 
@@ -95,7 +81,7 @@ head(index) = [];
 % ** Longitude:
 h.platform_type = 'ship'; % maybe a safe assumption ?'
 
-index = strmatch('** Ship',head);
+index = strncmp('** Ship',head,7);
 if ~isempty(index)
     st = head{index};
     isp = strfind(st,':');
@@ -106,7 +92,7 @@ else
     h.platform_identifier = [];
 end
 
-index = strmatch('** Cruise',head);
+index = strncmp('** Cruise',head,9);
 if ~isempty(index)
     st = head{index};
     isp = strfind(st,':');
@@ -122,8 +108,8 @@ end
 % * NMEA Longitude = 027 01.98 W
 % * NMEA UTC (Time) = Mar 29 2009  02:25:31
 % BAK & GDM on JC032 29 March 2009; parse NMEA positions if present
-index = strmatch('* NMEA Latitude',head);
-if ~isempty(index)
+index = strncmp('* NMEA Latitude',head,15);
+if sum(index)
     % parse NMEA latitude string
     m1 = 'NMEA Latitude string found';
     m2 = 'Do you want to use it in the mstar file header (y (default) or n) ? ';
@@ -138,34 +124,34 @@ if ~isempty(index)
         latdegs = st(1+isp(4):2+isp(4));
         latmins = st(1+isp(5):5+isp(5));
         lathems = st(1+isp(6));
-        lat = str2num(latdegs) + str2num(latmins)/60;
+        lat = str2double(latdegs) + str2double(latmins)/60;
         if strcmp(lathems,'S'); lat = -lat; end
         
         h.latitude = lat;
-        head(index) = [];
     end
+    head(index) = [];
 else
-    m1 = 'NMEA Latitude string not found ';
-    m2 = 'Lat info in mstar file will be left as absent ';
-    m3 = 'Reply with carriage return for compatibility with case where NMEA is found ';
-    m = sprintf('%s\n',m1,m2,m3);
-    reply = m_getinput(m,'s');
-    index = strmatch('** Latitude',head);
-    if ~isempty(index)
-        st = head{index};
-        isp = strfind(st,':');
-        string = st(1+isp(1):end);
-        h.latitude =  [];%str2num(string); % temporarily disabled until we know more about format of this variable in sbe files
-        %     head(index) = [];% don't remove the lat info because we don't know
-        %     how to save it in the mstar header yet
-    else
-        h.latitude =  [];
+    index = strncmp('** Latitude',head,11);
+    if sum(index)
+        st = head{index};    
+        m1 = 'NMEA Latitude string not found but operator-entered latitude found';
+        m2 = 'Do you want to use it in the mstar file header (n or carriage return (default) or y)?';
+        m = sprintf('%s\n',m1,m2);
+        reply = m_getinput(m,'s');
+        if strncmp(reply,'y',1)
+            isp = strfind(st,':');
+            string = st(1+isp(1):end);
+            h.latitude = str2double(string);
+        else
+            h.latitude =  [];
+        end
+        head(index) = [];
     end
 end
 
 
 index = strmatch('* NMEA Longitude',head);
-if ~isempty(index)
+if sum(index)
     % parse NMEA longitude string
     m1 = 'NMEA Longitude string found';
     m2 = 'Do you want to use it in the mstar file header (y (default) or n) ? ';
@@ -182,26 +168,25 @@ if ~isempty(index)
         lonhems = st(1+isp(6));
         lon = str2num(londegs) + str2num(lonmins)/60;
         if strcmp(lonhems,'W'); lon = -lon; end
-        
         h.longitude = lon;
-        head(index) = [];
     end
+    head(index) = [];
 else
-    m1 = 'NMEA Longitude string not found ';
-    m2 = 'Lon info in mstar file will be left as absent ';
-    m3 = 'Reply with carriage return for compatibility with case where NMEA is found ';
-    m = sprintf('%s\n',m1,m2,m3);
-    reply = m_getinput(m,'s');
     index = strmatch('** Longitude',head);
-    if ~isempty(index)
-        st = head{index};
-        isp = strfind(st,':');
-        string = st(1+isp(1):end);
-        h.longitude =  [];%str2num(string); % temporarily disabled until we know more about format of this variable in sbe files
-        %     head(index) = []; % don't remove the lon info because we don't know
-        %     how to save it in the mstar header yet
-    else
-        h.longitude =  [];
+    if sum(index)
+        m1 = 'NMEA Longitude string not found but operator-entered longitude found';
+        m2 = 'Do you want to use it in the mstar file header (n or carriage return (default) or y)?';
+        m = sprintf('%s\n',m1,m2);
+        reply = m_getinput(m,'s');
+        if strncmp(reply,'y',1)
+            st = head{index};
+            isp = strfind(st,':');
+            string = st(1+isp(1):end);
+            h.longitude = str2double(string);
+        else
+            h.longitude =  [];
+        end
+        head(index) = [];
     end
 end
 
@@ -231,12 +216,12 @@ end
 % # span 8 =          0,         12
 % # span 9 = 0.0000e+00, 0.0000e+00
 
-index = strmatch('# nquan',head);
-if ~isempty(index)
+index = strncmp('# nquan',head,7);
+if sum(index)
     st = head{index};
     isp = strfind(st,' ');
     string = st(1+isp(3):end);
-    noflds =  str2num(string);
+    noflds = str2double(string);
     head(index) = [];
 else
     m = 'Failed to identify number of variables; didn''t find string ''# nquan'' in file';
@@ -244,17 +229,17 @@ else
     return
 end
 
-% scan each variable
+% scan names and units for each variable
+varname = cell(1,noflds); varname_long = varname; varunits = varname;
 for k = 1:noflds
-    varname{k} = []; varname_long{k} = []; varunits{k} = [];
     sbe_string = ['# name ' sprintf('%d',k-1) ' '];
-    index = strmatch(sbe_string,head);
+    index = strncmp(sbe_string,head,length(sbe_string));
     st = head{index};
     isp = strfind(st,' ');
     ibrl = strfind(st,'[');
     ibrr = strfind(st,']');
     varname{k} = st(1+isp(4):isp(5)-2);
-    if isempty(ibrl);
+    if isempty(ibrl)
         varname_long{k} = st(isp(5)+1:end);
         varunits{k} = 'number';
     else
@@ -263,12 +248,9 @@ for k = 1:noflds
     end
     head(index) = [];
 end
-for k = 1:noflds
-    % chop the span part out of the header
-    sbe_string = ['# span ' sprintf('%d',k-1) ' '];
-    index = strmatch(sbe_string,head);
-    head(index) = [];
-end
+% chop all the span lines out of the header
+index = strncmp('# span ',head,6);
+head(index) = [];
 
 
 h.instrument_identifier = 'ctd';
@@ -276,14 +258,14 @@ h.dataname = 'sbe_ctd_rawdata';
 
 
 
-mstar_fn = m_getfilename;
-
-ncfile.name = mstar_fn;
-ncfile = m_openot(ncfile); %check it is not an open mstar file
+%get mstar filename and check it is not open
+ncfile.name = m_getfilename;
+ncfile = m_openot(ncfile);
 
 nc_attput(ncfile.name,nc_global,'dataname',h.dataname); %set the dataname
 nc_attput(ncfile.name,nc_global,'instrument_identifier',h.instrument_identifier);
 
+%write header variables
 if ~isempty(h.platform_type); nc_attput(ncfile.name,nc_global,'platform_type',h.platform_type); end
 if ~isempty(h.platform_identifier); nc_attput(ncfile.name,nc_global,'platform_identifier',h.platform_identifier); end
 if ~isempty(h.platform_number); nc_attput(ncfile.name,nc_global,'platform_number',h.platform_number); end
@@ -297,7 +279,7 @@ nc_attput(ncfile.name,nc_global,'data_time_origin',h.data_time_origin);
 
 disp('reading data');
 
-data1 = fscanf(fid,'%f',[noflds,inf]); % read data in, number of rows (variables) is noflds
+data1 = fscanf(fid,'%f',[noflds,inf]); % read data in, different variables go into rows (noflds), find out how many scans
 fclose(fid);
 numcycles = size(data1,2);
 
@@ -327,7 +309,7 @@ while ~isempty(head)
         c = [c sprintf('%s',head{1}) ' | '];
         head(1) = [];
     end
-    inl = strfind(c,sprintf('\n'));
+    inl = strfind(c,newline);
     c(inl) = []; % strip out the newline chars that were read in with fgets
     c = strrep(c,'\','\\');
     m_add_comment(ncfile,c);

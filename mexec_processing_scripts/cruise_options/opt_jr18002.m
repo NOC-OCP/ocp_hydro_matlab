@@ -98,8 +98,11 @@ switch scriptname
         end
         %%%%%%%%%% end mbot_00 %%%%%%%%%%
         
-        %%%%%%%%%% mbot_01 %%%%%%%%%%
-    case 'mbot_01'
+        %%%%%%%%%% mfir_01 %%%%%%%%%%
+        %transferred from mbot_01, and flag numbers updated to correctly
+        %map to WOCE 3 = leaking, 4 = did not trip correctly, 9 = samples
+        %not drawn, 20220624
+    case 'mfir_01'
         switch oopt
             case 'botflags'
                 %[station niskin]
@@ -110,23 +113,26 @@ switch scriptname
                     27 12; 27 23; 32 12; 32 21; 32 24; 34 7; 35 7;
                     41 24; 50 15; 45 16; 45 21; 45 24;
                     57 5; 58 24; 58 7]; % possibly leaking or questionable based on visual
-                flag3 = [flag3; 1 1; 5 9; 9 7; 13 2; 15 15; 27 15; 31 09; 32 07]; %possibly bad bottle based on analysed S,O,nuts,carbon
-                flag3 = [flag3; 17 4]; %possibly bad bottle based on analysed cfcs
+                flag3 = [flag3; 1 1; 5 9; 9 7; 13 2; 15 15; 27 15; 31 09; 32 07]; %possibly bad (leaking) bottle based on analysed S,O,nuts,carbon
+                flag3 = [flag3; 17 4]; %possibly bad (leaking) bottle based on analysed cfcs
                 flag4 = [2 8; 3 8; 3 10; 4 12; 4 14; 4 15; 4 17; 5 7; 5 11; 5 12; 5 14; 5 15; 5 17; 8 13;
                     10 8; 10 10; 11 08; 11 21; 14 21; 14 24; 15 7; 15 12; 15 21; 16 7; 16 11; 16 12; 16 24;
                     17 7; 17 12; 17 21; 17 24; 18 10; 19 11; 19 12; 20 12; 20 22; 21 12; 21 21; 21 24;
                     22 12; 22 24; 23 12; 23 21; 23 24; 25 19; 26 24; 27 24; 31 7; 31 21; 32 24; 33 7; 33 12;
                     36 10; 36 12; 36 19; 36 24; 37 7; 37 10; 37 19; 40 10; 40 19; 40 21; 40 24; 41 9; 41 19;
-                    44 7; 44 10; 44 12; 44 19; 44 21; 44 24; 45 15; 47 7]; % empty or end caps clearly not seated or bad based on sample values
-                flag9 = [13 24; 33 10; 33 19; 33 24; 34 10; 34 19; 34 24; 35 10; 35 19; 35 24; 36 24;
-                    38 10; 38 19; 39 10; 39 19; 39 24; 57 10; 58 8]; %did not fire (line not released)
-                flag4 = [flag4; 23 19]; % broken (lost) bottle
-                flag4 = [flag4; 9 7]; %bad bottle based on analysed S,O,nuts,co2
-                iif = find(flag3(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag3(iif,2)) = 3; end
-                iif = find(flag4(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag4(iif,2)) = 4; end
-                iif = find(flag9(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag9(iif,2)) = 9; end
+                    44 7; 44 10; 44 12; 44 19; 44 21; 44 24; 45 15; 47 7]; % empty or end caps clearly not seated or bad based on sample values: revise some or all to 3? or 9?
+                flag4 = [flag4; 9 7]; %bad bottle based on analysed S,O,nuts,co2: revise to 3?
+                flag4 = [13 24; 33 10; 33 19; 33 24; 34 10; 34 19; 34 24; 35 10; 35 19; 35 24; 36 24;
+                    38 10; 38 19; 39 10; 39 19; 39 24; 57 10; 58 8]; %did not fire (line not released), revised from 9 20220624
+                flag9 = [flag9; 23 19]; % broken (lost) bottle, no samples
+                niskin_flag(flag3(:,1)==stnlocal & ismember(position,flag3(:,2))) = 3;
+                niskin_flag(flag4(:,1)==stnlocal & ismember(position,flag4(:,2))) = 4;
+                niskin_flag(flag9(:,1)==stnlocal & ismember(position,flag9(:,2))) = 9;
+                iif = find(flag3(:,1)==stnlocal); if ~isempty(iif); niskin_flag(ismember(position,flag3(iif,2))) = 3; end
+                iif = find(flag4(:,1)==stnlocal); if ~isempty(iif); niskin_flag(ismember(position,flag4(iif,2))) = 4; end
+                iif = find(flag9(:,1)==stnlocal); if ~isempty(iif); niskin_flag(ismember(position,flag9(iif,2))) = 9; end
         end
-        %%%%%%%%%% end mbot_01 %%%%%%%%%%
+        %%%%%%%%%% end mfir_01 %%%%%%%%%%
         
         %%%%%%%%%% mfir_03 %%%%%%%%%%
     case 'mfir_03'

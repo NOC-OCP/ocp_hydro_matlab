@@ -4,9 +4,9 @@ function MEXEC_G = sw_addpath(other_programs_root,varargin)
 %
 % add external software directories listed below (seawater toolbox, etc.)
 % to path
-% finds the highest version available in other_programs_root/ unless
-% optional scalar input argument is 0, in which case versions listed below
-% will be used
+% for Matlab2016 or later, finds the highest version available in
+% other_programs_root/ unless optional scalar input argument is 0, in which
+% case versions listed below will be used
 % if structure MEXEC_G is passed as optional input argument, it can be used
 % to switch off including LADCP code in the list
 % (MEXEC_G is passed as an input argument not a global variable so this code
@@ -18,6 +18,10 @@ for no = 1:length(varargin)
     else
         force_ext_software_versions = varargin{no};
     end
+end
+if ~exist('MEXEC_G','var')
+    MEXEC_G.ix_ladcp = 1;
+    MEXEC_G.MMatlab_version_date = now;
 end
 
 ld = table('Size', [1 4], 'VariableTypes', {'string' 'string' 'string' 'string'}, 'VariableNames', {'predir' 'lib' 'exmfile' 'verstr'});
@@ -39,17 +43,15 @@ MEXEC_G.exsw_paths = {};
 for lno = 1:size(ld,1)
     
     mpath = fullfile(ld.predir{lno}, [ld.lib{lno} ld.verstr{lno}]);
-    if exist(mpath,'dir')==7 %presume subdirectories will also be present
-
-        if isempty(ld.exmfile{lno}) || isempty(which(ld.exmfile{lno}))
+    if isempty(ld.exmfile{lno}) || isempty(which(ld.exmfile{lno}))
+        if exist(mpath,'dir')==7 %presume subdirectories will also be present     
             disp('adding to path: ')
             disp(mpath)
             addpath(genpath(mpath), '-end')
             MEXEC_G.exsw_paths = [MEXEC_G.exsw_paths; mpath];
+        else
+            warning([mpath ' not found'])
         end
-        
-    else
-        warning([mpath ' not found'])
     end
     
 end

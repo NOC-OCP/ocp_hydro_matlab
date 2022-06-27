@@ -11,6 +11,10 @@ mdocshow(mfilename, ['adds CTD downcast data corresponding to upcast neutral den
 
 root_ctd = mgetdir('M_CTD');
 infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
+otfilef = infilef;
+if ~exist(infilef,'file')
+    infilef = [infilef '_ctd');
+end
 infiled = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2db']); 
 infileu = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2up']);
 
@@ -46,4 +50,4 @@ end
 hnew.comment = 'downcast data matched on neutral density (smoothed using heaveND.m)';
 
 %save
-mfsave(infilef, dnew, hnew, '-addvars');
+mfsave(otfilef, dnew, hnew, '-addvars');

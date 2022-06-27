@@ -1,74 +1,69 @@
-%  m_setup: script to be run before attempting any mexec processing
+%  m_setup: script to be run before attempting any mexec processing of
+%  cruise data; sets up environment (global variables and paths)
 %
-% sets up environment for mexec processing
+%  configure once at start of cruise
+%  likely just first block of code, or at most down to line containing "End
+%  of items to be edited on each site/cruise" 
 %
-% configure once at start of cruise
-%   down to line containing "End of items to be edited on each site/cruise"
-%
-% INPUT:
-%   none
-%
-% OUTPUT:
-%   none
-%
-% EXAMPLES:
-%   m_setup
-%
+%  (note this is not required for working with data later, e.g. loading, 
+% ***except for reading mstar files?*** 
+%  secondary QC, gridding and plotting of multiple hydro files)
 
-MEXEC.MSCRIPT_CRUISE_STRING='dy146';
-MEXEC.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
-MEXEC.SITE = [MEXEC.MSCRIPT_CRUISE_STRING '_later']; % common suffixes '_atsea', '_athome', '', etc.
-% MEXEC.mstar_root = ['/local/users/pstar/rpdmoc/users/rapid_oxygen/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise']; %set this if you have a /local/users/pstar/cruise but that is not the cruise directory you want, for instance if reprocessing old cruise data
-MEXEC.mexec_source_root = '~/programs/ocp_hydro_matlab/';
-MEXEC.other_programs_root = '~/programs/others/';
-MEXEC.force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
-MEXEC.quiet = 1; %if untrue, mexec_v3/source programs are verbose
-MEXEC.ssd = 0; %if true, print short documentation line to screen at beginning of scripts
-MEXEC.skipunderway = 0; %set to 1 if reprocessing data not including underway data from an old cruise
-MEXEC.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
-MEXEC.rvdas_ip = '192.168.62.12';
-MEXEC.ix_ladcp = 0; %set to 1 if processing LADCP data with LDEO IX software
+clear MEXEC_G
+global MEXEC_G
+MEXEC_G.MSCRIPT_CRUISE_STRING='dy113';
+MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
+MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_later']; % common suffixes '_atsea', '_athome', '', etc.
+%next line set if you have a /local/users/pstar/cruise but that is not the
+%one you want (e.g. if reprocessing old cruise on seagoing computer);
+%otherwise code will search for cruise directory
+%MEXEC_G.mexec_data_root = ['/local/users/pstar/rpdmoc/users/rapid_oxygen/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise/data']; 
+MEXEC_G.mexec_source_root = '~/programs/ocp_hydro_matlab/';
+MEXEC_G.other_programs_root = '~/programs/others/';
+force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
+MEXEC_G.quiet = 1; %if untrue, mexec_v3/source programs are verbose
+MEXEC_G.ssd = 0; %if true, print short documentation line to screen at beginning of scripts
+skipunderway = 0; %set to 1 if reprocessing data not including underway data from an old cruise
+MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
+MEXEC_G.RVDAS_MACHINE = '192.168.62.12'; %only relevant for NMF RVDAS underway systems
+MEXEC_G.ix_ladcp = 0; %set to 1 if processing LADCP data with LDEO IX software
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
-disp(['m_setup for ' MEXEC.MSCRIPT_CRUISE_STRING ' mexec (ocp_hydro_matlab) '])
+disp(['m_setup for ' MEXEC_G.MSCRIPT_CRUISE_STRING ' mexec (ocp_hydro_matlab)'])
 
 %look for mexec base directory
-if ~isfield(MEXEC,'mstar_root')
-    d = pwd; ii = strfind(d, MEXEC.MSCRIPT_CRUISE_STRING); if ~isempty(ii); d = d(1:ii-1); else; d = []; end
-    mpath = {'/local/users/pstar/cruise';
-        ['/local/users/pstar/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-        ['/noc/mpoc/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-        ['/local/users/pstar/rpdmoc/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise'];
-        fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING,'mcruise');
-        fullfile(d,MEXEC.MSCRIPT_CRUISE_STRING)};
+if ~isfield(MEXEC_G,'mexec_data_root')
+    d = pwd; ii = strfind(d, MEXEC_G.MSCRIPT_CRUISE_STRING); if ~isempty(ii); d = d(1:ii-1); else; d = []; end
+    mpath = {'/local/users/pstar/cruise/data';
+        ['/local/users/pstar/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
+        ['/noc/mpoc/rpdmoc/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
+        ['/local/users/pstar/rpdmoc/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
+        fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
+        fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
+        fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING)};
     fp = 0; n=1;
     while fp==0 && n<=length(mpath)
         if exist(mpath{n},'dir')==7
-            MEXEC.mstar_root = mpath{n};
+            MEXEC_G.mexec_data_root = mpath{n};
             fp = 1;
         end
         n=n+1;
     end
     if fp==0 %none found; query
-        disp('enter full path of cruise directory')
-        disp('e.g. /local/users/pstar/cruise')
-        MEXEC.mstar_root = input('  ', 's');
-        disp('you may want to modify m_setup.m to hard-code this directory for future calls')
+        disp('enter full path of cruise data processing directory')
+        disp('e.g. /local/users/pstar/cruise/data')
+        MEXEC_G.mexec_data_root = input('  ', 's');
+        disp('if you want, you can modify m_setup.m to hard-code this directory into MEXEC_G.mexec_data_root')
     else
-        disp(['MEXEC root: ' MEXEC.mstar_root])
+        disp(['MEXEC data root: ' MEXEC_G.mexec_data_root])
     end
     clear mpath d fp n ii
 end
 
-%add ocp_hydro_tools and external software to path
-if isempty(which('m_common')) || isempty(which('get_cropt')) % these are in file_tools/mexec/msubs and mexec_processing_scripts/cruise_options
-    %add all the ocp_hydro_matlab code to path
-    if ~isfield(MEXEC,'mexec_source_root')
-        MEXEC.mexec_source_root = fullfile(MEXEC.mstar_root,'sw','mexec');
-    end
-    %record code version
-    cdir = pwd; pdir = MEXEC.mexec_source_root;
+%add ocp_hydro_tools and external software to path (if not already added)
+if isempty(which('m_common')) || isempty(which('get_cropt')) || ~isfield(MEXEC_G,'mexecs_version')
+    cdir = pwd; pdir = MEXEC_G.mexec_source_root;
     cd(pdir)
     [s,c] = system('git log -1 | head -1');
     if s==0 && length(c)>=15 && ~strncmp('fatal:', c, 6)
@@ -76,51 +71,21 @@ if isempty(which('m_common')) || isempty(which('get_cropt')) % these are in file
     else
         mexecs_version = '';
     end
+    MEXEC_G.mexec_version = mexecs_version;
     cd(cdir)
     disp(['adding mexec source' mexecs_version ' to path'])
     clear mexecs_version s c cdir pdir
-    % add paths below source
-    addpath(genpath(MEXEC.mexec_source_root))
+    % add paths at and below source
+    if isempty(which('m_common')) || isempty(which('get_cropt'))
+       addpath(genpath(MEXEC_G.mexec_source_root))
+    end
 end
-
-
-% declare MEXEC_G and MEXEC_A as global variables
-m_common
-
-% now that MEXEC_G has been declared global, copy over fields from MEXEC
-MEXEC_G.MSCRIPT_CRUISE_STRING = MEXEC.MSCRIPT_CRUISE_STRING; % this variable set earlier in code
-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = MEXEC.MDEFAULT_DATA_TIME_ORIGIN; % set global value from local value
-MEXEC_G.SITE = MEXEC.SITE;
-MEXEC_G.quiet = MEXEC.quiet;
-MEXEC_G.ssd = MEXEC.ssd;
-MEXEC_G.ix_ladcp = MEXEC.ix_ladcp;
-MEXEC_G.uway_writeempty = MEXEC.uway_writeempty;
-
-% mexec working directory and mexec_processing_scripts
-MEXEC_G.mexec_data_root = fullfile(MEXEC.mstar_root, 'data');
-
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
-if ~isfield(MEXEC,'other_programs_root')
-    MEXEC.other_programs_root = fullfile(MEXEC.mstar_root,'sw','others');
+if ~isfield(MEXEC_G,'other_programs_root')
+    MEXEC_G.other_programs_root = fullfile(MEXEC.mstar_root,'sw','others');
 end
-ld = table('Size', [1 4], 'VariableTypes', {'string' 'string' 'string' 'string'}, 'VariableNames', {'predir' 'lib' 'exmfile' 'verstr'});
-n = 1;
-ld(n,:) = {MEXEC.other_programs_root 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
-ld(n,:) = {MEXEC.other_programs_root 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
-ld(n,:) = {MEXEC.other_programs_root 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
-%ld(n,:) = {MEXEC.other_programs_root 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
-ld(n,:) = {MEXEC.other_programs_root 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
-if MEXEC_G.ix_ladcp
-    ld(n,:) = {MEXEC.other_programs_root 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
-end
-if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~MEXEC.force_ext_software_versions
-    ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root
-    %add to path, recording which version was used (in MEXEC_G)
-end
-sw_addpath(ld);
-clear ld
-
+MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
 
 % Set path for directory with housekeeping files (in subdirectories version and history)
 MEXEC_G.housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
@@ -228,14 +193,13 @@ switch MEXEC_G.Mshipdatasystem
     case 'rvdas'
         MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
         MEXEC_G.RVDAS_CSVROOT = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-        MEXEC_G.RVDAS_MACHINE = MEXEC.rvdas_ip;
         MEXEC_G.RVDAS_USER = 'rvdas';
         MEXEC_G.RVDAS_DATABASE = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
 end
 
 %create file connecting underway data directories and stream names
 %and create underway data directories (for processed data)
-if MEXEC.skipunderway
+if skipunderway
     ud_is_current = 0; ud_runs = 0; sud_runs = 0; ufail = 0;
     while ud_is_current == 0 && ud_runs == 0 && ufail == 0
         try
@@ -281,6 +245,8 @@ MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%   End of items to be edited on each site/cruise   %%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+m_common
 
 [MEXEC.status, MEXEC.uuser] = system('whoami');
 if MEXEC.status ~= 0; MEXEC.uuser = 'user_not_identified'; end
@@ -373,6 +339,5 @@ if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     eval(cmd);
 end
 
-%MEXEC = rmfield(MEXEC,{'nl'});
 clear MEXEC nsecwait
 

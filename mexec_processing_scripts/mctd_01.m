@@ -69,7 +69,7 @@ MEXEC_A.MARGS_IN = {
     };
 msbe_to_mstar;
 
-%modify header
+%modify header platform information***
 MEXEC_A.MARGS_IN = {
     otfile
     'y'
@@ -88,7 +88,7 @@ MEXEC_A.MARGS_IN = {
 mheadr
 
 
-%%%%% rename variables, and add units where necessary*** %%%%%
+%%%%% rename variables, and add units where necessary %%%%%
 
 renamefile = fullfile(root_templates, 'ctd_renamelist.csv'); 
 dsv = dataset('File', renamefile, 'Delimiter', ',');
@@ -101,8 +101,9 @@ end
 if length(unique(dsv.sbename))<length(dsv.sbename)
     error(['There is a duplicate name in the list of variables to rename; use ctdvars_replace rather than ctdvars_add in opt_' mcruise]);
 end
-[varnames, junk, iiv] = mvars_in_file(dsv.sbename, otfile);
-dsv = dsv(iiv,:);
+h = m_read_header(otfile);
+[~,ia,ib] = intersect(dsv.sbename,h.fldnam);
+dsv = dsv(ia,:);
 varnames_units = cell(3,length(dsv));
 for vno = 1:length(dsv)
     varnames_units{1,vno} = dsv.sbename{vno};

@@ -1,0 +1,31 @@
+n = 1;
+
+unt(1).munit = 'number';
+unt(1).options = {'Scan Count'}; %par
+
+unt(length(unt)+1).munit = 'seconds';
+unt(end).options = {'seconds' 'sec' 's'};
+
+unt(length(unt)+1).munit = 'deg';
+unt(end).options = {'deg' 'degrees'};
+
+unt(length(unt)+1).munit = 'db';
+unt(end).options = {'dbar' 'db'}; %change this to dbar? db is not correct***
+
+unt.m = {'m' 'meters' 'metres' 'salt water, m'};
+unt.degc90 = {'ITS-90, deg C'};
+unt.
+c0mS/cm: Conductivity [mS/cm]
+c1mS/cm: Conductivity, 2 [mS/cm]
+ sal00: Salinity, Practical [PSU]
+ sal11: Salinity, Practical, 2 [PSU]
+ sbeox0V: Oxygen raw, SBE 43 [V]
+ sbox0Mm/Kg: Oxygen, SBE 43 [umol/kg]
+ sbeox1V: Oxygen raw, SBE 43, 2 [V]
+ sbox1Mm/Kg: Oxygen, SBE 43, 2 [umol/kg]
+ CStarTr0: Beam Transmission, WET Labs C-Star [%]
+ ptempC: Pressure Temperature [deg C]
+ pumps: Pump Status
+ turbWETbb0: Turbidity, WET Labs ECO BB [m^-1/sr]
+ flC: Fluorescence, Chelsea Aqua 3 Chl Con [ug/l]
+ altM: Altimeter [m]

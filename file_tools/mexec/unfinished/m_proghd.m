@@ -13,9 +13,7 @@ display_string = ['*** ' MEXEC_A.Mprog ' ***'];
 
 % don't display 'extras' names that begin 'mc' or subroutine names that
 % begin 'm_'
-if strncmp(MEXEC_A.Mprog,'mc',2) == 1
-    return
-elseif strncmp(MEXEC_A.Mprog,'m_',2) == 1
+if strncmp(MEXEC_A.Mprog,'mc',2) || strncmp(MEXEC_A.Mprog,'m_',2)
     return
 else
     if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfider,'\n%s\n\n',display_string); end

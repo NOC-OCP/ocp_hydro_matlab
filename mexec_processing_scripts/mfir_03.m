@@ -8,6 +8,10 @@ mdocshow(mfilename, ['adds CTD upcast data at bottle firing times to fir_' mcrui
 
 root_ctd = mgetdir('M_CTD');
 infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
+otfilef = infilef;
+if ~exist(infilef,'file')
+    infilef = [infilef '_ctd');
+end
 %not using 24hz because we want at least some averaging
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); 
 
@@ -35,5 +39,5 @@ dnew.utime = m_commontime(dnew.utime,hc.data_time_origin,hfir.data_time_origin);
 hnew.latitude = hc.latitude; hnew.longitude = hc.longitude; hnew.water_depth_metres = hc.water_depth_metres;
 
 MEXEC_A.Mprog = mfilename;
-mfsave(infilef, dnew, hnew, '-addvars');
+mfsave(otfilef, dnew, hnew, '-addvars');
 

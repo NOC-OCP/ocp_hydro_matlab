@@ -1,9 +1,9 @@
-% moxy_01: read in bottle oxy data from csv files, and save to appended
+% moxy_01: read in bottle oxy data from csv or spreadsheet files, and save to appended
 % mstar file oxy_cruise_01.nc, and to sam_cruise_all.nc
 %
-% The input data are in comma-delimited files, with one or more header
-% rows; the fields to look for to identify the header rows as well as
-% connect them to standard variable names are set in opt_cruise
+% The input data files contain one or more header rows; the fields to look
+% for to identify the header rows as well as connect them to standard
+% variable names are set in setdef_cropt_sam or opt_{cruise} 
 %
 % If concentrations are not included in file or in the list of columns to
 % parse in opt_cruise, calls moxy_ccalc to compute them
@@ -150,8 +150,6 @@ mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 clear hnew
 samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
 [ds,hs] = mloadq(samfile,'sampnum','niskin_flag','uasal',' ');
-m = ds.niskin_flag<9;
-ds.sampnum = ds.sampnum(m); ds.niskin_flag = ds.niskin_flag(m); ds.uasal = ds.uasal(m);
 [~,iis,iio] = intersect(ds.sampnum,d.sampnum);
 hnew.fldnam = {'sampnum'};
 hnew.fldunt = {'number'};
