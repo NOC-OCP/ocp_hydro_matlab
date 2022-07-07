@@ -19,7 +19,7 @@
 % case is provided, times are taken from ctd file as usual.
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['adds winch data to win_' mcruise '_' stn_string '.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'adding winch data to win_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
@@ -40,7 +40,7 @@ scriptname = mfilename; oopt = 'winchtime'; get_cropt;
 % winch_time_start and winch_time_end; example in opt_jc159
 % this option can also be used to set winch start and end times different
 % from ctd times, eg if CTD comms are lost when termination fails.
-if exist('winch_time_start','var') & ~isnan(winch_time_start) & ~isnan(winch_time_end)
+if exist('winch_time_start','var') && ~isnan(winch_time_start) && ~isnan(winch_time_end)
     t_start = datenum(winch_time_start);
     t_end = datenum(winch_time_end);
 else

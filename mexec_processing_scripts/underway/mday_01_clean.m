@@ -33,7 +33,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 root_out = mgetdir(abbrev);
 
 day_string = sprintf('%03d',day);
-mdocshow(mfilename, ['performs any automatic cleaning/editing/averaging from ' abbrev '_' mcruise '_d' day_string '_raw.nc to ' abbrev '_' mcruise '_d' day_string '_edt.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'performing any automatic cleaning/editing/averaging from %s_%s_d%s_raw.nc to %s_%s_d%s_edt.nc\n',abbrev,mcruise,day_string,abbrev,mcruise,day_string); end    abbrev '_' mcruise '_d' day_string '_raw.nc to ' abbrev '_' mcruise '_d' day_string '_edt.nc']);
 
 prefix = [abbrev '_' mcruise '_d' day_string];
 infile = fullfile(root_out, [prefix '_raw']);

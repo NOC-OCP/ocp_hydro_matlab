@@ -4,13 +4,13 @@
 %      stn = 16; mfir_03;
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['adds CTD upcast data at bottle firing times to fir_' mcruise '_' stn_string '.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to fir_%s_%s.nc\n', mcruise, stn_string); end
 
 root_ctd = mgetdir('M_CTD');
 infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
 otfilef = infilef;
 if ~exist(infilef,'file')
-    infilef = [infilef '_ctd');
+    infilef = [infilef '_ctd'];
 end
 %not using 24hz because we want at least some averaging
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); 

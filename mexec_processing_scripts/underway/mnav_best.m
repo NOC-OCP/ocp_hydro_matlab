@@ -30,8 +30,10 @@ for no = 1:7
     wkfile{no} = ['wk' num2str(no) '_' mfilename '_' datestr(now,30)];
 end
 
-mdocshow(mfilename, ['average 1-Hz navigation stream from ' infile ' to 30 s in ' avfile ' and calculate speed, course, distrun into ' spdfile]);
-mdocshow(mfilename, ['average 1-Hz navigation stream from ' infileh ' to 30 s in ' avfileh, ' merge onto 30 s averaged speed from ' spdfile ' into ' bstfile]);
+if MEXEC_G.quiet<=1
+    fprintf(1,'averaging 1-Hz navigation stream from %s01.nc to 30 s in %save.nc and calculate speed, course, distrun for %sspd.nc\n',prefixp,prefixp,prefixp);
+    fprintf(1,'averaging 1-Hz navigation stream from %s01.nc to 30 s in %save.nc, merge onto 30 s averaged speed from %sspd.nc for %s01.nc\n',prefixh,prefixh,prefixp,prefixo);
+end
 
 
 scriptname = 'ship'; oopt = 'avtime'; get_cropt

@@ -24,7 +24,7 @@
 
 m_common; MEXEC_A.mprog = mfilename;
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['makes corrections/conversions (for instance for oxygen hysteresis), as set in get_cropt and opt_' mcruise '.m) and writes to ctd_' mcruise '_' stn_string '_24hz.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hysteresis), as set in get_cropt and opt_%s\n',mcruise); end
 
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');

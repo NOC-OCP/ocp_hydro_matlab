@@ -103,7 +103,7 @@ for k = 1:length(dnames_u)
     
     
     MEXEC_A.Mhistory_lastlines = nlines;
-    if ~MEXEC_G.ssd
+    if ~MEXEC_G.quiet
        m = [sprintf('%d',nlines) ' lines written to history file ' MEXEC_A.Mhistory_filename];
        fprintf(MEXEC_A.Mfidterm,'\n%s\n',m)
     end

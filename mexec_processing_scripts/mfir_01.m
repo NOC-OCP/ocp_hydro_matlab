@@ -4,7 +4,7 @@
 %      stn = 16; mfir_01;
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['reads in .bl file to fir_' mcruise '_' stn_string '.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_botraw = mgetdir('M_CTD_BOT');

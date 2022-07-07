@@ -7,9 +7,8 @@
 % or for multiple stations use klist
 %      klist = 1:5; msbe35_01;
 
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-mdocshow(mfilename, ['loads SBE35 ascii file(s) and writes to sbe35_' mcruise '_01.nc and to sam_' mcruise '_all.nc']);
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
+if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
 
 % load sbe35 data
 root_sbe35 = mgetdir('M_SBE35');
@@ -18,7 +17,7 @@ ds = dir(fullfile(root_sbe35, sbe35file));
 file_list = {ds.name};
 kount = 0;
 alldata = {}; statnum = [];
-for kf = 1:length(file_list);
+for kf = 1:length(file_list)
     fn = fullfile(root_sbe35, file_list{kf});
     iis = strfind(file_list{kf},'.asc')+[-3:-1];
     fid2 = fopen(fn,'r');
@@ -31,7 +30,7 @@ for kf = 1:length(file_list);
         if strlen ~= 77; continue; end % data are in 77 byte lines
         kount = kount+1;
         alldata = [alldata; str];
-        statnum = [statnum; str2num(file_list{kf}(iis))]; %not used finally, but may be used by opt_cruise
+        statnum = [statnum; str2double(file_list{kf}(iis))]; %not used finally, but may be used by opt_cruise
     end
     fclose(fid2);
 end
@@ -47,19 +46,19 @@ kfields = {'bn' 'tdiff' 'val' 't90'};
 months = {'Jan' 'Feb' 'Mar' 'Apr' 'May' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec'}; % guess at month names
 for kd = 1:numdata
     data = alldata{kd};
-    dd = str2num(data(5:6));
+    dd = str2double(data(5:6));
     mon = data(8:10);
     mo = strmatch(mon,months);
-    yyyy = str2num(data(12:15));
+    yyyy = str2double(data(12:15));
     hms = data(18:25);
-    hh = str2num(hms(1:2));
-    mm = str2num(hms(4:5));
-    ss = str2num(hms(7:8));
+    hh = str2double(hms(1:2));
+    mm = str2double(hms(4:5));
+    ss = str2double(hms(7:8));
     datnum(kd) = datenum([yyyy mo dd hh mm ss]);
-    bn(kd) = str2num(data(32:33));
-    tdiff(kd) = str2num(data(41:46));
-    val(kd) = str2num(data(53:61));
-    t90(kd) = str2num(data(68:77));
+    bn(kd) = str2double(data(32:33));
+    tdiff(kd) = str2double(data(41:46));
+    val(kd) = str2double(data(53:61));
+    t90(kd) = str2double(data(68:77));
 end
 scriptname = mfilename; oopt = 'sbe35_datetime_adj'; get_cropt
 
@@ -76,7 +75,7 @@ files = dir(fullfile(mgetdir('M_CTD'), ['dcs_' mcruise '_*.nc']));
 for fno = 1:length(files)
 
     infile1 = fullfile(mgetdir('M_CTD'), files(fno).name);
-    stnlocal = str2num(infile1(end-5:end-3));
+    stnlocal = str2double(infile1(end-5:end-3));
     scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
     
     % read the station dcs file to identify start and end of station

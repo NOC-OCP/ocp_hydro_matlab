@@ -33,7 +33,7 @@
 %==========================================================================
 
 m_common
-mdocshow(mfilename, ['add documentation string for ' scriptname])
+if MEXEC_G.quiet<=1; fprintf(1, 'reading in bottle co2 data and saving to co2_%s_01.nc and sam_%s_all.nc',mcruise,mcruise); end
 
 % Resolve root directories for various file types
 root_co2 = mgetdir('M_BOT_CO2');

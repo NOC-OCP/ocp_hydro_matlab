@@ -24,7 +24,7 @@ day_string = sprintf('%03d',day);
 daylocal = day;
 clear day % so that it doesn't persist
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-mdocshow(scriptname, sprintf('plots tsg data for day %d, add more info here', daylocal));
+if MEXEC_G.quiet<=1; fprintf(1,'plots tsg data for day %d, add more info here', daylocal); end
 
 
 %% LOAD DATA

@@ -29,7 +29,7 @@ cmd = ['daynum = ' reply ';']; eval(cmd);
 day = daynum;
 
 day_string = sprintf('%03d',daynum);
-mdocshow(mfilename, ['appends ' mstarprefix '_' mcruise '_d' day_string '_edt.nc or _edt_av.nc to ' mstarprefix '_' mcruise '_01.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'appending %s_%s_d%s_edt.nc or _edt_av.nc to %s_%s_01.nc\n',mstarprefix,mcruise,day_string,mstarprefix,mcruise); end
 
 root_out = mgetdir(mstarprefix);
 if exist(root_out,'dir') ~= 7

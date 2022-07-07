@@ -4,16 +4,12 @@
 %  configure once at start of cruise
 %  likely just first block of code, or at most down to line containing "End
 %  of items to be edited on each site/cruise" 
-%
-%  (note this is not required for working with data later, e.g. loading, 
-% ***except for reading mstar files?*** 
-%  secondary QC, gridding and plotting of multiple hydro files)
 
 clear MEXEC_G
 global MEXEC_G
-MEXEC_G.MSCRIPT_CRUISE_STRING='jc238';
-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
-MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_athome', '', etc.
+MEXEC_G.MSCRIPT_CRUISE_STRING='jr18002';
+MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2018 1 1 0 0 0];
+MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_athome']; % common suffixes '_atsea', '_athome', '', etc.
 %next line set if you have a /local/users/pstar/cruise but that is not the
 %one you want (e.g. if reprocessing old cruise on seagoing computer);
 %otherwise code will search for cruise directory
@@ -21,12 +17,9 @@ MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_ats
 MEXEC_G.mexec_source_root = '~/programs/ocp/ocp_hydro_matlab/';
 MEXEC_G.other_programs_root = '~/programs/others/';
 force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
-MEXEC_G.quiet = 1; %if untrue, mexec_v3/source programs are verbose
-MEXEC_G.ssd = 0; %if true, print short documentation line to screen at beginning of scripts
+MEXEC_G.quiet = 1; %if 0, both mexec_v3/source programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 skipunderway = 0; %set to 1 if reprocessing data not including underway data from an old cruise
-MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
-MEXEC_G.RVDAS_MACHINE = '192.168.62.12'; %only relevant for NMF RVDAS underway systems
-MEXEC_G.ix_ladcp = 0; %set to 1 if processing LADCP data with LDEO IX software
+MEXEC_G.ix_ladcp = 0; %set to 1 to output 1-Hz CTD data for use by LDEO IX LADCP processing
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
@@ -61,7 +54,7 @@ if ~isfield(MEXEC_G,'mexec_data_root')
     clear mpath d fp n ii
 end
 
-%add ocp_hydro_tools and external software to path (if not already added)
+%add ocp_hydro_tools and external software to path if necessary
 if isempty(which('m_common')) || isempty(which('get_cropt')) || ~isfield(MEXEC_G,'mexecs_version')
     cdir = pwd; pdir = MEXEC_G.mexec_source_root;
     cd(pdir)
@@ -76,9 +69,7 @@ if isempty(which('m_common')) || isempty(which('get_cropt')) || ~isfield(MEXEC_G
     disp(['adding mexec source' mexecs_version ' to path'])
     clear mexecs_version s c cdir pdir
     % add paths at and below source
-    if isempty(which('m_common')) || isempty(which('get_cropt'))
-       addpath(genpath(MEXEC_G.mexec_source_root))
-    end
+    addpath(genpath(MEXEC_G.mexec_source_root))
 end
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
@@ -92,7 +83,7 @@ MEXEC_G.housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeepin
 MEXEC_G.version_file_name = ['mstar_versionfile_' MEXEC_G.SITE '.mat'];  % This setting should not normally be changed
 
 % set things about the ship
-MEXEC_G.PLATFORM_NUMBER = ['Cruise ' MEXEC_G.MSCRIPT_CRUISE_STRING(3:end)];%***why not maintain ship letters??
+MEXEC_G.PLATFORM_NUMBER = ['Cruise ' MEXEC_G.MSCRIPT_CRUISE_STRING];
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     case 'di'
         MEXEC_G.Mship = 'discovery';
@@ -195,7 +186,9 @@ switch MEXEC_G.Mshipdatasystem
         MEXEC_G.RVDAS_CSVROOT = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
         MEXEC_G.RVDAS_USER = 'rvdas';
         MEXEC_G.RVDAS_DATABASE = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+        MEXEC_G.RVDAS_MACHINE = '192.168.62.12'; %only relevant for NMF RVDAS underway systems***
 end
+MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
 
 %create file connecting underway data directories and stream names
 %and create underway data directories (for processed data)
@@ -267,6 +260,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
     % Should only happen once per cruise or data installation
     MEXEC_G.Mhousekeeping_version = fullfile(MEXEC_G.housekeeping_root, 'version');
     if ~exist(MEXEC_G.Mhousekeeping_version,'dir')
+        disp('making directory for tracking Mstar .nc data file versions')
         mkdir(MEXEC_G.Mhousekeeping_version);
     end
     MEXEC_G.VERSION_FILE = fullfile(MEXEC_G.Mhousekeeping_version, MEXEC_G.version_file_name);
@@ -335,8 +329,7 @@ end
 MEXEC_G.HISTORY_DIRECTORY = fullfile(MEXEC_G.housekeeping_root, 'history');
 if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     disp('history directory does not seem to exist; will create it');
-    cmd = ['!mkdir ' MEXEC_G.HISTORY_DIRECTORY];
-    eval(cmd);
+    mkdir(MEXEC_G.HISTORY_DIRECTORY);
 end
 
 clear MEXEC nsecwait

@@ -6,7 +6,7 @@
 % formerly mwin_03
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['adds winch data from bottle firing times to fir_' mcruise '_' stn_string '.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'adding winch data from bottle firing times to fir_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');

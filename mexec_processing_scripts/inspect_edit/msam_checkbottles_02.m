@@ -27,15 +27,15 @@ end
 root_ctd = mgetdir('M_CTD');
 
 fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal']);
-fnsamall = fullfile(root_ctd, 'sam_' mcruise '_all']);
+fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
 oopt = 'section'; get_cropt
 fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section]);
 fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' sprintf('%03d',stnlocal)]);
 
-[dctd hctd] = mload(fnctd,'/');
-[dsamall hsamall]  = mload(fnsamall,'/');
-[dgrid hgrid]  = mload(fngrid,'/');
-[ddcs hdcs] = mload(fndcs,'/');
+[dctd, hctd] = mload(fnctd,'/');
+[dsamall, ~]  = mload(fnsamall,'/');
+[dgrid, ~]  = mload(fngrid,'/');
+[ddcs, hdcs] = mload(fndcs,'/');
 
 dcstime1 = datenum(hdcs.data_time_origin) + ddcs.time_start/86400;
 dcstime2 = datenum(hdcs.data_time_origin) + ddcs.time_bot/86400;
@@ -50,8 +50,8 @@ kup = find(ctdtime > dcstime2 & ctdtime < dcstime3);
 %distribute all sam data back into separate stations
 ksam1 = find(dsamall.statnum == stnlist(1));
 ksam2 = find(dsamall.statnum == stnlist(2));
-ksam = find(dsamall.statnum == stnlist(3));
-if length(ksam)==0; warning(sprintf('no sample data for station %03d', stnlist(3))); return; end
+ksam = find(dsamall.statnum == stnlist(3), 1);
+if isempty(ksam); warning(sprintf('no sample data for station %03d', stnlist(3))); return; end
 ksam3 = find(dsamall.statnum == stnlist(4));
 ksam4 = find(dsamall.statnum == stnlist(5));
 
@@ -67,7 +67,7 @@ for ks = 1:5
     end
 end
 
-if ~isfield(dsam, 'botoxytemp') & isfield(dsam, 'botoxytempa'); dsam.botoxytemp = dsam.botoxytempa; end % jc159 cludge
+if ~isfield(dsam, 'botoxytemp') && isfield(dsam, 'botoxytempa'); dsam.botoxytemp = dsam.botoxytempa; end % jc159 cludge
 if ~isfield(dsam, 'sbe35temp'); dsam.sbe35temp = NaN+dsam.utemp; dsam.sbe35temp_flag = dsam.sbe35temp; end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
@@ -84,7 +84,7 @@ if doocal
    scriptname = 'mctd_03'; oopt = 'o_choice'; get_cropt; scriptname = 'msam_checkbottles_02';
    dctd.oxygen = oxy_apply_cal(o_choice,stnlocal,dctd.press,0*dctd.press,dctd.temp,dctd.oxygen);
 end
-if doccal | dotcal
+if doccal || dotcal
    dctd.psal = gsw_SP_from_C(dctd.cond, dctd.temp, dctd.press);
    dctd.asal = gsw_SA_from_SP(dctd.psal, dctd.press, hctd.longitude, hctd.latitude);
    dctd.potemp = gsw_pt0_from_t(dctd.asal, dctd.temp, dctd.press);
@@ -126,7 +126,7 @@ ls = {};
 if ~isempty(kbadpsal); ls = [ls; 'bad sample']; end
 if ~isempty(kbadnisk); ls = [ls; 'bad niskin']; end
 if ~isempty(kqnisk); ls = [ls; 'questionable nisk']; end
-try; legend([h4 h5 h6],ls,'location','best'); end
+try legend([h4 h5 h6],ls,'location','best'); catch; end
 
 subplot(1,nsubs,2)
 
@@ -172,20 +172,20 @@ for veno = 1:nsubs-3
 
    vnam = vnams{veno};
    
-   d = getfield(dsam, vnam);
-   if exist('dsam1','var') == 1; d1 = getfield(dsam1, vnam); else; d1 = d+nan; end
-   if exist('dsam2','var') == 1; d2 = getfield(dsam2, vnam); else; d2 = d+nan; end
-   if exist('dsam3','var') == 1; d3 = getfield(dsam3, vnam); else; d3 = d+nan; end
-   if exist('dsam4','var') == 1; d4 = getfield(dsam4, vnam); else; d4 = d+nan; end
-   dg = getfield(dgrid, vnam);
+   d = dsam.(vnam);
+   if exist('dsam1','var') == 1; d1 = dsam1.(vnam); else; d1 = d+nan; end
+   if exist('dsam2','var') == 1; d2 = dsam2.(vnam); else; d2 = d+nan; end
+   if exist('dsam3','var') == 1; d3 = dsam3.(vnam); else; d3 = d+nan; end
+   if exist('dsam4','var') == 1; d4 = dsam4.(vnam); else; d4 = d+nan; end
+   dg = dgrid.(vnam);
    clear und flagname
    if isfield(dsam,[vnam '_flag']); und = '_'; end
    if isfield(dsam,[vnam 'flag']); und = ''; end
-   dflag = getfield(dsam, [vnam und 'flag']);
-   if exist('dsam1','var') == 1; dflag1 = getfield(dsam1, [vnam und 'flag']); else; dflag1 = d+nan; end
-   if exist('dsam2','var') == 1; dflag2 = getfield(dsam2, [vnam und 'flag']); else; dflag2 = d+nan; end
-   if exist('dsam3','var') == 1; dflag3 = getfield(dsam3, [vnam und 'flag']); else; dflag3 = d+nan; end
-   if exist('dsam4','var') == 1; dflag4 = getfield(dsam4, [vnam und 'flag']); else; dflag4 = d+nan; end
+   dflag = dsam.([vnam und 'flag']);
+   if exist('dsam1','var') == 1; dflag1 = dsam1.([vnam und 'flag']); else; dflag1 = d+nan; end
+   if exist('dsam2','var') == 1; dflag2 = dsam2.([vnam und 'flag']); else; dflag2 = d+nan; end
+   if exist('dsam3','var') == 1; dflag3 = dsam3.([vnam und 'flag']); else; dflag3 = d+nan; end
+   if exist('dsam4','var') == 1; dflag4 = dsam4.([vnam und 'flag']); else; dflag4 = d+nan; end
    if exist('und','var') == 1
        flagname = [vnam und 'flag']; % we managed to match the flag var
    end
@@ -199,11 +199,11 @@ for veno = 1:nsubs-3
        error();
    end
    
-   dflag = getfield(dsam, flagname); 
-   if exist('dsam1','var') == 1; dflag1 = getfield(dsam1, flagname); else; dflag1 = d+nan; end
-   if exist('dsam2','var') == 1; dflag2 = getfield(dsam2, flagname); else; dflag2 = d+nan; end
-   if exist('dsam3','var') == 1; dflag3 = getfield(dsam3, flagname); else; dflag3 = d+nan; end
-   if exist('dsam4','var') == 1; dflag4 = getfield(dsam4, flagname); else; dflag4 = d+nan; end
+   dflag = dsam.(flagname); 
+   if exist('dsam1','var') == 1; dflag1 = dsam1.(flagname); else; dflag1 = d+nan; end
+   if exist('dsam2','var') == 1; dflag2 = dsam2.(flagname); else; dflag2 = d+nan; end
+   if exist('dsam3','var') == 1; dflag3 = dsam3.(flagname); else; dflag3 = d+nan; end
+   if exist('dsam4','var') == 1; dflag4 = dsam4.(flagname); else; dflag4 = d+nan; end
    kok1 = find(dflag1 == 2);
    kok2 = find(dflag2 == 2);
    kok3 = find(dflag3 == 2);

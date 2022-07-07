@@ -5,7 +5,7 @@ if max(mod(abs([d.lat(:);d.long(:)])*100,100))<=61
         warning('Cannot determine whether or not to apply cnav fix. Not applying.');
         
     else
-        mdocshow(scriptname, ['applying cnav fix to cnav_' mcruise '_d' day_string '_edt.nc']);
+        if MEXEC_G.quiet<=1; fprintf(1,'applying cnav fix to cnav_%s_d%s_edt.nc\n',mcruise,day_string); end
         sensors_to_cal={'lat','long'};
         sensorcals={'y=cnav_fix(x1)' 'y=cnav_fix(x1)'};
         sensorunits={'/','/'}; % keep existing units
@@ -38,5 +38,5 @@ if max(mod(abs([d.lat(:);d.long(:)])*100,100))<=61
     end
     
 else
-    mdocshow(scriptname, ['cnav fix not required for cnav_' mcruise '_d' day_string '_edt.nc']);
+    if MEXEC_G.quiet<=1; fprintf(1,'cnav fix not required for cnav_%s_d%s_edt.nc; no action\n',mcruise,day_string); end
 end

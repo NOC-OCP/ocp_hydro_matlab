@@ -6,7 +6,7 @@
 % dy146 ylf added start of cast estimate
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['finds scan number corresponding to bottom of cast, writes to dcs_' mcruise '_' stn_string '.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'finding scan number corresponding to bottom of cast for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');

@@ -22,7 +22,7 @@
 
 m_common; MEXEC_A.mprog = mfilename;
 scriptname = 'castpars'; oopt = 'minit'; get_cropt 
-mdocshow(mfilename, ['converts from .cnv to ctd_' mcruise '_' stn_string '_raw.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n'); end
 
 % resolve root directories for various file types
 root_cnv = mgetdir('M_CTD_CNV');

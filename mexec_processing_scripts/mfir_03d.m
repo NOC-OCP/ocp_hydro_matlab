@@ -7,13 +7,13 @@
 %      stn = 16; mfir_03d;
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['adds CTD downcast data corresponding to upcast neutral densities at bottle firing times to fir_' mcruise '_' stn_string '.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'adds CTD downcast data corresponding to upcast neutral densities at bottle firing times to fir_%s_%s.nc\n', mcruise, stn_string); end
 
 root_ctd = mgetdir('M_CTD');
 infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
 otfilef = infilef;
 if ~exist(infilef,'file')
-    infilef = [infilef '_ctd');
+    infilef = [infilef '_ctd'];
 end
 infiled = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2db']); 
 infileu = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2up']);

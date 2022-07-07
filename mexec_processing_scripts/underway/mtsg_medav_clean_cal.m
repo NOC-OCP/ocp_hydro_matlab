@@ -15,8 +15,10 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 % bak jc211 ship_data_sys_names sets metpre and tsgpre
 
-mdocshow(mfilename, ['averages to 1 minute and calls mtsg_cleanup to remove bad times from appended tsg file, producing ' tsgpre '_' mcruise '_01_medav_clean.nc'])
-mdocshow(mfilename, ['calls m_apply_calibration to apply sal and temp calibrations set in opt_' mcruise ', writing to ' tsgpre '_' mcruise '_01_medav_clean_cal.nc'])
+if MEXEC_G.quiet<=1
+    fprintf(1,'averaging to 1 minute, calling mtsg_cleanup to remove bad times from %s_%s_01.nc to make %s_%s_01_medav_clean.nc\n',tsgpre,mcruise,tsgpre,mcruise);
+    fprintf(1,'calling m_apply_calibration to apply sal and temp calibrations set in opt_%s for %s_%s_01_medav_clean_cal.nc\n',mcruise,tsgpre,mcruise);
+end
 
 root_dir = mgetdir(tsgpre);
 infile1 = fullfile(root_dir, [tsgpre '_' mcruise '_01']);

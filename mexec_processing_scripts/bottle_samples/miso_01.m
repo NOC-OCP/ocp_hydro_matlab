@@ -10,7 +10,7 @@
 
 scriptname = 'miso_01';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-mdocshow(scriptname, ['reads bottle del13C, Del14C, del18O data from .csv files into iso_' mcruise '_01.nc']) %add info on cropts***
+if MEXEC_G.quiet<=1; fprintf(1, 'reading bottle del13C, Del14C, del18O data from .csv files into iso_%s_01.nc',mcruise); end
 
 % resolve root directories for various file types
 root_iso = mgetdir('M_BOT_ISO');
@@ -187,3 +187,5 @@ MEXEC_A.MARGS_IN_5 = {
 MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
 msave
 %--------------------------------
+
+

@@ -1,8 +1,6 @@
 %scripts to rerun after editing using mctd_rawedit, or if calibration is
 %changed
 
-ssd0 = MEXEC_G.ssd; MEXEC_G.ssd = 1;
-
 root_ctd = mgetdir('M_CTD');
 
 if ~exist('klist','var')
@@ -42,5 +40,4 @@ end
 scriptname = 'batchactions'; oopt = 'sam'; get_cropt
 scriptname = 'batchactions'; oopt = 'syncc'; get_cropt
 clear klist*
-MEXEC_G.ssd = ssd0;
 

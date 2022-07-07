@@ -58,7 +58,7 @@
 %
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['plots CTD data from station ' stn_string ' along with data from selected previous stations']);
+if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD data from station %s along with data from selected previous stations',stn_string);end
 
 msg1 = '\n Type number of previous stations to view, a list of at least two station numbers, or return to quit\n';
 nump = input(msg1);
@@ -86,27 +86,20 @@ prefix2 = ['dcs_' mcruise '_'];
 
 % load data
 
-d2db = {};
-h2db = {};
-d2up = {};
-h2up = {};
-dpsal = {};
-hpsal = {};
-ddcs = {};
-hdcs = {};
-infiles = {};
-sused = [];
-for ks = [slist(:)' stnlocal];
+klist = [stlist(:)' stnlocal];
+sused = zeros(size(klist));
+infiles = cell(4,length(klist));
+d2db = cell(1,length(klist));
+d2up = d2db; dpsal = d2db; ddcs = d2db;
+for no = 1:length(klist)
+    ks = klist(no);
     sstring = sprintf('%03d',ks);
     infile1 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2db']));
     infile2 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2up']));
     infile3 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_psal']));
     infile4 = m_add_nc(fullfile(root_ctd, [prefix2 sstring]));
     % skip stations that don't have a complete set of files
-    if exist(infile1,'file') ~= 2; continue; end
-    if exist(infile2,'file') ~= 2; continue; end
-    if exist(infile3,'file') ~= 2; continue; end
-    if exist(infile4,'file') ~= 2; continue; end
+    if exist(infile1,'file') && exist(infile2,'file') && exist(infile3,'file') && exist(infile4,'file')
     % If there is a station 0 this is a test stations and
     if ks == 0
         ks1 = 1;
@@ -117,23 +110,20 @@ for ks = [slist(:)' stnlocal];
     infiles{2,ks1} = infile2;
     infiles{3,ks1} = infile3;
     infiles{4,ks1} = infile4;
-    [d h] = mloadq(infile1,'/');
-    d2db = [d2db d];
-    h2db = [h2db h];
-    [d h] = mloadq(infile2,'/');
-    d2up = [d2up d];
-    h2up = [h2up h];
-    [d h] = mloadq(infile3,'/');
-    dpsal = [dpsal d];
-    hpsal = [hpsal h];
-    [d h] = mloadq(infile4,'/');
-    ddcs = [ddcs d];
-    hdcs = [hdcs h];
-    sused = [sused ks]; % list of stations that will be used
+    [d2db{no}, ~] = mloadq(infile1,'/');
+    [d2up{no}, ~] = mloadq(infile2,'/');
+    [dpsal{no}, ~] = mloadq(infile3,'/');
+    [ddcs{no}, ~] = mloadq(infile4,'/');
+    sused(no) = 1;
+    end
 end
+infiles = infiles(:,sused);
+d2db = d2db(:,sused); d2up = d2up(:,sused);
+dpsal = dpsal(:,sused); ddcs = ddcs(:,sused);
+sused = klist(sused);
 numused = length(sused);
 
-if length(find(sused == stnlocal)) < 1
+if sum(sused==stnlocal)<1
     msg = ['Station ' sprintf('%03d',stnlocal) ' was not loaded. Check all the files are available'];
     fprintf(2,'%s\n',msg)
 end
@@ -184,8 +174,8 @@ for plotlist = cklist
             clear pf1;
             pf1.xlist = 'time';
             pf1.ylist = ['press temp ' saltype ' oxygen'];
-            first = min(find(dpsal{end}.scan > ddcs{end}.scan_start));
-            last = max(find(dpsal{end}.scan < ddcs{end}.scan_end));
+            first = find(dpsal{end}.scan > ddcs{end}.scan_start, 1 );
+            last = find(dpsal{end}.scan < ddcs{end}.scan_end, 1, 'last' );
             pf1.startdc = first; % good data only
             pf1.stopdc = last;
             if oxy_end
@@ -311,7 +301,7 @@ for plotlist = cklist
                 plot(dpsal{ks}.press(koku),dpsal{ks}.temp1(koku),'color',lcolors(iic,:),'linewidth',lwid);
                 
                 subplot(222)
-                sd = getfield(dpsal{ks},[saltype '1']);
+                sd = dpsal{ks}.([saltype '1']);
                 plot(dpsal{ks}.press(kokd),sd(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid);
@@ -324,13 +314,13 @@ for plotlist = cklist
                     kokdo = kokd;
                     kokuo = koku;
                 end
-                od = getfield(dpsal{ks},oxyvars{1,2});
+                od = dpsal{ks}.(oxyvars{1,2});
                 plot(dpsal{ks}.press(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid);
                 
                 subplot(224)
-                sd = getfield(dpsal{ks},[saltype '1']);
+                sd = dpsal{ks}.([saltype '1']);
                 plot(sd(kokd),dpsal{ks}.potemp1(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 plot(sd(koku),dpsal{ks}.potemp1(koku),'color',lcolors(iic,:),'linewidth',lwid);
@@ -369,7 +359,7 @@ for plotlist = cklist
                 plot(dpsal{ks}.press(koku),dpsal{ks}.temp2(koku),'color',lcolors(iic,:),'linewidth',lwid);
                 
                 subplot(222)
-                sd = getfield(dpsal{ks},[saltype '2']);
+                sd = dpsal{ks}.([saltype '2']);
                 plot(dpsal{ks}.press(kokd),sd(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid);
@@ -383,14 +373,14 @@ for plotlist = cklist
                     kokuo = koku;
                 end
                 if nox>1
-                    od = getfield(dpsal{ks},oxyvars{2,2});
+                    od = dpsal{ks}.(oxyvars{2,2});
                     plot(dpsal{ks}.press(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
                     hold on
                     plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid);
                 end
                 
                 subplot(224)
-                sd = getfield(dpsal{ks},[saltype '2']);
+                sd = dpsal{ks}.([saltype '2']);
                 plot(sd(kokd),dpsal{ks}.potemp2(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 plot(sd(koku),dpsal{ks}.potemp2(koku),'color',lcolors(iic,:),'linewidth',lwid);
@@ -475,27 +465,27 @@ for plotlist = cklist
             
             subplot(222)
             for ks = numused
-                plot(d2db{ks}.press,getfield(d2db{ks},[saltype '1']),['k' '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,d2db{ks}.([saltype '1']),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(d2db{ks}.press,getfield(d2db{ks},[saltype '2']),['r' '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,d2db{ks}.([saltype '2']),['r' '-'],'linewidth',lwid);
             end
             title(saltype)
             
             subplot(223)
             for ks = numused
-                plot(d2db{ks}.press,getfield(d2db{ks},oxyvars{1,2}),['k' '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,d2db{ks}.(oxyvars{1,2}),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
                 if nox>1
-                    plot(d2db{ks}.press,getfield(d2db{ks},oxyvars{2,2}),['r' '-'],'linewidth',lwid);
+                    plot(d2db{ks}.press,d2db{ks}.(oxyvars{2,2}),['r' '-'],'linewidth',lwid);
                 end
             end
             title ('oxygen')
             
             subplot(224)
             for ks = numused
-                plot(getfield(d2db{ks},[saltype '1']),d2db{ks}.potemp1,['k' '-'],'linewidth',lwid);
+                plot(d2db{ks}.([saltype '1']),d2db{ks}.potemp1,['k' '-'],'linewidth',lwid);
                 hold on; grid on;
-                plot(getfield(d2db{ks},[saltype '2']),d2db{ks}.potemp2,['r' '-'],'linewidth',lwid);
+                plot(d2db{ks}.([saltype '2']),d2db{ks}.potemp2,['r' '-'],'linewidth',lwid);
             end
             title (['theta-' saltype])
             
@@ -534,11 +524,11 @@ for plotlist = cklist
             for ks = numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                sd = getfield(dpsal{ks},[saltype '1']);
+                sd = dpsal{ks}.([saltype '1']);
                 plot(dpsal{ks}.press(kokd),sd(kokd),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
                 plot(dpsal{ks}.press(koku),sd(koku),['k' '--'],'linewidth',lwid);
-                sd = getfield(dpsal{ks},[saltype '2']);
+                sd = dpsal{ks}.([saltype '2']);
                 plot(dpsal{ks}.press(kokd),sd(kokd),['r' '-'],'linewidth',lwid);
                 plot(dpsal{ks}.press(koku),sd(koku),['r' '--'],'linewidth',lwid);
             end
@@ -554,12 +544,12 @@ for plotlist = cklist
                     kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                     koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 end
-                od = getfield(dpsal{ks},oxyvars{1,2});
+                od = dpsal{ks}.(oxyvars{1,2});
                 plot(dpsal{ks}.press(kokd),od(kokd),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
                 plot(dpsal{ks}.press(koku),od(koku),['k' '--'],'linewidth',lwid);
                 if nox>1
-                    od = getfield(dpsal{ks},oxyvars{2,2});
+                    od = dpsal{ks}.(oxyvars{2,2});
                     plot(dpsal{ks}.press(kokd),od(kokd),['r' '-'],'linewidth',lwid);
                     plot(dpsal{ks}.press(koku),od(koku),['r' '--'],'linewidth',lwid);
                 end
@@ -571,11 +561,11 @@ for plotlist = cklist
             for ks = numused
                 kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                 koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                sd = getfield(dpsal{ks},[saltype '1']);
+                sd = dpsal{ks}.([saltype '1']);
                 plot(sd(kokd),dpsal{ks}.temp1(kokd),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
                 plot(sd(koku),dpsal{ks}.temp1(koku),['k' '--'],'linewidth',lwid);
-                sd = getfield(dpsal{ks},[saltype '2']);
+                sd = dpsal{ks}.([saltype '2']);
                 plot(sd(kokd),dpsal{ks}.temp2(kokd),['r' '-'],'linewidth',lwid);
                 plot(sd(koku),dpsal{ks}.temp2(koku),['r' '--'],'linewidth',lwid);
             end
@@ -620,8 +610,8 @@ for plotlist = cklist
                 
                 subplot(323)
                 for ks = numused
-                    upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},[saltype '1']),d2db{ks}.press);
-                    plot(d2db{ks}.press, upintrp-getfield(d2db{ks},[saltype '1']),['k' '-'],'linewidth',lwid);
+                    upintrp = interp1(d2up{ks}.press,d2up{ks}.([saltype '1']),d2db{ks}.press);
+                    plot(d2db{ks}.press, upintrp-d2db{ks}.([saltype '1']),['k' '-'],'linewidth',lwid);
                     hold on; grid on;
                 end
                 title ([saltype '1 up minus down diff']);
@@ -629,8 +619,8 @@ for plotlist = cklist
                 
                 subplot(324)
                 for ks = numused
-                    upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},[saltype '2']),d2db{ks}.press);
-                    plot(d2db{ks}.press, upintrp-getfield(d2db{ks},[saltype '2']),['k' '-'],'linewidth',lwid);
+                    upintrp = interp1(d2up{ks}.press,d2up{ks}.([saltype '2']),d2db{ks}.press);
+                    plot(d2db{ks}.press, upintrp-d2db{ks}.([saltype '2']),['k' '-'],'linewidth',lwid);
                     hold on; grid on;
                 end
                 title ([saltype '2 up minus down diff']);
@@ -638,8 +628,8 @@ for plotlist = cklist
                 
                 subplot(325)
                 for ks = numused
-                    upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},oxyvars{1,2}),d2db{ks}.press);
-                    plot(d2db{ks}.press, upintrp-getfield(d2db{ks},oxyvars{1,2}),['k' '-'],'linewidth',lwid);
+                    upintrp = interp1(d2up{ks}.press,d2up{ks}.(oxyvars{1,2}),d2db{ks}.press);
+                    plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{1,2}),['k' '-'],'linewidth',lwid);
                     hold on; grid on;
                 end
                 title ('oxygen 1 up minus down diff');
@@ -647,8 +637,8 @@ for plotlist = cklist
                 subplot(326)
                 if nox>1
                     for ks = numused
-                        upintrp = interp1(d2up{ks}.press,getfield(d2up{ks},oxyvars{2,2}),d2db{ks}.press);
-                        plot(d2db{ks}.press, upintrp-getfield(d2db{ks},oxyvars{2,2}),['k' '-'],'linewidth',lwid);
+                        upintrp = interp1(d2up{ks}.press,d2up{ks}.(oxyvars{2,2}),d2db{ks}.press);
+                        plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{2,2}),['k' '-'],'linewidth',lwid);
                         hold on; grid on;
                     end
                     title ('oxygen 2 up minus down diff');
@@ -677,26 +667,26 @@ for plotlist = cklist
                 
                 subplot(321)
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
+                kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                 plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok),[cols(ks) '-'],'linewidth',lwid);
                 hold on
                 
                 subplot(322) %repeat with forced axes
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
+                kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                 plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok),[cols(ks) '-'],'linewidth',lwid);
                 hold on
                 
                 subplot(323)
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
+                kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                 sd1 = dpsal{ks}.([saltype '1']); sd2 = dpsal{ks}.([saltype '2']);
                 plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),[cols(ks) '-'],'linewidth',lwid);
                 hold on
                 
                 subplot(324) %zoomed version of above
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
+                kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                 sd1 = dpsal{ks}.([saltype '1']); sd2 = dpsal{ks}.([saltype '2']);
                 plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),[cols(ks) '-'],'linewidth',lwid);
                 hold on
@@ -706,14 +696,14 @@ for plotlist = cklist
                 end
                 if nox>1
                     subplot(325)
-                    kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
+                    kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                     od1 = dpsal{ks}.(oxyvars{1,2}); od2 = dpsal{ks}.(oxyvars{2,2});
                     plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),[cols(ks) '-'],'linewidth',lwid);
                     hold on
                     
                     subplot(326) %zoomed version of above
-                    kmid = max(find(dpsal{ks}.scan < ddcs{ks}.scan_bot));
-                    od1 = getfield(dpsal{ks},oxyvars{1,2}); od2 = getfield(dpsal{ks},oxyvars{2,2});
+                    kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
+                    od1 = dpsal{ks}.(oxyvars{1,2}); od2 = dpsal{ks}.(oxyvars{2,2});
                     plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),[cols(ks) '-'],'linewidth',lwid);
                     hold on; grid on;
                 end

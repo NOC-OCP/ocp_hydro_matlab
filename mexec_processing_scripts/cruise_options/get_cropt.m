@@ -66,7 +66,7 @@ if exist('MEXEC_G','var')
     mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 end
 
-if ~exist('help_cropt', 'var') | ~help_cropt %normal, use-in-scripts mode
+if ~exist('help_cropt', 'var') || ~help_cropt %normal, use-in-scripts mode
     
     %set defaults
     setdef_cropt_cast %defaults for ctd scripts
@@ -75,10 +75,10 @@ if ~exist('help_cropt', 'var') | ~help_cropt %normal, use-in-scripts mode
     setdef_cropt_other %others (sections, plots, ladcp, summaries)
     
     %continue to set cruise-specific options
-    if exist(['opt_' mcruise])==2
+    if exist(['opt_' mcruise '.m'],'file')==2
         eval(['opt_' mcruise]);
     else
-        disp(['opt_' mcruise ' not found; probably needs to be created to set cruise-specific options'])
+        disp(['opt_' mcruise '.m not found; probably needs to be created to set cruise-specific options'])
     end
     
     % check and warn for unset options
@@ -90,7 +90,7 @@ else %help mode
         clear help_cropt
         error('help mode uses grep and does not currently work on windows')
         
-    elseif ~exist('scriptname') | length(scriptname)==0
+    elseif ~exist('scriptname','var') || isempty(scriptname)
         %called to get list of scriptnames and oopts
         dm = which('m_setup'); dm = dm(1:end-9);
         dc = pwd;
@@ -106,13 +106,13 @@ else %help mode
             throw(me)
         end
         
-    elseif ~exist('oopt', 'var') | length(oopt)==0
+    elseif ~exist('oopt', 'var') || isempty(oopt)
         
         %called to get list of options for specific scriptname
         f = which(scriptname);
         
-        if length(f)>0 %show calls to get_cropt in m-file scriptname.m
-            [st, olist] = unix(['grep cropt ' f ' | grep -v mdocshow']);
+        if ~isempty(f) %show calls to get_cropt in m-file scriptname.m
+            [st, olist] = unix(['grep cropt ' f ]);
             disp(['calls to get_cropt in ' scriptname '.m:'])
             disp(olist)
             
@@ -121,9 +121,9 @@ else %help mode
             dc = pwd;
             try
                 cd(dm);
-                [st, slist1] = unix(['grep ' scriptname ' *.m | grep oopt | grep -v cruise_options']);
-                [st, slist2] = unix(['grep ' scriptname ' */*.m | grep oopt | grep -v cruise_options']);
-                [st, slist3] = unix(['grep ' scriptname ' */*/*.m | grep oopt | grep -v cruise_options']);
+                [~, slist1] = unix(['grep ' scriptname ' *.m | grep oopt | grep -v cruise_options']);
+                [~, slist2] = unix(['grep ' scriptname ' */*.m | grep oopt | grep -v cruise_options']);
+                [~, slist3] = unix(['grep ' scriptname ' */*/*.m | grep oopt | grep -v cruise_options']);
                 cd(dc);
                 disp(['mexec_processing_scripts that call get_cropt with scriptname = ''' scriptname ''':'])
                 more on

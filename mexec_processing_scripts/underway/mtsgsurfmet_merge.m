@@ -27,7 +27,7 @@ if exist(filemet, 'file')
     end
     
     if exist(filetsg,'file')
-        mdocshow(mfilename, ['merge tsg data into ' metpre '_' mcruise '_01.nc'])
+        if MEXEC_G.quiet<=1; fprintf(1,'merging tsg data into %s_%s_01.nc\n',metpre,mcruise); end
         [dt, ht] = mloadq(filetsg, '/');
         dt.timec = dt.time/3600/24+datenum(ht.data_time_origin);
         

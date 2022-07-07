@@ -1,5 +1,3 @@
-ssd0 = MEXEC_G.ssd; MEXEC_G.ssd = 1;
-
 mctd_01; %read in sbe .cnv data to mstar
 
 root_ctd = mgetdir('M_CTD');
@@ -24,5 +22,3 @@ stn = stnlocal; mdcs_01; % now does mdcs_01 and mdcs_02 in one step
 if MEXEC_G.ix_ladcp == 1
     mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
 end
-
-MEXEC_G.ssd = ssd0;

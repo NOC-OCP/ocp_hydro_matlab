@@ -25,10 +25,7 @@ m_varargs
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 day_string = sprintf('%03d',day);
-daylocal = day;
-clear day % so that it doesn't persist
-
-mdocshow(mfilename, ['loads in underway data stream ' streamname ', writes to ' mstarprefix '_' mcruise '_d' sprintf('%03d',daylocal), '_raw.nc']);
+if MEXEC_G.quiet<=1; fprintf(1,'loading underway data stream %s to write to %s_%s_d%s_raw.nc\n',streamname,mstarprefix,mcruise,day_string); end
 
 status = 1;
 root_out = mgetdir(mstarprefix);
@@ -46,8 +43,8 @@ switch MEXEC_G.Mshipdatasystem
         % function mrrvdas2mstar(table, dn1, dn2, otfile, dataname)
         
         table = mstarprefix;
-        dn1 = datenum([year 1 1 00 00 00]) + daylocal - 1;
-        dn2 = datenum([year 1 1 23 59 59]) + daylocal - 1;
+        dn1 = datenum([year 1 1 00 00 00]) + day - 1;
+        dn2 = datenum([year 1 1 23 59 59]) + day - 1;
         
         prefix1 = [mstarprefix '_' mcruise '_'];
         fnmstar = [prefix1 'd' day_string '_raw'];
@@ -83,9 +80,9 @@ switch MEXEC_G.Mshipdatasystem
         
         % upgrade by bak at noc aug 2010 so it works on either scs or techsas
         if strncmp(MEXEC_G.Mshipdatasystem,'scs',3)
-            mdatapupscs(yy,daylocal,timestart,yy,daylocal,timeend,'-',instream,otfile2,varlist);
+            mdatapupscs(yy,day,timestart,yy,day,timeend,'-',instream,otfile2,varlist);
         else % techsas
-            mdatapuptechsas(yy,daylocal,timestart,yy,daylocal,timeend,'-',instream,otfile2,varlist);
+            mdatapuptechsas(yy,day,timestart,yy,day,timeend,'-',instream,otfile2,varlist);
         end
         
         if ~exist(m_add_nc(otfile2),'file')

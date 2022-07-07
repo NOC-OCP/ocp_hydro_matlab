@@ -4,7 +4,7 @@
 %      stn = 16; mctd_rawshow;
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['plots 24 hz and 1 hz CTD data for station ' stn_string]);
+if MEXEC_G.quiet<=1; fprintf(1,'plotting 24 hz and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
 
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');
@@ -17,7 +17,7 @@ infile2 = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
 infile3 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
 
 hraw = m_read_header(infile1);
-[ddcs hdcs]  = mloadq(infile2,'/');
+[ddcs, hdcs]  = mloadq(infile2,'/');
 dcs_ts = ddcs.time_start(1);
 dcs_te = ddcs.time_end(1);
 dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
@@ -76,7 +76,7 @@ else
         pshow2.stopdcv.sbeoxyV1 = stopdco;
     end
 end
-[ylist, pshow2.ylist] = mvars_in_file(ylist, infile1);
+[~, pshow2.ylist] = mvars_in_file(ylist, infile1);
 pshow2.startdc = startdc;
 pshow2.stopdc = stopdc;
 pshow2.cols = 'kgrbmcy'; % so raw oxygen in this plot matches 1 hz trace in figure 1.
@@ -87,7 +87,7 @@ clear pshow3
 pshow3.ncfile.name = infile1;
 pshow3.xlist = 'time';
 ylist = {'press' 'turbidity' 'fluor' 'transmittance' 'par'};
-[ylist, pshow3.ylist] = mvars_in_file(ylist, infile1);
+[~, pshow3.ylist] = mvars_in_file(ylist, infile1);
 pshow3.startdc = startdc;
 pshow3.stopdc = stopdc;
 mplotxy(pshow3);
@@ -98,7 +98,7 @@ pshow4.ncfile.name = infile1;
 pshow4.xlist = 'time';
 ylist = {'latitude' 'longitude'};
 [ylist, pshow4.ylist] = mvars_in_file(ylist, infile1);
-if length(ylist)>0
+if ~isempty(ylist)
     pshow4.startdc = startdc;
     pshow4.stopdc = stopdc;
     mplotxy(pshow4);

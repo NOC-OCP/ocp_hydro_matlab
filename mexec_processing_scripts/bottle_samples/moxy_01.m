@@ -9,7 +9,7 @@
 % parse in opt_cruise, calls moxy_ccalc to compute them
 
 m_common
-mdocshow(mfilename, ['loads bottle oxygens from file specified in opt_' mcruise ', optionally calls moxy_ccalc to compute concentration from titration, and writes to oxy_' mcruise '_01.nc']);
+if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc and sam_%s_all.nc',mcruise,mcruise,mcruise); end
 
 % find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');

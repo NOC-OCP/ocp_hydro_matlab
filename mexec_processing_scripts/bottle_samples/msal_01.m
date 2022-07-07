@@ -24,7 +24,7 @@
 % 
 
 m_common
-mdocshow(mfilename, ['loads bottle salinities from the file(s) specified in opt_' mcruise ' and writes ctd samples to sal_' mcruise '_01.nc and sam_' mcruise '_all.nc, and underway samples to tsg_' mcruise '_01.nc']);
+if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
 
 std_samp_range = [9e5 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
 %ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7

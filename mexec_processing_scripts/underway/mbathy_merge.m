@@ -3,8 +3,7 @@
 
 if ism && iss
     
-    docstr = ['merge swath_depth and single-beam depth onto each other''s files'];
-    mdocshow(mfilename, docstr);
+    if MEXEC_G.quiet<=1; fprintf(1,'merging swath_depth and single-beam depth onto each other''s files'); end
 
     [ds,hs] = mloadq(filesbot,'/');
     ds.timec = ds.time/3600/24+datenum(hs.data_time_origin);

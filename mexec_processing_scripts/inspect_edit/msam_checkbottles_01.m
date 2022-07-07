@@ -4,7 +4,7 @@ function msam_checkbottles_01(stations, varname, section)
 % (formerly identify_bottles)
 % bak on jc159 19 March 2018
 %
-% identify bottles by plotting against theta or pressure
+% identify problem bottles by plotting against theta or pressure
 % plot full values or anomalies against CTD (S,O) or gridded data if available
 %
 % use:
@@ -13,7 +13,7 @@ function msam_checkbottles_01(stations, varname, section)
 % stations is a numeric array with a list of station numbers to display; If
 % 'stations' is empty, use all.
 %
-% var is a text string with the name of the (bottle sample) variable in a 
+% var is a text string with the name of the (bottle sample) variable in a
 % sam_xxxxx_all file
 %
 % section is a character string identifying a gridded section of bottle
@@ -34,9 +34,7 @@ if nargin < 2
 end
 
 m_common
-stn = 0;
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['plots bottle sample residuals (from ctd, or from gridded fields), allowing selection of outliers and identification of where flags need to be changed']);
+if MEXEC_G.quiet<=1; fprintf(1,'plotting bottle sample residuals (from ctd, or from gridded fields) to allow selection of outliers and identification of where flags need to be changed\n'); end
 
 root_ctd = mgetdir('M_CTD'); % identify CTD directory
 root_asc = mgetdir('M_CTD_CNV'); %this is where the bottle data flags script will live
@@ -46,8 +44,8 @@ bdffile = fullfile(root_asc, 'bottle_data_flags.txt'); %the name of this file is
 
 fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
 
-if exist(m_add_nc(fnsamall),'file') == 2;
-    [dsam hsam]  = mload(fnsamall,'/');
+if exist(m_add_nc(fnsamall),'file') == 2
+    [dsam, hsam]  = mload(fnsamall,'/');
 else
     fprintf(2,'\n%s %s %s\n\n','File ',m_add_nc(fnsamall),' not found; exiting');
     return
@@ -58,10 +56,10 @@ end
 
 if nargin >= 3
     fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section]);
-    if exist(m_add_nc(fngrid),'file') == 2;
-        [dg hg]  = mload(fngrid,'/');
+    if exist(m_add_nc(fngrid),'file') == 2
+        [dg, hg]  = mload(fngrid,'/');
     else
-        fprintf(2,'\n%s %s %s\n\n','File ',m_add_nc(fngrid),' not found; anaomalies will not be plotted');
+        fprintf(2,'\n%s %s %s\n\n','File ',m_add_nc(fngrid),' not found; anomalies will not be plotted');
         clear dg hg
     end
 else
@@ -84,39 +82,39 @@ if ~isfield(dsam,varname)
     return
 end
 
-v = getfield(dsam, varname);
+v = dsam.(varname);
 
 % flag (name format not always consistent)
 varflagname = [varname 'flag'];
-if ~isfield(dsam, varflagname) 
-   varflagname = [varname(1:end-1) 'flag' varname(end)]; %assume there's a number or letter appended
-   if ~isfield(dsam, varflagname)
-      varflagname = [varname '_flag']; %maybe there's an underscore
-      if ~isfield(dsam, varflagname)
-         error(['could not identify flag field for variable ' varname])
-      end
-   end
+if ~isfield(dsam, varflagname)
+    varflagname = [varname(1:end-1) 'flag' varname(end)]; %assume there's a number or letter appended
+    if ~isfield(dsam, varflagname)
+        varflagname = [varname '_flag']; %maybe there's an underscore
+        if ~isfield(dsam, varflagname)
+            error(['could not identify flag field for variable ' varname])
+        end
+    end
 end
-vflag = getfield(dsam, varflagname);
+vflag = dsam.(varflagname);
 
 %anomaly from comparison field
 switch varname
-   case 'botpsal'
-      vanom = v - dsam.upsal;
-   case {'botoxy', 'botoxya', 'botoxyb'}
-      %%%%% temporary fix, pending good CTD oxygen in sam file
-      dsam.uoxygen = oxy_apply_cal(1,dsam.statnum,dsam.upress,0*dsam.statnum,dsam.utemp,dsam.uoxygen); %***make this a cruise option, normally shouldn't need this line at all (is it from dy113 originally?). maybe only comes up at all if there isn't good oxygen (non-nan)?
-      vanom = v - dsam.uoxygen;
-   otherwise % expect to find the variable in both sam and grid
-      if exist('dg','var') ~= 1;
-         fprintf(2,'\n%s\n\n','Gridded data have not been loaded; anomalies will be set to zero');
-         vanom = 0*v;
-      elseif ~isfield(dg,varname)
-         fprintf(2,'\n%s %s %s\n\n','Gridded file does not have variable',varname,'; anomalies will be set to zero');
-         vanom = 0*v;
-      else
-         vanom = make_vanom(varname,dsam,hsam,dg,hg);
-      end
+    case 'botpsal'
+        vanom = v - dsam.upsal;
+    case {'botoxy', 'botoxya', 'botoxyb'}
+        %%%%% temporary fix, pending good CTD oxygen in sam file
+        dsam.uoxygen = oxy_apply_cal(1,dsam.statnum,dsam.upress,0*dsam.statnum,dsam.utemp,dsam.uoxygen); %***make this a cruise option, normally shouldn't need this line at all (is it from dy113 originally?). maybe only comes up at all if there isn't good oxygen (non-nan)?
+        vanom = v - dsam.uoxygen;
+    otherwise % expect to find the variable in both sam and grid
+        if exist('dg','var') ~= 1
+            fprintf(2,'\n%s\n\n','Gridded data have not been loaded; anomalies will be set to zero');
+            vanom = 0*v;
+        elseif ~isfield(dg,varname)
+            fprintf(2,'\n%s %s %s\n\n','Gridded file does not have variable',varname,'; anomalies will be set to zero');
+            vanom = 0*v;
+        else
+            vanom = make_vanom(varname,dsam,dg);
+        end
 end
 
 
@@ -143,8 +141,8 @@ kother = setdiff(kall,[k2; k3; k4; k5; k9]);
 %advise if any NaNs have "good" flags
 iib2 = find(isnan(v(k2)));
 if ~isempty(iib2)
-   warning('these NaNs have flags of 2!')
-   sprintf('%8.0f\n', vsampnum(k2(iib2)));
+    warning('these NaNs have flags of 2!')
+    sprintf('%8.0f\n', vsampnum(k2(iib2)))
 end
 
 x1 = v;
@@ -186,11 +184,11 @@ while 1
                 'numbering from top left to top right in the usual matlab convention:  ' ...
                 ];
             kwin = input(mess); % subplot number carried through script
-            if isempty(find([1 2 3 4] == kwin))
+            if isempty(find([1 2 3 4] == kwin, 1))
                 fprintf(2,'\n%s %d\n\n','Subplot number must be 1,2,3 or 4. You entered ',kwin);
                 continue
             else
-            fprintf(1,'\n%s %d \n\n','Using subplot ',kwin);
+                fprintf(1,'\n%s %d \n\n','Using subplot ',kwin);
             end
     end
     
@@ -240,15 +238,15 @@ while 1
             yy = sort(xy2(:,2));
             if ~exist('ksel','var'); ksel = kall; end
             kg = find(x >= xx(1) & x <= xx(2) & y >= yy(1) & y <= yy(2));
-
+            
     end
     
-    [kc ksel2 kb] = intersect(ksel,k2); % we need the index within ksel of flags
-    [kc ksel3 kb] = intersect(ksel,k3); % we need the index within ksel of flags
-    [kc ksel4 kb] = intersect(ksel,k4); % we need the index within ksel of flags
-    [kc ksel5 kb] = intersect(ksel,k5); % we need the index within ksel of flags
-    [kc ksel9 kb] = intersect(ksel,k9); % we need the index within ksel of flags
-    [kc kselother kb] = intersect(ksel,kother); % we need the index within ksel of flags
+    [~, ksel2, ~] = intersect(ksel,k2); % we need the index within ksel of flags
+    [~, ksel3, ~] = intersect(ksel,k3); % we need the index within ksel of flags
+    [~, ksel4, ~] = intersect(ksel,k4); % we need the index within ksel of flags
+    [~, ksel5, ~] = intersect(ksel,k5); % we need the index within ksel of flags
+    [~, ksel9, ~] = intersect(ksel,k9); % we need the index within ksel of flags
+    [~, kselother, ~] = intersect(ksel,kother); % we need the index within ksel of flags
     
     h = plot4(x1(ksel),x2(ksel),y1(ksel),y2(ksel),ksel2,ksel3,ksel4,ksel5,ksel9,kselother);
     subplot(2,2,1); xlabel(varname);
@@ -289,7 +287,7 @@ while 1
         otherwise
     end
     
-    switch a % listing; 
+    switch a % listing;
         case 'l'
             fprintf(1,'%8s %7s %7s %8s %8s %4s\n','sampnum','press','potemp','val','resid','flag');
             for kl = 1:length(ksel)
@@ -309,24 +307,23 @@ while 1
             subplot(2,2,4)
             plot(vanom(kg),potemp(kg),'g^','markersize',15);
             if strcmp(a, 'w') % also write to file
-               if exist(bdffile)==2
-	              fid = fopen(bdffile, 'a');
-               else
-                  fid = fopen(bdffile, 'w');
-               end
-	           for kl = 1:length(kg)
-                  fprintf(fid, '%s, %d, %d, %d\n', varflagname, vsampnum(kg(kl)), vflag(kg(kl)), vflag(kg(kl)));
-               end
-    	       fclose(fid)
-	           disp(['now run msam_checkbottles_02 to check against property gradients and determine what new flags should be'])
-               disp(['put the new flags into column 4 of ' bdffile ' before running msam_02b to apply them'])
+                if exist(bdffile,'file')==2
+                    fid = fopen(bdffile, 'a');
+                else
+                    fid = fopen(bdffile, 'w');
+                end
+                for kl = 1:length(kg)
+                    fprintf(fid, '%s, %d, %d, %d\n', varflagname, vsampnum(kg(kl)), vflag(kg(kl)), vflag(kg(kl)));
+                end
+                fclose(fid);
+                disp(['now run msam_checkbottles_02 to check against property gradients and determine what new flags should be'])
+                disp(['put the new flags into column 4 of ' bdffile ' before running msam_02b to apply them'])
             end
     end
     
 end
 
 
-return
 
 function h = plot4(x1,x2,y1,y2,k2,k3,k4,k5,k9,kother)
 
@@ -395,15 +392,15 @@ plot(x2(k9),y2(k9),'mx','markersize',10);
 
 return
 
-function vanom = make_vanom(varname,dsam,hsam,dg,hg);
+function vanom = make_vanom(varname,dsam,dg)
 
-v = getfield(dsam, varname);
+v = dsam.(varname);
 vanom = v+nan;
 
 stats = unique(dsam.statnum(~isnan(dsam.utemp))); %sam stations
 statg = dg.statnum(1,:);
 
-for kl = 1:length(stats);
+for kl = 1:length(stats)
     snum = stats(kl); % station number
     ksam = find(dsam.statnum == snum); % cycles in sam file for this station
     
@@ -413,7 +410,7 @@ for kl = 1:length(stats);
         fprintf(2,'%s %4d %s\n','Station',snum,'not found in gridded file; anomalies will be set to zero'); % so vanom is zero
         vanom(ksam) = 0*v(ksam);
     else
-        gvar = getfield(dg, varname); gvar = gvar(:,kgcol);
+        gvar = dg.(varname); gvar = gvar(:,kgcol);
         vanom(ksam) = v(ksam) - interp1(dg.press(:,kgcol),gvar,dsam.upress(ksam));
     end
 end

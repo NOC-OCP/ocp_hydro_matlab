@@ -28,7 +28,4 @@ if ~isempty(iim)
     end
 end
 
-docstr = ['5-minute median average bathymetry streams'];
-if iss || ism
-    mdocshow(mfilename, docstr);
-end
+if (iss || ism) && MEXEC_G.quiet<=1; fprintf(1,'5-minute median averaging bathymetry streams'); end

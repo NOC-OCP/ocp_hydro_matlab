@@ -8,7 +8,7 @@
 %      stn = 16; mdep_01;
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-mdocshow(mfilename, ['adds water depth from station_depths/station_depths_' mcruise '.mat to all the files for station ' stn_string]);
+if MEXEC_G.quiet<=1; fprintf(1,'adding water depth from station_depths/station_depths_%s.mat to all the files for station %s\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
@@ -23,7 +23,7 @@ iis = find(d.statnum==stnlocal);
 if isempty(iis)
     warning([deps_fn ' does not contain depth for station ' stn_string '; not adding depth to any .nc files'])
 else
-    if length(iis)>1 & length(unique(bestdeps(iis,2)))>1
+    if length(iis)>1 && length(unique(bestdeps(iis,2)))>1
        warning([deps_fn ' contains more than one depth for station ' stn_string '; using first one'])
     end
     iis = iis(1);
