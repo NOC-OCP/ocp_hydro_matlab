@@ -7,9 +7,9 @@
 
 clear MEXEC_G
 global MEXEC_G
-MEXEC_G.MSCRIPT_CRUISE_STRING='jr18002';
-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2018 1 1 0 0 0];
-MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_athome']; % common suffixes '_atsea', '_athome', '', etc.
+MEXEC_G.MSCRIPT_CRUISE_STRING='sa2201';
+MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
+MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_athome', '', etc.
 %next line set if you have a /local/users/pstar/cruise but that is not the
 %one you want (e.g. if reprocessing old cruise on seagoing computer);
 %otherwise code will search for cruise directory
@@ -115,6 +115,13 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
             MEXEC_G.default_hedstream = 'attposmv'; %or gyropmv
         end
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
+    case 'sa'
+        MEXEC_G.Mship = 'sda';
+        MEXEC_G.Mshipdatasystem = 'rvdas';
+        warning('set default nav and heading stream names here')
+        %MEXEC_G.default_navstream = ''; 
+        %MEXEC_G.default_hedstream = '';
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
     case 'jr'
         MEXEC_G.Mship = 'jcr';
         MEXEC_G.default_navstream = 'seatex_gll'; %'seapos';
@@ -186,7 +193,7 @@ switch MEXEC_G.Mshipdatasystem
         MEXEC_G.RVDAS_CSVROOT = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
         MEXEC_G.RVDAS_USER = 'rvdas';
         MEXEC_G.RVDAS_DATABASE = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-        MEXEC_G.RVDAS_MACHINE = '192.168.62.12'; %only relevant for NMF RVDAS underway systems***
+        %MEXEC_G.RVDAS_MACHINE = '192.168.62.12'; %only relevant for NMF RVDAS underway systems***
 end
 MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
 
