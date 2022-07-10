@@ -1,21 +1,22 @@
-% moxy_01: read in bottle oxy data from csv or spreadsheet files, and save to appended
-% mstar file oxy_cruise_01.nc, and to sam_cruise_all.nc
+% moxy_01: read in bottle oxy data from csv or spreadsheet files, parse and
+% calculate concentrations if required, and save to appended mstar file
+% oxy_cruise_01.nc and to sam_cruise_all.nc 
 %
 % The input data files contain one or more header rows; the fields to look
 % for to identify the header rows as well as connect them to standard
-% variable names are set in setdef_cropt_sam or opt_{cruise} 
+% variable names are set in setdef_cropt_sam or opt_{cruise}
 %
 % If concentrations are not included in file or in the list of columns to
-% parse in opt_cruise, calls moxy_ccalc to compute them
+% parse in opt_cruise, uses parameters set under oxy_calc to compute them
 
 m_common
 if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc and sam_%s_all.nc',mcruise,mcruise,mcruise); end
 
 % find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');
-scriptname = mfilename; oopt = 'oxy_files_parse'; get_cropt 
+scriptname = mfilename; oopt = 'oxy_files'; get_cropt
 if isempty(ofiles)
-    warning(['no files matching ' ofpat ' found in ' root_oxy '; skipping'])
+    warning(['no oxygen data files found in ' root_oxy '; skipping'])
     return
 else
     for flno = 1:length(ofiles)
@@ -28,15 +29,17 @@ end
 if isempty(ds_oxy)
     error('no data loaded')
 end
-%special code, for instance to get information from header
-cellT = 25; %default
-scriptname = mfilename; oopt = 'oxy_parse_files'; get_cropt
 
-%rename according to lookup table
-ds_oxy_fn = ds_oxy.Properties.VariableNames;
-[~,ia,ib] = intersect(oxyvarmap(:,2)',ds_oxy_fn);
-ds_oxy_fn(ib) = oxyvarmap(ia,1)';
-ds_oxy.Properties.VariableNames = ds_oxy_fn;
+%parse, for instance combining duplicates, or getting information from header
+cellT = 25; %default
+scriptname = mfilename; oopt = 'oxy_parse'; get_cropt
+%rename according to lookup table, if supplied
+if ~isempty(oxyvarmap)
+    ds_oxy_fn = ds_oxy.Properties.VariableNames;
+    [~,ia,ib] = intersect(oxyvarmap(:,2)',ds_oxy_fn);
+    ds_oxy_fn(ib) = oxyvarmap(ia,1)';
+    ds_oxy.Properties.VariableNames = ds_oxy_fn;
+end
 
 %check units
 clear oxyunits
@@ -69,14 +72,15 @@ if sum(strcmp('flag',ds_oxy_fn))==0
 else
     ds_oxy.flag(ds_oxy.flag==0) = NaN;
     if sum(isnan(ds_oxy.flag))>0
-        ds_oxy.flag(isnan(ds_oxy.flag) & isnan(ds_oxy.sample_titre)) = 9;
-        ds_oxy.flag(isnan(ds_oxy.flag) & ~isnan(ds_oxy.sample_titre)) = 2;
-        ds_oxy.flag(isnan(ds_oxy.flag) & isnan(ds_oxy.sample_titre) & ~isnan(ds_oxy.fix_temp)) = 5;
+        if isfield(ds_oxy,'sample_titre'); m = isnan(ds_oxy.sample_titre); else; m = isnan(ds_oxy.conc_o2); end
+        ds_oxy.flag(isnan(ds_oxy.flag) & m) = 9;
+        ds_oxy.flag(isnan(ds_oxy.flag) & ~m) = 2;
+        ds_oxy.flag(isnan(ds_oxy.flag) & m & ~isnan(ds_oxy.fix_temp)) = 5;
     end
 end
 
 %compute bottle volumes at fixing temperature if not present
-if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0
+if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))
     if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
         ds_oxy.bot_cal_temp = cellT+zeros(size(ds_oxy.sampnum));
     end
@@ -85,7 +89,7 @@ end
 
 %compute concentration if not present
 if sum(strcmp('conc_o2',ds_oxy_fn))==0
-    scriptname = mfilename; oopt = 'oxycalcpars'; get_cropt
+    scriptname = mfilename; oopt = 'oxy_calc'; get_cropt
     n_o2_reag = mol_o2_reag*vol_reag_tot;
     % molarity (mol/mL) of titrant
     mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);
@@ -119,7 +123,7 @@ hnew.fldunt = [hnew.fldunt 'umol/L' 'degC' 'woce_9.4'];
 
 iib = setdiff(1:length(ds_oxy.sampnum),iia);
 if ~isempty(iib) %***do something different for different input, like duplicates on same line? or don't allow this
-    d.botoxyb_per_l = NaN+d.botoxya_per_l; 
+    d.botoxyb_per_l = NaN+d.botoxya_per_l;
     d.botoxyb_temp = d.botoxyb_per_l;
     d.botoxyb_flag = 9+zeros(size(d.sampnum));
     [~,ii,iid] = intersect(ds_oxy.sampnum(iib),d.sampnum);
@@ -142,7 +146,7 @@ if ~isempty(iib) %***do something different for different input, like duplicates
     end
 end
 
-scriptname = mfilename; oopt = 'oxyflags'; get_cropt
+scriptname = mfilename; oopt = 'oxy_flags'; get_cropt
 
 mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 

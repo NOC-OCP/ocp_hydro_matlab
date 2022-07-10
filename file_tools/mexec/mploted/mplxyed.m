@@ -35,8 +35,8 @@ global hplot x1 x2 r1 r2 c1 c2 % hplot is a structure used to pass information b
 hplot = [];
 
 m = 'Type pdf for initial plot; Type c/r for none: ';
-if length(MEXEC_A.MARGS_IN_LOCAL) > 0
-    if ~isstruct(MEXEC_A.MARGS_IN_LOCAL{1});
+if ~isempty(MEXEC_A.MARGS_IN_LOCAL)
+    if ~isstruct(MEXEC_A.MARGS_IN_LOCAL{1})
         pdfin = [];
     else
         % pull the first argument assuming it is a pdf
@@ -82,7 +82,7 @@ else
     end
     m = sprintf('%s',': ');
     vared = m_getinput(m,'d');
-    if length(vared)==0 | vared<=0 | vared>length(hplot)
+    if isempty(vared) || vared<=0 || vared>length(hplot)
         vared = m_getinput('try again (number): ', 'd');
     elseif isnan(vared)
         disp('exiting mplxyed'); return
@@ -217,7 +217,7 @@ if kedit > 0
         %  [flpath,flname,flext] = fileparts(pdfin.ncfile.name);
         % I haven't tested it thoroughly, but pdfot is probably populated even
         % if pdfin is empty. Try next line instead
-        [flpath,flname,flext] = fileparts(pdfot.ncfile.name);
+        [flpath,~,~] = fileparts(pdfot.ncfile.name);
         if isempty(flpath) % if this is a simple run on a local file, the filename could just be 'surfmet_jc211_d050_edt.nc' and flpath is empty
             flpath = '.'; 
         end

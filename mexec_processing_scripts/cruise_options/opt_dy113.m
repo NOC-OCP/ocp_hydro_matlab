@@ -149,31 +149,25 @@ switch scriptname
         %%%%%%%%%% end station_summary %%%%%%%%%%
         
         
-        %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
-    case 'msal_standardise_avg'
+        %%%%%%%%%% msal_01 (transferred jc238 from msal_standardise_avg) %%%%%%%%%%
+    case 'msal_01'
         switch oopt
-            case 'salcsv'
+            case 'sal_files'
                 sal_csv_file = 'sal_dy113_all.csv';
-            case 'k15'
+            case 'sal_calc'
                 ds_sal.K15 = repmat(0.99985,length(ds_sal.sampnum),1); %p163
-            case 'cellT'
                 ds_sal.cellT = 21+zeros(length(ds_sal.sampnum),1);
-            case 'check_sal_runs'
                 calc_offset = 1; %calculate offset from standards readings - 2*K15
                 %make the next two variables 1 if you want to check the
                 %salinity readings (do this when you first read in a
                 %station or set of stations)
                 check_sal_runs = 0; %plot standards and sample runs to compare before averaging
-            case 'plot_stations'
                 plot_all_stations = 0;
                 iistno = 1:length(stnos);
-            case 'std2use'
                 std2use(ismember(ssns, [8 16 18 19 26 27 27.5 31 33 47 57 61]),1) = 0;
                 std2use(ssns==4, 2) = 0;
                 std2use(ismember(ssns,[3 13 23 39 55]),3) = 0;
-            case 'fillstd'
                 xoff = ds_sal.runtime;
-            case 'sam2use'
                 sb1 = [115 123 201 208 301 303 403 413 415 505 510 605 703 817 914];
                 sb1 = [sb1 1315 1409 1913 2209 2613 2701 2802 2813 2905 2913 3101];
                 sb1 = [sb1 3201 3302 3304 3706 3717 4021 4113 4523 4914 5312 6202 7001 8001 9701 10016 10101 10418];
@@ -189,25 +183,18 @@ switch scriptname
                 ds_sal.flag(iisam(ii1)) = max(ds_sal.flag(iisam(ii1)),3);
                 ds_sal.flag(ds_sal.sampnum==2213) = 3;
         end
-        %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
+        %%%%%%%%%% msal_01 %%%%%%%%%%
         
         %%%%%%%%%% moxy_01 %%%%%%%%%%
     case 'moxy_01'
         switch oopt
-            case 'oxycsv'
+            case 'oxy_files'
                 infile = fullfile(root_oxy, ['oxy_dy113_' stn_string '.csv']);
-            case 'oxyflags'
+            case 'oxy_flags'
                 ds_oxy.flag(ds_oxy.flag==2.3) = 2; %these are mostly 'tiny bubbles' and replicates show they don't make a difference
-        end
-        %%%%%%%%%% end moxy_01 %%%%%%%%%%
-        
-        %%%%%%%%%% moxy_ccalc %%%%%%%%%%
-    case 'moxy_ccalc'
-        switch oopt
-            case 'oxypars'
+            case 'oxy_calc'
                 vol_reag1 = 0.99; %?
                 vol_reag2 = 0.99; %?seems coincidental they're all labelled 0.99g
-            case 'blstd'
                 %vol_std = ds_oxy.vol_std;
                 %vol_titre_std = ds_oxy.vol_titre_std;
                 %vol_blank = ds_oxy.vol_blank;
@@ -219,10 +206,9 @@ switch scriptname
                     vol_titre_std = 0.4491;
                     vol_blank = -0.0006; %***
                 end
-            case 'botvols'
                 obot_vol = ds_oxy.bot_vol;
         end
-        %%%%%%%%%% end moxy_ccalc %%%%%%%%%%
+        %%%%%%%%%% end moxy_01 %%%%%%%%%%
         
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
     case 'msam_ashore_flag'

@@ -74,10 +74,9 @@ switch scriptname
         
     case 'moxy_01'
         switch oopt
-            case 'oxy_files'
+            case 'oxy_files_parse'
                 clear ofiles
                 ofiles.name = 'DY130_bot_o2.csv';
-            case 'oxy_parse'
                 hcpat = {'std_titre (mL)'};
                 chrows = 1;
                 mvar_fvar = {
@@ -91,7 +90,7 @@ switch scriptname
                     'bot_vol_tfix',       'bot_vol_at_tfix_ml'
                      'conc_o2', 'c_o2_umol_l' %comment this line out, uncomment 'oxycalcpars' case below, and put a debug point in moxy_01 line 124 if you want to compare spreadsheet to calculated conc_o2
                     };
-            case 'oxy_parse_files'
+            case 'oxy_parse_header'
                 ds_oxy.statnum = str2num(cell2mat(replace(ds.cruise_ctd,'DY130-','')));
             %case 'oxycalcpars'
             %    vol_reag_tot = 0;

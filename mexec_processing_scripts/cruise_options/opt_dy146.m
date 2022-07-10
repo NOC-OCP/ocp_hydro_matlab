@@ -1,12 +1,12 @@
 switch scriptname
-
+    
     case 'm_daily_proc'
         switch oopt
             case 'excludestreams'
                 uway_excludes = {'singleb_t'};
         end
         
-        case 'mday_01_fcal'
+    case 'mday_01_fcal'
         switch oopt
             case 'uway_factory_cal'
                 switch abbrev
@@ -37,13 +37,13 @@ switch scriptname
                     datenum([2022 02 21 13 18 00]) datenum([2022 02 21 13 27 00])
                     datenum([2022 03 04 12 38 00]) datenum([2023 01 01 00 00 00]) % end of TSG logging in international waters
                     ];
-       case 'tsgcals'
-tsgopts.docal.salinity = 1;
-load(fullfile(root_dir,'sdiffsm'))
-kbad = find(isnan(t+sdiffsm)); t(kbad) = []; sdiffsm(kbad) = [];
-tsgopts.calstr.salinity.dy146 = 'dcal.salinity_cal = dnew.salinity_raw + interp1([-1e10; t; 1e10],sdiffsm([1 1:end end]),d.time);';
- end
-
+            case 'tsgcals'
+                tsgopts.docal.salinity = 1;
+                load(fullfile(root_dir,'sdiffsm'))
+                kbad = find(isnan(t+sdiffsm)); t(kbad) = []; sdiffsm(kbad) = [];
+                tsgopts.calstr.salinity.dy146 = 'dcal.salinity_cal = dnew.salinity_raw + interp1([-1e10; t; 1e10],sdiffsm([1 1:end end]),d.time);';
+        end
+        
         %%%%%%%%%% mtsg_bottle_compare %%%%%%%%%%
     case 'mtsg_bottle_compare'
         switch oopt
@@ -56,8 +56,8 @@ tsgopts.calstr.salinity.dy146 = 'dcal.salinity_cal = dnew.salinity_raw + interp1
                 sc1 = 0.5; sc2 = 0.01; %thresholds to use for smoothed series
         end
         %%%%%%%%%% end mtsg_bottle_compare %%%%%%%%%%
- 
-
+        
+        
     case 'castpars'
         switch oopt
             case 'nnisk'
@@ -65,7 +65,7 @@ tsgopts.calstr.salinity.dy146 = 'dcal.salinity_cal = dnew.salinity_raw + interp1
             case 'oxy_align'
                 oxy_end = 1;
         end
-
+        
     case 'mfir_01'
         switch oopt
             case 'nispos'
@@ -81,7 +81,7 @@ tsgopts.calstr.salinity.dy146 = 'dcal.salinity_cal = dnew.salinity_raw + interp1
         
     case 'msal_01'
         switch oopt
-            case 'sal_off'
+            case 'sal_calc'
                 sal_off = [
                     000 -1
                     001 -4
@@ -111,11 +111,11 @@ tsgopts.calstr.salinity.dy146 = 'dcal.salinity_cal = dnew.salinity_raw + interp1
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
                 sal_off_base = 'sampnum_run';
-case 'tsgsampnum'
-tsg.sampnum = dsu.sampnum;
-tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');
+            case 'tsg_sampnum'
+                tsg.sampnum = dsu.sampnum;
+                tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');
         end
-
+        
     case 'mctd_02'
         switch oopt
             case 'raw_corrs'
@@ -134,7 +134,7 @@ tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');
                     2001 3000
                     9000 3000
                     ];
-
+                
                 castopts.oxyhyst.H3{1} = interp1(h3tab1(:,1),h3tab1(:,2),d.press);
                 iib = find(isnan(d.press)); iig = find(~isnan(d.press));
                 if ~isempty(iib); castopts.oxyhyst.H3{1}(iib) = interp1(iig,castopts.oxyhyst.H3{1}(iig),iib); end
@@ -145,19 +145,19 @@ tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');
                 castopts.docal.temp = 1;
                 castopts.docal.cond = 1;
                 castopts.docal.oxygen = 1;
-
+                
                 castopts.calstr.temp1.dy146 = 'dcal.temp1 = d0.temp1 + interp1([-10 0 2000 4500 6000],[ 5  5  5 0 0]/1e4,d0.press);';
                 castopts.calstr.temp2.dy146 = 'dcal.temp2 = d0.temp2 + interp1([-10 0 2000 4500 6000],[-4 -4 -4 4 4]/1e4,d0.press);';
                 calms = 'from comparison with SBE35, stations 1-25 (all)';
                 castopts.calstr.temp1.msg = calms;
                 castopts.calstr.temp2.msg = calms;
-
+                
                 castopts.calstr.cond1.dy146 = 'dcal.cond1 = d0.cond1.*(1 + interp1([-10 0 500 1000 2000 3500 4500 8000],1*[-12 -12   0  10 18 4 -5 -5]/1e4,d0.press)/35);';
                 castopts.calstr.cond2.dy146 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 0 500 1000 2000 3500 4500 8000],1*[-35 -35 -17  -6  6 2 -5 -5]/1e4,d0.press)/35);';
                 calms = 'from comparison with bottle salinity, stations 1-25 (all)';
                 castopts.calstr.cond1.msg = calms;
                 castopts.calstr.cond2.msg = calms;
-
+                
                 castopts.calstr.oxygen1.dy146 = ['dcal.oxygen1 = d0.oxygen1.*'...
                     'interp1([-10      0    1000    3000  5400   6000],[1.027 1.027  1.033   1.038 1.055 1.055],d0.press).*'...
                     'interp1([1 5 25],[0.988 1 1],d0.statnum);'];
@@ -167,7 +167,7 @@ tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');
                 calms = 'from comparison with bottle oxygens, stations 1-25 (all)';
                 castopts.calstr.oxygen1.msg = calms;
                 castopts.calstr.oxygen2.msg = calms;
-
+                
         end
         %%%%%%%%%% mctd_03 %%%%%%%%%%
     case 'mctd_03'
@@ -178,15 +178,16 @@ tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');
                 stns_alternate_o = [1:8 10:99];
         end
         %%%%%%%%%% end mctd_03 %%%%%%%%%%
-
+        
     case 'moxy_01'
         switch oopt
-            case 'oxy_files_parse'
+            case 'oxy_files'
                 clear ofiles
                 ofiles = {'oxygen_calculation_newflasks_dy146.xlsx'};
                 sheets = 1:30; %ok if this is longer than number of data sheets
                 chrows = 1:2;
                 chunits = 3;
+            case 'oxy_parse'
                 oxyvarmap = {
                     'statnum',       'cast_number'
                     'position',      'niskin_bottle'
@@ -200,41 +201,41 @@ tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');
                     'date_titre',    'dnum'
                     'bot_vol_tfix'   'botvol_at_tfix'
                     'conc_o2',       'c_o2_'}; %not including conc_o2, recalculating instead
-            case 'oxycalcpars'
-if 0
-                [num,~,raw] = xlsread(fullfile(mgetdir('M_BOT_OXY'),'Logsheet-Blanks&Standards_DY146.xlsx'));
-                num = [NaN+zeros(2,size(num,2)); num];
-                ii1 = find(strncmp('After bubbles',raw(:,4),13));
-                iib = find(strncmp('B',raw(1:size(num,1),1),1) & ~isnan(num(:,2)) & ~isnan(num(:,3))); 
-                iib = iib(iib>ii1);
-                bl = num(iib,2:5); %bll = raw(iib,1);
-                bl_av = bl(:,1)-(bl(:,2)+bl(:,3))/2;
-                bl_av(isnan(bl(:,3))) = NaN;
-                bl(bl(:,4)==bl_av,4) = NaN;
-                bl_av_all = bl(:,1)-m_nanmean(bl(:,2:4),2);
-                bl_av_all(isnan(bl_av)) = NaN;
-                gb = abs(round(bl_av_all*1e4)/10)<=4;
-                blank = mean(bl_av_all(gb));
-                iis = find(strncmp('S',raw(1:size(num,1),8),1) & ~isnan(num(:,9))); iis = iis(iis>ii1);
-                st = num(iis,9); %stl = [raw(iis7,7); raw(iis8,8)];
-                m = st<0.48 & st>=0.47;
-                disp([blank sum(gb)/sum(~isnan(bl_av_all))*100 mean(st(m)) std(st(m))/mean(st(m)) sum(m)/sum(~isnan(st))*100])
-    end
-ds_oxy.blank_titre = repmat(0.003,size(ds_oxy.sampnum,1),1);
-ds_oxy.std_titre = repmat(0.4735,size(ds_oxy.sampnum,1),1);            
-ds_oxy.std_titre(ismember(ds_oxy.statnum,3:5)) = 0.4725;
-ds_oxy.std_titre(ismember(ds_oxy.statnum,6:22)) = 0.475;
-ds_oxy.std_titre(ismember(ds_oxy.statnum,23:25)) = 0.4765;
-vol_reag_tot = 1.97;
-case 'oxyflags'
-m = ismember(d.sampnum,[109 201 209 211 605 1201]);
-d.botoxya_flag(m) = max(d.botoxya_flag(m),3);
-d.botoxyb_flag(m) = max(d.botoxyb_flag(m),3);
-d.botoxyc_flag(m) = max(d.botoxyc_flag(m),3);
-end
-
-           %%%%%%%%%% best_station_depths %%%%%%%%%%
- case 'best_station_depths'
+            case 'oxy_calc'
+                if 0
+                    [num,~,raw] = xlsread(fullfile(mgetdir('M_BOT_OXY'),'Logsheet-Blanks&Standards_DY146.xlsx'));
+                    num = [NaN+zeros(2,size(num,2)); num];
+                    ii1 = find(strncmp('After bubbles',raw(:,4),13));
+                    iib = find(strncmp('B',raw(1:size(num,1),1),1) & ~isnan(num(:,2)) & ~isnan(num(:,3)));
+                    iib = iib(iib>ii1);
+                    bl = num(iib,2:5); %bll = raw(iib,1);
+                    bl_av = bl(:,1)-(bl(:,2)+bl(:,3))/2;
+                    bl_av(isnan(bl(:,3))) = NaN;
+                    bl(bl(:,4)==bl_av,4) = NaN;
+                    bl_av_all = bl(:,1)-m_nanmean(bl(:,2:4),2);
+                    bl_av_all(isnan(bl_av)) = NaN;
+                    gb = abs(round(bl_av_all*1e4)/10)<=4;
+                    blank = mean(bl_av_all(gb));
+                    iis = find(strncmp('S',raw(1:size(num,1),8),1) & ~isnan(num(:,9))); iis = iis(iis>ii1);
+                    st = num(iis,9); %stl = [raw(iis7,7); raw(iis8,8)];
+                    m = st<0.48 & st>=0.47;
+                    disp([blank sum(gb)/sum(~isnan(bl_av_all))*100 mean(st(m)) std(st(m))/mean(st(m)) sum(m)/sum(~isnan(st))*100])
+                end
+                ds_oxy.blank_titre = repmat(0.003,size(ds_oxy.sampnum,1),1);
+                ds_oxy.std_titre = repmat(0.4735,size(ds_oxy.sampnum,1),1);
+                ds_oxy.std_titre(ismember(ds_oxy.statnum,3:5)) = 0.4725;
+                ds_oxy.std_titre(ismember(ds_oxy.statnum,6:22)) = 0.475;
+                ds_oxy.std_titre(ismember(ds_oxy.statnum,23:25)) = 0.4765;
+                vol_reag_tot = 1.97;
+            case 'oxy_flags'
+                m = ismember(d.sampnum,[109 201 209 211 605 1201]);
+                d.botoxya_flag(m) = max(d.botoxya_flag(m),3);
+                d.botoxyb_flag(m) = max(d.botoxyb_flag(m),3);
+                d.botoxyc_flag(m) = max(d.botoxyc_flag(m),3);
+        end
+        
+        %%%%%%%%%% best_station_depths %%%%%%%%%%
+    case 'best_station_depths'
         switch oopt
             case 'depth_source'
                 depth_source = {'ctd'};
@@ -268,9 +269,9 @@ end
                     25 4240
                     ];
         end
-
-          %%%%%%%%%% station_summary %%%%%%%%%%
-  case 'station_summary'
+        
+        %%%%%%%%%% station_summary %%%%%%%%%%
+    case 'station_summary'
         switch oopt
             case 'sum_varsam'
                 snames = {'nsal'; 'noxy'; 'nnut_shore'; 'nco2_shore'; 'nchl_shore'; 'ndoc_shore'}; %s suffix for variables not analysed on ship at all
@@ -279,11 +280,11 @@ end
                     {'silc' 'phos' 'totnit'} %list of nuts variables
                     {'dic' 'alk' 'ph'} %list of co2 variables
                     {'botchla'} %
-                    {'doc'} % 
+                    {'doc'} %
                     };
         end
-
-
+        
+        
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
     case 'msam_ashore_flag'
         switch oopt
@@ -354,6 +355,6 @@ end
                     };
         end
         %%%%%%%%%% end mout_cchdo %%%%%%%%%%
-
-
+        
+        
 end

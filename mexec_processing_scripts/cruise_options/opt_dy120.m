@@ -1,21 +1,16 @@
 switch scriptname
         
-        %%%%%%%%%% mbot_00 %%%%%%%%%% added by Kristin, 10/10/2020
-    case 'mbot_00' %information about niskin bottle numbers
+        %%%%%%%%%% mfir_01 %%%%%%%%%% 
+        % added jc238 to combine former mbot_00 and mbot_01 code (which was added by Kristin, 10/10/2020)
+    case 'mfir_01' %information about niskin bottle numbers
         switch oopt
             case 'nispos'
                 %inventory/serial numbers of the niskins in order of 1 to 24
-                nis = [2754:2774 2776:2778]; %250002754:250002778
-        end
-        %%%%%%%%%% end mbot_00 %%%%%%%%%%
-        
-        %%%%%%%%%% mbot_01 %%%%%%%%%% added by Kristin, 10/10/2020
-    case 'mbot_01'
-        switch oopt
+                niskn = [2754:2774 2776:2778]; %250002754:250002778
             case 'botflags'
                 % CTD has only 12 bottles, set every 2nd bottle 9: did not
                 % fire
-                bottle_qc_flag(2:2:24) = 9;
+                niskin_flag(2:2:24) = 9;
                 % set individual flags for each cast [station_number bottle_number]
                 flag3 = []; flag4 = []; flag9 = []; %[station niskin]
                 %flag3 = []; % (possibly) leaking or questionable based on visual
@@ -24,22 +19,22 @@ switch scriptname
                 %     flag4 = [flag4; 1 1; 8 2; 22 13]; %sample data very suspicious
                 %flag9 = []; %did not fire
                 %iif = find(flag3(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag3(iif,2)) = 3; end
-                iif = find(flag4(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag4(iif,2)) = 4; end
+                iif = find(flag4(:,1)==stnlocal); if ~isempty(iif); niskin_flag(flag4(iif,2)) = 4; end
                 %iif = find(flag9(:,1)==stnlocal); if length(iif)>0; bottle_qc_flag(flag9(iif,2)) = 9; end
                 %cast 45: some question about niskins closing at wrong
                 %depth if damaged by slack wire but probably ok
         end
-        %%%%%%%%%% end mbot_01 %%%%%%%%%
+        %%%%%%%%%% end mfir_01 %%%%%%%%%
         
-        %%%%%%%%%% populate_station_depths %%%%%%%%%%
+        %%%%%%%%%% best_station_depths (transferred jc238 from populate_station_depths) %%%%%%%%%%
     case 'populate_station_depths'
         switch oopt
             case 'depth_source'
-                depth_source = 'ctd';
+                depth_source = {'ctd'};
             case 'bestdeps'
-                ii = find(bestdeps(:,1)==3); bestdeps(ii,2) = 1787; % from CTD+Altim
+                replacedeps = [3 1787]; % from CTD+Altim
         end
-        %%%%%%%%%% end populate_station_depths %%%%%%%%%%
+        %%%%%%%%%% end best_station_depths %%%%%%%%%%
         
         %%%%%%%%%% mvad_01 %%%%%%%%%%
     case 'mvad_01'
@@ -52,44 +47,50 @@ switch scriptname
         end
         %%%%%%%%%% end mvad_01 %%%%%%%%%%
         
-        
-        %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
-    case 'msal_standardise_avg'
+        %%%%%%%%%% moxy_01 (added jc238 to replace custom code in moxy_01_OSNAP) %%%%%%%%%% 
+    case 'moxy_01'
         switch oopt
-            case 'salcsv'
+            case 'oxy_files'
+                hcpat = {'position'; 'number'};
+            case 'oxy_parse'
+            %rearrange botoxy1,2,3 into conc_o2 (so we can operate on
+            %single column; moxy_01 separates out duplicate/triplicates
+            %again later anyway)
+            ds_oxy = rmfield(ds_oxy,'sampnum'); %recalculate later
+            ds_oxy.conc_o2 = ds_oxy.botoxy1;
+            ds_oxy.fix_temp = ds_oxy.botoxytemp1;
+            ii = find(~isnan(ds_oxy.botoxytemp2));
+            l = length(ii);
+            l0 = length(ds_oxy.conc_o2);
+            ds_oxy.conc_o2(l0+[1:l]) = ds_oxy.botoxy2(ii);
+            ds_oxy.fix_temp(l0+[1:l]) = ds_oxy.botoxytemp2(ii);
+            ds_oxy.statnum(l0+[1:l]) = ds_oxy.statnum(ii);
+            ds_oxy.position(l0+[1:l]) = ds_oxy.position(ii);
+            ii = find(~isnan(ds_oxy.botoxytemp3));
+            l = length(ii);
+            l0 = length(ds_oxy.conc_o2);
+            ds_oxy.conc_o2(l0+[1:l]) = ds_oxy.botoxy3(ii);
+            ds_oxy.fix_temp(l0+[1:l]) = ds_oxy.botoxytemp3(ii);
+            ds_oxy.statnum(l0+[1:l]) = ds_oxy.statnum(ii);
+            ds_oxy.position(l0+[1:l]) = ds_oxy.position(ii);            
+        end
+        
+        %%%%%%%%%% msal_01 (transferred jc238 from msal_standardise_avg) %%%%%%%%%%
+    case 'msal_01'
+        switch oopt
+            case 'sal_files'
                 sal_csv_file = 'sal_dy120_01.csv';
-            case 'check_sal_runs'
+            case 'sal_calc'
                 check_sal_runs = 1;
                 calc_offset = 1;
                 plot_all_stations = 1;
-            case 'k15'
                 sswb = 163; %ssw batch
                 msal_ssw
                 ds_sal.K15 = zeros(size(ds_sal.sampnum));
                 ds_sal.K15(iistd) = ssw_batches(ssw_batches(:,1)==sswb,2)/2;
-            case 'cellT'
                 ds_sal.cellT = 21+zeros(length(ds_sal.sampnum),1);
-            case 'std2use'
-                %                 std2use([47 68 121],1) = 0;
-                %                 std2use([50],2) = 0;
-                %                 std2use([61],3) = 0;
-            case 'sam2use'
-                %                 sam2use(51,2) = 0;
-                %                 sam2use([2587 2896],3) = 0;
-            case 'fillstd'
-                %add the start standard--can add it at the end because we'll
-                %use time to interpolate
-                %%                ds_sal.sampnum = [ds_sal.sampnum; 999000];
-                %%                ds_sal.offset(end) = 0;
-                %%                ds_sal.runtime(end) = ds_sal.runtime(1)-1/60/24; %put it 1 minute before sample 1
-                %%machine was re-standardised before running stn 68
-                %ds_sal.sampnum = [ds_sal.sampnum; 999097.5];
-                %ds_sal.offset(end) = 4e-6;
-                %ds_sal.runtime(end) = ds_sal.runtime(ds_sal.sampnum==6801)-1/60/24;
-                %this half-crate had no standard at the end so use the one
-                %from the beginning
         end
-        %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
+        %%%%%%%%%% msal_01 %%%%%%%%%%
         
         %%%%%%%%%% cond_apply_cal %%%%%%%%%% added by KB
     case 'cond_apply_cal'

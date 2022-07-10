@@ -124,7 +124,7 @@ switch scriptname
         %%%%%%%%%% msal_01 %%%%%%%%%%
     case 'msal_01'
         switch oopt
-            case 'sal_off'
+            case 'sal_calc'
                 sal_off = [
                     900  2
                     901  1
@@ -201,9 +201,10 @@ switch scriptname
         %%%%%%%%%% moxy_01 %%%%%%%%%%
     case 'moxy_01'
         switch oopt
-            case 'oxy_parse'
+            case 'oxy_files'
                 chunits = 3;
-                mvar_fvar = {
+            case 'oxy_parse'
+                oxyvarmap = {
                     'statnum',       'cast_number'
                     'position',      'niskin_bottle'
                     'vol_blank',     'blank_titre'
@@ -216,7 +217,6 @@ switch scriptname
                     'bot_vol',       'bot_vol'
                     'date_titre',    'dnum'
                     }; %not including bot_vol_tfix or conc_o2, recalculating instead
-            case 'oxy_parse_files'
                 %extra flags for inter-machine comparison***temporary
                 if sum(strcmp('notes',ds.Properties.VarNames))
                     ii = find(strncmp('ABC',ds.notes,3));
@@ -243,7 +243,7 @@ switch scriptname
                 [~,ia,ib] = intersect(ds.bottle_no, ds_vol.Oxygen_bottle);
                 ds.bot_vol = NaN+ds.bottle_no;
                 ds.bot_vol(ia) = ds_vol.Vol(ib);
-            case 'oxycalcpars'
+            case 'oxy_calc'
                 vol_reag_tot = 1.99;
                 ds_oxy.vol_std(:) = 5;
                 %load all blanks and standards records, average over runs
@@ -296,7 +296,7 @@ switch scriptname
                 ds_oxy.vol_blank(ds_oxy.statnum<40) = a(1);
                 ds_obs.blanks(strncmp('bad',ds_obs.comment,3)) = NaN;
                 ds_obs.stds(strncmp('bad',ds_obs.comment,3)) = NaN;
-            case 'oxyflags'
+            case 'oxy_flags'
                 %adjust back
                 d.botoxya_flag(d.botoxya_flag>20) = d.botoxya_flag(d.botoxya_flag>20)-20;
                 d.botoxyb_flag(d.botoxyb_flag>20) = d.botoxyb_flag(d.botoxyb_flag>20)-20;

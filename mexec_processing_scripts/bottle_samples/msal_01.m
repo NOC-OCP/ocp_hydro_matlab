@@ -26,38 +26,36 @@
 m_common
 if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
 
-std_samp_range = [9e5 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
-%ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
-
-% resolve root directories for various file types, and set output files
+% find list of files and information on variables
 root_sal = mgetdir('M_BOT_SAL');
-dataname = ['sal_' mcruise '_01'];
-salfile = fullfile(root_sal, [dataname '.nc']);
-samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
-scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
-tsgfile = fullfile(mgetdir(tsgpre), ['tsgsal_' mcruise '_all.nc']);
-
-%get list of files to load
-scriptname = mfilename; oopt = 'salfiles'; get_cropt %list of files to load
-for flno = 1:length(salfiles)
-    salfiles{flno} = fullfile(root_sal,salfiles{flno});
+scriptname = mfilename; oopt = 'sal_files'; get_cropt %list of files to load
+if isempty(salfiles)
+    warning(['no salinity data files found in ' root_sal '; skipping']);
+    return
+else
+    for flno = 1:length(salfiles)
+        salfiles{flno} = fullfile(root_sal,salfiles{flno});
+    end
 end
 
 %load
-[ds_sal, salhead] = load_samdata(salfiles, hcpat, 'chrows', chrows, 'chunits', chunits);
+[ds_sal, salhead] = load_samdata(salfiles, hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets);
 if isempty(ds_sal)
     error('no data loaded')
 end
-fn = ds_sal.Properties.VariableNames;
 
-%deal with different variable names
+%parse, for instance getting information from header
+scriptname = mfilename; oopt = 'sal_parse'; get_cropt 
+
+%rename*** a lot of this code and the time variable code is specific to nmf
+%autosal output files, right? put in setdef_cropt_sam? 
 clear samevars
 samevars.sample_1 = {'sample1' 'reading_1' 'reading1' 'r1'};
 samevars.sample_2 = {'sample2' 'reading_2' 'reading2' 'r2'};
 samevars.sample_3 = {'sample3' 'reading_3' 'reading3' 'r3'};
 samevars.runavg = {'average'};
-scriptname = mfilename; oopt = 'salnames'; get_cropt 
 vars = fieldnames(samevars);
+fn = ds_sal.Properties.VariableNames;
 for vno = 1:length(vars)
     ii0 = strcmp(vars{vno},fn);
     iid = find(contains(samevars.(vars{vno}),fn));
@@ -108,16 +106,18 @@ end
 
 ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3],2);
 
-scriptname = mfilename; oopt = 'salflags'; get_cropt
+scriptname = mfilename; oopt = 'sal_flags'; get_cropt
 
 %check for offsets in cruise options, also set things like cellT, K15
-scriptname = mfilename; oopt = 'sal_off'; get_cropt
+scriptname = mfilename; oopt = 'sal_calc'; get_cropt
 if ~isfield(ds_sal,'cellt') || sum(~isnan(ds_sal.cellt))==0
     ds_sal.cellt = repmat(cellT,size(ds_sal,1),1);
 end
 if isfield(ds_sal,'k15') && sum(~isnan(ds_sal.k15))==0; ds_sal.k15 = []; end
 
 %apply offsets
+std_samp_range = [9e5 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
+%ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
 if isempty(sal_adj_comment) && ~isempty(sal_off)
     sal_adj_comment = ['Adjustments specified in opt_' mcruise];
 end
@@ -179,6 +179,13 @@ if ~isempty(ds_sal.Properties.VariableUnits)
     check_table_units(ds_sal, salunits)
 end
 
+dataname = ['sal_' mcruise '_01'];
+salfile = fullfile(root_sal, [dataname '.nc']);
+samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
+scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+tsgfile = fullfile(mgetdir(tsgpre), ['tsgsal_' mcruise '_all.nc']);
+
+%get list of files to load
 %select the variables we want to save
 fn = ds_sal.Properties.VariableNames;
 fn0 = fieldnames(salunits);
@@ -230,7 +237,7 @@ mfsave(samfile, ds, hnew, '-merge', 'sampnum');
             dsu.(fnd{no}) = d.(fnd{no})(iiu,:);
         end
         
-        scriptname = mfilename; oopt = 'tsgsampnum'; get_cropt
+        scriptname = mfilename; oopt = 'tsg_sampnum'; get_cropt
         [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
         dsu.time = NaN+dsu.sampnum;
         dsu.time(ia) = 86400*(tsg.dnum(ib)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));

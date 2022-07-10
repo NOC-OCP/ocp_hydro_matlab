@@ -235,7 +235,7 @@ switch scriptname
                 blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stnlocal));
             case 'nispos'
                 crhelp_str = {'niskc gives the carousel positions and niskn the bottle numbers'
-                    '(e.g. serial numbers, if known). both should be length = nnisk (set in castpars)'
+                    '(e.g. serial numbers, if known). length of both should = nnisk (set in castpars)'
                     'both default to [1:nnisk]''.'};
                 niskc = [1:nnisk]';
                 niskn = [1:nnisk]';
@@ -301,6 +301,28 @@ switch scriptname
                     'to be added to _raw and _raw_cleaned files'};
                 newvars = {};
         end
+        
+                     %%%%%%%%%% best_station_depths %%%%%%%%%%
+    case 'best_station_depths'
+        switch oopt
+            case 'depth_recalc'
+                crhelp_str = {'recalcdepth_stns (default []) lists stations for which to recalculate depths '
+                    'even if they already have values in station_depths mat-file'};
+                recalcdepth_stns = [];
+            case 'depth_source'
+                crhelp_str = {'depth_source (default: {''ladcp'', ''ctd''}) determines preferred method(s), '
+                    'in order, for finding station depths. Other option is ''file''; if this is set, must also'
+                    'specify fnintxt, the name of the ascii (csv or two-column text) file of [stations, depths].'};
+                depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
+            case 'bestdeps'
+                crhelp_str = {'Place to edit those station depths that were not correctly filled in by '
+                    'the chosen depmeth, either directly by editing bestdeps (a list of [station, depth]), '
+                    'or by setting replacedeps, a list of [station, depth] only containing the pairs to edit.'
+                    'Also can set stnmiss, a list of stations not to include in bestdeps list.'};
+                replacedeps = [];
+                stnmiss = [];
+        end
+        %%%%%%%%%% end best_station_depths %%%%%%%%%%
         
         
     case 'mout_1hzasc'

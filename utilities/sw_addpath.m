@@ -27,7 +27,7 @@ end
 ld = table('Size', [1 4], 'VariableTypes', {'string' 'string' 'string' 'string'}, 'VariableNames', {'predir' 'lib' 'exmfile' 'verstr'});
 n = 1;
 ld(n,:) = {other_programs_root 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
-ld(n,:) = {other_programs_root 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
+%ld(n,:) = {other_programs_root 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
 ld(n,:) = {other_programs_root 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
 %ld(n,:) = {other_programs_root 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
 ld(n,:) = {other_programs_root 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
