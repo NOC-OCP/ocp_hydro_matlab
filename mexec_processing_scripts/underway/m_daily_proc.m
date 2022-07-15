@@ -22,7 +22,7 @@ if ~exist('days','var')
 end
 
 if ~exist('restart_uway_append','var'); restart_uway_append = 0; end
-if restart_uway_append; warning(['will delete appended file and start from ' num2str(days(1)) '; this is probably not necessary']); end
+if restart_uway_append; warning('will delete appended file and start from %d; this is probably not necessary as mday_02 merges on time',days(1)); end
 
 root_u = MEXEC_G.mexec_data_root;
 
@@ -47,7 +47,7 @@ for daynumber = days
             continue
         end
         
-        %apply additional processing and cleaning for some streams
+        %apply additional processing and cleaning (and renaming) for some streams
         mday_01_clean(shortnames{sno}, daynumber);
         
     end
@@ -55,8 +55,7 @@ for daynumber = days
     %merge bathymetry streams with each other; they are edited day by day,
     %so do merge at this stage
     if sum(strcmp('bathy', umtypes))
-        mbathy_av
-        mbathy_merge
+        mbathy_av_merge
     end
     
 end

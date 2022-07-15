@@ -19,7 +19,7 @@ for kloop = klist
     stn = kloop; mctd_02
 
     stn = kloop; mctd_03;
-    if MEXEC_G.ix_ladcp==1
+    if MEXEC_G.ix_ladcp
         mout_1hzasc(stnlocal);
     end
     stn = kloop; mctd_04;
@@ -37,7 +37,7 @@ for kloop = klist
     
 end
 
-scriptname = 'batchactions'; oopt = 'sam'; get_cropt
-scriptname = 'batchactions'; oopt = 'syncc'; get_cropt
+%output to csv files
+scriptname = 'batchactions'; oopt = 'output_for_others'; get_cropt
 clear klist*
 

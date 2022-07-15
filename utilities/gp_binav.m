@@ -71,8 +71,10 @@ for bno = 1:length(xm)
                     w = sum(double(m));
                     for no2 = 1:s(2)
                         if w(no2)>0
-                            b = [ones(w,1) xb(m(:,no2))]\yb(m(:,no2),no2);
-                            yg(bno,no2) = b(1)+b(2)*xm;
+                            try
+                            b = [ones(w(no2),1) xb(m(:,no2))]\yb(m(:,no2),no2);
+                            yg(bno,no2) = b(1)+b(2)*xm(bno);
+                            catch; keyboard; end
                         end
                     end        
             end

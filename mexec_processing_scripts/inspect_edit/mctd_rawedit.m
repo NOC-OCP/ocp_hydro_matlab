@@ -67,7 +67,7 @@ else
         pshow1 = pshow0;
         mplxyed(pshow1);
         
-        redo = input('run for another variable? (1 for yes, 0 for no) ');
+        redo = input('run for another variable? (1 for yes, 0 for no) \n');
         
     end
     

@@ -84,7 +84,7 @@ dv1 = datevec(dn1); % this will convert a datenum to a datevec if it isn't alrea
 dv2 = datevec(dn2);
 
 
-[dd names units] = mrload(table,dn1,dn2,varstring,qflag);
+[dd, names, units] = mrload(table,dn1,dn2,varstring,qflag);
 
 if numel(dd.dnum) == 0
     if isempty(qflag)
@@ -94,69 +94,33 @@ if numel(dd.dnum) == 0
     return
 end
 
-% calculate mexec time in seconds and remove dnum from the names list for
-% saving. dnum is always there as the matlab_datenum time variable.
-torg = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
-dd.time = (dd.dnum-torg)*86400;
-names = [{'time'};names];
-units = [{'seconds'};units];
-kdnum = find(strcmp('dnum',names));
-names(kdnum) = [];
-units(kdnum) = [];
+%change dnum to mexec time in seconds
+dd.time = (dd.dnum-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
+names = [names; 'time'];
+units = [units; 'seconds'];
+dd = rmfield(dd, 'dnum');
+[names, ia] = setdiff(names, {'dnum'});
+units = units(ia);
 
-nvars = length(names);
-namesunits = cell(0);
-for kl = 1:nvars
+%add variable names and units to hnew, or remove from dd
+clear hnew
+hnew.fldnam = {}; hnew.fldunt = {};
+for kl = 1:length(names)
     vname = names{kl};
-    cmd = [vname ' = dd.(vname);']; eval(cmd);
-    namesunits = [namesunits;{' '};units(kl)]; % will be used to set units in msave
+    if isnumeric(dd.(vname))
+        hnew.fldnam = [hnew.fldnam vname];
+        hnew.fldunt = [hnew.fldunt units(kl)];
+    else
+        dd = rmfield(dd,vname);
+        warning('skipping non-numeric variable %s from table %s',vname,table)
+    end
 end
 
-MEXEC_A.MARGS_IN_1 = {otfile};
-MEXEC_A.MARGS_IN_2 = names;
-MEXEC_A.MARGS_IN_3 = {
-    ' '
-    ' '
-    '8'
-    '0'
-    };
-MEXEC_A.MARGS_IN_4 = namesunits;
-MEXEC_A.MARGS_IN_5 = {
-    '-1'
-    '-1'
-    };
-    
+hnew.dataname = dataname;
+hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER ' calling msave'];
+mfsave(otfile, dd, hnew);
 
-
-MEXEC_A.MARGS_IN = [
-    MEXEC_A.MARGS_IN_1
-    MEXEC_A.MARGS_IN_2
-    MEXEC_A.MARGS_IN_3
-    MEXEC_A.MARGS_IN_4
-    MEXEC_A.MARGS_IN_5
-    ];
-msave
-
-MEXEC_A.MARGS_IN = {
-otfile
-'y'
-'1'
-dataname
-' '
-'2'
-MEXEC_G.PLATFORM_TYPE
-MEXEC_G.PLATFORM_IDENTIFIER
-MEXEC_G.PLATFORM_NUMBER
-' '
-'4'
-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
-' '
-'-1'
-'-1'
-};
-mheadr
-
-nowstring = datestr(now,31);
-ncfile_ot.name = otfile;
-m_add_comment(ncfile_ot,['Variables written from rvdas to mstar at ' nowstring ' by ' MEXEC_G.MUSER ' calling msave']);
-%--------------------------------
+%MEXEC_G.PLATFORM_TYPE
+%MEXEC_G.PLATFORM_IDENTIFIER
+%MEXEC_G.PLATFORM_NUMBER
+%MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN

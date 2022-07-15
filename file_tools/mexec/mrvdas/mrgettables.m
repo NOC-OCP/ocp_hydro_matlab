@@ -24,28 +24,15 @@ function rvdas_tables = mrgettables
 %   rvdas. The list of tables is determined from the psql \dt command.
 %
 %   So fieldnames(rvdas_tables) is a cell array of the table names.
+%   Each field is []
 
 m_common
 
-rootcsv = [MEXEC_G.RVDAS_CSVROOT '/'];
+% place to temporarily put list of tables
 
-csvname = [rootcsv 'table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv'];
-
-
+csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 sqltext = ['"\dt" >! ' csvname];
-
-sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-% sqlroot = ['psql -h ' '192.168.62.12' ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-psql_string = [sqlroot ' -c ' sqltext ];  
-
-try
-    [s1, ~] = system(psql_string);
-    if stat~=0
-        error('LD_LIBRARY_PATH?')
-    end
-catch
-    [s1, ~] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
-end
+mr_try_psql(sqltext);
 
 fid = fopen(csvname,'r');
 tl = cell(0);

@@ -76,7 +76,7 @@ for kl = 1:nvar
         vd = vdata(end);
     end
     dnum = 0;
-    if strcmp(vname,'dnum');
+    if strcmp(vname,'dnum')
         dnum = 1;
     end
     pad = '                                                   ';
@@ -84,14 +84,16 @@ for kl = 1:nvar
     vname = vname(end-30:end);
     if isempty(qflag)
         if dnum == 1
-            if isfinite(vd); 
+            if isfinite(vd)
                 datestring = datestr(vd,31);
             else
                 datestring = 'No data found';
             end
             fprintf(MEXEC_A.Mfidterm,'%s : %s\n',vname,datestring);
         else
+            try;
             fprintf(MEXEC_A.Mfidterm,'%s : %19.6f     %s\n',vname,vd,vunits);
+            catch; keyboard; end
         end
     end
 end

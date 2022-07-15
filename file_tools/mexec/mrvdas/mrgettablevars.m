@@ -38,21 +38,9 @@ if length(ktable) == 1
 end
 
 
-rootcsv = [MEXEC_G.RVDAS_CSVROOT '/'];
-csvname = [rootcsv 'table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv'];
-sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-% sqlroot = ['psql -h ' '192.168.62.12' ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-
+csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 sqltext = ['"\copy (select * from ' table ' order by time asc limit 0) to ''' csvname ''' csv header"'];
-psql_string = [sqlroot ' -c ' sqltext];
-try
-    [s1, ~] = system(psql_string);
-    if s1~=0
-        error('LD_LIBRARY_PATH?')
-    end
-catch
-    [s1, ~] = system(['unsetenv LD_LIBRARY_PATH;' psql_string]);
-end
+mr_try_psql(sqltext)
 
 fid = fopen(csvname,'r');
 t = fgetl(fid);  % t is now the comma delimited list of variable names

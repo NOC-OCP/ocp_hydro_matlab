@@ -366,8 +366,10 @@ if nosort
 else
     s = size(mvo);
     d.(indepvar) = unique([mvo(:); mvn(:)]);
-    s(s>1) = length(d.(indepvar));
-    d.(indepvar) = reshape(d.(indepvar),s); %row vs column vector
+    if sum(s)>2
+        s(s>1) = length(d.(indepvar));
+        d.(indepvar) = reshape(d.(indepvar),s); %row vs column vector
+    end
 end
 
 %place combined variables

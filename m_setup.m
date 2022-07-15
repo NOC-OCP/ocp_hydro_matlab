@@ -19,7 +19,7 @@ MEXEC_G.other_programs_root = '~/programs/others/';
 force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 1; %if 0, both mexec_v3/source programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 skipunderway = 0; %set to 1 if reprocessing data not including underway data from an old cruise
-MEXEC_G.ix_ladcp = 0; %set to 1 to output 1-Hz CTD data for use by LDEO IX LADCP processing
+MEXEC_G.ix_ladcp = 1; %if true, output 1-Hz CTD data for use by LDEO IX LADCP processing
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 
@@ -156,13 +156,15 @@ MEXEC_G.MDIRLIST = {
     'M_BOT_CHL' fullfile('ctd','BOTTLE_SHORE')
     'M_BOT_ISO' fullfile('ctd','BOTTLE_SHORE')
     'M_SAM' 'ctd'
-    'M_TEMPLATES' fullfile('mexec_processing_scripts','varlists')
-    'M_VMADCP' 'vmadcp'
-    'M_LADCP' 'ladcp'
-    'M_IX' fullfile('ladcp','ix')
     'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
     'M_SUM' 'collected_files'
+    'M_VMADCP' 'vmadcp'
     };
+if MEXEC_G.ix_ladcp
+    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
+        {'M_LADCP' 'ladcp'
+        'M_IX' fullfile('ladcp','ix')}];
+end
 
 % add underway system-dependent directories
 switch MEXEC_G.Mshipdatasystem
@@ -183,14 +185,19 @@ switch MEXEC_G.Mshipdatasystem
             ];
     case 'rvdas'
         MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
-        MEXEC_G.RVDAS_CSVROOT = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-        MEXEC_G.RVDAS_USER = 'rvdas';
-        MEXEC_G.RVDAS_DATABASE = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+        MEXEC_G.RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
+        MEXEC_G.RVDAS.user = 'rvdas';
+        MEXEC_G.RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
         switch MEXEC_G.Mship
             case 'cook'
-                MEXEC_G.RVDAS_MACHINE = 'rvdas.cook.local';
+                MEXEC_G.RVDAS.machine = 'rvdas.cook.local';
+                MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/jcmeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
             case 'discovery'
-                MEXEC_G.RVDAS_MACHINE = '192.168.62.12';
+                MEXEC_G.RVDAS.machine = '192.168.62.12';
+                MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/dymeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
+            case 'attenborough'
+                MEXEC_G.RVDAS.machine = '';
+                MEXEC_G.RVDAS.jsondir = '';
         end
 end
 MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range

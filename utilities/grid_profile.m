@@ -4,7 +4,8 @@ function dg = grid_profile(d, gridvar, gridvec, method, varargin)
 % dg = grid_profile(d, gridvar, gridvec, 'medint', 'int', [below above]);
 % dg = grid_profile(d, gridvar, gridvec, 'smhan', 'len', len);
 %
-% grids variables in d (structure) based on field gridvar (string):
+% grids variables in d (structure) based on field gridvar (string) using
+%   one of the following methods: 
 % 'meanbin': means of data in (contiguous) bins with edges gridvec
 % 'medbin': as above but median
 % 'meannum': means of each *** segment of data
@@ -158,6 +159,7 @@ switch method
             gridvec(iie) = []; ge(iie,:) = [];
         end
         dg.(gridvar) = gridvec;
+        if ~isrow; dg.(gridvar) = dg.(gridvar)'; end        
         %now that we've set up the bin edges can use binav below
         method = [method(1:end-3) 'bin'];
     case {'linterp' 'smhan'}
@@ -172,6 +174,7 @@ switch method
         dg.(gridvar) = gridvec;
     case 'meannum'
         dg.(gridvar) = mean(reshape(d.(gridvar)(1:num*nav),[num nav]));
+        if ~isrow; dg.(gridvar) = dg.(gridvar)'; end
 end
 ngv = length(gridvec);
 
@@ -242,7 +245,9 @@ for vno = usevar
 end
 %transpose gridvar if necessary
 if isrow && size(dg.(gridvar),1)>1
-   dg.(gridvar) = dg.(gridvar).';
+    dg.(gridvar) = dg.(gridvar).';
+elseif ~isrow && size(dg.(gridvar),2)>1
+    dg.(gridvar) = dg.(gridvar).';
 end
 
 

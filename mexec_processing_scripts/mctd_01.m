@@ -22,12 +22,11 @@
 
 m_common; MEXEC_A.mprog = mfilename;
 scriptname = 'castpars'; oopt = 'minit'; get_cropt 
-if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n'); end
+if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_cnv = mgetdir('M_CTD_CNV');
 root_ctd = mgetdir('M_CTD'); 
-root_templates = mgetdir('M_TEMPLATES');
 
 dataname = ['ctd_' mcruise '_' stn_string];
 
@@ -90,13 +89,13 @@ mheadr
 
 %%%%% rename variables, and add units where necessary %%%%%
 
-renamefile = fullfile(root_templates, 'ctd_renamelist.csv'); 
-dsv = dataset('File', renamefile, 'Delimiter', ',');
+dsv = dataset('File', 'ctd_renamelist.csv', 'Delimiter', ','); %on the matlab path
 scriptname = mfilename; oopt = 'ctdvars'; get_cropt
 if ~isempty(ctdvars_add)
-    dsv.sbename = [dsv.sbename; ctdvars_add(:,1)];
-    dsv.varname = [dsv.varname; ctdvars_add(:,2)];
-    dsv.varunit = [dsv.varunit; ctdvars_add(:,3)];
+    l = length(dsv.sbename); ln = size(ctdvars_add,1);
+    dsv.sbename(l+[1:ln]) = ctdvars_add(:,1);
+    dsv.varname(l+[1:ln]) = ctdvars_add(:,2);
+    dsv.varunit(l+[1:ln]) = ctdvars_add(:,3);
 end
 if length(unique(dsv.sbename))<length(dsv.sbename)
     error(['There is a duplicate name in the list of variables to rename; use ctdvars_replace rather than ctdvars_add in opt_' mcruise]);

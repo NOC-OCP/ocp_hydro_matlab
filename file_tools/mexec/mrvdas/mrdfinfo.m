@@ -24,7 +24,7 @@ function d = mrdfinfo(varargin)
 % table: is the RVDAS table name or the mexec shorthand.
 % qflag will suppress fprintf within the function if set to 'q'.
 % fastflag will save time counting the number of cycles if set to 'f'.
-%
+%try
 % Output:
 %
 % structure d has times of first and last cycle, number of cycles, and
@@ -37,6 +37,9 @@ function d = mrdfinfo(varargin)
 m_common
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
+if isempty(argot.table)
+    error('no valid rvdas table name was specified');
+end
 table = argot.table;
 qflag = argot.qflag;
 if length(argot.otherstrings) < 1
@@ -57,29 +60,13 @@ def = mrdefine;
 table = mrresolve_table(table); % table is now an RVDAS table name for sure.
 vdef = def.mrtables.(table);
 
-rootcsv = [MEXEC_G.RVDAS_CSVROOT '/'];
-
-csvname = [rootcsv table '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv'];
-
 sqlname = vdef{1,1};
 
-sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-sqlroot = ['psql -h ' '192.168.62.12' ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-
 % Number of cycles. Skip if fastflag is set to 'f'
-
 if ~strcmp('f',fastflag)
-    sqltext = ['\copy (select count(*) from ' sqlname ' ) to ''' csvname ''' csv '];
-    psql_string = [sqlroot ' -c "' sqltext '"'];
-    try
-        [s1, ~] = system(psql_string);
-        if s1~=0
-            error('LD_LIBRARY_PATH?')
-        end
-    catch
-        [s1, ~] = system(['unsetenv LD_LIBRARY_PATH ; ' psql_string]);
-    end
-
+    csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
+    sqltext = ['"\copy (select count(*) from ' sqlname ' ) to ''' csvname ''' csv "'];
+    mr_try_psql(sqltext);
     ncyc = load(csvname); % Should just load a number
 else
     ncyc = -1;
@@ -105,16 +92,8 @@ end
 
 % Earliest time
 
-sqltext = ['\copy (select time from ' sqlname ' order by time asc limit 1) to ''' csvname ''' csv '];
-psql_string = [sqlroot ' -c "' sqltext '"'];
-try
-    [s1, ~] = system(psql_string);
-    if s1~=0
-        error('LD_LIBRARY_PATH?')
-    end
-catch
-    [s1, ~] = system(['unsetenv LD_LIBRARY_PATH ; ' psql_string]);
-end
+sqltext = ['"\copy (select time from ' sqlname ' order by time asc limit 1) to ''' csvname ''' csv "'];
+mr_try_psql(sqltext);
 fid = fopen(csvname,'r');
 t = fgetl(fid);  % t is now a RVDAS time string
 fclose(fid);
@@ -138,16 +117,8 @@ dn1 = mrconverttime({t});
 
 % Latest time
 
-sqltext = ['\copy (select time from ' sqlname ' order by time desc limit 1) to ''' csvname ''' csv '];
-psql_string = [sqlroot ' -c "' sqltext '"'];
-try
-    [s1, ~] = system(psql_string);
-    if s1~=0
-        error('LD_LIBRARY_PATH?')
-    end
-catch
-    [s1, ~] = system(['unsetenv LD_LIBRARY_PATH ; ' psql_string]);
-end
+sqltext = ['"\copy (select time from ' sqlname ' order by time desc limit 1) to ''' csvname ''' csv "'];
+mr_try_psql(sqltext);
 fid = fopen(csvname,'r');
 t = fgetl(fid);
 fclose(fid);

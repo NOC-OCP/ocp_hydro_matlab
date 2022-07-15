@@ -86,7 +86,7 @@ prefix2 = ['dcs_' mcruise '_'];
 
 % load data
 
-klist = [stlist(:)' stnlocal];
+klist = [slist(:)' stnlocal];
 sused = zeros(size(klist));
 infiles = cell(4,length(klist));
 d2db = cell(1,length(klist));

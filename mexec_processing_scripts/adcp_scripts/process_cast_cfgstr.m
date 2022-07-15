@@ -114,7 +114,7 @@ pcs.stop = 0; %by default, no debug stops
 pcs.eval_expr = ''; %by default, no variable overrides
 
 %if specified, use cfg to set some parameters in pcs
-if length(varargin)>0
+if ~isempty(varargin)
    cfg = varargin{1};
    if isfield(cfg, 'begin_step'); pcs.begin_step = cfg.begin_step; end
    if isfield(cfg, 'stop'); pcs.stop = cfg.stop; end
@@ -122,7 +122,7 @@ if length(varargin)>0
 end
 
 %defaults to pass to ix_cast_params in cfg
-if ~exist('cfg') | ~isfield(cfg, 'orient')
+if ~exist('cfg') || ~isfield(cfg, 'orient')
     cfg.orient = 'DL';
 end
 if ~isfield(cfg, 'constraints')
@@ -297,7 +297,7 @@ if pcs.begin_step <= pcs.cur_step
   %  get ctd time series data
   %  We provide more than one version to support different file formats
   % 
-  if length(f.ctd)>1 & exist('loadctd')==exist('loadrdi')
+  if length(f.ctd)>1 && exist('loadctd','var')==exist('loadrdi','var')
     pcs.update_figures = [pcs.update_figures 4];
     [d,p]=loadctd(f,d,p);
     
@@ -318,7 +318,7 @@ if pcs.begin_step <= pcs.cur_step
   %  Find depth and bottom and surface using ADCP data 
   if p.getdepth==2
    [d,p]=getdpthi(d,p);
-   if length(find(~isfinite(d.izm(1,:))))
+   if ~isempty(find(~isfinite(d.izm(1,:)), 1))
      error('Non-finite values in d.izm --- try processing with p.getdepth == 1');
    end
   else
@@ -397,7 +397,7 @@ if pcs.begin_step <= pcs.cur_step
   % Reduce scatter by successively removing 1% of the data
   %  in oder to do that we need a first solution
   %
-  if ps.outlier>0 | p.offsetup2down>0
+  if ps.outlier>0 || p.offsetup2down>0
      diary off
      if exist('loadsadcp')==exist('loadrdi') 
       [di,p]=loadsadcp(f,di,p);
@@ -421,7 +421,7 @@ if pcs.begin_step <= pcs.cur_step
   %
   % once we have a first guess profile we recompute the super ensemble
   %
-  if (p.offsetup2down>0 & length(d.izu)>0)
+  if (p.offsetup2down>0 && ~isempty(d.izu))
    pcs.update_figures = [pcs.update_figures 5 6 10];
    diary off
    [di,p,d]=prepinv(d,p,dr);
@@ -626,7 +626,7 @@ fclose('all');				%  close all files just to make sure
 
 disp(' ')				% final message
 disp(['==> The whole task took ',int2str(toc),' seconds'])
-cd([MEXEC_G.MEXEC_DATA_ROOT])
+cd([MEXEC_G.mexec_data_root])
 
 
 

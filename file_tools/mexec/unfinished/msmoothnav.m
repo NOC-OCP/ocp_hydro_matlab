@@ -23,36 +23,10 @@ fn_ot = m_getfilename;
 ncfile_in.name = fn_in;
 ncfile_ot.name = fn_ot;
 
-ncfile_in = m_openin(ncfile_in);
-ncfile_ot = m_openot(ncfile_ot);
-
-
-h = m_read_header(ncfile_in);
+[d, h] = mloadq(ncfile_in);
 if ~MEXEC_G.quiet; m_print_header(h); end
 
-hist = h;
-hist.filename = ncfile_in.name;
-MEXEC_A.Mhistory_in{1} = hist;
-
-
-% --------------------
-% Now do something with the data
-% first write the same header; this will also create the file
-h.openflag = 'W'; %ensure output file remains open for write, even though input file is 'R';
-m_write_header(ncfile_ot,h);
-
-
-ok = 0;
-while ok == 0
-    m1 = ' Do you want just the average (/ or return)  ';
-    m2 = ' or the full stats (f) ?';
-    m1 = sprintf('%s\n',' ',m1,m2);
-    reply = m_getinput(m1,'s');
-    if(strcmp(reply,' ') == 1); fullstats = 0; ok = 1; continue; end
-    if(strcmp(reply,'/') == 1); fullstats = 0; ok = 1; continue; end
-    if(strcmp(reply,'f') == 1); fullstats = 1; ok = 1; continue; end
-end
-
+%determine control variable and whether to average over rows of columns
 copylistok = 0;
 while copylistok == 0
     m = sprintf('%s\n','Type name or number of control variable :');
@@ -79,7 +53,7 @@ while copylistok == 0
         end
     end
     copylistok = 1;
-end
+end %***grid_profile requires d.(gridvar) to be a vector
 
 
 % find vars with 'matching' dimensions
@@ -87,8 +61,8 @@ nrows = h.dimrows;
 ncols = h.dimcols;
 ncycles = nrows.*ncols;
 
-if ccols == 1; rc = 1; end; % only one col so average rows together;
-if crows == 1; rc = 2; end; % only one row so average cols together;
+if ccols == 1; rc = 1; end % only one col so average rows together
+if crows == 1; rc = 2; end % only one row so average cols together
 
 if(rc == 1) %average rows together so match number of nrows
     kmat = find(nrows == crows);
@@ -108,7 +82,7 @@ while okreply == 0
     clear lims
     cmd = ['lims = [' reply '];']; %convert char response to number
     eval(cmd);
-    if length(lims) ~= 3;
+    if length(lims) ~= 3
         fprintf(MEXEC_A.Mfider,'\n%s\n','You must type 3 responses : ');
         reply = m_getinput(' ','s');
         continue
@@ -119,92 +93,40 @@ while okreply == 0
     end
     okreply = 1;
 end
-% lwr = lims(1);
-% upr = lims(2);
-% step = lims(3);
-% bins = [lwr:step:upr];
+lwr = lims(1);
+upr = lims(2);
+step = lims(3);
 
 m1 = ['Use the full range of bins (f) or discard end bins which have no data in control variable ? '];
 m2 = ['You can discard bins to the left (l), right (r) or both (b or ''/'', default)'];
 m2 = sprintf('%s\n',m1,m2);
 reply = m_getinput(m2,'s');
 okreply = 0;
-trunc = 0;
+clear opts
 while okreply == 0
-    if strcmp(' ',reply) == 1; trunc = 4; break; end
-    if strcmp('/',reply) == 1; trunc = 4; break; end
-    if strcmp('l',reply) == 1; trunc = 2; break; end
-    if strcmp('r',reply) == 1; trunc = 3; break; end
-    if strcmp('b',reply) == 1; trunc = 4; break; end
-    if strcmp('f',reply) == 1; trunc = 1; break; end
+    if strcmp(' ',reply) == 1; opts.grid_extrap = [0 0]; break; end
+    if strcmp('/',reply) == 1; opts.grid_extrap = [0 0]; break; end
+    if strcmp('l',reply) == 1; opts.grid_extrap = [0 1]; break; end
+    if strcmp('r',reply) == 1; opts.grid_extrap = [1 0]; break; end
+    if strcmp('b',reply) == 1; opts.grid_extrap = [0 0]; break; end
+    if strcmp('f',reply) == 1; opts.grid_extrap = [1 1]; break; end
     fprintf(MEXEC_A.Mfider,'\n%s\n','You must reply one of ''f'' ''l'' ''r'' or ''b'' ''c/r'' ''/'' : ');
     reply = m_getinput(' ','s');
 end
-lwr = lims(1);
-upr = lims(2);
-step = lims(3);
-% bins = [lwr:step:upr]; % don't get all bins here. This could be very large if
-% lower time limit was offered as 0 and variable is seconds since 1950.
-% do the truncation first.
 
-cvar = nc_varget(ncfile_in.name,h.fldnam{vcontrol});
-if rc == 1
-    x = cvar(:,1);
-elseif rc == 2
-    x = cvar(1,:)';
-end
-
-if trunc == 2 | trunc == 4
-    % find first bin that contains data
-    xmin = min(x);
-    lwr = lwr + max(0,step*floor((xmin-lwr)/step));
-%     kb1 = find(bins <= xmin);
-%     if isempty(kb1); kb1 = 1; end
-%     if kb1(end) > 1; bins(1:kb1(end)-1) = []; end
-end
-% nbins = length(bins);
-if trunc == 3 | trunc == 4
-    % find last bin that contains data
-    xmax = max(x);
-    upr = upr - max(0,step*floor((upr-xmax)/step));
-%     kb2 = find(bins > xmax);
-%     if isempty(kb2); kb2 = nbins; end
-%     if kb2(1) < nbins; bins(kb2(1)+1:end) = []; end
-end
 bins = [lwr:step:upr];
+if rc == 1; bins = bins'; end
 nbins = length(bins); %number of bin boundaries.
-
 if ~MEXEC_G.quiet
-m = ['number of output bins for averaging is ' sprintf('%d',nbins-1)];
-fprintf(MEXEC_A.Mfidterm,'%s\n',m);
+    m = ['number of output bins for averaging is ' sprintf('%d',nbins-1)];
+    fprintf(MEXEC_A.Mfidterm,'%s\n',m);
 end
 
-[xsort ksort] = sort(x);
+opts.ignorenan = 1;
+dg = grid_profile(d, h.fldnam{vcontrol}, bins, 'lfitbin', opts);
+h.comment = [h.comment '\n averaged to by finding midpoint of linear fit in bins of width ' num2str(step)];
+mfsave(otfile, dg, h);
 
-[klo khi] = m_assign_to_bins(xsort,bins);
-
-% tile the control variable if it started as 2-D;
-if rc == 1; tile = [1 ccols]; bins = bins(:); end
-if rc == 2; tile = [crows 1]; bins = bins(:)'; end
-xc = bins(1:end-1) + step/2; % bin centres
-xcontrol = repmat(xc,tile);
-
-% write the control variable bin centres
-
-vname = h.fldnam{vcontrol};
-v.name = vname;
-v.data = xcontrol;
-
-m_write_variable(ncfile_ot,v,'nodata'); %write the variable information into the header but not the data
-% next copy the attributes
-vinfo = nc_getvarinfo(ncfile_in.name,vname);
-va = vinfo.Attribute;
-for k2 = 1:length(va)
-    vanam = va(k2).Name;
-    vaval = va(k2).Value;
-    nc_attput(ncfile_ot.name,vname,vanam,vaval);
-end
-% now write the data, using the attributes already saved in the output file
 % this provides the opportunity to change attributes if required, eg fillvalue
 nc_varput(ncfile_ot.name,vname,v.data);
 m_uprlwr(ncfile_ot,vname);

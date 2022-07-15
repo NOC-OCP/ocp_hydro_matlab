@@ -12,40 +12,19 @@ switch abbrev
     
     case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet' 'possea' 'dopsea' 'vtgsea' 'attsea' 'dopcnav' 'hdtsea' 'ea600' 'logskip' 'posranger' 'hdtgyro'}
         %work on the latest file, which already be an edited version; always output to otfile
-        if exist([otfile '.nc'])
-            movefile(m_add_nc(otfile), m_add_nc(wkfile1)); infile1 = wkfile1;
+        if exist(m_add_nc(otfile),'file')
+            [d,h] = mload(otfile,'/');
         else
-            infile1 = infile;
+            [d,h] = mload(infile,'/');
         end
-        %flag repeated times
-        h = m_read_header(infile1);
-        MEXEC_A.MARGS_IN = {infile1; otfile; '/'; 'time'};
-        if h.rowlength==1
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'y=[1 x1(2:end)-x1(1:end-1)]'];
-        else
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'y=[1; x1(2:end)-x1(1:end-1)]'];
+        deltat = d.time(2:end)-d.time(1:end-1);
+        deltat = [1; deltat(:)];
+        iib = find(deltat==0);
+        for no = 1:length(h.fldnam)
+            d.(h.fldnam{no})(iib) = [];
         end
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; 'deltat'; 'seconds'; ' '];
-        mcalc
-        delete(m_add_nc(wkfile1));
-        %now remove them
-        d = mload(otfile, 'deltat');
-        if sum(d.deltat==0)
-            h = m_read_header(otfile); fn = setdiff(h.fldnam, 'deltat');
-            MEXEC_A.MARGS_IN = {otfile; 'y'};
-            for fno = 1:length(fn)
-                MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-                    fn{fno};
-                    [fn{fno} ' deltat']
-                    ['y = x1; y(x2==0) = NaN;']
-                    ' '
-                    ' '
-                    ];
-            end
-            MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-            mcalib2
-        end
-        
+        mfsave(otfile, d, h);
+
     case {'gys', 'gyr', 'gyro_s', 'gyropmv' 'posmvpos'}
         %work on the latest file, which already be an edited version; always output to otfile
         if exist([otfile '.nc'])

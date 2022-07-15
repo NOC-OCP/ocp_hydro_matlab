@@ -39,14 +39,14 @@ end
 okf = [2]; %only bother with good samples
 okf = [2 3]; %include good or questionable samples (useful for checking flags due to niskins)
 
-printdir = fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'plots');
+printdir = fullfile(MEXEC_G.mexec_data_root, 'plots');
 prstr = '';
 if ~exist('plotprof','var'); plotprof = 1; end %for cond or oxy, make profile plots to check how good samples are
 
 presrange = [-max(d.upress(~isnan(d.utemp))) 0];
 pdeep = 1500;
 
-d = mloadq(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ctd', ['sam_' mcruise '_all']), '/');
+d = mloadq(fullfile(MEXEC_G.mexec_data_root, 'ctd', ['sam_' mcruise '_all']), '/');
 
 %deal with sensor groups and applying calibrations
 scriptname = 'castpars'; oopt = 'ctdsens_groups'; get_cropt

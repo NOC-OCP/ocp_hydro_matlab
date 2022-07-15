@@ -9,7 +9,7 @@ function mout_1hzasc(stn)
 m_common
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s.02.asc, and navstream to ladcp/gps/sm',stn_string); end
+if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s.02.asc, and navstream to ladcp/gps/sm\n',stn_string); end
 
 %%%%%%%%% write ctd data %%%%%%%%%
 
@@ -27,7 +27,7 @@ if ~sum(strcmp(dh.fldnam, 'latitude'))
     disp('not writing 1 hz ascii file for ladcp processing because no lat/lon series')
     return
 end
-[dd dh] = mload(infile,'time press temp psal latitude longitude','0');
+[dd, dh] = mload(infile,'time press temp psal latitude longitude','0');
 
 dd.decday = datenum(dh.data_time_origin) + dd.time/86400 - datenum([dh.data_time_origin(1) 1 0 0 0 0]); % decimal day of year; noon on 1 jan = 1.5
 % noon on 1 jan = 1.5, to agree with loadctd and loadnav

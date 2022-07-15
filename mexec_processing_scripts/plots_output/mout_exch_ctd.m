@@ -22,6 +22,10 @@ nsamp = length(d.press);
 
 clear dh
 scriptname = 'mout_exch'; oopt = 'woce_expo'; get_cropt
+if ~exist('expocode','var')
+    warning('no expocode set in opt_%s.m; skipping', mcruise)
+    return
+end
 dh.expocode = expocode;
 dh.sect_id = sect_id;
 dh.statnum = stnlocal;
@@ -40,9 +44,6 @@ if length(iis)==1
     dn = datenum(hsum.data_time_origin) + dsum.time_bottom(iis)/86400;
     dh.date = datestr(dn,'yyyymmdd');
     dh.time = datestr(dn,'HHMM');
-else 
-    %*** calculate from file if station_summary not updated yet? or at
-    %least take variables we don't have out of list to print out (before line 101)***
 end
 if ~isfield(d, 'castno')
     d.castno = ones(nsamp,1);
@@ -52,7 +53,7 @@ end
 ctdflag = 9+zeros(nsamp,1); ctdflag(~isnan(d.temp+d.psal)) = 2;
 ctoflag = 9+zeros(nsamp,1); ctoflag(~isnan(d.oxygen)) = 2;
 if isfield(d,'fluor')
-ctfflag = 9+zeros(nsamp,1); ctfflag(~isnan(d.fluor)) = 2;
+    ctfflag = 9+zeros(nsamp,1); ctfflag(~isnan(d.fluor)) = 2;
 end
 scriptname = 'mout_exch'; oopt = 'woce_ctd_flags'; get_cropt
 d.temp_flag = ctdflag; d.psal_flag = ctdflag; 

@@ -37,6 +37,7 @@
 % mrconverttime.m             Convert an array of rvdas time strings to matlab datenum                   
 % mrdefine.m                  Create definitions for mexec processing of rvdas dataa          
 % mr_make_psql.m              Make the psql command string for mrload 
+% mr_try_psql.m               Put together command with psql prefix and try with and without LD_LIBRARY
 % mrparseargs.m               Parse the varargin cell arrays of most functions
 % mrresolve_table.m           Return the name of the rvdas table
 % mrgetrvdascontents.m        Get a list of the entire contents of the rvdas database
@@ -52,17 +53,13 @@
 %
 % % These files are used for converting .json files to .mat files and reading information out of them
 %   The json files describe the contents of the rvdas tables - variable names
-%   and units. Since units aren't stored in the database (true on JC211 at 28 Jan
-%   2021) we get units from the .json files. At present the path names are
-%   local, so the functions have to be run in the directory where the json
-%   and mat files are.
+%   and units. On JC211 (28 Jan 2021) to JC238 (12 Jul 2022) units were not 
+%   stored in the database so we got them from .json files. 
+%   At present the path names are local, so the functions have to be run in the directory where the json and mat files are.
 %
-% mrjson2mat_all.m            Run function mrjson2mat on a set of json files       
-% mrjson2mat.m                Decode a .json file to a .mat file. Needs jsondecode
-% mrshow_json_all.m           Run function mrshow_json on a set of json/mat files    
-% mrshow_json.m               Show the sentences in the rvdas json file, and store variable names and units.
-%
-%
+% mrjson_get_list.m           Sync json files from rvdas machine, parse and print out (calling mrjson_load_all)
+% mrjson_load_all.m           Load json files, run jsondecode, then mrshow_json
+% mrjson_show.m               Show the sentences in the rvdas json file, and store variable names and units.
 %
 
 

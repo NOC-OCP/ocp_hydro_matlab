@@ -67,7 +67,7 @@ d.tablemap = mrnames('q'); % any argument suppresses listing to screen
 
 % get a list of variables for which we want to change names when loaded
 % into mexec
-[d.renametables, d.renametables_list] = mrrename_tables('q'); % any argument suppresses listing to screen
+[d.renametables, d.renametables_list] = mrrename_tables(d.mrtables, 'q'); % any argument suppresses listing to screen
 
 % get a list of rvdas tables for which variables will be renamed as raw
 % when they are read into mexec, because we expect to do post-processing on

@@ -68,8 +68,6 @@ else
     varstring = argot.otherstrings{1};
 end
 
-rootcsv = [MEXEC_G.RVDAS_CSVROOT '/'];
-
 def = mrdefine;
 
 switch length(argot.dnums)
@@ -95,9 +93,6 @@ table = mrresolve_table(table); % table is now an RVDAS table name for sure.
 dv1str = datestr(dv1,'yyyy-mm-dd HH:MM:SS');
 dv2str = datestr(dv2,'yyyy-mm-dd HH:MM:SS');
 
-csvname = [rootcsv table '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv'];
-
-
 % get the definition for this table, and the list of variables we want from
 % it
 
@@ -119,33 +114,32 @@ sqlunits = {'string'};
 % are also present, then they are needed by mrload to make sense of the lat
 % and lon variables.
 
-latitude_in_varstring = ~isempty(strfind(lower(varstring),'latitude'));
-longitude_in_varstring = ~isempty(strfind(lower(varstring),'longitude'));
-latdir_not_in_varstring = isempty(strfind(lower(varstring),'latdir'));
-londir_not_in_varstring = isempty(strfind(lower(varstring),'londir'));
-latdir_in_vdef = sum(strcmpi('latdir',vdef(:,1)));
-londir_in_vdef = sum(strcmpi('londir',vdef(:,1)));
-
-if latitude_in_varstring & latdir_not_in_varstring & latdir_in_vdef
-    % add latdir to varstring
-    varstring = [varstring ',latdir'];
-end
-if longitude_in_varstring & londir_not_in_varstring & londir_in_vdef
-    % add londir to varstring
-    varstring = [varstring ',londir'];
-end
-
-
-varnums = [];
-for kl = 2:size(vdef,1)
-    thisvar = vdef{kl,1};
-    if ~isempty(strfind(lower(varstring),lower(thisvar)))  % if thisvar is found in varstring, add it to the list. Added to the varlist from the vdef, so the case is correct
-        varnums = [varnums kl];
+if ~isempty(varstring)
+    latitude_in_varstring = contains(lower(varstring),'latitude');
+    latdir_not_in_varstring = ~contains(lower(varstring),'latdir');
+    latdir_in_vdef = sum(strcmpi('latdir',vdef(:,1)));
+    if latitude_in_varstring && latdir_not_in_varstring && latdir_in_vdef
+        % add latdir to varstring
+        varstring = [varstring ',latdir'];
+    end
+    longitude_in_varstring = contains(lower(varstring),'longitude');
+    londir_not_in_varstring = ~contains(lower(varstring),'londir');
+    londir_in_vdef = sum(strcmpi('londir',vdef(:,1)));
+    if longitude_in_varstring && londir_not_in_varstring && londir_in_vdef
+        % add londir to varstring
+        varstring = [varstring ',londir'];
     end
 end
 
-if isempty(varnums); varnums = 2:size(vdef,1); end
-varnums = varnums(:)';
+varnums = zeros(1,size(vdef,1));
+for kl = 2:size(vdef,1)
+    thisvar = vdef{kl,1};
+    if contains(lower(varstring),lower(thisvar))  % if thisvar is found in varstring, add it to the list. Added to the varlist from the vdef, so the case is correct
+        varnums(kl) = 1;
+    end
+end
+varnums = find(varnums);
+if isempty(varnums); varnums = [2:size(vdef,1)]; end
 
 for kl = varnums
     thisvar = vdef{kl,1};
@@ -153,17 +147,14 @@ for kl = varnums
     sqlvars = [sqlvars ',' thisvar];
     if isempty(thisunit)
         thisunit = 'json_empty';
-        vdef{kl,2} = {thisunit}; % don't want empty units string, even if json defs allow it.
+        vdef(kl,2) = {thisunit}; % don't want empty units string, even if json defs allow it.
     end
     sqlunits = [sqlunits;thisunit];
 end
 
 % where time between '2021-01-25' and '2021-01-27'
-
+csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 sqltext = ['"\copy (select ' sqlvars ' from ' sqlname ' where time between ''' dv1str ''' and ''' dv2str ''' order by time asc) to ''' csvname ''' csv header"'];
-
-sqlroot = ['psql -h ' MEXEC_G.RVDAS_MACHINE ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-% sqlroot = ['psql -h ' '192.168.62.12' ' -U ' MEXEC_G.RVDAS_USER ' -d ' MEXEC_G.RVDAS_DATABASE];
-psql_string = [sqlroot ' -c ' sqltext];  
+[~,psql_string] = mr_try_psql(sqltext);
 
 return

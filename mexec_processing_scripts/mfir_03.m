@@ -9,7 +9,7 @@ if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to f
 root_ctd = mgetdir('M_CTD');
 infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
 otfilef = infilef;
-if ~exist(infilef,'file')
+if ~exist(m_add_nc(infilef),'file')
     infilef = [infilef '_ctd'];
 end
 %not using 24hz because we want at least some averaging

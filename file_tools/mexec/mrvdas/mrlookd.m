@@ -55,6 +55,12 @@ end
 
 
 def = mrdefine;
+[extras,ia] = setdiff(def.mrtables_list, def.tablemap(:,2));
+def.mrtables = rmfield(def.mrtables,extras);
+def.mrtables_list(ia) = [];
+[extras,ia] = setdiff(def.renametables_list, def.tablemap(:,2));
+def.renametables = rmfield(def.renametables,extras);
+def.renametables_list(ia) = [];
 
 mrtables_list = def.mrtables_list;
 tablemap = def.tablemap;
@@ -66,8 +72,8 @@ ntables = length(sortlist);
 
 for kl = 1:ntables
     table = sortlist{kl};
-    ktable = find(strcmp(table,tablemap(:,2)));
-    try; mtable = tablemap{ktable,1};catch; keyboard; end
+    ktable = strcmp(table,tablemap(:,2));
+    mtable = tablemap{ktable,1};
     mtablepad = [mtable '                          '];
     mtablepad = mtablepad(1:12); % mexec table, padded to length 12;
     d = mrdfinfo(table,'q',fastflag);

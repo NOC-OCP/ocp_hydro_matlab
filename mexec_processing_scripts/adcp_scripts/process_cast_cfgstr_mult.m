@@ -667,7 +667,7 @@ fclose('all');				%  close all files just to make sure
 
 disp(' ')				% final message
 disp(['==> The whole task took ',int2str(toc),' seconds'])
-cd([MEXEC_G.MEXEC_DATA_ROOT])
+cd([MEXEC_G.mexec_data_root])
 
 
 

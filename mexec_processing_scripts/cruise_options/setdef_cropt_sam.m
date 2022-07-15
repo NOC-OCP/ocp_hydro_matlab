@@ -21,7 +21,7 @@ switch scriptname
                 sbe35file = sprintf('%s_SBE35_CTD*.asc', upper(mcruise));
             case 'sbe35_datetime_adj'
                 crhelp_str = {'Place to modify SBE35 file dates/times, as date is sometimes '
-                    'not reset correctly before deployment'};
+                    'not reset correctly before deployment. Only necessary if clock is far off.'};
             case 'sbe35flag'
                 crhelp_str = {'Place to modify flags (sbe35flag) on SBE35 temperature data'};
         end

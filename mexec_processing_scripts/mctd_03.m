@@ -13,10 +13,8 @@
 %      stn = 16; mctd_03;
 %
 % calls: 
-%     mcalib2 (if sensors are being switched)
-%     maddvars
-%     mintrp2
 %     mloadq
+%     grid_profile
 %     gsw functions
 %     mfsave
 % and via get_cropt:
@@ -115,6 +113,7 @@ hnew.fldnam = var_copycell;
 
 %average to 1hz, output to _psal file
 scriptname = mfilename; oopt = '1hz_interp'; get_cropt
-tg = dnew.time(1):dnew.time(end)+1; %end will be truncated anyway by setting grid_extrap to 0
+tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_extrap to 0
+if size(dnew.time,1)>1; tg = tg'; end
 dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_extrap', [0 0], 'postfill', maxfill1);
 mfsave(otfile1, dnew, hnew);

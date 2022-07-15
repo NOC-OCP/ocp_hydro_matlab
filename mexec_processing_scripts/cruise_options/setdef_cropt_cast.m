@@ -35,7 +35,7 @@ switch scriptname
             case 'oxyvars'
                 crhelp_str = {'oxyvars (default: {''oxygen_sbe1''; ''oxygen_sbe2''}) is a cell array listing the name(s) of ';
                     'oxygen variables in raw file (first column) and 24hz file (second, don''t change this). If you only have ';
-                    'one oxygen sensor, keep just the first row; if you change templates/ctd_renamelist.csv, change the first ';
+                    'one oxygen sensor, keep just the first row; if you change ctd_renamelist.csv, change the first ';
                     'column accordingly.'};
                 oxyvars = {'oxygen_sbe1' 'oxygen1';
                     'oxygen_sbe2' 'oxygen2'};
@@ -53,7 +53,7 @@ switch scriptname
             case 'ctdsens_groups'
                                 crhelp_str = {'ctdsens is a structure with fields corresponding to the CTD sensors e.g.'
                     'temp1, oxygen1, temp2, etc. (temp1 applies to both temp1 and cond1); '
-                    'their values are 2xN cell arrays listing stations and corresponding sensor/serial number, '
+                    'their values are 2edit setdexN cell arrays listing stations and corresponding sensor/serial number, '
                     'in case one or more sensors was changed during the cruise.'
                     'all default to [1:999] in the first row and 1 in the second (no change of sensors), '
                     'but, for example, you could set ctdsens.oxygen1 = [1:30; [ones(1,8) ones(2,22)];'
@@ -67,7 +67,6 @@ switch scriptname
                 ctdsens.transmittance = a;
         end
         %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
-        
         
         %%%%%%%%%% mctd_01 %%%%%%%%%%
     case 'mctd_01'
@@ -88,13 +87,13 @@ switch scriptname
             case 'ctdvars'
                 crhelp_str = {'Place to put additional (ctdvars_add) or replacement (ctdvars_replace)'
                     'triplets of SBE variable name, mstar variable name, mstar variable units to '
-                    'supplement those in templates/ctd_renamelist.csv. Default is both empty.'};
+                    'supplement those in ctd_renamelist.csv. Default is both empty.'};
                 ctdvars_replace = {};
                 ctdvars_add = {};
             case 'absentvars' % introduced new on jc191
                 crhelp_str = {'absentvars (default {}) is a cell array of strings listing variables not present '
                     'for given station(s); if applicable should be set in opt_cruise for selected stations '
-                    '(variables that are never present should be removed from templates/ctd_renamelist.csv instead)'};
+                    '(variables that are never present should be removed from ctd_renamelist.csv instead)'};
                 absentvars = {}; %default: don't skip any variables
         end
         %%%%%%%%%% end mctd_01 %%%%%%%%%%
@@ -206,7 +205,7 @@ switch scriptname
     case 'mdcs_01'
         switch oopt
             case 'kbot'
-                crhelp_str = {'place to overwrite kbot, the index of the bottom of cast'
+                crhelp_str = {'place to overwriteedit setde kbot, the index of the bottom of cast'
                     '(defaults to max(press))'};
         end
         %%%%%%%%%% end mdcs_01 %%%%%%%%%%

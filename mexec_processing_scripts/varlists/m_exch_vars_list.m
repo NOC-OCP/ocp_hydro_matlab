@@ -1,5 +1,5 @@
-function [vars, varsh] = m_cchdo_vars_list(typ);
-%function [vars, varsh] = m_cchdo_vars_list(typ);
+function [vars, varsh] = m_exch_vars_list(typ)
+%function [vars, varsh] = m_exch_vars_list(typ);
 %
 % Lists of woce exchange format variable names, units, mstar variable
 % names, and format strings for printing to _ct1.csv (CTD data, typ=1) or
@@ -37,6 +37,8 @@ if typ==1 % this is for ctd profiles
         'CTDFLUOR_FLAG_W', ' ', 'fluor_flag', '%d'
         'PAR', 'UMOL/M^2/SEC', 'par_up', '%6.5f' %par_up is up-looking (downwelling)
         'PAR_FLAG_W', ' ', 'par_up_flag', '%d'
+        'CTDPH', ' ', 'ph', '%8.4f'
+        'CTDPH_FLAG_W', ' ', 'ph_flag', '%d'
         };
     
 elseif typ==2 % this is for comparing with bottle samples
@@ -106,6 +108,7 @@ elseif typ==2 % this is for comparing with bottle samples
         'BOTCHLA', 'ML/L', 'botchla', '%7.1f'
         'BOTCHLA_FLAG_W', ' ', 'botchla_flag', '%d'
         'PAR', 'UMOL/M^2/SEC', 'upar_up', '%6.5f' %par_up is up-looking (downwelling)
+        'CTDPH', ' ', 'uph', '%8.4f'
         };
         
 else

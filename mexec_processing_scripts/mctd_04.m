@@ -17,12 +17,8 @@
 %
 % calls:
 %     mloadq
-%     mcalib2
-%     mcopya
-%     msort
-%     mavrg
-%     minterp
-%     mcalc
+%     grid_profile
+%     mfsave
 % and via get_cropt:
 %     setdef_cropt_cast (castpars and mctd_04 cases)
 

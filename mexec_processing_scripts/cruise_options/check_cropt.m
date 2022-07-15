@@ -47,7 +47,7 @@ switch scriptname
                 end
                 for vno = 1:length(samvars_use)
                     if sum(strcmp([ds_sam.varname; samvars_add(:,1)], samvars_use{vno}))==0
-                        error('variable %s not found in either templates/sam_varlist.csv or in samvars_add from opt_%s', samvars_use{vno}, mcruise);
+                        error('variable %s not found in either sam_varlist.csv or in samvars_add from opt_%s', samvars_use{vno}, mcruise);
                     end
                 end
         end

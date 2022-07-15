@@ -449,12 +449,6 @@ switch scriptname
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         
-        %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
-    case 'batchactions'
-        switch oopt
-        end
-        %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
-        
         %%%%%%%%%% ix_cast_params %%%%%%%%%%
     case 'ix_cast_params'
         switch oopt

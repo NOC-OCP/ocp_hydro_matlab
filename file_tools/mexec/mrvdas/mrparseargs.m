@@ -149,7 +149,7 @@ for ka = 1:nargs
     if ~ischar(arg); continue; end % not a char argument
     if sum(strcmp(arg,tmap_mexec)) == 1; ftab = 1; end
     if sum(strcmp(arg,tmap_rvdas)) == 1; ftab = 1; end
-    if ftab == 1;
+    if ftab == 1
         table = arg;
         allargs(ka) = [];
         break

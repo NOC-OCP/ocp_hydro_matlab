@@ -13,7 +13,7 @@
 
 m_global; m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; stnstr = sprintf('%03d', stn); stnlocal = stn;
-cd(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ladcp', 'ix'));
+cd(fullfile(MEXEC_G.mexec_data_root, 'ladcp', 'ix'));
 rawdir = 'raw';
 
 if strcmp(cfg.orient, 'DL')

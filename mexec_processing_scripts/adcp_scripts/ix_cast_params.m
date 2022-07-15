@@ -12,15 +12,16 @@
 %======================================================================
 
 m_global; m_common
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; stnstr = sprintf('%03d', stn); stnlocal = stn;
-cd(fullfile(MEXEC_G.MEXEC_DATA_ROOT, 'ladcp', 'ix'));
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
+stnstr = stn_string; stn = stnlocal;
+cd(fullfile(MEXEC_G.mexec_data_root, 'ladcp', 'ix'));
 rawdir = 'raw';
 
 if strcmp(cfg.orient, 'DL')
     isdo = 1; isup = 0;
 elseif strcmp(cfg.orient, 'UL')
     isdo = 0; isup = 1;
-elseif strcmp(cfg.orient, 'DLUL') | strcmp(cfg.orient, 'ULDL')
+elseif strcmp(cfg.orient, 'DLUL') || strcmp(cfg.orient, 'ULDL')
     isdo = 1; isup = 1;
 else
    error('orientation must be one of: DL, UL, DLUL, or ULDL')
@@ -33,13 +34,13 @@ ps.botfac = 0; ps.sadcpfac = 0;
 for no = 1:length(cfg.constraints)
    subdir = [subdir '_' cfg.constraints{no}];
 end
-if length(cfg.constraints)==0
+if isempty(cfg.constraints)
    subdir = [subdir 'SHR']; %***not sure this will work--what happens if f.ctd is not set?
 else
    if sum(strcmp(cfg.constraints, 'BT')); ps.botfac = 1; end
    if sum(strcmp(cfg.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
-if ps.sadcpfac & isfield(cfg, 'SADCP_inst')
+if ps.sadcpfac && isfield(cfg, 'SADCP_inst')
     subdir = fullfile(subdir, cfg.SADCP_inst);
 end
 pdir = fullfile(subdir, 'processed', stnstr);
@@ -53,7 +54,7 @@ more off;subplot(222)
 %find files and set f.ladcpdo and f.ladcpup (if applicable)
 %this code allows for the possiblity of multiple files
 if isdo
-   d = dir(fullfile(rawdir, stnstr, [ststr 'DL*.000']));
+   d = dir(fullfile(rawdir, stnstr, [stnstr 'DL*.000']));
    dlfiles = {};
    ii = [];
    for no = 1:length(d)
@@ -72,26 +73,27 @@ if isup
    end
    if length(ii)==1; ulfiles = ulfiles{ii}; else; ulfiles = ulfiles(ii); end
 end
-if isdo & ~isup % downlooker only
+if isdo && ~isup % downlooker only
    f.ladcpdo = dlfiles;
    f.ladcpup = ' ';
-elseif ~isdo & isup % uplooker only, put it in ladcpdo as required by code
+elseif ~isdo && isup % uplooker only, put it in ladcpdo as required by code
    f.ladcpdo = ulfiles;
    f.ladcpup = ' ';
-elseif isdo & isup % both
+elseif isdo && isup % both
    f.ladcpdo = dlfiles;
    f.ladcpup = ulfiles;
 end
 
-f.res = [pdir stnstr];
+f.res = fullfile(pdir, stnstr);
 f.checkpoints = fullfile('checkpoints', sprintf('%03d', stnlocal));
 if isfield(cfg, 'SADCP_inst')
     f.sadcp	= fullfile('SADCP', [cfg.SADCP_inst '_' mcruise '_ctd_' stnstr '_forladcp.mat']);
-else
+elseif sum(strcmp('SADCP',cfg.constraints))
     f.sadcp	= fullfile('SADCP', ['os75nb_' mcruise '_ctd_' stnstr '_forladcp.mat']);
 end
 
-f.ctd = fullfile('CTD', ['ctd.' stnstr '.02.asc']);
+scriptname = 'mout_1hzasc'; oopt = '1hz_fname'; get_cropt
+f.ctd = fnot;
 if exist(f.ctd,'file')
 	f.ctd_header_lines      = 0;		% file layout
 	f.ctd_fields_per_line	= 7;

@@ -28,7 +28,7 @@ if pcs.cur_step == pcs.begin_step
     eval(save_pcs.eval_expr);
   end
   disp('RE-LOADING PER-CAST PARAMETERS');
-  set_cast_params_cfgstr;
+  ix_cast_params;
   if ~isempty(save_pcs.eval_expr)
     disp(sprintf('RE-EVALUATING EXPRESSION <%s>...',save_pcs.eval_expr));
     eval(save_pcs.eval_expr);

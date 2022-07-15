@@ -23,6 +23,10 @@ iig = iig(:)';
 %%%%% add some fields that don't exist (or edit) %%%%%
 
 scriptname = 'mout_exch'; oopt = 'woce_expo'; get_cropt
+if ~exist('expocode','var')
+    warning('no expocode set in opt_%s.m; skipping', mcruise)
+    return
+end
 d.expocode = repmat(expocode,length(d.sampnum),1);
 d.sect_id = repmat(sect_id,length(d.sampnum),1);
 if isfield(d,'utime')

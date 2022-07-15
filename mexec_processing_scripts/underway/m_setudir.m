@@ -54,7 +54,7 @@ for kl = 1:length(am)
         fprintf(1,'%s\n',am{kl}); 
     else
         iid = find(strcmp(matlist{kl,1}, udirs(:,1)));
-        if length(iid)>0; iim(kl) = iid; end
+        if ~isempty(iid); iim(kl) = iid; end
     end
 end
 fprintf(1,'\n%s\n\n','End of list')
@@ -65,7 +65,7 @@ fprintf(1,'\n%s\n\n','End of list')
 
 upath = fileparts(mfilename('fullpath'));
 fid = fopen(fullfile(upath, 'm_udirs.m'), 'w');
-fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs();');
+fprintf(fid, '%s\n\n', 'function [udirs, udcruise] = m_udirs()');
 fprintf(fid, 'udcruise = ''%s'';\n', MEXEC_G.MSCRIPT_CRUISE_STRING);
 fprintf(fid, '%s\n', 'udirs = {');
 

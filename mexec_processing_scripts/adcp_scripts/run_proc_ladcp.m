@@ -6,7 +6,8 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 clear cfg
-isul = 1; %set this to 0 if you don't have one***make cruise option
+scriptname = mfilename; oopt = 'is_uplooker'; get_cropt
+dopause = 1;
 
 %only cast nav and pressure time series as constraints (from mout_1hzasc)
 cfg.constraints = {'GPS'};
@@ -19,7 +20,9 @@ if isul
         pause
     end
     if exist(infileu,'file')
-        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg);
+        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); 
+        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause; end
     else
         isul = 0;
     end
@@ -34,10 +37,12 @@ if exist(infiled,'file')
 
     %DL
     try
-        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
+        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); 
+        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause; end
         dlalone = 1;
     catch me
-        if strcmp('MATLAB:colon:nonFiniteEndpoint',me.identifier) & strcmp('geterr',me.stack(1).name)
+        if strcmp('MATLAB:colon:nonFiniteEndpoint',me.identifier) && strcmp('geterr',me.stack(1).name)
             dlalone = 0;
             warning('cast too shallow/bottom stop too long to have any good data in deepest ensemble');
             warning(['geterr would fail to find btmi on line ' me.stack(1).line '; not processing downlooker alone']);
@@ -49,6 +54,8 @@ if exist(infiled,'file')
     %DLUL
     if isul
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
+        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause; end
     end
     
 end
@@ -60,9 +67,13 @@ if ~ismember(stn, shortcasts)
     cfg.constraints = [cfg.constraints 'BT'];
     if dlalone
         cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
+        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause; end
     end
     if isul
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
+        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause; end
     end    
 end
 
@@ -74,8 +85,12 @@ if exist(sfile,'file')
     cfg.SADCP_inst = 'os75nb';
     if isul
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
+        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause; end
     elseif dlalone
         cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
+        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause; end
     end
 end
 

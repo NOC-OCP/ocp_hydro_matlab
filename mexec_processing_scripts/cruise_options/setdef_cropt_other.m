@@ -16,14 +16,10 @@ switch scriptname
     %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
     case 'batchactions'
         switch oopt
-            case 'ctd'
-                crhelp_str = {'additional actions after operating on ctd files, default will be*** to run mout_cchdo_ctd'};
-                %stn = stnlocal; mout_cchdo_ctd %station_summary first?
-            case 'sam'
-                crhelp_str = {'additional actions after operating on sam files, default will be*** to run mout_cchdo_sam'};
-                %mout_cchdo_sam
-            case 'sync'
-                crhelp_str = {'actions to sync mstar processed data and other output files to shared drive, no default'};
+            case 'output_for_others'
+                crhelp_str = {'additional actions after operating on ctd or sam files'
+                    'for instance to sync the resulting files'
+                    'to a shared drive accessible by e.g. chemistry team'}; 
         end
     %%%%%%%%%% batchactions (not a script) %%%%%%%%%%    
     
@@ -120,8 +116,8 @@ switch scriptname
                 crhelp_str = {'vars_exclude_ctd and vars_exclude_sam are lists of mstar variable names'
                     'to exclude from woce exchange-format output files for submission to cchdo, even if '
                     'they are in ctd/sam files and in lists set in m_cchdo_vars_list.m. '
-                    'Defaults: vars_exclude_ctd = {''fluor'' ''transmittance''}, vars_exclude_sam = {}.'};
-                vars_exclude_ctd = {'fluor' 'transmittance'};
+                    'Defaults: vars_exclude_ctd = {}, vars_exclude_sam = {}.'};
+                vars_exclude_ctd = {}; %changed jc238 from {'fluor' 'transmittance'};
                 vars_exclude_sam = {};
             case 'woce_file_flagonly'
                 crhelp_str = {'varsexclude is a cell array listing variables to NaN before printing to'
@@ -224,5 +220,12 @@ switch scriptname
         end
         %%%%%%%%%% end ix_cast_params %%%%%%%%%%
 
+    case 'run_proc_ladcp'
+        switch oopt
+            case 'is_uplooker'
+                crhelp_str = {'isul (default 1) sets whether there is an uplooking as well as a'
+                    'downlooking LADCP'};
+                isul = 1;
+        end
         
 end
