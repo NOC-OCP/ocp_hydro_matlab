@@ -159,6 +159,10 @@ if mergemode
     end
     
     d0 = mloadq(filename, indepvar);
+    d0.(indepvar) = d0.(indepvar)(:);
+    if size(d.(indepvar),2)>1
+        d0.(indepvar) = d0.(indepvar).';
+    end
     if length(d0.(indepvar))==length(d.(indepvar)) && max(abs(d0.(indepvar)-d.(indepvar)))==0
         mergemode = 0; %identical indepvar contents, including order, so can use -addvars mode
     else

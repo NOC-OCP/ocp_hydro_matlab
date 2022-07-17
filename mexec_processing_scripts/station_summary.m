@@ -218,6 +218,7 @@ scriptname = mfilename; oopt = 'sum_extras'; get_cropt
 
 %reload file in case we only added some stations in workspace
 [ds,hs] = mloadq(otfile2,'/');
+stnall = unique(ds.statnum);
 
 stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.txt']);
 fid = fopen(stnlistname,'w');

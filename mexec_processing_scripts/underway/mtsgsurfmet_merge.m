@@ -59,8 +59,8 @@ if exist(filemet, 'file')
                 [ds, hs] = mloadq(filesa, '/');
                 ds.timec = ds.time/3600/24+datenum(hs.data_time_origin);
                 
-                windsin = munderway_varname('windsvar', hs.fldnam, 1, 's');
-                winddin = munderway_varname('winddvar', hs.fldnam, 1, 's');
+                windsin = munderway_varname('twindsvar', hs.fldnam, 1, 's');
+                winddin = munderway_varname('twinddvar', hs.fldnam, 1, 's');
                 windssa = [windsin '_sonic']; winddsa = [winddin '_sonic'];
                 data = interp1(ds.timec, ds.(windsin).*exp(sqrt(-1)*ds.(winddin)/180*pi), dm.timec);
                 dnew.(windssa) = abs(data); dnew.(winddsa) = mod(angle(data)*180/pi,360);

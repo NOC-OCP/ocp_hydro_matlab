@@ -134,7 +134,7 @@ rtables.cnav_gnvtg = {  % from cnav-jc-2022-01-01T000000Z-null.json
 %                       'desCog'                             ''
 %                         'cogm'                      'degrees'
 %                      'desCogm'                             ''
-%                          'sog'                        'knots'
+                          'sog'                        'knots'
 %                       'desSog'                             ''
 %                      'sogkmph'          'Kilometre per hours'
 %                   'desSogKmph'                             ''

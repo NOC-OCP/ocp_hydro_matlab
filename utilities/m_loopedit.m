@@ -37,7 +37,7 @@ if ~isempty(ptol) && ~isnan(ptol)
     %calculate max pressure above (before) each point
     %in chunks, otherwise matrix is too big
     np = length(p);
-    pm = zeros(1,np); %this will contain max pressure above (before) each point
+    pm = false(1,np); %this will contain max pressure above (before) each point
     %separate into chunks otherwise matrix is too big
     nm = 5000; ns = floor(np/nm); nr = np-nm*ns;
     %first chunk
@@ -51,7 +51,7 @@ if ~isempty(ptol) && ~isnan(ptol)
     end
     flagp = (p<=pm'-ptol);
 else
-    flagp = zeros(size(p));
+    flagp = false(size(p));
 end
 
 if ~isempty(spdtol) && ~isnan(spdtol)
@@ -59,7 +59,7 @@ if ~isempty(spdtol) && ~isnan(spdtol)
     spd = [NaN; diff(p)];
     flags = (spd<spdtol);
 else
-    flags = zeros(size(p));
+    flags = false(size(p));
 end
 
 pe = p;

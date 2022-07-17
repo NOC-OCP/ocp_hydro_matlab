@@ -7,7 +7,7 @@
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 clear cfg
 scriptname = mfilename; oopt = 'is_uplooker'; get_cropt
-dopause = 1;
+dopause = 0;
 
 %only cast nav and pressure time series as constraints (from mout_1hzasc)
 cfg.constraints = {'GPS'};
@@ -16,13 +16,18 @@ cfg.constraints = {'GPS'};
 if isul
     infileu = fullfile(mgetdir('M_IX'), 'raw', sprintf('%03d',stn), sprintf('%03dUL000.000',stn));
     if ~exist(infileu,'file')
-        warning(['no uplooker file ' infileu ' found; try sync again if you expect one; return to continue'])
-        pause
+        warning(['no uplooker file ' infileu ' found'])
+        if dopause
+            warning(['try sync again if you expect one; return to continue'])
+            pause
+        end
     end
     if exist(infileu,'file')
         cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); 
-        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause; end
+        if dopause
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause
+        end
     else
         isul = 0;
     end
@@ -31,15 +36,19 @@ end
 infiled = fullfile(mgetdir('M_IX'), 'raw', sprintf('%03d',stn), sprintf('%03dDL000.000',stn));
 if ~exist(infiled,'file')
     warning(['no downlooker file ' infiled ' found; try sync again if you expect one; return to continue'])
-    pause
+    if dopause
+        pause
+    end
 end
 if exist(infiled,'file')
 
     %DL
     try
         cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); 
-        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause; end
+        if dopause
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause
+        end
         dlalone = 1;
     catch me
         if strcmp('MATLAB:colon:nonFiniteEndpoint',me.identifier) && strcmp('geterr',me.stack(1).name)
@@ -54,8 +63,10 @@ if exist(infiled,'file')
     %DLUL
     if isul
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
-        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause; end
+        if dopause
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause
+        end
     end
     
 end
@@ -63,34 +74,40 @@ end
 %also bottom tracking, if cast was full-depth
 scriptname = 'castpars'; oopt = 'shortcasts'; get_cropt
 if ~ismember(stn, shortcasts)
-%     disp('inspect figures then any key to continue, adding BT as a constraint'); pause
     cfg.constraints = [cfg.constraints 'BT'];
     if dlalone
         cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
-        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause; end
+        if dopause
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause
+        end
     end
     if isul
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
-        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause; end
+        if dopause
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause
+        end
     end    
 end
 
 %SADCP, if it's been processed and output to file for ladcp
 sfile = fullfile(mgetdir('M_VMADCP'), 'mproc', sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn));
 if exist(sfile,'file')
-%     disp('inspect figures then any key to continue, adding SADCP as a constraint'); pause
     cfg.constraints = [cfg.constraints 'SADCP'];
     cfg.SADCP_inst = 'os75nb';
     if isul
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
-        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause; end
+        if dopause
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause
+        end
     elseif dlalone
         cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
-        if dopause; fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause; end
+        if dopause
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            pause
+        end
     end
 end
 

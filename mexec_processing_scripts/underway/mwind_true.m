@@ -36,7 +36,7 @@ dn.timew = m_commontime(dn.time, hn.data_time_origin, hw.data_time_origin);
 
 
 %ship heading as a vector
-[headav_e, headav_n] = uvsd(ones(size(dn.heading_av)), dn.heading_av, 'sduv');
+[headav_e, headav_n] = uvsd(ones(size(dn.heading)), dn.heading, 'sduv');
 %interpolate to wind file times
 headav_e = interp1(dn.timew, headav_e, dw.time);
 headav_n = interp1(dn.timew, headav_n, dw.time);
@@ -70,39 +70,19 @@ hnew.comment = sprintf('truwind calculated using %d-second average nav and headi
 copyfile(m_add_nc(infilew), m_add_nc(otfile1))
 mfsave(otfile1, dnew, hnew, '-addvars');
 
-[~, h] = mloadq(otfile1, '/');
-tstart = datenum([1900 1 1])-round(tave_period/2)/86400;
-tend = datenum([2100 1 1]);
-torg = datenum(h.data_time_origin);
-tstart_secs = round((tstart-torg)*86400);
-tend_secs = round((tend-torg)*86400);
-tavstring = sprintf('%13.0f %13.0f %d',tstart_secs,tend_secs,tave_period);
-%--------------------------------
-MEXEC_A.MARGS_IN = {
-otfile1
-otfile2
-'/'
-'1'
-tavstring
-'/'
-};
-mavrge
-%--------------------------------
+[d, h] = mloadq(otfile1, '/');
+tg = (floor(min(d.time)/86400)*86400 - tav2):tave_period:(ceil(max(d.time)/86400)*86400+1);
+clear opts
+opts.ignore_nan = 1;
+opts.grid_extrap = [0 0];
+dg = grid_profile(d, 'time', tg, 'lfitbin', opts);
+h.comment = [h.comment '\n averaged to by finding midpoint of linear fit in bins of width ' num2str(tave_period)];
 
-% % %average everything
-% % [d, h] = mloadq(otfile1, '/');
-% % time_edges = min(d.time)-round(tave_period/2):tave_period:1e10;
-% % %recalculate wind speed and direction from averaged vectors
-% % [d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
-
-[d, h] = mloadq(otfile2, '/');
 %recalculate wind speed and direction from averaged vectors
-[d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
-
-
+[dg.truwind_spd, dg.truwind_dir] = uvsd(dg.truwind_e, dg.truwind_n, 'uvsd');
 
 %save
 clear hnew
 hnew.fldnam = h.fldnam; hnew.fldunt = h.fldunt;
-hnew.comment = sprintf('truwind averaged over %d seconds from %s',tave_period,otfile1);
+hnew.comment = [h.comment sprintf('\n truwind averaged over %d seconds from %s',tave_period,otfile1)];
 mfsave(otfile2, d, hnew);

@@ -63,7 +63,7 @@ if exist([infile '.nc']) %only if there is a raw file for this day
    if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb'}))
        mday_01_cordep %carter table soundspeed correction, go from depth_uncor to depth
    end
-    
+   
    % set data to absent outside ranges
    mday_01_rangeedit 
     

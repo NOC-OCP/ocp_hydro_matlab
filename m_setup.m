@@ -70,6 +70,7 @@ if isempty(which('m_common')) || isempty(which('get_cropt')) || ~isfield(MEXEC_G
     clear mexecs_version s c cdir pdir
     % add paths at and below source
     addpath(genpath(MEXEC_G.mexec_source_root))
+    rmpath(genpath(fullfile(MEXEC_G.mexec_source_root,'.git')))
 end
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);

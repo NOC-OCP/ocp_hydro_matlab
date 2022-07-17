@@ -87,7 +87,7 @@ prefix2 = ['dcs_' mcruise '_'];
 % load data
 
 klist = [slist(:)' stnlocal];
-sused = zeros(size(klist));
+sused = false(size(klist));
 infiles = cell(4,length(klist));
 d2db = cell(1,length(klist));
 d2up = d2db; dpsal = d2db; ddcs = d2db;
@@ -104,7 +104,7 @@ for no = 1:length(klist)
     if ks == 0
         ks1 = 1;
     else
-        ks1 = ks;
+        ks1 = ks-klist(1)+1;
     end
     infiles{1,ks1} = infile1;
     infiles{2,ks1} = infile2;
@@ -745,3 +745,5 @@ for plotlist = cklist
             
     end
 end
+
+clear klist

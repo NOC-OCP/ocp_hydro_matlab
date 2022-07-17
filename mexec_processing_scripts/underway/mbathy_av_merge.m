@@ -11,32 +11,36 @@ end
 if isempty(iis) || ~exist(filesbin,'file')
     iist = find(strcmp(shortnames,'singleb_t'));
     if ~isempty(iist)
-        if MEXEC_G.quiet<=1; fprintf(1,'%s\n', 'calculating single beam water depth from xducer depth and depth_below_xducer'); end
         filest = fullfile(root_u, udirs{iist}, [shortnames{iist} '_' mcruise '_d' daystr '_edt.nc']);
-        [d,h] = mloadq(filest,'/');
-        files = fullfile(root_u, udirs{iist}, ['singleb_' mcruise '_d' daystr '_edt.nc']);
-        clear dnew hnew
-        dnew.time = d.time;
-        newname = 'depth'; %this is after mday_01_namesunits
-        dnew.depth = d.waterdepth_below_transduce + d.transduceroffset;
-        hnew.fldnam = {'time', 'depth'};
-        hnew.fldunt = {'seconds', 'metres'};
-        hnew.comment = [h.comment '\n created from ' filest];
-        mfsave(files, dnew, hnew);
-        filesbin = files;
-        if isempty(iis)
-            udirs = [udirs; udirs{iist}];
-            shortnames = [shortnames; 'singleb'];
-            streamnames = [streamnames; ['not_rvdas_but_calculated_from_' streamnames{iist}]];
-            iis = length(udirs)-1;
+        if exist(filest,'file')
+            if MEXEC_G.quiet<=1; fprintf(1,'%s\n', 'calculating single beam water depth from xducer depth and depth_below_xducer'); end
+            [d,h] = mloadq(filest,'/');
+            files = fullfile(root_u, udirs{iist}, ['singleb_' mcruise '_d' daystr '_edt.nc']);
+            clear dnew hnew
+            dnew.time = d.time;
+            newname = 'depth'; %this is after mday_01_namesunits
+            dnew.depth = d.waterdepth_below_transduce + d.transduceroffset;
+            hnew.fldnam = {'time', 'depth'};
+            hnew.fldunt = {'seconds', 'metres'};
+            hnew.comment = [h.comment '\n created from ' filest];
+            mfsave(files, dnew, hnew);
+            filesbin = files;
+            if isempty(iis)
+                udirs = [udirs; udirs{iist}];
+                shortnames = [shortnames; 'singleb'];
+                streamnames = [streamnames; ['not_rvdas_but_calculated_from_' streamnames{iist}]];
+                iis = length(udirs)-1;
+            end
+            udirs(iist,:) = [];
+            shortnames(iist) = [];
+            streamnames(iist) = [];
+            if ~ismember(MEXEC_G.MDIRLIST(:,1),'singleb')
+                MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'singleb'} udirs(end)];
+            end
+            iss = 1;
+        else
+            iss = 0;
         end
-        udirs(iist,:) = [];
-        shortnames(iist) = [];
-        streamnames(iist) = [];
-        if ~ismember(MEXEC_G.MDIRLIST(:,1),'singleb')
-            MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'singleb'} udirs(end)];
-        end
-        iss = 1;
     else
         iss = 0;
     end
@@ -63,32 +67,36 @@ end
 if isempty(iim) || ~exist(filembin,'file')
     iimt = find(strcmp(shortnames,'multib_t'));
     if ~isempty(iimt)
-        if MEXEC_G.quiet<=1; fprintf(1,'%s\n', 'calculating multi beam water depth from xducer depth and depth_below_xducer'); end
         filemt = fullfile(root_u, udirs{iimt}, [shortnames{iimt} '_' mcruise '_d' daystr '_edt.nc']);
-        [d,h] = mloadq(filemt,'/');
-        filem = fullfile(root_u, udirs{iimt}, ['multib_' mcruise '_d' daystr '_edt.nc']);
-        clear dnew hnew
-        dnew.time = d.time;
-        newname = 'swath_depth'; %this is after mday_01_namesunits stage
-        dnew.(newname) = d.waterdepth_below_transduce + d.transduceroffset;
-        hnew.fldnam = {'time', newname};
-        hnew.fldunt = {'seconds', 'metres'};
-        hnew.comment = [h.comment '\n created from ' filemt];
-        mfsave(filem, dnew, hnew);
-        filembin = filem;
-        if isempty(iim)
-            udirs = [udirs; udirs{iimt}];
-            shortnames = [shortnames; 'multib'];
-            streamnames = [streamnames; ['not_rvdas_but_calculated_from_' streamnames{iimt}]];
-            iim = length(udirs)-1;
+        if exist(filemt,'file')
+            if MEXEC_G.quiet<=1; fprintf(1,'%s\n', 'calculating multi beam water depth from xducer depth and depth_below_xducer'); end
+            [d,h] = mloadq(filemt,'/');
+            filem = fullfile(root_u, udirs{iimt}, ['multib_' mcruise '_d' daystr '_edt.nc']);
+            clear dnew hnew
+            dnew.time = d.time;
+            newname = 'swath_depth'; %this is after mday_01_namesunits stage
+            dnew.(newname) = d.waterdepth_below_transduce + d.transduceroffset;
+            hnew.fldnam = {'time', newname};
+            hnew.fldunt = {'seconds', 'metres'};
+            hnew.comment = [h.comment '\n created from ' filemt];
+            mfsave(filem, dnew, hnew);
+            filembin = filem;
+            if isempty(iim)
+                udirs = [udirs; udirs{iimt}];
+                shortnames = [shortnames; 'multib'];
+                streamnames = [streamnames; ['not_rvdas_but_calculated_from_' streamnames{iimt}]];
+                iim = length(udirs)-1;
+            end
+            udirs(iimt,:) = [];
+            shortnames(iimt) = [];
+            streamnames(iimt) = [];
+            if ~ismember(MEXEC_G.MDIRLIST(:,1),'multib')
+                MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'multib'} udirs(end)];
+            end
+            ism = 1;
+        else
+            ism = 0;
         end
-        udirs(iimt,:) = [];
-        shortnames(iimt) = [];
-        streamnames(iimt) = [];
-        if ~ismember(MEXEC_G.MDIRLIST(:,1),'multib')
-            MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'multib'} udirs(end)];
-        end
-        ism = 1;
     else
         ism = 0;
     end

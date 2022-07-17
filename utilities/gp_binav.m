@@ -33,7 +33,7 @@ for bno = 1:length(xm)
     if sum(xmask)
     
         xb = x(xmask);
-        if (min(xb)<xm(bno) && max(xb)>xm(bno)) || bin_partial
+        if bin_partial || (min(xb)<xm(bno) && max(xb)>xm(bno))
         
             yb = y(xmask,:);
             if ignore_nan
@@ -67,7 +67,6 @@ for bno = 1:length(xm)
                     yg(bno,ii1) = min(yb(:,ii1)); %for nanmedian, only good value
                     
                 case 'lfit'
-                    yg = NaN(1,s(2));
                     w = sum(double(m));
                     for no2 = 1:s(2)
                         if w(no2)>0
@@ -76,7 +75,8 @@ for bno = 1:length(xm)
                             yg(bno,no2) = b(1)+b(2)*xm(bno);
                             catch; keyboard; end
                         end
-                    end        
+                    end    
+
             end
             
         end

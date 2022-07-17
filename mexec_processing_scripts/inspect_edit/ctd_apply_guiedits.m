@@ -4,7 +4,7 @@
 %all edits to a given station file (i.e. from multiple mplxyed_* files
 %generated at multiple times/passes of the mctd_rawedit GUI)
 
-scriptname = castpars; oopt = 'minit'; get_cropt
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 
 root_ctd = mgetdir('CTD');
 edfiles = dir(fullfile(root_ctd,['mplxyed_*_ctd_' mcruise '_' stn_string]));
@@ -18,11 +18,11 @@ end
 otfile = fullfile(root_ctd,['ctd_' mcruise '_' stn_string '_raw_cleaned.nc']);
 if ~exist(otfile,'file')
     infile = fullfile(root_ctd,['ctd_' mcruise '_' stn_string '_raw.nc']);
-    copyfile(infile, otfile);
+    if ~exist(infile,'file')
+        error('must run mctd_01 first to generate ctd_%s_%s_raw.nc',mcruise,stn_string)
+    end
+    copyfile(infile,otfile);
     system(['chmod 644 ' otfile]);
-end
-if ~exist(infile,'file')
-    error('must run mctd_01 first to generate ctd_%s_%s_raw.nc',mcruise,stn_string)
 end
 
 %get list of variables and scans to NaN
@@ -38,7 +38,7 @@ for fno = 1:length(edfiles)
             s = str2num(a{lno});
             if isempty(s)
                 var = a{lno}; %variable name
-                if ~isfield(donan,'var')
+                if ~exist('donan','var') || ~isfield(donan,var)
                     donan.(var) = []; %initialise
                 end
             else
@@ -58,17 +58,21 @@ end
 vars = fieldnames(donan);
 varlist = sprintf('%s ',vars{:});
 if MEXEC_G.quiet<=1; fprintf(1,'edits to: %s\n', varlist); end
-[d,h] = mloadq(otfile, [varlist ' /']);
+[d,h] = mloadq(otfile, ['scan ' varlist ' /']);
 
 %apply edits
 for vno = 1:length(vars)
     d.(vars{vno})(ismember(d.scan,donan.(vars{vno}))) = NaN;
 end
+d = rmfield(d,'scan');
 
 %save
 clear hnew
-hnew.fldnam = h.fldnam;
-hnew.fldunt = h.fldunt;
+[hnew.fldnam,ia,~] = intersect(fieldnames(d),h.fldnam,'stable');
+hnew.fldunt = h.fldunt(ia);
 hnew.comment = 'saved GUI edits reapplied';
 mfsave(otfile, d, hnew, '-addvars');
-    
+
+%propagate through
+stn = stnlocal; ctd_all_postedit
+

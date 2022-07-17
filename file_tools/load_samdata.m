@@ -138,10 +138,12 @@ for fno = 1:length(infile)
                 dat = sd_get_char_vars(dat, opts, infile{fno});
             end
             if exist('hcpat','var')
-                dat.Properties.VariableNames = ch;
+                m = ~cellfun('isempty',ch);
+                dat.Properties.VariableNames(m) = ch(m);
             end
             if ~isempty(chunits)
-                dat.Properties.VariableUnits = un;
+                m = ~cellfun('isempty',un);
+                dat.Properties.VariableUnits(m) = un(m);
             end
             warning('on','MATLAB:table:ModifiedAndSavedVarnames')
             warning('on','MATLAB:textscan:AllNatSuggestFormat')

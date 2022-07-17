@@ -43,6 +43,10 @@ switch MEXEC_G.Mshipdatasystem
         % function mrrvdas2mstar(table, dn1, dn2, otfile, dataname)
         
         table = mstarprefix;
+        if contains(mstarprefix,'not_rvdas')
+            return
+        end
+        
         dn1 = datenum([year 1 1 00 00 00]) + day - 1;
         dn2 = datenum([year 1 1 23 59 59]) + day - 1;
         

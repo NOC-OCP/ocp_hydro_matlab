@@ -7,14 +7,14 @@ if ~exist('klist','var')
     if ~exist('stn','var') %prompt
         stn = input('type stn number: ');
     end
-    klist = stn;
+    klist = stn; clear stn
 else
 disp('Will process stations in klist: ')
 disp(klist)
 end
-klist = klist(:)';
+klistl = klist(:)'; clear klist
 
-for kloop = klist
+for kloop = klistl
 
     stn = kloop; mctd_02
 
@@ -32,12 +32,14 @@ for kloop = klist
     end
     stn = kloop; mfir_03;
     stn = kloop; mfir_to_sam;
-    
-    scriptname = 'batchactions'; oopt = 'ctd'; get_cropt
+   
+    %output to csv files
+    stn = stnlocal; mout_exch_ctd
     
 end
+mout_exch_sam
 
-%output to csv files
+%and sync
 scriptname = 'batchactions'; oopt = 'output_for_others'; get_cropt
-clear klist*
+
 

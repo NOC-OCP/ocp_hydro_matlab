@@ -10,7 +10,7 @@
 % parse in opt_cruise, uses parameters set under oxy_calc to compute them
 
 m_common
-if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc and sam_%s_all.nc',mcruise,mcruise,mcruise); end
+if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise,mcruise); end
 
 % find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');
@@ -193,8 +193,13 @@ hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
 
 %apply niskin flags (and also confirm consistency between sample and flag)
 ds = hdata_flagnan(ds, [4 9]);
-%don't need to rewrite them though, nor uasal
-ds = rmfield(ds, {'niskin_flag', 'uasal'});
+%just keep the fields set above (don't need to keep niskin_flag etc. here)
+fn = fieldnames(ds);
+[~, ia, ib] = intersect(fn, hnew.fldnam, 'stable');
+if length(ia)<length(fn)
+    ds = rmfield(ds, fn(setdiff(1:length(fn),ia)));
+end
+hnew.fldnam = hnew.fldnam(ib); hnew.fldunt = hnew.fldunt(ib);
 
 %save
 mfsave(samfile, ds, hnew, '-merge', 'sampnum');

@@ -72,6 +72,7 @@ h.comment = [h. comment '\n speed, course over ground, and distance run calculat
 
 [dh, hh] = mloadq(infileh, '/');
 %first compute dummy easting and northing and grid them
+headvar = munderway_varname('headvar', hh.fldnam, 1, 's');
 [dh.dum_e, dh.dum_n] = uvsd(ones(size(dh.(headvar))), dh.(headvar), 'sduv');
 dh = rmfield(dh,headvar);
 tg = (floor(min(d.time)/86400)*86400 - tav2):tave_period:1e10;
@@ -82,7 +83,7 @@ dgh = grid_profile(dh, 'time', tg, 'lfitbin', opts);
 %convert back to heading
 [~, dgh.(headvar)] = uvsd(dgh.dum_e, dgh.dum_n, 'uvsd');
 dgh = rmfield(dgh, {'dum_e'; 'dum_n'});
-hh.comment = [hh.comment '\n averaged to by finding midpoint of linear fit in bins of width ' num2str(step)];
+hh.comment = [hh.comment '\n averaged to by finding midpoint of linear fit in bins of width ' num2str(tave_period)];
 mfsave(avfileh, dgh, hh);
 
 
@@ -95,7 +96,7 @@ h.comment = [h.comment '\n vector-averaged heading interpolated onto position ti
 mfsave(bstfile, dg, h);
 
 %--------------------------------
-wkfile = ['wk' num2str(no) '_' mfilename '_' datestr(now,30)];
+wkfile = ['wk_' mfilename '_' datestr(now,30)];
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     % bak on jr281 march 23 2013: bad weather break, adding to edits from jc069
     case {'jc' 'jcr' 'dy' 'jr'} % ashtech broken on jr281 and not needed on cook

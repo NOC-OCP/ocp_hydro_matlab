@@ -92,7 +92,7 @@ else %help mode
         
     elseif ~exist('scriptname','var') || isempty(scriptname)
         %called to get list of scriptnames and oopts
-        dm = which('m_setup'); dm = dm(1:end-9);
+        dm = which('m_setup'); dm = [dm(1:end-9) '/mexec_processing_scripts'];
         dc = pwd;
         try
             cd(dm);

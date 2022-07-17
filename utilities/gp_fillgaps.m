@@ -40,7 +40,7 @@ yf = y;
 if maxgap>0
     for no = 1:s(2)
         iib = find(isnan(y(:,no)));
-        if ~isempty(iib)
+        if ~isempty(iib) && length(iib)<s(1)-1
             iig = setdiff([1:s(1)]',iib);
             %add to list of good indices, indices at start of (in) too-long
             %gaps; this will put NaNs in interpolation for these gaps

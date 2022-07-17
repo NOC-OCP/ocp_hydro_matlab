@@ -83,18 +83,18 @@ switch scriptname
                         for pcno = 1:length(ii)
                             co = co + length(vars{ii(pcno),4});
                         end
-                        svar = [repmat(' ',1,co+1) datestr(time_start(k), ' yy/mm/dd HHMM ')];
+                        svar = [repmat(' ',1,co+1) datestr(ds.time_start(k), ' yy/mm/dd HHMM ')];
                     case 'time_bottom'
-                        svar = datestr(time_bottom(k), 'yy/mm/dd HHMM');
+                        svar = datestr(ds.time_bottom(k), 'yy/mm/dd HHMM');
                     case 'time_end'
-                        svar = [repmat(' ',1,co+1) datestr(time_end(k), ' yy/mm/dd HHMM')];
+                        svar = [repmat(' ',1,co+1) datestr(ds.time_end(k), ' yy/mm/dd HHMM')];
                     case 'lat'
-                        latd = floor(abs(lat(k))); latm = 60*(abs(lat(k))-latd); if latm>=59.995; latm = 0; latd = latd+1; end
-                        if lat(k)>=0; lath = 'N'; else; lath = 'S'; end
+                        latd = floor(abs(ds.lat(k))); latm = 60*(abs(ds.lat(k))-latd); if latm>=59.995; latm = 0; latd = latd+1; end
+                        if ds.lat(k)>=0; lath = 'N'; else; lath = 'S'; end
                         svar = sprintf('%02d %06.3f %s ', latd, latm, lath);
                     case 'lon'
-                        lond = floor(abs(lon(k))); lonm = 60*(abs(lon(k))-lond); if lonm>=59.995; lonm = 0; lond = lond+1; end
-                        if lon(k)>=0; lonh = 'E'; else; lonh = 'W'; end
+                        lond = floor(abs(ds.lon(k))); lonm = 60*(abs(ds.lon(k))-lond); if lonm>=59.995; lonm = 0; lond = lond+1; end
+                        if ds.lon(k)>=0; lonh = 'E'; else; lonh = 'W'; end
                         svar = sprintf('%03d %06.3f %s', lond, lonm, lonh);
                 end
         end

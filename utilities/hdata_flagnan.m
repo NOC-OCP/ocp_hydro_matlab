@@ -48,7 +48,6 @@ end
 
 %data variables to consider    
 fnames = fieldnames(data);
-fnames = fnames(~contains(fnames, '_flag'));
 fnames = setdiff(fnames, vars_exclude); 
 
 %niskin flags are applied not to niskins but to other fields
@@ -63,7 +62,7 @@ end
 
 %loop through data fields
 for vno = 1:length(fnames)
-    if isnumeric(data.(fnames{vno})) %data field
+    if ~contains(fnames{vno},'_flag') && isnumeric(data.(fnames{vno})) %data field
 
         d = data.(fnames{vno});
         d(d<=-900) = NaN;
@@ -87,9 +86,9 @@ for vno = 1:length(fnames)
 
         if isempty(iif)
             %add flag field
-            d.([fnames{vno} '_flag']) = NaN+d.(fnames{vno});
-            fnames = [fnames [fnames{vno} '_flag']]; 
-            iif = length(fieldnames(d)); %***does this work on tables?
+            data.([fnames{vno} '_flag']) = NaN+data.(fnames{vno});
+            fnames{length(fnames)+1} = [fnames{vno} '_flag']; 
+            iif = length(fnames); %***does this work on tables?
         end
 
         %modify flags to match data

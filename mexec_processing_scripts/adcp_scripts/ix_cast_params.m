@@ -135,6 +135,8 @@ else
     %p.btrk_ts = 30; 
 end
 
+%p.getdepth = 1; %for very shallow casts
+
 p.edit_mask_dn_bins = [1]; %***is this what we want? it's to be used to account for 0 blanking distance but we don't usually set things that way!
 p.edit_mask_up_bins = [1];
 

@@ -93,9 +93,9 @@ for no = 1:length(fn)
     a(m,3) = {'temp_remote'};
     m = strcmp('housingWaterTemperature',a(:,1));
     a(m,3) = {'temp_housing'};
-    m = strcmp('longitudalWaterSpeed',a(:,1));
+    m = strcmp('longitudalWaterSpeed',a(:,1)) | strcmp('speedfa',a(:,1));
     a(m,3) = {'speed_forward'};
-    m = strcmp('transverseWaterSpeed',a(:,1));
+    m = strcmp('transverseWaterSpeed',a(:,1)) | strcmp('speedps',a(:,1));
     a(m,3) = {'speed_stbd'};
 
     %cut the lines that are the same
