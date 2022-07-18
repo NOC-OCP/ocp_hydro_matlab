@@ -7,15 +7,18 @@ if ~exist(jsondir,'dir')
     mkdir(jsondir);
 end
 listfile = fullfile(jsondir,'list_json.txt');
-if exist(listfile,'file')
-    delete(listfile);
-end
 
 %sync json files
 system(['rsync -au --delete ' MEXEC_G.RVDAS.user '@' MEXEC_G.RVDAS.machine ':' MEXEC_G.RVDAS.jsondir '/ ' jsondir '/']);
 
 %list them to file
-system(['ls ' jsondir '/*.json > ' listfile]);
+if ~exist(listfile, 'file')
+    system(['ls ' jsondir '/*.json > ' listfile]);
+    disp('edit list of .json files, press any key to continue')
+    pause
+else
+    warning('using existing list of .json files')
+end
 
 %read in each one and output for mrtables_from_json
 p = fileparts(mfilename('fullpath'));

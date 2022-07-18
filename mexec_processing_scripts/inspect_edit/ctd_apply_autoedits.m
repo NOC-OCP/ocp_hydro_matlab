@@ -56,14 +56,14 @@ end
 if isfield(castopts,'despike')
     fn = fieldnames(castopts.despike);
     for no = 1:length(fn)
-        if strncmp(fn{no},'temp')
+        if strncmp(fn{no},'temp',4)
             warning('editing temperature in mctd_02 is risky; are you sure spikes are not large enough to need to restart mctd_01 with redoctm?')
         end
         t = castopts.despike.(fn{no});
         comment = [comment '\n despiked ' fn{no} ' using median_despike with successive thresholds '];
         for dno = 1:length(t)
-        d.(fn{no}) = median_despike(d.(fn{no}), t(dno));
-        comment = [comment num2str(t(dno)) ' '];
+            d.(fn{no}) = median_despike(d.(fn{no}), t(dno));
+            comment = [comment num2str(t(dno)) ' '];
         end
     end
 end

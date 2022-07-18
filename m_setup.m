@@ -38,9 +38,10 @@ disp(['m_setup for ' MEXEC_G.MSCRIPT_CRUISE_STRING ' mexec (ocp_hydro_matlab)'])
 %look for mexec base directory
 if ~isfield(MEXEC_G,'mexec_data_root')
     d = pwd; ii = strfind(d, MEXEC_G.MSCRIPT_CRUISE_STRING); if ~isempty(ii); d = d(1:ii-1); else; d = []; end
-    mpath = {'/local/users/pstar/cruise/data';
-        ['/local/users/pstar/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
+    mpath = {['/local/users/pstar/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
+        ['/local/users/pstar/' MEXEC_G.MSCRIPT_CRUISE_STRING '/data'];
         ['/noc/mpoc/rpdmoc/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
+        ['/noc/mpoc/rpdmoc/' MEXEC_G.MSCRIPT_CRUISE_STRING '/data'];
         ['/local/users/pstar/rpdmoc/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
         fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
         fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
@@ -55,7 +56,7 @@ if ~isfield(MEXEC_G,'mexec_data_root')
     end
     if fp==0 %none found; query
         disp('enter full path of cruise data processing directory')
-        disp('e.g. /local/users/pstar/cruise/data')
+        disp('e.g. /local/users/pstar/jc238/mcruise/data')
         MEXEC_G.mexec_data_root = input('  ', 's');
         disp('if you want, you can modify m_setup.m to hard-code this directory into MEXEC_G.mexec_data_root')
     else

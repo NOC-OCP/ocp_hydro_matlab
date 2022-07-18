@@ -90,7 +90,7 @@ for ks = 1:n_sentences
         else
             f = s.field(kf);
         end
-        fname = f.fieldNumber;
+        fname = f.fieldNumber; %[f.fieldNumber '_' f.name];
         if isfield(f,'units'); funit = f.units; else; funit = f.unit; end
         fprintf(fid,'%30s %30s\n',['''' fname ''''],['''' funit '''']);
         try

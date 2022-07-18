@@ -28,54 +28,6 @@ clear rtables rtables_list
  
 
 
-%airsea2-jc-2022-02-04T081700Z-null  2  sentences
-
-% %"DATNN"
-% rtables.airsea2_datnn = {  % from airsea2-jc-2022-02-04T081700Z-null.json
-% 'airsea2_datnn' 20  % fields
-%                        'date2'                             ''
-%                        'time2'                             ''
-%                    'julianDay'                             ''
-%                      'gravity'                           'cu'
-%                'springTension'                           'cu'
-%                 'beamPosition'                             ''
-%                          'vcc'                             ''
-%                           'al'                             ''
-%                           'ax'                             ''
-%                           've'                             ''
-%                          'ax2'                             ''
-%                        'xacc2'                             ''
-%                        'lacc2'                             ''
-%                     'crossAcc'                          'gal'
-%                      'longAcc'                          'gal'
-%                       'eotvos'                        'mgall'
-%                    'longitude'                             ''
-%                     'latitude'                             ''
-%                     'velocity'                             ''
-%                      'heading'                             ''
-% };
-% 
-% %"ENVNN"
-% rtables.airsea2_envnn = {  % from airsea2-jc-2022-02-04T081700Z-null.json
-% 'airsea2_envnn' 15  % fields
-%                        'date2'                             ''
-%                        'time2'                             ''
-%                    'julianDay'                             ''
-%                      'meterID'                             ''
-%                        'press'                             ''
-%                         'temp'               'degreesCelsius'
-%                  'ambientTemp'               'degreesCelsius'
-%                      'kFactor'                             ''
-%                     'vccCoeff'                             ''
-%                      'alCoeff'                             ''
-%                      'axCoeff'                             ''
-%                      'veCoeff'                             ''
-%                     'ax2Coeff'                             ''
-%           'serialFilterLength'                             ''
-%               'QCFilterLength'                             ''
-% };
-
-
 %cnav-jc-2022-01-01T000000Z-null  9  sentences
 
 %"GNGGA"
@@ -90,7 +42,7 @@ rtables.cnav_gngga = {  % from cnav-jc-2022-01-01T000000Z-null.json
                       'numsat'                             ''
                         'hdop'                             ''
                     'altitude'                       'metres'
-%             'unitsOfAltitude'                             ''
+             'unitsOfAltitude'                             ''
 %                'geoidAltitude'                       'metres'
 %          'unitOfGeoidAltitude'                             ''
 %                     'diffcAge'                             ''
@@ -120,9 +72,9 @@ rtables.cnav_gnrmc = {  % from cnav-jc-2022-01-01T000000Z-null.json
                       'londir'                             ''
                          'sog'                        'knots'
                          'tmg'                      'degrees'
-                     'UTCDate'                             ''
-                      'magvar'                      'degrees'
-                   'magvarDir'                             ''
+%                      'UTCDate'                             ''
+%                       'magvar'                      'degrees'
+%                    'magvarDir'                             ''
 %              'positioningMode'                             ''
 %                    'navStatus'                             ''
 };
@@ -131,113 +83,113 @@ rtables.cnav_gnrmc = {  % from cnav-jc-2022-01-01T000000Z-null.json
 rtables.cnav_gnvtg = {  % from cnav-jc-2022-01-01T000000Z-null.json
 'cnav_gnvtg'  9  % fields
                          'cog'                      'degrees'
-%                       'desCog'                             ''
-%                         'cogm'                      'degrees'
-%                      'desCogm'                             ''
-                          'sog'                        'knots'
-%                       'desSog'                             ''
-%                      'sogkmph'          'Kilometre per hours'
-%                   'desSogKmph'                             ''
-%              'positioningMode'                             ''
+                      'desCog'                             ''
+                        'cogm'                      'degrees'
+                     'desCogm'                             ''
+                         'sog'                        'knots'
+                      'desSog'                             ''
+                     'sogkmph'          'Kilometre per hours'
+                  'desSogKmph'                             ''
+             'positioningMode'                             ''
 };
 
-% %"GNZDA"
-% rtables.cnav_gnzda = {  % from cnav-jc-2022-01-01T000000Z-null.json
-% 'cnav_gnzda'  6  % fields
-%                      'UTCTime'                             ''
-%                          'day'                             ''
-%                        'month'                             ''
-%                         'year'                             ''
-%                     'zoneHour'                             ''
-%                  'zoneMinutes'                             ''
-% };
+%"GNZDA"
+rtables.cnav_gnzda = {  % from cnav-jc-2022-01-01T000000Z-null.json
+'cnav_gnzda'  6  % fields
+                     'UTCTime'                             ''
+                         'day'                             ''
+                       'month'                             ''
+                        'year'                             ''
+                    'zoneHour'                             ''
+                 'zoneMinutes'                             ''
+};
 
 %"GNGSA"
 rtables.cnav_gngsa = {  % from cnav-jc-2022-01-01T000000Z-null.json
 'cnav_gngsa' 18  % fields
-%                      'gsaMode'                             ''
-%                    'gsaStatus'                             ''
-%                         'sId1'                             ''
-%                         'sId2'                             ''
-%                         'sId3'                             ''
-%                         'sId4'                             ''
-%                         'sId5'                             ''
-%                         'sId6'                             ''
-%                         'sId7'                             ''
-%                        'sId10'                             ''
-%                         'sId8'                             ''
-%                         'sId9'                             ''
-%                        'sId11'                             ''
-%                        'sId12'                             ''
+                     'gsaMode'                             ''
+                   'gsaStatus'                             ''
+                        'sId1'                             ''
+                        'sId2'                             ''
+                        'sId3'                             ''
+                        'sId4'                             ''
+                        'sId5'                             ''
+                        'sId6'                             ''
+                        'sId7'                             ''
+                       'sId10'                             ''
+                        'sId8'                             ''
+                        'sId9'                             ''
+                       'sId11'                             ''
+                       'sId12'                             ''
                         'pdop'                             ''
                         'hdop'                             ''
                         'vdop'                             ''
                         'gsId'                             ''
 };
 
-% %"GNDTM"
-% rtables.cnav_gndtm = {  % from cnav-jc-2022-01-01T000000Z-null.json
-% 'cnav_gndtm'  8  % fields
-%                    'datumCode'                             ''
-%                 'subDatumCode'                             ''
-%                    'latOffset'                             ''
-%                       'latdir'                             ''
-%                    'lonOffset'                             ''
-%                       'londir'                             ''
-%               'altitudeOffset'                             ''
-%           'referenceDatumCode'                             ''
-% };
+%"GNDTM"
+rtables.cnav_gndtm = {  % from cnav-jc-2022-01-01T000000Z-null.json
+'cnav_gndtm'  8  % fields
+                   'datumCode'                             ''
+                'subDatumCode'                             ''
+                   'latOffset'                             ''
+                      'latdir'                             ''
+                   'lonOffset'                             ''
+                      'londir'                             ''
+              'altitudeOffset'                             ''
+          'referenceDatumCode'                             ''
+};
 
-% %"GPGSV"
-% rtables.cnav_gpgsv = {  % from cnav-jc-2022-01-01T000000Z-null.json
-% 'cnav_gpgsv' 20  % fields
-%               'messageTotalNo'                             ''
-%                    'messageNo'                             ''
-%                      'totalSv'                             ''
-%                        'svId1'                             ''
-%                      'svElev1'                      'degrees'
-%                       'svAzi1'                      'degrees'
-%                       'svSNR1'                      'decibel'
-%                        'svId2'                             ''
-%                      'svElev2'                      'degrees'
-%                       'svAzi2'                      'degrees'
-%                       'svSNR2'                      'decibel'
-%                        'svId3'                             ''
-%                      'svElev3'                      'degrees'
-%                       'svAzi3'                      'degrees'
-%                       'svSNR3'                      'decibel'
-%                        'svId4'                             ''
-%                      'svElev4'                      'degrees'
-%                       'svAzi4'                      'degrees'
-%                       'svSNR4'                      'decibel'
-%                     'signalId'                             ''
-% };
-% 
-% %"GLGSV"
-% rtables.cnav_glgsv = {  % from cnav-jc-2022-01-01T000000Z-null.json
-% 'cnav_glgsv' 20  % fields
-%               'messageTotalNo'                             ''
-%                    'messageNo'                             ''
-%                      'totalSv'                             ''
-%                        'svId1'                             ''
-%                        'svId2'                             ''
-%                        'svId3'                             ''
-%                        'svId4'                             ''
-%                      'svElev1'                      'degrees'
-%                      'svElev2'                      'degrees'
-%                      'svElev3'                      'degrees'
-%                      'svElev4'                      'degrees'
-%                       'svAzi1'                      'degrees'
-%                       'svAzi2'                      'degrees'
-%                       'svAzi3'                      'degrees'
-%                       'svAzi4'                      'degrees'
-%                       'svSNR1'                      'decibel'
-%                       'svSNR2'                      'decibel'
-%                       'svSNR3'                      'decibel'
-%                       'svSNR4'                      'decibel'
-%                     'signalId'                             ''
-% };
-% 
+%"GPGSV"
+rtables.cnav_gpgsv = {  % from cnav-jc-2022-01-01T000000Z-null.json
+'cnav_gpgsv' 20  % fields
+              'messageTotalNo'                             ''
+                   'messageNo'                             ''
+                     'totalSv'                             ''
+                       'svId1'                             ''
+                     'svElev1'                      'degrees'
+                      'svAzi1'                      'degrees'
+                      'svSNR1'                      'decibel'
+                       'svId2'                             ''
+                     'svElev2'                      'degrees'
+                      'svAzi2'                      'degrees'
+                      'svSNR2'                      'decibel'
+                       'svId3'                             ''
+                     'svElev3'                      'degrees'
+                      'svAzi3'                      'degrees'
+                      'svSNR3'                      'decibel'
+                       'svId4'                             ''
+                     'svElev4'                      'degrees'
+                      'svAzi4'                      'degrees'
+                      'svSNR4'                      'decibel'
+                    'signalId'                             ''
+};
+
+%"GLGSV"
+rtables.cnav_glgsv = {  % from cnav-jc-2022-01-01T000000Z-null.json
+'cnav_glgsv' 20  % fields
+              'messageTotalNo'                             ''
+                   'messageNo'                             ''
+                     'totalSv'                             ''
+                       'svId1'                             ''
+                       'svId2'                             ''
+                       'svId3'                             ''
+                       'svId4'                             ''
+                     'svElev1'                      'degrees'
+                     'svElev2'                      'degrees'
+                     'svElev3'                      'degrees'
+                     'svElev4'                      'degrees'
+                      'svAzi1'                      'degrees'
+                      'svAzi2'                      'degrees'
+                      'svAzi3'                      'degrees'
+                      'svAzi4'                      'degrees'
+                      'svSNR1'                      'decibel'
+                      'svSNR2'                      'decibel'
+                      'svSNR3'                      'decibel'
+                      'svSNR4'                      'decibel'
+                    'signalId'                             ''
+};
+
 
 %ea640-jc-2022-02-04T064000Z-null  2  sentences
 
@@ -251,12 +203,12 @@ rtables.ea640_sddpt = {  % from ea640-jc-2022-02-04T064000Z-null.json
 %"SDDBS"
 rtables.ea640_sddbs = {  % from ea640-jc-2022-02-04T064000Z-null.json
 'ea640_sddbs'  6  % fields
-%                    'depthFeet'                         'Feet'
-%                     'flagFeet'                             ''
+                   'depthFeet'                         'Feet'
+                    'flagFeet'                             ''
                   'depthMeter'                       'metres'
                    'flagMeter'                             ''
-%                   'deptFathom'                       'fathom'
-%                   'flagFathom'                             ''
+                  'deptFathom'                       'fathom'
+                  'flagFathom'                             ''
 };
 
 
@@ -267,7 +219,7 @@ rtables.em122_kidpt = {  % from em122-jc-2022-02-01T150300Z-null.json
 'em122_kidpt'  3  % fields
              'waterDepthMeter'                             ''
             'transducerOffset'                             ''
-%                     'maxRange'                             ''
+                    'maxRange'                             ''
 };
 
 
@@ -277,42 +229,16 @@ rtables.em122_kidpt = {  % from em122-jc-2022-02-01T150300Z-null.json
 rtables.envtemp_wimta = {  % from envtemp-jc-2022-02-01T174900Z-null.json
 'envtemp_wimta'  2  % fields
               'airTemperature'               'degreesCelsius'
-%                  'celsiusFlag'                             ''
+                 'celsiusFlag'                             ''
 };
 
 %"WIMHU"
 rtables.envtemp_wimhu = {  % from envtemp-jc-2022-02-01T174900Z-null.json
 'envtemp_wimhu'  4  % fields
                     'humidity'                   'percentage'
-%                 'FlagHumidity'                             ''
+                'FlagHumidity'                             ''
          'temperatureDewPoint'               'degreesCelsius'
-%                  'flagCelsius'                             ''
-};
-
-
-%gravat1m-jc-2022-01-01T000000Z-null  1  sentences
-
-%"UWRAW"
-rtables.gravat1m_uwraw = {  % from gravat1m-jc-2022-01-01T000000Z-null.json
-'gravat1m_uwraw' 18  % fields
-                     'gravity'                             ''
-                        'long'                             ''
-                      'crossa'                             ''
-                        'beam'                             ''
-                        'temp'               'degreesCelsius'
-                    'pressure'                             ''
-                    'electemp'               'degreesCelsius'
-                         'vcc'                             ''
-                          've'                             ''
-                          'al'                             ''
-                          'ax'                             ''
-                      'status'                             ''
-                    'checksum'                             ''
-                    'latitude'                             ''
-                   'longitude'                             ''
-                       'speed'                             ''
-                      'course'                             ''
-                     'gpstime'                             ''
+                 'flagCelsius'                             ''
 };
 
 
@@ -354,11 +280,11 @@ rtables.posmv_gpgga = {  % from posmv-jc-2022-02-03T184700Z-null.json
                       'numsat'                             ''
                         'hdop'                             ''
                     'altitude'                       'metres'
-%             'unitsOfAltitude'                             ''
-%                'geoidAltitude'                             ''
-%          'unitOfGeoidAltitude'                             ''
-%                     'diffcAge'                             ''
-%                   'dgnssRefid'                             ''
+             'unitsOfAltitude'                             ''
+               'geoidAltitude'                             ''
+         'unitOfGeoidAltitude'                             ''
+                    'diffcAge'                             ''
+                  'dgnssRefid'                             ''
 };
 
 %"GPHDT"
@@ -372,14 +298,14 @@ rtables.posmv_gphdt = {  % from posmv-jc-2022-02-03T184700Z-null.json
 rtables.posmv_gpvtg = {  % from posmv-jc-2022-02-03T184700Z-null.json
 'posmv_gpvtg'  9  % fields
                          'cog'                      'degrees'
-%                       'desCog'                             ''
-%                         'cogm'                      'degrees'
-%                      'desCogm'                             ''
+                      'desCog'                             ''
+                        'cogm'                      'degrees'
+                     'desCogm'                             ''
                          'sog'                        'knots'
-%                       'desSog'                             ''
-%                      'sogkmph'          'Kilometre per hours'
-%                   'desSogKmph'                             ''
-%              'positioningMode'                             ''
+                      'desSog'                             ''
+                     'sogkmph'          'Kilometre per hours'
+                  'desSogKmph'                             ''
+             'positioningMode'                             ''
 };
 
 %"GPRMC"
@@ -396,19 +322,19 @@ rtables.posmv_gprmc = {  % from posmv-jc-2022-02-03T184700Z-null.json
                      'UTCDate'                             ''
                       'magvar'                             ''
                    'magvarDir'                             ''
-%              'positioningMode'                             ''
+             'positioningMode'                             ''
 };
 
-% %"GPZDA"
-% rtables.posmv_gpzda = {  % from posmv-jc-2022-02-03T184700Z-null.json
-% 'posmv_gpzda'  6  % fields
-%                      'UTCTime'                             ''
-%                          'day'                             ''
-%                        'month'                             ''
-%                         'year'                             ''
-%                     'zoneHour'                             ''
-%                  'zoneMinutes'                             ''
-% };
+%"GPZDA"
+rtables.posmv_gpzda = {  % from posmv-jc-2022-02-03T184700Z-null.json
+'posmv_gpzda'  6  % fields
+                     'UTCTime'                             ''
+                         'day'                             ''
+                       'month'                             ''
+                        'year'                             ''
+                    'zoneHour'                             ''
+                 'zoneMinutes'                             ''
+};
 
 %"PASHR"
 rtables.posmv_pashr = {  % from posmv-jc-2022-02-03T184700Z-null.json
@@ -441,35 +367,35 @@ rtables.ranger2usbl_gpgga = {  % from ranger2usbl-jc-2022-02-04T072000Z-null.jso
                       'numsat'                             ''
                         'hdop'                             ''
                     'altitude'                       'metres'
-%             'unitsOfAltitude'                             ''
-%                'geoidAltitude'                       'metres'
-%          'unitOfGeoidAltitude'                             ''
-%                     'diffcAge'                             ''
-%                   'dgnssRefid'                             ''
+             'unitsOfAltitude'                             ''
+               'geoidAltitude'                       'metres'
+         'unitOfGeoidAltitude'                             ''
+                    'diffcAge'                             ''
+                  'dgnssRefid'                             ''
 };
 
 
 %rex2-jc-2022-02-10T110000Z-null  2  sentences
 
-% %"PRAMR"
-% rtables.rex2_pramr = {  % from rex2-jc-2022-02-10T110000Z-null.json
-% 'rex2_pramr'  9  % fields
-%              'dateTimeFromWVC'                             ''
-%                    'julianDay'                             ''
-%                       'airgap'                             ''
-%                        'h4rms'                             ''
-%                         'tz_s'                             ''
-%                         'hmax'                             ''
-%                       'hcrest'                             ''
-%                         'tp_s'                             ''
-%                         'tc_s'                             ''
-% };
-% 
-% %"3RR0R"
-% rtables.rex2_3rr0r = {  % from rex2-jc-2022-02-10T110000Z-null.json
-% 'rex2_3rr0r'  1  % fields
-%                      'message'                             ''
-% };
+%"PRAMR"
+rtables.rex2_pramr = {  % from rex2-jc-2022-02-10T110000Z-null.json
+'rex2_pramr'  9  % fields
+             'dateTimeFromWVC'                             ''
+                   'julianDay'                             ''
+                      'airgap'                             ''
+                       'h4rms'                             ''
+                        'tz_s'                             ''
+                        'hmax'                             ''
+                      'hcrest'                             ''
+                        'tp_s'                             ''
+                        'tc_s'                             ''
+};
+
+%"3RR0R"
+rtables.rex2_3rr0r = {  % from rex2-jc-2022-02-10T110000Z-null.json
+'rex2_3rr0r'  1  % fields
+                     'message'                             ''
+};
 
 
 %sbe38dropkeel-jc-2022-02-04T133000Z-null  1  sentences
@@ -508,11 +434,11 @@ rtables.seapathatt_ingga = {  % from seapathatt-jc-2022-02-03T184800Z-null.json
                       'numsat'                             ''
                         'hdop'                             ''
                     'altitude'                       'metres'
-%             'unitsOfAltitude'                             ''
-%                'geoidAltitude'                             ''
-%          'unitOfGeoidAltitude'                             ''
-%                     'diffcAge'                             ''
-%                   'dgnssRefid'                             ''
+             'unitsOfAltitude'                             ''
+               'geoidAltitude'                             ''
+         'unitOfGeoidAltitude'                             ''
+                    'diffcAge'                             ''
+                  'dgnssRefid'                             ''
 };
 
 %"PSXN23"
@@ -524,15 +450,15 @@ rtables.seapathatt_psxn23 = {  % from seapathatt-jc-2022-02-03T184800Z-null.json
                        'heave'                       'metres'
 };
 
-% %"PSXN20"
-% rtables.seapathatt_psxn20 = {  % from seapathatt-jc-2022-02-03T184800Z-null.json
-% 'seapathatt_psxn20'  4  % fields
-%            'horizontalQuality'                             ''
-%                'heightQuality'                             ''
-%               'headingQuality'                             ''
-%             'pitchRollQuality'                             ''
-% };
-% 
+%"PSXN20"
+rtables.seapathatt_psxn20 = {  % from seapathatt-jc-2022-02-03T184800Z-null.json
+'seapathatt_psxn20'  4  % fields
+           'horizontalQuality'                             ''
+               'heightQuality'                             ''
+              'headingQuality'                             ''
+            'pitchRollQuality'                             ''
+};
+
 
 %seapathgps-jc-2022-02-03T184800Z-null 10  sentences
 
@@ -548,32 +474,32 @@ rtables.seapathgps_ingga = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
                       'numsat'                             ''
                         'hdop'                             ''
                     'altitude'                       'metres'
-%             'unitsOfAltitude'                             ''
-%                'geoidAltitude'                       'metres'
-%          'unitOfGeoidAltitude'                             ''
-%                     'diffcAge'                             ''
-%                   'dgnssRefid'                             ''
+             'unitsOfAltitude'                             ''
+               'geoidAltitude'                       'metres'
+         'unitOfGeoidAltitude'                             ''
+                    'diffcAge'                             ''
+                  'dgnssRefid'                             ''
 };
 
 %"INHDT"
 rtables.seapathgps_inhdt = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
 'seapathgps_inhdt'  2  % fields
                      'heading'                      'degrees'
-%                  'desHeading'                             ''
+                  'desHeading'                             ''
 };
 
 %"INVTG"
 rtables.seapathgps_invtg = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
 'seapathgps_invtg'  9  % fields
                          'cog'                      'degrees'
-%                       'desCog'                             ''
-%                         'cogm'                      'degrees'
-%                      'desCogm'                             ''
+                      'desCog'                             ''
+                        'cogm'                      'degrees'
+                     'desCogm'                             ''
                          'sog'                        'knots'
-%                       'desSog'                             ''
-%                      'sogkmph'          'Kilometre per hours'
-%                   'desSogKmph'                             ''
-%              'positioningMode'                             ''
+                      'desSog'                             ''
+                     'sogkmph'          'Kilometre per hours'
+                  'desSogKmph'                             ''
+             'positioningMode'                             ''
 };
 
 %"INRMC"
@@ -590,41 +516,41 @@ rtables.seapathgps_inrmc = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
                      'UTCDate'                             ''
                       'magvar'                             ''
                    'magvarDir'                             ''
-%              'positioningMode'                             ''
+             'positioningMode'                             ''
 };
 
-% %"INZDA"
-% rtables.seapathgps_inzda = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
-% 'seapathgps_inzda'  6  % fields
-%                      'UTCTime'                             ''
-%                          'day'                             ''
-%                        'month'                             ''
-%                         'year'                             ''
-%                     'zoneHour'                             ''
-%                  'zoneMinutes'                             ''
-% };
+%"INZDA"
+rtables.seapathgps_inzda = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
+'seapathgps_inzda'  6  % fields
+                     'UTCTime'                             ''
+                         'day'                             ''
+                       'month'                             ''
+                        'year'                             ''
+                    'zoneHour'                             ''
+                 'zoneMinutes'                             ''
+};
 
-% %"GPGSA"
-% rtables.seapathgps_gpgsa = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
-% 'seapathgps_gpgsa' 17  % fields
-%                      'gsaMode'                             ''
-%                    'gsaStatus'                             ''
-%                         'sId1'                             ''
-%                         'sId2'                             ''
-%                         'sId3'                             ''
-%                         'sId4'                             ''
-%                         'sId5'                             ''
-%                         'sId6'                             ''
-%                         'sId7'                             ''
-%                         'sId8'                             ''
-%                         'sId9'                             ''
-%                        'sId10'                             ''
-%                        'sId11'                             ''
-%                        'sId12'                             ''
-%                         'pdop'                             ''
-%                         'hdop'                             ''
-%                         'vdop'                             ''
-% };
+%"GPGSA"
+rtables.seapathgps_gpgsa = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
+'seapathgps_gpgsa' 17  % fields
+                     'gsaMode'                             ''
+                   'gsaStatus'                             ''
+                        'sId1'                             ''
+                        'sId2'                             ''
+                        'sId3'                             ''
+                        'sId4'                             ''
+                        'sId5'                             ''
+                        'sId6'                             ''
+                        'sId7'                             ''
+                        'sId8'                             ''
+                        'sId9'                             ''
+                       'sId10'                             ''
+                       'sId11'                             ''
+                       'sId12'                             ''
+                        'pdop'                             ''
+                        'hdop'                             ''
+                        'vdop'                             ''
+};
 
 %"INGLL"
 rtables.seapathgps_ingll = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
@@ -635,101 +561,78 @@ rtables.seapathgps_ingll = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
                       'londir'                             ''
                      'UTCTime'                             ''
                    'recStatus'                             ''
-%              'positioningMode'                             ''
+             'positioningMode'                             ''
 };
 
-% %"GPGSV"
-% rtables.seapathgps_gpgsv = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
-% 'seapathgps_gpgsv' 19  % fields
-%               'messageTotalNo'                             ''
-%                    'messageNo'                             ''
-%                      'totalSv'                             ''
-%                        'svId1'                             ''
-%                      'svElev1'                             ''
-%                       'svAzi1'                             ''
-%                       'svSNR1'                      'decibel'
-%                        'svId2'                             ''
-%                      'svElev2'                             ''
-%                       'svAzi2'                             ''
-%                       'svSNR2'                      'decibel'
-%                        'svId3'                             ''
-%                      'svElev3'                             ''
-%                       'svAzi3'                             ''
-%                       'svSNR3'                      'decibel'
-%                        'svId4'                             ''
-%                      'svElev4'                             ''
-%                       'svAzi4'                             ''
-%                       'svSNR4'                      'decibel'
-% };
-% 
-% %"GLGSV"
-% rtables.seapathgps_glgsv = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
-% 'seapathgps_glgsv' 19  % fields
-%               'messageTotalNo'                             ''
-%                    'messageNo'                             ''
-%                      'totalSv'                             ''
-%                        'svId1'                             ''
-%                      'svElev1'                             ''
-%                       'svAzi1'                             ''
-%                       'svSNR1'                             ''
-%                        'svId2'                             ''
-%                      'svElev2'                             ''
-%                       'svAzi2'                             ''
-%                       'svSNR2'                      'decibel'
-%                        'svId3'                             ''
-%                      'svElev3'                             ''
-%                       'svAzi3'                             ''
-%                       'svSNR3'                      'decibel'
-%                        'svId4'                             ''
-%                      'svElev4'                             ''
-%                       'svAzi4'                             ''
-%                       'svSNR4'                      'decibel'
-% };
+%"GPGSV"
+rtables.seapathgps_gpgsv = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
+'seapathgps_gpgsv' 19  % fields
+              'messageTotalNo'                             ''
+                   'messageNo'                             ''
+                     'totalSv'                             ''
+                       'svId1'                             ''
+                     'svElev1'                             ''
+                      'svAzi1'                             ''
+                      'svSNR1'                      'decibel'
+                       'svId2'                             ''
+                     'svElev2'                             ''
+                      'svAzi2'                             ''
+                      'svSNR2'                      'decibel'
+                       'svId3'                             ''
+                     'svElev3'                             ''
+                      'svAzi3'                             ''
+                      'svSNR3'                      'decibel'
+                       'svId4'                             ''
+                     'svElev4'                             ''
+                      'svAzi4'                             ''
+                      'svSNR4'                      'decibel'
+};
 
-% %"GNGSA"
-% rtables.seapathgps_gngsa = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
-% 'seapathgps_gngsa' 17  % fields
-%                       'saMode'                             ''
-%                        'PMode'                             ''
-%                         'sat1'                             ''
-%                         'sat2'                             ''
-%                         'sat3'                             ''
-%                         'sat4'                             ''
-%                         'sat5'                             ''
-%                         'sat6'                             ''
-%                         'sat7'                             ''
-%                         'sat8'                             ''
-%                         'sat9'                             ''
-%                        'sat10'                             ''
-%                        'sat11'                             ''
-%                         'pdop'                             ''
-%                         'hdop'                             ''
-%                         'vdop'                             ''
-%                        'sat12'                             ''
-% };
+%"GLGSV"
+rtables.seapathgps_glgsv = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
+'seapathgps_glgsv' 19  % fields
+              'messageTotalNo'                             ''
+                   'messageNo'                             ''
+                     'totalSv'                             ''
+                       'svId1'                             ''
+                     'svElev1'                             ''
+                      'svAzi1'                             ''
+                      'svSNR1'                             ''
+                       'svId2'                             ''
+                     'svElev2'                             ''
+                      'svAzi2'                             ''
+                      'svSNR2'                      'decibel'
+                       'svId3'                             ''
+                     'svElev3'                             ''
+                      'svAzi3'                             ''
+                      'svSNR3'                      'decibel'
+                       'svId4'                             ''
+                     'svElev4'                             ''
+                      'svAzi4'                             ''
+                      'svSNR4'                      'decibel'
+};
 
-
-%seaspy2-jc-2022-01-01T000000Z-null  2  sentences
-
-% %"INMAG"
-% rtables.seaspy2_inmag = {  % from seaspy2-jc-2022-01-01T000000Z-null.json
-% 'seaspy2_inmag'  9  % fields
-%               'juliandatetime'                             ''
-%                'magneticField'                    'NanoTesla'
-%               'signalStrength'                             ''
-%                        'depth'                       'metres'
-%              'altitudeTowfish'                             ''
-%                         'leak'                             ''
-%             'mearsurementTime'                             ''
-%                'signalQuality'                             ''
-%              'warningMessages'                             ''
-% };
-% 
-% %"3RR0R"
-% rtables.seaspy2_3rr0r = {  % from seaspy2-jc-2022-01-01T000000Z-null.json
-% 'seaspy2_3rr0r'  1  % fields
-%                      'message'                             ''
-% };
+%"GNGSA"
+rtables.seapathgps_gngsa = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
+'seapathgps_gngsa' 17  % fields
+                      'saMode'                             ''
+                       'PMode'                             ''
+                        'sat1'                             ''
+                        'sat2'                             ''
+                        'sat3'                             ''
+                        'sat4'                             ''
+                        'sat5'                             ''
+                        'sat6'                             ''
+                        'sat7'                             ''
+                        'sat8'                             ''
+                        'sat9'                             ''
+                       'sat10'                             ''
+                       'sat11'                             ''
+                        'pdop'                             ''
+                        'hdop'                             ''
+                        'vdop'                             ''
+                       'sat12'                             ''
+};
 
 
 %sgyro-jc-2022-02-04T070000Z-null  4  sentences
@@ -738,14 +641,14 @@ rtables.seapathgps_ingll = {  % from seapathgps-jc-2022-02-03T184800Z-null.json
 rtables.sgyro_hehdt = {  % from sgyro-jc-2022-02-04T070000Z-null.json
 'sgyro_hehdt'  2  % fields
                      'heading'                      'degrees'
-%                  'desHeading'                             ''
+                  'desHeading'                             ''
 };
 
 %"HCHDM"
 rtables.sgyro_hchdm = {  % from sgyro-jc-2022-02-04T070000Z-null.json
 'sgyro_hchdm'  2  % fields
                      'heading'                      'degrees'
-%                  'desHeading'                             ''
+                  'desHeading'                             ''
 };
 
 %"TIROT"
@@ -755,44 +658,44 @@ rtables.sgyro_tirot = {  % from sgyro-jc-2022-02-04T070000Z-null.json
                    'rotStatus'                             ''
 };
 
-% %"PPNSD"
-% rtables.sgyro_ppnsd = {  % from sgyro-jc-2022-02-04T070000Z-null.json
-% 'sgyro_ppnsd'  8  % fields
-%                          'dm1'                             ''
-%                          'dm2'                             ''
-%                          'dm3'                             ''
-%                          'dm4'                             ''
-%                          'dm5'                             ''
-%                          'dm6'                             ''
-%                          'dm7'                             ''
-%                          'dm8'                             ''
-% };
+%"PPNSD"
+rtables.sgyro_ppnsd = {  % from sgyro-jc-2022-02-04T070000Z-null.json
+'sgyro_ppnsd'  8  % fields
+                         'dm1'                             ''
+                         'dm2'                             ''
+                         'dm3'                             ''
+                         'dm4'                             ''
+                         'dm5'                             ''
+                         'dm6'                             ''
+                         'dm7'                             ''
+                         'dm8'                             ''
+};
 
 
 %slogchernikeef-jc-2022-02-04T130800Z-null  2  sentences
 
-% %"VMVLW"
-% rtables.slogchernikeef_vmvlw = {  % from slogchernikeef-jc-2022-02-04T130800Z-null.json
-% 'slogchernikeef_vmvlw'  4  % fields
-%                        'tdist'                             ''
-%                       'nFlag1'                             ''
-%                        'rdist'                             ''
-%                       'nFlag2'                             ''
-% };
+%"VMVLW"
+rtables.slogchernikeef_vmvlw = {  % from slogchernikeef-jc-2022-02-04T130800Z-null.json
+'slogchernikeef_vmvlw'  4  % fields
+                       'tdist'                             ''
+                      'nFlag1'                             ''
+                       'rdist'                             ''
+                      'nFlag2'                             ''
+};
 
 %"VMVBW"
 rtables.slogchernikeef_vmvbw = {  % from slogchernikeef-jc-2022-02-04T130800Z-null.json
 'slogchernikeef_vmvbw' 10  % fields
                      'speedfa'                             ''
                      'speedps'                             ''
-%                      'status1'                             ''
-%                'speedfaGround'                        'knots'
-%                'speedpsGround'                        'knots'
-%                      'status2'                             ''
-%                         'vbw7'                             ''
-%                         'vbw8'                             ''
-%                      'status3'                             ''
-%                        'vbw10'                             ''
+                     'status1'                             ''
+               'speedfaGround'                        'knots'
+               'speedpsGround'                        'knots'
+                     'status2'                             ''
+                        'vbw7'                             ''
+                        'vbw8'                             ''
+                     'status3'                             ''
+                       'vbw10'                             ''
 };
 
 
@@ -828,7 +731,7 @@ rtables.winchlog_winch = {  % from winchlog-jc-2022-02-04T084800Z-null.json
                         'rate'                             ''
                  'backTension'                        'tonne'
                    'rollAngle'                             ''
-%                    'undefined'                             ''
+                   'undefined'                             ''
 };
 
 

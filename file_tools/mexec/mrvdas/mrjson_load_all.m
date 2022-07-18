@@ -20,7 +20,7 @@ function names_units = mrjson_load_all(fntxt,varargin)
 %
 % Input:
 %
-% Text file with list of roots of .json files for conversion to .mat. 
+% Text file with list of roots of .json files to be read
 % eg fntxt = 'list_json.txt';
 % eg content might be
 %    
@@ -31,9 +31,8 @@ function names_units = mrjson_load_all(fntxt,varargin)
 % cnav_gps-jc
 % dps116_gps-jc
 % 
-% Files that would exist in this directory would include 
-% (.mat file is read, .json file alrady exists)
-% 
+% Files to be read might be
+%
 % cnav_gps-jc.json
 % cnav_gps-jc.mat
 % dps116_gps-jc.json
