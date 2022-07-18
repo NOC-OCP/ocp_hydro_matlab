@@ -27,7 +27,7 @@ function dg = grid_profile(d, gridvar, gridvec, method, varargin)
 %   num (scalar), for method 'meannum': number of points in each average
 %   int (tuple), for method 'medint' or 'meanint': range [lower upper]
 %   around  each element of gridvec (in gridvar-units) over which to
-%   compute median 
+%   compute median/mean
 % len (scalar), for method 'smhan': length (points) for hanning filter
 %
 % optional inputs for multiple methods:

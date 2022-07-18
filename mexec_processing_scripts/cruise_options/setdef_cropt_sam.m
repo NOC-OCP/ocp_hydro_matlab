@@ -45,19 +45,36 @@ switch scriptname
                     '(default: ''hh:mm:ss'') for converting date and time strings to datevec'};
                 datform = 'dd/mm/yyyy';
                 timform = 'HH:MM:SS';
-                
+
             case 'sal_flags'
                 crhelp_str = {'Place to set flags on salinity bottles or readings.'};
-            case 'sal_off'
+            case 'sal_calc'
                 crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive) for ranges '
                     'of sampnum, or leave empty (default) to run msal_standardise_avg to calculate and plot.'
                     'Also must set sal_off_base (default ''sampnum_run'') to specify how to match them to samples. Optionally set '
                     'sal_adj_comment here to give information on how standards offsets were chosen (if'
-                    'not chosen using msal_standardise_avg).'};
-                cellT = 21; %***
+                    'not chosen using msal_standardise_avg). This is also the place to set cellT (bath temperature)'
+                    'if it is not a column in your input files (or include code to parse it from the file headers).'};
                 sal_off = [];
                 sal_off_base = 'sampnum_run';
                 sal_adj_comment = '';
+            case 'tsg_sampnum'
+                crhelp_str = {'Place to parse tsg sampnum (default: same as sampnum read in from file'
+                    'and dnum (datenum) from sampnum (default: either yyyymmddHHMM, or if sampnum<0, -jjjHHMM)'
+                    'where jjj is yearday)'};
+                tsg.sampnum = dsu.sampnum;
+                ii = find(tsg.sampnum>0);
+                if ~isempty(ii)
+                    tsg.dnum(ii) = datenum(num2str(tsg.sampnum(ii)),'yyyymmddHHMM');
+                end
+                ii = find(tsg.sampnum<0);
+                if ~isempty(ii)
+                    s = num2str(-tsg.sampnum(ii));
+                    jjj = str2num(s(:,1:3));
+                    HH = str2num(s(:,4:5));
+                    MM = str2num(s(:,6:7));
+                    tsg.dnum(ii) = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1) + jjj-1 + (HH+MM/60)/24;
+                end
         end
         %%%%%%%%%% end msal_01 %%%%%%%%%%
         

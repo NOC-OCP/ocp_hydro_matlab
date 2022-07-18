@@ -36,7 +36,6 @@ MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-h = m_read_header(dcsfile);
 [dd, ~] = mloadq(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
 %***code to calculate dc24 from dc and scan if there is no dc24?***
 % allow for the possibility that the dcs file contains many stations
@@ -98,10 +97,10 @@ end
 pg = [1:2:1e4]';
 scriptname = mfilename; oopt = 'interp2db'; get_cropt
 clear g2opts
-g2opts.int = [-1 1];
-g2opts.grid_extrap = [0 0];
-g2opts.postfill = maxfill2db;
-g2opts.bin_partial = 1;
+g2opts.int = [-1 1]; %interval for bins
+g2opts.grid_extrap = [0 0]; %discard empty bins
+g2opts.postfill = maxfill2db; %fill after gridding?
+g2opts.bin_partial = 1; %use bins with data in only one half
 dn2 = grid_profile(dn, 'press', pg, 'meanint', g2opts);
 up2 = grid_profile(up, 'press', pg, 'meanint', g2opts);
 hn.comment = 'bin averaged to 2 dbar using grid_cast_segment\n';

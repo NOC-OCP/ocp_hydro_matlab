@@ -82,6 +82,7 @@ switch scriptname
     case 'msal_01'
         switch oopt
             case 'sal_calc'
+                cellT = 21;
                 sal_off = [
                     000 -1
                     001 -4

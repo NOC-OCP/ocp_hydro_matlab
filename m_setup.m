@@ -19,7 +19,17 @@ MEXEC_G.other_programs_root = '~/programs/others/';
 force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 1; %if 0, both mexec_v3/source programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 skipunderway = 0; %set to 1 if reprocessing data not including underway data from an old cruise
-MEXEC_G.ix_ladcp = 1; %if true, output 1-Hz CTD data for use by LDEO IX LADCP processing
+if ismember(MEXEC_G.MSCRIPT_CRUISE_STRING, {'jc238'})
+    disp('LDEO_IX and m_moorproc_toolbox/rodbload contain functions with the same name')
+    pathpath = input('are you processing LADCP data (1) or mooring/caldip data (2) in this session? \n');
+    if pathpath==2
+        MEXEC_G.ix_ladcp = 0;
+    else
+        MEXEC_G.ix_ladcp = 1; %if true, output 1-Hz CTD data for use by LDEO IX LADCP processing
+    end
+else
+    MEXEC_G.ix_ladcp = 1;
+end
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 

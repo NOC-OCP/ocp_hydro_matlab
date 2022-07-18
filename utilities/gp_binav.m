@@ -44,17 +44,17 @@ for bno = 1:length(xm)
             
             switch method
                 case 'mean'
-                    w = sum(double(m));
+                    w = sum(double(m),1);
                     yb(~m) = 0;
-                    yg(bno,:) = sum(yb)./w;
+                    yg(bno,:) = sum(yb,1)./w;
                     yg(bno,w==0) = NaN;
                     
                 case 'median'
-                    mid = sum(m)/2;
+                    mid = sum(m,1)/2;
                     ii1 = find(mid==0.5); %for nanmedian, only one good point
                     ii0 = find(mid==0); %for nanmedian, no good points
                     mid([ii0 ii1]) = size(yb,1); %these will be NaN but will fill in ii1 after
-                    yb = sort(yb);
+                    yb = sort(yb,1);
                     s2 = size(yb,2);
                     if s2==1
                         ind1 = floor(mid);
@@ -64,10 +64,10 @@ for bno = 1:length(xm)
                         ind2 = sub2ind(size(yb),ceil(mid),1:s2);
                     end
                     yg(bno,:) = .5*(yb(ind1)+yb(ind2));
-                    yg(bno,ii1) = min(yb(:,ii1)); %for nanmedian, only good value
+                    yg(bno,ii1) = min(yb(:,ii1),[],1); %for nanmedian, only good value
                     
                 case 'lfit'
-                    w = sum(double(m));
+                    w = sum(double(m),1);
                     for no2 = 1:s(2)
                         if w(no2)>0
                             try

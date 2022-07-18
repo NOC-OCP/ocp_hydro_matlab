@@ -110,7 +110,7 @@ scriptname = mfilename; oopt = 'sal_flags'; get_cropt
 
 %check for offsets in cruise options, also set things like cellT, K15
 scriptname = mfilename; oopt = 'sal_calc'; get_cropt
-if ~isfield(ds_sal,'cellt') || sum(~isnan(ds_sal.cellt))==0
+if ~isfield(ds_sal,'cellt') || sum(isfinite(ds_sal.cellt))==0
     ds_sal.cellt = repmat(cellT,size(ds_sal,1),1);
 end
 if isfield(ds_sal,'k15') && sum(~isnan(ds_sal.k15))==0; ds_sal.k15 = []; end

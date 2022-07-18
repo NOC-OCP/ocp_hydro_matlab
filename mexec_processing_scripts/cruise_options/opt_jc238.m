@@ -5,7 +5,7 @@ switch scriptname
             case 'nnisk'
                 nnisk = 12;
             case 'oxy_align'
-                if ismember(stnlocal,[2 3 5:8 12:13]) %add stations finished by dougal here
+                if ismember(stnlocal,[2 3 5:8 12:13 17:19]) %add stations finished by dougal here
                     oxy_end = 1;
                 end
         end
@@ -51,6 +51,8 @@ switch scriptname
                 switch stnlocal
                     case 1
                         niskin_flag(position==1) = 7; %questionable tap
+                    case 17
+                        niskin_flag(position==9) = 4; %misfire
                     otherwise
                 end
         end
@@ -124,6 +126,15 @@ switch scriptname
         end
         %%%%%%%%%% end mday_01_fcal %%%%%%%%%%
 
+    case 'msal_01'
+        switch oopt
+            case 'sal_files'
+                salfiles = dir(fullfile(root_sal, ['JC238_*.csv']));
+                salfiles = {salfiles.name};
+            case 'sal_calc'
+                cellT = 24;
+        end
+        
     case 'moxy_01'
         switch oopt
             case 'oxy_files'
@@ -269,43 +280,7 @@ switch scriptname
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
         
-        
-        %%%%%%%%%% msal_01 (transferred jc238 from msal_standardise_avg) %%%%%%%%%%
-    case 'msal_01'
-        switch oopt
-            case 'sal_files'
-                sal_csv_file = 'sal_dy113_all.csv';
-            case 'sal_calc'
-                ds_sal.K15 = repmat(0.99985,length(ds_sal.sampnum),1); %p163
-                ds_sal.cellT = 21+zeros(length(ds_sal.sampnum),1);
-                calc_offset = 1; %calculate offset from standards readings - 2*K15
-                %make the next two variables 1 if you want to check the
-                %salinity readings (do this when you first read in a
-                %station or set of stations)
-                check_sal_runs = 0; %plot standards and sample runs to compare before averaging
-                plot_all_stations = 0;
-                iistno = 1:length(stnos);
-                std2use(ismember(ssns, [8 16 18 19 26 27 27.5 31 33 47 57 61]),1) = 0;
-                std2use(ssns==4, 2) = 0;
-                std2use(ismember(ssns,[3 13 23 39 55]),3) = 0;
-                xoff = ds_sal.runtime;
-                sb1 = [115 123 201 208 301 303 403 413 415 505 510 605 703 817 914];
-                sb1 = [sb1 1315 1409 1913 2209 2613 2701 2802 2813 2905 2913 3101];
-                sb1 = [sb1 3201 3302 3304 3706 3717 4021 4113 4523 4914 5312 6202 7001 8001 9701 10016 10101 10418];
-                sam2use(ismember(ds_sal.sampnum(iisam),sb1),1) = 0; %1017 1023
-                sb2 = [315 514 815 1003 1101 1514 2101 2214 2514 2815 3218 3221];
-                sb2 = [sb2 3223 3606 3712 4217 4403 4709 5710 5915 8208];
-                sam2use(ismember(ds_sal.sampnum(iisam),sb2),2) = 0;
-                sb3 = [114 121 219 511 611 1809 1907 2421 3503 3711 3905];
-                sb3 = [sb3 4221 4805 5105 5109 5411 5815 5921 5923 8107 8117 8503 8910 10206];
-                sam2use(ismember(ds_sal.sampnum(iisam),sb3),3) = 0;
-                sam2use(ismember(ds_sal.sampnum(iisam),[1017 1023 1103]),2:3) = 0;
-                ii1 = find(sum(sam2use,2)==1);
-                ds_sal.flag(iisam(ii1)) = max(ds_sal.flag(iisam(ii1)),3);
-                ds_sal.flag(ds_sal.sampnum==2213) = 3;
-        end
-        %%%%%%%%%% msal_01 %%%%%%%%%%
-        
+                
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
     case 'msam_ashore_flag'
         switch oopt
