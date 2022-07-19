@@ -21,11 +21,11 @@ MEXEC_G.quiet = 1; %if 0, both mexec_v3/source programs and mexec_processing_scr
 skipunderway = 0; %set to 1 if reprocessing data not including underway data from an old cruise
 if ismember(MEXEC_G.MSCRIPT_CRUISE_STRING, {'jc238'})
     disp('LDEO_IX and m_moorproc_toolbox/rodbload contain functions with the same name')
-    pathpath = input('are you processing LADCP data (1) or mooring/caldip data (2) in this session? \n');
-    if pathpath==2
-        MEXEC_G.ix_ladcp = 0;
+    pathpath = input('are you processing LADCP data (1),\n mooring/caldip data (2),\n or neither (0)?\n');
+    if pathpath==1
+        MEXEC_G.ix_ladcp = 1; %output 1-Hz CTD data for use by LDEO IX LADCP processing
     else
-        MEXEC_G.ix_ladcp = 1; %if true, output 1-Hz CTD data for use by LDEO IX LADCP processing
+        MEXEC_G.ix_ladcp = 0; 
     end
 else
     MEXEC_G.ix_ladcp = 1;

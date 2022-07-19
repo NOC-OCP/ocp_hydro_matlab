@@ -1,4 +1,4 @@
-function [dnew, hnew] = ctd_apply_oxyhyst(d, h, castopts)
+function [dnew, hnew] = apply_oxyhyst(d, h, castopts)
 %reverse and/or apply oxygen hysteresis correction to _raw_cleaned file,
 %producing _24hz file
 

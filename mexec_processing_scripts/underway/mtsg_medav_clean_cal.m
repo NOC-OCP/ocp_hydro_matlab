@@ -16,7 +16,7 @@ scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 % bak jc211 ship_data_sys_names sets metpre and tsgpre
 
 if MEXEC_G.quiet<=1
-    fprintf(1,'averaging to 1 minute, calling mtsg_cleanup to remove bad times from %s_%s_01.nc to make %s_%s_01_medav_clean.nc\n',tsgpre,mcruise,tsgpre,mcruise);
+    fprintf(1,'cleaning (calling ctd_apply_autoedits) %s_%s_01.nc and averaging to one minute to make %s_%s_01_medav_clean.nc\n',tsgpre,mcruise,tsgpre,mcruise);
     fprintf(1,'calling m_apply_calibration to apply sal and temp calibrations set in opt_%s for %s_%s_01_medav_clean_cal.nc\n',mcruise,tsgpre,mcruise);
 end
 
@@ -30,62 +30,31 @@ if ~exist(m_add_nc(infile1),'file')
     return
 end
 
-scriptname = mfilename; oopt = 'tsg_editvars'; get_cropt
-scriptname = mfilename; oopt = 'tsg_badlims'; get_cropt
-h = m_read_header(infile1);
-editvars = intersect(editvars, h.fldnam);
+[d,h] = mload(infile1,'/');
 
-scriptname = 'ship'; oopt = 'avtime'; get_cropt
-avtsg = round(avtsg);
-
-if ~isempty(kbadlims) && ~isempty(editvars)
-    
-    %average
-    MEXEC_A.MARGS_IN = {
-        infile1
-        otfile1
-        ' '
-        'time'
-        sprintf('%d 1e10 60',avtsg)
-        'b'
-        };
-    mavmed
-    
-    %remove badtimes and save
-    [d,h] = mloadq(otfile1, '/');
-    torg = datenum(h.data_time_origin);
-    d.time = m_commontime(d.time,h.data_time_origin,0)/86400; %convert to matlab datenum
-    clear dnew hnew
-    hnew.fldnam = {}; hnew.fldunt = {}; hnew.comment = 'TSG bad time ranges removed';
-    iib = [];
-    if iscell(kbadlims)
-        for kb = 1:size(kbadlims,1)
-            iib = [iib; find(d.time>=datenum(kbadlims{kb,1}) & d.time<=datenum(kbadlims{kb,2}))];
-        end
-    else
-        for kb = 1:size(kbadlims,1)
-            iib = [iib; find(d.time>=kbadlims(kb,1) & d.time<=kbadlims(kb,2))];
-        end
-    end
-    for vno = 1:length(editvars)
-        dnew.(editvars{vno}) = d.(editvars{vno});
-        dnew.(editvars{vno})(iib) = NaN;
-        hnew.fldnam = [hnew.fldnam editvars{vno}];
-        thisvar = strcmp(editvars{vno}, h.fldnam);
-        hnew.fldunt = [hnew.fldunt h.fldunt(thisvar)];
-    end
-    %***necessary to calculate salinity using temp_housing?
-    mfsave(otfile1, dnew, hnew, '-addvars');
-    
-else
-    disp('no editvars found in file or no kbadlims set; skipping')
-    return
+%clean
+scriptname = mfilename; oopt = 'tsg_edits'; get_cropt
+if ~isempty(tsgedits)
+    [d, comment] = ctd_apply_autoedits(d, tsgedits);
+    h.comment = [h.comment comment];
 end
 
+%average
+scriptname = 'ship'; oopt = 'avtime'; get_cropt
+avtsg = round(avtsg);
+MEXEC_A.MARGS_IN = {
+    infile1
+    otfile1
+    ' '
+    'time'
+    sprintf('%d 1e10 60',avtsg)
+    'b'
+    };
+mavmed
 
-%get calibrations to use
+
+%calibrate
 scriptname = mfilename; oopt = 'tsgcals'; get_cropt
-%if found, apply
 if isfield(tsgopts, 'calstr') && isfield(tsgopts, 'docal') && tsgopts.docal.salinity
     cmd = ['!/bin/cp -p ' otfile1 '.nc ' otfile2 '.nc']; eval(cmd)
     d.time = (d.time-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1))+1; %year-day
@@ -95,4 +64,3 @@ if isfield(tsgopts, 'calstr') && isfield(tsgopts, 'docal') && tsgopts.docal.sali
     hcal.fldunt = {'psu'};
     mfsave(otfile2, dcal, hcal, '-addvars');
 end
-

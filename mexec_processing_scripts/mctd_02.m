@@ -63,7 +63,7 @@ end
 
 scriptname = mfilename; oopt = 'rawedit_auto'; get_cropt
 [d, h] = mloadq(infile, '/');
-[d, comment] = ctd_apply_autoedits(d, castopts);
+[d, comment] = apply_autoedits(d, castopts);
 didedits = 0;
 if ~isempty(comment)
     h.comment = [h.comment comment];
@@ -72,8 +72,8 @@ end
 
 %if we were editing _noctm file, apply align and celltm corrections now
 if castopts.redoctm
-    d.cond1 = ctd_apply_celltm(d.time, d.temp1, d.cond1);
-    d.cond2 = ctd_apply_celltm(d.time, d.temp2, d.cond2);
+    d.cond1 = apply_ctd_celltm(d.time, d.temp1, d.cond1);
+    d.cond2 = apply_ctd_celltm(d.time, d.temp2, d.cond2);
     h.comment = [h.comment; '\n cond corrected for cell thermal mass by ctd_apply_celltm'];
     scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
     for no = 1:length(ovars)
@@ -101,7 +101,7 @@ scriptname = mfilename; oopt = 'raw_corrs'; get_cropt
 %%%%% oxygen hysteresis and/or renaming oxygen variables %%%%%
 [d, h] = mloadq(rawfile_use, '/');
 if castopts.dooxyrev || castopts.dooxyhyst
-    [dnew, hnew] = ctd_apply_oxyhyst(d, h, castopts);
+    [dnew, hnew] = apply_oxyhyst(d, h, castopts);
 else
     %just rename oxyvars(:,1) to oxyvars(:,2)
     scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt

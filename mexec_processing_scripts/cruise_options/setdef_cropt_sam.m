@@ -49,12 +49,11 @@ switch scriptname
             case 'sal_flags'
                 crhelp_str = {'Place to set flags on salinity bottles or readings.'};
             case 'sal_calc'
-                crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive) for ranges '
-                    'of sampnum, or leave empty (default) to run msal_standardise_avg to calculate and plot.'
-                    'Also must set sal_off_base (default ''sampnum_run'') to specify how to match them to samples. Optionally set '
-                    'sal_adj_comment here to give information on how standards offsets were chosen (if'
-                    'not chosen using msal_standardise_avg). This is also the place to set cellT (bath temperature)'
-                    'if it is not a column in your input files (or include code to parse it from the file headers).'};
+                crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive, default []) for ranges'
+                    'of sampnum, while sal_off_base (default ''sampnum_run'') to specify how to match them to samples.'
+                    'Optionally, set sal_adj_comment here to give information on how standards offsets were chosen.'
+                    'This is also the place to set cellT (bath temperature) if it is not a column in your input files'
+                    '(or include code to parse it from the file headers).'};
                 sal_off = [];
                 sal_off_base = 'sampnum_run';
                 sal_adj_comment = '';

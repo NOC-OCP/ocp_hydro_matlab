@@ -10,11 +10,13 @@ usecallocal = usecal; clear usecal
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 prefix = tsgpre;
 root_tsg = mgetdir(tsgpre);
-root_bot = mgetdir('M_BOT_SAL');
 
 tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01_medav_clean']); % median averaged file
 if usecallocal
     tsgfn = [tsgfn '_cal'];
+end
+if ~exist(m_add_nc(tsgfn),'file')
+    tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01']);
 end
 [dt, ht] = mload(tsgfn, '/');
 salvar = munderway_varname('salvar',ht.fldnam,1,'s');
@@ -43,7 +45,7 @@ end
 
 %***add code for temperature, other variables (fluo?)
 
-botfn = fullfile(root_bot, ['tsgsal_' mcruise '_all']);
+botfn = fullfile(root_tsg, ['tsgsal_' mcruise '_all']);
 [db, hb] = mload(botfn, '/');
 db.time = m_commontime(db.time, hb.data_time_origin, ht.data_time_origin);
 %sort all variables
@@ -126,7 +128,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
         sdiffsm = sdiffsm_all; % rename back to sdfiff and t for saving, but _all vars are the aggregated ones over all segments
         t_all = [t_all; t];
         t = t_all; 
-        if ~usecallocal;
+        if ~usecallocal
 %             t = db.time-1; 
             save(fullfile(root_tsg, 'sdiffsm'), 't', 'sdiffsm'); 
         end
@@ -145,19 +147,19 @@ title([calstr ' TSG'])
 xlim(dt.time([1 end]))
 subplot(nsp,1,2)
 plot(db.time, sdiffall, 'r+-',t_all+1, sdiffsm,' kx-'); grid
-ylabel([calstr ' bottle minus TSG salinity (psu)']); xlabel('yearday, noon on 1 Jan = 1.5')
+ylabel([calstr ' bottle minus TSG (psu)']); xlabel('yearday, noon on 1 Jan = 1.5')
 xlim(dt.time([1 end]))
 ylim([-.02 .04])
 if nsp==4
     subplot(nsp,1,3)
     plot(tssts, sdiffall, 'r+', tssts, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
     xlabel('Sea Surface Temperature (^\circC)')
-    ylabel([calstr ' TSG salinity - bottle salinity (psu)'])
+    ylabel([calstr ' TSG - bottle (psu)'])
     legend('Total Difference', 'Smoothed Difference');
     subplot(nsp,1,4)
     plot(tsals, sdiffall, 'r+', tsals, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
     xlabel([calstr ' TSG salinity (psu)'])
-    ylabel([calstr ' TSG salinity - bottle salinity (psu)'])
+    ylabel([calstr ' TSG - bottle (psu)'])
 end
 
 disp('mean diff, median diff')

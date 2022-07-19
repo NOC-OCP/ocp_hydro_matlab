@@ -86,6 +86,10 @@ if sum(md) && sum(mt)
     ds_sal.time = []; ds_sal.date = [];
     fn = ds_sal.Properties.VariableNames;
 end
+if sum(strcmp('runtime',fn))
+    [~,iit] = sort(ds_sal.runtime);
+    ds_sal = ds_sal(iit,:);
+end
 
 %fill in information about cellt or Bath Temp and k15 from header
 %***load_samdata should keep track of which header lines correspond to which data lines
@@ -114,9 +118,11 @@ if ~isfield(ds_sal,'cellt') || sum(isfinite(ds_sal.cellt))==0
     ds_sal.cellt = repmat(cellT,size(ds_sal,1),1);
 end
 if isfield(ds_sal,'k15') && sum(~isnan(ds_sal.k15))==0; ds_sal.k15 = []; end
+if ~isfield(ds_sal,'k15') && exist('ssw_k15','var'); ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1); end    
+%***add plotting code
 
 %apply offsets
-std_samp_range = [9e5 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
+std_samp_range = [999000 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
 %ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
 if isempty(sal_adj_comment) && ~isempty(sal_off)
     sal_adj_comment = ['Adjustments specified in opt_' mcruise];
@@ -138,8 +144,10 @@ else
             dt = ds_sal.runtime(iis)'-ds_sal.runtime(iistd);
             dt(dt>0) = NaN; [dt2,ii2] = max(dt); dt2 = -dt2;
             iiw = (min(dt1,dt2)>1/24 | max(dt1,dt2)>3/24); %***
-            warning('%s\n','these samples are not near any standard; if a standard was not run','on either side of each crate, sampnum_run may not be the best method: ');
-            disp(ds_sal.sampnum(iis(iiw)))
+            if ~isempty(iiw)
+                warning('these samples are not near any standard; if a standard was not run\n on either side of each crate, sampnum_run may not be the best method:\n');
+                disp(ds_sal.sampnum(iis(iiw)))
+            end
             [c,ia,ib] = intersect(sal_off(:,1),ds_sal.sampnum);
             ds_sal.sal_off = NaN+zeros(size(ds_sal.sampnum));
             ds_sal.sal_off(ib) = sal_off(ia,2);
@@ -214,7 +222,7 @@ hnew.comment = ['salinity data from sal_' mcruise '_01.nc. ' sal_adj_comment];
 ds = mloadq(samfile, 'sampnum', 'niskin_flag', ' ');
 [~,isam,isal] = intersect(ds.sampnum,d.sampnum);
 ds.botpsal = NaN+ds.sampnum; ds.botpsal_flag = 9+zeros(size(ds.sampnum));
-if isfield(d, 'salinity_adj')
+if isfield(d, 'salinity_adj') && sum(~isnan(d.salinity_adj(isal)))
     ds.botpsal(isam) = d.salinity_adj(isal);
 else
     ds.botpsal(isam) = d.salinity(isal);

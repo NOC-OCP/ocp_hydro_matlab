@@ -30,13 +30,17 @@ switch scriptname
         
     case 'mtsg_medav_clean_cal'
         switch oopt
-            case 'tsg_badlims'
+            case 'tsg_edits'
                 kbadlims = [
                     datenum([2020 01 01 00 00 00]) datenum([2022 02 09 19 00 00]) % start of cruise
                     datenum([2022 02 10 08 58 00]) datenum([2022 02 10 09 05 00])
                     datenum([2022 02 21 13 18 00]) datenum([2022 02 21 13 27 00])
                     datenum([2022 03 04 12 38 00]) datenum([2023 01 01 00 00 00]) % end of TSG logging in international waters
                     ];
+                fn = setdiff(h.fldnam,{'time' 'deltat'});
+                for no = 1:length(fn)
+                    tsgedits.badtimes.(fn{no}) = kbadlims;
+                end
             case 'tsgcals'
                 tsgopts.docal.salinity = 1;
                 load(fullfile(root_dir,'sdiffsm'))

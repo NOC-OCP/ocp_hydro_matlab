@@ -75,12 +75,17 @@ for kl = 1:nvar
     else
         vd = vdata(end);
     end
+    if iscell(vd)
+        vd = vd{1};
+    end
+    if ischar(vd)
+        continue
+    end
     dnum = 0;
     if strcmp(vname,'dnum')
         dnum = 1;
     end
-    pad = '                                                   ';
-    vname = [pad vname];
+    vname = [repmat(' ',1,30) vname];
     vname = vname(end-30:end);
     if isempty(qflag)
         if dnum == 1
@@ -91,7 +96,7 @@ for kl = 1:nvar
             end
             fprintf(MEXEC_A.Mfidterm,'%s : %s\n',vname,datestring);
         else
-            try;
+            try
             fprintf(MEXEC_A.Mfidterm,'%s : %19.6f     %s\n',vname,vd,vunits);
             catch; keyboard; end
         end

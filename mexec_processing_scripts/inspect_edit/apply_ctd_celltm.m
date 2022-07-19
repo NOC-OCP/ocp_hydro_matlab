@@ -1,4 +1,4 @@
-function cond = ctd_apply_celltm(time,temp,cond);
+function cond = apply_ctd_celltm(time,temp,cond);
 
 % dy040 bak 21 dec 2015
 % code up celltm algorithm
@@ -10,7 +10,7 @@ num = numel(time);
 
 ctm = zeros(size(cond));
 
-kfirst = min(find(isfinite(time+temp)));
+kfirst = find(isfinite(time+temp), 1);
 
 if isempty(kfirst)
     msg = ['No finite time+temp data found for celltm calculation in ' mfilename];

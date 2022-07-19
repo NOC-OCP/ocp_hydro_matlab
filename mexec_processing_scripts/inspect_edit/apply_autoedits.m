@@ -1,4 +1,10 @@
-function [d, comment] = ctd_apply_autoedits(d, castopts)
+function [d, comment] = apply_autoedits(d, castopts)
+% function [d, comment] = apply_autoedits(d, castopts)
+% apply edits specified in castops structure to data in structure d
+% 
+% see setdef_cropt_cast mctd_02 case and setdef_cropt_uway
+% mtsg_medav_clean_cal case for information on castopts 
+% 
 
 comment = [];
 
@@ -22,16 +28,24 @@ if isfield(castopts,'pumpsNaN')
     end
 end
 
-%scanedit (for additional bad scan ranges)
-if isfield(castopts,'badscans')
-    fn = fieldnames(castopts.badscans);
-    for no = 1:length(fn)
-        s = castopts.badscans.(fn{no});
-        iis = find(d.scan>=s(1) & d.scan<=s(2));
-        iis = setdiff(iis,isnan(d.(fn{no})));
-        if ~isempty(iis)
-            d.(fn{no})(iis) = NaN;
-            comment = [comment '\n edited out scans from ' num2str(s(1)) ' to ' num2str(s(2)) ' from ' fn{no}];
+%formerly scanedit (for additional bad scan ranges)
+%now could also/alternately be applied to times or any other variable
+cfn = fieldnames(castopts);
+iibp = find(strncmp('bad',cfn,3));
+for bpno = 1:length(iibp)
+    xvar = cfn{iibp(bpno)};
+    if strcmp(xvar(end),'s') %it's badscans, badtimes, etc.
+        bads = castopts.(xvar);
+        x = d.(xvar(4:end-1))(:).'; %badscans --> scan, etc.
+        vars = fieldnames(bads);
+        for vno = 1:length(vars)
+            badranges = bads.(vars{vno});
+            mb = sum(x>=badranges(:,1) & x<=badranges(:,2))>0;
+            nn = sum(isnan(d.(vars{vno})));
+            d.(vars{vno})(mb) = NaN;
+            if sum(isnan(d.(vars{vno})))>nn
+                comment = [comment '\n edited out ranges of ' xvar 's from ' vars{vno}];
+            end
         end
     end
 end

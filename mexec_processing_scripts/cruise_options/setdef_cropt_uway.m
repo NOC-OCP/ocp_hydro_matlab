@@ -138,17 +138,22 @@ switch scriptname
         %%%%%%%%%% mtsg_medav_clean_cal %%%%%%%%%%
     case 'mtsg_medav_clean_cal'
         switch oopt
-            case 'tsg_editvars'
-                crhelp_str = {'editvars is a list of possible variables to edit (where they exist)'
-                    'based on bad times. Add to this list if you have a new variable name; only'
-                    'need to set it in opt_cruise if you want to exclude one of the variables'
-                    'in the list even though it''s found in your file.'};
-                %default: edit all ocean vars
-                editvars = {'salinity','tstemp','sstemp','sstemp2','sampletemp','chlorophyll','trans','psal','fluo','cond','temp_m','temp_h','salin','fluor'};
-                editvars = [editvars {'temp_housing_raw','conductivity_raw','salinity_raw','soundvelocity_raw','temp_remote_raw'}]; % bak jc211 added for rvdas
-            case 'tsg_badlims'
-                crhelp_str = 'kbadlims (default []) is an Nx2 vector of start and end datenums of bad times to NaN';
-                kbadlims = [];
+            case 'tsg_edits'
+                  crhelp_str = {'Edits to one or more tsg variables: '
+                    'tsgedits.pumpsNaN.var1 = N gives the number of bad points N expected for variable var1'
+                    '    after pumps come back on;'
+                    'tsgedits.badtimes.var1 = [t1_low t1_hi; ... tN_low tN_hi] gives 1 ... N ranges of times'
+                    '    over which to NaN variable var1 (inclusive);'
+                    'tsgedits.rangelim.var1 = [V1 V2] gives the range of acceptable values for variable var1;'
+                    'tsgedits.despike.var1 = [T1 ... Tn] gives the successive thresholds T1 to Tn for '
+                    '    applying median despiking to variable var1.'
+                    'e.g.:'
+                    'tsgedits.pumpsNaN.temp_housing_raw = 120; %takes 2 minutes to flow through'
+                    'tsgedits.pumpsNaN.conductivity_raw = 120; '
+                    'tsgedits.badtimes.conductivity_raw = [-10 1e3; 5.5e5 5.6e5]; %start of cruise and TSG cleaning'
+                    'tsgedits.badtimes.temp_housing_raw = [-10 1e3; 5.5e5 5.6e5]; '
+                    'tsgedits.despike.fluor = [0.3 0.2 0.2];'
+                    'All default to not set (no action).'};
             case 'tsgcals'
                 crhelp_str = {'Set calibration functions to be applied to tsg variables, if'
                     'corresponding flags are set to true. See help for mctd_02, ctdcals (in setdef_cropt_uway.m).'};

@@ -74,14 +74,19 @@ if isfield(pdfin,'varednum') && isnumeric(pdfin.varednum) && pdfin.varednum>0
     vared = pdfin.varednum;
     fprintf(MEXEC_A.Mfidterm,'set to edit variable %d, %s\n',vared,h.fldnam{ynumlist(vared)});
 else
-    m = 'Type the number of the variable you wish to edit from the list below, or return to quit ';
+    m = 'Type the name or number of the variable you wish to edit from the list below, or return to quit ';
     fprintf(MEXEC_A.Mfidterm,'%s\n',m)
     for k = 1:length(hplot)
         m1 = [sprintf('%3d ',k) h.fldnam{ynumlist(k)}];
         fprintf(MEXEC_A.Mfidterm,'%s\n',m1)
     end
     m = sprintf('%s',': ');
-    vared = m_getinput(m,'d');
+    vared = m_getinput(m,'s');
+    if isfinite(str2double(vared))
+        vared = str2double(vared);
+    else
+        vared = find(strcmp(vared,h.fldnam(ynumlist)));
+    end
     if isempty(vared) || vared<=0 || vared>length(hplot)
         vared = m_getinput('try again (number): ', 'd');
     elseif isnan(vared)

@@ -1,0 +1,4 @@
+files that start with mctd_, mtsg_, msam_, etc. are scripts and generally take either station number (variable stn) or year-day (variable day) as inputs
+files like ctd_all_* or *_daily_proc call a number of these scripts
+files in cruise_options are scripts used by many scripts/functions for setting cruise-specific processing parameters and choices
+others may be functions or scripts

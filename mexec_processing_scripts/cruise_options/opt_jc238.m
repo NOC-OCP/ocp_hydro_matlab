@@ -64,6 +64,8 @@ switch scriptname
                         niskin_flag(position==1) = 7; %questionable tap
                     case 17
                         niskin_flag(position==9) = 4; %misfire
+                    case 23
+                        niskin_flag(position==9) = 4; %misfire                      
                     otherwise
                 end
         end
@@ -146,6 +148,20 @@ switch scriptname
                 salfiles = {salfiles.name};
             case 'sal_calc'
                 cellT = 24;
+                ssw_batch = 'P165';
+                ssw_k15 = 0.99986;
+                sal_off = [
+                    1 1
+                    2 3.2
+                    3 3.1
+                    4 2.2
+                    5 0.4
+                    6 2.3
+                    7 3.3
+                    8 2];
+                sal_off(:,1) = sal_off(:,1)+999000;
+                sal_off(:,2) = sal_off(:,2)*1e-5;
+                sal_adj_comment = ['Adjustments to SSW batch P165 specified in opt_jc238.m'];
         end
         
     case 'moxy_01'

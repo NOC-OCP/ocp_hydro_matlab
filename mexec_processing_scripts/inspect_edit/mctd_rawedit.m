@@ -25,9 +25,9 @@ infile = fullfile(root_ctd, [prefix1 '_raw.nc']);
 infiled = fullfile(root_ctd, [prefix2 '.nc']); % dcs file
 
 if ~exist(m_add_nc(otfile), 'file')
-    copyfile(m_add_nc(infile), m_add_nc(otfile))
+    copyfile(m_add_nc(infile), m_add_nc(otfile));
 end
-system(['chmod 644 ' m_add_nc(otfile)])
+system(['chmod 644 ' m_add_nc(otfile)]);
 
 
 %only plot the good part of the cast, chosen in mdcs_03g (not the on-deck or soak periods)
@@ -67,7 +67,12 @@ else
         pshow1 = pshow0;
         mplxyed(pshow1);
         
-        redo = input('run for another variable? (1 for yes, 0 for no) \n');
+        redos = input('run for another variable? (y/n) \n','s');
+        if isfinite(str2double(redos))
+            redo = str2double(redos);
+        else
+            if strncmp(redos,'y',1); redo = 1; else; redo = 0; end
+        end
         
     end
     
