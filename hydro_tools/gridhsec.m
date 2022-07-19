@@ -1,4 +1,4 @@
-function [mgrid, cdata, sdata] = gridhsec(cruise, varargin);
+function [mgrid, cdata, sdata] = gridhsec(cruise, varargin)
 % [mgrid, cdata, sdata] = gridhsec(cruise, varargin);
 %
 % wrapper, calls loadhdata, maphsec
@@ -51,30 +51,41 @@ info.samout = 0;
 info.expocode = '';
 readme = {};
 
-clear mgrid
-mgrid.method = 'msec_maptracer'; 
-readme_g = {'ctd data gridded by linear interpolation in vertical (after filling uniform mixed layer)'};
-readme_g = [readme_g; 'sample data as in m_maptracer, using CTD T,S for sigma'];
-mgrid.sam_fill = 'smooth_nnv'; 
-readme_g = [readme_g; 'sample grids filled using mapping with larger radius cutoffs, and finally nearest neighbour in each profile']; %***and allow asymmetric sigma?
-mgrid.ctd_fill = 'sam';
-readme_g = [readme_g; 'missing gridded ctd oxygen filled using gridded sample oxygen'];
-
 %run through optional inputs once in case section is needed by hsecpars_file
 for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
 %get cruise info and mapping parameters from file
-eval(hsecpars_file)
+scriptname = mfilename; eval(hsecpars_file)
 %run through optional inputs again to overwrite any set in hsecpars_file
 for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
 
-%output files
-otfile = fullfile(predir, 'mapped', [info.section '_' cruise '_' info.season]);
-otfileg = [otfile '_' mgrid.method];
+if strcmp(mgrid.method,'msec_maptracer')
+    readme_g = {'ctd data gridded by linear interpolation in vertical (after filling uniform mixed layer)'};
+    readme_g = [readme_g; 'sample data as in m_maptracer, using CTD T,S for sigma'];
+else
+    readme_g = {};
+end
 
+%fill with defaults (for parameters not set)
+if ~isfield(mgrid,'sam_fill')
+    mgrid.sam_fill = 'smooth_nnv';
+    readme_g = [readme_g; 'sample grids filled using mapping with larger radius cutoffs, and finally nearest neighbour in each profile']; %***and allow asymmetric sigma?
+end
+if ~isfield(mgrid,'ctd_fill')
+    mgrid.ctd_fill = 'sam';
+    readme_g = [readme_g; 'missing gridded ctd oxygen filled using gridded sample oxygen'];
+end
+
+%output files
+if ~exist('otfile','var')
+    otfile = fullfile(predir, 'mapped', [info.section '_' cruise '_' info.season]);
+end
+if ~exist('otfileg','var')
+    otfileg = [otfile '_' mgrid.method];
+end
 
 %%%%% load and concatenate ctd and sample data %%%%%
 file_listc = dir(fullfile(info.ctddir, info.ctdpat));

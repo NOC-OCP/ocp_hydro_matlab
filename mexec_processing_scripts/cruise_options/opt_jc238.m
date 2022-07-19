@@ -167,7 +167,7 @@ switch scriptname
     case 'moxy_01'
         switch oopt
             case 'oxy_files'
-                ofiles = {'Winkler_Calculation_Spreadsheet_2022.xlsx'};
+                ofiles = {'Winkler_Calculation_Spreadsheet_JC238_2022.xlsx'};
                 hcpat = {'CTD cast no.'};
                 chrows = 1;
                 chunits = [];
@@ -226,8 +226,8 @@ switch scriptname
                 ctd_regridlist = [ctd_regridlist ' fluor ph'];
             case 'sec_stns'
                 switch section
-                    case 'eel'
-                        kstns = [2:13];
+                    case 'osnapeall'
+                        kstns = [2:23];
                 end
             case 'varuse'
                 varuselist.names = {'botoxy'};

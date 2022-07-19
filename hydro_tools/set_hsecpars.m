@@ -231,7 +231,7 @@ switch cruise
         info.statind = [1:21];
         
     %a23 only physics
-    case {'jr010' 'jr040' 'a16s_2005' 'jr239' 'jr272a' 'jr281' 'a16s_2013' 'jr299' 'jr310' 'jr15006' 'jr16004' 'jr17003'}
+    case {'jr010' 'jr040' 'a16s_2005' 'jr272a' 'a16s_2013' 'jr310' 'jr15006' 'jr16004' 'jr17003'}
         info.section = 'a23';
         info.ctddir = [predir1 'a23/'];
         info.ctdpat = 'a23_ctds_20191021.mat';

@@ -1,4 +1,4 @@
-function mgrid = maphsec(cdata, sdata, mgrid);
+function mgrid = maphsec(cdata, sdata, mgrid)
 % function mgrid = maphsec(cdata, sdata, mgrid);
 %
 % map hydrographic section data

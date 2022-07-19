@@ -1,5 +1,5 @@
-function msam_checkbottles_01(stations, varname, section)
-% function msam_checkbottles_01(stations, varname, section)
+function checkbottles_01(stations, varname, section)
+% function checkbottles_01(stations, varname, section)
 %
 % (formerly identify_bottles)
 % bak on jc159 19 March 2018
@@ -45,7 +45,7 @@ bdffile = fullfile(root_asc, 'bottle_data_flags.txt'); %the name of this file is
 fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
 
 if exist(m_add_nc(fnsamall),'file') == 2
-    [dsam, hsam]  = mload(fnsamall,'/');
+    [dsam, ~]  = mload(fnsamall,'/');
 else
     fprintf(2,'\n%s %s %s\n\n','File ',m_add_nc(fnsamall),' not found; exiting');
     return
@@ -57,7 +57,7 @@ end
 if nargin >= 3
     fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section]);
     if exist(m_add_nc(fngrid),'file') == 2
-        [dg, hg]  = mload(fngrid,'/');
+        [dg, ~]  = mload(fngrid,'/');
     else
         fprintf(2,'\n%s %s %s\n\n','File ',m_add_nc(fngrid),' not found; anomalies will not be plotted');
         clear dg hg
