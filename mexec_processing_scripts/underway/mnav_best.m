@@ -44,6 +44,7 @@ tg = (floor(min(d.time)/86400)*86400 - tav2):tave_period:(ceil(max(d.time)/86400
 clear opts
 opts.ignore_nan = 1;
 opts.grid_extrap = [0 0];
+opts.postfill = 30;
 dg = grid_profile(d, 'time', tg, 'lfitbin', opts);
 h.comment = [h.comment '\n averaged to by finding midpoint of linear fit in bins of width ' num2str(tave_period)];
 mfsave(avfile, dg, h);
@@ -59,7 +60,6 @@ speed = 1000*dist./delt;
 ve = zeros(size(dg.(latvar))); vn = ve;
 ve(2:end) = speed.*cos(ang*pi/180);
 vn(2:end) = speed.*sin(ang*pi/180);
-ve = cumsum(ve); vn = cumsum(vn);
 [dg.smg, dg.cmg] = uvsd(ve, vn, 'uvsd');
 dist(isnan(dist)) = 0;
 dg.distrun = cumsum(dist);

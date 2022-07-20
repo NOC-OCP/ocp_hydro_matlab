@@ -42,7 +42,7 @@ switch abbrev
         end
         MEXEC_A.MARGS_IN = {wkfile2; otfile; '2'; 'tflag .5 1.5'; ' '; varlist};
         mdatpik
-        delete(m_add_nc(wkfile2))
+        delete(m_add_nc(wkfile2));
         delete(m_add_nc(wkfile));
         
 end
