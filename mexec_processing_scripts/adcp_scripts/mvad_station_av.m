@@ -69,7 +69,7 @@ end
 sstart = datestr(tstart,31); send = datestr(tend,31);
 
 %get vmadcp data
-[d, h] = mvad_codas_to_mstar(inst);
+[d, h] = codas_to_mstar(inst);
 d.time = d.time/86400 + datenum(h.data_time_origin);
 
 %find indices of vmadcp data in interval, and check whether tstart and tend

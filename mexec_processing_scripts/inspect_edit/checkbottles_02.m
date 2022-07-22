@@ -29,13 +29,21 @@ root_ctd = mgetdir('M_CTD');
 
 fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal']);
 fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
-oopt = 'section'; get_cropt
-fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section]);
+scriptname = 'msec_grid'; oopt = 'sections_to_grid'; get_cropt
+if exist('sections')
+    section = sections{1}; 
+    scriptname = 'msec_grid'; oopt = 'sec_stns_grids'; get_cropt
+    stnlist = intersect(stnlocal-2:stnlocal+2,kstns);
+end
+if ~exist('section')
+    error('checkbottles_02 requires a gridded section file')
+end
+fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section '.mat']);
 fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' sprintf('%03d',stnlocal)]);
 
 [dctd, hctd] = mload(fnctd,'/');
 [dsamall, ~]  = mload(fnsamall,'/');
-[dgrid, ~]  = mload(fngrid,'/');
+load(fngrid,'mgrid'); dgrid = mgrid; 
 [ddcs, hdcs] = mload(fndcs,'/');
 
 dcstime1 = datenum(hdcs.data_time_origin) + ddcs.time_start/86400;
@@ -80,25 +88,18 @@ if ~isfield(dsam, 'sbe35temp')
 end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
-oopt = 'docals'; get_cropt
-if dotcal
-   scriptname = 'mctd_03'; oopt = 's_choice'; get_cropt; scriptname = 'msam_checkbottles_02';
-   dctd.temp = temp_apply_cal(s_choice,stnlocal,dctd.press,0*dctd.press,dctd.temp);
+scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
+if isfield(castopts,'calstr')
+    calstr = select_calibrations(castopts.docal, castopts.calstr);
+    if ~isempty(calstr)
+        [dctd, hctd] = apply_calibrations(dctd, hctd, calstr);
+        if castopts.docal.cond || castopts.docal.temp
+            dctd.psal = gsw_SP_from_C(dctd.cond, dctd.temp, dctd.press);
+            dctd.asal = gsw_SA_from_SP(dctd.psal, dctd.press, hctd.longitude, hctd.latitude);
+            dctd.potemp = gsw_pt0_from_t(dctd.asal, dctd.temp, dctd.press);
+        end
+    end
 end
-if doccal
-   scriptname = 'mctd_03'; oopt = 's_choice'; get_cropt; scriptname = 'msam_checkbottles_02';
-   dctd.cond = cond_apply_cal(s_choice,stnlocal,dctd.press,0*dctd.press,dctd.temp,dctd.cond);
-end
-if doocal
-   scriptname = 'mctd_03'; oopt = 'o_choice'; get_cropt; scriptname = 'msam_checkbottles_02';
-   dctd.oxygen = oxy_apply_cal(o_choice,stnlocal,dctd.press,0*dctd.press,dctd.temp,dctd.oxygen);
-end
-if doccal || dotcal
-   dctd.psal = gsw_SP_from_C(dctd.cond, dctd.temp, dctd.press);
-   dctd.asal = gsw_SA_from_SP(dctd.psal, dctd.press, hctd.longitude, hctd.latitude);
-   dctd.potemp = gsw_pt0_from_t(dctd.asal, dctd.temp, dctd.press);
-end
-
 
 
 %%%%%%%%% plot %%%%%%%%%
@@ -114,12 +115,12 @@ m_figure
 scrsz = get(0,'ScreenSize');
 set(gcf,'Position',[1 0.4*scrsz(4) 0.9*scrsz(3) 0.5*scrsz(4)])
 
-kbadnisk = find(dsam.bottle_qc_flag==4); kqnisk = find(dsam.bottle_qc_flag==3);
+kbadnisk = find(dsam.niskin_flag==4); kqnisk = find(dsam.niskin_flag==3);
 
 subplot(1,nsubs,1)
 vnam = 'psal';
-kbadpsal = find(dsam.botpsalflag~=2);
-kbadsbe35 = find(dsam.sbe35flag~=2);
+kbadpsal = find(dsam.botpsal_flag~=2);
+kbadsbe35 = find(dsam.sbe35temp_flag~=2);
 h1 = plot(dctd.psal(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
 title(['Stn ' sprintf('%03d',stnlocal)]);
@@ -139,7 +140,7 @@ try legend([h4 h5 h6],ls,'location','best'); catch; end
 
 subplot(1,nsubs,2)
 
-kbadoxy = find(dsam.botoxyflag~=2 & dsam.botoxyflag~=6);
+kbadoxy = find(dsam.botoxy_flag~=2 & dsam.botoxy_flag~=6);
 
 plot(dctd.oxygen(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
@@ -159,18 +160,18 @@ hold on; grid on;
 title(['Stn ' sprintf('%03d',stnlocal)]);
 xlabel('potemp/botoxytemp/depths');
 plot(dctd.potemp(kup),-dctd.press(kup),'r-');
-plot(dsam.botoxytemp,-dsam.upress,'b+','markersize',m1);
-plot(dsam.botoxytemp(kbadoxy),-dsam.upress(kbadoxy),'k^','markersize',m2);
-plot(dsam.botoxytemp(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
-plot(dsam.botoxytemp(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
+plot(dsam.botoxya_temp,-dsam.upress,'b+','markersize',m1);
+plot(dsam.botoxya_temp(kbadoxy),-dsam.upress(kbadoxy),'k^','markersize',m2);
+plot(dsam.botoxya_temp(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
+plot(dsam.botoxya_temp(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
 plot(dsam.sbe35temp,-dsam.upress,'c+','markersize',m1);
 plot(dsam.sbe35temp(kbadsbe35),-dsam.upress(kbadsbe35),'m<','markersize',m2);
-plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag,-dsam.upress,'k+','markersize',m1);
-plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
-plot(max([dsam.botoxytemp+1;0])+dsam.bottle_qc_flag(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
-ylim(yl); xlim([-2 2+(max([dsam.upotemp;0; dsam.botoxytemp])+max(dsam.bottle_qc_flag))]); % bak on jc191 bug fix. scale needs to be based on potemp if there are no botoxytemps
+plot(max([dsam.botoxya_temp+1;0])+dsam.niskin_flag,-dsam.upress,'k+','markersize',m1);
+plot(max([dsam.botoxya_temp+1;0])+dsam.niskin_flag(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
+plot(max([dsam.botoxya_temp+1;0])+dsam.niskin_flag(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
+ylim(yl); xlim([-2 2+(max([dsam.upotemp;0; dsam.botoxya_temp])+max(dsam.niskin_flag))]); % bak on jc191 bug fix. scale needs to be based on potemp if there are no botoxytemps
 for klab = 1:24
-	     text(max([dsam.botoxytemp+1;0;dsam.upotemp])+dsam.bottle_qc_flag(klab),-dsam.upress(klab),...
+	     text(max([dsam.botoxya_temp+1;0;dsam.upotemp])+dsam.niskin_flag(klab),-dsam.upress(klab),...
         sprintf('%d  ',dsam.position(klab)),'fontsize',14,'horizontalalignment','right','verticalalignment','middle')
 end
 

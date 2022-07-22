@@ -39,6 +39,35 @@ switch scriptname
                     castopts.despike.cond1 = [0.2 0.1];
                     castopts.despike.cond2 = [0.2 0.1];
                 end
+            case 'ctdcals'              
+                %calibration strings below for testing; not final; do not
+                %apply to ctd files
+                castopts.docal.temp = 0;
+                castopts.docal.cond = 0;
+                castopts.docal.oxygen = 0;
+
+                castopts.calstr.temp1.jc238 = 'dcal.temp1 = d0.temp1 + interp1([-10 3100],[2 -1]*1e-3,d0.press);';
+                castopts.calstr.temp2.jc238 = 'dcal.temp2 = d0.temp2 + 1e-3;';
+                calms = 'from comparison with SBE35, stations 1-33 (all)';
+                castopts.calstr.temp1.msg = calms;
+                castopts.calstr.temp2.msg = calms;
+
+                %castopts.calstr.cond1.jc238 = 'dcal.cond1 = d0.cond1;';
+                castopts.calstr.cond2.jc238 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 3100],[-2.2e-3 1.7e-3],d0.press)/35);';
+                calms = 'from comparison with bottle salinity, stations 1-25 (all)';
+                %castopts.calstr.cond1.msg = calms;
+                %castopts.calstr.cond2.msg = calms;
+                
+%                 castopts.calstr.oxygen1.dy146 = ['dcal.oxygen1 = d0.oxygen1.*'...
+%                     'interp1([-10      0    1000    3000  5400   6000],[1.027 1.027  1.033   1.038 1.055 1.055],d0.press).*'...
+%                     'interp1([1 5 25],[0.988 1 1],d0.statnum);'];
+%                 castopts.calstr.oxygen2.dy146 = ['dcal.oxygen2 = d0.oxygen2.*'...
+%                     'interp1([-10      0    1000    3000  5400   6000],[1.045 1.045  1.052   1.062 1.075 1.075],d0.press).*'...
+%                     'interp1([1 5 25],[.992  1 1],d0.statnum);'];
+%                 calms = 'from comparison with bottle oxygens, stations 1-25 (all)';
+%                 castopts.calstr.oxygen1.msg = calms;
+%                 castopts.calstr.oxygen2.msg = calms;
+
         end
 
     case 'mctd_03'
@@ -245,11 +274,12 @@ switch scriptname
     case 'msec_grid'
         switch oopt
             case 'sections_to_grid'
-	    sections = {'osnapeall'};
+	    sections = {'osnape'};
             case 'sec_stns_grids'
                 switch section
-                    case 'osnapeall'
-                        kstns = [2:29];
+                    case 'osnape'
+                      kstns = [2:33];
+                      zpressgrid = [0 5 25 50 75 100 175 250 375 500 625 750 875 1000 1250 1500 1750 2000 2250 2500 2750 3000]';  
                 end
             case 'ctd_regridlist'
                 ctd_regridlist = [ctd_regridlist 'fluor' 'ph'];

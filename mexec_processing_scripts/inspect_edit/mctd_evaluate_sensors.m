@@ -12,30 +12,32 @@ function mctd_evaluate_sensors(sensname, varargin)
 %     (approximately equivalent to an offset for sal) 
 %   linear station number drift + *** for oxy
 %
-% set sensname to 'temp1' 'cond1' 'cond2' 'oxygen1' 'oxygen' etc.
+% inputs:
+% sensname: 'temp1' 'cond1' 'cond2' 'oxygen1' 'oxygen2' etc.
 %
-% can also set testcal, structure whose fieldnames are variables (temp,
-% cond, etc.) and values are 1 to apply calibrations or 0 (or missing) to
-% not (default: empty; no action)
-% and, if testcal is set, calstr0, otherwise it defaults to getting calstr
-% from opt_cruise
+% [optional] testcal: structure whose fieldnames are variables (temp, cond,
+%   etc.) and values are 1 to apply calibrations or 0 (or missing) to not
+%   (default: empty; no action)
+% [optional] calstr0: (only used if testcal is set) a structure giving the
+%   calibration strings (see setdef_cropt_cast.m under mctd_02, ctd_cals);
+%   if not supplied or empty, the calstr set in opt_cruise will be used
 %
-% for instance if sensname = 'temp' and docal.temp = 1, it would test
-% calibrations coded into the mctd_02 case in opt_cruise (for both temp1
-% and temp2)
-% if sensname = 'cond' and docal.temp=1 and docal.cond=1, it would apply
-% the temperature calibration coded into the mctd_02, cal_ctd case in
-% opt_cruise to temperature first before converting from bottle salinity to
-% conductivity (generally this is a good idea)
-%
-% this test calibrating, because it is applied to conductivity not salinity
-% at this stage, and because oxygen sensors are not associated with a
-% single temp/cond sensor pair, won't be used to reconvert bottle oxygen
-% from umol/l to umol/kg. so for oxygen the best procedure is to apply
-% temperature and conductivity calibrations to the files first, then
-% determine the oxygen calibration, but it also doesn't make as much
-% difference to the oxygen residuals (not as much as temperature would for
-% conductivity)
+% e.g. 
+%   testcal.temp = 1;
+%   mctd_evaluate_sensors('temp1',testcal)
+%     will apply the calibrations coded into the mctd_02 case in opt_cruise
+%     (for both temp1 and temp2) before plotting
+%   testcal.temp = 1; calstr0.temp1.jc238 = 'dcal.temp1 = d0.temp1+1e-4;';
+%   mctd_evaluate_sensors('temp1',testcal,calstr0)
+%     will instead apply this calibration function
+% if you want to test out a conductivity calibration and have an estimated
+%   but not yet applied (to the ctd and sam files) temperature calibration,
+%   it is a good idea to also set testcal.temp = 1 to use the best estimate
+%   of temperature in the salinity-conductivity conversion
+% for oxygen, this script will not reconvert from umol/l to umol/kg, so if
+%   you have determined temperature and conductivity calibrations, apply
+%   them to the (ctd and sam) files first, then run this script to
+%   determine the final oxygen calibration
 %
 % loads sam_cruise_all
 %
@@ -49,21 +51,21 @@ m_common
 %defaults and optional input arguments
 testcal.temp = 0; testcal.cond = 0; testcal.oxygen = 0; testcal.fluor = 0;
 useoxyratio = 0;
-usedn = 0; %use upcast not downcast ctd data
+usedn = 0; %set to 1 to use downcast rather than upcast ctd data
 calstr0 = []; %get calibration from opt_cruise -- but may depend on station number
-okf = [2 3]; %include good or questionable samples (useful for checking niskin flags)
-pdeep = 1500; %cutoff for "deep" samples
+okf = [2 6 3]; %2 and 6 are good (6 is average of replicates); 3 is questionable
+pdeep = 1200; %cutoff for "deep" samples
 uselegend = 1;
 printform = '-dpdf';
 plotprof = 1; %for cond or oxy, make profile plots to check how good samples are
 printdir = fullfile(MEXEC_G.mexec_data_root, 'plots');
 if strncmp(sensname, 'temp', 4)
     rlabel = 'SBE35 T - CTD T (degC)';
-    rlim = [-10 10]*1e-3;
+    rlim = [-1 1]*1e-2;
     vrlim = [-2 32];
 elseif strncmp(sensname, 'cond', 4)
     rlabel = 'C_{bot}/C_{ctd} (equiv. psu)';
-    rlim = [-10 10]*2e-3;
+    rlim = [-1 1]*2e-2;
     vlim = [25 60];
 elseif strncmp(sensname, 'oxy', 3)
     rlabel = 'O_{bot} - O_{ctd} (umol/kg)';
@@ -75,6 +77,10 @@ end
 llim = [rlim(2)/2 rlim(2)/4]; %threshold for shallow and deep points to examine in individual profiles
 stn0 = 0; %only plot individual stations after stn0
 
+if isstruct(varargin{1})
+    testcal = varargin{1};
+    varargin(1) = [];
+end
 for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
@@ -125,7 +131,7 @@ if sum(cell2mat(struct2cell(testcal)))
         stnlocal = stns(sno);
         %get only the calibration functions we want to test here
         if cropt_cal %didn't specify as input, get from opt_cruise
-            scriptname = 'mctd_02'; oopt = 'ctd_cal'; get_cropt
+            scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
             calstr0 = castopts.calstr;
         end
         calstr = select_calibrations(testcal, calstr0);
@@ -204,6 +210,7 @@ for gno = 1:length(sensg)
         if useoxyratio
             res = caldata./ctddata;
             isratio = 1;
+            rlim = 1+rlim/100; % percent rather than difference
         else
             res = (caldata - ctddata);
             isratio = 0;
@@ -266,11 +273,11 @@ for gno = 1:length(sensg)
             legend(clabel,'cal-ctd',['cal-ctd, p>' num2str(pdeep)])
         end
     end
-    xlabel('statnum'); xlim(statrange); ylim(rlim); ylabel(rlabel)
+    xlabel('statnum'); xlim(statrange); ylabel(rlabel); ylim(rlim)
     title([mcruise])
     subplot(5,5,[9:10 14:15 19:20 24:25])
     plot(ctdres, -press, 'c.', res, -press, '+k', [0 0], presrange, 'r'); grid
-    ylabel('press'); ylim(presrange); xlim(rlim); xlabel(rlabel)
+    ylabel('press'); ylim(presrange); xlabel(rlabel); xlim(rlim)
     subplot(5,5,[6:8 11:13])
     plot(caldata, ctddata, 'o-k', caldata(deep), ctddata(deep), 'sb', caldata, caldata); grid;
     axis image; xlabel(['cal ' sensname]); ylabel(['ctd ' sensname]);
@@ -357,9 +364,14 @@ for gno = 1:length(sensg)
                 caldata(iiq), -d.upress(iiq), 'or', ctddata(iiq), -d.upress(iiq), 'sb');
             grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',s(no)));
             for qno = 1:length(iiq)
-                sprintf('%d %d %5.2f %d %d %d', s(no), nisk(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), niskf(iiq(qno)), round(press(iiq(qno))))
+                sprintf('%d %d %5.3f %d %d %d', s(no), nisk(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), niskf(iiq(qno)), round(press(iiq(qno))))
             end
-            keyboard
+            cont = input('k for keyboard prompt, enter to continue to next\n','s');
+            if strcmp(cont,'k')
+                keyboard
+            else
+                continue
+            end
             
         end
     end

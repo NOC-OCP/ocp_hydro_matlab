@@ -66,8 +66,7 @@ ddcs.dnum_start = datenum(hdcs.data_time_origin)+ddcs.time_start/86400;
 ddcs.dnum_end = datenum(hdcs.data_time_origin)+ddcs.time_end/86400;
 
 root_vmad = mgetdir('M_VMADCP');
-fn_vad = fullfile(root_vmad, 'mproc', [inst '_' mcruise '_01.nc']);
-[dvad, hvad] = mloadq(fn_vad,'/');
+[dvad, hvad] = codas_to_mstar(inst);
 dvad.dnum = datenum(hvad.data_time_origin)+dvad.time/86400;
 
 levsvad = 3:6;

@@ -34,7 +34,7 @@ if nargin < 2
 end
 
 m_common
-if MEXEC_G.quiet<=1; fprintf(1,'plotting bottle sample residuals (from ctd, or from gridded fields) to allow selection of outliers and identification of where flags need to be changed\n'); end
+if MEXEC_G.quiet<=1; fprintf(1,'plotting bottle sample residuals (from ctd, or from gridded fields) to allow selection of outliers\n and identification of where flags need to be changed\n'); end
 
 root_ctd = mgetdir('M_CTD'); % identify CTD directory
 root_asc = mgetdir('M_CTD_CNV'); %this is where the bottle data flags script will live
@@ -55,11 +55,26 @@ end
 % check for existence of gridded file; warn if 3 arguments but file is absent
 
 if nargin >= 3
-    fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section]);
-    if exist(m_add_nc(fngrid),'file') == 2
-        [dg, ~]  = mload(fngrid,'/');
+    fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section '.mat']);
+    if exist(fngrid,'file') == 2
+        load(fngrid,'mgrid'); dg = mgrid;
+        clear hg; hg.fldnam = dg.vars; hg.fldunt = dg.unts;
+        dg = rmfield(dg,{'vars' 'unts'});
+        scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
+        if isfield(castopts, 'calstr')
+            calstr = select_calibrations(castopts.docal, castopts.calstr);
+            if ~isempty(calstr)
+                [dg, hg] = apply_calibrations(dg, hg, calstr);
+                if castopts.docal.cond || castopts.docal.temp
+                    dg.psal = gsw_SP_from_C(dg.cond, dg.temp, dg.press);
+                    dg.asal = gsw_SA_from_SP(dg.psal, dg.press, hg.longitude, hg.latitude);
+                    dg.potemp = gsw_pt0_from_t(dg.asal, dg.temp, dg.press);
+                end
+            end
+        end
+
     else
-        fprintf(2,'\n%s %s %s\n\n','File ',m_add_nc(fngrid),' not found; anomalies will not be plotted');
+        fprintf(2,'\n%s %s %s\n\n','File ',fngrid,' not found; anomalies will not be plotted');
         clear dg hg
     end
 else
@@ -85,11 +100,11 @@ end
 v = dsam.(varname);
 
 % flag (name format not always consistent)
-varflagname = [varname 'flag'];
+varflagname = [varname '_flag'];
 if ~isfield(dsam, varflagname)
     varflagname = [varname(1:end-1) 'flag' varname(end)]; %assume there's a number or letter appended
     if ~isfield(dsam, varflagname)
-        varflagname = [varname '_flag']; %maybe there's an underscore
+        varflagname = [varname 'flag']; %maybe there's no underscore
         if ~isfield(dsam, varflagname)
             error(['could not identify flag field for variable ' varname])
         end
@@ -102,8 +117,6 @@ switch varname
     case 'botpsal'
         vanom = v - dsam.upsal;
     case {'botoxy', 'botoxya', 'botoxyb'}
-        %%%%% temporary fix, pending good CTD oxygen in sam file
-        dsam.uoxygen = oxy_apply_cal(1,dsam.statnum,dsam.upress,0*dsam.statnum,dsam.utemp,dsam.uoxygen); %***make this a cruise option, normally shouldn't need this line at all (is it from dy113 originally?). maybe only comes up at all if there isn't good oxygen (non-nan)?
         vanom = v - dsam.uoxygen;
     otherwise % expect to find the variable in both sam and grid
         if exist('dg','var') ~= 1
@@ -131,7 +144,7 @@ potemp = dsam.upotemp(kuse);
 
 
 kall = 1:length(v); kall = kall(:);
-k2 = find(vflag == 2);
+k2 = find(vflag == 2 | vflag == 6); %good or average of replicates
 k3 = find(vflag == 3);
 k4 = find(vflag == 4);
 k5 = find(vflag == 5);
@@ -316,8 +329,8 @@ while 1
                     fprintf(fid, '%s, %d, %d, %d\n', varflagname, vsampnum(kg(kl)), vflag(kg(kl)), vflag(kg(kl)));
                 end
                 fclose(fid);
-                disp(['now run msam_checkbottles_02 to check against property gradients and determine what new flags should be'])
-                disp(['put the new flags into column 4 of ' bdffile ' before running msam_02b to apply them'])
+                disp(['now run checkbottles_02 to check against property gradients'])
+                disp(['and determine what the new flags should be; edit flags in opt_' mcruise])
             end
     end
     
@@ -346,7 +359,7 @@ plot(x1(k5),y1(k5),'gx','markersize',10);
 plot(x1(k9),y1(k9),'mx','markersize',10);
 ylabel('pressure');
 xlabel('variable');
-title({'flags denoted by 3 (ro) 4 (ko) 5 (gx) 9 (mx) other (co)'})
+title({'flagged data: 3 (ro) 4 (ko) 5 (gx) 9 (mx) other (co)'})
 
 
 

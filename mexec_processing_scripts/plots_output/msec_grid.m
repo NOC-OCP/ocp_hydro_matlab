@@ -62,6 +62,9 @@ for ksec = 1:length(sections)
                 mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=4000);
         end
     else
+        if size(zpressgrid,2)>size(zpressgrid,1)
+            zpressgrid = zpressgrid';
+        end
         mgrid.zpressgrid = zpressgrid;
     end
     
@@ -128,6 +131,6 @@ for ksec = 1:length(sections)
 
     %save
     readme = 'gridded using maphsec calling map_as_mstar';
-    save(otfile, cdata, sdata, mgrid, readme);
+    save(otfile, 'cdata', 'sdata', 'mgrid', 'readme');
 
 end

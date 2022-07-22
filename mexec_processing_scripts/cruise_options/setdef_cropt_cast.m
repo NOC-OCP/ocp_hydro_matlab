@@ -127,38 +127,38 @@ switch scriptname
                     if isfield(castopts,'despike'); castopts = rmfield(castopts,'despike'); end
                 end
             case 'raw_corrs'
-                crhelp_str = {'flags for optional corrections to apply to the raw file (in this order): '
-                    'dooxyrev (default 0), if true, run moxyhyst_rev to undo the hysteresis '
-                    'correction applied in SBE processing, using parameters set in case ''oxyrev''; '
-                    'dooxyhyst (default 1), if true, run moxyhyst to apply a hysteresis correction, '
-                    'using parameters set below '
-                    '(note recommended path is to apply oxyhyst not in SBE processing but here, meaning'
-                    'it does not have to be undone before applying revised parameters here if indicated);'
-                    'note: if dooxyrev = 1 & dooxyhyst = 0, _24hz file will only have the oxygen_rev vars, not the ones '
-                    'that mctd_03 and subsequent processing stages are expecting (specified by second column of oxyvars '
-                    'set in scriptname = ''ctdpars''; oopt = ''oxyvars'').'
-                    'doturbV (default 0), if true, convert from turbidity volts to turbidity again (to correct for '
-                    'precision problem), using parameters set below. '};
+                crhelp_str = {'structure castopts contains:'
+                    'flags for optional corrections to apply to the raw file (in this order): '
+                    '  dooxyrev (default 0), if true, run moxyhyst_rev to undo the hysteresis '
+                    '    correction applied in SBE processing, using parameters set in case ''oxyrev''; '
+                    '  dooxyhyst (default 1), if true, run moxyhyst to apply a hysteresis correction, '
+                    '    using parameters set below '
+                    '    (note recommended path is to apply oxyhyst not in SBE processing but here, meaning'
+                    '    it does not have to be undone before applying revised parameters here if indicated);'
+                    '    note: if dooxyrev = 1 & dooxyhyst = 0, _24hz file will only have the oxygen_rev vars, not the ones '
+                    '    that mctd_03 and subsequent processing stages are expecting (specified by second column of oxyvars '
+                    '    set in scriptname = ''ctdpars''; oopt = ''oxyvars'').'
+                    '  doturbV (default 0), if true, convert from turbidity volts to turbidity again (to correct for '
+                    '    precision problem), using parameters set below. '
+                    '  oxyrev and oxyhyst, containing the parameters to pass to mcoxyhyst_rev and mcoxyhyst'
+                    '    defaults to SBE values, but any of the 3 parameters could be a vector based on d.press;'
+                    '    to use different parameters for sensor 1 and sensor 2, use cell arrays'
+                    '  turbVpars, the scale factor and offset to convert from turbidity volts to turbidity'
+                    '    (defaults to [3.343e-3 6.600e-2])'};
                 castopts.dooxyrev = 0;
                 castopts.dooxyhyst = 1;
                 castopts.doturbV = 0;
-                crhelp_str = {'sets three parameters to pass to mcoxyhyst_rev; defaults to standard SBE processing values.'};
                 if isfield(castopts,'oxyrev'); castopts = rmfield(castopts,'oxyrev'); end
                 castopts.oxyrev.H1 = -0.033;
                 castopts.oxyrev.H2 = 5000;
                 castopts.oxyrev.H3 = 1450;
-                crhelp_str = {'sets three parameters to pass to mcoxyhyst; defaults to standard SBE processing values.'
-                    'H1, H2, H3 can each be scalar, or you can use d.press to make any/all a vector dependent on pressure; '
-                    'to use different parameters for e.g. oxygen_sbe1 and oxygen_sbe2, use cell arrays'};
                 if isfield(castopts,'oxyhyst'); castopts = rmfield(castopts,'oxyhyst'); end
                 castopts.oxyhyst.H1 = -0.033;
                 castopts.oxyhyst.H2 = 5000;
                 castopts.oxyhyst.H3 = 1450;
-                castopts.H_0 = [castopts.oxyhyst.H1 castopts.oxyhyst.H2 castopts.oxyhyst.H3]; %this stores defaults for later reference; don't change!
-                crhelp_str = {'sets scale factor and offset to apply to turbidity volts to convert to turbidity, '
-                    'defaults to the values from XMLCON for BBRTD-182, calibration date 6 Mar 17 (see your XMLCON file)'};
+                castopts.H_0 = [castopts.oxyhyst.H1 castopts.oxyhyst.H2 castopts.oxyhyst.H3]; %this line stores defaults for later reference; don't change!
                 castopts.turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
-            case 'ctd_cals'
+            case 'ctdcals'
                 crhelp_str = {'Set calibration functions to be applied to variables in _24hz file, if '
                     'corresponding flags are set to true. '
                     'Functions are set in calstr, a structure whose fields are sensors (e.g. cond1, oxygen2),'

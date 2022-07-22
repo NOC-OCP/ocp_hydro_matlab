@@ -136,6 +136,7 @@ switch method
     case {'meanbin' 'medbin' 'lfitbin'}
         %bin edges
         ge = [gridvec(1:end-1) gridvec(2:end)];
+        gridvec = mean(ge,2);
         if grid_extrap(1)==0
             iie = ge(:,2)<min(d.(gridvar));
             gridvec(iie) = []; ge(iie,:) = [];
@@ -145,9 +146,8 @@ switch method
             gridvec(iie) = []; ge(iie,:) = [];
         end
         if strcmp(method, 'lfitbin')
-            dg.(gridvar) = .5*(gridvec(1:end-1)+gridvec(2:end));
+            dg.(gridvar) = gridvec;
         end
-        gridvec = .5*(gridvec(1:end-1)+gridvec(2:end));
     case {'medint' 'meanint'}
         %bin edges
         ge = [gridvec+int(1) gridvec+int(2)];
@@ -195,7 +195,7 @@ for vno = 1:nvar
         end
         dg.(fn{vno}) = NaN+zeros(s(1),ngv);
         data = [data d.(fn{vno}).'];
-        datainds = [datainds vno];
+        datainds = [datainds repmat(vno,1,size(d.(fn{vno}),1))];
     else
         if s(1)~=ng_in
             warning('size [%d %d] of variable %s does not match length %d of gridding variable %s; skipping.', s(1), s(2), fn{vno}, ng_in, gridvar)
@@ -204,7 +204,7 @@ for vno = 1:nvar
         end
         dg.(fn{vno}) = NaN+zeros(ngv,s(2));
         data = [data d.(fn{vno})];
-        datainds = [datainds vno];
+        datainds = [datainds repmat(vno,1,size(d.(fn{vno}),2))];
     end
 end
 usevar = find(usevar);
@@ -235,6 +235,17 @@ switch method
         data = gp_smooth(data, d.(gridvar), gridvec, method, 'ignore_nan', ignore_nan);
 end
 
+%fill gaps and ends if specified
+if profile_extrap(1)==1
+    data = gp_fillgaps(data, 'first');
+end
+if profile_extrap(2)==1
+    data = gp_fillgaps(data, 'last');
+end
+if postfill>0
+    data = gp_fillgaps(data, dg.(gridvar), postfill);
+end
+
 %separate data into variables and transpose if necessary
 for vno = usevar
     vm = datainds==vno;
@@ -250,20 +261,3 @@ if isrow && size(dg.(gridvar),1)>1
 elseif ~isrow && size(dg.(gridvar),2)>1
     dg.(gridvar) = dg.(gridvar).';
 end
-
-%fill gaps and ends if specified
-if sum(profile_extrap)>0 || postfill>0
-    for vno = usevar
-        if postfill>0
-            dg.(fn{vno}) = gp_fillgaps(dg.(fn{vno}), dg.(gridvar), postfill);
-        end
-        if profile_extrap(1)==1
-            dg.(fn{vno}) = gp_fillgaps(dg.(fn{vno}), 'first');
-        end
-        if profile_extrap(2)==1
-            dg.(fn{vno}) = gp_fillgaps(dg.(fn{vno}), 'last');
-        end
-    end
-end
-
-

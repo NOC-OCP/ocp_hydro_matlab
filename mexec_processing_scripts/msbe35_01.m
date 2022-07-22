@@ -7,11 +7,14 @@
 % or for multiple stations use klist
 %      klist = 1:5; msbe35_01;
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
 
 if ~exist('klist','var')
-    klist = stn;
+    if exist('stn','var')
+        klist = stn;
+    else
+        klist = input('enter list of stations to (re)load');
+    end
 end
 
 % load sbe35 data

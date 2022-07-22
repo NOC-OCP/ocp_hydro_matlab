@@ -3,7 +3,6 @@ function yf = gp_fillgaps(y, varargin)
 % yf = gp_fillgaps(y, x, maxgap);
 % yf = gp_fillgaps(y, 'first');
 % yf = gp_fillgaps(y, 'last');
-% yf = gp_fillgaps(y, maxgap, 'first');
 %
 % fill NaNs in columns of y depending on the one or more other input
 %   arguments: 
@@ -53,19 +52,23 @@ if maxgap>0
 end
 
 if dofirst
-    indm = repmat([1:s(1)]',1,s(2));
-    indm(isnan(yf)) = NaN;
+    ind = repmat([1:s(1)]',1,s(2));
+    indm = ind; indm(isnan(yf)) = inf;
     [fv, ii] = min(indm);
     yfill = repmat(fv,s(1),1);
-    yfill(indm>repmat(ii,s(1),1)) = NaN;
-    yf(isnan(yf)) = yfill(isnan(yf));
+    yfill(ind>repmat(ii,s(1),1)) = NaN;
+    yfill = sub2ind(size(yf),yfill,repmat(1:s(2),s(1),1));
+    m = isnan(yf) & ~isnan(yfill);
+    yf(m) = yf(yfill(m));
 end
 
 if dolast
-    indm = repmat([1:s(1)]',1,s(2));
-    indm(isnan(yf)) = NaN;
+    ind = repmat([1:s(1)]',1,s(2));
+    indm = ind; indm(isnan(yf)) = 0;
     [fv, ii] = max(indm);
     yfill = repmat(fv,s(1),1);
-    yfill(indm<repmat(ii,s(1),1)) = NaN;
-    yf(isnan(yf)) = yfill(isnan(yf));
+    yfill(ind<repmat(ii,s(1),1)) = NaN;
+    yfill = sub2ind(size(yf),yfill,repmat(1:s(2),s(1),1));
+    m = isnan(yf) & ~isnan(yfill);
+    yf(m) = yf(yfill(m));
 end

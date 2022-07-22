@@ -93,8 +93,8 @@ else
     commentd = '';
 end
 
-%%%%% average to 2 dbar %%%%%
-pg = [1:2:1e4]';
+%%%%% grid to 2 dbar %%%%%
+pg = [0:2:1e4]';
 scriptname = mfilename; oopt = 'interp2db'; get_cropt
 clear g2opts
 g2opts.int = [-1 1]; %interval for bins
@@ -102,9 +102,9 @@ g2opts.grid_extrap = [0 0]; %discard empty bins
 g2opts.postfill = maxfill2db; %fill after gridding?
 g2opts.ignore_nan = 1;
 g2opts.bin_partial = 1; %use bins with data in only one half
-dn2 = grid_profile(dn, 'press', pg, 'meanint', g2opts);
-up2 = grid_profile(up, 'press', pg, 'meanint', g2opts);g2opts.ignore_nan = 1; 
-hn.comment = 'bin averaged to 2 dbar using grid_cast_segment\n';
+dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
+up2 = grid_profile(up, 'press', pg, 'lfitbin', g2opts);
+hn.comment = 'gridded to 2 dbar using grid_profile method lfitbin\n';
 if maxfill2db>0
     if isfinite(maxfill2db)
         hn.comment = [hn.comment 'gaps up to ' num2str(maxfill2db) ' in 2 dbar filled using linear interpolation\n'];

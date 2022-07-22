@@ -61,7 +61,7 @@ for sno = 1:length(calsens)
 
 
     if ~isfield(calstr.(calsens{sno}),mcruise)
-        error([calstr.' calsens{sno} ' set but calstr.' calsens{sno} ' has no field ' mcruise ' for this cruise'])
+        error(['calstr.' calsens{sno} ' set but calstr.' calsens{sno} ' has no field ' mcruise ' for this cruise'])
     end
 
     if ~isfield(d0, calsens{sno})

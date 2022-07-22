@@ -43,9 +43,7 @@ clear d; d.z = cdata.z;
 for vno = 1:length(mgrid.vars)
     d.data = cdata.(mgrid.vars{vno});
     dg = grid_profile(d, 'z', zg, 'lfitbin', gpopts);
-keyboard
     dg.data(mgrid.mask==1) = NaN;
-keyboard
     m = double(isnan(dg.data));
     mgrid.(mgrid.vars{vno}) = dg.data;
     mgrid.datam(:,:,vno) = m;

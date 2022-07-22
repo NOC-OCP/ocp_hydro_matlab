@@ -1,5 +1,5 @@
-function [d, h] = mvad_codas_to_mstar(inst)
-% function [d, h] = mvad_codas_to_mstar(inst);
+function [d, h] = codas_to_mstar(inst)
+% function [d, h] = codas_to_mstar(inst);
 %
 % read data from CODAS .nc file into data and header structures like those
 % loaded from mstar files by mload
