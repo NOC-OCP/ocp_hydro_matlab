@@ -77,7 +77,7 @@ end
 llim = [rlim(2)/2 rlim(2)/4]; %threshold for shallow and deep points to examine in individual profiles
 stn0 = 0; %only plot individual stations after stn0
 
-if isstruct(varargin{1})
+if nargin>1 && isstruct(varargin{1})
     testcal = varargin{1};
     varargin(1) = [];
 end

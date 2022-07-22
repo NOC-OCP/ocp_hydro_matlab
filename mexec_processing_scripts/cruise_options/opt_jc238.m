@@ -48,23 +48,19 @@ switch scriptname
 
                 castopts.calstr.temp1.jc238 = 'dcal.temp1 = d0.temp1 + interp1([-10 3100],[2 -1]*1e-3,d0.press);';
                 castopts.calstr.temp2.jc238 = 'dcal.temp2 = d0.temp2 + 1e-3;';
-                calms = 'from comparison with SBE35, stations 1-33 (all)';
-                castopts.calstr.temp1.msg = calms;
-                castopts.calstr.temp2.msg = calms;
+%                calms = 'from comparison with SBE35, stations 1-33 (all)';
+%                castopts.calstr.temp1.msg = calms;
+%                castopts.calstr.temp2.msg = calms;
 
                 %castopts.calstr.cond1.jc238 = 'dcal.cond1 = d0.cond1;';
                 castopts.calstr.cond2.jc238 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 3100],[-2.2e-3 1.7e-3],d0.press)/35);';
-                calms = 'from comparison with bottle salinity, stations 1-25 (all)';
-                %castopts.calstr.cond1.msg = calms;
-                %castopts.calstr.cond2.msg = calms;
+%                calms = 'from comparison with bottle salinity, stations 1-25 (all)';
+%                castopts.calstr.cond1.msg = calms;
+%                castopts.calstr.cond2.msg = calms;
                 
-%                 castopts.calstr.oxygen1.dy146 = ['dcal.oxygen1 = d0.oxygen1.*'...
-%                     'interp1([-10      0    1000    3000  5400   6000],[1.027 1.027  1.033   1.038 1.055 1.055],d0.press).*'...
-%                     'interp1([1 5 25],[0.988 1 1],d0.statnum);'];
-%                 castopts.calstr.oxygen2.dy146 = ['dcal.oxygen2 = d0.oxygen2.*'...
-%                     'interp1([-10      0    1000    3000  5400   6000],[1.045 1.045  1.052   1.062 1.075 1.075],d0.press).*'...
-%                     'interp1([1 5 25],[.992  1 1],d0.statnum);'];
-%                 calms = 'from comparison with bottle oxygens, stations 1-25 (all)';
+                 castopts.calstr.oxygen1.jc238 = 'dcal.oxygen1 = d0.oxygen1.*interp1([-10 3100],[1.03 1.04],d0.press)+interp1([-10 3100],[2 1],d0.press);';
+                 castopts.calstr.oxygen2.jc238 = 'dcal.oxygen2 = d0.oxygen2.*interp1([-10 3100],[1.01 1.04],d0.press)+1.8;';
+%                 calms = 'from comparison with bottle oxygens, stations 1-29 (all)';
 %                 castopts.calstr.oxygen1.msg = calms;
 %                 castopts.calstr.oxygen2.msg = calms;
 
@@ -91,6 +87,8 @@ switch scriptname
                 switch stnlocal
                     case 1
                         niskin_flag(position==1) = 7; %questionable tap
+                    case 4
+                        niskin_flag(position==9) = 4; %most likely misfire based on sample and botoxytemp (looks like it closed around 600)
                     case 17
                         niskin_flag(position==9) = 4; %misfire
                     case 23

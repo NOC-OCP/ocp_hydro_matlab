@@ -7,20 +7,30 @@ function nsubs = checkbottles_02(stn, varargin)
 %
 % plots psal, oxygen, potemp, and the other variables you name
 %
-% input arguments after stn are strings naming variables in
-% sam_cruise_all.nc
+% inputs:
+%   stn, station number
+%   [optional] testcal, structure determining whether to apply calibrations
+%     from opt_cruise (set testcal.temp = 1 to apply temp calibration,
+%     etc.) 
+%   [optional] vnam1, vnam2, etc. names of variables to plot in addition to
+%     botpsal, botoxy, and sbe35temp and botoxya_temp
 %
-% requires a gridded section file (mstar .nc or .mat)
+% requires a gridded section file (mstar .mat)
 
 m_common
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
 
 %subplots will be psal (and botpsal), oxygen (and botoxygen), and potemp (and botoxytemp and sbe35temp [if avail]),
 %as well as the variable input names
-nsubs = nargin+2; % = length(varargin)+3
+vnams = {};
 for no = 1:length(varargin)
-    vnams{no} = varargin{no};
+    if isstruct(varargin{no})
+        testcal = varargin{no};
+    else
+        vnams{no} = varargin{no};
+    end
 end
+nsubs = length(vnams)+3; % = length(varargin)+3
 
 
 %%%%%%%%% get data %%%%%%%%%
@@ -34,6 +44,10 @@ if exist('sections')
     section = sections{1}; 
     scriptname = 'msec_grid'; oopt = 'sec_stns_grids'; get_cropt
     stnlist = intersect(stnlocal-2:stnlocal+2,kstns);
+    if length(stnlist)<5
+        warning('fewer than 4 neighbouring stations in section list; skipping')
+        return
+    end
 end
 if ~exist('section')
     error('checkbottles_02 requires a gridded section file')
@@ -57,22 +71,17 @@ kup = find(ctdtime > dcstime2 & ctdtime < dcstime3);
 
 
 %distribute all sam data back into separate stations
-ksam1 = find(dsamall.statnum == stnlist(1));
-ksam2 = find(dsamall.statnum == stnlist(2));
-ksam = find(dsamall.statnum == stnlist(3), 1);
-if isempty(ksam); warning(sprintf('no sample data for station %03d', stnlist(3))); return; end
-ksam3 = find(dsamall.statnum == stnlist(4));
-ksam4 = find(dsamall.statnum == stnlist(5));
-
-sams = {'1' '2' '' '3' '4'}; % repopulate dsam1 to dsam4
+tall = struct2table(dsamall);
 for ks = 1:5
-    samname = ['dsam' sams{ks}];
-    kname = ['ksam' sams{ks}];
-    fall = fieldnames(dsamall);
-    cmd = ['ksamx = ' kname ';']; eval(cmd);
-    if isempty(ksamx); continue; end
-    for kf = 1:length(fall)
-        cmd = [samname '.' fall{kf} ' = dsamall.' fall{kf} '(ksamx);']; eval(cmd)
+    ms = tall.statnum==stnlist(ks);
+    if ks==3
+        if sum(ms)==0
+            warning('no sample data for station %03d; skipping',stnlist(3))
+            return
+        end
+        dsam = table2struct(tall(ms,:),'ToScalar',true);
+    else
+       eval(['dsam' num2str(ks) ' = table2struct(tall(ms,:),''ToScalar'',true);']);
     end
 end
 
@@ -88,15 +97,21 @@ if ~isfield(dsam, 'sbe35temp')
 end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
-scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
+scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
 if isfield(castopts,'calstr')
+    if exist('testcal','var')
+        castopts.docal = testcal;
+    end
     calstr = select_calibrations(castopts.docal, castopts.calstr);
     if ~isempty(calstr)
-        [dctd, hctd] = apply_calibrations(dctd, hctd, calstr);
+        [dctd_c, hctd_c] = apply_calibrations(dctd, hctd, calstr);
+        for no = 1:length(hctd_c.fldnam)
+            dctd.(hctd_c.fldnam{no}) = dctd_c.(hctd_c.fldnam{no});
+        end
         if castopts.docal.cond || castopts.docal.temp
-            dctd.psal = gsw_SP_from_C(dctd.cond, dctd.temp, dctd.press);
-            dctd.asal = gsw_SA_from_SP(dctd.psal, dctd.press, hctd.longitude, hctd.latitude);
-            dctd.potemp = gsw_pt0_from_t(dctd.asal, dctd.temp, dctd.press);
+            dctd.psal = gsw_SP_from_C(dctd.cond2, dctd.temp2, dctd.press);
+            dctd.asal = gsw_SA_from_SP(dctd.psal2, dctd.press, hctd.longitude, hctd.latitude);
+            dctd.potemp = gsw_pt0_from_t(dctd.asal, dctd.temp2, dctd.press);
         end
     end
 end
@@ -132,11 +147,13 @@ h5 = plot(dsam.botpsal(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
 h6 = plot(dsam.botpsal(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
 ylim(yl)
 
-ls = {};
-if ~isempty(kbadpsal); ls = [ls; 'bad sample']; end
-if ~isempty(kbadnisk); ls = [ls; 'bad niskin']; end
-if ~isempty(kqnisk); ls = [ls; 'questionable nisk']; end
-try legend([h4 h5 h6],ls,'location','best'); catch; end
+h = [h1; h2; h3]; ls = {'downcast'; 'upcast'; 'sample'};
+if ~isempty(kbadpsal); ls = [ls; 'bad sample']; h = [h; h4]; end
+if ~isempty(kbadnisk); ls = [ls; 'bad niskin']; h = [h; h5]; end
+if ~isempty(kqnisk); ls = [ls; 'questionable nisk']; h = [h; h6]; end
+if ~isempty(h)
+    legend(h,ls,'location','best');
+end
 
 subplot(1,nsubs,2)
 
@@ -170,7 +187,7 @@ plot(max([dsam.botoxya_temp+1;0])+dsam.niskin_flag,-dsam.upress,'k+','markersize
 plot(max([dsam.botoxya_temp+1;0])+dsam.niskin_flag(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
 plot(max([dsam.botoxya_temp+1;0])+dsam.niskin_flag(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
 ylim(yl); xlim([-2 2+(max([dsam.upotemp;0; dsam.botoxya_temp])+max(dsam.niskin_flag))]); % bak on jc191 bug fix. scale needs to be based on potemp if there are no botoxytemps
-for klab = 1:24
+for klab = 1:length(dsam.niskin_flag)
 	     text(max([dsam.botoxya_temp+1;0;dsam.upotemp])+dsam.niskin_flag(klab),-dsam.upress(klab),...
         sprintf('%d  ',dsam.position(klab)),'fontsize',14,'horizontalalignment','right','verticalalignment','middle')
 end
@@ -241,7 +258,14 @@ for veno = 1:nsubs-3
 end
 
 for no = 1:nsubs; subplot(1,nsubs,no); ylim([-500 0]); end
+disp('enter to continue')
 pause
 for no = 1:nsubs; subplot(1,nsubs,no); ylim(yl); end
+cont = input('k for keyboard or enter to continue\n','s');
+if strcmp(cont,'k')
+    keyboard
+else
+    return
+end
 
 
