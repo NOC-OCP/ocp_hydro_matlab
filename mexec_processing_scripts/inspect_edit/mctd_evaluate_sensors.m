@@ -2,15 +2,17 @@ function mctd_evaluate_sensors(sensname, varargin)
 % mctd_evaluate_sensors(sensname)
 % mctd_evaluate_sensors(sensname, testcal, varargin)
 %
-%compare CTD temperature, conductivity, or oxygen to calibration values
-%in order to choose calibration functions
+% compare CTD temperature, conductivity, or oxygen to calibration values
+% in order to choose calibration functions
 %
-%produces plots comparing them and a suggested calibration function depending on quantity:
-%linear station number drift offset for temp
-%linear station number drift + linear in pressure scaling for cond (approximately equivalent to an offset for sal)
-%linear station number drift + *** for oxy
+% produces plots comparing them and a suggested calibration function
+%     depending on quantity: 
+%   linear station number drift offset for temp
+%   linear station number drift + linear in pressure scaling for cond
+%     (approximately equivalent to an offset for sal) 
+%   linear station number drift + *** for oxy
 %
-%set sensname to 'temp1' 'cond1' 'cond2' 'oxygen1' 'oxygen' etc.
+% set sensname to 'temp1' 'cond1' 'cond2' 'oxygen1' 'oxygen' etc.
 %
 % can also set testcal, structure whose fieldnames are variables (temp,
 % cond, etc.) and values are 1 to apply calibrations or 0 (or missing) to
@@ -35,9 +37,9 @@ function mctd_evaluate_sensors(sensname, varargin)
 % difference to the oxygen residuals (not as much as temperature would for
 % conductivity)
 %
-%loads sam_cruise_all
+% loads sam_cruise_all
 %
-%there are some selection and plotting options near the top, otherwise they are set in opt_cruise
+% there are some selection and plotting options near the top, otherwise they are set in opt_cruise
 %
 
 %***add fluor
@@ -163,7 +165,7 @@ for gno = 1:length(sensg)
     ctddata = d.(sensname)(iig);
     if strncmp(sensname, 'temp', 4)
         caldata = d.sbe35temp(iig);
-        calflag = d.sbe35flag(iig);
+        calflag = d.sbe35temp_flag(iig);
         ii = find(ismember(calflag,okf));
         caldata = caldata(ii); calflag = calflag(ii); ctddata = ctddata(ii);
         iig = iig(ii);
@@ -227,7 +229,7 @@ for gno = 1:length(sensg)
 
     %fit model
     if strncmp(sensname,'temp',4)
-        model = [ones(size(caldata)) d.press d.statnum];
+        model = [ones(size(caldata)) press stn];
         modform = 'tempcal = temp + C1 + C2(press) + C3(stn)';
         C = regress(res,model);
     elseif strncmp(sensname,'cond',4)

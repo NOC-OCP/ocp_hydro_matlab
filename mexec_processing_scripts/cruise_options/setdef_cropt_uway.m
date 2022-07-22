@@ -48,8 +48,8 @@ switch scriptname
         %%%%%%%%%% end bathy (not a script) %%%%%%%%%%
         
         
-        %%%%%%%%%% m_daily_proc %%%%%%%%%%
-    case 'm_daily_proc'
+        %%%%%%%%%% uway_daily_proc %%%%%%%%%%
+    case 'uway_daily_proc'
         switch oopt
             case 'excludestreams'
                 crhelp_str = {'uway_excludes lists streams to skip and uway_excludep lists '
@@ -69,7 +69,7 @@ switch scriptname
                     '(re)calculating salinity from conductivity and housing temperature.'}; 
                 umtypes = {'bathy' 'tsgsurfmet'};
         end
-        %%%%%%%%%% end m_daily_proc %%%%%%%%%%
+        %%%%%%%%%% end uway_daily_proc %%%%%%%%%%
         
         %%%%%%%%%% mday_01_clean_av %%%%%%%%%%
     case 'mday_01_clean_av'

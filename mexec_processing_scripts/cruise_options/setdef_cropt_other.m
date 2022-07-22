@@ -132,58 +132,49 @@ switch scriptname
         end
         %%%%%%%%%% end mout_exch %%%%%%%%%%
         
-        %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
-    case 'msec_run_mgridp'
+        %%%%%%%%%% msec_grid %%%%%%%%%%
+    case 'msec_grid'
         switch oopt
-            case 'sections'
+            case 'sections_to_grid'
                 crhelp_str = {'sections (cell array) contains a list of all sections to grid for this cruise'};
-            case 'gpars'
-                crhelp_str = {'Set gstart, gstop, and gstep to override section-dependent default pressure grid'
-                    'range and spacing (dbar) coded in msec_run_mgridp.'};
-                gstart = []; gstop = []; gstep = [];
+            case 'sec_stns_grids'
+                crhelp_str = {'Use switch-case on section to set kstns (1xN, default 1:99):'
+                    'list of stations (on this cruise) for each section;'
+                    'xstatnumgrid and zpressgrid for maphsec (default [], if left empty they'
+                    'will be looked up in msec_grid based on section, or set to maphsec defaults).'};
+                kstns = 1:99;
+                xstatnumgrid = []; 
+                zpressgrid = [];
             case 'ctd_regridlist'
-                crhelp_str = {'ctd_regridlist (string) is a list of CTD variables separated by spaces to grid using '
-                    'mgridp. Default is [''press temp psal potemp oxygen'']}. Make ctd_regridlist empty to not rerun '
-                    'the gridding.'};
-                ctd_regridlist  = ['press temp psal potemp oxygen'];
-            case 'sec_stns'
-                crhelp_str = {'kstns (1xN) contains list of stations (on this cruise) in each section'};
+                crhelp_str = {'ctd_regridlist is a cell array list of CTD variables to be gridded;'
+                    'default is temp, psal, potemp, oxygen. If empty, gridded CTD data will'
+                    'be loaded from existing grid_ file and only bottle data will be remapped.'};
+                ctd_regridlist  = {'temp' 'psal' 'potemp' 'oxygen'};
             case 'sam_gridlist'
-                crhelp_str = {'varuselist.names (default: {''botpsal'' ''botoxy''}) contains a list of sample '
-                    'variables to grid.'};
-                varuselist.names = {'botpsal' 'botoxy'};
+                crhelp_str = {'sam_gridlist is a cell array list of bottle variables to be gridded;'
+                    'default is botpsal, botoxy.'};
+                sam_gridlist = {'botpsal' 'botoxy'};
         end
-        %%%%%%%%%% end msec_run_mgridp %%%%%%%%%%
-        
-        %%%%%%%%%% m_maptracer %%%%%%%%%%
-    case 'm_maptracer'
-        switch oopt
-            case 'samfn'
-                samfn = fullfile(root_ctd, ['sam_' MEXEC_G.MSCRIPT_CRUISE_STRING '_all']);
-            case 'kstatgroups'
-                kstatgroups = {[1:999]};
-            case 'xzlim'
-                flaglim = 2; % default 2; highest flag to be used for gridding
-                s.xlim = 2; % default 1; width of gridding window, +/- xlim, measured in statnum
-                s.zlim = 4; % default 4; vertical extent of gridding window measured in plev
-                % bak jc191 reset s.xlim and s.zlim in a cruise option.
-                % s.xlim and s.zlim are the half-width of the number of points used in the
-                % local fit. ie s.xlim = 1 means three stations used. This one and one
-                % either side.
-            case 'scales_xz'
-                % bak jc191 feb 2020 . scale_x and scale_z are scalings on the distances xu and zu.
-                % xu and zu measure the distance away in counts of stations for x and
-                % levels for z. s.xlim and s.zlim control the number of stations/levels
-                % included. scale_x and scale_z control the relative importance of
-                % those distances in the weight. So low values of scale_x and scale_z
-                % make the map smoother by not reducing the weight of more distant points.
-                % High values of scale_x and scale_z give high weight to nearby points
-                % and low weight to distant points. Default for scale_x and scale_z is
-                % unity, unless changed in opt_cruise.
-                scale_x = 0.5; % choose value < 1 for smoother
-                scale_z = 1;
-        end
-        %%%%%%%%%% end m_maptracer %%%%%%%%%%
+%            case 'xzlim'
+%                flaglim = 2; % default 2; highest flag to be used for gridding
+%                s.xlim = 2; % default 1; width of gridding window, +/- xlim, measured in statnum
+%                s.zlim = 4; % default 4; vertical extent of gridding window measured in plev
+%                % bak jc191 reset s.xlim and s.zlim in a cruise option.
+%                % s.xlim and s.zlim are the half-width of the number of points used in the
+%                % local fit. ie s.xlim = 1 means three stations used. This one and one
+%                % either side.
+%            case 'scales_xz'
+%                % bak jc191 feb 2020 . scale_x and scale_z are scalings on the distances xu and zu.
+%                % xu and zu measure the distance away in counts of stations for x and
+%                % levels for z. s.xlim and s.zlim control the number of stations/levels
+%                % included. scale_x and scale_z control the relative importance of
+%                % those distances in the weight. So low values of scale_x and scale_z
+%                % make the map smoother by not reducing the weight of more distant points.
+%                % High values of scale_x and scale_z give high weight to nearby points
+%                % and low weight to distant points. Default for scale_x and scale_z is
+%                % unity, unless changed in opt_cruise.
+%                scale_x = 0.5; % choose value < 1 for smoother
+%                scale_z = 1;
         
         %%%%%%%%%% msec_plot_contrs %%%%%%%%%%
     case 'msec_plot_contrs'
@@ -206,6 +197,14 @@ switch scriptname
                 
         end
         %%%%%%%%%% end set_clev_col %%%%%%%%%%
+        
+            case 'mout_1hzasc'
+        switch oopt
+            case '1hz_fname'
+                crhelp_str = {'name, fnot, for text file of 1Hz CTD data (e.g. for IX LADCP processing'};
+                root_out = mgetdir('M_LADCP');
+                fnot = fullfile(root_out, 'CTD', ['ctd.' stn_string '.02.asc']);
+        end
         
                 %%%%%%%%%% ix_cast_params %%%%%%%%%%
     case 'ix_cast_params'

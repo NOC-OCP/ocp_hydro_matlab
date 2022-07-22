@@ -1,7 +1,7 @@
 function checkbottles_01(stations, varname, section)
 % function checkbottles_01(stations, varname, section)
 %
-% (formerly identify_bottles)
+% (formerly identify_bottles, then msam_checkbottles_01)
 % bak on jc159 19 March 2018
 %
 % identify problem bottles by plotting against theta or pressure
@@ -21,8 +21,8 @@ function checkbottles_01(stations, varname, section)
 % exist, anomalies are not plotted.
 %
 % eg
-% msam_checkbottles_01([],'botpsal')
-% msam_checkbottles_01([10:30 32:50],'totnit','24s')
+% checkbottles_01([],'botpsal')
+% checkbottles_01([10:30 32:50],'totnit','24s')
 %
 % The second example will refer to file
 % grid_jc159_24s.nc

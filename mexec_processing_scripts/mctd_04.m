@@ -67,8 +67,8 @@ end
 
 
 %%%%% separate downcast and upcast ranges %%%%%
-clear dn up hn
-hn.data_time_origin = h.data_time_origin;
+clear dn up
+hn = h;
 hn.fldnam = {}; hn.fldunt = {};
 for vno = 1:length(var_copycell)
     dn.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_start:dd.dc24_bot);
@@ -148,5 +148,3 @@ mfsave(otfile1d, dn2, hnd);
 
 hnu = hn;
 mfsave(otfile1u, up2, hnu);
-
-

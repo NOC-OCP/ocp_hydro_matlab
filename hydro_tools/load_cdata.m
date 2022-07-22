@@ -33,14 +33,14 @@ disp('ctd loaded')
 
 %do some QC
 ii = find(cdata.psal<20 | cdata.psal>40);
-if length(ii)>0
+if ~isempty(ii)
     cdata.psal(ii) = NaN;
     if isfield(cdata, 'psal_flag')
         cdata.psal_flag(ii) = 4;
     end
 end
 ii = find(cdata.oxygen<100 | cdata.oxygen>500);
-if length(ii)>0
+if ~isempty(ii)
     cdata.oxygen(ii) = NaN;
     if isfield(cdata, 'oxygen_flag')
         cdata.oxygen_flag(ii) = 4;

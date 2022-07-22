@@ -49,7 +49,7 @@ for bno = 1:length(xm)
                     yg(bno,:) = sum(yb,1)./w;
                     yg(bno,w==0) = NaN;
                     
-                case 'median'
+                case 'med'
                     mid = sum(m,1)/2;
                     ii1 = find(mid==0.5); %for nanmedian, only one good point
                     ii0 = find(mid==0); %for nanmedian, no good points

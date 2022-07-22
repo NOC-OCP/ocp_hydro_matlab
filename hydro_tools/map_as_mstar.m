@@ -1,4 +1,4 @@
-function mgrid = map_as_mstar(mgrid, cdata, sdata);
+function mgrid = map_as_mstar(mgrid, cdata, sdata)
 % function mgrid = map_as_mstar(mgrid, cdata, sdata);
 %
 % linearly interpolate CTD data, contained in structure cdata,
@@ -29,20 +29,26 @@ ngz = size(mgrid.z,1); ngx = size(mgrid.x,2);
 ns = length(sdata.x);
 nvars = length(sdata.vars);
 
-mgrid.vars = {}; mgrid.unts = {};
-
 %ctd data: weighted average in vertical (using midpoint of linear fit),
 %including fill-to-surface,
 %then linearly interpolate in x to fill in missing profiles
-for vno = 1:length(cdata.vars)
-    data0 = smss(cdata.z, cdata.(cdata.vars{vno}), mgrid.z(:,1), 'smethod', 'lfitmid', 'init_extrap', 'surf', 'bin_extrap', 1);
-    data = interp1(cdata.x', data0.', mgrid.x(1,:)').';
-    data(mgrid.mask==1) = NaN;
-    m = double(isnan(data)); %might be NaNs in input ctdoxy; fill later
-    mgrid.(cdata.vars{vno}) = data;
+mgrid.vars = cdata.vars;
+mgrid.unts = cdata.unts;
+gpopts.grid_extrap = [1 0];
+gpopts.profile_extrap = [1 0];
+gpopts.postfill = inf;
+dz1 = mgrid.z(2,1)-mgrid.z(1,1); dz2 = mgrid.z(end,1)-mgrid.z(end-1,1);
+zg = [mgrid.z(1,1)-dz1/2; .5*(mgrid.z(1:end-1,1)+mgrid.z(2:end,1)); mgrid.z(end,1)+dz2/2];
+clear d; d.z = cdata.z;
+for vno = 1:length(mgrid.vars)
+    d.data = cdata.(mgrid.vars{vno});
+    dg = grid_profile(d, 'z', zg, 'lfitbin', gpopts);
+keyboard
+    dg.data(mgrid.mask==1) = NaN;
+keyboard
+    m = double(isnan(dg.data));
+    mgrid.(mgrid.vars{vno}) = dg.data;
     mgrid.datam(:,:,vno) = m;
-    mgrid.vars = [mgrid.vars cdata.vars{vno}];
-    mgrid.unts = [mgrid.unts cdata.unts{vno}];
 end
 
 %sample data: average over close-enough points, weighted by gaussian in "distance" and by potential density
@@ -113,7 +119,7 @@ for gno = iig
                 datag(zno, xno, vno) = poly(1); %***first coef is mean?
             end
             %if vno==6 && mgrid.z(gno)>=15 && poly(1)<2100; keyboard; end
-        elseif length(iisg)>0 && isfield(mgrid, 'sam_fill') && contains(mgrid.sam_fill, 'nearby')
+        elseif ~isempty(iisg) && isfield(mgrid, 'sam_fill') && contains(mgrid.sam_fill, 'nearby')
             datag(zno, xno, vno) = mean(data(iis(iisg)));
             datam(zno, xno, vno) = 0.7; %***
         end
@@ -127,7 +133,7 @@ if isfield(mgrid, 'sam_fill') && contains(mgrid.sam_fill, 'nnv')
     for vno = 1:nvars
         for xno = 1:ngx
             iib = find(datam(:,xno,vno)==1 & mgrid.mask(:,xno)==0);
-            if length(iib)>0
+            if ~isempty(iib)
                 iig = find(datam(:,xno,vno)==0);
                 if length(iig)>2
                     datag(iib,xno,vno) = interp1(iig, datag(iig,xno,vno), iib, 'nearest', 'extrap');
@@ -146,11 +152,11 @@ if isfield(mgrid, 'ctd_fill')
             iic = find(strcmp(cvarsfill{vno}, mgrid.vars));
             if sum(sum(datam(:,:,iic)>0))>sum(sum(mgrid.mask))
                 %first fill with masked sample oxygen
-                iis = find(strcmp(cvarsfill{vno}, sdata.vars));
-                dat = datag(:,:,iis);
+                mso = strcmp(cvarsfill{vno}, sdata.vars);
+                dat = datag(:,:,mso);
                 m = mgrid.datam(:,:,iic);
-                iifs = find(m>0 & ~isnan(dat));
-                mgrid.(cvarsfill{vno})(iifs) = dat(iifs);
+                mfs = (m>0 & ~isnan(dat));
+                mgrid.(cvarsfill{vno})(mfs) = dat(mfs);
                 mgrid.(cvarsfill{vno})(mgrid.mask==1) = NaN;
                 m(iifs) = 0.5; m(mgrid.mask==1) = 1;
                 mgrid.datam(:,:,iic) = m;
@@ -162,7 +168,7 @@ end
 % add sample maps to mgrid for quantities not from ctd
 for vno = 1:nvars
     if ~sum(strcmp(sdata.vars{vno}, mgrid.vars))
-        mgrid = setfield(mgrid, sdata.vars{vno}, datag(:,:,vno));
+        mgrid.(sdata.vars{vno}) = datag(:,:,vno);
         mgrid.vars = [mgrid.vars sdata.vars{vno}];
         mgrid.unts = [mgrid.unts sdata.unts{vno}];
         mgrid.datam(:,:,size(mgrid.datam,3)+1) = datam(:,:,vno);

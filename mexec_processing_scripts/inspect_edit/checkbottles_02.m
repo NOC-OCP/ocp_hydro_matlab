@@ -1,8 +1,8 @@
-function nsubs = msam_checkbottles_02(stn, varargin)
-% function nsubs = msam_checkbottles_02(stn,varargin)
-% function msam_checkbottles_02(stn,vnam1,vnam2,vnam3,vnam4,vnam5)
+function nsubs = checkbottles_02(stn, varargin)
+% function nsubs = checkbottles_02(stn,varargin)
+% function checkbottles_02(stn,vnam1,vnam2,vnam3,vnam4,vnam5)
 %
-% (formerly bottle_inspectionall)
+% (formerly bottle_inspectionall, then msam_checkbottles_02)
 %
 %
 % plots psal, oxygen, potemp, and the other variables you name
@@ -10,6 +10,7 @@ function nsubs = msam_checkbottles_02(stn, varargin)
 % input arguments after stn are strings naming variables in
 % sam_cruise_all.nc
 %
+% requires a gridded section file (mstar .nc or .mat)
 
 m_common
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
@@ -67,8 +68,16 @@ for ks = 1:5
     end
 end
 
-if ~isfield(dsam, 'botoxytemp') && isfield(dsam, 'botoxytempa'); dsam.botoxytemp = dsam.botoxytempa; end % jc159 cludge
-if ~isfield(dsam, 'sbe35temp'); dsam.sbe35temp = NaN+dsam.utemp; dsam.sbe35temp_flag = dsam.sbe35temp; end
+if ~isfield(dsam, 'botoxya_temp')
+    if isfield(dsam, 'botoxytempa')
+        dsam.botoxya_temp = dsam.botoxytempa; 
+    elseif isfield(dsam, 'botoxytemp')
+        dsam.botoxya_temp = dsam.botoxytemp;
+    end
+end 
+if ~isfield(dsam, 'sbe35temp')
+    dsam.sbe35temp = NaN+dsam.utemp; dsam.sbe35temp_flag = dsam.sbe35temp; 
+end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
 oopt = 'docals'; get_cropt
@@ -230,7 +239,6 @@ for veno = 1:nsubs-3
 
 end
 
-%pause
 for no = 1:nsubs; subplot(1,nsubs,no); ylim([-500 0]); end
 pause
 for no = 1:nsubs; subplot(1,nsubs,no); ylim(yl); end

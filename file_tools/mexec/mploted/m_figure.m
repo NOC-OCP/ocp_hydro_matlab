@@ -17,6 +17,6 @@ set(gcf,'defaultaxeslinewidth',2)
 %return
 set(gcf,'defaultlinelinewidth',2)
 %return
-set(gcf,'defaultaxesfontsize',16)
-set(gcf,'defaulttextfontsize',16)
-
+set(gcf,'defaultaxesfontsize',14)
+set(gcf,'defaulttextfontsize',14)
+set(gcf,'defaultaxescolor',[.9 .9 .9])

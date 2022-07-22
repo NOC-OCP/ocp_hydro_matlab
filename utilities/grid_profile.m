@@ -147,6 +147,7 @@ switch method
         if strcmp(method, 'lfitbin')
             dg.(gridvar) = .5*(gridvec(1:end-1)+gridvec(2:end));
         end
+        gridvec = .5*(gridvec(1:end-1)+gridvec(2:end));
     case {'medint' 'meanint'}
         %bin edges
         ge = [gridvec+int(1) gridvec+int(2)];
@@ -192,7 +193,7 @@ for vno = 1:nvar
             usevar(vno) = 0;
             continue
         end
-        dg.(fn{vno}) = NaN+zeros(s(1),length(gridvec));
+        dg.(fn{vno}) = NaN+zeros(s(1),ngv);
         data = [data d.(fn{vno}).'];
         datainds = [datainds vno];
     else
@@ -201,7 +202,7 @@ for vno = 1:nvar
             usevar(vno) = 0;
             continue
         end
-        dg.(fn{vno}) = NaN+zeros(length(gridvec),s(2));
+        dg.(fn{vno}) = NaN+zeros(ngv,s(2));
         data = [data d.(fn{vno})];
         datainds = [datainds vno];
     end
@@ -250,9 +251,8 @@ elseif ~isrow && size(dg.(gridvar),2)>1
     dg.(gridvar) = dg.(gridvar).';
 end
 
-
 %fill gaps and ends if specified
-if sum(profile_extrap)>0
+if sum(profile_extrap)>0 || postfill>0
     for vno = usevar
         if postfill>0
             dg.(fn{vno}) = gp_fillgaps(dg.(fn{vno}), dg.(gridvar), postfill);
@@ -265,4 +265,5 @@ if sum(profile_extrap)>0
         end
     end
 end
+
 

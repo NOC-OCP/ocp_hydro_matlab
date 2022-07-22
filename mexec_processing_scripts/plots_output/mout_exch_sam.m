@@ -57,7 +57,6 @@ if ~isfield(d, 'depth') || sum(~isnan(d.depth))==0
     end
 end
 
-
 %%%%% figure out which fields to write %%%%%
 
 vars = m_exch_vars_list(2);

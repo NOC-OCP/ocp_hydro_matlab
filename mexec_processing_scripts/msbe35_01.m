@@ -10,6 +10,10 @@
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
 
+if ~exist('klist','var')
+    klist = stn;
+end
+
 % load sbe35 data
 root_sbe35 = mgetdir('M_SBE35');
 scriptname = mfilename; oopt = 'sbe35file'; get_cropt
@@ -30,7 +34,7 @@ for kf = 1:length(file_list)
         if strlen ~= 77; continue; end % data are in 77 byte lines
         kount = kount+1;
         alldata = [alldata; str];
-        statnum = [statnum; str2double(file_list{kf}(iis))]; %not used finally, but may be used by opt_cruise
+        %statnum = [statnum; str2double(file_list{kf}(iis))]; %not used finally, but may be used by opt_cruise
     end
     fclose(fid2);
 end
@@ -76,43 +80,45 @@ for fno = 1:length(files)
 
     infile1 = fullfile(mgetdir('M_CTD'), files(fno).name);
     stnlocal = str2double(infile1(end-5:end-3));
-    scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
-    
-    % read the station dcs file to identify start and end of station
-    if exist(m_add_nc(infile1),'file') ~= 2
-        msg = ['dcs file ' infile1 ' not found'];
-        fprintf(MEXEC_A.Mfider,'%s\n',msg);
-        return
-    end
-    hd = m_read_header(infile1);
-    if sum(strcmp('time_start',hd.fldnam)) && sum(strcmp('time_end',hd.fldnam))
-        
-        [dd, hd] = mloadq(infile1,'time_start time_end');
-        stn_start = datenum(hd.data_time_origin) + dd.time_start/86400;
-        stn_end = datenum(hd.data_time_origin) + dd.time_end/86400;
-        
-        %append data from this station into structure d
-        kok = find(datnum >= stn_start-15/1440 & datnum <= stn_end+15/1440);
-        if ~isempty(kok)
-            time = 86400*(datnum(kok)-datenum(hd.data_time_origin));
-            [timesort, ksort, junk] = unique(time); %YLF JR15003 in case of duplicates (recorder not erased between casts)
-            % repopulate time, just to be sure all data variables are sorted identically
-            ds.time = [ds.time; 86400*(datnum(kok(ksort))-datenum(hd.data_time_origin))];
-            ds.position = [ds.position; bn(kok(ksort))];
-            ds.tdiff = [ds.tdiff; tdiff(kok(ksort))];
-            ds.val = [ds.val; val(kok(ksort))];
-            ds.sbe35temp = [ds.sbe35temp; t90(kok(ksort))];
-            ds.sbe35temp_flag = [ds.sbe35temp_flag; 2+zeros(length(ksort),1)];
-            ds.statnum = [ds.statnum; stnlocal+zeros(length(ksort),1)];
+    if ismember(stnlocal,klist)
+        scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
+
+        % read the station dcs file to identify start and end of station
+        if exist(m_add_nc(infile1),'file') ~= 2
+            msg = ['dcs file ' infile1 ' not found'];
+            fprintf(MEXEC_A.Mfider,'%s\n',msg);
+            return
         end
-        
+        hd = m_read_header(infile1);
+        if sum(strcmp('time_start',hd.fldnam)) && sum(strcmp('time_end',hd.fldnam))
+
+            [dd, hd] = mloadq(infile1,'time_start time_end');
+            stn_start = datenum(hd.data_time_origin) + dd.time_start/86400;
+            stn_end = datenum(hd.data_time_origin) + dd.time_end/86400;
+
+            %append data from this station into structure ds
+            kok = find(datnum >= stn_start-15/1440 & datnum <= stn_end+15/1440);
+            if ~isempty(kok)
+                time = 86400*(datnum(kok)-datenum(hd.data_time_origin));
+                [timesort, ksort, junk] = unique(time); %YLF JR15003 in case of duplicates (recorder not erased between casts)
+                % repopulate time, just to be sure all data variables are sorted identically
+                ds.time = [ds.time; 86400*(datnum(kok(ksort))-datenum(hd.data_time_origin))];
+                ds.position = [ds.position; bn(kok(ksort))];
+                ds.tdiff = [ds.tdiff; tdiff(kok(ksort))];
+                ds.val = [ds.val; val(kok(ksort))];
+                ds.sbe35temp = [ds.sbe35temp; t90(kok(ksort))];
+                ds.sbe35temp_flag = [ds.sbe35temp_flag; 2+zeros(length(ksort),1)];
+                ds.statnum = [ds.statnum; stnlocal+zeros(length(ksort),1)];
+            end
+
+        end
     end
     
 end
 ds.sampnum = 100*ds.statnum+ds.position;
 scriptname = mfilename; oopt = 'sbe35flag'; get_cropt
-%***bottle not fired won't be in list, so nan must be bad
-ds.sbe35temp_flag(isnan(ds.sbe35temp)&ds.sbe35temp_flag<4) = 4; 
+%bottle not fired won't be in list, so nan must be bad
+ds.sbe35temp_flag(isnan(ds.sbe35temp) & ds.sbe35temp_flag<4) = 4; 
 
 % now save the data
 clear hnew

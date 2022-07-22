@@ -45,29 +45,36 @@ function mgrid = maphsec(cdata, sdata, mgrid)
 if ~isfield(mgrid, 'method')
     mgrid.method = 'msec_maptracer';
 end
-if ~isfield(mgrid, 'background');
+if ~isfield(mgrid, 'background')
     mgrid.background = 'none';
 end
 
 %lengths
-if sum(strcmp(mgrid.method, 'msec_maptracer')) & ~isfield(mgrid, 'xlim')
+if sum(strcmp(mgrid.method, 'msec_maptracer')) && ~isfield(mgrid, 'xlim')
     mgrid.xlim = 1; mgrid.zlim = 4;
-elseif sum(strcmp(mgrid.method, 'om')) & ~isfield(mgrid, 'xL')
+elseif sum(strcmp(mgrid.method, 'om')) && ~isfield(mgrid, 'xL')
     mgrid.xL = 2; mgrid.zL = 4; mgrid.xL = 3;
 end
 
 %station number and pressure coordinate mapping
 if ~isfield(mgrid, 'xstatnumgrid')
-    mgrid.xstatnumgrid = [cdata.statnum(:)'; 1:length(cdata.statnum)];
-    %or xstatnum mgrid can be some other mapping between station number and x coordinate, e.g. distance, or a shifted station number to account for out of order or missing stations
+    mgrid.xstatnumgrid = [cdata.statnum(:)'];
+end
+if size(mgrid.xstatnumgrid,1)==1
+    mgrid.xstatnumgrid = [mgrid.xstatnumgrid; 1:length(cdata.statnum)];
+    % or xstatnum mgrid can be some other mapping between station number 
+    % and x coordinate, e.g. based on distance, or using a shifted station 
+    % number to account for out of order or missing stations
 end
 if ~isfield(mgrid, 'zpressgrid')
     %pressure levels
     mgrid.zpressgrid = [0 5 25 50 75 100 175 250 375 500 ...
         625 750 875 1000 1250 1500 1750 2000 2250 2500 ...
         2750 3000 3250 3500 3750 4000 4250 4500 4750 ...
-        5000 5250 5500 5750 6000];
-    mgrid.zpressgrid = [mgrid.zpressgrid' [1:length(mgrid.zpressgrid)]'];
+        5000 5250 5500 5750 6000]';
+end
+if size(mgrid.zpressgrid,2)==1
+    mgrid.zpressgrid = [mgrid.zpressgrid [1:length(mgrid.zpressgrid)]'];
 end
 
 %and translate input coordinates
@@ -105,8 +112,8 @@ mgrid.lat = interp1(cdata.statnum, cdata.lat, mgrid.statnum);
 mgrid.mask = ones(ngz,ngx);
 for xno = 1:ngx
     iix = find(cdata.x==mgrid.x(1,xno));
-    iib = max(find(~isnan(cdata.temp(:,iix)))); %last good point
-    if length(iib)>0
+    iib = find(~isnan(cdata.temp(:,iix)), 1, 'last' ); %last good point
+    if ~isempty(iib)
         ii = find(mgrid.z(:,1)<=cdata.z(iib));
         mgrid.mask(ii,xno) = 0; %water points
     end
@@ -142,7 +149,7 @@ switch mgrid.method
                 mgrids = map_as_mstar(mgrids, cdata, sdata);
                 for vno = 1:length(mgrid.vars)
                     ii = find(mgrid.datam(:,:,vno)>=0.8 & mgrid.mask==0);
-                    if length(ii)>0
+                    if ~isempty(ii)
                         try
                             v = mgrids.(mgrid.vars{vno}); v = fill_to_surf(v);
                         catch; keyboard; end

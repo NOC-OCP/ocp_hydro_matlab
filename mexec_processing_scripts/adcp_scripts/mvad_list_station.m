@@ -1,4 +1,7 @@
-% script mvad_list_station
+function mvad_list_station(stn, inst)
+% function mvad_list_station(stn, inst)
+%
+% inst is e.g. 'os75nb' or 'os150nb'
 %
 % bak 2 April 2018; jc159
 % 
@@ -39,52 +42,32 @@
 % is reached:
 % tbuffer = 3600/86400; % days
 
-
+m_common
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 %reset constants, just in case
 i = sqrt(-1);
 pi = 4*atan(1);
 degrad = pi/180;
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-scriptname = 'mvad_list_station';
 
 spdmin = 1; % m/s
 levsvad = 3:6; % levels for reducing adcp velocity for display
 tbuffer = 3600/86400; % days
 
-
-if exist('stn','var')
-    m = ['Running script ' scriptname ' on station ' sprintf('%03d',stn)];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m)
-else
-    stn = input('type stn number ');
-end
-stnlocal = stn; clear stn; % so it doesnt persist
-stn_string = sprintf('%03d',stnlocal);
-
-if exist('inst','var')
-    m = ['Running script ' scriptname ' for VMADCP ' sprintf('%d',inst)];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m)
-else
-    inst = input('Enter instrument type: os75nb or os150nb etc.: ','s');
-end
-instlocal = inst; clear inst; % so it doesn't persist
-
-
 root_nav = mgetdir('M_POS');  
 fn_nav = fullfile(root_nav, ['bst_' mcruise '_01.nc']);
-[dnav hnav] = mloadq(fn_nav,'/');
+[dnav, hnav] = mloadq(fn_nav,'/');
 dnav.dnum = datenum(hnav.data_time_origin)+dnav.time/86400;
 dnav.chead =  exp(i*(90-dnav.heading_av_corrected)*degrad);
 
 root_ctd = mgetdir('M_CTD');  
 fn_dcs = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string '.nc']);
-[ddcs hdcs] = mloadq(fn_dcs,'/');
+[ddcs, hdcs] = mloadq(fn_dcs,'/');
 ddcs.dnum_start = datenum(hdcs.data_time_origin)+ddcs.time_start/86400;
 ddcs.dnum_end = datenum(hdcs.data_time_origin)+ddcs.time_end/86400;
 
 root_vmad = mgetdir('M_VMADCP');
-fn_vad = fullfile(root_vmad, 'mproc', [instlocal '_' mcruise '_01.nc']);
-[dvad hvad] = mloadq(fn_vad,'/');
+fn_vad = fullfile(root_vmad, 'mproc', [inst '_' mcruise '_01.nc']);
+[dvad, hvad] = mloadq(fn_vad,'/');
 dvad.dnum = datenum(hvad.data_time_origin)+dvad.time/86400;
 
 levsvad = 3:6;
@@ -117,20 +100,20 @@ tform = 'yyyy mm dd HH MM SS';
 % start and end times
 
 times(3) = ddcs.dnum_start;
-knav3 = min(find(dvad.refdnum >= times(3)));
-knav2 = max(find(dvad.refdnum <= times(3) & dvad.refshipspd >= spdmin))+1;
+knav3 = find(dvad.refdnum >= times(3), 1 );
+knav2 = find(dvad.refdnum <= times(3) & dvad.refshipspd >= spdmin, 1, 'last' )+1;
 if isempty(knav2); knav2 = 1; end % start at beginning of file
 times(2) = dvad.refdnum(knav2);
-knav1 = max(find(dvad.refdnum <= times(2)-tbuffer));
+knav1 = find(dvad.refdnum <= times(2)-tbuffer, 1, 'last' );
 if isempty(knav1); knav1 = 1; end % start at beginning of file
 times(1) = dvad.refdnum(knav1);
 
 times(4) = ddcs.dnum_end;
-knav4 = max(find(dvad.refdnum <= times(4)));
-knav5 = min(find(dvad.refdnum >= times(4) & dvad.refshipspd >= spdmin))-1;
+knav4 = find(dvad.refdnum <= times(4), 1, 'last' );
+knav5 = find(dvad.refdnum >= times(4) & dvad.refshipspd >= spdmin, 1 )-1;
 if isempty(knav5); knav5 = length(dvad.refdnum); end
 times(5) = dvad.refdnum(knav5);
-knav6 = min(find(dvad.refdnum >= times(5)+tbuffer));
+knav6 = find(dvad.refdnum >= times(5)+tbuffer, 1 );
 if isempty(knav6); knav6 = length(dvad.refdnum); end
 times(6) = dvad.refdnum(knav6);
 
@@ -145,12 +128,12 @@ fprintf(1,'%s %03d [%s] [%s]\n','wait',stnlocal,datestr(times(2),tform),datestr(
 
 fprintf(1,'%s %s %s %s %s\n',' yyyy mm dd HH MM SS ',' speed',' head','  uabs','  vabs')
 
-if 0
-for kl = knav1:knav6
-    if kl == knav2; fprintf(1,'%s\n','speed limit'); end
-    if kl == knav3; fprintf(1,'%s %03d %s\n','CTD',stnlocal,'start'); end
-    fprintf(1,'%s%s%s %6.2f %5.0f %6.2f %6.2f\n','[',datestr(dvad.refdnum(kl),tform),']',dvad.refshipspd(kl),dvad.shiphead(kl),dvad.refuabs(kl),dvad.refvabs(kl));
-    if kl == knav4; fprintf(1,'%s %03d %s\n','CTD',stnlocal,'end'); end
-    if kl == knav5; fprintf(1,'%s\n','speed limit'); end
-end
+if 1
+    for kl = knav1:knav6
+        if kl == knav2; fprintf(1,'%s\n','speed limit'); end
+        if kl == knav3; fprintf(1,'%s %03d %s\n','CTD',stnlocal,'start'); end
+        fprintf(1,'%s%s%s %6.2f %5.0f %6.2f %6.2f\n','[',datestr(dvad.refdnum(kl),tform),']',dvad.refshipspd(kl),dvad.shiphead(kl),dvad.refuabs(kl),dvad.refvabs(kl));
+        if kl == knav4; fprintf(1,'%s %03d %s\n','CTD',stnlocal,'end'); end
+        if kl == knav5; fprintf(1,'%s\n','speed limit'); end
+    end
 end

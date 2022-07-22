@@ -87,8 +87,8 @@ if sum(md) && sum(mt)
     fn = ds_sal.Properties.VariableNames;
 end
 if sum(strcmp('runtime',fn))
-    [~,iit] = sort(ds_sal.runtime);
-    ds_sal = ds_sal(iit,:);
+    [~,ii] = sort(ds_sal.runtime);
+    ds_sal = ds_sal(ii,:);
 end
 
 %fill in information about cellt or Bath Temp and k15 from header
@@ -112,14 +112,51 @@ ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3],2);
 
 scriptname = mfilename; oopt = 'sal_flags'; get_cropt
 
-%check for offsets in cruise options, also set things like cellT, K15
+%check for offsets in cruise options
 scriptname = mfilename; oopt = 'sal_calc'; get_cropt
-if ~isfield(ds_sal,'cellt') || sum(isfinite(ds_sal.cellt))==0
+fn = ds_sal.Properties.VariableNames;
+if ~sum(strcmp('cellt',fn)) || sum(isfinite(ds_sal.cellt))==0
     ds_sal.cellt = repmat(cellT,size(ds_sal,1),1);
 end
-if isfield(ds_sal,'k15') && sum(~isnan(ds_sal.k15))==0; ds_sal.k15 = []; end
-if ~isfield(ds_sal,'k15') && exist('ssw_k15','var'); ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1); end    
-%***add plotting code
+fn = ds_sal.Properties.VariableNames;
+if sum(strcmp('k15',fn)) && sum(~isnan(ds_sal.k15))==0
+    ds_sal.k15 = [];
+end
+fn = ds_sal.Properties.VariableNames;
+if ~sum(strcmp('k15',fn)) && exist('ssw_k15','var')
+    ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1); 
+end    
+fn = ds_sal.Properties.VariableNames;
+
+%plot standards
+if sum(strcmp('k15',fn))
+    iis = find(ds_sal.sampnum>999000);
+    figure(10); clf
+    subplot(211)
+    st = ds_sal.k15*2;
+    if sum(strcmp('runtime',fn))
+        x = ds_sal.runtime - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
+        plot(x,ds_sal.runavg-st,'oc'); hold on
+        disp('cyan o: all sample averages recorded')
+        ist = 1;
+    else
+        x = ds_sal.sampnum;
+        ist = 0;
+    end
+    plot(x(iis),ds_sal.sample_1(iis)-st(iis),'k.',...
+    x(iis),ds_sal.sample_2(iis)-st(iis),'r.',...
+    x(iis),ds_sal.sample_3(iis)-st(iis),'m.',...
+    x(iis),ds_sal.runavg(iis)-st(iis),'sb');
+    if ist
+        s = ds_sal.sampnum(iis)-999000;
+        text(x(iis),zeros(1,length(iis)),num2str(s(:)));
+    end
+    ylim([-1 1]*4e-5); ylabel('autosal value - 2K15')
+    grid on
+    disp('dots (k,r,m): run1, run2, run3 of standards; blue squares: run average of standards');
+    cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
+    if strcmp(cont,'k'); keyboard; end
+end
 
 %apply offsets
 std_samp_range = [999000 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
@@ -144,8 +181,8 @@ else
             dt = ds_sal.runtime(iis)'-ds_sal.runtime(iistd);
             dt(dt>0) = NaN; [dt2,ii2] = max(dt); dt2 = -dt2;
             iiw = (min(dt1,dt2)>1/24 | max(dt1,dt2)>3/24); %***
-            if ~isempty(iiw)
-                warning('these samples are not near any standard; if a standard was not run\n on either side of each crate, sampnum_run may not be the best method:\n');
+            if sum(iiw)
+                warning('%s\n %s\n','these samples are an hour or more from any standard; if a standard was not run','on either side of each crate, sampnum_run may not be the best method:');
                 disp(ds_sal.sampnum(iis(iiw)))
             end
             [c,ia,ib] = intersect(sal_off(:,1),ds_sal.sampnum);
@@ -177,7 +214,7 @@ salunits.runtime = {'MATLAB_datenum'};
 salunits.sample_1 = {'2Rt'};
 salunits.sample_2 = {'2Rt'};
 salunits.sample_3 = {'2Rt'};
-salunits.runavg = {'2Rt'};
+mctd_evaluate_salunits.runavg = {'2Rt'};
 salunits.cellt = {'degC'};
 salunits.k15 = {'2Rt'};
 salunits.flag = {'woce_9.4'};
@@ -211,8 +248,14 @@ for no = 1:length(ia)
 end
 
 %write all to sal_ file
-hc.comment = ['salinity data from ; ' sal_adj_comment]; %***hc.comment
+hc.comment = [sal_adj_comment];
 mfsave(salfile, d, hc);
+
+%plot CTD samples
+figure(10); subplot(223)
+ii = find(d.sampnum>0 & d.sampnum<9e5);
+plot(d.sampnum(ii),d.salinity(ii),'o',d.sampnum(ii),d.salinity_adj(ii),'s')
+title('CTD'); xlabel('sampnum'); legend('sal', 'sal adj')
 
 %write some fields for CTD samples to sam_ file
 clear hnew
@@ -235,30 +278,35 @@ ds = rmfield(ds,'niskin_flag');
 %save
 mfsave(samfile, ds, hnew, '-merge', 'sampnum');
 
-    %get TSG samples, figure out event numbers
-    %either negative, dddhhmmss (where ddd is year-day starting at 1), or yyyymmddhhmmss
-    iiu = find(d.sampnum<0 | d.sampnum>=1e7);
-    if ~isempty(iiu)
-        
-        fnd = fieldnames(d);
-        for no = 1:length(fnd)
-            dsu.(fnd{no}) = d.(fnd{no})(iiu,:);
-        end
-        
-        scriptname = mfilename; oopt = 'tsg_sampnum'; get_cropt
-        [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
-        dsu.time = NaN+dsu.sampnum;
-        dsu.time(ia) = 86400*(tsg.dnum(ib)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
-        if sum(isnan(dsu.time))>0
-            warning('missing times for tsg samples:')
-            disp(dsu.sampnum(isnan(dsu.time)))
-            keyboard
-        end
-        hu = hc;
-        hu.fldnam = [hu.fldnam 'time'];
-        hu.fldunt = [hu.fldunt 'seconds'];
-        hu.comment = hc.comment;
-        hu.dataname = ['tsgsal_' mcruise '_all'];
-        mfsave(tsgfile, dsu, hu);
-    
-    end 
+%get TSG samples, figure out event numbers
+%either negative, dddhhmmss (where ddd is year-day starting at 1), or yyyymmddhhmmss
+iiu = find(d.sampnum<0 | d.sampnum>=1e7);
+if ~isempty(iiu)
+
+    fnd = fieldnames(d);
+    for no = 1:length(fnd)
+        dsu.(fnd{no}) = d.(fnd{no})(iiu,:);
+    end
+
+    scriptname = mfilename; oopt = 'tsg_sampnum'; get_cropt
+    [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
+    dsu.time = NaN+dsu.sampnum;
+    dsu.time(ia) = 86400*(tsg.dnum(ib)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
+    if sum(isnan(dsu.time))>0
+        warning('missing times for tsg samples:')
+        disp(dsu.sampnum(isnan(dsu.time)))
+        keyboard
+    end
+    hu = hc;
+    hu.fldnam = [hu.fldnam 'time'];
+    hu.fldunt = [hu.fldunt 'seconds'];
+    hu.comment = hc.comment;
+    hu.dataname = ['tsgsal_' mcruise '_all'];
+    mfsave(tsgfile, dsu, hu);
+
+    figure(10); subplot(224)
+    x = dsu.time/86400-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)+1;
+    plot(x,dsu.salinity,'o',x,dsu.salinity_adj,'s')
+    title('TSG'); xlabel('yearday'); 
+
+end

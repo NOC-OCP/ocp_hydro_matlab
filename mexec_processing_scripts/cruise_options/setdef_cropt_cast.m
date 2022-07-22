@@ -327,12 +327,4 @@ switch scriptname
         %%%%%%%%%% end best_station_depths %%%%%%%%%%
         
         
-    case 'mout_1hzasc'
-        switch oopt
-            case '1hz_fname'
-                crhelp_str = {'name, fnot, for text file of 1Hz CTD data (e.g. for IX LADCP processing'};
-                root_out = mgetdir('M_LADCP');
-                fnot = fullfile(root_out, 'CTD', ['ctd.' stn_string '.02.asc']);
-        end
-        
 end

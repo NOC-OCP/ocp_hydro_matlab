@@ -4,6 +4,7 @@ function mfsave(filename, d, varargin)
 % mfsave(filename, d, h, '-merge', indepvar);
 % mfsave(filename, d, '-addvars');
 % mfsave(filename, d, '-merge', indepvar);
+% mfsave(filename, d, h, '-merge', indepvar, comment_update);
 %
 % save data to new or existing mstar file filename
 %
@@ -33,7 +34,13 @@ function mfsave(filename, d, varargin)
 %         Other variables (from both file and d) will be padded to the same
 %         size as the new indepvar, with one exception: if indepvar is
 %         sampnum, statnum and position will be reconstructed from it***
-%         Note that unlike in mmerge, there is no interpolation. 
+%         Note that unlike in mmerge, there is no interpolation.
+%     ***TBI:***comment_update (default 0) 1 to check existing file comment string
+%         for lines similar to the new comment lines to be added, and remove
+%         them (so that, for example, if yesterday you merged into the sam
+%         file all the sal data available, and today you merged in all of
+%         it again, the comment string would only say 'merged from
+%         sal_cruise_01.nc once)
 % required argument if '-merge' or '-addvars' not specified, or if file
 %         filename does not exist, else optional:
 %     h, structure with information for mstar file header, such as some
@@ -134,8 +141,8 @@ else
     if isfield(h, 'dataname')
         h0.dataname = h.dataname;
     else
-        ii = strfind(filename,'/'); if isempty(ii); ii = strfind(filename,'\'); if isempty(ii); ii = 0; end; end
-        h0.dataname = filename(ii(end)+1:end);
+        [~,fn,~] = fileparts(filename);
+        h0.dataname = fn;
     end
     h0.fldnam = []; h0.fldunt = [];
 end
@@ -268,7 +275,7 @@ fn = setdiff(fieldnames(h),{'comment' 'fldnam' 'fldunt' 'version' 'mstar_site'})
 for fno = 1:length(fn)
     h0.(fn{fno}) = h.(fn{fno});
 end
-if ~isempty(fn) | writenew
+if ~isempty(fn) || writenew
     m_write_header(ncfile,h0);
 end
 

@@ -10,6 +10,10 @@ if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,s
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
 scriptname = mfilename; oopt = 'blinfile'; get_cropt
+if ~exist(blinfile,'file')
+    fprintf(2,'.bl file not found; try sync again and enter to continue, or Ctrl-C to quit \n (you can still run mctd_checkplots at this point)');
+    pause
+end
 m = ['infile = ' blinfile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 dataname = ['fir_' mcruise '_' stn_string];
 otfile = fullfile(root_ctd, dataname);
@@ -39,6 +43,11 @@ scan = NaN+niskc;
 scan(ib) = scn(ia);
 niskin_flag = 9+zeros(nnisk,1); %default flag 9 means not closed
 niskin_flag(ib) = 2; %if bottle closed, defaults to 2
+m = isfinite(scan);
+scan = scan(m); 
+position = position(m); 
+niskin = niskin(m); 
+niskin_flag = niskin_flag(m);
 scriptname = mfilename; oopt = 'botflags'; get_cropt %change flags here
 
 %--------------------------------

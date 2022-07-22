@@ -42,7 +42,7 @@ if exist(cleanfile, 'file') && exist(infile0, 'file')
         'if mctd_01 has just been rerun with redoctm set, remove _raw_cleaned file'
         'now to start from _raw_noctm instead.'
         'return to continue'};
-    fprintf(MEXEC_A.Mfider,'%s\n',m{:})
+    fprintf(MEXEC_A.Mfider,'%s\n',m{:});
     pause
 end
 castopts.redoctm = 0;
@@ -93,7 +93,7 @@ end
 %%%%% now do corrections to produce _24hz file %%%%%
 
 copyfile(m_add_nc(rawfile_use), m_add_nc(otfile24));
-system(['chmod 644 ' m_add_nc(otfile24)]) %in case this was _raw (not _raw_cleaned, which is not write-protected)
+system(['chmod 644 ' m_add_nc(otfile24)]); %in case this was _raw (not _raw_cleaned, which is not write-protected)
 
 %which corrections to do?
 scriptname = mfilename; oopt = 'raw_corrs'; get_cropt

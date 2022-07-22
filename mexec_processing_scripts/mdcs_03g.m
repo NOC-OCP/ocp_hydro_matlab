@@ -131,12 +131,15 @@ while 1
             hold on; grid on
             ha(5) = gca;
             ylabel('oxygen')
+
+            figure(102)
             
         case 'z'
             xl = get(gca,'xlim');
             for kp = 1:5
                 set(ha(kp),'xlim',xl);
             end
+            figure(102)
             
         case 'x'
             xl = []; 
@@ -145,6 +148,7 @@ while 1
             for kp = 1:5
                 set(ha(kp),'xlim',xl);
             end
+            figure(102)
             
         case 'ss'
             % select downcast start scan
@@ -219,6 +223,8 @@ while 1
             hold on ;grid on
             ha(5) = gca;
             ylabel('oxygen')
+
+            figure(102)
 
         case 'w'
             break

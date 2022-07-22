@@ -77,7 +77,7 @@ if isempty(which('m_common')) || isempty(which('get_cropt')) || ~isfield(MEXEC_G
     end
     MEXEC_G.mexec_version = mexecs_version;
     cd(cdir)
-    disp(['adding mexec source' mexecs_version ' to path'])
+    disp(['adding ocp_hydro_matlab source' mexecs_version ' to path'])
     clear mexecs_version s c cdir pdir
     % add paths at and below source
     addpath(genpath(MEXEC_G.mexec_source_root))

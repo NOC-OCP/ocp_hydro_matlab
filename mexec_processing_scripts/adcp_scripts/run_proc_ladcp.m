@@ -9,6 +9,10 @@ clear cfg
 scriptname = mfilename; oopt = 'is_uplooker'; get_cropt
 dopause = 0;
 
+if isempty(which('getinv'))
+    error('LADCP processing functions not on path; try running m_setup again')
+end
+
 %only cast nav and pressure time series as constraints (from mout_1hzasc)
 cfg.constraints = {'GPS'};
 
@@ -92,7 +96,7 @@ if ~ismember(stn, shortcasts)
 end
 
 %SADCP, if it's been processed and output to file for ladcp
-sfile = fullfile(mgetdir('M_VMADCP'), 'mproc', sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn));
+sfile = fullfile(mgetdir('M_LADCP'), 'SADCP', sprintf('os75nb_%s_%03d_forladcp.mat',mcruise,stn));
 if exist(sfile,'file')
     cfg.constraints = [cfg.constraints 'SADCP'];
     cfg.SADCP_inst = 'os75nb';

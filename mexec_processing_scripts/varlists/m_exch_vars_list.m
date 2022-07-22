@@ -109,7 +109,9 @@ elseif typ==2 % this is for comparing with bottle samples
         'BOTCHLA_FLAG_W', ' ', 'botchla_flag', '%d'
         'PAR', 'UMOL/M^2/SEC', 'upar_up', '%6.5f' %par_up is up-looking (downwelling)
         'CTDPH', ' ', 'uph', '%8.4f'
-        };
+        'CTDSIG0', 'KG/M^3', 'upden', '%8.2f'
+        'BOTSIG0', 'KG/M^3', 'pden', '%8.2f'
+};
         
 else
     

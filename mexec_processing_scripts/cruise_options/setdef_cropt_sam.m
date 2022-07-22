@@ -42,18 +42,18 @@ switch scriptname
             case 'sal_parse'
                 crhelp_str = {'place to change fieldnames, combine fields, etc. after '
                     'loading; also to specify datform (default: ''dd/mm/yyyy'') and timform'
-                    '(default: ''hh:mm:ss'') for converting date and time strings to datevec'};
+                    '(default: ''hh:mm:ss'') for converting date and time strings to datevec.'
+                    'also a place to add information like cellT (bath temperature) or k15'
+                    'if it is not a column in the file (or if it in the header, code to parse'
+                    'it from salhead).'};
                 datform = 'dd/mm/yyyy';
                 timform = 'HH:MM:SS';
-
             case 'sal_flags'
                 crhelp_str = {'Place to set flags on salinity bottles or readings.'};
             case 'sal_calc'
                 crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive, default []) for ranges'
                     'of sampnum, while sal_off_base (default ''sampnum_run'') to specify how to match them to samples.'
-                    'Optionally, set sal_adj_comment here to give information on how standards offsets were chosen.'
-                    'This is also the place to set cellT (bath temperature) if it is not a column in your input files'
-                    '(or include code to parse it from the file headers).'};
+                    'Optionally, set sal_adj_comment here to give information on how standards offsets were chosen.'};
                 sal_off = [];
                 sal_off_base = 'sampnum_run';
                 sal_adj_comment = '';

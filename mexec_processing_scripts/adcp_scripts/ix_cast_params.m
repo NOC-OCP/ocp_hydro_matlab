@@ -87,11 +87,12 @@ end
 f.res = fullfile(pdir, stnstr);
 f.checkpoints = fullfile('checkpoints', sprintf('%03d', stnlocal));
 if isfield(cfg, 'SADCP_inst')
-    f.sadcp	= fullfile('SADCP', [cfg.SADCP_inst '_' mcruise '_ctd_' stnstr '_forladcp.mat']);
+    f.sadcp	= fullfile(mgetdir('M_LADCP'), 'SADCP', [cfg.SADCP_inst '_' mcruise '_' stnstr '_forladcp.mat']);
 elseif sum(strcmp('SADCP',cfg.constraints))
-    f.sadcp	= fullfile('SADCP', ['os75nb_' mcruise '_ctd_' stnstr '_forladcp.mat']);
+    f.sadcp	= fullfile(mgetdir('M_LADCP'), '/SADCP', ['os75nb_' mcruise '_' stnstr '_forladcp.mat']);
 end
 
+%ctd and nav file
 scriptname = 'mout_1hzasc'; oopt = '1hz_fname'; get_cropt
 f.ctd = fnot;
 if exist(f.ctd,'file')
@@ -124,7 +125,11 @@ p.ladcp_station = stnlocal;
 p.name = sprintf('%s cast #%d (processing version %s)',p.cruise_id,p.ladcp_station,subdir);
 
 p.saveplot = [];
-p.saveplot_pdf	= [1:7 9:14];
+p.saveplot_pdf	= [1:7 10:14];
+if isfield(f,'sadcp'); p.saveplot_pdf = [p.saveplot_pdf 9]; end
+if strcmp(cfg.orient,'DL') || strcmp(cfg.orient,'UL')
+    p.saveplot_pdf = setdiff(p.saveplot_pdf,[8 10]);
+end
 p.orig = 0; % save original data or not
 
 scriptname = 'castpars'; oopt = 'shortcasts'; get_cropt

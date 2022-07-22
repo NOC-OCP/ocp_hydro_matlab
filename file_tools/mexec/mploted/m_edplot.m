@@ -216,7 +216,7 @@ end
 
 
 % figure out the start and stop data cycles
-if (length(startdc) > 1 | length(stopdc) > 1 ) & isnan(tvarnum)
+if (length(startdc) > 1 || length(stopdc) > 1 ) && isnan(tvarnum)
     m1 = 'Based on the startdc settings you appear to be trying ';
     m2 = 'to use time to select data cycles but no time variable was found, and ';
     m3 = 'you didn''t specify one using pdf.time_var';
@@ -235,11 +235,11 @@ end
 
 
 % now load precisely the data required to plot
-[r1 c1] = m_index_to_rowcol(x1,h,xnum);
-[r2 c2] = m_index_to_rowcol(x2,h,xnum);
+[r1, c1] = m_index_to_rowcol(x1,h,xnum);
+[r2, c2] = m_index_to_rowcol(x2,h,xnum);
 
 if h.dimcols(xnum) > 1
-    if r1 ~= 1 | r2 ~= h.dimrows(xnum)
+    if r1 ~= 1 || r2 ~= h.dimrows(xnum)
         m = 'The start and stop data cycles must be defined in such a way that';
         m2 = 'startdc is in row 1 of the x variable and stopdc is in the last row of the x variable';
         fprintf(MEXEC_A.Mfider,'%s\n',m,m2);
@@ -379,7 +379,8 @@ else
     %     largely absent, then the xlim found might not be wide enough to plot
     %     all vars. Now ensure all vars appear within xlim.
     plot(x,m_nansum(y,1));
-    h0 = gca;
+    set(gcf,'defaultaxescolor',[.9 .9 .9]);
+    h0 = gca; 
     xax = get(h0,'xlim');
     xt = get(h0,'xtick');
     nxt = length(xt)-1;

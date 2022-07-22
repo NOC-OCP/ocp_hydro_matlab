@@ -5,7 +5,7 @@ switch scriptname
             case 'nnisk'
                 nnisk = 12;
             case 'oxy_align'
-                if ismember(stnlocal,[2 3 5:8 12:13 17:19]) %add stations finished by dougal here
+                if ismember(stnlocal,[2 3 5:8 11:13 17:18 25:26 33]) %add stations where CTD was not turned off before pumps switched off here
                     oxy_end = 1;
                 end
         end
@@ -65,7 +65,11 @@ switch scriptname
                     case 17
                         niskin_flag(position==9) = 4; %misfire
                     case 23
-                        niskin_flag(position==9) = 4; %misfire                      
+                        niskin_flag(position==9) = 4; %misfire         
+                    case 28
+                        niskin_flag(position==12) = 9; %bottle fired but not attached 
+                    case 30
+                        niskin_flag(position==3) = 7; %possible leak but we might have opened the tap first
                     otherwise
                 end
         end
@@ -117,6 +121,14 @@ switch scriptname
                     '#Nutrients: Who - ***; Status - not yet analysed';...
                     '#Carbon: Who - ***; Status - not yet analysed';...
                     };
+            case 'woce_vars_exclude'
+                %use this space to calculate sigma0 (for sam file only)
+                if isfield(d,'upsal')
+                    d.upden = sw_pden(d.upsal,d.utemp,d.upress,0);
+                end
+                %if isfield(d,'botpsal')
+                %    d.pden = sw_pden(d.botpsal,d.utemp,d.upress,0);
+                %end
         end
 
                 %%%%%%%%%% mday_01_fcal %%%%%%%%%%
@@ -146,24 +158,35 @@ switch scriptname
             case 'sal_files'
                 salfiles = dir(fullfile(root_sal, ['JC238_*.csv']));
                 salfiles = {salfiles.name};
-            case 'sal_calc'
+            case 'sal_parse'
                 cellT = 24;
                 ssw_batch = 'P165';
                 ssw_k15 = 0.99986;
+            case 'sal_calc'
                 sal_off = [
                     1 1
-                    2 3.2
-                    3 3.1
-                    4 2.2
-                    5 0.4
-                    6 2.3
-                    7 3.3
-                    8 2];
+                    2 3
+                    3 3 %3 is a repeat from same bottle as 2; using value from 2
+                    4 2
+                    5 0
+                    6 2
+                    7 2 %7 is a repeat from same bottle as 6; using value from 6
+                    8 2
+                    9 -1
+                    10 2
+                    11 2 %11 is a repeat from same bottle as 10; using value from 10
+                    12 2
+                    13 -3
+                    14 1
+                    15 3
+                    16 0
+                    17 2
+                    18 1];
                 sal_off(:,1) = sal_off(:,1)+999000;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
-                sal_adj_comment = ['Adjustments to SSW batch P165 specified in opt_jc238.m'];
+                sal_adj_comment = ['Bottle salinities adjusted using SSW batch P165'];
         end
-        
+
     case 'moxy_01'
         switch oopt
             case 'oxy_files'
@@ -196,6 +219,7 @@ switch scriptname
             case 'fir_fill'
                 firmethod = 'medint';
                 firopts.int = [-1 120]; %average over 5 s to match .ros file used in BASproc
+                firopts.prefill = 48;
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%
         
@@ -217,20 +241,18 @@ switch scriptname
         end
         %%%%%%%%%% end populate_station_depths %%%%%%%%%%
         
-        %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
-    case 'msec_run_mgridp'
+        %%%%%%%%%% msec_grid %%%%%%%%%%
+    case 'msec_grid'
         switch oopt
-            case 'sections'
-	    sections = {'eel'};
-            case 'ctd_regridlist'
-                ctd_regridlist = [ctd_regridlist ' fluor ph'];
-            case 'sec_stns'
+            case 'sections_to_grid'
+	    sections = {'osnapeall'};
+            case 'sec_stns_grids'
                 switch section
                     case 'osnapeall'
-                        kstns = [2:23];
+                        kstns = [2:29];
                 end
-            case 'varuse'
-                varuselist.names = {'botoxy'};
+            case 'ctd_regridlist'
+                ctd_regridlist = [ctd_regridlist 'fluor' 'ph'];
         end
 
 end
