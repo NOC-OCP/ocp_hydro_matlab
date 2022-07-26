@@ -31,7 +31,11 @@ m_common
 % place to temporarily put list of tables
 
 csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
-sqltext = ['"\dt" >! ' csvname];
+if ismac
+    sqltext = ['"\dt" > ' csvname];
+else
+    sqltext = ['"\dt" >! ' csvname];
+end
 mr_try_psql(sqltext);
 
 fid = fopen(csvname,'r');

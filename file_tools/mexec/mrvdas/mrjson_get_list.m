@@ -14,7 +14,7 @@ system(['rsync -au --delete ' MEXEC_G.RVDAS.user '@' MEXEC_G.RVDAS.machine ':' M
 %list them to file
 if ~exist(listfile, 'file')
     system(['ls ' jsondir '/*.json > ' listfile]);
-    disp('edit list of .json files, press any key to continue')
+    fprintf(1,'edit list of .json files in\n %s,\n press any key to continue\n',listfile);
     pause
 else
     warning('using existing list of .json files')

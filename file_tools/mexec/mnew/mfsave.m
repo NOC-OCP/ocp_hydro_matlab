@@ -96,6 +96,7 @@ filename = m_add_nc(filename);
 writenew = 1; %default: overwrite if exists, or create new
 mergemode = 0; %default: (if file exists) add new variables, don't change existing variables
 nosort = 0; %default: if mergemode==1, sort indepvar for output
+unitsnew = 0;
 
 for argn = 1:length(varargin)
     if isstruct(varargin{argn})
@@ -225,7 +226,16 @@ else %overwrite existing variables and keep record of new ones in varsnew and un
             %sort out units
             if isfield(h, 'fldunt') && ~strcmp(h.fldunt{vno}, h0.fldunt{ii})
                 if mergemode
-                    error(['unit ' h.fldunt{vno} ' in new header does not match ' h0.fldunt{ii} ' in existing ' filename]);
+                    warning(['unit ' h.fldunt{vno} ' in new header does not match ' h0.fldunt{ii} ' in existing ' filename]);
+                    cont = input('overwrite (1) or keep old (0)? (or control-C to quit)\n');
+                    if cont==1
+                        h0.fldunt(ii) = h.fldunt(vno);
+                        unitsnew = 1;
+                    elseif cont==0
+                        h.fldunt(vno) = h0.fldunt(ii);
+                    else
+                        error('must answer 1 or 0')
+                    end
                 else
                     warning(['unit ' h.fldunt{vno} ' in new header overwriting ' h0.fldunt{ii} ' in existing ' filename]);
                     h0.fldunt(ii) = h.fldunt(vno);
@@ -285,6 +295,9 @@ if ~isempty(varsnew)
     % now check that variable units match those in h. Note that
     % m_write_header only writes the parts of h that are global attributes.
     % fldnam and fldunt are variable attributes.
+    m_write_units_from_header(ncfile,h0);
+end
+if unitsnew
     m_write_units_from_header(ncfile,h0);
 end
 

@@ -60,7 +60,6 @@ end
 clear filesbin
 
 %next calculate and average multibeam
-lastm = 0;
 [~,iim,~] = intersect(shortnames,{'em120' 'em122' 'multib'});
 if ~isempty(iim)
     filembin = fullfile(root_u, udirs{iim}, [shortnames{iim} '_' mcruise '_d' daystr '_edt.nc']);
@@ -87,7 +86,6 @@ if isempty(iim) || ~exist(filembin,'file')
                 shortnames = [shortnames; 'multib'];
                 streamnames = [streamnames; ['not_rvdas_but_calculated_from_' streamnames{iimt}]];
                 iim = length(udirs)-1;
-                lastm = 1;
             end
             udirs(iimt,:) = [];
             shortnames(iimt) = [];
@@ -153,14 +151,7 @@ if iss && ism
 
 end
 
+mf = strncmp('not_rvdas',streamnames,9);
+streamnames(mf) = [];
+shortnames(mf) = [];
 clear iss ism filembot filesbot iis iim
-
-%fix streamnames
-ii = find(strncmp('not_rvdas',streamnames,9)); 
-if ~isempty(ii)
-    streamnames(ii) = [];
-    shortnames(ii) = [];
-end
-if length(shortnames)~=length(streamnames)
-    keyboard
-end

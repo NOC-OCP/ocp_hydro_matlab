@@ -46,54 +46,57 @@ else
 end
 
 
-
 tablemap = {
 
-    'winch'        'winchlog_winch'
+    'winch'        'winchlog_winch'    
 %
-    'hdtgyro'      'sgyro_hehdt'
+    'hdtgyro'      'sgyro_hehdt'       
 %
-    'attpmv'       'posmv_pashr'
-    'hdtpmv'       'posmv_gphdt'
-    'pospmv'       'posmv_gpgga'
-    'vtgpmv'       'posmv_gpvtg'
+    'attpmv'       'posmv_pashr'       
+    'hdtpmv'       'posmv_gphdt'       
+%    'pospmv'       'posmv_gpgga'      
+    'pospmv'       'posmv_gpggk'       
+    'vtgpmv'       'posmv_gpvtg'       
 %
-%    'posfugro'     'fugro_gps_gpgga'
-%    'vtgfugro'     'fugro_gps_gpvtg'
-%    'dopfugro'     'fugro_gps_gngsa'
+%    'posfugro'     'fugro_gps_gpgga'  
+%    'vtgfugro'     'fugro_gps_gpvtg'  
+%    'dopfugro'     'fugro_gps_gngsa'  
 %
-%    'attphins'     'phins_att_pashr'
-%    'hdtphins'     'phins_att_hehdt'
-%    'posphins'     'phins_att_pixsegpsin0' % phins lat and lon
-%    'hssphins'     'phins_att_pixseheave0' % phins surge sway heave
-%    'prophins'     'phins_att_pixseatitud' % phins pitch and roll
-%    'prdphins'     'phins_att_prdid'
+%    'attphins'     'phins_att_pashr'   
+%    'hdtphins'     'phins_att_hehdt'   
+%    'posphins'     'phins_att_pixsegpsin0'   % phins lat and lon
+%    'hssphins'     'phins_att_pixseheave0'   % phins surge sway heave
+%    'prophins'     'phins_att_pixseatitud'   % phins pitch and roll
+%    'prdphins'     'phins_att_prdid'   
 %
-    'poscnav'      'cnav_gngga'
-    'vtgcnav'      'cnav_gnvtg'
+    'poscnav'      'cnav_gngga'   
+    'vtgcnav'      'cnav_gnvtg'   
      'dopcnav'      'cnav_gngsa'  % available on jc211
-%     'posdps'       'dps116_gps_gpgga' % available on jc211
+%     'posdps'       'dps116_gps_gpgga'    % available on jc211
    
-    'posranger'    'ranger2usbl_gpgga'
+    'posranger'    'ranger2usbl_gpgga'   
 %
-    'attsea'       'seapathatt_psxn23'
-    'hdtsea'       'seapathgps_inhdt'
-    'possea'       'seapathgps_ingga'
-    'vtgsea'       'seapathgps_invtg'
+    'attsea'       'seapathatt_psxn23'   
+    'hdtsea'       'seapathgps_inhdt'   
+    'possea'       'seapathgps_ingga'   
+    'vtgsea'       'seapathgps_invtg'   
 %     'dopsea'       'seapath_pos_ingsa'  % available on jc211
 %
-    'sbe38'        'sbe38dropkeel_sbe38'
-    'surfmet'      'surfmet_gpxsm'
-     'windsonic'    'windsonicnmea_iimwv'
-    'multib_t'     'em122_kidpt'  %     'em120'        'em120_depth_kidpt'    on jc211
-    'singleb'      'ea640_sddbs'  %     'ea600'        'em600_depth_sddbs'    on jc211
-    'singleb_t'    'ea640_sddpt'
-    'envtemp'      'envtemp_wimta'
-    'envhumid'     'envtemp_wimhu'
-    %'rex2wave'     'rex2_wave_pramr'
-    %'wamos'        'wamos_wave_pwam'
-    'tsg'          'sbe45_nanan'
-     'logchf'       'slogchernikeef_vmvbw'  % available on jc211
+    'sbe38'        'sbe38dropkeel_sbe38'   
+    'surfmet'      'surfmet_gpxsm'   
+    'windsonic'    'windsonicnmea_iimwv'   
+    'tsg'          'sbe45_nanan'   
+    %'rex2wave'     'rex2_wave_pramr'   
+    %'wamos'        'wamos_wave_pwam'   
+     
+    'multib_t'     'em122_kidpt'   
+    'singleb'      'ea640_sddbs'   
+    'singleb_t'    'ea640_sddpt'   
+
+    'envtemp'      'envtemp_wimta'   
+    'envhumid'     'envtemp_wimhu'   
+
+    %'logchf'       'slogchernikeef_vmvbw'  % available on jc211
     %'logskip'      'ships_skipperlog_vdvbw'
     %'gravity'      'u12_at1m_uw'
     %'mag'          'seaspy_mag_inmag'

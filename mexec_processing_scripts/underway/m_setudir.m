@@ -34,7 +34,9 @@ switch(MEXEC_G.Mshipdatasystem)
         as = msgetstreams; %list of all streams found
         f = 'msnames';
     case 'rvdas'
-        matlist = mrnames('q'); am = matlist(:,2); %mrnames list
+        d = mrdefine; 
+        matlist = d.tablemap(ismember(d.tablemap(:,2),d.mrtables_list),:);
+        am = matlist(:,2); %mrnames list
         as = fieldnames(mrgettables); %list of tables found in database
         f = 'mrnames';
 end

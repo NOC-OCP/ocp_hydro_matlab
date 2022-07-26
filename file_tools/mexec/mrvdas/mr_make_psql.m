@@ -1,5 +1,5 @@
-function [psql_string,csvname,sqlunits]= mr_make_psql(varargin)
-% function [psql_string,csvname,sqlunits]= mr_make_psql(table,dv1,dv2,varlist)
+function [sqltext,csvname,sqlunits]= mr_make_psql(varargin)
+% function [sqltext,csvname,sqlunits]= mr_make_psql(table,dv1,dv2,varlist)
 % 
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -38,7 +38,7 @@ function [psql_string,csvname,sqlunits]= mr_make_psql(varargin)
 %
 % Output:
 %
-% psql_string: psql string to be executed
+% sqltext: command for the psql string to be executed
 %
 % csvname: The full pathname of a csv file that will be used for output
 %   from rvdas and input to matlab load.
@@ -155,6 +155,5 @@ end
 % where time between '2021-01-25' and '2021-01-27'
 csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 sqltext = ['"\copy (select ' sqlvars ' from ' sqlname ' where time between ''' dv1str ''' and ''' dv2str ''' order by time asc) to ''' csvname ''' csv header"'];
-[~,psql_string] = mr_try_psql(sqltext);
 
 return

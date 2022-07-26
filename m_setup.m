@@ -30,6 +30,13 @@ if ismember(MEXEC_G.MSCRIPT_CRUISE_STRING, {'jc238'})
 else
     MEXEC_G.ix_ladcp = 1;
 end
+if ismac
+    MEXEC_G.RVDAS.psql_path = '/usr/local/bin/';
+else
+    MEXEC_G.RVDAS.psql_path = '/usr/bin/';
+    %matlab on linux seems to find psql fine so you could set this to ''
+    %(empty)
+end
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 

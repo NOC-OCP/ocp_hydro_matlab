@@ -88,37 +88,16 @@ tablemap = def.tablemap;
 ktable = strcmp(table,tablemap(:,2));
 mtable = tablemap{ktable,1}; % mtable is the mexec tablename
 
+%get command
+[sqlcom, fnin, units] = mr_make_psql(table,dv1,dv2,varstring); % it should be fine if varstring is empty
 
-[sqlcom, fncsv, units] = mr_make_psql(table,dv1,dv2,varstring); % it should be fine if varstring is empty
-
-fnin = fncsv;
-% fncom = [fncsv(1:end-4) '_com.txt'];
-% fidcom = fopen(fncom,'w');
-% fprintf(fidcom,'%s\n','#! /bin/csh -f');
-% fprintf(fidcom,'%s\n','unsetenv LD_LIBRARY_PATH');
-% fprintf(fidcom,'%s\n',sqlcom);
-% fclose(fidcom);
-% system(['chmod 755 ' fncom]);
-% 
-% [stat, res] = system(fncom);
-
-% delete(fncom);
-
-try
-    [stat, ~] = system(sqlcom);
-    if stat~=0
-        error('LD_LIBRARY_PATH?')
-    end
-catch
-    [~, ~] = system(['unsetenv LD_LIBRARY_PATH; ' sqlcom]);
-end
+%now run
+mr_try_psql(sqlcom);
 
 clear ds dd 
 ds = dataset('file',fnin,'delimiter',',');
 
-names = ds.Properties.VarNames; 
-
-names = names(:);
+names = ds.Properties.VarNames(:); 
 
 % now fix variable names in the dataset, so variables have the correct names
 % when moved to a structure.

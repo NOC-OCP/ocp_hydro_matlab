@@ -73,7 +73,7 @@ end
 % sort out the table name
 table = mrresolve_table(table); % table is now an RVDAS table name for sure.
 tablemap = mrnames('q');
-ktable = find(strcmp(table,tablemap(:,2)));
+ktable = strcmp(table,tablemap(:,2));
 mtable = tablemap{ktable,1}; % mtable is the mexec tablename
 
 
@@ -85,7 +85,7 @@ end
 
 d = mrload(table,dn-5*60/86400,dn+5*60/86400,qflag); % load 30 minutes either side
 
-if ~isfield(d,'latitude') | ~isfield(d,'longitude');
+if ~isfield(d,'latitude') || ~isfield(d,'longitude')
     if isempty(qflag)
     fprintf(MEXEC_A.Mfider,'%s %s\n','latitude or longitude not found in table',mtable);
     end
@@ -94,7 +94,7 @@ if ~isfield(d,'latitude') | ~isfield(d,'longitude');
     d.longitude = [];
 end
 
-if length(d.latitude) == 0
+if isempty(d.latitude)
     lat = nan;
     lon = nan;
 else

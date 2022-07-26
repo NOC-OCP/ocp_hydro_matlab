@@ -57,7 +57,7 @@ switch MEXEC_G.Mshipdatasystem
         
         mrrvdas2mstar(table,dn1,dn2,otfile2,dataname,'q');
         % mrrvdas2mstar will quit without writing a file if no data found.
-        
+
         if ~exist(m_add_nc(otfile2),'file')
             % mrrvdas2mstar didn't make an output file, probably because no data cycles
             % found

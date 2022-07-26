@@ -14,9 +14,9 @@ function names_units = mrjson_show(varargin)
 %
 % Examples
 %
-%   names_units = mrshow_json('posmv_gyro-jc')  % start a new names_units structure
-%   names_units = mrshow_json('posmv_pos-jc',names_units) % add to the existing structure
-%   names_units = mrshow_json(js, names_units) %pass structure as in
+%   names_units = mrjson_show('posmv_gyro-jc')  % start a new names_units structure
+%   names_units = mrjson_show('posmv_pos-jc',names_units) % add to the existing structure
+%   names_units = mrjson_show(js, names_units) %pass structure as in
 %       mrshow_json_all.m
 %
 % Input:
@@ -32,8 +32,11 @@ function names_units = mrjson_show(varargin)
 % 
 % Output:
 % 
-% to outfile if specified, else to screen: The content of the js structure
-% loaded from the sentences in a json file
+% to outfile if specified, else to screen: The relevant content of the js
+%   structure loaded from the sentences in a json file;
+%   variables set (by cruise options) to be skipped (those matching the
+%   var_skip, pat_skip, or sentence_var_skip lists) will be omitted from
+%   names_units and commented out in outfile
 %
 % names_units : is a structure. Each field describes a table in rvdas.
 %   The function writes, for example
@@ -45,8 +48,9 @@ function names_units = mrjson_show(varargin)
 %     names_units.posmv_gyro_pashr
 
 % names_units has fieldnames that are rvdas table names
-%   Each table name has fieldnames that are the variable names for that table
-%   The contents of each variable name is a string equal to the variable units.
+%   Each table name has fieldnames that are the variable names for that
+%   table; each variable name has two fields, units and long_name, whose
+%   contents are the variable units and long name (js.sentences.name)
 
 if isstruct(varargin{1})
     js = varargin{1};
@@ -55,23 +59,28 @@ elseif ischar(varargin{1}) && exist(varargin{1},'file')
     [~,fname,~] = fileparts(varargin{1});
     js.filename = fname; %fnroot
 end
-if nargin > 1
-    d = varargin{2};
+for no = 2:nargin
+    if isstruct(varargin{no})
+        d = varargin{no};
+    elseif ischar(varargin{no})
+        outfile = varargin{no};
+    end
 end
-if nargin > 2
-    outfile = varargin{3};
+
+if exist('outfile','var')
     fid = fopen(outfile,'a');
 else
     fid = 1;
 end
 
-% % n_sentences = js.sentencesNo; % The seapath_pos json file 
-% has sentencesNo set to 9, but it actually has 10 sentences.
+scriptname = 'mrvdas_ingest'; oopt = 'rvdas_skip'; get_cropt
+
 n_sentences = length(js.sentences);
+id = js.id; id = lower(id);
 fprintf(fid,'\n\n%s%s %2d%s\n','%',js.filename,n_sentences,'  sentences');
 
 for ks = 1:n_sentences
-    id = js.id; id = lower(id);
+
     s = js.sentences(ks);
     jsonname = s.name;
     talkId = s.talkId;
@@ -79,10 +88,16 @@ for ks = 1:n_sentences
     noflds = length(s.field); %s.fieldNo;
     msg = lower([talkId messageId]);
     sqlname = [id '_' msg];
-    fprintf(fid,'\n%s%s%s%s\n','%','"',jsonname,'"'); % make this output a comment for cut and paste
+    %skip this sentence?
+    if sum(strcmpi(msg,msg_skip)) || sum(strcmpi(sqlname,sentence_skip))
+        continue
+    end
+
     str = ['rtables.' sqlname ' = {  % from ' js.filename '.json'];
+    fprintf(fid,'\n%s%s%s%s\n','%','"',jsonname,'"'); % make this output a comment for cut and paste
     fprintf(fid,'%s\n',str);
-    fprintf(fid,'%s %2d %s\n',['''' sqlname ''''],noflds,' % fields');
+    fprintf(fid,'%s %2d %s %s\n',['''' sqlname ''''],noflds,['[]'],' % fields');
+
     for kf = 1:noflds
         sf = s.field(kf);
         if iscell(sf)
@@ -90,15 +105,33 @@ for ks = 1:n_sentences
         else
             f = s.field(kf);
         end
-        fname = f.fieldNumber; %[f.fieldNumber '_' f.name];
+        fname = f.fieldNumber;
+        longname = replace(f.name, ' ', '_');
         if isfield(f,'units'); funit = f.units; else; funit = f.unit; end
-        fprintf(fid,'%30s %30s\n',['''' fname ''''],['''' funit '''']);
-        try
-            d.(sqlname).(fname) = funit; % will fail if sqlname or fname are invalid. Some gravity meter json files define names that are invalid matab names, eg with spaces and starting with a number
-        catch
-            sqlname = matlab.lang.makeValidName(sqlname);
-            fname = matlab.lang.makeValidName(fname); 
-            d.(sqlname).(fname) = funit;
+        
+        skipit = false;
+        if ~isempty(var_skip)
+            skipit = skipit || sum(strcmpi(fname,var_skip));
+        end
+        if ~isempty(sentence_var_skip)
+            skipit = skipit || sum(strcmpi([sqlname '_' fname],sentence_var_skip));
+        end
+        if ~isempty(pat_skip)
+            skipit = skipit || sum(contains(fname,pat_skip,'IgnoreCase',true));
+        end
+        if skipit
+            fprintf(fid,'%s %28s %30s %80s\n','%',['''' fname ''''],['''' funit ''''],['''' longname '''']);
+        else
+            fprintf(fid,'%30s %30s %80s\n',['''' fname ''''],['''' funit ''''],['''' longname '''']);
+            try
+                d.(sqlname).(fname).units = funit; % will fail if sqlname or fname are invalid. Some gravity meter json files define names that are invalid matab names, eg with spaces and starting with a number
+                d.(sqlname).(fname).long_name = longname;
+            catch
+                sqlname = matlab.lang.makeValidName(sqlname);
+                fname = matlab.lang.makeValidName(fname);
+                d.(sqlname).(fname).unit = funit;
+                d.(sqlname).(fname).long_name = longname;
+            end
         end
     end
     fprintf(fid,'%s\n','};');

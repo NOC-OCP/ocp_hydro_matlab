@@ -1,5 +1,5 @@
-function [rtables,rtables_list] = mrrename_tables(tables,varargin)
-% function [renametables,renametables_list] = mrrename_tables(tables,qflag)
+function [rtables,rawlist] = mrrename_tables(tables,varargin)
+% function [renametables,rawlist] = mrrename_tables(tables,qflag)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -8,27 +8,26 @@ function [rtables,rtables_list] = mrrename_tables(tables,varargin)
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
-% A list of rvdas variable names and units we wish to rename when read into
-%   mexec.  The structures are cut and pasted and replacement names added from the script
-%   'mrtables_from_json.m'
+% A list and/or set of find-replace for rvdas variable names and units we
+% wish to rename when read into mexec, as well as those we wish to ignore
+% (not read in). 
 %
 % The list in this script could be moved elsewhere, but is unlikely to
 %   change much from crusie to cruise. It may be added to from time to
 %   time.
 %
-% At the end of the function, ensure that all new variable names are
-%   lowerecase, regardless of what has been entered row by row.
+% At the end of the function, ensures that all new variable names are
+%   lowercase, regardless of what has been entered row by row.
 %
 % Examples
 %
 %   [renametables,renametables_list] = mrrename_tables;
-%
 %   [renametables,renametables_list] = mrrename_tables('q');
 %
 % Input:
-% 
-%   If qflag has the value 'q', listign to the screen is suppressed.
-%   Default ''
+%   tables, the output of mrtables_from_json
+%   [optional] qflag: if qflag has the value 'q', listing to screen is
+%     supressed
 %
 % Output:
 %
@@ -58,56 +57,93 @@ else
     qflag = ''; % qflag = '' if not present as an argument
 end
 
-
 fn = fieldnames(tables);
 for no = 1:length(fn)
-
-    a = tables.(fn{no});
-    a = [a a];
-
-    m = strcmp('utcTime',a(:,1));
-    a(m,3) = {'utctime'};
-    a(m,4) = {'hhmmss_fff'};
-    m = strcmp('latitude',a(:,1)) & strcmp('degrees and decimal minutes',a(:,2));
-    a(m,3) = {'latdegm'};
-    a(m,4) = {'dddmm'};
-    m = strcmp('longitude',a(:,1)) & strcmp('degrees and decimal minutes',a(:,2));
-    a(m,3) = {'londegm'};
-    a(m,4) = {'dddmm'};
-    m = strcmp('waterDepthMeterTransducer',a(:,1)) | strcmp('waterDepthMeterFromTransducer',a(:,1));
-    a(m,3) = {'waterdepth_below_transducer'};
-    a(m,4) = {'metres'};
-    m = strcmp('waterDepthMeter',a(:,1)) | strcmp('depthMeter',a(:,1)); %***check for two instruments which is below transducer and which below surface
-    a(m,3) = {'waterdepth_below_transducer'};
-    a(m,4) = {'metres'};
-    m = strcmp('waterDepthMeterFromSurface',a(:,1));
-    a(m,3) = {'waterdepth'};
-    a(m,4) = {'metres'};
-    m = strcmp('degressCelsius',a(:,2)) | strcmp('degreesCelsius',a(:,2)) | strcmp('DegreesCelsius',a(:,2)) | strcmp('degC',a(:,2));
-    a(m,4) = {'degreesC'};
-    m = strcmp('courseOverGround',a(:,1)) | strcmp('courseTrue',a(1,:));
-    a(m,3) = {'course'};
-    m = strcmp('headingTrue',a(:,2));
-    a(m,3) = {'heading'};
-    m = strcmp('remoteWaterTemperature',a(:,1)) | strcmp('tempr',a(:,1));
-    a(m,3) = {'temp_remote'};
-    m = strcmp('housingWaterTemperature',a(:,1));
-    a(m,3) = {'temp_housing'};
-    m = strcmp('longitudalWaterSpeed',a(:,1)) | strcmp('speedfa',a(:,1));
-    a(m,3) = {'speed_forward'};
-    m = strcmp('transverseWaterSpeed',a(:,1)) | strcmp('speedps',a(:,1));
-    a(m,3) = {'speed_stbd'};
+        
+    a = tables.(fn{no});    
+    
+    %add columns for new-name and new-units
+    n = size(a,2);
+    a = [a a(:,1:2)];
+    
+    m = strcmpi('utctime',a(:,1));
+    a(m,n+1) = {'utctime'};
+    a(m,n+2) = {'hhmmss_fff'};
+    m = strcmpi('latitude',a(:,1)) & strcmpi('degrees and decimal minutes',a(:,2));
+    a(m,n+1) = {'latdegm'};
+    a(m,n+2) = {'dddmm'};
+    m = strcmpi('longitude',a(:,1)) & strcmpi('degrees and decimal minutes',a(:,2));
+    a(m,n+1) = {'londegm'};
+    a(m,n+2) = {'dddmm'};
+    m = strcmpi('waterDepthMeterTransducer',a(:,1)) | strcmpi('waterDepthMeterFromTransducer',a(:,1));
+    a(m,n+1) = {'waterdepth_below_transducer'};
+    a(m,n+2) = {'metres'};
+    m = strcmpi('waterDepthMeter',a(:,1)) | strcmpi('depthMeter',a(:,1)); %***check for two instruments which is below transducer and which below surface
+    a(m,n+1) = {'waterdepth_below_transducer'};
+    a(m,n+2) = {'metres'};
+    m = strcmpi('waterDepthMeterFromSurface',a(:,1));
+    a(m,n+1) = {'waterdepth'};
+    a(m,n+2) = {'metres'};
+    m = strcmpi('degressCelsius',a(:,2)) | strcmpi('degreesCelsius',a(:,2)) | strcmpi('degC',a(:,2));
+    a(m,n+2) = {'degreesC'};
+    m = strcmpi('courseOverGround',a(:,1)) | strcmpi('courseTrue',a(1,:));
+    a(m,n+1) = {'course'};
+    m = strcmpi('headingTrue',a(:,2));
+    a(m,n+1) = {'heading'};
+    m = strcmpi('remoteWaterTemperature',a(:,1)) | strcmpi('tempr',a(:,1));
+    a(m,n+1) = {'temp_remote'};
+    m = strcmpi('housingWaterTemperature',a(:,1));
+    a(m,n+1) = {'temp_housing'};
+    m = strcmpi('longitudalWaterSpeed',a(:,1)) | strcmpi('speedfa',a(:,1));
+    a(m,n+1) = {'speed_forward'};
+    m = strcmpi('transverseWaterSpeed',a(:,1)) | strcmpi('speedps',a(:,1));
+    a(m,n+1) = {'speed_stbd'};
 
     %cut the lines that are the same
-    s = strcmp(a(:,1),a(:,3)) & strcmp(a(:,2),a(:,4));
+    s = strcmp(a(:,1),a(:,n+1)) & strcmp(a(:,2),a(:,n+2));
     a(s,:) = [];
 
+    %temporary!***
+    a = a(:,[1 2 end-1:end]); %discard long_name column
+    
     %reassign
     if ~isempty(a)
         rtables.(fn{no}) = a;
     end
 
 end
-%lower case units***
+%***lower case units?
 
-rtables_list = fieldnames(rtables);
+rawlist = {
+    %     'ships_gyro_hehdt'
+    %     'nmf_winch_winch'
+    %     'posmv_gyro_gphdt'
+    %     'posmv_att_pashr'
+    %     'posmv_pos_gpgga'
+    %     'posmv_pos_gpvtg'
+    'surfmet_gpxsm'
+    %'nmf_surfmet_gpxsm'
+    %'windsonic_nmea_iimwv'
+    %     'cnav_gps_gngga'
+    %     'cnav_gps_gnvtg'
+    %     'cnav_gps_gngsa'
+    %     'dps116_gps_gpgga'
+    %     'em120_depth_kidpt'
+    'em640_sddbs'
+    %'em122_kidpt'
+    %'em600_depth_sddbs'
+    %     'env_temp_wimta'
+    %     'env_temp_wimhu'
+    %     'ranger2_usbl_gpgga'
+    'sbe45_nanan'
+    %'sbe45_tsg_nanan'
+    %     'seapath_pos_ingga'
+    %     'seapath_pos_ingsa'
+    %     'seapath_pos_invtg'
+    %     'seapath_att_psxn23'
+    %'ships_chernikeef_vmvbw'
+    %'ships_skipperlog_vdvbw'
+    'slog_chernikeef_vmvbw'
+    %     'u12_at1m_uw'
+    %     'seaspy_mag_inmag'
+    };

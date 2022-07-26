@@ -3,8 +3,8 @@ function varargout = mr_try_psql(sqltext)
 
 m_common
 
-sqlroot = ['psql -h ' MEXEC_G.RVDAS.machine ' -U ' MEXEC_G.RVDAS.user ' -d ' MEXEC_G.RVDAS.database];
-
+sqlroot = [MEXEC_G.RVDAS.psql_path 'psql -h ' MEXEC_G.RVDAS.machine ' -U ' MEXEC_G.RVDAS.user ' -d ' MEXEC_G.RVDAS.database];
+ 
 psql_string = [sqlroot ' -c ' sqltext ];  
 
 try
@@ -15,8 +15,9 @@ try
 catch
     [stat, result] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
 end
+
 if stat~=0
-    error('failed executing: %s', psql_string);
+    error('failed at executing\n %s\n does your ~/.pgpass contain the correct machine:port:database:user:password?', psql_string);
 end
 
 if nargout>0

@@ -39,6 +39,66 @@ switch scriptname
         end
         %%%%%%%%%% end ship (not a script) %%%%%%%%%%
         
+                %%%%%%%%%% mrvdas_ingest (not a script) %%%%%%%%%%
+    case 'mrvdas_ingest'
+        switch oopt
+            case 'rvdas_skip'
+                crhelp_str = {'Determine which tables and variables are listed in mrtables_from_json and'
+                    'therefore read into mexec processing, by adding to or modifying:'
+                    'table_skip: list of tables (id in the json files; also json file prefixes) to not load at all'
+                    '  (e.g. air2sea_gravity)'
+                    'msg_skip: list of messages (name or [talkId messageId]) to never read in from any '
+                    '  instrument (e.g. GPDTM)'
+                    'sentence_skip: list of instrument-message combinations ([id talkId messageId])'
+                    '  not to read in (often because they duplicate other messages from the same '
+                    '  instrument, e.g. phins_att_pixsepositi),'
+                    'pat_skip: list of patterns, variables containing any of which will never be read in'
+                    '  (e.g. unitsOf),'
+                    'var_skip: list of variables to never be read in from any table/message'
+                    '  (e.g. speedknots),'
+                    'sentence_var_skip: list of instrument_message_variable combinations to not read in'
+                    '  (e.g. sbe45_nanan_soundVelocity).'
+                    'All are case-insensitive.'
+                    'Defaults in msg_skip include datum, time zone, and satellite status,'
+                    'defaults in json_skip include gravimeters, USBL, and (depending on the ship)'
+                    'skipperlog and/or chernikeef E/M log,'
+                    'defaults in sentence_skip are ship-dependent and include many phins messages on DY';
+                    'defaults in pat_skip and var_skip include units, flags, and satellite-status related fields,'
+                    'and there are no defaults for sentence_var_skip.'};
+                msg_skip = {'glgsv', ...
+                    'gndtm', 'gngsa', 'gngst', 'gnzda', ...
+                    'gpdtm', 'gpgga', 'gpgsa', 'gpgst', 'gpgsv', ...
+                    'gprmc', 'gpzda', ...
+                    'heths', 'inzda', 'ppnsd'};
+                pat_skip = {'unitsOf', 'unitOf', 'Unit', 'des', 'geoid', 'dgnss', ...
+                    'magvar', 'status', 'vbw', 'waterdepthfeet', 'waterdepthfathom', ...
+                    'magnetic' 'flag' ...
+                    };
+                var_skip = {'speedknots' 'speedkmph' 'winchDatum' 'undefined' 'celsiusFlag' ...
+                    'geoid' 'diffcAge' 'UTCDate' 'maxrange' 'trueheading' ...
+                    'truecourse' 'positioningmode'};
+                sentence_var_skip = {};
+                switch MEXEC_G.Mship
+                    case 'discovery'
+                        table_skip = {'10_at1m_uw' 'at1m_u12_uw' ...
+                            'air2sea_gravity' 'air2sea_s84' ...
+                            'posmv_att' 'posmv_gyro' 'seaspy'};
+                        sentence_skip = {'phins_att_pixsepositi', 'phins_att_pixsespeed', 'phins_att_pixseutmwgs',...
+                            'phins_att_pixsetime', 'phins_att_pixsestdhrp', 'phins_att_pixsestdpos',...
+                            'phins_att_pixsestdspd', 'phins_att_pixseutcin', 'phins_att_pixsegp2in', ...
+                            'phins_att_pixsealgsts', 'phins_att_pixsestatus', 'phins_att_pixseht0sts'};
+                    case 'cook'
+                        table_skip = {'airsea2', 'gravat1m', 'ranger2usbl', 'seaspy2', 'slogchernikeef', 'rex2'};
+                        sentence_skip = {'cnav_gngll', 'cnav_gnrmc', 'posmv_prdid', ...
+                            'seapathatt_ingga', 'seapathatt_psxn20', 'seapathgps_inrmc', 'seapathgps_ingll'...
+                            'sgyro_hchdm'};
+                        msg_skip = [msg_skip, ...
+                            'rex2_3rr0r'];
+                        var_skip = [var_skip 'ggaqual', 'numsat', 'hdop']; %not on dy146
+                    case 'sda'
+                end
+        end
+
         %%%%%%%%%% bathy (not a script) %%%%%%%%%%
     case 'bathy'
         switch oopt

@@ -40,15 +40,28 @@ for daynumber = days
     loadstatus = zeros(1,length(shortnames));
     for sno = 1:length(shortnames)
         
-        %load
-        loadstatus(sno) = mday_01(streamnames{sno}, shortnames{sno}, daynumber, year);
-        if loadstatus(sno)==1 
-            %did not find directory in MEXEC_G.MDIRLIST, go to next shortname after single warning
-            continue
+        if loadstatus(sno)==0
+            %load
+            try
+                loadstatus(sno) = mday_01(streamnames{sno}, shortnames{sno}, daynumber, year);
+            catch
+                loadstatus(sno) = 1;
+            end
+            if loadstatus(sno)==1
+                %did not find directory in MEXEC_G.MDIRLIST, go to next shortname after single warning
+                fprintf(1,'%s (%s) not found in MEXEC_G.MDIRLIST,\n',shortnames{sno},streamnames{sno})
+                if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
+                    fprintf(1,'or is in m_udirs.m but not in mrtables_from_json.m (rerun m_setudir and m_setup?),\n')
+                end
+                warning('enter to continue skipping this stream, or Ctrl-C to quit');
+                    
+                pause
+                continue
+            end
+            
+            %apply additional processing and cleaning (and renaming) for some streams
+            mday_01_clean(shortnames{sno}, daynumber);
         end
-        
-        %apply additional processing and cleaning (and renaming) for some streams
-        mday_01_clean(shortnames{sno}, daynumber);
         
     end
     
@@ -59,6 +72,9 @@ for daynumber = days
     end
     
 end
+shortnames(loadstatus==1) = [];
+streamnames(loadstatus==1) = [];
+udirs(loadstatus==1) = [];
 
 %append to _01 files
 m_uway_append(shortnames, udirs, days, restart_uway_append)

@@ -59,19 +59,16 @@ function d = mrdefine
 
 
 % Identify rvdas tables of interest from json files
-[d.mrtables, d.mrtables_list] = mrtables_from_json; % d.mrtables_list is a list of RVDAS tables we want to be able to use
-
+d.mrtables = mrtables_from_json; % d.mrtables_list is a list of RVDAS tables we want to be able to use
+d.mrtables_list = fieldnames(d.mrtables);
 
 % get table of mexec short names for RVDAS tables
 d.tablemap = mrnames('q'); % any argument suppresses listing to screen
 
 % get a list of variables for which we want to change names when loaded
-% into mexec
-[d.renametables, d.renametables_list] = mrrename_tables(d.mrtables, 'q'); % any argument suppresses listing to screen
+% into mexec, and a list of tables whose variables should have _raw
+% appended
+[d.renametables, d.rawlist] = mrrename_tables(d.mrtables, 'q'); % any argument suppresses listing to screen
+d.renametables_list = fieldnames(d.renametables);
 
-% get a list of rvdas tables for which variables will be renamed as raw
-% when they are read into mexec, because we expect to do post-processing on
-% them
-
-d.rawlist = mrmakeraw;
 
