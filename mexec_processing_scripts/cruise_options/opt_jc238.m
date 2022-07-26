@@ -5,9 +5,11 @@ switch scriptname
             case 'nnisk'
                 nnisk = 12;
             case 'oxy_align'
-                if ismember(stnlocal,[2 3 5:8 11:13 17:18 25:26 33]) %add stations where CTD was not turned off before pumps switched off here
+                if ismember(stnlocal,[2 3 5:8 11:13 17:18 25:26 33 37 40 41]) %add stations where CTD was not turned off before pumps switched off here
                     oxy_end = 1;
                 end
+            case 'shortcasts'
+                shortcasts = 42 ;
         end
 
     case 'batchactions'
@@ -34,12 +36,17 @@ switch scriptname
         switch oopt
             case 'rawedit_auto'
                 if stnlocal==3
-                   castopts.badscans.transmittance = [0 inf]; %instrument went bad pretty much the cast
+                   castopts.badscans.transmittance = [0 inf]; %instrument went bad pretty much the whole cast
                 elseif stnlocal==19
                     castopts.despike.cond1 = [0.2 0.1];
                     castopts.despike.cond2 = [0.2 0.1];
+                elseif stnlocal==38
+                    %caught a fish
+                    castopts.badscans.temp1 = [135900 inf];
+                    castopts.badscans.cond1 = [135900 inf];
+                    castopts.badscans.oxygen_sbe1 = [135900 inf];
                 end
-            case 'ctdcals'              
+            case 'ctd_cals'              
                 %calibration strings below for testing; not final; do not
                 %apply to ctd files
                 castopts.docal.temp = 0;
@@ -80,13 +87,16 @@ switch scriptname
                 blinfile = fullfile(root_botraw,sprintf('%s_CTD_%03d.bl', upper(mcruise), stnlocal));
             case 'nispos'
                 niskc = [1:2:23]';
-                %niskn = [9002 8149 9006:2:9024]'; %25000NNNN
+                niskn = [6914:2:6936]'; %26000NNNN
+                if stnlocal>41
+                    niskn(1) = [6915]; %bottle 1 leaked, switched out
+                end
             case 'botflags'
                 %Niskin flags: 2 = good, 3 leaking, 4 misfire [wire did not
                 %release], 7 unknown problem [for further investigation], 9 not sampled
                 switch stnlocal
                     case 1
-                        niskin_flag(position==1) = 7; %questionable tap
+                        niskin_flag(position==1) = 3; %questionable tap and oxy looks bad so suspect leak
                     case 4
                         niskin_flag(position==9) = 4; %most likely misfire based on sample and botoxytemp (looks like it closed around 600)
                     case 17
@@ -97,6 +107,8 @@ switch scriptname
                         niskin_flag(position==12) = 9; %bottle fired but not attached 
                     case 30
                         niskin_flag(position==3) = 7; %possible leak but we might have opened the tap first
+                    case 41
+                        niskin_flag(position==1) = 3; %definite leak
                     otherwise
                 end
         end
@@ -183,7 +195,7 @@ switch scriptname
     case 'msal_01'
         switch oopt
             case 'sal_files'
-                salfiles = dir(fullfile(root_sal, ['JC238_*.csv']));
+                salfiles = dir(fullfile(root_sal, ['JC238*.csv']));
                 salfiles = {salfiles.name};
             case 'sal_parse'
                 cellT = 24;
@@ -208,10 +220,17 @@ switch scriptname
                     15 3
                     16 0
                     17 2
-                    18 1];
+                    18 1
+                    19 0
+                    20 1
+                    21 1
+                    22 -1
+                    23 -2
+                    24 3];
                 sal_off(:,1) = sal_off(:,1)+999000;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
                 sal_adj_comment = ['Bottle salinities adjusted using SSW batch P165'];
+            case 'sal_flags'
         end
 
     case 'moxy_01'
@@ -234,10 +253,15 @@ switch scriptname
                     'oxy_bottle'     'do_sample_bot_no'
                     'bot_vol_tfix'   'bot_vol_at_tfix_mls'
                     'conc_o2',       'c_o2_umol_per_l'};
-            case 'oxy_calc'
-                if statnum<=99
-                    mol_std = 0.0030073;
-                end
+            case 'oxy_flags'
+                % a few more outliers (others flagged in input .xlsx file)
+                d.botoxya_flag(ismember(d.sampnum,[1223 2301 2303 2815 2819 2901 3219])) = 4;
+                % these stations are low compared to CTDs, throughout the
+                % water column. not sure why (they weren't all analysed in
+                % a row or with the same standard/blank different from
+                % others), but it doesn't appear to be a function of
+                % watermass 
+                d.botoxya_flag(ismember(d.statnum,[7 9:13])) = 3; 
         end
 
         %%%%%%%%%% mfir_03 %%%%%%%%%%
@@ -272,15 +296,81 @@ switch scriptname
     case 'msec_grid'
         switch oopt
             case 'sections_to_grid'
-	    sections = {'osnape'};
+	    sections = {'osnape' 'ungridded'};
             case 'sec_stns_grids'
+                      zpressgrid = [0 5 25 50 75 100 175 250 375 500 625 750 875 1000 1250 1500 1750 2000 2250 2500 2750 3000]';  
                 switch section
                     case 'osnape'
-                      kstns = [2:33];
-                      zpressgrid = [0 5 25 50 75 100 175 250 375 500 625 750 875 1000 1250 1500 1750 2000 2250 2500 2750 3000]';  
+                      kstns = [5:8 4 10:25 27 26 28:32 35:39 43 40 41];
+                    case 'all'
+                      kstns = [1:41 43];
                 end
             case 'ctd_regridlist'
                 ctd_regridlist = [ctd_regridlist 'fluor' 'ph'];
         end
 
+    case 'msam_ashore_flag'
+        switch oopt
+            case 'sam_ashore_nut'
+                fnin = fullfile(mgetdir('M_BOT_ISO'),'Nutrient_Tube_Numbers.xlsx');
+                st = readtable(fnin);
+                st = fill_samdata_statnum(st,'CTDCastNo_');
+                clear dnew
+                dnew.sampnum = st.CTDCastNo_*100+st.NiskinBottleNo_;
+                dnew.flag = 9+zeros(size(dnew.sampnum));
+                dnew.flag(st.No_OfNutrientSamples>0) = 1;
+                vars = {'silc','totnit','phos'};
+                do_empty_vars = 1;
+            case 'sam_ashore_co2'
+                fnin = fullfile(mgetdir('M_BOT_ISO'),'Carbon_Bottle_Names.xlsx');
+                st = readtable(fnin);
+                st = fill_samdata_statnum(st,'CTDCastNo_');
+                clear dnew
+                dnew.sampnum = st.CTDCastNo_*100+st.NiskinBottleNo_;
+                dnew.flag = 9+zeros(size(dnew.sampnum));
+                dnew.flag(st.CarbonSamplesNo_>0) = 1;
+                vars = {'dic' 'alk'};
+                do_empty_vars = 1;
+        end
+
+    case 'ix_cast_params'
+        switch oopt
+            case 'ladcpopts'
+                if isfield(cfg,'pdir_root') && ~strcmp(cfg.pdir_root,'processed')
+%                 if stnlocal==43
+%                     p.vlim = 3.3; %for example
+%                 elseif ismember(stnlocal,[1 3])
+%                     p.btrk_mode = 0; %for example
+%                 end
+
+
+
+%OUTLIER detection is called twice once to clean the raw data
+%	and a second time to clean the super ensembles
+%        [n1 n2 n3 ...] the length gives the number of scans and
+%	each value the maximum allowed departure from the mean in std
+%	applied for the u,v,w fields for each bin over blocks 
+%   of p.outlier_n profiles
+% p=setdefv(p,'outlier',[4.0  3.0]);
+% default for p.outlier_n is number of profiles in 5 minutes
+% p=setdefv(p,'outlier_n',100);
+% minimum std for horizontal velocities of super ensemble
+% p=setdefv(p,'superens_std_min',0.01);
+
+
+%SPIKES
+% 	maximum value for abs(V-error) velocity
+p.elim = 0.3;
+% 	maximum value for horizontal velocity 
+% p=setdefv(p,'vlim',2.5);
+% 	minimum value for %-good
+ p.pglim = 50;
+%	maximum value for W difference between the mean W and actual
+%        W(z) for each profile. 
+ p.wlim = 0.10;
+p.edit_spike_filter=0;
+p.edit_spike_filter_max_curv=2;
+
+                end
+        end
 end

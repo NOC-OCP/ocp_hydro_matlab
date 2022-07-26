@@ -229,13 +229,16 @@ switch scriptname
         
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
     case 'msam_ashore_flag'
-        crhelp_str = {'set fnin, the file from which to load information on samples collected'
-            'for analysis ashore;'
-            'flagvars (Mx1 cell array), a list of flag field names for sam_cruise_all file;'
-            'sampnums (MxN cell array), lists of sample numbers, and'
+        crhelp_str = {'Place for code to load one or more files containing'
+            'information on samples collected for analysis ashore, producing:'
+            'vars (Mx1 cell array), a list of variables for which flags should'
+            'be added to sam_cruise_all file (e.g. del18o, silc, etc.)'
+            'dnew.sampnum and dnew.flag_flagval (MxN cell array), lists of Px2 matrices containing sampnum (statnum*100+position)'
+            '  and flag value for for sample numbers, and'
             'flagvals (1xN vector), the values to assign to flag variables for these sets of sampnums.'
             'in most cases flagvals = 1 and sampnums has a single column. sampnums not specified default'
             'to 9, or 5 (not analysed) where bottle_qc_flag is 4 (bad).'};
+        do_empty_vars = 0;
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
         
         %%%%%%%%%% msam_checkbottles_02 %%%%%%%%%%

@@ -52,7 +52,8 @@ relwind_direarth = mcrange(180+(dw.(wd)+merged_heading), 0, 360);
 
 %ship velocity
 [shipv_e, shipv_n] = uvsd(dn.smg, dn.cmg, 'sduv');
-%interpolate to wind file timees
+
+%interpolate to wind file times
 shipv_e = interp1(dn.timew, shipv_e, dw.time);
 shipv_n = interp1(dn.timew, shipv_n, dw.time);
 
@@ -85,4 +86,4 @@ h.comment = [h.comment '\n averaged to by finding midpoint of linear fit in bins
 clear hnew
 hnew.fldnam = h.fldnam; hnew.fldunt = h.fldunt;
 hnew.comment = [h.comment sprintf('\n truwind averaged over %d seconds from %s',tave_period,otfile1)];
-mfsave(otfile2, d, hnew);
+mfsave(otfile2, dg, hnew);

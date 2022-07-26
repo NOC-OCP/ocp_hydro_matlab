@@ -11,6 +11,10 @@ infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
 otfilef = infilef;
 if ~exist(m_add_nc(infilef),'file')
     infilef = [infilef '_ctd'];
+    if ~exist(m_add_nc(infilef),'file')
+        warning('station %s fir file not found; skipping',stn_string)
+        return
+    end
 end
 %not using 24hz because we want at least some averaging
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); 

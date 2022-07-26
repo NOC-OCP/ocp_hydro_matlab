@@ -128,10 +128,10 @@ if sum(cell2mat(struct2cell(testcal)))
     %loop through stations, since they might have different cal functions
     stns = unique(d.statnum);
     for sno = stns(:)'
-        stnlocal = stns(sno);
+        stnlocal = sno;
         %get only the calibration functions we want to test here
         if cropt_cal %didn't specify as input, get from opt_cruise
-            scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
+            scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
             calstr0 = castopts.calstr;
         end
         calstr = select_calibrations(testcal, calstr0);
@@ -232,7 +232,7 @@ for gno = 1:length(sensg)
     %get other quantities we might use
     stn = d.statnum(iig); 
     nisk = d.position(iig); niskf = d.niskin_flag(iig);
-    press = d.upress(iig); ctemp = d.utemp(iig);
+    press = d.upress(iig); ctemp = d.utemp(iig); csal = d.upsal(iig);
 
     %fit model
     if strncmp(sensname,'temp',4)
@@ -294,22 +294,27 @@ for gno = 1:length(sensg)
         print(printform, fullfile(printdir, ['ctd_eval_' sensname '_set' num2str(no)]))
     end
     
-    %plot residual or ratio in color vs 2 of statnum, press, temp, oxygen
+    %plot residual or ratio in color vs 2 of statnum, press, temp, oxygen,
+    %T-S
     figure((gno-1)*10+3); clf; orient portrait
+    set(gcf,'defaultaxescolor',[.8 .8 .8])
     load cmap_bo2; colormap(cmap_bo2)
-    subplot(1,8,1:2); scatter(ctemp, -press, 16, res, 'filled'); grid; set(gca,'color',[.8 .8 .8])
+    subplot(2,5,[1 6]); scatter(ctemp, -press, 16, res, 'filled'); grid;
     xlabel('temp'); xlim([min(ctemp) max(ctemp)])
     ylabel('press'); ylim(presrange); caxis(rlim); colorbar
-    subplot(1,8,3:4); scatter(stn, -press, 16, res, 'filled'); grid; set(gca,'color',[.8 .8 .8])
+    subplot(2,5,[2 7]); scatter(stn, -press, 16, res, 'filled'); grid; 
     xlabel('station'); xlim([min(stn) max(stn)])
     ylabel('press'); ylim(presrange); caxis(rlim); colorbar
     title([mcruise ' ' rlabel])
-    subplot(1,8,5:6); scatter(ctemp, d.uoxygen(iig), 16, res, 'filled'); grid; set(gca,'color',[.8 .8 .8])
+    subplot(2,5,[3 8]); scatter(ctemp, d.uoxygen(iig), 16, res, 'filled'); grid; 
     xlabel('temp'); xlim([min(ctemp) max(ctemp)])
     ylabel('oxygen'); ylim([min(d.uoxygen) max(d.uoxygen)]); caxis(rlim); colorbar
-    subplot(1,8,7:8); scatter(d.uoxygen(iig), -press, 16, res, 'filled'); grid; set(gca,'color',[.8 .8 .8])
-    xlabel('oxygen'); xlim([min(d.uoxygen(iig)) max(d.uoxygen(iig))])
-    ylabel('press'); ylim(presrange); caxis(rlim); colorbar
+    subplot(2,5,[4 9]); scatter(csal, d.uoxygen(iig), 16, res, 'filled'); grid; 
+    ylabel('oxygen'); ylim([min(d.uoxygen(iig)) max(d.uoxygen(iig))])
+    xlabel('sal'); xlim([min(csal) max(csal)]); caxis(rlim); colorbar
+    subplot(2,5,[5 10]); scatter(d.upsal(iig), d.utemp(iig), 16, res, 'filled'); grid; 
+    xlabel('S'); ylabel('T'); caxis(rlim); colorbar
+    xlim([min(d.upsal(iig)) max(d.upsal(iig))]); ylim([min(d.utemp(iig)) max(d.utemp(iig))]);
     if ~isempty(printform)
         print(printform, fullfile(printdir, ['ctd_eval_' sensname '_set' num2str(no) '_pt']))
     end
@@ -339,7 +344,7 @@ for gno = 1:length(sensg)
             %calibrate them
             if exist('cropt_cal','var')
                 if cropt_cal
-                    scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
+                    scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
                     calstr0 = castopts.calstr;
                 end
                 calstr = select_calibrations(testcal, calstr0);
@@ -359,12 +364,17 @@ for gno = 1:length(sensg)
             iisbf = find(stn==s(no) & ~ismember(calflag, okf));
             iiq = find(stn==s(no) & abs(res)>llim(2) & ismember(calflag, okf));
             
-            plot(d1.(sensname)(ii1u), -d1.press(ii1u), 'c', du.(sensname), -du.press, 'k--', ...
-                caldata(iis), -d.upress(iis), 'r.', caldata(iisbf), -d.upress(iisbf), 'm.', ctddata(iis), -d.upress(iis), 'b.', ...
-                caldata(iiq), -d.upress(iiq), 'or', ctddata(iiq), -d.upress(iiq), 'sb');
+            plot(d1.(sensname)(ii1u), -d1.press(ii1u), 'c', ...
+                du.(sensname), -du.press, 'k--', ...
+                caldata(iis), -press(iis), 'r.', ...
+                caldata(iisbf), -press(iisbf), 'm.', ...
+                caldata(iiq), -press(iiq), 'or', ...
+                ctddata(iis), -press(iis), 'b.', ...
+                ctddata(iiq), -press(iiq), 'sb');
             grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',s(no)));
+            disp('sampnum residual sample_flag niskin_flag pressure')
             for qno = 1:length(iiq)
-                sprintf('%d %d %5.3f %d %d %d', s(no), nisk(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), niskf(iiq(qno)), round(press(iiq(qno))))
+                sprintf('%d %5.3f %d %d %d', s(no)*100+nisk(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), niskf(iiq(qno)), round(press(iiq(qno))))
             end
             cont = input('k for keyboard prompt, enter to continue to next\n','s');
             if strcmp(cont,'k')

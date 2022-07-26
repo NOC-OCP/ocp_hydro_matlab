@@ -89,6 +89,24 @@ if ~isfield(MEXEC_G,'other_programs_root')
     MEXEC_G.other_programs_root = fullfile(MEXEC.mstar_root,'sw','others');
 end
 MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
+% %mooring processing software if selected
+% if exist('pathpath','var') && pathpath==2
+%     cdir = pwd;
+%     odir = '/local/users/pstar/osnap';
+%     moorstart = ['startup' MEXEC_G.MSCRIPT_CRUISE_STRING];
+%     rmoordir = fullfile(fileparts(MEXEC_G.mexec_source_root),'moor_exec');
+%     if exist([odir moorstart '.m'],'file')
+%         addpath(odir)
+%         eval(moorstart)
+%         cd(cdir)
+%         rwidgdir = fullfile(rmoordir,'mfiles','rapid_widgit_lite');
+%         addpath(genpath(rwidgdir))
+%     elseif exist(rmoordir,'dir')
+%         addpath(genpath(rmoordir))
+%     else
+%         disp('no mooring processing paths found to add')
+%     end
+% end
 
 % Set path for directory with housekeeping files (in subdirectories version and history)
 MEXEC_G.housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
@@ -357,4 +375,3 @@ if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
 end
 
 clear MEXEC nsecwait
-

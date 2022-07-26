@@ -272,7 +272,7 @@ else
 end
 ds.botpsal_flag(isam) = d.flag(isal);
 %apply niskin flags (and also confirm consistency between sample and flag)
-ds = hdata_flagnan(ds, [4 9]);
+ds = hdata_flagnan(ds, [3 4 9]);
 %don't need to rewrite them though
 ds = rmfield(ds,'niskin_flag');
 %save

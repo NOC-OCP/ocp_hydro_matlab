@@ -40,12 +40,16 @@ else
    if sum(strcmp(cfg.constraints, 'BT')); ps.botfac = 1; end
    if sum(strcmp(cfg.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
-if ps.sadcpfac && isfield(cfg, 'SADCP_inst')
-    subdir = fullfile(subdir, cfg.SADCP_inst);
+if isfield(cfg, 'pdir_root') && ~strcmp(cfg.pdir_root,'processed')
+   subdir = fullfile(subdir, cfg.pdir_root);
+else
+   subdir = fullfile(subdir, 'processed');
 end
-pdir = fullfile(subdir, 'processed', stnstr);
-if ~exist(pdir, 'dir')
-   mkdir(pdir);
+if ps.sadcpfac && isfield(cfg, 'SADCP_inst')
+   subdir = [subdir '_' cfg.SADCP_inst];
+end
+if ~exist(subdir, 'dir')
+   mkdir(subdir);
 end
 
 %close all;
@@ -84,7 +88,7 @@ elseif isdo && isup % both
    f.ladcpup = ulfiles;
 end
 
-f.res = fullfile(pdir, stnstr);
+f.res = fullfile(subdir, stnstr);
 f.checkpoints = fullfile('checkpoints', sprintf('%03d', stnlocal));
 if isfield(cfg, 'SADCP_inst')
     f.sadcp	= fullfile(mgetdir('M_LADCP'), 'SADCP', [cfg.SADCP_inst '_' mcruise '_' stnstr '_forladcp.mat']);

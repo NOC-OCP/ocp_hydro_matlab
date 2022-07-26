@@ -14,6 +14,13 @@ root_ctd = mgetdir('M_CTD');
 
 winfile = fullfile(root_win, ['win_' mcruise '_' stn_string]);
 firfile = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
+if ~exist(m_add_nc(firfile),'file')
+    firfile = [firfile '_ctd']; %backwards compatibility
+    if ~exist(m_add_nc(firfile),'file')
+        warning('station %s fir file not found; skipping',stn_string)
+        return
+    end
+end
 
 clear d h
 

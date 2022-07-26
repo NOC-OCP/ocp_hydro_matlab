@@ -192,7 +192,7 @@ hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxya_temp' 'botoxy_flag'];
 hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
 
 %apply niskin flags (and also confirm consistency between sample and flag)
-ds = hdata_flagnan(ds, [4 9]);
+ds = hdata_flagnan(ds, [3 4 9]);
 %just keep the fields set above (don't need to keep niskin_flag etc. here)
 fn = fieldnames(ds);
 [~, ia, ib] = intersect(fn, hnew.fldnam, 'stable');

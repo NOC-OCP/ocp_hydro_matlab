@@ -3,14 +3,16 @@ mctd_04;
 
 %bottle firing data
 stn = stnlocal; mfir_01;
-stn = stnlocal; mfir_03;
+if exist(blotfile,'file')
+    stn = stnlocal; mfir_03;
 
-%winch data
-stn = stnlocal; mwin_01;
-stn = stnlocal; mwin_to_fir;
+    %winch data
+    stn = stnlocal; mwin_01;
+    stn = stnlocal; mwin_to_fir;
 
-%add to sam file
-stn = stnlocal; mfir_to_sam;
+    %add to sam file
+    stn = stnlocal; mfir_to_sam;
+end
 
 %calculate and apply depths
 stations_to_reload = stnlocal; station_summary

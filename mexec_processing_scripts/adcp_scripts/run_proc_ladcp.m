@@ -95,6 +95,7 @@ if ~ismember(stn, shortcasts)
     end    
 end
 
+if 0
 %SADCP, if it's been processed and output to file for ladcp
 sfile = fullfile(mgetdir('M_LADCP'), 'SADCP', sprintf('os75nb_%s_%03d_forladcp.mat',mcruise,stn));
 if exist(sfile,'file')
@@ -114,7 +115,7 @@ if exist(sfile,'file')
         end
     end
 end
-
+end
 
 
 

@@ -335,7 +335,7 @@ switch scriptname
     case 'miso_02'
         switch oopt
             case 'vars'
-                cvars = 'del18o del18o_flag'
+                cvars = 'del18o del18o_flag';
         end
         %%%%%%%%%% end miso_02 %%%%%%%%%%
         

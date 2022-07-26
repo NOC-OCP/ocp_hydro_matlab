@@ -24,17 +24,17 @@ for kloop = klistl
     end
     stn = kloop; mctd_04;
     
+    %output to csv files
+    stn = stnlocal; mout_exch_ctd
+
     infile2 = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
     if exist(m_add_nc(infile2),'file') ~= 2
-        mess = ['File ' m_add_nc(infile2) ' not found'];
-        fprintf(MEXEC_A.Mfider,'%s\n',mess)
+        warning('File %s not found, skipping',m_add_nc(infile2))
         continue
     end
     stn = kloop; mfir_03;
     stn = kloop; mfir_to_sam;
    
-    %output to csv files
-    stn = stnlocal; mout_exch_ctd
     
 end
 mout_exch_sam

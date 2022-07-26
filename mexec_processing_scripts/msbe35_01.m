@@ -13,7 +13,7 @@ if ~exist('klist','var')
     if exist('stn','var')
         klist = stn;
     else
-        klist = input('enter list of stations to (re)load');
+        klist = input('enter list of stations to (re)load\n');
     end
 end
 

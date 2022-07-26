@@ -13,19 +13,28 @@ if ~exist('samtype', 'var')
     samtype = input('sample type? ','s');
 end
 scriptname = mfilename; oopt = ['sam_ashore_' samtype]; get_cropt
-%sets sampnums, flagvals, flagvars
+%sets vars, sampnums, flagvals, flagvars
 
 %get sampnums to merge on, and niskin_flag
 root_sam = mgetdir('M_CTD');
 samfile = fullfile(root_sam, ['sam_' mcruise '_all']);
 [ds,hs] = mloadq(samfile,'sampnum','niskin_flag',' ');
+
 clear hnew
 hnew.fldnam = {'sampnum'};
 hnew.fldunt = {'number'};
 
 %fill in flag values for sets of sampnums for each variable
-for nno = 1:length(flagvars)
-    flagname = [flagvars{nno} '_flag'];
+vars = fieldnames(shore_sams);
+for nno = 1:length(vars)
+    if do_empty_vars && 
+        hnew.fldnam = [hnew.fldnam vars{nno}];
+        hnew.fldunt = [hnew.fldunt shore_sams.(vars{nno}).unit];
+        if ~isfield(ds,vars{nno})
+            ds.(vars{nno}) = NaN+zeros(size(ds.sampnum));
+        end
+    end
+    flagname = [vars{nno} '_flag'];
     hnew.fldnam = [hnew.fldnam flagname];
     hnew.fldunt = [hnew.fldunt 'woce_table_4.8'];
     if ~isfield(ds,flagname)

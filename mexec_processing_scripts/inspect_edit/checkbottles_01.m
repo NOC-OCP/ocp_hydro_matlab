@@ -111,6 +111,11 @@ if ~isfield(dsam, varflagname)
     end
 end
 vflag = dsam.(varflagname);
+if isfield(dsam,'niskin_flag')
+    nflag = dsam.niskin_flag;
+elseif isfield(dsam,'bottle_qc_flag')
+    nflag = dsam.bottle_qc_flag;
+end
 
 %anomaly from comparison field
 switch varname
@@ -136,6 +141,7 @@ kuse = find(ismember(dsam.statnum, stations));
 v = v(kuse);
 vanom = vanom(kuse);
 vflag = vflag(kuse);
+nflag = nflag(kuse);
 vsampnum = dsam.sampnum(kuse);
 press = dsam.upress(kuse);
 potemp = dsam.upotemp(kuse);
@@ -302,14 +308,14 @@ while 1
     
     switch a % listing;
         case 'l'
-            fprintf(1,'%8s %7s %7s %8s %8s %4s\n','sampnum','press','potemp','val','resid','flag');
+            fprintf(1,'%8s %7s %7s %8s %8s %4s %9s\n','sampnum','press','potemp','val','resid','flag','nisk_flag');
             for kl = 1:length(ksel)
-                fprintf(1,'%8.0f %7.1f %7.3f %8.3f %8.3f %4.0f\n',vsampnum(ksel(kl)),press(ksel(kl)),potemp(ksel(kl)),v(ksel(kl)),vanom(ksel(kl)),vflag(ksel(kl)));
+                fprintf(1,'%8d %7.1f %7.3f %8.3f %8.3f %4.0f %4.0f\n',vsampnum(ksel(kl)),press(ksel(kl)),potemp(ksel(kl)),v(ksel(kl)),vanom(ksel(kl)),vflag(ksel(kl)),nflag(ksel(kl)));
             end
         case {'c', 'w'}
-            fprintf(1,'%8s %7s %7s %8s %8s %4s\n','sampnum','press','potemp','val','resid','flag');
+            fprintf(1,'%8s %7s %7s %8s %8s %4s %9s\n','sampnum','press','potemp','val','resid','flag','nisk_flag');
             for kl = 1:length(kg)
-                fprintf(1,'%8.0f %7.1f %7.3f %8.3f %8.3f %4.0f\n',vsampnum(kg(kl)),press(kg(kl)),potemp(kg(kl)),v(kg(kl)),vanom(kg(kl)),vflag(kg(kl)));
+                fprintf(1,'%8d %7.1f %7.3f %8.3f %8.3f %4.0f %4.0f\n',vsampnum(kg(kl)),press(kg(kl)),potemp(kg(kl)),v(kg(kl)),vanom(kg(kl)),vflag(kg(kl)),nflag(kg(kl)));
             end
             subplot(2,2,1)
             plot(v(kg),-press(kg),'g^','markersize',15);
@@ -324,9 +330,10 @@ while 1
                     fid = fopen(bdffile, 'a');
                 else
                     fid = fopen(bdffile, 'w');
+                    fprintf(fid, '%s %s %s %s\n', 'flagname, sampnum, flag, nisk_flag');
                 end
                 for kl = 1:length(kg)
-                    fprintf(fid, '%s, %d, %d, %d\n', varflagname, vsampnum(kg(kl)), vflag(kg(kl)), vflag(kg(kl)));
+                    fprintf(fid, '%s, %d, %d, %d\n', varflagname, vsampnum(kg(kl)), vflag(kg(kl)), nflag(kg(kl)));
                 end
                 fclose(fid);
                 disp(['now run checkbottles_02 to check against property gradients'])

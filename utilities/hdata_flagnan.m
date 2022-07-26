@@ -9,7 +9,7 @@ function data = hdata_flagnan(data, varargin)
 % specified) replace -999s with NaNs, and make data fields and flag fields
 % (*_flag), match 
 % 
-% optional input vector badflags (default [4 9]) sets which flag values
+% optional input vector badflags (default [3 4 9]) sets which flag values
 % should be accompanied by NaNs
 %
 % assumes woce flag values (table 4.9) unless both badflags and 'notwoce'
@@ -28,7 +28,7 @@ function data = hdata_flagnan(data, varargin)
 %
 % YLF 2021/05
 
-badflags = [4 9];
+badflags = [3 4 9]; %for niskins: leaked, misfired, did not sample
 woceflags = 1;
 keepempty = 0;
 vars_exclude = {'sampnum' 'statnum' 'niskin' 'position'};
@@ -52,10 +52,8 @@ fnames = setdiff(fnames, vars_exclude);
 
 %niskin flags are applied not to niskins but to other fields
 if isfield(data, 'niskin_flag') && woceflags
-    %NaN all samples from badly-closed (4) or unused (9) Niskins
-    %could include leaking (3) except this is often used to note
-    %slight leaks (i.e. almost certainly only outward)***
-    iinf = find(ismember(data.niskin_flag,[4 9])); 
+    %NaN all samples from leaking (3), badly-closed (4) or unused (9) Niskins
+    iinf = find(ismember(data.niskin_flag,[3 4 9])); 
 else
     iinf = [];
 end
@@ -94,9 +92,9 @@ for vno = 1:length(fnames)
         %modify flags to match data
         f = data.(fnames{iif});
         if woceflags
-            %flags of 2 (good), 3 (questionable), 6 (mean of replicates)
-            %ought to have non-nan data; if not, assume flag should be 4
-            %(bad)
+            %sample flags of 2 (good), 3 (questionable), 6 (mean of
+            %replicates) ought to have non-nan data; if not, assume flag
+            %should be 4 (bad)
             f(isnan(d) & ismember(f, [2 3 6])) = 4;
             %if data is nan and flag is nan (or -999), assume that means 9
             %(no sample) [though it could also mean 5 (not reported)]

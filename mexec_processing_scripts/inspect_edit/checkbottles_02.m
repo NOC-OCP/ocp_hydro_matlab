@@ -97,7 +97,7 @@ if ~isfield(dsam, 'sbe35temp')
 end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
-scriptname = 'mctd_02'; oopt = 'ctdcals'; get_cropt
+scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
 if isfield(castopts,'calstr')
     if exist('testcal','var')
         castopts.docal = testcal;

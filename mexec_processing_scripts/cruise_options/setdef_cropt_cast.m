@@ -158,7 +158,7 @@ switch scriptname
                 castopts.oxyhyst.H3 = 1450;
                 castopts.H_0 = [castopts.oxyhyst.H1 castopts.oxyhyst.H2 castopts.oxyhyst.H3]; %this line stores defaults for later reference; don't change!
                 castopts.turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
-            case 'ctdcals'
+            case 'ctd_cals'
                 crhelp_str = {'Set calibration functions to be applied to variables in _24hz file, if '
                     'corresponding flags are set to true. '
                     'Functions are set in calstr, a structure whose fields are sensors (e.g. cond1, oxygen2),'

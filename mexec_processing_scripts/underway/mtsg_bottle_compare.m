@@ -2,28 +2,41 @@
 % 
 % choose calibrated or uncalibrated data for comparison
 
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; % cruise name (from MEXEC_G global)
 
-scriptname = mfilename; oopt = 'tsg_usecal'; get_cropt;
-usecallocal = usecal; clear usecal
+
+comp2ctd = false %true % set to false if you don't want to compare to CTD data
+
+
+% get_cropt basically checks that file exists and sets defaults set
+% elsewhere
+% oopt are different case options to run through for setting various defaults
+
+scriptname = mfilename; oopt = 'tsg_usecal'; get_cropt; % mfilename = name of current file
+usecallocal = usecal; clear usecal 
 
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
-prefix = tsgpre;
-root_tsg = mgetdir(tsgpre);
+prefix = tsgpre; % prefix for tsg data
+root_tsg = mgetdir(tsgpre); %gets directory from MEXEC_g
 
 tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01_medav_clean']); % median averaged file
 if usecallocal
     tsgfn = [tsgfn '_cal'];
 end
-if ~exist(m_add_nc(tsgfn),'file')
-    tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01']);
+if ~exist(m_add_nc(tsgfn),'file') % ensures nc file has .nc suffix
+    tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01']); %combines parts of filenames
 end
-[dt, ht] = mload(tsgfn, '/');
+
+[dt, ht] = mload(tsgfn, '/'); % load tsg netcdf file
+
+% obtains variable names for each parameter from ht and list of known
+% common variable names for that parameter
 salvar = munderway_varname('salvar',ht.fldnam,1,'s');
 tempvar = munderway_varname('tempvar',ht.fldnam,1,'s');
 tempsst = munderway_varname('sstvar',ht.fldnam,1,'s');
 condvar = munderway_varname('condvar',ht.fldnam,1,'s');
 
+% if not calibrated, change variable name
 if usecallocal
     switch salvar
         case 'salinity_raw'
@@ -45,9 +58,9 @@ end
 
 %***add code for temperature, other variables (fluo?)
 
-botfn = fullfile(root_tsg, ['tsgsal_' mcruise '_all']);
-[db, hb] = mload(botfn, '/');
-db.time = m_commontime(db.time, hb.data_time_origin, ht.data_time_origin);
+botfn = fullfile(root_tsg, ['tsgsal_' mcruise '_all']); % generate filename for bottle salinities
+[db, hb] = mload(botfn, '/'); % load bottle salinities
+db.time = m_commontime(db.time, hb.data_time_origin, ht.data_time_origin); %match up times
 %sort all variables
 [a, iibot] = sort(db.time);
 fn = fieldnames(db);
@@ -83,8 +96,9 @@ if ~isempty(idx)
 	end
 end
 sdiffall = sdiff;
-sdiff(idx) = NaN;
+sdiff(idx) = NaN; % set values where value>3*SD as NaN
 
+% set anytime tsg was not running (tbreaks)
 % bak jc211, break points in sdiffsm to allow for cleaning
 tbreak = []; % example of how to set tbreak in opt_jc211
 scriptname = mfilename; oopt = 'tsg_timebreaks'; get_cropt;
@@ -100,6 +114,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
     tstart = tbreak(kseg)+1/86400;
     tend = tbreak(kseg+1)-1/86400;
     
+    % why -1 ??
     kbottle = find(db.time-1 > tstart & db.time-1 < tend);
     sdiff = sdiffsave(kbottle);
     
@@ -108,11 +123,15 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
     
     t = db.time(kbottle)-1;
     
+    % work out if interval is before or after start of tsg data (and select
+    % the later of the 2 start times and earlier of the 2 end times)
     t0 = max([tstart min(dt.time-1)]); % tstart, or start of tsg data
     t1 = min([tend max(dt.time-1)]); % tend or end of tsg data
     t = [t0; t; t1];
     sdiff = [nan; sdiff; nan]; % pad this set of times with two nans for the pseudo times
-
+    % need values for sdiff at the start and end point (for interpolation)
+    % such that there will definitely be a tsg time less and more than the
+    % bottle time for all bottle times
     
     
     %smoothed difference--default is a two-pass filter on the whole time series
@@ -138,6 +157,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
     end
 end
 
+% plot TSG and bottle data
 figure(1); clf
 subplot(nsp,1,1)
 hl = plot(dt.time, tsal, db.time, db.salinity, '.y', db.time, db.salinity_adj, 'o', db.time, tsals, '<'); grid
@@ -170,6 +190,16 @@ rms_res = sqrt(sum(sdiff(~isnan(sdiff)).^2)/sum(~isnan(sdiff)))
 % stde = sqrt(sum(sdiff(~isnan(sdiff)).^2)/(sum(~isnan(sdiff))-1)) % not output by bak on dy146; not sure this is helpful
 
 if ~usecallocal
-    disp(['choose a constant or simple time-dependent correction for TSG, add to tsgsal_apply_cal case of opt_' mcruise])
-    disp(['you can set it so tsgsal_apply_cal calculates the smooth function shown here'])
+    disp(['choose a constant or simple time-dependent correction for TSG, add to '])
+    disp(['mstg_medav_clean_cal:tsgcals case in opt_cruise'])
+    disp(['(you can set it so it uses the smooth function shown here)'])
 end
+
+
+if comp2ctd
+    load_postedit_ctd_for_tsg_comp
+    
+
+
+end
+    

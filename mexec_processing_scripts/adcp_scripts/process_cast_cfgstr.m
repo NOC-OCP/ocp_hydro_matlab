@@ -141,7 +141,7 @@ p = setdefv(p,'checkpoints',[]);        % disable checkpointing by default
 ix_cast_params %replaces set_cast_params
 
 close all
-openwindows_fewer;				% open all windows to be used
+%openwindows_fewer;				% open all windows to be used
 
 if length(f.res) > 1			% open log file
     if exist([f.res,'.log'])==exist('loadrdi.m')

@@ -126,11 +126,17 @@ for ksec = 1:length(sections)
     [~,ia,~] = intersect(h.fldnam,sam_gridlist);
     sdata.unts = h.fldunt(ia);
 
-    %and run the gridding
-    mgrid = maphsec(cdata, sdata, mgrid);
+    if strcmp(section,'ungridded') %this is just a way to compile some or all of the stations into a .mat file
+        save(otfile,'cdata','sdata')
+    else
+        %run the gridding
+        mgrid = maphsec(cdata, sdata, mgrid);
 
-    %save
-    readme = 'gridded using maphsec calling map_as_mstar';
-    save(otfile, 'cdata', 'sdata', 'mgrid', 'readme');
+        %save
+        readme = 'gridded using maphsec calling map_as_mstar';
+        save(otfile, 'cdata', 'sdata', 'mgrid', 'readme');
+    end
 
 end
+
+clear sections

@@ -10,23 +10,27 @@ if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,s
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
 scriptname = mfilename; oopt = 'blinfile'; get_cropt
+m = ['infile = ' blinfile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
+dataname = ['fir_' mcruise '_' stn_string];
+blotfile = fullfile(root_ctd, dataname);
 if ~exist(blinfile,'file')
     fprintf(2,'.bl file not found; try sync again and enter to continue, or Ctrl-C to quit \n (you can still run mctd_checkplots at this point)');
     pause
 end
-m = ['infile = ' blinfile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
-dataname = ['fir_' mcruise '_' stn_string];
-otfile = fullfile(root_ctd, dataname);
 
 cellall = mtextdload(blinfile,',',10); % load all text
+if size(cellall,2)<4
+    warning('no bottles for cast %s; skipping',stn_string)
+    return
+end
 nr = size(cellall,1);
 
 n = 1;
 pos = NaN; scn = NaN;
 for kline = 1:nr
     if ~isempty(cellall{kline,4})
-        pos(n) = str2num(cellall{kline,2});
-        scn(n) = str2num(cellall{kline,4});
+        pos(n) = str2double(cellall{kline,2});
+        scn(n) = str2double(cellall{kline,4});
         n = n+1;
     end
 end
@@ -54,7 +58,7 @@ scriptname = mfilename; oopt = 'botflags'; get_cropt %change flags here
 comment = ['input data from ' blinfile];
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
 MEXEC_A.MARGS_IN = {
-    otfile
+    blotfile
     'scan'
     'position'
     'niskin'

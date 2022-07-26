@@ -129,7 +129,7 @@ mfsave(otfile24, dnew, hnew, '-addvars');
 
 
 %%%%% sensor calibrations %%%%%
-scriptname = mfilename; oopt = 'ctdcals'; get_cropt
+scriptname = mfilename; oopt = 'ctd_cals'; get_cropt
 if isfield(castopts, 'calstr')
 
     %select calibrations to apply and put in calstr

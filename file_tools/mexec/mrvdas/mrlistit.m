@@ -140,6 +140,9 @@ for kv = kvaruse(2:end)
     vn = n{kv};
     vu = u{kv};
      
+    if iscell(d.(vn))
+        continue
+    end
     varvals = [varvals d.(vn)(:)];% add this variable to the varvals array
     
     pad = '                                                         ';
