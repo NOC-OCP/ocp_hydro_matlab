@@ -7,6 +7,7 @@ function [dp] = heaveND(dn_psal,dn_temp,up_psal,up_temp,pdn,lon0,lat0)
 %  - dn_psal,dn_temp,  practical salinity and in-situ temperature of downcast
 %  - up_psal,up_temp,  practical salinity and in-situ temperature of upcast
 %  - both up and down profiles are given at pressures pdn
+%  they should be column vectors
 %
 % DAS 2021
 % ylf modified dy146
@@ -23,9 +24,8 @@ dmix =  0.005;  % Change of density in upper mixed layer
 idebug = 0;     % Chnage to 1 when testing
 
 % Calculate neutral density
-dn_nd = gamma_n(dn_psal',dn_temp',pdn',lon0,lat0);
-up_nd = gamma_n(up_psal',up_temp',pdn',lon0,lat0);
-dn_nd = dn_nd';up_nd = up_nd';
+dn_nd = gamma_n(dn_psal,dn_temp,pdn,lon0,lat0);
+up_nd = gamma_n(up_psal,up_temp,pdn,lon0,lat0);
 	
 % Avoid extrapolation or NaNs 
 ilo = up_nd < min(dn_nd);  up_nd(ilo) = min(dn_nd);
@@ -37,14 +37,14 @@ dp0 = pup-pdn(isort);
 % If there is an upper mixed layer
 imix_dn = find(dn_nd < min(dn_nd) + dmix);
 imix_up = find(up_nd < min(up_nd) + dmix);
-imixS = 1:max([imix_dn imix_up]);
+imixS = 1:max([imix_dn(:); imix_up(:)]);
 dp0(imixS) = 0;
 fprintf(1,'(heaveND) Depth upper mixed layer: %5.0f db \n',pdn(imixS(end)))
 
 % If there is an bottom mixed layer
 imix_dn = find(dn_nd > max(dn_nd) - dmix/3);
 imix_up = find(up_nd > max(up_nd) - dmix/3);
-imixB = min([imix_dn imix_up]):length(pdn);
+imixB = min([imix_dn(:); imix_up(:)]):length(pdn);
 dp0(imixB) = 0;
 fprintf(1,'(heaveND) Depth bottom mixed layer: %5.0f db \n',max(pdn)-pdn(imixB(1)))
 
@@ -53,10 +53,10 @@ fprintf(1,'(heaveND) Depth bottom mixed layer: %5.0f db \n',max(pdn)-pdn(imixB(1
 [pf2,df2] = das_filt(pdn,dp0,dpf2);
 
 % Enforce 0 at top and the bottom
-pf10 = [0 pf1 max(pdn)];
-df10 = [0 df1 0];
-pf20 = [0 pf2 max(pdn)];
-df20 = [0 df2 0];
+pf10 = [0; pf1; max(pdn)];
+df10 = [0; df1; 0];
+pf20 = [0; pf2; max(pdn)];
+df20 = [0; df2; 0];
 dp1  = interp1(pf10,df10,pdn);
 dp2  = interp1(pf20,df20,pdn);
 
@@ -78,3 +78,26 @@ if idebug == 1
 	plot(pdn,dp2,'r')
 	plot(pdn,dp,'k','LineWidth',2)
 end
+function [jg_filt,m_filt] = das_filt(jg1,m1,tfilt)
+% Convolve with tukeywin 
+% [jg_filt,m_filt] = das_filt(jg1,m1,tfilt)
+%
+
+dt=mean(diff(jg1));
+N=round(tfilt/dt);
+
+% make the window
+mywin = tukeywin(N);
+% 2nd parameter (not used here) ranges from 0 to 1.  0.5 is default Tukey.  0 is boxcar, 1 is hanning.
+mywin=mywin/nansum(mywin);
+
+% Do convolution    tmpd=conv(data,mywin,'same');
+tmpd=conv(m1,mywin,'same');
+
+nd=length(tmpd);
+suspect=[1:round(N/2) nd-round(N/2)+1:nd];
+isel = ~ismember([1:nd],suspect);
+jg_filt = jg1(isel);
+m_filt = tmpd(isel);
+
+

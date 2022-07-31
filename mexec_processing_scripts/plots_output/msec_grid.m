@@ -20,9 +20,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 root_ctd = mgetdir('M_CTD');
 
 %get section parameters
-if ~exist('sections','var') || strcmp(sections, 'all') %if list exists, don't overwrite
-    scriptname = mfilename; oopt = 'sections_to_grid'; get_cropt %get list of sections from this cruise
-end
+scriptname = mfilename; oopt = 'sections_to_grid'; get_cropt %get list of sections from this cruise
 
 clear mgrid
 mgrid.method = 'msec_maptracer';
@@ -83,8 +81,8 @@ for ksec = 1:length(sections)
     else
         clear cdata
         cdata.statnum = kstns;
-        pmin = floor(mgrid.zpressgrid(1,1)/2)*2+1; 
-        pmax = floor(mgrid.zpressgrid(end,1)/2)*2-1;
+        pmin = 1;
+        pmax = floor((mgrid.zpressgrid(end,1)*1.5-mgrid.zpressgrid(end-1)*.5)/2)*2-1;
         cdata.press = [pmin:2:pmax]';
         ctd_regridlist = setdiff(ctd_regridlist,'press');
         for vno = 1:length(ctd_regridlist)
@@ -99,8 +97,13 @@ for ksec = 1:length(sections)
                 %done the rest of the list yet either
                 break
             end
-            cdata.lat(1,kstn) = d.latitude(1);
-            cdata.lon(1,kstn) = d.longitude(1);
+            if isfield(d,'latitude')
+                cdata.lat(1,kstn) = nanmean(d.latitude);
+                cdata.lon(1,kstn) = nanmean(d.longitude);
+            else
+                cdata.lon(1,kstn) = h.latitude;
+                cdata.lat(1,kstn) = h.longitude;
+            end
             [~,ii,iic] = intersect(d.press,cdata.press(:,1));
             for vno = 1:length(ctd_regridlist)
                 cdata.(ctd_regridlist{vno})(iic,kstn) = d.(ctd_regridlist{vno})(ii);
@@ -109,16 +112,24 @@ for ksec = 1:length(sections)
         [~,ia,~] = intersect(h.fldnam,ctd_regridlist);
         cdata.vars = ctd_regridlist;
         cdata.unts = h.fldunt(ia);
+        m = sum(isnan(cdata.temp),2)==size(cdata.temp,2);
+        cdata.press(m) = [];
+        for vno = 1:length(ctd_regridlist)
+            cdata.(ctd_regridlist{vno})(m,:) = [];
+        end
     end
-
+    
     %load the bottle sample data
     scriptname = mfilename; oopt = 'sam_gridlist'; get_cropt
     clear sdata
     [d,h] = mload(fullfile(root_ctd,sprintf('sam_%s_all',mcruise)),'/');
-    mstn = ismember(d.statnum,kstns) & d.upress>=pmin & d.upress<=pmax;
+    mstn = ismember(d.statnum,kstns);
     sdata.statnum = d.statnum(mstn);
     sdata.position = d.position(mstn);
     sdata.press = d.upress(mstn);
+    sdata.ctdtmp = d.utemp(mstn);
+    sdata.ctdsal = d.upsal(mstn);
+    sdata.ctdoxy = d.uoxygen(mstn);
     for vno = 1:length(sam_gridlist)
         sdata.(sam_gridlist{vno}) = d.(sam_gridlist{vno})(mstn);
     end

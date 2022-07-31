@@ -16,7 +16,7 @@ function mgrid = maphsec(cdata, sdata, mgrid)
 %       specify xL [2], zL [4], sL [3] gaussian decorrelation length scales in x, z, and potential density sigma
 %
 % xstatnumgrid
-%   row 1 is list of stations (must span cdata.statnum, but can be more
+%   row 1 is list of stations (should span cdata.statnum, but can be more
 %       finely spaced) [default: cdata.statnum]
 %   row 2 is list of mapping x coordinate corresponding to each [default: 1:length(cdata.statnum)]
 %       the defaults produce a spatially-varying length scale reflecting how stations are usually closer
@@ -25,7 +25,7 @@ function mgrid = maphsec(cdata, sdata, mgrid)
 % xlim or xL, see above
 %
 % zpressgrid
-%   col 1 is list of pressures (must span cdata.press) [default: more closely spaced shallower, see code]
+%   col 1 is list of pressures (should span cdata.press) [default: more closely spaced shallower, see code]
 %   col 2 is list of mapping z coordinate corresponding to each [default: 1:length]
 % zlim or zL, see above
 %
@@ -82,6 +82,16 @@ cdata.x = interp1(mgrid.xstatnumgrid(1,:),mgrid.xstatnumgrid(2,:),cdata.statnum)
 sdata.x = interp1(mgrid.xstatnumgrid(1,:),mgrid.xstatnumgrid(2,:),sdata.statnum);
 cdata.z = interp1(mgrid.zpressgrid(:,1),mgrid.zpressgrid(:,2),cdata.press);
 sdata.z = interp1(mgrid.zpressgrid(:,1),mgrid.zpressgrid(:,2),sdata.press);
+%remove the out-of-range ones with no mapping coordinates
+cdata = remove_masked_rowcol(cdata);
+m = isnan(sdata.x+sdata.z);
+l = length(sdata.x);
+fn = fieldnames(sdata);
+for no = 1:length(fn)
+    if length(sdata.(fn{no}))==l
+        sdata.(fn{no})(m) = [];
+    end
+end
 ncx = size(cdata.x,2); ncz = size(cdata.z,2);
 nsx = size(sdata.x,2); nsz = size(sdata.z,2);
 
@@ -191,4 +201,25 @@ p_ref = 2000;
 if isgsw
     mgrid.dh2000 = gsw_geo_strf_dyn_height(mgrid.SA,mgrid.CT,mgrid.press,p_ref);
 end
+
+
+
+function data = remove_masked_rowcol(data)
+
+m = isnan(data.x);
+if sum(m)
+    data.x(m) = []; data.statnum(m) = [];
+    for vno = 1:length(data.vars)
+        data.(data.vars{vno})(:,m) = [];
+    end
+end
+
+m = isnan(data.z);
+if sum(m)
+    data.z(m) = []; data.press(m) = [];
+    for vno = 1:length(data.vars)
+        data.(data.vars{vno})(m,:) = [];
+    end
+end
+
 

@@ -54,18 +54,19 @@ if exist([infile '.nc']) %only if there is a raw file for this day
 
     % fix some things
     mday_01_fixtimes
+    mday_01_rangeedit 
+    if sum(strcmp(abbrev,{'singleb' 'multib'}))
+        mday_01_despike
+    end
     if strcmp(abbrev,'cnav')
         mday_01_cnavfix %this re-parses degrees/minutes, hasn't been necessary since ***
     end
        
    % apply adjustments
    mday_01_fcal %factory calibrations as specified in opt_cruise
-   if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb'}))
-       mday_01_cordep %carter table soundspeed correction, go from depth_uncor to depth
+   if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb' 'em122' 'multib'}))
+       mday_01_cordep %apply transducer offset and (for singleb) carter table soundspeed correction, go from depth_uncor to depth
    end
    
-   % set data to absent outside ranges
-   mday_01_rangeedit 
-    
 end
 

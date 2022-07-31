@@ -34,12 +34,13 @@ uway_set_streams
 %which variables to merge from one file into another
 scriptname = mfilename; oopt = 'comb_uvars'; get_cropt 
 
+
 for daynumber = days
     daystr = sprintf('%03d', daynumber);
-    
+
     loadstatus = zeros(1,length(shortnames));
     for sno = 1:length(shortnames)
-        
+
         if loadstatus(sno)==0
             %load
             try
@@ -47,37 +48,43 @@ for daynumber = days
             catch
                 loadstatus(sno) = 1;
             end
-            if loadstatus(sno)==1
+            if loadstatus(sno)==2
                 %did not find directory in MEXEC_G.MDIRLIST, go to next shortname after single warning
                 fprintf(1,'%s (%s) not found in MEXEC_G.MDIRLIST,\n',shortnames{sno},streamnames{sno})
                 if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
                     fprintf(1,'or is in m_udirs.m but not in mrtables_from_json.m (rerun m_setudir and m_setup?),\n')
                 end
                 warning('enter to continue skipping this stream, or Ctrl-C to quit');
-                    
+
                 pause
                 continue
             end
-            
+
             %apply additional processing and cleaning (and renaming) for some streams
             mday_01_clean(shortnames{sno}, daynumber);
         end
-        
+
     end
-    
-    %merge bathymetry streams with each other; they are edited day by day,
-    %so do merge at this stage
-    if sum(strcmp('bathy', umtypes))
-        mbathy_av_merge
-    end
-    
+
 end
+
+%edit bathymetry files
+if sum(strcmp('bathy', umtypes))
+    for daynumber = days
+        daystr = sprintf('%03d',daynumber);
+        mbathy_edit_av
+    end
+end
+ 
+
 shortnames(loadstatus==1) = [];
 streamnames(loadstatus==1) = [];
 udirs(loadstatus==1) = [];
 
 %append to _01 files
-m_uway_append(shortnames, udirs, days, restart_uway_append)
+%ii = find(strcmp('singleb',shortnames) | strcmp('multib',shortnames));
+ii = 1:length(shortnames);
+m_uway_append(shortnames(ii), udirs(ii), days, restart_uway_append)
 clear restart_uway_append
 
 %%%%% further processing %%%%%

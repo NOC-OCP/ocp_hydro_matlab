@@ -17,7 +17,7 @@ varr.rad.range = [-10 1500]; varr.rad.names = {'ppar' 'spar' 'ptir' 'stir' 'parp
 varr.seatemp.range = [-2 50]; varr.seatemp.names = {'temp_h' 'temp_r' 'temp_m' 'sstemp' 'tstemp' 'temp_housing' 'temp_remote'};
 varr.cond.range = [0 10]; varr.cond.names = {'cond' 'conductivity'};
 varr.trans.range = [0 105]; 
-varr.dep.range = [20 1e4]; varr.dep.names = {'depth' 'swath_depth'};
+varr.dep.range = [20 1e4]; varr.dep.names = {'depth' 'swath_depth' 'waterdepth' 'depth_below_xducer'};
 
 fn = fieldnames(varr);
 h = m_read_header(otfile);

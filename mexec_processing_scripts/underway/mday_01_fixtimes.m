@@ -8,23 +8,24 @@ wkfile2 = ['wk2_' prefix '_' mfilename '_' datestr(now,30)];
 
 %%%%% check for repeated times and backward time jumps %%%%%
 
+%work on the latest file, which already be an edited version; always output to otfile
+if exist(m_add_nc(otfile),'file')
+    [d,h] = mload(otfile,'/');
+else
+    [d,h] = mload(infile,'/');
+end
+deltat = d.time(2:end)-d.time(1:end-1);
+deltat = [1; deltat(:)];
+iib = find(deltat==0);
+if ~isempty(iib)
+    for no = 1:length(h.fldnam)
+        d.(h.fldnam{no})(iib) = [];
+    end
+    mfsave(otfile, d, h);
+end
+
 switch abbrev
     
-    case {'ash', 'cnav', 'gp4', 'pos', 'met', 'met_light', 'met_tsg', 'tsg', 'surfmet' 'possea' 'dopsea' 'vtgsea' 'attsea' 'dopcnav' 'hdtsea' 'ea600' 'logskip' 'posranger' 'hdtgyro'}
-        %work on the latest file, which already be an edited version; always output to otfile
-        if exist(m_add_nc(otfile),'file')
-            [d,h] = mload(otfile,'/');
-        else
-            [d,h] = mload(infile,'/');
-        end
-        deltat = d.time(2:end)-d.time(1:end-1);
-        deltat = [1; deltat(:)];
-        iib = find(deltat==0);
-        for no = 1:length(h.fldnam)
-            d.(h.fldnam{no})(iib) = [];
-        end
-        mfsave(otfile, d, h);
-
     case {'gys', 'gyr', 'gyro_s', 'gyropmv' 'posmvpos'}
         %work on the latest file, which already be an edited version; always output to otfile
         if exist([otfile '.nc'])

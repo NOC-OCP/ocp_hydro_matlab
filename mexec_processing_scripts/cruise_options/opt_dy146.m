@@ -146,7 +146,7 @@ switch scriptname
                 castopts.oxyhyst.H3{2} = interp1(h3tab2(:,1),h3tab2(:,2),d.press);
                 iib = find(isnan(d.press)); iig = find(~isnan(d.press));
                 if ~isempty(iib); castopts.oxyhyst.H3{2}(iib) = interp1(iig,castopts.oxyhyst.H3{2}(iig),iib); end
-            case 'ctdcals'
+            case 'ctd_cals'
                 castopts.docal.temp = 1;
                 castopts.docal.cond = 1;
                 castopts.docal.oxygen = 1;

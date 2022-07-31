@@ -30,7 +30,7 @@ function tablevars = mrgettablevars(table)
 
 m_common
 
-tablemap = mrnames('q');
+def = mrdefine; tablemap = def.tablemap;
 ktable = find(strcmp(table,tablemap(:,1)));
 if length(ktable) == 1
     % if table matches an mexec table name, convert it to rvdas table name.

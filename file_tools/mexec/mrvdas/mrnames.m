@@ -27,7 +27,15 @@ function tablemap = mrnames(varargin)
 % Output: 
 % 
 % tablemap is an N x 2 cell array. Column 1 is the list of mexec short
-% names. Column 2 is the list of RVDAS table names.
+% names. Column 2 is the list of RVDAS table names. When mrnames is used
+% (e.g. in mrdefine) it will be tested against the result of
+% mrtables_from_json to find the messages actually present and being
+% ingested on this cruise; therefore column 1 can have repeated values as
+% long as only one of the corresponding messages is being read in on a
+% given cruise (e.g. if on one ship the pmvpos message is posmv_gpgga and
+% on the other it is posmv_gpggk, both lines can be kept in the list
+% below). If there are duplicate lines that both have ingested messages on
+% a cruise, the first will be used.
 
 
 % Search for any of the arguments to be 'q', and set qflag = 'q' or '';
@@ -49,59 +57,60 @@ end
 tablemap = {
 
     'winch'        'winchlog_winch'    
-%
+
     'hdtgyro'      'sgyro_hehdt'       
-%
+
     'attpmv'       'posmv_pashr'       
     'hdtpmv'       'posmv_gphdt'       
-%    'pospmv'       'posmv_gpgga'      
+    'pospmv'       'posmv_gpgga'      
     'pospmv'       'posmv_gpggk'       
     'vtgpmv'       'posmv_gpvtg'       
-%
-%    'posfugro'     'fugro_gps_gpgga'  
-%    'vtgfugro'     'fugro_gps_gpvtg'  
-%    'dopfugro'     'fugro_gps_gngsa'  
-%
-%    'attphins'     'phins_att_pashr'   
-%    'hdtphins'     'phins_att_hehdt'   
-%    'posphins'     'phins_att_pixsegpsin0'   % phins lat and lon
-%    'hssphins'     'phins_att_pixseheave0'   % phins surge sway heave
-%    'prophins'     'phins_att_pixseatitud'   % phins pitch and roll
-%    'prdphins'     'phins_att_prdid'   
-%
+
+    'posfugro'     'fugro_gps_gpgga'  
+    'vtgfugro'     'fugro_gps_gpvtg'  
+    'dopfugro'     'fugro_gps_gngsa'  
+
+    'attphins'     'phins_att_pashr'   
+    'hdtphins'     'phins_att_hehdt'   
+    'posphins'     'phins_att_pixsegpsin0'   % phins lat and lon
+    'hssphins'     'phins_att_pixseheave0'   % phins surge sway heave
+    'prophins'     'phins_att_pixseatitud'   % phins pitch and roll
+    'prdphins'     'phins_att_prdid'   
+
     'poscnav'      'cnav_gngga'   
     'vtgcnav'      'cnav_gnvtg'   
-     'dopcnav'      'cnav_gngsa'  % available on jc211
-%     'posdps'       'dps116_gps_gpgga'    % available on jc211
+    'dopcnav'      'cnav_gngsa'  % available on jc211
+    'posdps'       'dps116_gps_gpgga'    % available on jc211
    
     'posranger'    'ranger2usbl_gpgga'   
-%
+
     'attsea'       'seapathatt_psxn23'   
     'hdtsea'       'seapathgps_inhdt'   
     'possea'       'seapathgps_ingga'   
     'vtgsea'       'seapathgps_invtg'   
-%     'dopsea'       'seapath_pos_ingsa'  % available on jc211
-%
+    'dopsea'       'seapath_pos_ingsa'  % available on jc211
+
     'sbe38'        'sbe38dropkeel_sbe38'   
     'surfmet'      'surfmet_gpxsm'   
     'windsonic'    'windsonicnmea_iimwv'   
     'tsg'          'sbe45_nanan'   
-    %'rex2wave'     'rex2_wave_pramr'   
-    %'wamos'        'wamos_wave_pwam'   
+    'rex2wave'     'rex2_wave_pramr'   
+    'wamos'        'wamos_wave_pwam'   
      
-    'multib_t'     'em122_kidpt'   
-    'singleb'      'ea640_sddbs'   
-    'singleb_t'    'ea640_sddpt'   
+    'multib'     'em122_kidpt'   
+    'singleb'    'ea640_sddpt'   
+    'singleb'    'ea640_sddbs'   
 
     'envtemp'      'envtemp_wimta'   
     'envhumid'     'envtemp_wimhu'   
 
-    %'logchf'       'slogchernikeef_vmvbw'  % available on jc211
-    %'logskip'      'ships_skipperlog_vdvbw'
-    %'gravity'      'u12_at1m_uw'
-    %'mag'          'seaspy_mag_inmag'
-    %'magerror'     'seaspy_mag_3rr0r'
+    'logchf'       'slogchernikeef_vmvbw'  % available on jc211
+    'logskip'      'ships_skipperlog_vdvbw'
+    'gravity'      'u12_at1m_uw'
+    'mag'          'seaspy_mag_inmag'
+    'magerror'     'seaspy_mag_3rr0r'
     };
+
 
 if ~isempty(qflag); return; end
 

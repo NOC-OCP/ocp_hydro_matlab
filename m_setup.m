@@ -171,6 +171,7 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         fprintf(2,'%s\n',merr);
         return
 end
+scriptname = mfilename; oopt = 'default_nav'; get_cropt
 MEXEC_G.PLATFORM_TYPE= 'ship';
 
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normally be changed

@@ -64,6 +64,15 @@ d.mrtables_list = fieldnames(d.mrtables);
 
 % get table of mexec short names for RVDAS tables
 d.tablemap = mrnames('q'); % any argument suppresses listing to screen
+% limit to the names actually in mrtables_from_json
+[~,ii,~] = intersect(d.tablemap(:,2),d.mrtables_list,'stable');
+d.tablemap = d.tablemap(ii,:);
+[~,ii] = unique(d.tablemap(:,1),'first');
+if length(ii)<size(d.tablemap,1)
+    warning('rvdas:mrdefine:mnamedup','duplicate mexec short names detected; keeping first')
+    warning('off','rvdas:mrdefine:mnamedup'); %only once per session
+end
+d.tablemap = d.tablemap(ii,:);
 
 % get a list of variables for which we want to change names when loaded
 % into mexec, and a list of tables whose variables should have _raw

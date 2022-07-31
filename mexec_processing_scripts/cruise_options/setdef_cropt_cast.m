@@ -161,9 +161,9 @@ switch scriptname
             case 'ctd_cals'
                 crhelp_str = {'Set calibration functions to be applied to variables in _24hz file, if '
                     'corresponding flags are set to true. '
-                    'Functions are set in calstr, a structure whose fields are sensors (e.g. cond1, oxygen2),'
-                    'each of which itself has two fields, the cruise name containing the calibration function '
-                    'e.g. dcal.cond1 = d0.cond1.*(1+4e-4*d0.statnum)/35,'
+                    'Functions are set in castopts.calstr, a structure whose fields are sensors (e.g. cond1, oxygen2),'
+                    'each of which itself has two fields: the cruise name containing the calibration function as a string'
+                    'e.g. ''dcal.cond1 = d0.cond1.*(1+4e-4*d0.statnum)/35;'','
                     'and ''msg'' a string containing information to be added to the file header along with'
                     'the calibration function, e.g. ''using bottle salinities from stations 1-40 only''.'
                     'Flags are set in structure docal, containing temp, cond, oxygen, fluor, transmittance.'
@@ -224,7 +224,7 @@ switch scriptname
                 ptol = 0.08; %default is not to apply, but this would be the default value if you did
                 spdtol = 0.24; %default value from SBE program
             case 'interp2db'
-                crhelp_str = {'maxgap2db determines maximum length of gaps in 2 dbar averaged data'
+                crhelp_str = {'maxfill2db determines maximum length of gaps in 2 dbar averaged data'
                     'to fill by linear interpolation (in dbar; default 0 though pre-dy113 default was inf).'};
                 maxfill2db = 0;
         end
@@ -252,14 +252,15 @@ switch scriptname
         switch oopt
             case 'fir_fill'
                 crhelp_str = {'firmethod and firopts determine how to get CTD data at Niskin firing times:'
-                    'firmethod = ''medint'' to take median average over a scan interval around '
-                    'firing scans set by firopts.int (e.g. [-1 120] for just before to 5 s after); or'
-                    'firmethod = ''linterp'' (default) to linearly interpolate.'
+                    'firmethod = ''medint'' to take median average over a scan interval around firing'
+                    'scan set by firopts.int (e.g. default [-1 120] for just before to 5 s after); or'
+                    'firmethod = ''linterp'' to linearly interpolate.'
                     'Additional fields of firopts set whether to fill gaps of any length (firopts.prefill = inf),'
                     'up to set length N (firopts.prefill = N; default 120), or not at all (firopts.prefill = 0)'
                     'by linear interpolation, before averaging or interpolating.'};
-                firmethod = 'linterp'; 
+                firmethod = 'medint';
                 clear firopts;
+                firopts.int = [-1 120];
                 firopts.prefill = 24*5; %fill gaps up to 5 s first
         end
         %%%%%%%%%% end mfir_03 %%%%%%%%%%

@@ -72,6 +72,11 @@ copyfile(m_add_nc(infilew), m_add_nc(otfile1))
 mfsave(otfile1, dnew, hnew, '-addvars');
 
 [d, h] = mloadq(otfile1, '/');
+%get rid of the variables we shouldn't average
+excl = {ws wd 'truwind_dir' 'truwind_spd'};
+[excl,~,iie] = intersect(excl,h.fldnam);
+h.fldnam(iie) = []; h.fldunt(iie) = [];
+d = rmfield(d,excl);
 tg = (floor(min(d.time)/86400)*86400 - tav2):tave_period:(ceil(max(d.time)/86400)*86400+1);
 clear opts
 opts.ignore_nan = 1;
@@ -81,9 +86,12 @@ h.comment = [h.comment '\n averaged to by finding midpoint of linear fit in bins
 
 %recalculate wind speed and direction from averaged vectors
 [dg.truwind_spd, dg.truwind_dir] = uvsd(dg.truwind_e, dg.truwind_n, 'uvsd');
+h.fldnam = [h.fldnam 'truwind_spd']; h.fldunt = [h.fldunt 'm/s'];
+h.fldnam = [h.fldnam 'truwind_dir']; h.fldunt = [h.fldunt 'degrees N of E'];
 
 %save
 clear hnew
-hnew.fldnam = h.fldnam; hnew.fldunt = h.fldunt;
+[~,ia,ib] = intersect(fieldnames(dg),h.fldnam);
+hnew.fldnam = h.fldnam(ib); hnew.fldunt = h.fldunt(ib);
 hnew.comment = [h.comment sprintf('\n truwind averaged over %d seconds from %s',tave_period,otfile1)];
 mfsave(otfile2, dg, hnew);

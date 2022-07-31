@@ -53,7 +53,7 @@ fnames = setdiff(fnames, vars_exclude);
 %niskin flags are applied not to niskins but to other fields
 if isfield(data, 'niskin_flag') && woceflags
     %NaN all samples from leaking (3), badly-closed (4) or unused (9) Niskins
-    iinf = find(ismember(data.niskin_flag,[3 4 9])); 
+    iinf = ismember(data.niskin_flag,[3 4 9]); 
 else
     iinf = [];
 end
@@ -108,8 +108,9 @@ for vno = 1:length(fnames)
         %now NaN everywhere that flag is bad
         d(ismember(f, badflags)) = NaN;
         %and where niskin is flagged
-        if ~isempty(iinf)
+        if ~isempty(iinf) && sum(iinf)
             d(iinf) = NaN;
+            f(iinf & f<9) = 4;
         end
         
         data.(fnames{vno}) = d;

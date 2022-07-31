@@ -87,24 +87,23 @@ rtables.cnav_gngsa = {  % from cnav-jc-2022-01-01T000000Z-null.json
 
 %ea640-jc-2022-02-04T064000Z-null  2  sentences
 
-%"SDDPT"
 rtables.ea640_sddpt = {  % from ea640-jc-2022-02-04T064000Z-null.json
 'ea640_sddpt'  2 []  % fields
                        'depth'                       'metres'                                            'Depth_in_meters_from_the_transducer'
             'transducerOffset'                             '' 'Positive_means_distance_from_transducer_to_waterline_Negative_means_distance_from_transducer_to_keel_in_meter'
 };
 
+
 %"SDDBS"
 rtables.ea640_sddbs = {  % from ea640-jc-2022-02-04T064000Z-null.json
 'ea640_sddbs'  6 []  % fields
-                   'depthFeet'                         'Feet'                                                'Depth_in_feets_from_the_surface'
+%                   'depthFeet'                         'Feet'                                                'Depth_in_feets_from_the_surface'
 %                   'flagFeet'                             ''                                                               'feet_designation'
                   'depthMeter'                       'metres'                                               'Depth_in_metres_from_the_surface'
 %                  'flagMeter'                             ''                                                              'Meter_designation'
-                  'deptFathom'                       'fathom'                                               'Depth_in_Fathom_from_the_surface'
+%                  'deptFathom'                       'fathom'                                               'Depth_in_Fathom_from_the_surface'
 %                 'flagFathom'                             ''                                                             'Fathom_designation'
 };
-
 
 %em122-jc-2022-02-01T150300Z-null  1  sentences
 

@@ -26,6 +26,9 @@
 m_common
 if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
 
+std_samp_range = [999000 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
+%ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
+
 % find list of files and information on variables
 root_sal = mgetdir('M_BOT_SAL');
 scriptname = mfilename; oopt = 'sal_files'; get_cropt %list of files to load
@@ -130,7 +133,7 @@ fn = ds_sal.Properties.VariableNames;
 
 %plot standards
 if sum(strcmp('k15',fn))
-    iis = find(ds_sal.sampnum>999000);
+    iis = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<std_samp_range(2));
     figure(10); clf
     subplot(211)
     st = ds_sal.k15*2;
@@ -159,8 +162,6 @@ if sum(strcmp('k15',fn))
 end
 
 %apply offsets
-std_samp_range = [999000 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
-%ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
 if isempty(sal_adj_comment) && ~isempty(sal_off)
     sal_adj_comment = ['Adjustments specified in opt_' mcruise];
 end
@@ -198,7 +199,7 @@ else
     end
 end
 
-%apply offsets (and plot?)***
+%apply offsets
 ds_sal.salinity = gsw_SP_salinometer(ds_sal.runavg/2, ds_sal.cellt); %changed on JC103 in rapid branch, after JR16002 in JCR branch
 if ~isempty(sal_off)
     ds_sal.salinity_adj = gsw_SP_salinometer((ds_sal.runavg+ds_sal.sal_off)/2, ds_sal.cellt);
@@ -278,8 +279,8 @@ ds = rmfield(ds,'niskin_flag');
 %save
 mfsave(samfile, ds, hnew, '-merge', 'sampnum');
 
-%get TSG samples, figure out event numbers
-%either negative, dddhhmmss (where ddd is year-day starting at 1), or yyyymmddhhmmss
+%get TSG samples, figure out times: either -dddhhmmss (where ddd is
+%year-day starting at 1), or yyyymmddhhmmss 
 iiu = find(d.sampnum<0 | d.sampnum>=1e7);
 if ~isempty(iiu)
 
@@ -305,7 +306,7 @@ if ~isempty(iiu)
     mfsave(tsgfile, dsu, hu);
 
     figure(10); subplot(224)
-    x = dsu.time/86400-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)+1;
+    x = dsu.time/86400+1;
     plot(x,dsu.salinity,'o',x,dsu.salinity_adj,'s')
     title('TSG'); xlabel('yearday'); 
 

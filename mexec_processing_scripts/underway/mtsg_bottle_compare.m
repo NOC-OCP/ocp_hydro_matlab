@@ -5,7 +5,18 @@
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; % cruise name (from MEXEC_G global)
 
 
-comp2ctd = false %true % set to false if you don't want to compare to CTD data
+comp2ctd = true ; % false %true % set to false if you don't want to compare to CTD data
+
+if comp2ctd==true
+    updownboth = 'both' ; %'up' %'down'
+
+    % set a variable for the CTD salinity variable to look at (currently psal
+    % but could make it variable...) 
+    ctd_sal_var = 'psal';
+    ctd_temp_var = 'temp';
+
+
+end 
 
 
 % get_cropt basically checks that file exists and sets defaults set
@@ -70,12 +81,17 @@ end
 
 %year-day
 dt.time = dt.time/3600/24+1; 
-db.time = db.time/3600/24+1+1/1440; % delay bottles by one minute to allow for time between bottle sample being drawn and water passing through TSG
+switch MEXEC_G.Mship
+    case {'cook' 'discovery'}
+db.time = db.time/3600/24+1-1/1440; % delay bottles by one minute to allow for time between bottle sample being drawn and water passing through TSG
+    case 'jcr'
+db.time = db.time/3600/24+1-1/1440; % delay bottles by one minute to allow for time between bottle sample being drawn and water passing through TSG
+end
 
 tsal = dt.(salvar);
 tsals = interp1(dt.time, tsal, db.time);
 nsp = 2;
-if exist('tempsst','var') & ~isempty(tempsst)
+if exist('tempsst','var') && ~isempty(tempsst)
     tssts = interp1(dt.time, dt.(tempsst), db.time);
     nsp = 4;
 end
@@ -166,20 +182,20 @@ ylabel('Salinity (psu)'); xlabel('yearday, noon on 1 Jan = 1.5')
 title([calstr ' TSG'])
 xlim(dt.time([1 end]))
 subplot(nsp,1,2)
-plot(db.time, sdiffall, 'r+-',t_all+1, sdiffsm,' kx-'); grid
-ylabel([calstr ' bottle minus TSG (psu)']); xlabel('yearday, noon on 1 Jan = 1.5')
+plot(db.time, sdiffall, 'r+-',t_all+1, sdiffsm,' kx-'); grid ; hold on ; 
+ylabel([calstr ' bottle - TSG (psu)']); xlabel('yearday, noon on 1 Jan = 1.5')
 xlim(dt.time([1 end]))
-ylim([-.02 .04])
+ylim([-.02 .06])
 if nsp==4
     subplot(nsp,1,3)
     plot(tssts, sdiffall, 'r+', tssts, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
     xlabel('Sea Surface Temperature (^\circC)')
-    ylabel([calstr ' TSG - bottle (psu)'])
-    legend('Total Difference', 'Smoothed Difference');
+    ylabel([calstr ' bottle - TSG (psu)'])
+    legend('Total Difference', 'Smoothed Difference'); hold on ; 
     subplot(nsp,1,4)
     plot(tsals, sdiffall, 'r+', tsals, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
     xlabel([calstr ' TSG salinity (psu)'])
-    ylabel([calstr ' TSG - bottle (psu)'])
+    ylabel([calstr ' bottle - TSG (psu)'])
 end
 
 disp('mean diff, median diff')
@@ -198,7 +214,149 @@ end
 
 if comp2ctd
     load_postedit_ctd_for_tsg_comp
+    % Check if variable set for the CTD salinity variable exists within the
+    % strcture
+    if isfield(ds_i, ctd_sal_var)
+       
+     else
+       prompt= 'Which (salinity) variable would you like to use for comparison with tsg data?' % Options include '+ fnames
+       ctd_sal_var = string(input(prompt))
+    end
+
+    if isfield(ds_i, ctd_temp_var)
+       
+    else
+       prompt= 'Which (temperature) variable would you like to use for comparison with tsg data?' % Options include '+ fnames
+       ctd_temp_var = string(input(prompt))
+    end
+
+    % plot TSG, bottle and CTD data
+    figure(2); clf
+    subplot(1,1,1) %nsp
+    h2 = plot(dt.time, tsal, db.time, db.salinity, '.y', db.time, db.salinity_adj, 'o', db.time, tsals, '<'); grid
+    hold on;
+    h3 = plot(ds_i_all.time_jul, ds_i_all.(ctd_sal_var), 'r.', ds_i_all_shallowest.time_jul, ds_i_all_shallowest.(ctd_sal_var), 'r.');
+    h3(2).MarkerSize = 20;
+    legend(h2([1 3 4]), 'TSG','bottle','TSG'); %, 'CTD')
+    hold on;
+    ctd_all_leg_str = 'CTD all downcast < ' + string(max_comp_depth);
+    legend(h3([1, 2]), ctd_all_leg_str, 'Shallowest');
+    ylabel('Salinity (psu)'); xlabel('yearday, noon on 1 Jan = 1.5')
+    title([calstr ' TSG'])
+    xlim(dt.time([1 end]))
     
+    if nseg < 2
+        % relate tsg time to ctd time
+        % tsal = dt.(salvar); %this already defined above
+        tsals_ctd_shallow = interp1(dt.time, tsal, ds_i_all_shallowest.time_jul);
+        tsals_ctd_5m = interp1(dt.time, tsal, ds_i_all_5m.time_jul);
+
+    else 
+        %  work out overlapping times for each segment
+        try 
+            tsals_ctd_shallow = interp1(dt.time, tsal, ds_i_all_shallowest.time_jul);
+            tsals_ctd_5m = interp1(dt.time, tsal, ds_i_all_5m.time_jul);
+
+        catch 
+            disp('Interpolation of TSG sal onto CTD sal failed. Likely as TSG not running during CTD deployment. Next section will likely fail.')
+        end
+        
+    end
+
+    nsp = 2;
+    if exist('tempsst','var') & ~isempty(tempsst)
+        tssts_ctd_shallow = interp1(dt.time, dt.(tempsst), ds_i_all_shallowest.time_jul);
+        tssts_ctd_5m = interp1(dt.time, dt.(tempsst), ds_i_all_5m.time_jul);
+
+        nsp = 4;
+    end
+
+    %NaN some of the db.salinity_adj points ???
+
+    sdiff_ctd_shallow = ds_i_all_shallowest.(ctd_sal_var)-tsals_ctd_shallow; %offset is bottle minus tsg, so that it is correction to be added to tsg
+    sdiff_std_ctd_shallow = m_nanstd(sdiff_ctd_shallow); sdiff_mean_ctd_shallow = m_nanmean(sdiff_ctd_shallow);
+    idx = find(abs(sdiff_ctd_shallow-sdiff_mean_ctd_shallow)>3*sdiff_std_ctd_shallow); % bak dy146 sdiff-sdiff_mean ?
+    % List and discard possible outliers
+    if ~isempty(idx)
+	    fprintf(1,'\n Std deviation of ctd tsg - differnces is %7.3f \n',sdiff_std_ctd_shallow)
+	    fprintf(1,' The following are outliers to be checked: \n')
+	    fprintf(1,' Sample  Jday Time    Difference  \n')
+	    for ii = idx(:)'
+		    jdx = floor(ds_i_all_shallowest.time_jul(ii));
+		    fprintf(1,'  %2d  -  %d  %s  %7.3f \n',ii,jdx,datestr(ds_i_all_shallowest.time_jul(ii),15),sdiff_ctd_shallow(ii))
+	    end
+    end
+    sdiffall_ctd_shallow = sdiff_ctd_shallow;
+    sdiff_ctd_shallow(idx) = NaN; % set values where value>3*SD as NaN
+
+
+    sdiff_ctd_5m = ds_i_all_5m.(ctd_sal_var)-tsals_ctd_5m; %offset is bottle minus tsg, so that it is correction to be added to tsg
+    sdiff_std_ctd_5m = m_nanstd(sdiff_ctd_5m); sdiff_mean_ctd_5m = m_nanmean(sdiff_ctd_5m);
+    idx = find(abs(sdiff_ctd_5m-sdiff_mean_ctd_5m)>3*sdiff_std_ctd_5m); % bak dy146 sdiff-sdiff_mean ?
+    % List and discard possible outliers
+    if ~isempty(idx)
+	    fprintf(1,'\n Std deviation of ctd tsg - differnces is %7.3f \n',sdiff_std_ctd_5m)
+	    fprintf(1,' The following are outliers to be checked: \n')
+	    fprintf(1,' Sample  Jday Time    Difference  \n')
+	    for ii = idx(:)'
+		    jdx = floor(ds_i_all_5m.time_jul(ii));
+		    fprintf(1,'  %2d  -  %d  %s  %7.3f \n',ii,jdx,datestr(ds_i_all_5m.time_jul(ii),15),sdiff_ctd_5m(ii))
+	    end
+    end
+    sdiffall_ctd_5m = sdiff_ctd_5m;
+    sdiff_ctd_5m(idx) = NaN; % set values where value>3*SD as NaN
+
+
+    % plot TSG and bottle data
+    figure(3); clf
+    subplot(nsp,1,1)
+    
+    % plot bottles too
+    h4 = plot(dt.time, tsal, db.time, db.salinity, '.y', db.time, db.salinity_adj, 'o', db.time, tsals, '<', ds_i_all.time_jul, ds_i_all.(ctd_sal_var), 'r.', ds_i_all_shallowest.time_jul, ds_i_all_shallowest.(ctd_sal_var), 'r.'); grid
+    legend(h4([1 3 4 5 6]), 'TSG','bottle','TSG', ctd_all_leg_str, 'Shallowest'); % , '5m')
+    h4(6).MarkerSize = 20;
+
+    % just plot CTD data NOT bottles
+    %h4 = plot(dt.time, tsal, ds_i_all.time_jul, ds_i_all.(ctd_sal_var), 'k.', ds_i_all_shallowest.time_jul, ds_i_all_shallowest.(ctd_sal_var), 'r.'); grid
+    %legend(h4([1 2 3]), 'TSG', ctd_all_leg_str, 'Shallowest'); % , '5m')
+    %h4(3).MarkerSize = 20;
+    
+    %h3 = plot(ds_i_all.time_jul, ds_i_all.(ctd_sal_var), 'r.', ds_i_all_shallowest.time_jul, ds_i_all_shallowest.(ctd_sal_var), 'r.');
+    %legend(h2([1 3 4]), 'TSG','bottle','TSG'); %, 'CTD')
+
+    ylabel('Salinity (psu)'); xlabel('yearday, noon on 1 Jan = 1.5')
+    title([calstr ' TSG'])
+    xlim(dt.time([1 end]))
+    ylim([34.5, 35.5])
+    subplot(nsp,1,2)
+    plot(ds_i_all_shallowest.time_jul, sdiffall_ctd_shallow, 'r+-', ds_i_all_5m.time_jul, sdiffall_ctd_5m, 'k+-') ; grid %,t_all+1, sdiffsm,' kx-'); grid
+    hold on ;
+    ylabel([calstr ' CTD minus TSG (psu)']); xlabel('yearday, noon on 1 Jan = 1.5')
+    xlim(dt.time([1 end]))
+    ylim([-.02 .06])
+    legend('Shallowest', '5m');
+    hold on ;
+    if nsp==4
+        subplot(nsp,1,3)
+        plot(tssts_ctd_shallow, sdiffall_ctd_5m, 'r+', tssts_ctd_5m, sdiffall_ctd_5m, 'k+') ; grid %, tssts, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
+        xlabel('Sea Surface Temperature (^\circC)')
+        ylabel([calstr ' CTD - TSG (psu)'])
+        legend('Shallowest', '5m');
+        ylim([-.01, 0.06])
+        subplot(nsp,1,4)
+        plot(tsals_ctd_shallow, sdiffall_ctd_shallow, 'r+', tsals_ctd_5m, sdiffall_ctd_5m, 'k+') ; grid %, tsals, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
+        xlabel([calstr ' TSG salinity (psu)'])
+        ylabel([calstr ' CTD - TSG (psu)'])
+        legend('Shallowest', '5m');
+        ylim([-.01, 0.06])
+
+    end
+    
+    % compare TSG and CTD temp
+    figure(4); clf ; 
+    h5 = plot(dt.time, dt.(tempsst), 'k', dt.time, dt.(tempvar), 'b', ds_i_all.time_jul, ds_i_all.(ctd_temp_var), 'r.', ds_i_all_shallowest.time_jul, ds_i_all_shallowest.(ctd_temp_var), 'r.');
+    legend(h5([1 2 3]), 'TSG tempr', 'TSG temph', 'CTD temp', 'Shallowest CTD temp') ; %, ctd_all_leg_str, 'Shallowest'); % , '5m')
+    h5(3).MarkerSize = 20;
 
 
 end

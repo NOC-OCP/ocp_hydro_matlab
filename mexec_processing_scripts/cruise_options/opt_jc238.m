@@ -9,7 +9,13 @@ switch scriptname
                     oxy_end = 1;
                 end
             case 'shortcasts'
-                shortcasts = 42 ;
+                shortcasts = 42;
+        end
+
+    case 'm_setup'
+        switch oopt
+            case 'default_nav'
+                MEXEC_G.default_hedstream = 'attsea'; %posmv was 4 degrees out most of the trip
         end
 
     case 'batchactions'
@@ -38,6 +44,7 @@ switch scriptname
                 if stnlocal==3
                    castopts.badscans.transmittance = [0 inf]; %instrument went bad pretty much the whole cast
                 elseif stnlocal==19
+                    %needed cleaning
                     castopts.despike.cond1 = [0.2 0.1];
                     castopts.despike.cond2 = [0.2 0.1];
                 elseif stnlocal==38
@@ -46,30 +53,33 @@ switch scriptname
                     castopts.badscans.cond1 = [135900 inf];
                     castopts.badscans.oxygen_sbe1 = [135900 inf];
                 end
-            case 'ctd_cals'              
+            case 'raw_corrs'
+                castopts.oxyhyst.H2 = {6000 6000};
+                castopts.oxyhyst.H3 = {1800 2000};
+            case 'ctd_cals'
                 %calibration strings below for testing; not final; do not
                 %apply to ctd files
-                castopts.docal.temp = 0;
-                castopts.docal.cond = 0;
-                castopts.docal.oxygen = 0;
+                castopts.docal.temp = 1;
+                castopts.docal.cond = 1;
+                castopts.docal.oxygen = 1;
 
-                castopts.calstr.temp1.jc238 = 'dcal.temp1 = d0.temp1 + interp1([-10 3100],[2 -1]*1e-3,d0.press);';
-                castopts.calstr.temp2.jc238 = 'dcal.temp2 = d0.temp2 + 1e-3;';
-%                calms = 'from comparison with SBE35, stations 1-33 (all)';
-%                castopts.calstr.temp1.msg = calms;
-%                castopts.calstr.temp2.msg = calms;
+                castopts.calstr.temp1.jc238 = 'dcal.temp1 = d0.temp1 + interp1([-10 1000 3100],[0.7 0.9 -1.7]*1e-3,d0.press);';
+                castopts.calstr.temp2.jc238 = 'dcal.temp2 = d0.temp2 - 2e-5*d0.statnum + interp1([-10 1300 3100],[1.5 1.4 0.2]*1e-3,d0.press) + 2e-4;';
+                calms = 'from comparison with SBE35, stations 1-41,43-44 (all)';
+                castopts.calstr.temp1.msg = calms;
+                castopts.calstr.temp2.msg = calms;
 
-                %castopts.calstr.cond1.jc238 = 'dcal.cond1 = d0.cond1;';
-                castopts.calstr.cond2.jc238 = 'dcal.cond2 = d0.cond2.*(1 + interp1([-10 3100],[-2.2e-3 1.7e-3],d0.press)/35);';
-%                calms = 'from comparison with bottle salinity, stations 1-25 (all)';
-%                castopts.calstr.cond1.msg = calms;
-%                castopts.calstr.cond2.msg = calms;
-                
-                 castopts.calstr.oxygen1.jc238 = 'dcal.oxygen1 = d0.oxygen1.*interp1([-10 3100],[1.03 1.04],d0.press)+interp1([-10 3100],[2 1],d0.press);';
-                 castopts.calstr.oxygen2.jc238 = 'dcal.oxygen2 = d0.oxygen2.*interp1([-10 3100],[1.01 1.04],d0.press)+1.8;';
-%                 calms = 'from comparison with bottle oxygens, stations 1-29 (all)';
-%                 castopts.calstr.oxygen1.msg = calms;
-%                 castopts.calstr.oxygen2.msg = calms;
+                castopts.calstr.cond1.jc238 = 'dcal.cond1 = d0.cond1.*(1 - (5.5e-5*d0.statnum + interp1([-10 2300 3100],[-1 -1 4]*1e-4,d0.press))/35);';
+                castopts.calstr.cond2.jc238 = 'dcal.cond2 = d0.cond2.*(1 - (5e-5*d0.statnum + interp1([-10 1300 3100],[1.5 -0.2 -0.3]*1e-3,d0.press))/35);';
+                calms = 'from comparison with bottle salinity, stations 1-41,43 (all)';
+                castopts.calstr.cond1.msg = calms;
+                castopts.calstr.cond2.msg = calms;
+
+                castopts.calstr.oxygen1.jc238 = 'dcal.oxygen1 = d0.oxygen1.*interp1([-10 600 3100],[1.04 1.04 1.06],d0.press) + interp1([1 32 36 40 44],[-2 0 2 -2 1],d0.statnum);';
+                castopts.calstr.oxygen2.jc238 = 'dcal.oxygen2 = d0.oxygen2.*(1.025+1.2e-4*d0.statnum + interp1([-10 400 3100],[-0.9 -0.25 2.7]*1e-2,d0.press));';% + interp1([-10 2000 3100],[1 3.5 9],d0.press);';
+                calms = 'from comparison with bottle oxygens, stations 3-9,11,13-41,43';
+                castopts.calstr.oxygen1.msg = calms;
+                castopts.calstr.oxygen2.msg = calms;
 
         end
 
@@ -106,7 +116,10 @@ switch scriptname
                     case 28
                         niskin_flag(position==12) = 9; %bottle fired but not attached 
                     case 30
-                        niskin_flag(position==3) = 7; %possible leak but we might have opened the tap first
+                        %niskin_flag(position==3) = 7; %visual: possible
+                        %leak but we might have opened the tap first.
+                        %inspection of samples: looks fine, so revised to
+                        %default good
                     case 41
                         niskin_flag(position==1) = 3; %definite leak
                     otherwise
@@ -118,8 +131,19 @@ switch scriptname
             case 'bestdeps'
                 % only for stations where we can't use ctd+altimeter
                 % replacedeps = [cast_number depth]
-                %replacedeps = [
-                %   1 1088];
+                replacedeps = [
+                   1 1088
+                   42 2989];
+        end
+
+    case 'station_summary'
+        switch oopt
+            case 'sum_varsams'
+                snames = {'nsal' 'noxy' 'nnut_shore' 'nco2_shore'};
+                sgrps = {{'botpsal'}
+                    {'botoxy'}
+                    {'silc'}
+                    {'dic'}};
         end
 
     case 'mout_exch'
@@ -135,11 +159,11 @@ switch scriptname
                     '#Region: Eastern subpolar North Atlantic';...
                     ['#EXPOCODE: ' expocode];...
                     '#DATES: 20220712 - 20220801';...
-                    '#Chief Scientist: B. Moat, NOC';...
-                    '#Supported by grants from the UK Natural Environment Research Council for the OSNAP program (grant no. ***).';...
-                    '#*** stations with 12-place rosette';...
-                    '#CTD: Who - Y. Firing; Status - uncalibrated';...
-%                    '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                    '#Chief Scientist: B. Moat, NOC, and K. Burmeister, SAMS';...
+                    '#Supported by grants from the UK Natural Environment Research Council for the OSNAP (grant no. NE/K010875/1, NE/K010875/2, NE/T008938/1) and CLASS (grant no. NE/R015953/1) programs and from the EU Horizon 2020 program to iAtlantic (grant no. 210522255).';...
+                    '#44 stations with 12-place rosette';...
+                    '#CTD: Who - Y. Firing; Status - final.';...
+                    '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                     '# DEPTH_TYPE   : COR';...
                     };
             case 'woce_sam_headstr'
@@ -149,22 +173,22 @@ switch scriptname
                     '#Region: Eastern subpolar North Atlantic';...
                     ['#EXPOCODE: ' expocode];...
                     '#DATES: 20220712 - 20220801';...
-                    '#Chief Scientist: B. Moat, NOC';...
-                    '#Supported by grants from the UK Natural Environment Research Council for the OSNAP program (grant no. ***).';...
-                    '#*** stations with 12-place rosette';...
-                    '#CTD: Who - Y. Firing; Status - uncalibrated';...
+                    '#Chief Scientist: B. Moat, NOC, and K. Burmeister, SAMS';...
+                    '#Supported by grants from the UK Natural Environment Research Council for the OSNAP (grant no. NE/K010875/1, NE/K010875/2, NE/T008938/1) and CLASS (grant no. NE/R015953/1) programs and from the EU Horizon 2020 program to iAtlantic (grant no. 210522255).';...
+                    '#42 stations with 12-place rosette';...
+                    '#CTD: Who - Y. Firing; Status - final';...
                     '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
-%                    '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
-                    '#Salinity: Who - Y. Firing; Status - not yet analysed';...
-                    '#Oxygen: Who - S. Beith; Status - not yet analysed';...
-                    '#Nutrients: Who - ***; Status - not yet analysed';...
-                    '#Carbon: Who - ***; Status - not yet analysed';...
+                    '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                    '#Salinity: Who - Y. Firing; Status - final; SSW batch P165.';...
+                    '#Oxygen: Who - S. Beith; Status - final.';...
+                    '#Nutrients: Who - C. Johnson and R. Tuerena; Status - not yet analysed';...
+                    '#Carbon: Who - N. Allison; Status - not yet analysed';...
                     };
             case 'woce_vars_exclude'
                 %use this space to calculate sigma0 (for sam file only)
-                if isfield(d,'upsal')
-                    d.upden = sw_pden(d.upsal,d.utemp,d.upress,0);
-                end
+                %if isfield(d,'upsal')
+                %    d.upden = sw_pden(d.upsal,d.utemp,d.upress,0);
+                %end
                 %if isfield(d,'botpsal')
                 %    d.pden = sw_pden(d.botpsal,d.utemp,d.upress,0);
                 %end
@@ -176,21 +200,45 @@ switch scriptname
             case 'uway_factory_cal'
                 switch abbrev
                     case 'surfmet'
-%                         sensors_to_cal={'fluo';'trans';'parport';'tirport';'parstarboard';'tirstarboard'};
-                         sensors_to_cal={'parport';'tirport';'parstarboard';'tirstarboard'};
+                         sensors_to_cal={'fluo';'trans';'parport';'tirport';'parstarboard';'tirstarboard'};
                          sensorcals={
-%                             'y=(x1-0.078)*13.5'; % fluorometer: s/n WS3S-134 cal 14 Jul 2020
-%                             'y=(x1-0.058)/(4.625-0.058)*100' %transmissometer: s/n CST-1132PR cal 24 Jun 2019
+                             'y=(x1-0.055)*16.3'; % fluorometer: s/n WS3S-246 cal 13 Jan 2022    
+                             'y=(x1-0.058)/(4.707-0.058)*100' %transmissometer: s/n CST-112R cal 14 Mar 2021
                              'y=x1/1.059' % port PAR: s/n 28559 cal 23 Mar 2021
                              'y=x1/1.134' % port TIR: 994132 cal 6 Apr 2021
                              'y=x1/1.016' % stb PAR: s/n 28560 cal 23 Mar 2021
                              'y=x1/1.065'}; % stb TIR: 047463 cal 18 Aug 2021
 %                         % the surfmet instrument box is outputting in V*1e-5 for PAR/TIR already
-%                         sensorunits={'ug/l';'percent';'W/m2';'W/m2';'W/m2';'W/m2'};
-                         sensorunits={'W/m2';'W/m2';'W/m2';'W/m2'};
+                         sensorunits={'ug/l';'percent';'W/m2';'W/m2';'W/m2';'W/m2'};
                 end
         end
         %%%%%%%%%% end mday_01_fcal %%%%%%%%%%
+
+    case 'mtsg_medav_clean_cal'
+        switch oopt
+            case 'tsg_edits'
+                badtimes = [datenum(2022,7,1) datenum(2022,7,12,14,6,0)
+                    datenum(2022,7,28,12,28,0) datenum(2022,7,28,17,20,0)];
+                badtimes = (badtimes-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
+                tsgedits.badtimes.conductivity_raw = badtimes;
+                tsgedits.badtimes.salinity_raw = badtimes;
+                tsgedits.badtimes.temph_raw = badtimes;
+
+                %badtimes = [datenum(2022,7,27,12,30,0) datenum(2022,7,27,17,15,0)];
+                %tsgedits.badtimes.conductivity_raw = badtimes;
+                %tsgedits.badtimes.salinity_raw = badtimes;
+                %tsgedits.badtimes.temph_raw = badtimes;
+                
+                %if day>=209
+                %    tsgedits.despike.conductivity = [1 0.5];
+                %end
+            case 'tsgcals'
+                tsgopts.docal.salinity = 1;
+                load(fullfile(root_dir,'sdiffsm'))
+                kbad = find(isnan(t+sdiffsm)); t(kbad) = []; sdiffsm(kbad) = [];
+                tsgopts.calstr.salinity.jc238 = 'dcal.salinity_cal = dnew.salinity_raw + interp1([-1e10; t; 1e10],sdiffsm([1 1:end end]),d.time);';
+
+        end
 
     case 'msal_01'
         switch oopt
@@ -226,11 +274,22 @@ switch scriptname
                     21 1
                     22 -1
                     23 -2
-                    24 3];
+                    24 3
+                    25 -3
+                    26 -1
+                    27 -3
+                    28 0
+                    29 -2
+                    30 -1
+                    31 -3
+                    32 -2
+                    33 -3
+                    34 -2
+                    35 -1
+                    36 -1];
                 sal_off(:,1) = sal_off(:,1)+999000;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
                 sal_adj_comment = ['Bottle salinities adjusted using SSW batch P165'];
-            case 'sal_flags'
         end
 
     case 'moxy_01'
@@ -261,7 +320,10 @@ switch scriptname
                 % a row or with the same standard/blank different from
                 % others), but it doesn't appear to be a function of
                 % watermass 
-                d.botoxya_flag(ismember(d.statnum,[7 9:13])) = 3; 
+                m = ismember(d.statnum,[7 9:13]);
+                d.botoxya_flag(m) = max(3,d.botoxya_flag(m));
+                d.botoxyb_flag(m) = max(3,d.botoxyb_flag(m));
+                d.botoxyc_flag(m) = max(3,d.botoxyc_flag(m));
         end
 
         %%%%%%%%%% mfir_03 %%%%%%%%%%
@@ -302,7 +364,7 @@ switch scriptname
                 switch section
                     case 'osnape'
                       kstns = [5:8 4 10:25 27 26 28:32 35:39 43 40 41];
-                    case 'all'
+                    case 'ungridded'
                       kstns = [1:41 43];
                 end
             case 'ctd_regridlist'
@@ -312,25 +374,22 @@ switch scriptname
     case 'msam_ashore_flag'
         switch oopt
             case 'sam_ashore_nut'
-                fnin = fullfile(mgetdir('M_BOT_ISO'),'Nutrient_Tube_Numbers.xlsx');
-                st = readtable(fnin);
-                st = fill_samdata_statnum(st,'CTDCastNo_');
-                clear dnew
-                dnew.sampnum = st.CTDCastNo_*100+st.NiskinBottleNo_;
-                dnew.flag = 9+zeros(size(dnew.sampnum));
-                dnew.flag(st.No_OfNutrientSamples>0) = 1;
-                vars = {'silc','totnit','phos'};
+                fnin = {fullfile(mgetdir('M_BOT_ISO'),'Nutrient_Tube_Numbers.xlsx')};
+                varmap = {'statnum' 'CTDCastNo_' ' '
+                    'position' 'NiskinBottleNo_' ' '
+                    'silc_flag' 'No_OfNutrientSamples' 'num_samples'
+                    'phos_flag' 'No_OfNutrientSamples' 'num_samples'
+                    'totnit_flag' 'No_OfNutrientSamples' 'num_samples'};
                 do_empty_vars = 1;
+                fillstat = 1;
             case 'sam_ashore_co2'
-                fnin = fullfile(mgetdir('M_BOT_ISO'),'Carbon_Bottle_Names.xlsx');
-                st = readtable(fnin);
-                st = fill_samdata_statnum(st,'CTDCastNo_');
-                clear dnew
-                dnew.sampnum = st.CTDCastNo_*100+st.NiskinBottleNo_;
-                dnew.flag = 9+zeros(size(dnew.sampnum));
-                dnew.flag(st.CarbonSamplesNo_>0) = 1;
-                vars = {'dic' 'alk'};
+                fnin = {fullfile(mgetdir('M_BOT_ISO'),'Carbon_Bottle_Names.xlsx')};
+                varmap = {'statnum' 'CTDCastNo_' ' '
+                    'position' 'NiskinBottleNo_' ' '
+                    'dic_flag' 'CarbonSamplesNo_' 'num_samples'
+                    'alk_flag' 'CarbonSamplesNo_' 'num_samples'};
                 do_empty_vars = 1;
+                fillstat = 1;
         end
 
     case 'ix_cast_params'

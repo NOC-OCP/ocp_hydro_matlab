@@ -76,14 +76,21 @@ for no = 1:length(fn)
     a(m,n+1) = {'londegm'};
     a(m,n+2) = {'dddmm'};
     m = strcmpi('waterDepthMeterTransducer',a(:,1)) | strcmpi('waterDepthMeterFromTransducer',a(:,1));
-    a(m,n+1) = {'waterdepth_below_transducer'};
-    a(m,n+2) = {'metres'};
-    m = strcmpi('waterDepthMeter',a(:,1)) | strcmpi('depthMeter',a(:,1)); %***check for two instruments which is below transducer and which below surface
-    a(m,n+1) = {'waterdepth_below_transducer'};
+    a(m,n+1) = {'depth_below_xducer'};
     a(m,n+2) = {'metres'};
     m = strcmpi('waterDepthMeterFromSurface',a(:,1));
     a(m,n+1) = {'waterdepth'};
     a(m,n+2) = {'metres'};
+    if strcmp(fn{no},'ea640_sddpt')
+        m = strcmpi('depth',a(:,1));
+        a(m,n+1) = {'depth_below_xducer'};
+        a(m,n+2) = {'metres'};
+    end
+    if strcmp(fn{no},'em122_kidpt') 
+        m = strcmpi('waterdepthmeter',a(:,1));
+        a(m,n+1) = {'depth_below_xducer'}; %according to long name
+        a(m,n+2) = {'metres'};
+    end
     m = strcmpi('degressCelsius',a(:,2)) | strcmpi('degreesCelsius',a(:,2)) | strcmpi('degC',a(:,2));
     a(m,n+2) = {'degreesC'};
     m = strcmpi('courseOverGround',a(:,1)) | strcmpi('courseTrue',a(1,:));
@@ -129,7 +136,7 @@ rawlist = {
     %     'cnav_gps_gngsa'
     %     'dps116_gps_gpgga'
     %     'em120_depth_kidpt'
-    'em640_sddbs'
+    %'em640_sddbs'
     %'em122_kidpt'
     %'em600_depth_sddbs'
     %     'env_temp_wimta'

@@ -48,6 +48,5 @@ for vno = 1:length(varnames)
     c = repmat(iiv',length(iim),1);
     d = c; d(~b) = NaN;
     f = max(d,[],2);
-    a(iim) = a(f);
-    tabl.(varnames{vno})(iim) = a;
+    tabl.(varnames{vno})(iim) = a(f);
 end

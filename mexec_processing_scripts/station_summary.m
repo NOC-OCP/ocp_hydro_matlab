@@ -218,15 +218,18 @@ scriptname = mfilename; oopt = 'sum_extras'; get_cropt
 
 %reload file in case we only added some stations in workspace
 [ds,hs] = mloadq(otfile2,'/');
+ds.time_start = ds.time_start/86400+datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
+ds.time_bottom = ds.time_bottom/86400+datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
+ds.time_end = ds.time_end/86400+datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
 stnall = unique(ds.statnum);
 
-stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.txt']);
+stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.csv']);
 fid = fopen(stnlistname,'w');
 
 % list headings
 for cno = 1:length(vars)
     if ~isempty(vars{cno,5}) && ~isnumeric(vars{cno,4})
-        fprintf(fid, '%s ', vars{cno,4});
+        fprintf(fid, '%s, ', vars{cno,4});
     end
 end
 fprintf(fid, '%s\n', ' ');
@@ -237,7 +240,7 @@ for k = 1:length(stnall)
     for cno = 1:length(vars)
         if isnumeric(vars{cno,4}) && vars{cno,4}==-1 %line before
             scriptname = mfilename; oopt = 'sum_special_print'; get_cropt
-            fprintf(fid, '%s ', svar);
+            fprintf(fid, '%s, ', svar);
             extraline = 1;
         end
     end
@@ -247,13 +250,13 @@ for k = 1:length(stnall)
         if ~isempty(vars{cno,5})
             if isempty(strfind(vars{cno,5},'%'))
                 scriptname = mfilename; oopt = 'sum_special_print'; get_cropt
-                fprintf(fid, '%s ', svar);
+                fprintf(fid, '%s, ', svar);
             else
                 eval(['dk = ds.' vars{cno,1} '(k);'])
                 if iscell(dk)
-                    fprintf(fid, [vars{cno,5} ' '], dk{:});
+                    fprintf(fid, [vars{cno,5} ', '], dk{:});
                 else
-                    fprintf(fid, [vars{cno,5} ' '], dk);
+                    fprintf(fid, [vars{cno,5} ', '], dk);
                 end
             end
         end
@@ -264,7 +267,7 @@ for k = 1:length(stnall)
     for cno = 1:length(vars)
         if isnumeric(vars{cno,4}) && vars{cno,4}==1 %line after
             scriptname = mfilename; oopt = 'sum_special_print'; get_cropt
-            fprintf(fid, '%s ', svar);
+            fprintf(fid, '%s, ', svar);
             extraline = 1;
         end
     end

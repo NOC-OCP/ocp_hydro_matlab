@@ -33,6 +33,7 @@ if exist(root_out,'dir') ~= 7
     % requested data stream/directory doesn't seem to exist
     m = ['Directory ' mstarprefix ' not found - skipping'];
     fprintf(MEXEC_A.Mfider,'%s\n',m);
+    status = 2;
     return
 end
 
@@ -44,6 +45,7 @@ switch MEXEC_G.Mshipdatasystem
         
         table = mstarprefix;
         if contains(mstarprefix,'not_rvdas')
+            status = 2;
             return
         end
         

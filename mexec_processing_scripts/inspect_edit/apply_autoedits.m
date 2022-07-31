@@ -41,6 +41,7 @@ for bpno = 1:length(iibp)
         for vno = 1:length(vars)
             badranges = bads.(vars{vno});
             mb = sum(x>=badranges(:,1) & x<=badranges(:,2),1)>0;
+            %disp(vars{vno})
             nn = sum(isnan(d.(vars{vno})));
             d.(vars{vno})(mb) = NaN;
             if sum(isnan(d.(vars{vno})))>nn

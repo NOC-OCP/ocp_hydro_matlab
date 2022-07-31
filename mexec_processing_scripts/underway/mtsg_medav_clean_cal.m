@@ -35,8 +35,9 @@ end
 %clean
 scriptname = mfilename; oopt = 'tsg_edits'; get_cropt
 if ~isempty(tsgedits)
-    [d, comment] = ctd_apply_autoedits(d, tsgedits);
+    [d, comment] = apply_autoedits(d, tsgedits);
     h.comment = [h.comment comment];
+    mfsave(infile1,d,h);
 end
 
 %average

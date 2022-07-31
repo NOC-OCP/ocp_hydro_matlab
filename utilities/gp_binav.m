@@ -69,7 +69,7 @@ for bno = 1:length(xm)
                 case 'lfit'
                     w = sum(double(m),1);
                     for no2 = 1:s(2)
-                        if w(no2)>0
+                        if w(no2)>1
                             try
                             b = [ones(w(no2),1) xb(m(:,no2))]\yb(m(:,no2),no2);
                             yg(bno,no2) = b(1)+b(2)*xm(bno);

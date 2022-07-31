@@ -8,6 +8,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 clear cfg
 scriptname = mfilename; oopt = 'is_uplooker'; get_cropt
 dopause = 0;
+cdir = pwd;
 
 if isempty(which('getinv'))
     error('LADCP processing functions not on path; try running m_setup again')
@@ -117,7 +118,7 @@ if exist(sfile,'file')
 end
 end
 
-
+cd(cdir)
 
 %load ladcp/ix/UL_GPS/processed/073/073; dr73u = dr;
 %plot(dr73u.u_do,-dr73u.z,dr73u.u_up,-dr73u.z,dr73u.u_shear_method,-dr73u.z)

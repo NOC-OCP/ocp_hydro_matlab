@@ -49,7 +49,9 @@ switch scriptname
                 datform = 'dd/mm/yyyy';
                 timform = 'HH:MM:SS';
             case 'sal_flags'
-                crhelp_str = {'Place to set flags on salinity bottles or readings.'};
+                crhelp_str = {'Place to set flags on salinity bottles or readings: change ds_sal.flag'
+                    'based on ds_sal.sampnum. Note: sample flags: 1 not yet analysed, 2 good, 3 questionable,'
+                '4 bad, 5 not reported (?), 6 average of replicates, 9 not drawn'};
             case 'sal_calc'
                 crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive, default []) for ranges'
                     'of sampnum, while sal_off_base (default ''sampnum_run'') to specify how to match them to samples.'
@@ -62,6 +64,7 @@ switch scriptname
                     'and dnum (datenum) from sampnum (default: either yyyymmddHHMM, or if sampnum<0, -jjjHHMM)'
                     'where jjj is yearday)'};
                 tsg.sampnum = dsu.sampnum;
+                tsg.dnum = NaN+zeros(size(tsg.sampnum));
                 ii = find(tsg.sampnum>0);
                 if ~isempty(ii)
                     tsg.dnum(ii) = datenum(num2str(tsg.sampnum(ii)),'yyyymmddHHMM');
@@ -229,16 +232,25 @@ switch scriptname
         
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
     case 'msam_ashore_flag'
-        crhelp_str = {'Place for code to load one or more files containing'
-            'information on samples collected for analysis ashore, producing:'
-            'vars (Mx1 cell array), a list of variables for which flags should'
-            'be added to sam_cruise_all file (e.g. del18o, silc, etc.)'
-            'dnew.sampnum and dnew.flag_flagval (MxN cell array), lists of Px2 matrices containing sampnum (statnum*100+position)'
-            '  and flag value for for sample numbers, and'
-            'flagvals (1xN vector), the values to assign to flag variables for these sets of sampnums.'
-            'in most cases flagvals = 1 and sampnums has a single column. sampnums not specified default'
-            'to 9, or 5 (not analysed) where bottle_qc_flag is 4 (bad).'};
+        crhelp_str = {'Switching on sam_ashore_{sampletype} (e.g. sam_ashore_nut), set:'
+            'fnin, a cell array list of csv or excel file(s) containing lists of '
+            '  samples collected for a given sampletype,'
+            'varmap, a Mx3 cell array whose first column is mexec names, second is'
+            '  the corresponding variable names in the file being read in, and '
+            '  third specifies (for flag fields) how to decode them: as ''flag'''
+            '  (i.e. no decoding, use as-is) or as ''num_samples'' (i.e. anything >0'
+            '  gets a flag of 1).'
+            '  the mexec names must include either sampnum or statnum and position,'
+            '  as well as the one or more {parameter}_flag variables to be written '
+            '  for this sampletype (e.g. silc_flag, phos_flag, totnit_flag), '
+            'fillstat (default 0), a flag setting whether statnum is blank in some'
+            '  rows and needs to be filled in,'
+            'do_empty_vars (default 0), a flag setting whether to also add columns'
+            '  of NaNs as parameter (e.g. silc, phos, totnit) placeholders, in '
+            'addition to the flags.'};
         do_empty_vars = 0;
+        fillstat = 0;
+        varmap = {};
         %%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
         
         %%%%%%%%%% msam_checkbottles_02 %%%%%%%%%%
