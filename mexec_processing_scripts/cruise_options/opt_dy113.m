@@ -189,7 +189,7 @@ switch scriptname
     case 'moxy_01'
         switch oopt
             case 'oxy_files'
-                infile = fullfile(root_oxy, ['oxy_dy113_' stn_string '.csv']);
+                ofiles = {'oxy_dy113_040.csv'};
             case 'oxy_flags'
                 ds_oxy.flag(ds_oxy.flag==2.3) = 2; %these are mostly 'tiny bubbles' and replicates show they don't make a difference
             case 'oxy_calc'

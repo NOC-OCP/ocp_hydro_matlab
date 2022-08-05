@@ -106,6 +106,7 @@ for fno = 1:length(infile)
                     [iih, ch, un] = sd_find_colhead(hdr, hcpat, chrows, chunits);
                 end
             catch
+                warning('did not find hcpat on sheet %d, stopping loop',sno)
                 %not a data sheet, stop loop here
                 break
             end

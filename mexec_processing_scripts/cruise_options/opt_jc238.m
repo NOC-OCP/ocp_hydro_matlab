@@ -1,5 +1,5 @@
 switch scriptname
-    
+
     case 'castpars'
         switch oopt
             case 'nnisk'
@@ -13,6 +13,12 @@ switch scriptname
         end
 
     case 'm_setup'
+        switch oopt
+            case 'setup_datatypes'
+                use_ix_ladcp = 'query';
+        end
+        
+    case 'ship'
         switch oopt
             case 'default_nav'
                 MEXEC_G.default_hedstream = 'attsea'; %posmv was 4 degrees out most of the trip

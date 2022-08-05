@@ -13,18 +13,39 @@
 
 switch scriptname
     
-    %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
+    case 'm_setup'
+        switch oopt
+            case 'setup_datatypes'
+                crhelp_str = {'Set use_ix_ladcp to ''yes'' (default) if you are collecting '
+                    'LADCP data and want to add LDEO IX scripts to the path; set to '
+                    '''query'' if you are processing both LADCP and mooring data on this '
+                    'cruise, so that m_setup will ask which to add to path (due to repeated'
+                    'filenames); set to ''no'' to never add.'
+                    'Set skipunderway to 0 to read in and process ship underway data'
+                    '(default if MEXEC_G.SITE contains ''atsea''),'
+                    '1 to set best nav stream etc. but not set up underway directories'
+                    '(default otherwise)'
+                    'and 2 to ignore underway data entirely.'};
+                use_ix_ladcp = 'yes';
+                if contains(MEXEC_G.SITE,'atsea')
+                    skipunderway = 0;
+                else
+                    skipunderway = 1;
+                end
+        end
+        
+        %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
     case 'batchactions'
         switch oopt
             case 'output_for_others'
                 crhelp_str = {'additional actions after operating on ctd or sam files'
                     'for instance to sync the resulting files'
-                    'to a shared drive accessible by e.g. chemistry team'}; 
+                    'to a shared drive accessible by e.g. chemistry team'};
         end
-    %%%%%%%%%% batchactions (not a script) %%%%%%%%%%    
-    
-    
-    %%%%%%%%%% station_summary %%%%%%%%%%
+        %%%%%%%%%% batchactions (not a script) %%%%%%%%%%
+        
+        
+        %%%%%%%%%% station_summary %%%%%%%%%%
     case 'station_summary'
         switch oopt
             case 'sum_stn_list'
@@ -99,8 +120,8 @@ switch scriptname
                 end
         end
         %%%%%%%%%% end station_summary %%%%%%%%%%
-
-
+        
+        
         %%%%%%%%%% mout_exch %%%%%%%%%%
     case 'mout_exch'
         switch oopt
@@ -143,7 +164,7 @@ switch scriptname
                     'xstatnumgrid and zpressgrid for maphsec (default [], if left empty they'
                     'will be looked up in msec_grid based on section, or set to maphsec defaults).'};
                 kstns = 1:99;
-                xstatnumgrid = []; 
+                xstatnumgrid = [];
                 zpressgrid = [];
             case 'ctd_regridlist'
                 crhelp_str = {'ctd_regridlist is a cell array list of CTD variables to be gridded;'
@@ -155,26 +176,26 @@ switch scriptname
                     'default is botpsal, botoxy.'};
                 sam_gridlist = {'botpsal' 'botoxy'};
         end
-%            case 'xzlim'
-%                flaglim = 2; % default 2; highest flag to be used for gridding
-%                s.xlim = 2; % default 1; width of gridding window, +/- xlim, measured in statnum
-%                s.zlim = 4; % default 4; vertical extent of gridding window measured in plev
-%                % bak jc191 reset s.xlim and s.zlim in a cruise option.
-%                % s.xlim and s.zlim are the half-width of the number of points used in the
-%                % local fit. ie s.xlim = 1 means three stations used. This one and one
-%                % either side.
-%            case 'scales_xz'
-%                % bak jc191 feb 2020 . scale_x and scale_z are scalings on the distances xu and zu.
-%                % xu and zu measure the distance away in counts of stations for x and
-%                % levels for z. s.xlim and s.zlim control the number of stations/levels
-%                % included. scale_x and scale_z control the relative importance of
-%                % those distances in the weight. So low values of scale_x and scale_z
-%                % make the map smoother by not reducing the weight of more distant points.
-%                % High values of scale_x and scale_z give high weight to nearby points
-%                % and low weight to distant points. Default for scale_x and scale_z is
-%                % unity, unless changed in opt_cruise.
-%                scale_x = 0.5; % choose value < 1 for smoother
-%                scale_z = 1;
+        %            case 'xzlim'
+        %                flaglim = 2; % default 2; highest flag to be used for gridding
+        %                s.xlim = 2; % default 1; width of gridding window, +/- xlim, measured in statnum
+        %                s.zlim = 4; % default 4; vertical extent of gridding window measured in plev
+        %                % bak jc191 reset s.xlim and s.zlim in a cruise option.
+        %                % s.xlim and s.zlim are the half-width of the number of points used in the
+        %                % local fit. ie s.xlim = 1 means three stations used. This one and one
+        %                % either side.
+        %            case 'scales_xz'
+        %                % bak jc191 feb 2020 . scale_x and scale_z are scalings on the distances xu and zu.
+        %                % xu and zu measure the distance away in counts of stations for x and
+        %                % levels for z. s.xlim and s.zlim control the number of stations/levels
+        %                % included. scale_x and scale_z control the relative importance of
+        %                % those distances in the weight. So low values of scale_x and scale_z
+        %                % make the map smoother by not reducing the weight of more distant points.
+        %                % High values of scale_x and scale_z give high weight to nearby points
+        %                % and low weight to distant points. Default for scale_x and scale_z is
+        %                % unity, unless changed in opt_cruise.
+        %                scale_x = 0.5; % choose value < 1 for smoother
+        %                scale_z = 1;
         
         %%%%%%%%%% msec_plot_contrs %%%%%%%%%%
     case 'msec_plot_contrs'
@@ -198,7 +219,7 @@ switch scriptname
         end
         %%%%%%%%%% end set_clev_col %%%%%%%%%%
         
-            case 'mout_1hzasc'
+    case 'mout_1hzasc'
         switch oopt
             case '1hz_fname'
                 crhelp_str = {'name, fnot, for text file of 1Hz CTD data (e.g. for IX LADCP processing'};
@@ -206,7 +227,7 @@ switch scriptname
                 fnot = fullfile(root_out, 'CTD', ['ctd.' stn_string '.02.asc']);
         end
         
-                %%%%%%%%%% ix_cast_params %%%%%%%%%%
+        %%%%%%%%%% ix_cast_params %%%%%%%%%%
     case 'ix_cast_params'
         switch oopt
             case 'ladcpopts'
@@ -218,7 +239,7 @@ switch scriptname
                     'numbers), etc.; see ix_cast_params for more'};
         end
         %%%%%%%%%% end ix_cast_params %%%%%%%%%%
-
+        
     case 'run_proc_ladcp'
         switch oopt
             case 'is_uplooker'

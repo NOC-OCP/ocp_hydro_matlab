@@ -17,6 +17,28 @@ switch scriptname
     case 'ship'
         %parameters used by multiple scripts, related to ship underway data
         switch oopt
+            case 'default_nav'
+                crhelp_str = {'Set (or overwrite) ship-based defaults for data '
+                    'system and best navigation and heading/attitude streams '
+                    '(MEXEC_G.default_navstream and MEXEC_G.default_hedstream'};
+                switch MEXEC_G.Mship
+                    case {'discovery' 'cook'}
+                        %di: techsas, cnav, gyro_s
+                        %pre 2021: techsas, posmvpos, attposmv
+                        MEXEC_G.Mshipdatasystem = 'rvdas';
+                        MEXEC_G.default_navstream = 'pospmv';
+                        MEXEC_G.default_hedstream = 'attpmv';
+                    case 'sa'
+                        MEXEC_G.Mshipdatasystem = 'rvdas';
+                        warning('add fields default_navstream and default_hedstream to MEXEC_G here or in opt_{cruise}.m');
+                    case 'jr'
+                        MEXEC_G.Mshipdatasystem = 'scs';
+                        MEXEC_G.default_navstream = 'seatex_gll';
+                        MEXEC_G.default_hedstream = 'seatex_hdt';
+                        MEXEC_G.Mrsh_machine = 'jruj'; % remote machine for rvs datapup command
+                    otherwise
+                        warning('No underway data system and default nav streams set for %s',MEXEC_G.Mship)
+                end
             case 'ship_data_sys_names'
                 crhelp_str = {'Datasystem- (and possibly ship-) specific list of mexec directory names '
                     'for tsg file (tsgpre) and surfmet file (metpre).'};
@@ -38,14 +60,6 @@ switch scriptname
                 avtsg = 60;
         end
         %%%%%%%%%% end ship (not a script) %%%%%%%%%%
-
-    case 'm_setup'
-        switch oopt
-            case 'default_nav'
-                crhelp_str = {'Place to overwrite ship-based defaults for best'
-                    'navigation and heading/attitude streams (MEXEC_G.default_navstream'
-                    'and MEXEC_G.default_hedstream'};
-        end
         
                 %%%%%%%%%% mrvdas_ingest (not a script) %%%%%%%%%%
     case 'mrvdas_ingest'

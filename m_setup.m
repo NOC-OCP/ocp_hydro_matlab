@@ -3,33 +3,23 @@
 %
 %  configure once at start of cruise
 %  likely just first block of code, or at most down to line containing "End
-%  of items to be edited on each site/cruise" 
+%  of items to be edited on each site/cruise"
 
 clear MEXEC_G
 global MEXEC_G
-MEXEC_G.MSCRIPT_CRUISE_STRING='jc238';
+MEXEC_G.MSCRIPT_CRUISE_STRING='dy113';
 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
-MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atsea']; % common suffixes '_atsea', '_athome', '', etc.
+MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atnoc']; % common suffixes '_atsea', '_athome', '', etc.
 %next line set if you have a /local/users/pstar/cruise but that is not the
 %one you want (e.g. if reprocessing old cruise on seagoing computer);
 %otherwise code will search for cruise directory
-%MEXEC_G.mexec_data_root = ['/local/users/pstar/rpdmoc/users/rapid_oxygen/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise/data']; 
+%MEXEC_G.mexec_data_root = ['/local/users/pstar/rpdmoc/users/rapid_oxygen/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise/data'];
+MEXEC_G.mexec_data_root = '/Users/yvonng/cruises/dy113/mcruise/data/';
 MEXEC_G.mexec_source_root = '~/programs/ocp/ocp_hydro_matlab/';
 MEXEC_G.other_programs_root = '~/programs/others/';
-force_ext_software_versions = 0; %set to 1 to use hard-coded versions for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
+force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
+scriptname = mfilename; oopt = 'setup_datatypes'; get_cropt %use_ix_ladcp and skipunderway set here (and used below)
 MEXEC_G.quiet = 1; %if 0, both mexec_v3/source programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-skipunderway = 0; %set to 1 if reprocessing data not including underway data from an old cruise
-if ismember(MEXEC_G.MSCRIPT_CRUISE_STRING, {'jc238'})
-    disp('LDEO_IX and m_moorproc_toolbox/rodbload contain functions with the same name')
-    pathpath = input('are you processing LADCP data (1),\n mooring/caldip data (2),\n or neither (0)?\n');
-    if pathpath==1
-        MEXEC_G.ix_ladcp = 1; %output 1-Hz CTD data for use by LDEO IX LADCP processing
-    else
-        MEXEC_G.ix_ladcp = 0; 
-    end
-else
-    MEXEC_G.ix_ladcp = 1;
-end
 if ismac
     MEXEC_G.RVDAS.psql_path = '/usr/local/bin/';
 else
@@ -39,6 +29,7 @@ else
 end
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
+%%%%% (or it can be edited in opt_{cruise}.m instead) %%%%%
 
 disp(['m_setup for ' MEXEC_G.MSCRIPT_CRUISE_STRING ' mexec (ocp_hydro_matlab)'])
 
@@ -71,6 +62,7 @@ if ~isfield(MEXEC_G,'mexec_data_root')
     end
     clear mpath d fp n ii
 end
+fprintf(1,'working in %s\n',MEXEC_G.mexec_data_root)
 
 %add ocp_hydro_tools and external software to path if necessary
 if isempty(which('m_common')) || isempty(which('get_cropt')) || ~isfield(MEXEC_G,'mexecs_version')
@@ -94,6 +86,20 @@ end
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
 if ~isfield(MEXEC_G,'other_programs_root')
     MEXEC_G.other_programs_root = fullfile(MEXEC.mstar_root,'sw','others');
+end
+switch use_ix_ladcp
+    case 'yes'
+        MEXEC_G.ix_ladcp = 1;
+    case 'query'
+        disp('LDEO_IX and m_moorproc_toolbox/rodbload contain functions with the same names')
+        pathpath = input('are you processing LADCP data (1),\n mooring/caldip data (2),\n or neither (0)?\n');
+        if pathpath==1
+            MEXEC_G.ix_ladcp = 1; %output 1-Hz CTD data for use by LDEO IX LADCP processing
+        else
+            MEXEC_G.ix_ladcp = 0;
+        end
+    otherwise
+        MEXEC_G.ix_ladcp = 0;
 end
 MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
 % %mooring processing software if selected
@@ -122,56 +128,27 @@ MEXEC_G.version_file_name = ['mstar_versionfile_' MEXEC_G.SITE '.mat'];  % This 
 % set things about the ship
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' MEXEC_G.MSCRIPT_CRUISE_STRING];
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
-    case 'di'
+    case {'di' 'dy'}
         MEXEC_G.Mship = 'discovery';
-        MEXEC_G.Mshipdatasystem = 'techsas';
-        MEXEC_G.default_navstream = 'cnav'; %'gpsfugro';
-        MEXEC_G.default_hedstream = 'gyro_s';
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
-    case 'dy'
-        MEXEC_G.Mship = 'discovery';
-        if datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)>=datenum(2021,6,1)
-            MEXEC_G.Mshipdatasystem = 'rvdas';
-            MEXEC_G.default_navstream = 'pospmv';
-            MEXEC_G.default_hedstream = 'attpmv';
-        else
-            MEXEC_G.Mshipdatasystem = 'techsas';
-            MEXEC_G.default_navstream = 'posmvpos';
-            MEXEC_G.default_hedstream = 'attposmv';
-        end
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
     case 'jc'
         MEXEC_G.Mship = 'cook';
-        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
-            MEXEC_G.Mshipdatasystem = 'rvdas';
-            MEXEC_G.default_navstream = 'pospmv';
-            MEXEC_G.default_hedstream = 'attpmv';
-        else
-            MEXEC_G.Mshipdatasystem = 'techsas';
-            MEXEC_G.default_navstream = 'posmvpos';
-            MEXEC_G.default_hedstream = 'attposmv'; %or gyropmv
-        end
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
+    case 'sa'
+        MEXEC_G.Mship = 'sda';
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
     case 'jr'
         MEXEC_G.Mship = 'jcr';
-        MEXEC_G.default_navstream = 'seatex_gll'; %'seapos';
-        MEXEC_G.default_hedstream = 'seatex_hdt'; %'seahead';
-        MEXEC_G.Mshipdatasystem = 'scs'; % JCR
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
         MEXEC_G.Mrsh_machine = 'jruj';  % remote machine for rvs datapup command
     case 'kn'
         MEXEC_G.Mship = 'knorr';
-        MEXEC_G.default_navstream = fullfile('nav','gps'); %guess
-        MEXEC_G.default_hedstream = fullfile('nav','gyro_s'); %guess
         MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
     otherwise
-        MEXEC_G.default_navstream = fullfile('nav','gps'); %guess
-        MEXEC_G.default_hedstream = fullfile('nav','gyro_s'); %guess
         merr = ['Ship ''' MEXEC_G.Mship ''' not recognised'];
         fprintf(2,'%s\n',merr);
         return
 end
-scriptname = mfilename; oopt = 'default_nav'; get_cropt
 MEXEC_G.PLATFORM_TYPE= 'ship';
 
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normally be changed
@@ -204,45 +181,48 @@ if MEXEC_G.ix_ladcp
         'M_IX' fullfile('ladcp','ix')}];
 end
 
-% add underway system-dependent directories
-switch MEXEC_G.Mshipdatasystem
-    case 'techsas'
-        MEXEC_G.uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
-        MEXEC_G.uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
-        if strncmp(computer, 'MAC', 3); MEXEC_G.uway_root = [MEXEC_G.uway_root '_mac']; end
-        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_TECHSAS' 'techsas'}];
-    case 'scs'
-        MEXEC_G.uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
-        MEXEC_G.uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs_raw'); % scs raw data on logger machine
-        MEXEC_G.uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs_sed'); % scs raw data on logger machine
-        MEXEC_G.uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs_mat'); % local directory for scs converted to matlab
-        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
-            {'M_SCSRAW' 'scs_raw'}
-            {'M_SCSMAT' 'scs_mat'}
-            {'M_SCSSED' 'scs_sed'}
-            ];
-    case 'rvdas'
-        MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
-        MEXEC_G.RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-        MEXEC_G.RVDAS.user = 'rvdas';
-        MEXEC_G.RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-        switch MEXEC_G.Mship
-            case 'cook'
-                MEXEC_G.RVDAS.machine = 'rvdas.cook.local';
-                MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/jcmeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
-            case 'discovery'
-                MEXEC_G.RVDAS.machine = '192.168.62.12';
-                MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/dymeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
-            case 'attenborough'
-                MEXEC_G.RVDAS.machine = '';
-                MEXEC_G.RVDAS.jsondir = '';
-        end
+% add underway system information and directories
+if skipunderway<2
+    scriptname = 'ship'; oopt = 'default_nav'; get_cropt %set underway data system and best nav and heading streams
+    switch MEXEC_G.Mshipdatasystem
+        case 'techsas'
+            MEXEC_G.uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
+            MEXEC_G.uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
+            if strncmp(computer, 'MAC', 3); MEXEC_G.uway_root = [MEXEC_G.uway_root '_mac']; end
+            MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_TECHSAS' 'techsas'}];
+        case 'scs'
+            MEXEC_G.uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
+            MEXEC_G.uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs_raw'); % scs raw data on logger machine
+            MEXEC_G.uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs_sed'); % scs raw data on logger machine
+            MEXEC_G.uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs_mat'); % local directory for scs converted to matlab
+            MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
+                {'M_SCSRAW' 'scs_raw'}
+                {'M_SCSMAT' 'scs_mat'}
+                {'M_SCSSED' 'scs_sed'}
+                ];
+        case 'rvdas'
+            MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
+            MEXEC_G.RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
+            MEXEC_G.RVDAS.user = 'rvdas';
+            MEXEC_G.RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+            switch MEXEC_G.Mship
+                case 'cook'
+                    MEXEC_G.RVDAS.machine = 'rvdas.cook.local';
+                    MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/jcmeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
+                case 'discovery'
+                    MEXEC_G.RVDAS.machine = '192.168.62.12';
+                    MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/dymeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
+                case 'attenborough'
+                    MEXEC_G.RVDAS.machine = '';
+                    MEXEC_G.RVDAS.jsondir = '';
+            end
+    end
+    MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
 end
-MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
 
-%create file connecting underway data directories and stream names
-%and create underway data directories (for processed data)
-if ~skipunderway
+if skipunderway==0
+    %create file connecting underway data directories and stream names
+    %and create underway data directories (for processed data)
     ud_is_current = 0; ud_runs = 0; sud_runs = 0; ufail = 0;
     while ud_is_current == 0 && ud_runs == 0 && ufail == 0
         try
@@ -282,6 +262,7 @@ if ~skipunderway
     end
     clear sud_runs ufail ud_* udirs udcruise mps_pre
 end
+
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 
 
@@ -328,7 +309,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
         end
     end
     clear us
-
+    
     % might have to wait a bit to find it
     nsecwait = 0;
     while exist(MEXEC.simplelockfile,'file') ~= 2 && nsecwait<40

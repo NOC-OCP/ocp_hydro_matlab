@@ -1,5 +1,11 @@
 switch scriptname
     
+    case 'm_setup'
+        switch oopt
+            case 'setup_datatypes'
+        skipunderway = 2;
+        end
+        
     case 'mctd_01'
         switch oopt
             case 'cnvfilename'

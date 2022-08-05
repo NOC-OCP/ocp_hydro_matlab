@@ -15,7 +15,7 @@ switch scriptname
     
     %%%%%%%%%% castpars (not a script) %%%%%%%%%%
     case 'castpars'
-        %parameters used by multiple scripts, related to CTD/LADCP casts
+        %parameters (often used by multiple scripts), related to CTD/LADCP casts
         switch oopt
             case 'minit'
                 crhelp_str = {'stn_string (default: 3-digit form of stn) for filenames'
