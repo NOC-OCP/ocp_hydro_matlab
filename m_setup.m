@@ -7,43 +7,43 @@
 
 clear MEXEC_G
 global MEXEC_G
-MEXEC_G.MSCRIPT_CRUISE_STRING='dy113';
-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
+MEXEC_G.MSCRIPT_CRUISE_STRING='jc211';
+MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2021 1 1 0 0 0];
 MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atnoc']; % common suffixes '_atsea', '_athome', '', etc.
 %next line set if you have a /local/users/pstar/cruise but that is not the
 %one you want (e.g. if reprocessing old cruise on seagoing computer);
 %otherwise code will search for cruise directory
-%MEXEC_G.mexec_data_root = ['/local/users/pstar/rpdmoc/users/rapid_oxygen/' MEXEC.MSCRIPT_CRUISE_STRING '/mcruise/data'];
-MEXEC_G.mexec_data_root = '/Users/yvonng/cruises/dy113/mcruise/data/';
 MEXEC_G.mexec_source_root = '~/programs/ocp/ocp_hydro_matlab/';
 MEXEC_G.other_programs_root = '~/programs/others/';
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 scriptname = mfilename; oopt = 'setup_datatypes'; get_cropt %use_ix_ladcp and skipunderway set here (and used below)
 MEXEC_G.quiet = 1; %if 0, both mexec_v3/source programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-if ismac
-    MEXEC_G.RVDAS.psql_path = '/usr/local/bin/';
-else
-    MEXEC_G.RVDAS.psql_path = '/usr/bin/';
-    %matlab on linux seems to find psql fine so you could set this to ''
-    %(empty)
-end
+
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 %%%%% (or it can be edited in opt_{cruise}.m instead) %%%%%
 
 disp(['m_setup for ' MEXEC_G.MSCRIPT_CRUISE_STRING ' mexec (ocp_hydro_matlab)'])
 
-%look for mexec base directory
+%look for base directory for this cruise: first look in path of current
+%directory, then in home directory
 if ~isfield(MEXEC_G,'mexec_data_root')
-    d = pwd; ii = strfind(d, MEXEC_G.MSCRIPT_CRUISE_STRING); if ~isempty(ii); d = d(1:ii-1); else; d = []; end
-    mpath = {['/local/users/pstar/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
-        ['/local/users/pstar/' MEXEC_G.MSCRIPT_CRUISE_STRING '/data'];
-        ['/noc/mpoc/rpdmoc/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
-        ['/noc/mpoc/rpdmoc/' MEXEC_G.MSCRIPT_CRUISE_STRING '/data'];
-        ['/local/users/pstar/rpdmoc/' MEXEC_G.MSCRIPT_CRUISE_STRING '/mcruise/data'];
-        fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
-        fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
-        fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING)};
+    d = pwd;
+    cd('~'); hd = pwd; cd(d);
+    ii = strfind(d, MEXEC_G.MSCRIPT_CRUISE_STRING);
+    if ~isempty(ii)
+        d = d(1:ii-1);
+        mpath = {fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
+            fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
+            fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING)};
+    else
+        mpath = {};
+    end
+    mpath = [mpath;
+        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
+        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
+        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING)
+        fullfile(hd,'cruises',MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data')];
     fp = 0; n=1;
     while fp==0 && n<=length(mpath)
         if exist(mpath{n},'dir')==7
@@ -134,8 +134,8 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     case 'jc'
         MEXEC_G.Mship = 'cook';
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
-    case 'sa'
-        MEXEC_G.Mship = 'sda';
+    case 'da'
+        MEXEC_G.Mship = 'attenborough';
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
     case 'jr'
         MEXEC_G.Mship = 'jcr';
@@ -215,6 +215,11 @@ if skipunderway<2
                 case 'attenborough'
                     MEXEC_G.RVDAS.machine = '';
                     MEXEC_G.RVDAS.jsondir = '';
+            end
+            if ismac
+                MEXEC_G.RVDAS.psql_path = '/usr/local/bin/';
+            else
+                MEXEC_G.RVDAS.psql_path = ''; %'/usr/bin/' but on linux matlab finds it on path on its own
             end
     end
     MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range

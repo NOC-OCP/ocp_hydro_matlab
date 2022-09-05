@@ -1,6 +1,6 @@
 % moxy_01: read in bottle oxy data from csv or spreadsheet files, parse and
 % calculate concentrations if required, and save to appended mstar file
-% oxy_cruise_01.nc and to sam_cruise_all.nc 
+% oxy_cruise_01.nc
 %
 % The input data files contain one or more header rows; the fields to look
 % for to identify the header rows as well as connect them to standard
@@ -10,7 +10,7 @@
 % parse in opt_cruise, uses parameters set under oxy_calc to compute them
 
 m_common
-if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise,mcruise); end
+if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc\n',mcruise,mcruise); end
 
 % find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');
@@ -150,56 +150,4 @@ scriptname = mfilename; oopt = 'oxy_flags'; get_cropt
 
 mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 
-% compute botoxy_per_kg (umol/kg) from botoxy (umol/L) and save to samfile
-clear hnew
-samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
-[ds,hs] = mloadq(samfile,'sampnum','niskin_flag','uasal',' ');
-[~,iis,iio] = intersect(ds.sampnum,d.sampnum);
-hnew.fldnam = {'sampnum'};
-hnew.fldunt = {'number'};
-
-%convert to umol/kg
-dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxya_temp(iio),0),0);
-botoxya = d.botoxya_per_l(iio)./(dens/1000);
-if isfield(d, 'botoxyb_per_l')
-    dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxyb_temp(iio),0),0);
-    botoxyb = d.botoxyb_per_l(iio)./(dens/1000);
-end
-
-ds.botoxy = NaN+ds.sampnum;
-ds.botoxy_flag = 9+zeros(size(ds.sampnum));
-if isfield(d, 'botoxyb_per_l')
-    %for sam file, average 'a' and 'b' samples depending on flag
-    av = find(d.botoxya_flag(iio)==d.botoxyb_flag(iio));
-    ds.botoxy(iis(av)) = .5*(botoxya(av)+botoxyb(av));
-    ds.botoxy_flag(iis(av)) = 6;
-    a = find(d.botoxya_flag(iio)<d.botoxyb_flag(iio));
-    ds.botoxy(iis(a)) = botoxya(a);
-    ds.botoxy_flag(iis(a)) = d.botoxya_flag(iio(a));
-    b = find(d.botoxyb_flag(iio)<d.botoxya_flag(iio));
-    ds.botoxy(iis(b)) = botoxyb(b);
-    ds.botoxy_flag(iis(b)) = d.botoxyb_flag(iio(b));
-else
-    %only 'a' samples
-    ds.botoxy(iis) = botoxya;
-    ds.botoxy_flag(iis) = d.botoxya_flag(iio);
-end
-%for temperature it's not meaningful to average, just report botoxya
-%temp as diagnostic of good bottle closing
-ds.botoxya_temp = NaN+ds.sampnum;
-ds.botoxya_temp(iis) = d.botoxya_temp(iio);
-hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxya_temp' 'botoxy_flag'];
-hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
-
-%apply niskin flags (and also confirm consistency between sample and flag)
-ds = hdata_flagnan(ds, [3 4 9]);
-%just keep the fields set above (don't need to keep niskin_flag etc. here)
-fn = fieldnames(ds);
-[~, ia, ib] = intersect(fn, hnew.fldnam, 'stable');
-if length(ia)<length(fn)
-    ds = rmfield(ds, fn(setdiff(1:length(fn),ia)));
-end
-hnew.fldnam = hnew.fldnam(ib); hnew.fldunt = hnew.fldunt(ib);
-
-%save
-mfsave(samfile, ds, hnew, '-merge', 'sampnum');
+moxy_to_sam

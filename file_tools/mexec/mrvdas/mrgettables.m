@@ -22,6 +22,7 @@ function rvdas_tables = mrgettables
 %
 %   A structure in which the fieldnames are the names of the tables in
 %   rvdas. The list of tables is determined from the psql \dt command.
+%   ***for sda, needs to be updated to just look for current tables***
 %
 %   So fieldnames(rvdas_tables) is a cell array of the table names.
 %   Each field is []

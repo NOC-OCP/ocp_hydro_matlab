@@ -265,5 +265,17 @@ switch scriptname
         %%%%%%%%%% end msam_checkbottles_02 %%%%%%%%%%
         
                         
+    case 'miso_01'
+        switch oopt
+            case 'iso_files'
+                crhelp_str = {'set list of files, isofiles, from which to load isotope data (no default)'};
+            case 'iso_parse'
+                crhelp_str = {'Place to parse/store additional info from each file, for instance from header hs,'
+                    'or to compute things from fields of ds, for instance looking up bottle volumes from bottle '
+                    'numbers, or to specify mapping between file and mstar variable names in cell array isovarmap '
+                    '(first column: mstar names, second column: names in file).'};            
+            case 'iso_flags'
+                crhelp_str = {'set flag fields in iso'};
+        end
                 
 end

@@ -1,5 +1,5 @@
 % msal_01: read in the bottle salinities from digitized autosal log(s)
-% and save to sal_cruise_01.nc, tsgsal_cruise_01.nc, and sam_cruise_01.nc
+% and save to sal_cruise_01.nc, tsgsal_cruise_01.nc
 %
 % Use: msal_01 
 %
@@ -227,7 +227,6 @@ end
 
 dataname = ['sal_' mcruise '_01'];
 salfile = fullfile(root_sal, [dataname '.nc']);
-samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 tsgfile = fullfile(mgetdir(tsgpre), ['tsgsal_' mcruise '_all.nc']);
 
@@ -259,25 +258,7 @@ plot(d.sampnum(ii),d.salinity(ii),'o',d.sampnum(ii),d.salinity_adj(ii),'s')
 title('CTD'); xlabel('sampnum'); legend('sal', 'sal adj')
 
 %write some fields for CTD samples to sam_ file
-clear hnew
-hnew.fldnam = {'sampnum' 'botpsal' 'botpsal_flag'};
-hnew.fldunt = {'number' 'psu' 'woce_9.4'}; %***
-hnew.comment = ['salinity data from sal_' mcruise '_01.nc. ' sal_adj_comment];
-ds = mloadq(samfile, 'sampnum', 'niskin_flag', ' ');
-[~,isam,isal] = intersect(ds.sampnum,d.sampnum);
-ds.botpsal = NaN+ds.sampnum; ds.botpsal_flag = 9+zeros(size(ds.sampnum));
-if isfield(d, 'salinity_adj') && sum(~isnan(d.salinity_adj(isal)))
-    ds.botpsal(isam) = d.salinity_adj(isal);
-else
-    ds.botpsal(isam) = d.salinity(isal);
-end
-ds.botpsal_flag(isam) = d.flag(isal);
-%apply niskin flags (and also confirm consistency between sample and flag)
-ds = hdata_flagnan(ds, [3 4 9]);
-%don't need to rewrite them though
-ds = rmfield(ds,'niskin_flag');
-%save
-mfsave(samfile, ds, hnew, '-merge', 'sampnum');
+msal_to_sam
 
 %get TSG samples, figure out times: either -dddhhmmss (where ddd is
 %year-day starting at 1), or yyyymmddhhmmss 

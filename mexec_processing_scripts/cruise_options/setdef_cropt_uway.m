@@ -28,10 +28,10 @@ switch scriptname
                         MEXEC_G.Mshipdatasystem = 'rvdas';
                         MEXEC_G.default_navstream = 'pospmv';
                         MEXEC_G.default_hedstream = 'attpmv';
-                    case 'sa'
+                    case 'attenborough'
                         MEXEC_G.Mshipdatasystem = 'rvdas';
                         warning('add fields default_navstream and default_hedstream to MEXEC_G here or in opt_{cruise}.m');
-                    case 'jr'
+                    case 'jcr'
                         MEXEC_G.Mshipdatasystem = 'scs';
                         MEXEC_G.default_navstream = 'seatex_gll';
                         MEXEC_G.default_hedstream = 'seatex_hdt';
@@ -54,7 +54,8 @@ switch scriptname
                         metpre = 'met';
                 end
             case 'avtime'
-                crhelp_str = {'Number of seconds over which to average nav, met, and tsg measurements'};
+                crhelp_str = {'Number of seconds over which to average nav, met, and tsg measurements'
+                    'in appended files.'};
                 avnav = 30;
                 avmet = 60;
                 avtsg = 60;
@@ -91,7 +92,8 @@ switch scriptname
                     'gndtm', 'gngsa', 'gngst', 'gnzda', ...
                     'gpdtm', 'gpgga', 'gpgsa', 'gpgst', 'gpgsv', ...
                     'gprmc', 'gpzda', ...
-                    'heths', 'inzda', 'ppnsd'};
+                    'heths', 'inzda', 'ppnsd', ...
+                    'pcrfs', 'pctnh'};
                 pat_skip = {'unitsOf', 'unitOf', 'Unit', 'des', 'geoid', 'dgnss', ...
                     'magvar', 'status', 'vbw', 'depthfeet', 'depthfathom', ...
                     'magnetic' 'flag' 'hdop' 'ggaqual' ...
@@ -100,24 +102,30 @@ switch scriptname
                     'geoid' 'diffcAge' 'UTCDate' 'maxrange' 'trueheading' ...
                     'truecourse' 'positioningmode'};
                 sentence_var_skip = {};
+                        table_skip = {};
+                        sentence_skip = {};
                 switch MEXEC_G.Mship
                     case 'discovery'
-                        table_skip = {'10_at1m_uw' 'at1m_u12_uw' ...
+                        table_skip = [table_skip '10_at1m_uw' 'at1m_u12_uw' ...
                             'air2sea_gravity' 'air2sea_s84' ...
-                            'posmv_att' 'posmv_gyro' 'seaspy'};
-                        sentence_skip = {'phins_att_pixsepositi', 'phins_att_pixsespeed', 'phins_att_pixseutmwgs',...
+                            'posmv_att' 'posmv_gyro' 'seaspy'];
+                        sentence_skip = ['phins_att_pixsepositi', 'phins_att_pixsespeed', 'phins_att_pixseutmwgs',...
                             'phins_att_pixsetime', 'phins_att_pixsestdhrp', 'phins_att_pixsestdpos',...
                             'phins_att_pixsestdspd', 'phins_att_pixseutcin', 'phins_att_pixsegp2in', ...
-                            'phins_att_pixsealgsts', 'phins_att_pixsestatus', 'phins_att_pixseht0sts'};
+                            'phins_att_pixsealgsts', 'phins_att_pixsestatus', 'phins_att_pixseht0sts'];
                     case 'cook'
-                        table_skip = {'airsea2', 'gravat1m', 'ranger2usbl', 'seaspy2', 'slogchernikeef', 'rex2'};
-                        sentence_skip = {'cnav_gngll', 'cnav_gnrmc', 'posmv_prdid', ...
+                        table_skip = [table_skip 'airsea2', 'gravat1m', 'ranger2usbl', 'seaspy2', 'slogchernikeef', 'rex2'];
+                        sentence_skip = [sentence_skip 'cnav_gngll', 'cnav_gnrmc', 'posmv_prdid', ...
                             'seapathatt_ingga', 'seapathatt_psxn20', 'seapathgps_inrmc', 'seapathgps_ingll'...
-                            'sgyro_hchdm', 'ea640_sddbs'};
+                            'sgyro_hchdm', 'ea640_sddbs'];
                         msg_skip = [msg_skip, ...
                             'rex2_3rr0r'];
                         var_skip = [var_skip 'ggaqual', 'numsat', 'hdop']; %not on dy146
-                    case 'sda'
+                    case 'attenborough'
+                        sentence_skip = [sentence_skip, 'singlebeam_skipper_gds_102_sddpt', 'singlebeam_skipper_gds102_sddbs',...
+                            'singlebeam_skipper_gds102_sddbk', 'singlebeam_skipper_gds102_pskpdpt', 'singlebeam_skipper_gds102_sdalr',...
+                            'gnss_saab_r5_supreme_gnrmc'];
+                    otherwise
                 end
         end
 
@@ -125,7 +133,8 @@ switch scriptname
     case 'bathy'
         switch oopt
             case 'bathy_grid'
-                crhelp_str = {'load gridded bathymetry into top.lon, top.lat, top.depth'};
+                crhelp_str = {'load gridded bathymetry into top.lon, top.lat, top.depth,'
+                    'for use by mbathy_edit_av'};
         end
         %%%%%%%%%% end bathy (not a script) %%%%%%%%%%
         

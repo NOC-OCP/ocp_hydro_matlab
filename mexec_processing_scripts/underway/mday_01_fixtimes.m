@@ -1,6 +1,5 @@
 %script containing code from previous version of mday_01_clean_av to flag
-%repeated times and backward time jumps
-%(for rvdas we hope this won't be necessary)
+%repeated times, backward time jumps, and non-finite times
 
 prefix = [abbrev '_' mcruise '_d' day_string];
 wkfile1 = ['wk1_' prefix '_' mfilename '_' datestr(now,30)];
@@ -16,7 +15,7 @@ else
 end
 deltat = d.time(2:end)-d.time(1:end-1);
 deltat = [1; deltat(:)];
-iib = find(deltat==0);
+iib = find(deltat==0 | ~isfinite(d.time));
 if ~isempty(iib)
     for no = 1:length(h.fldnam)
         d.(h.fldnam{no})(iib) = [];

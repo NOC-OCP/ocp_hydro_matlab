@@ -19,9 +19,9 @@ switch scriptname
                     9009 9010 8156 9012 9013 9014 9015 9016 9017 ...
                     9018 9019 9020 9021 9022 9023 9024 9025]; %25000NNNN
             case 'botflags'
-                niskin_flag(ismember(statnum,[3 4 7 9 46 49]) & position==3) = 4; %bottom endcap not closed
-                niskin_flag(ismember(statnum,[10 18 19 21 37 45 60 65 71 73 80]) & position==10) = 4; %did not seal or leaked
-                niskin_flag(statnum==21 & position==9) = 4; %bottom end cap did not seal
+                niskin_flag(ismember(statnum,[3 4 7 9 46 49]) & position==3) = 3; %bottom endcap not closed %revised from 4 20220807
+                niskin_flag(ismember(statnum,[10 18 19 21 37 45 60 65 71 73 80]) & position==10) = 3; %did not seal or leaked %revised from 4 20220807
+                niskin_flag(statnum==21 & position==9) = 3; %bottom end cap did not seal %revised from 4 20220827
                 niskin_flag(ismember(sampnum, [5503 7416 8016])) = 3; %leaked from bottom end cap after sampling
         end
         %%%%%%%%%% end mbot_01 %%%%%%%%%%
@@ -604,5 +604,14 @@ switch scriptname
                     '#These data should be acknowledged with: "Data were collected and made publicly available by the international Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre and the British Antarctic Survey."'};
         end
         %%%%%%%%%% end mout_cchdo %%%%%%%%%%
+        
+    case 'miso_01'
+        switch oopt
+            case 'iso_files'
+                isofiles = fullfile(root_iso,'740H20210202_hy1_data.csv');
+                hcpat = {'CTDPRS' 'DBAR'};
+            case 'iso_parse'
+                
+        end
         
 end

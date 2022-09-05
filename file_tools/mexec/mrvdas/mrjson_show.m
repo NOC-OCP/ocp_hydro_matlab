@@ -79,6 +79,8 @@ n_sentences = length(js.sentences);
 id = js.id; id = lower(id);
 fprintf(fid,'\n\n%s%s %2d%s\n','%',js.filename,n_sentences,'  sentences');
 
+specchar = {' ', ',', '''', ';'};
+
 for ks = 1:n_sentences
 
     s = js.sentences(ks);
@@ -106,7 +108,7 @@ for ks = 1:n_sentences
             f = s.field(kf);
         end
         fname = f.fieldNumber;
-        longname = replace(f.name, ' ', '_');
+        longname = replace(f.name, specchar, '_');
         if isfield(f,'units'); funit = f.units; else; funit = f.unit; end
         
         skipit = false;

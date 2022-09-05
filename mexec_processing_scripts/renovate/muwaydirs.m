@@ -91,6 +91,7 @@ udirso = {
 udirs = [udirsn; udirso]; clear udirsn udirso
 
     case 'rvdas'
+        %superseded***
 
             udirs = {
         'dopcnav'    fullfile('nav','cnav')

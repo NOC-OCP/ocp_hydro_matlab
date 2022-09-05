@@ -1,6 +1,11 @@
 switch scriptname
     
-    
+    case 'mctd_01'
+        switch oopt
+            case 'cnvfilename'
+                cnvfile = sprintf('%s_CTD%03d_align_ctm.cnv',upper(mcruise),stnlocal);
+        end
+        
     %%%%%%%%%% mctd_03 %%%%%%%%%%
     case 'mctd_03'
         switch oopt
@@ -26,9 +31,11 @@ switch scriptname
         %%%%%%%%%% mfir_01 %%%%%%%%%%
         %transferred from mbot_01, and some flag 4 changed to 3, 20220429,
         %other flags revised 20220617
-            case 'mfir_01'
+    case 'mfir_01'
         switch oopt
-            case 'nnisk'
+                        case 'blinfile'
+               blinfile = fullfile(root_botraw,sprintf('%s_CTD%03d.bl', upper(mcruise), stnlocal));
+            case 'nispos'
                 %inventory/serial numbers of the niskins in order of 1 to 24
                 niskn = [2754:2774 2776:2778]'; %250002754:250002778
             case 'botflags'
@@ -182,6 +189,7 @@ switch scriptname
                 ii1 = find(sum(sam2use,2)==1);
                 ds_sal.flag(iisam(ii1)) = max(ds_sal.flag(iisam(ii1)),3);
                 ds_sal.flag(ds_sal.sampnum==2213) = 3;
+                ds_sal.flag(ismember(ds_sal.sampnum,[104 502 1315 1514 1801 1809 1017 1023 1103 802 614 2318 2222 5312 6413 6813 6918 7018 7805 7810 8505 8518 6513 6505 6609])) = 3;
         end
         %%%%%%%%%% msal_01 %%%%%%%%%%
         
@@ -192,6 +200,8 @@ switch scriptname
                 ofiles = {'oxy_dy113_040.csv'};
             case 'oxy_flags'
                 ds_oxy.flag(ds_oxy.flag==2.3) = 2; %these are mostly 'tiny bubbles' and replicates show they don't make a difference
+                ds_oxy.flag(ismember(ds_oxy.sampnum,[313])) = 4;
+                ds_oxy.flag(ismember(ds_oxy.sampnum,[721 1409 6002 4001 1312 3801 4519 9803 2221 9406])) = 3;
             case 'oxy_calc'
                 vol_reag1 = 0.99; %?
                 vol_reag2 = 0.99; %?seems coincidental they're all labelled 0.99g

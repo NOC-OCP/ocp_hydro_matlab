@@ -191,6 +191,7 @@ switch scriptname
                     '#Carbon: Who - N. Allison; Status - not yet analysed';...
                     };
             case 'woce_vars_exclude'
+                vars_exclude_ctd = {'ph'}; %cal is no good in current version
                 %use this space to calculate sigma0 (for sam file only)
                 %if isfield(d,'upsal')
                 %    d.upden = sw_pden(d.upsal,d.utemp,d.upress,0);
@@ -397,45 +398,25 @@ switch scriptname
                 do_empty_vars = 1;
                 fillstat = 1;
         end
-
+        
     case 'ix_cast_params'
         switch oopt
             case 'ladcpopts'
                 if isfield(cfg,'pdir_root') && ~strcmp(cfg.pdir_root,'processed')
-%                 if stnlocal==43
-%                     p.vlim = 3.3; %for example
-%                 elseif ismember(stnlocal,[1 3])
-%                     p.btrk_mode = 0; %for example
-%                 end
-
-
-
-%OUTLIER detection is called twice once to clean the raw data
-%	and a second time to clean the super ensembles
-%        [n1 n2 n3 ...] the length gives the number of scans and
-%	each value the maximum allowed departure from the mean in std
-%	applied for the u,v,w fields for each bin over blocks 
-%   of p.outlier_n profiles
-% p=setdefv(p,'outlier',[4.0  3.0]);
-% default for p.outlier_n is number of profiles in 5 minutes
-% p=setdefv(p,'outlier_n',100);
-% minimum std for horizontal velocities of super ensemble
-% p=setdefv(p,'superens_std_min',0.01);
-
-
-%SPIKES
-% 	maximum value for abs(V-error) velocity
-p.elim = 0.3;
-% 	maximum value for horizontal velocity 
-% p=setdefv(p,'vlim',2.5);
-% 	minimum value for %-good
- p.pglim = 50;
-%	maximum value for W difference between the mean W and actual
-%        W(z) for each profile. 
- p.wlim = 0.10;
-p.edit_spike_filter=0;
-p.edit_spike_filter_max_curv=2;
-
+                    %SPIKES
+                    % 	maximum value for abs(V-error) velocity
+                    p.elim = 0.3;
+                    % 	maximum value for horizontal velocity
+                    % p=setdefv(p,'vlim',2.5);
+                    % 	minimum value for %-good
+                    p.pglim = 50;
+                    %	maximum value for W difference between the mean W and actual
+                    %        W(z) for each profile.
+                    p.wlim = 0.10;
+                    p.edit_spike_filter=0;
+                    p.edit_spike_filter_max_curv=2;
+                    
                 end
         end
+        
 end
