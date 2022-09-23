@@ -12,7 +12,8 @@ function data = parse_load_hdata(infile, varnamesunits, varargin)
 %
 % optional parameter-value input argument pairs used include
 %     predir, directory for input file(s) (default './')
-%     badflags, list of flag values which NaN corresponding variables (default [4 9])
+%     badflags, list of flag values which NaN corresponding variables
+%     (default [4 9])*** [1 9 5] and do the additional NaNing later***
 %     hcpat, chrows, chunits (no defaults)
 %         for csv files, information on column header (see help for load_samdata)
 %     cruisename (no default)
@@ -40,11 +41,11 @@ if length(varargin)==1 && isstruct(varargin{1})
         opts.predir = './';
     end
     if ~isfield(opts, 'badflags')
-        opts.badflags = [4 9];
+        opts.badflags = [1 9 5];
     end
 else
     opts.predir = './';
-    opts.badflags = [4 9];
+    opts.badflags = [1 9 5];
     if length(varargin)==1 %supplied single cell array containing par-val pairs
         varargin = varargin{:};
     end
@@ -99,7 +100,7 @@ for fno = 1:size(infile,1)
         else
             ds = load(fullfile(opts.predir, infile{fno}), '-mat');
         end
-        if isfield(ds, 'data');
+        if isfield(ds, 'data')
             ds = ds.data;
         end
         %find GLODAP cruise *** this could also come up for csv data
@@ -154,7 +155,7 @@ for fno = 1:size(infile,1)
             d = ncread(fullfile(opts.predir, infile{fno}), vars{iiv(vno)});
             if ischar(d)
                 d = str2num(d(:)');
-            elseif isinteger(d);
+            elseif isinteger(d)
                 d = double(d);
             end
             ds.(varnamesunits.hvar{iinv(vno)}) = d;
@@ -343,7 +344,7 @@ for fno = 1:size(infile,1)
         
     end
     
-    fno
+    disp(fno)
 end
 
 
@@ -361,4 +362,4 @@ data.unts = data.unts(:)';
 
 
 %NaN bad data, apply flags (mask), and make sure they match
-data = hdata_flagnan(data, opts.badflags);
+data = hdata_flagnan(data, 'sam_missflags', opts.badflags);

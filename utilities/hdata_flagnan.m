@@ -1,121 +1,172 @@
-function data = hdata_flagnan(data, varargin)
-% function data = hdata_flagnan(data);
-% function data = hdata_flagnan(data, badflags);
-% function data = hdata_flagnan(data, badflags, 'notwoce');
-% function data = hdata_flagnan(data, vars_exclude);
-% function data = hdata_flagnan(data, vars_exclude, 'keepempty');
+function d = hdata_flagnan(d, varargin)
+% function d = hdata_flagnan(d);
+% function d = hdata_flagnan(d, 'parameter', value);
 %
-% for each data field of structure data (except those in vars_exclude, if
-% specified) replace -999s with NaNs, and make data fields and flag fields
-% (*_flag), match 
-% 
-% optional input vector badflags (default [3 4 9]) sets which flag values
-% should be accompanied by NaNs
+% 1) for each sample field/column of structure/table/dataset d, replace
+%   -999s with NaNs. some fields are skipped: by default, if addflags (see
+%   below) is set to 1, the skipped fields are sampnum, statnum, station,
+%   niskin, position, press, upress, depth and udepth; all other fields not
+%   ending in _flag are treated as sample fields, and optional input
+%   argument vars_exclude is a cell array list of additional fields to
+%   ignore (e.g. {'sbe35temp'}). if addflags is set to 0, every field (and
+%   only those fields) with a corresponding _flag field, except niskin, is
+%   treated as a sample field
+% 2) for each corresponding flag field (*_flag), replace -999s or NaNs with
+%   9, or if there is no flag field create it with values of 2 or 9 for
+%   non-NaN or NaN sample values, respectively (unless optional input 
+%   addflags is set to 0).  
+% 3) make sample and flag fields consistent with each other and with
+%   niskin_flag (if this is a field in d), using nisk_badflags 
+%   (default: [3 4 9]) and sam_missflags (default: [9 1 5]), such that:  
+%     where niskin_flag is a member of nisk_badflags, sample values are
+%       NaNed and flag values other than sam_missflags(1) are replaced by
+%       sam_missflags(end); 
+%     where sample values are NaN but corresponding flags are not in
+%       sam_missflags, flags are replaced by sam_missflags(end).
+%   default values come from woce tables 4.8 and 4.9 and the assumption
+%     that only not-sampled, not-analysed, and not-reported values are NaN,
+%     while questionable and bad values are still reported. If you want to
+%     also NaN "bad" samples, for instance, set sam_missflags = [9 1 4 5]
+% 4) depending on optional input keepempty, either: 
+%    1: do nothing,
+%    0 (default): remove flag fields that are all 9s, and their associated
+%    sample fields, or 
+%    -1: remove flag fields that are all 9s and sample fields that are all
+%      NaNs (whether or not they are linked; so for instance if you have
+%      not-analysed data outstanding, the parameter column could be removed
+%      and only the flag column kept)
 %
-% assumes woce flag values (table 4.9) unless both badflags and 'notwoce'
-% are in inputs; in this case, flags where data are -999 or NaN are set to
-% min(badflags)
-%
-% by default, variables with no non-NaN data, and their corresponding
-% flags, will be removed; to suppress this include 'keepempty' in inputs
-%
-% by default, sampnum, statnum, niskin, and position are excluded from this
-% checking; specify additional variables to exclude in input vars_exclude
-%
-% optional input arguments can be in any order
-%
-% data can be a structure, a dataset, or a table
 %
 % YLF 2021/05
 
-badflags = [3 4 9]; %for niskins: leaked, misfired, did not sample
-woceflags = 1;
+%default: use woce flags
+nisk_badflags = [3 4 9]; %for niskins: leaked, misfired, did not sample
+sam_missflags = [9 1 5]; %for samples: did not sample, not yet analysed, not reported
+%default: get rid of empty fields
 keepempty = 0;
-vars_exclude = {'sampnum' 'statnum' 'niskin' 'position'};
-for no = 1:length(varargin)
-    if ischar(varargin{no})
-        if strcmp(varargin{no}, 'notwoce')
-            woceflags = 0;
-        elseif strcmp(varargin{no}, 'keepempty')
-            keepempty = 1;
-        end
-    elseif iscell(varargin{no})
-        vars_exclude = [vars_exclude varargin{no}];
-    else
-        badflags = varargin{no};
+%default: add flag fields where not present
+addflags = 1;
+
+%optional inputs
+for no = 1:2:length(varargin)
+    eval([varargin{no} ' = varargin{no+1};'])
+end
+if ~ismember(keepempty,[-1 0 1])
+    keepempty = 0;
+end
+
+if addflags
+    skipvars = {'sampnum' 'statnum' 'station' 'niskin' 'position' 'press' 'upress' 'depth' 'udepth'};
+else
+    skipvars = {'niskin'};
+end
+if istable(d)
+    skipvars = [skipvars 'Properties' 'Row' 'Variables'];
+end
+if exist('vars_exclude','var')
+    skipvars = [skipvars vars_exclude];
+end
+
+if length(sam_missflags)==1
+    sam_missflags = [NaN sam_missflags];
+end
+
+%get separate lists of sample and flag variables
+fnames = fieldnames(d);
+fnames = setdiff(fnames, skipvars); 
+snames = {};
+for no = 1:length(fnames)
+    if ~endsWith(fnames{no},'_flag')
+        snames = [snames fnames{no}];
     end
 end
+fnames = setdiff(fnames, snames);
 
-%data variables to consider    
-fnames = fieldnames(data);
-fnames = setdiff(fnames, vars_exclude); 
-
-%niskin flags are applied not to niskins but to other fields
-if isfield(data, 'niskin_flag') && woceflags
-    %NaN all samples from leaking (3), badly-closed (4) or unused (9) Niskins
-    iinf = ismember(data.niskin_flag,[3 4 9]); 
-else
-    iinf = [];
+%replace -999s in flags
+for no = 1:length(fnames)
+    flag = d.(fnames{no});
+    flag(flag<-900) = 9;
+    d.(fnames{no}) = flag;
 end
 
-%loop through data fields
-for vno = 1:length(fnames)
-    if ~contains(fnames{vno},'_flag') && isnumeric(data.(fnames{vno})) %data field
+%replace -999s in data and add flags if necessary
+for no = 1:length(snames)
+    sam = d.(snames{no});
+    sam(sam<-900) = NaN;
+    d.(snames{no}) = sam;
+    fn = [snames{no} '_flag'];
+    
+    if ~ismember(fn,fnames)
+        if addflags
+            flag = 9+zeros(size(sam));
+            flag(~isnan(sam)) = 2;
+            d.(fn) = flag;
+            fnames = [fnames; fn];
+        end
+    else
+        flag = d.(fn);
+        flag(isnan(sam) & isnan(flag)) = 9;
+        d.(fn) = flag;
+    end
+    
+end
 
-        d = data.(fnames{vno});
-        d(d<=-900) = NaN;
-        iif = find(strcmp([fnames{vno} '_flag'], fnames)); %flag field
+%apply niskin_flags to samples and their flags
+if isfield(d, 'niskin_flag')
+    niskbad = ismember(d.niskin_flag, nisk_badflags);
+    fnames = setdiff(fnames, {'niskin_flag'});
+    
+    for no = 1:length(fnames)
+        flag = d.(fnames{no});
+        flag(niskbad & flag~=sam_missflags(1)) = sam_missflags(end);
+        d.(fnames{no}) = flag;
+    end
+    
+    for no = 1:length(snames)
+        sam = d.(snames{no});
+        sam(niskbad) = NaN;
+        d.(snames{no}) = sam;
+    end
+    
+end
 
-        if ~keepempty && ~sum(~isnan(d)) 
-            %no data; get rid of this field and its flag field
-            if isstruct(data)
-                data = rmfield(data, fnames{vno});
-                if ~isempty(iif)
-                    data = rmfield(data, [fnames{vno} '_flag']);
-                end
-            else
-                data.(fnames{vno}) = [];
-                if ~isempty(iif)
-                    data.([fnames{vno} '_flag']) = [];
-                end
+for no = 1:length(snames)
+    
+    %match sample flags and data, where both exist
+    if isfield(d, [snames{no} '_flag'])
+        flag = d.([snames{no} '_flag']);
+        sam = d.(snames{no});
+        mf = ismember(flag,sam_missflags);
+        flag(isnan(sam) & ~mf) = sam_missflags(end);
+        sam(mf) = NaN;
+        d.([snames{no} '_flag']) = flag;
+        d.(snames{no}) = sam;
+
+        if keepempty==-1
+            %if all missing, get rid of column
+            if sum(~isnan(sam))==0
+                d = rmfield(d, snames{no});
             end
-            continue %to next variable
-        end
-
-        if isempty(iif)
-            %add flag field
-            data.([fnames{vno} '_flag']) = NaN+data.(fnames{vno});
-            fnames{length(fnames)+1} = [fnames{vno} '_flag']; 
-            iif = length(fnames); %***does this work on tables?
-        end
-
-        %modify flags to match data
-        f = data.(fnames{iif});
-        if woceflags
-            %sample flags of 2 (good), 3 (questionable), 6 (mean of
-            %replicates) ought to have non-nan data; if not, assume flag
-            %should be 4 (bad)
-            f(isnan(d) & ismember(f, [2 3 6])) = 4;
-            %if data is nan and flag is nan (or -999), assume that means 9
-            %(no sample) [though it could also mean 5 (not reported)]
-            f(isnan(d) & ~(f>0)) = 9;
-            %if data is non-nan and flag is nan (or -999), assume good
-            f(~isnan(d) & ~(f>0)) = 2;
-        else
-            f(isnan(d) & ~ismember(f,badflags)) = min(badflags);
-        end
-
-        %now NaN everywhere that flag is bad
-        d(ismember(f, badflags)) = NaN;
-        %and where niskin is flagged
-        if ~isempty(iinf) && sum(iinf)
-            d(iinf) = NaN;
-            f(iinf & f<9) = 4;
         end
         
-        data.(fnames{vno}) = d;
-        data.([fnames{vno} '_flag']) = f;
-
     end
+    
 end
 
+%check flag fields for discard
+if keepempty<1
+    
+    for no = 1:length(fnames)
+        if sum(d.(fnames{no})~=9)==0
+            d = rmfield(d, fnames{no});
+            
+            if keepempty==0
+                %didn't remove data column above, but flags are all 9 so
+                %remove now
+                d = rmfield(d, fnames{no}(1:end-5));
+            end
+            
+        end
+    end
+    
+end

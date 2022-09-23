@@ -36,11 +36,21 @@ else
 end
 d.date = datestr(dn,'yyyymmddHHMM');
 d.time = d.date(:,9:12); d.date = d.date(:,1:8);
+if length(unique(dn))>length(unique(d.statnum))
+    d.btldate = d.date;
+    d.btltime = d.time;
+    d = rmfield(d,{'date','time'});
+end
 if ~isfield(d,'ulatitude') && isfield(d,'latitude')
     d.ulatitude = d.latitude; d.ulongitude = d.longitude;
 end
 if ~isfield(d,'ulatitude') && isfield(d,'lat')
     d.ulatitude = d.lat; d.ulongitude = d.lon;
+end
+if max(length(unique(d.ulatitude)),length(unique(d.ulongitude)))>length(unique(d.statnum))
+    d.btllat = d.ulatitude;
+    d.btllon = d.ulongitude;
+    d = rmfield(d,{'ulatitude','ulongitude'});
 end
 if ~isfield(d, 'castno')
     d.castno = ones(size(d.sampnum));

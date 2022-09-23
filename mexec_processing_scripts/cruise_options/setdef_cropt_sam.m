@@ -139,6 +139,14 @@ switch scriptname
         end
         %%%%%%%%%% end moxy_01 %%%%%%%%%%
                 
+    case 'moxy_to_sam'
+        switch oopt
+            case 'use_oxy_repl'
+                crhelp_str = {'Set use_oxy_repl (default: 1) to 0 to not average replicates, 1 to average duplicates,'
+                    'or 2 to average duplicates or triplicates'};
+                use_oxy_repl = 1;
+        end
+        
         %%%%%%%%%% mnut_01 %%%%%%%%%%
     case 'mnut_01'
         switch oopt

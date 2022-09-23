@@ -51,7 +51,7 @@ oxyunits.sample_titre = {'ml' 'mls'};
 oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
 oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
 if ~isempty(chunits)
-    check_table_units(ds_oxy, oxyunits)
+    check_units(ds_oxy, oxyunits)
 end
 
 %compute or fill some fields
@@ -65,19 +65,31 @@ else
         ds_oxy.position = ds_oxy.sampnum - ds_oxy.statnum*100;
     end
 end
-if sum(strcmp('flag',ds_oxy_fn))==0
-    ds_oxy.flag = 9+zeros(size(ds_oxy.sampnum));
-    ds_oxy.flag(~isnan(ds_oxy.sample_titre)) = 2;
-    ds_oxy.flag(isnan(ds_oxy.sample_titre) & ~isnan(ds_oxy.fix_temp)) = 5;
+
+%create flags if necessary, then make sure they match available data
+if isfield(ds_oxy,'sample_titre')
+    dname = 'sample_titre';
 else
-    ds_oxy.flag(ds_oxy.flag==0) = NaN;
-    if sum(isnan(ds_oxy.flag))>0
-        if isfield(ds_oxy,'sample_titre'); m = isnan(ds_oxy.sample_titre); else; m = isnan(ds_oxy.conc_o2); end
-        ds_oxy.flag(isnan(ds_oxy.flag) & m) = 9;
-        ds_oxy.flag(isnan(ds_oxy.flag) & ~m) = 2;
-        ds_oxy.flag(isnan(ds_oxy.flag) & m & ~isnan(ds_oxy.fix_temp)) = 5;
-    end
+    dname = 'conc_o2';
 end
+if sum(strcmp('flag',ds_oxy_fn))==0
+    ds_oxy.flag = NaN+zeros(size(ds_oxy.sampnum));
+end
+ds_oxy.flag(ds_oxy.flag<=0) = NaN;
+bd = isnan(ds_oxy.(dname));
+bt = isnan(ds_oxy.fix_temp);
+%both oxy and temp, no flag: 2
+ds_oxy.flag(~bd & ~bt & isnan(ds_oxy.flag)) = 2;
+%both oxy and temp, flag 5 or 9: NaN oxy
+ds_oxy.(dname)(~bd & ~bt & ismember(ds_oxy.flag, [5 9])) = NaN;
+%temp but no oxy: 5 or 9
+ds_oxy.flag(bd & ~bt & ds_oxy.flag<9) = 5;
+%oxy but no temp: 5 and NaN oxy (no good without temp)
+if sum(~bd & bt)>0; warning('oxy values without fix_temp will be discarded'); end
+ds_oxy.flag(~bd & bt) = 5; 
+ds_oxy.flag(~bd & bt) = NaN;
+%neither oxy nor temp: 9
+ds_oxy.flag(bd & bt) = 9;
 
 %compute bottle volumes at fixing temperature if not present
 if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))

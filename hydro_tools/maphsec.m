@@ -161,7 +161,8 @@ switch mgrid.method
                     ii = find(mgrid.datam(:,:,vno)>=0.8 & mgrid.mask==0);
                     if ~isempty(ii)
                         try
-                            v = mgrids.(mgrid.vars{vno}); v = fill_to_surf(v);
+                            v = mgrids.(mgrid.vars{vno}); 
+                            v = gp_fillgaps(v, 0, 'first'); %replacement for fill_to_surf
                         catch; keyboard; end
                         mgrid.(mgrid.vars{vno})(ii) = v(ii);
                         mgrid.(mgrid.vars{vno})(mgrid.mask==1) = NaN;

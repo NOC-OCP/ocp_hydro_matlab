@@ -1,5 +1,5 @@
 % moxy_to_sam: read in bottle oxy data from oxy_cruise_01.nc, convert from 
-% umol/L to umol/kg, save to sam_cruise_all.nc
+% umol/L to umol/kg, average replicates, save to sam_cruise_all.nc
 %
 
 m_common
@@ -51,41 +51,68 @@ clear hnew
 hnew.fldnam = {'sampnum'};
 hnew.fldunt = {'number'};
 
+%average replicates?
+scriptname = mfilename; oopt = 'use_oxy_repl'; get_cropt
+if use_oxy_repl>1 && ~isfield(d, 'botoxyc_per_l')
+    use_oxy_repl = 1;
+end
+if use_oxy_repl>0 && ~isfield(d, 'botoxyb_per_l')
+    use_oxy_repl = 0;
+end
+
 %convert to umol/kg
 dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxya_temp(iio),0),0);
 botoxya = d.botoxya_per_l(iio)./(dens/1000);
-if isfield(d, 'botoxyb_per_l')
+if use_oxy_repl>0
     dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxyb_temp(iio),0),0);
     botoxyb = d.botoxyb_per_l(iio)./(dens/1000);
+    if use_oxy_repl>1
+        dens = gsw_rho(ds.uasal(iis),gsw_CT_from_t(ds.uasal(iis),d.botoxyc_temp(iio),0),0);
+        botoxyc = d.botoxyc_per_l(iio)./(dens/1000);
+    end
 end
 
-ds.botoxy = NaN+ds.sampnum;
+ds.botoxy = zeros(size(ds.sampnum));
 ds.botoxy_flag = 9+zeros(size(ds.sampnum));
-if isfield(d, 'botoxyb_per_l')
-    %for sam file, average 'a' and 'b' samples depending on flag
-    av = find(d.botoxya_flag(iio)==d.botoxyb_flag(iio));
-    ds.botoxy(iis(av)) = .5*(botoxya(av)+botoxyb(av));
-    ds.botoxy_flag(iis(av)) = 6;
-    a = find(d.botoxya_flag(iio)<d.botoxyb_flag(iio));
-    ds.botoxy(iis(a)) = botoxya(a);
-    ds.botoxy_flag(iis(a)) = d.botoxya_flag(iio(a));
-    b = find(d.botoxyb_flag(iio)<d.botoxya_flag(iio));
-    ds.botoxy(iis(b)) = botoxyb(b);
-    ds.botoxy_flag(iis(b)) = d.botoxyb_flag(iio(b));
-else
-    %only 'a' samples
-    ds.botoxy(iis) = botoxya;
-    ds.botoxy_flag(iis) = d.botoxya_flag(iio);
+ds.botoxy(iis) = botoxya;
+ds.botoxy_flag(iis) = d.botoxya_flag(iio);
+if use_oxy_repl>0
+    nav = ones(size(ds.sampnum));
+
+    %for sam file, average 'a' and 'b' samples if they have the same flag
+    av = find(ds.botoxy_flag(iis)==d.botoxyb_flag(iio) & ~isnan(botoxyb));
+    ds.botoxy(iis(av)) = ds.botoxy(iis(av)) + botoxyb(av);
+    nav(iis(av)) = nav(iis(av))+1;
+    ds.botoxy_flag(iis(av)) = 6; %mean of replicates
+    %and if 'b' flag is better just use 'b'
+    replace = find(d.botoxyb_flag(iio)<ds.botoxy_flag(iis) & ds.botoxy_flag(iis)~=6);
+    ds.botoxy(iis(replace)) = botoxyb(replace);
+    ds.botoxy_flag(iis(replace)) = d.botoxyb_flag(iio(replace));
+    
+    if use_oxy_repl>1
+        %add 'c'
+        av = find(ds.botoxy_flag(iis)==d.botoxyc_flag(iio) & ~isnan(botoxyc));
+        ds.botoxy(iis(av)) = ds.botoxy(iis(av)) + botoxyc(av);
+        nav(iis(av)) = nav(iis(av))+1;
+        ds.botoxy_flag(iis(av)) = 6; %mean of replicates
+        %if 'c' is better just use 'c'
+        replace = find(d.botoxyc_flag(iio)<ds.botoxy_flag(iis) & ds.botoxy_flag(iis)~=6);
+        ds.botoxy(iis(replace)) = botoxyc(replace);
+        ds.botoxy_flag(iis(replace)) = d.botoxyc_flag(iio(replace));
+    end
+    
+    %average replicates
+    ds.botoxy = ds.botoxy./nav;
 end
-%for temperature it's not meaningful to average, just report botoxya
-%temp as diagnostic of good bottle closing
+%for temperature it's not meaningful to average, so in sam_all file just
+%report botoxya temp as diagnostic of good bottle closing
 ds.botoxya_temp = NaN+ds.sampnum;
 ds.botoxya_temp(iis) = d.botoxya_temp(iio);
 hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxya_temp' 'botoxy_flag'];
 hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
 
 %apply niskin flags (and also confirm consistency between sample and flag)
-ds = hdata_flagnan(ds, [3 4 9]);
+ds = hdata_flagnan(ds, 'keepempty', 1);
 %just keep the fields set above (don't need to keep niskin_flag etc. here)
 fn = fieldnames(ds);
 [~, ia, ib] = intersect(fn, hnew.fldnam, 'stable');

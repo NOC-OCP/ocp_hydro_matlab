@@ -13,7 +13,7 @@ ds = mloadq(samfile, 'sampnum', 'niskin_flag', ' ');
 clear hnew
 hnew.fldnam = {'sampnum' 'botpsal' 'botpsal_flag'};
 hnew.fldunt = {'number' 'psu' 'woce_9.4'}; %***
-hnew.comment = ['salinity data from sal_' mcruise '_01.nc. ' sal_adj_comment];
+hnew.comment = ['salinity data from sal_' mcruise '_01.nc. ' hc.comment];
 [~,isam,isal] = intersect(ds.sampnum,d.sampnum);
 ds.botpsal = NaN+ds.sampnum; ds.botpsal_flag = 9+zeros(size(ds.sampnum));
 if isfield(d, 'salinity_adj') && sum(~isnan(d.salinity_adj(isal)))
@@ -24,7 +24,7 @@ end
 ds.botpsal_flag(isam) = d.flag(isal);
 
 %apply niskin flags (and also confirm consistency between sample and flag)
-ds = hdata_flagnan(ds, [3 4 9]);
+ds = hdata_flagnan(ds, 'keepempty', 1);
 %don't need to rewrite them though
 ds = rmfield(ds,'niskin_flag');
 

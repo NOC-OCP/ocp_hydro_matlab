@@ -7,8 +7,8 @@
 
 clear MEXEC_G
 global MEXEC_G
-MEXEC_G.MSCRIPT_CRUISE_STRING='jc211';
-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2021 1 1 0 0 0];
+MEXEC_G.MSCRIPT_CRUISE_STRING='jc238';
+MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
 MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atnoc']; % common suffixes '_atsea', '_athome', '', etc.
 %next line set if you have a /local/users/pstar/cruise but that is not the
 %one you want (e.g. if reprocessing old cruise on seagoing computer);

@@ -21,11 +21,8 @@ if ~isempty(file_lists)
     toc
     
     %make vars just list variables to map, not coordinate variables
-    iil = [];
-    for cno = 1:length(coordv)
-        iil = [iil find(strcmp(coordv{cno}, sdata.vars))];
-    end
-    sdata.vars(iil) = []; sdata.unts(iil) = [];
+    [sdata.vars,iil] = setdiff(sdata.vars, coordv);
+    sdata.unts = sdata.unts(iil);
     %or flag variables
     iifs = find(contains(sdata.vars, '_flag'));
     sdata.vars(iifs) = []; sdata.unts(iifs) = [];
@@ -99,4 +96,5 @@ if isfield(sdata, 'nitr') %take the others out of list of variables to map
     sdata.unts([iit iin]) = [];
 end
 
+clear iil iifs iib iic iif iin iit ii
 disp('sample data loaded')

@@ -152,8 +152,11 @@ else
     load(otfile, 'sdata')
 end
 
-%***(in load_sdata:) check units, convert umol/L to umol/kg if necessary
-
+%%%%% check/convert units, check/apply calibrations/adjustments %%%%%
+if reloadc || reloads
+    quick_qc
+    save(otfile, '-append', 'cdata', 'sdata');
+end
 
 %%%%% map both ctd and bottle data using same length scales and grid variables %%%%%
 

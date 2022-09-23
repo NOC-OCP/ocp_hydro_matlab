@@ -93,14 +93,16 @@ for fno = 1:length(infile)
             %first load as char cells to get header
             warning('off','MATLAB:table:ModifiedAndSavedVarnames')
             warning('off','MATLAB:textscan:AllNatSuggestFormat')
+            opts = detectImportOptions(infile{fno});
+            opts = setvartype(opts,'char');
             if isss
-                hdr = readtable(infile{fno}, 'format', 'auto', 'sheet', sheets(sno)); %will include header and have text columns
+                hdr = readtable(infile{fno}, opts, 'sheet', sheets(sno));
             else
-                hdr = readtable(infile{fno},'format','auto');
+                hdr = readtable(infile{fno}, opts);
             end
+            keyboard
             hdr = hdr{:,:};
-            %identify header lines using hcpat, and parse variable names
-            %and units
+            %identify header lines and parse variable names and units
             try
                 if exist('hcpat','var')
                     [iih, ch, un] = sd_find_colhead(hdr, hcpat, chrows, chunits);
