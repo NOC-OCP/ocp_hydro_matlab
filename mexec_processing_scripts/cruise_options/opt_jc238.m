@@ -158,40 +158,47 @@ switch scriptname
                 expocode = '740H20220712';
                 sect_id = 'Ellet Line -- OSNAP-East';
                 submitter = 'OCPNOCYLF'; %group institution person
-            case 'woce_ctd_headstr'
-                headstring = {['CTD,' datestr(now,'yyyymmdd') submitter];...
-                    '#SHIP: RRS James Cook';...
+                common_headstr = {'#SHIP: RRS James Cook';...
                     '#Cruise JC238; OSNAP East (Rockall Trough to Iceland Basin)';...
                     '#Region: Eastern subpolar North Atlantic';...
                     ['#EXPOCODE: ' expocode];...
                     '#DATES: 20220712 - 20220801';...
-                    '#Chief Scientist: B. Moat, NOC, and K. Burmeister, SAMS';...
-                    '#Supported by grants from the UK Natural Environment Research Council for the OSNAP (grant no. NE/K010875/1, NE/K010875/2, NE/T008938/1) and CLASS (grant no. NE/R015953/1) programs and from the EU Horizon 2020 program to iAtlantic (grant no. 210522255).';...
-                    '#44 stations with 12-place rosette';...
+                    '#Chief Scientist: B. Moat (NOC) and K. Burmeister (SAMS)';...
+                    '#Supported by grants from the UK Natural Environment Research Council for the OSNAP (grant no. NE/K010875/1; NE/K010875/2; NE/T008938/1) and CLASS (grant no. NE/R015953/1) programs and from the EU Horizon 2020 program to iAtlantic (grant no. 210522255).'};
+            case 'woce_ctd_headstr'
+                headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
+                headstring = [headstring; common_headstr;
+                    {'#44 stations with 12-place rosette';...
                     '#CTD: Who - Y. Firing; Status - final.';...
                     '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                     '# DEPTH_TYPE   : COR';...
-                    };
+                    %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom, or speed of sound corrected ship-mounted bathymetric echosounding'...
+                    }];
             case 'woce_sam_headstr'
-                headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter];... 
-                    '#SHIP: RRS James Cook';...
-                    '#Cruise JC238; OSNAP East (Rockall Trough to Iceland Basin)';...
-                    '#Region: Eastern subpolar North Atlantic';...
-                    ['#EXPOCODE: ' expocode];...
-                    '#DATES: 20220712 - 20220801';...
-                    '#Chief Scientist: B. Moat, NOC, and K. Burmeister, SAMS';...
-                    '#Supported by grants from the UK Natural Environment Research Council for the OSNAP (grant no. NE/K010875/1, NE/K010875/2, NE/T008938/1) and CLASS (grant no. NE/R015953/1) programs and from the EU Horizon 2020 program to iAtlantic (grant no. 210522255).';...
-                    '#42 stations with 12-place rosette';...
+                headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
+                headstring = [headstring; common_headstr;
+                    {'#42 stations with 12-place rosette';...
                     '#CTD: Who - Y. Firing; Status - final';...
                     '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                     '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                    %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom'...
                     '#Salinity: Who - Y. Firing; Status - final; SSW batch P165.';...
                     '#Oxygen: Who - S. Beith; Status - final.';...
                     '#Nutrients: Who - C. Johnson and R. Tuerena; Status - not yet analysed';...
                     '#Carbon: Who - N. Allison; Status - not yet analysed';...
-                    };
+                    }];
             case 'woce_vars_exclude'
                 vars_exclude_ctd = {'ph'}; %cal is no good in current version
+                %rename CTDTURB to be more specific (so, the whole list should be in
+                %cropt?)
+                m = strcmp('CTDTURB',vars(:,1));
+                if sum(m)
+                    vars{m,1} = 'CTDBETA650_124';
+                end
+                m = strcmp('CTDTURB_FLAG_W',vars(:,1));
+                if sum(m)
+                    vars{m,1} = 'CTDBETA650_124_FLAG_W';
+                end
                 %use this space to calculate sigma0 (for sam file only)
                 %if isfield(d,'upsal')
                 %    d.upden = sw_pden(d.upsal,d.utemp,d.upress,0);
@@ -199,6 +206,7 @@ switch scriptname
                 %if isfield(d,'botpsal')
                 %    d.pden = sw_pden(d.botpsal,d.utemp,d.upress,0);
                 %end
+                vars_exclude_sam = {'uph'};
         end
 
                 %%%%%%%%%% mday_01_fcal %%%%%%%%%%
@@ -252,6 +260,7 @@ switch scriptname
             case 'sal_files'
                 salfiles = dir(fullfile(root_sal, ['JC238*.csv']));
                 salfiles = {salfiles.name};
+                clear iopts; iopts.datetimeformat = 'dd/MM/uuuu'; %***for NMF files
             case 'sal_parse'
                 cellT = 24;
                 ssw_batch = 'P165';
@@ -352,15 +361,7 @@ switch scriptname
         end
         %%%%%%%%%% end mctd_checkplots %%%%%%%%%%
                 
-        
-        %%%%%%%%%% populate_station_depths %%%%%%%%%%
-    case 'populate_station_depths'
-        switch oopt
-            case 'depth_source'
-                depth_source = {'ladcp' 'ctd'};
-        end
-        %%%%%%%%%% end populate_station_depths %%%%%%%%%%
-        
+                
         %%%%%%%%%% msec_grid %%%%%%%%%%
     case 'msec_grid'
         switch oopt
@@ -380,6 +381,8 @@ switch scriptname
 
     case 'msam_ashore_flag'
         switch oopt
+            case 'shore_sam_types'
+                samtypes = {'nut', 'co2'};
             case 'sam_ashore_nut'
                 fnin = {fullfile(mgetdir('M_BOT_ISO'),'Nutrient_Tube_Numbers.xlsx')};
                 varmap = {'statnum' 'CTDCastNo_' ' '
@@ -397,6 +400,13 @@ switch scriptname
                     'alk_flag' 'CarbonSamplesNo_' 'num_samples'};
                 do_empty_vars = 1;
                 fillstat = 1;
+        end
+        
+    case 'sam_all_make'
+        switch oopt
+            case 'sam_all_restart_flag'
+                sam_all_restart = {'sam','sbe35','sal','oxy','shore'};
+                klist = [1:41 43:44];
         end
         
     case 'ix_cast_params'

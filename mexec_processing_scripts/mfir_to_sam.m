@@ -31,8 +31,18 @@ if exist(m_add_nc(infile),'file') == 2
     d.sampnum = stnlocal*100+d.position;
     h.fldnam = ['statnum' 'sampnum' h.fldnam]; h.fldunt = ['number' 'number' h.fldunt];
     if sum(~isnan(d.sampnum))>0
+        ns = size(d.sampnum);
         d.utime = m_commontime(d.utime,h.data_time_origin,h0.data_time_origin);
         h.data_time_origin = h0.data_time_origin;
+        %add station parameters
+        d.stnlat = repmat(h.latitude,ns); 
+        h.fldnam = [h.fldnam 'stnlat']; h.fldunt = [h.fldunt 'degrees'];
+        d.stnlon = repmat(h.longitude,ns);
+        h.fldnam = [h.fldnam 'stnlon']; h.fldunt = [h.fldunt 'degrees'];
+        d.stndepth = repmat(h.water_depth_metres,ns);
+        h.fldnam = [h.fldnam 'stndepth']; h.fldunt = [h.fldunt 'metres'];
+        h.latitude = -999; h.longitude = -999; h.water_depth_metres = -999; % sam file has multiple stations
+        %h.comment = sprintf('CTD data from station %03d added',stnlocal); 
         h.comment = []; % BAK fixing comment problem: Don't pass in this comment string
         h.dataname = ['sam_' mcruise '_all'];
         MEXEC_A.Mprog = mfilename;

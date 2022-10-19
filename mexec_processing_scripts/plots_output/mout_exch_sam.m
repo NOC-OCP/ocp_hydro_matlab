@@ -36,33 +36,57 @@ else
 end
 d.date = datestr(dn,'yyyymmddHHMM');
 d.time = d.date(:,9:12); d.date = d.date(:,1:8);
-if length(unique(dn))>length(unique(d.statnum))
-    d.btldate = d.date;
-    d.btltime = d.time;
-    d = rmfield(d,{'date','time'});
-end
-if ~isfield(d,'ulatitude') && isfield(d,'latitude')
-    d.ulatitude = d.latitude; d.ulongitude = d.longitude;
-end
-if ~isfield(d,'ulatitude') && isfield(d,'lat')
-    d.ulatitude = d.lat; d.ulongitude = d.lon;
-end
-if max(length(unique(d.ulatitude)),length(unique(d.ulongitude)))>length(unique(d.statnum))
-    d.btllat = d.ulatitude;
-    d.btllon = d.ulongitude;
-    d = rmfield(d,{'ulatitude','ulongitude'});
-end
 if ~isfield(d, 'castno')
     d.castno = ones(size(d.sampnum));
 end
-if ~isfield(d, 'depth') || sum(~isnan(d.depth))==0
-    sumfn = [mgetdir('M_SUM') '/station_summary_' mcruise '_all.nc'];
-    if exist(sumfn,'file')
-        [dsum, hsum] = mloadq(sumfn,'/');
-        d.depth = NaN+zeros(size(d.sampnum));
-        for sno = 1:length(dsum.statnum)
-            ii = find(d.statnum==dsum.statnum(sno));
-            d.depth(ii) = dsum.cordep(sno);
+
+%station positions and depths
+stns = unique(d.statnum); ns = length(stns);
+if ~isfield(d,'stnlat')
+    if isfield(d,'lat')
+        d.stnlat = d.lat; d.stnlon = d.lon;
+    elseif isfield(d,'latitude')
+        d.stnlat = d.latitude; d.stnlon = d.longitude;
+    elseif isfield(d,'ulatitude') %will replace with single pos below
+        d.stnlat = d.ulatitude; d.stnlon = d.ulongitude;
+    else
+        d.stnlat = NaN+d.statnum; d.stnlon = d.stnlat;
+    end
+end
+if ~isfield(d,'stndepth')
+    if isfield(d,'depth')
+        d.stndepth = d.depth;
+    else
+        d.stndepth = NaN+d.statnum;
+    end
+end
+%check single pos for each station and if not, fill or estimate; also fill
+%depth if necessary
+sumfn = [mgetdir('M_SUM') '/station_summary_' mcruise '_all.nc'];
+if exist(sumfn,'file')
+    [dsum, hsum] = mloadq(sumfn,'/');
+else
+    clear dsum; dsnum.statnum = [];
+end
+for sno = 1:ns
+    m = d.statnum==stns(sno);
+    ms = dsum.statnum==stns(sno);
+    if length(unique(d.stnlat(m)))~=1 || length(unique(d.stnlon(m)))~=1 || ~sum(~isnan(d.stnlat(m)) & d.stnlat(m)>-999)
+        if sum(ms)
+            d.stnlat(m) = dsum.lat(ms);
+            d.stnlon(m) = dsum.lon(ms);
+        else
+            %pos at deepest bottle
+            mp = m & d.upress==max(d.upress(m));
+            d.stnlat(m) = d.stnlat(mp);
+            d.stnlon(m) = d.stnlon(mp);
+        end
+    end
+    if length(unique(d.stndepth(m)))~=1 || ~sum(~isnan(d.stndepth(m)) & d.stndepth(m)>-999)
+        if sum(ms)
+            d.stndepth(m) = dsum.cordep(ms);
+        else
+            d.stndepth(m) = max(d.stndepth(m));
         end
     end
 end

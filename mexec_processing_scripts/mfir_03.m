@@ -19,7 +19,7 @@ end
 %not using 24hz because we want at least some averaging
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); 
 
-var_copycell = mcvars_list(2);
+var_copycell = mcvars_list(2); %which variables to copy from 24hz CTD file
 % remove any vars from copy list that aren't available in the input file
 [var_copycell, var_copystr] = mvars_in_file(var_copycell, infile1);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
@@ -41,6 +41,7 @@ end
 dnew.utime = m_commontime(dnew.utime,hc.data_time_origin,hfir.data_time_origin);
 
 hnew.latitude = hc.latitude; hnew.longitude = hc.longitude; hnew.water_depth_metres = hc.water_depth_metres;
+hnew.comment = hc.comment;
 
 MEXEC_A.Mprog = mfilename;
 mfsave(otfilef, dnew, hnew, '-addvars');

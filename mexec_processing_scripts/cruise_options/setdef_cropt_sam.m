@@ -39,6 +39,7 @@ switch scriptname
                 chrows = 1;
                 chunits = [];
                 sheets = 1;
+                iopts = struct([]);
             case 'sal_parse'
                 crhelp_str = {'place to change fieldnames, combine fields, etc. after '
                     'loading; also to specify datform (default: ''dd/mm/yyyy'') and timform'
@@ -240,6 +241,15 @@ switch scriptname
         
         %%%%%%%%%% msam_ashore_flag %%%%%%%%%%
     case 'msam_ashore_flag'
+        switch oopt
+            case 'shore_sam_types'
+                crhelp_str = {'If not already set in workspace, set samtypes'
+                    '(default {}), a cell array list of sampletypes collected'
+                    'for later analysis, e.g. samtypes = {''nut'', ''co2''};'
+                    'or if there is only one you could instead set e.g. samtype = ''nut'';'
+                    'If neither is set, script will prompt for a single samtype.'};
+                samtypes = {};
+        end
         crhelp_str = {'Switching on sam_ashore_{sampletype} (e.g. sam_ashore_nut), set:'
             'fnin, a cell array list of csv or excel file(s) containing lists of '
             '  samples collected for a given sampletype,'
@@ -284,6 +294,22 @@ switch scriptname
                     '(first column: mstar names, second column: names in file).'};            
             case 'iso_flags'
                 crhelp_str = {'set flag fields in iso'};
+        end
+        
+    case 'sam_all_make'
+        switch oopt
+            case 'sam_all_restart_steps'
+                crhelp_str = {'If not already set in workspace, set:'
+                    'sam_all_restart, a list of steps to be rerun: '
+                    '  sam to delete sam_cruise_all.nc and start from scratch (default); '
+                    '  fir to regenerate the fir files by running mfir_01, mfir_03, mwin_to_fir '
+                    '    (default: skip; just run mfir_to_sam to paste existing into sam_cruise_all.nc);'
+                    '  one or more parameters (default: ''sbe35'', ''sal'', ''oxy'') for which '
+                    '    to run the corresponding m{parameter}_01 scripts; '
+                    '  shore to run msam_ashore_flag (default: skip).'
+                    'klist, list of stations for which to run fir and sbe35 steps (default [] --> prompt)'};
+                sam_all_restart = {'sam', 'sbe35', 'sal', 'oxy'};
+                klist = [];
         end
                 
 end

@@ -37,8 +37,8 @@ if typ==1 % this is for ctd profiles
         'CTDFLUOR_FLAG_W', ' ', 'fluor_flag', '%d'
         'PAR', 'UMOL/M^2/SEC', 'par_up', '%6.5f' %par_up is up-looking (downwelling)
         'PAR_FLAG_W', ' ', 'par_up_flag', '%d'
-        'CTDPH', ' ', 'ph', '%8.4f'
-        'CTDPH_FLAG_W', ' ', 'ph_flag', '%d'
+        %'CTDPH', ' ', 'ph', '%8.4f'
+        %'CTDPH_FLAG_W', ' ', 'ph_flag', '%d'
         };
     
 elseif typ==2 % this is for comparing with bottle samples
@@ -53,13 +53,11 @@ elseif typ==2 % this is for comparing with bottle samples
         'BTLNBR_FLAG_W', ' ', 'bottle_qc_flag', '%d'
         'DATE', ' ', 'date', '%s'
         'TIME', ' ', 'time', '%s'
-        'LATITUDE', ' ', 'ulatitude', '%9.5f'
-        'LONGITUDE', ' ', 'ulongitude', '%10.5f'
-        'BTL_DATE', ' ', 'btldate', '%s'
-        'BTL_TIME', ' ', 'btltime', '%s'
-        'BTL_LAT', ' ', 'btllat', '%9.5f'
-        'BTL_LON', ' ', 'btllon', '%10.5f'
-        'DEPTH', 'METERS', 'depth', '%4.0f'
+        'LATITUDE', ' ', 'stnlat', '%9.5f'
+        'LONGITUDE', ' ', 'stnlon', '%10.5f'
+        %'BTL_LAT', ' ', 'ulatitude', '%9.5f'
+        %'BTL_LON', ' ', 'ulongitude', '%10.5f'
+        'DEPTH', 'METERS', 'stndepth', '%4.0f'
         'CTDPRS', 'DBAR', 'upress', '%6.1f'
         'CTDTMP', 'ITS-90', 'utemp', '%7.4f'
         'SBE35', 'ITS-90', 'sbe35temp', '%7.4f'
@@ -112,7 +110,7 @@ elseif typ==2 % this is for comparing with bottle samples
         'BOTCHLA', 'ML/L', 'botchla', '%7.1f'
         'BOTCHLA_FLAG_W', ' ', 'botchla_flag', '%d'
         'PAR', 'UMOL/M^2/SEC', 'upar_up', '%6.5f' %par_up is up-looking (downwelling)
-        'CTDPH', ' ', 'uph', '%8.4f'
+        %'CTDPH', ' ', 'uph', '%8.4f'
         'CTDSIG0', 'KG/M^3', 'upden', '%8.2f'
         'BOTSIG0', 'KG/M^3', 'pden', '%8.2f'
 };

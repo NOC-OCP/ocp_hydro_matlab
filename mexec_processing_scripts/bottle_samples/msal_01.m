@@ -42,7 +42,7 @@ else
 end
 
 %load
-[ds_sal, salhead] = load_samdata(salfiles, hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets);
+[ds_sal, salhead] = load_samdata(salfiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts);
 if isempty(ds_sal)
     error('no data loaded')
 end
@@ -83,9 +83,17 @@ fn = ds_sal.Properties.VariableNames;
 %deal with time variable(s)
 md = strcmp('date',fn); mt = strcmp('time',fn);
 if sum(md) && sum(mt)
-    tim = datevec(ds_sal{:,mt},timform);
-    dat = datevec(ds_sal{:,md},datform);
-    ds_sal.runtime = datenum([dat(:,1:3) tim(:,4:6)]);
+    if ischar(ds_sal{:,mt})
+        tim = datevec(ds_sal{:,mt},timform);
+    else
+        tim = datevec(ds_sal{:,mt});
+    end
+    if ischar(ds_sal{:,md})
+        dat = datevec(ds_sal{:,md},datform);
+    else
+        dat = datevec(ds_sal{:,md});
+    end
+    ds_sal.runtime = datenum(dat + tim);
     ds_sal.time = []; ds_sal.date = [];
     fn = ds_sal.Properties.VariableNames;
 end

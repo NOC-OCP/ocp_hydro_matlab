@@ -1,4 +1,4 @@
-function [varlist, var_copystr, iiv] = mvars_in_file(varlist, infile, varargin);
+function [varlist, var_copystr, iiv] = mvars_in_file(varlist, infile, varargin)
 % [varlist, var_copystr, iiv] = mvars_in_file(varlist, infile);
 % [varlist, var_copystr, iiv] = mvars_in_file(varlist, infile, prestr, poststr);
 %

@@ -7,10 +7,10 @@ function mctd_evaluate_sensors(sensname, varargin)
 %   residuals
 %
 % produces plots comparing them and a suggested calibration function
-%     depending on quantity: 
+%     depending on quantity:
 %   linear station number drift offset for temp
 %   linear station number drift + linear in pressure scaling for cond
-%     (approximately equivalent to an offset for sal) 
+%     (approximately equivalent to an offset for sal)
 %   linear station number drift + *** for oxy
 %
 % inputs:
@@ -34,9 +34,11 @@ function mctd_evaluate_sensors(sensname, varargin)
 %   uselegend (default 1) to add legend to plots
 %   printform (default '-dpdf') for how to print plots
 %   plotprof (default 1) first station for which to potentially plot
-%     individual profiles; switch to inf or nan for none 
+%     individual profiles; switch to inf or nan for none
+%   stns_examine (default []) list of station numbers for which to plot
+%     individual profiles (supersedes plotprof)
 %
-% e.g. 
+% e.g.
 %   testcal.temp = 1;
 %   mctd_evaluate_sensors('temp1',testcal)
 %     will apply the calibrations coded into the mctd_02 case in opt_cruise
@@ -71,6 +73,7 @@ pdeep = 1000; %cutoff for "deep" samples
 uselegend = 1;
 printform = '-dpdf';
 plotprof = 1; %first station from which to plot individual profiles with large residuals
+stns_examine = [];
 if strncmp(sensname, 'temp', 4)
     rlabel = 'SBE35 T - CTD T (degC)';
     rlim = [-1 1]*1e-2;
@@ -177,7 +180,7 @@ if strncmp(sensname, 'temp', 4)
     caldata = d.sbe35temp(iig);
     calflag = d.sbe35temp_flag(iig);
     ii = find(ismember(calflag,okf));
-    caldata = caldata(ii); calflag = calflag(ii); 
+    caldata = caldata(ii); calflag = calflag(ii);
     ctddata = ctddata(ii);
     iig = iig(ii);
     res = (caldata - ctddata);
@@ -193,7 +196,7 @@ elseif strncmp(sensname, 'cond', 4)
     caldata = gsw_C_from_SP(d.botpsal(iig),d.(['temp' sensnum])(iig),d.press(iig)); %cond at CTD temp
     calflag = d.botpsal_flag(iig);
     ii = find(ismember(calflag,okf));
-    caldata = caldata(ii); calflag = calflag(ii); 
+    caldata = caldata(ii); calflag = calflag(ii);
     ctddata = ctddata(ii);
     iig = iig(ii);
     res = (caldata./ctddata - 1)*35;
@@ -211,7 +214,7 @@ elseif strncmp(sensname, 'oxygen', 6)
     caldata = d.botoxy(:);
     calflag = d.botoxy_flag(iig);
     ii = find(ismember(calflag,okf));
-    caldata = caldata(ii); calflag = calflag(ii); 
+    caldata = caldata(ii); calflag = calflag(ii);
     ctddata = ctddata(ii);
     iig = iig(ii);
     if useoxyratio
@@ -242,7 +245,7 @@ nisk = d.position(iig); niskf = d.niskin_flag(iig);
 press = d.upress(iig); ctemp = d.utemp(iig); csal = d.upsal(iig);
 
 %check for high-variance bottle stops
-cqflag = 2+zeros(length(iig),1); 
+cqflag = 2+zeros(length(iig),1);
 m = false(size(cqflag));
 if isfield(d,['std1_' sensname(1:end-1)])
     m = m | d.(['std1_' sensname(1:end-1)])(iig)>rlim(2)*.8;
@@ -274,8 +277,8 @@ disp(modform); format long; disp(C); format
 md = m_nanmedian(res(iigc)); ms = sqrt(m_nansum((res(iigc))-md).^2)/(length(iigc)-1);
 deep = press>=pdeep;
 ngp = length(iigc);
-c = res(iigc); c = c(press(iigc)>pdeep); 
-try    
+c = res(iigc); c = c(press(iigc)>pdeep);
+try
     iqrd = iqr(c);
 catch
     c = sort(c);
@@ -353,69 +356,69 @@ end
 
 
 %plot individual stations to check samples with large residuals
-ii = find( (abs(res)>llim(1) & press<pdeep) | (abs(res)>llim(2) & press>=pdeep) );
+ii = find( (abs(res)>llim(1) & press<pdeep) | (abs(res)>llim(2) & press>=pdeep) & stn>=plotprof);
 cstn = stn(ii); cnisk = nisk(ii);
-if isfinite(plotprof) && ~isempty(cstn)
+if ~isempty(cstn)
     disp('to examine larger differences profile-by-profile to help pick bad or')
     disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01,')
     disp('press any key to continue (or ctrl-c to quit)')
     pause
+end
 
-    figure(1); clf
-    s = unique(stn(ii)); s = s(s>=plotprof);
-    for no = 1:length(s)
-        stnlocal = s(no);
-        stn_string = sprintf('%03d', stnlocal);
-
-        %load 1 and 2 dbar upcast profiles
-        [d1, h1] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
-        [dcs, ~] = mloadq(fullfile(rootdir, ['dcs_' mcruise '_' stn_string '.nc']), '/');
-        ii1u = find(d1.scan>=dcs.scan_bot & d1.scan<=dcs.scan_end);
-        [du, hu] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
-        scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
-        %calibrate them
-        if exist('cropt_cal','var')
-            if cropt_cal
-                scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
-                calstr0 = castopts.calstr;
-            end
-            calstr = select_calibrations(testcal, calstr0);
-            [dcal1, hcal1] = apply_calibrations(d1, h1, calstr);
-            [dcalu, hcalu] = apply_calibrations(du, hu, calstr);
-            %put calibrated fields back into d1 and du
-            for vno = 1:length(hcal1.fldnam)
-                d1.(hcal1.fldnam{vno}) = dcal1.(hcal1.fldnam{vno});
-            end
-            for vno = 1:length(hcalu.fldnam)
-                du.(hcalu.fldnam{vno}) = dcalu.(hcalu.fldnam{vno});
-            end
+figure(1); clf
+s = unique(union(cstn,stns_examine));
+for no = 1:length(s)
+    stnlocal = s(no);
+    stn_string = sprintf('%03d', stnlocal);
+    
+    %load 1 and 2 dbar upcast profiles
+    [d1, h1] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
+    [dcs, ~] = mloadq(fullfile(rootdir, ['dcs_' mcruise '_' stn_string '.nc']), '/');
+    ii1u = find(d1.scan>=dcs.scan_bot & d1.scan<=dcs.scan_end);
+    [du, hu] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
+    scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
+    %calibrate them
+    if exist('cropt_cal','var')
+        if cropt_cal
+            scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
+            calstr0 = castopts.calstr;
         end
-
-        %bottle samples and niskin data for this station
-        iis = find(stn==s(no));
-        iisbf = find(stn==s(no) & ~ismember(calflag, okf));
-        iiq = find(stn==s(no) & abs(res)>llim(2) & ismember(calflag, okf));
-
-        plot(d1.(sensname)(ii1u), -d1.press(ii1u), 'c', ...
-            du.(sensname), -du.press, 'k--', ...
-            caldata(iis), -press(iis), 'r.', ...
-            caldata(iisbf), -press(iisbf), 'm.', ...
-            caldata(iiq), -press(iiq), 'or', ...
-            ctddata(iis), -press(iis), 'b.', ...
-            ctddata(iiq), -press(iiq), 'sb');
-        grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',s(no)));
-        disp('sampnum residual sample_flag niskin_flag pressure')
-        for qno = 1:length(iiq)
-            sprintf('%d %5.3f %d %d %d', s(no)*100+nisk(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), niskf(iiq(qno)), round(press(iiq(qno))))
+        calstr = select_calibrations(testcal, calstr0);
+        [dcal1, hcal1] = apply_calibrations(d1, h1, calstr);
+        [dcalu, hcalu] = apply_calibrations(du, hu, calstr);
+        %put calibrated fields back into d1 and du
+        for vno = 1:length(hcal1.fldnam)
+            d1.(hcal1.fldnam{vno}) = dcal1.(hcal1.fldnam{vno});
         end
-        cont = input('k for keyboard prompt, enter to continue to next\n','s');
-        if strcmp(cont,'k')
-            keyboard
-        else
-            continue
+        for vno = 1:length(hcalu.fldnam)
+            du.(hcalu.fldnam{vno}) = dcalu.(hcalu.fldnam{vno});
         end
-
     end
+    
+    %bottle samples and niskin data for this station
+    iis = find(stn==s(no));
+    iisbf = find(stn==s(no) & ~ismember(calflag, okf));
+    iiq = find(stn==s(no) & abs(res)>llim(2) & ismember(calflag, okf));
+    
+    plot(d1.(sensname)(ii1u), -d1.press(ii1u), 'c', ...
+        du.(sensname), -du.press, 'k--', ...
+        caldata(iis), -press(iis), 'r.', ...
+        caldata(iisbf), -press(iisbf), 'm.', ...
+        caldata(iiq), -press(iiq), 'or', ...
+        ctddata(iis), -press(iis), 'b.', ...
+        ctddata(iiq), -press(iiq), 'sb');
+    grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',s(no)));
+    disp('sampnum residual sample_flag niskin_flag pressure')
+    for qno = 1:length(iiq)
+        sprintf('%d %5.3f %d %d %d', s(no)*100+nisk(iiq(qno)), res(iiq(qno)), calflag(iiq(qno)), niskf(iiq(qno)), round(press(iiq(qno))))
+    end
+    cont = input('k for keyboard prompt, enter to continue to next\n','s');
+    if strcmp(cont,'k')
+        keyboard
+    else
+        continue
+    end
+    
 end
 
 

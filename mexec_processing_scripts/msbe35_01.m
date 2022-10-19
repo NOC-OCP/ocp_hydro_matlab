@@ -133,8 +133,4 @@ MEXEC_A.Mprog = mfilename;
 mfsave(otfile1, ds, hnew, '-merge', 'sampnum');
 
 %and update sam_cruise_all file
-otfile2 = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all']);
-hnew = rmfield(hnew, 'dataname');
-hnew.comment = ['SBE35 data from sbe35_' mcruise '_01.nc'];
-MEXEC_A.Mprog = mfilename;
-mfsave(otfile2, ds, hnew, '-merge', 'sampnum');
+msbe35_to_sam

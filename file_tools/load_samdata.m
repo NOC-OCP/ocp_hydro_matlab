@@ -1,13 +1,15 @@
 function [samtable, samhead] = load_samdata(infile, varargin)
-% function [samtable, samhead] = load_samdata(infile, hcpat)
-% function [samtable, samhead] = load_samdata(infile, hcpat, 'parameter', value)
+% function [samtable, samhead] = load_samdata(infile, 'parameter', value)
 % function [samtable, samhead] = load_samdata(infile, opts)
 %
 % read in sample data from spreadsheet or comma delimited files listed in
 %   cell array infile
 %   tries to use readtable and if that fails uses mtextdload
-% parses to find header or blank lines, column header line(s), units line
-%   if specified, and data lines
+% parses to find header or blank lines, column header line(s), units
+%   line(s) if specified, and data lines
+% csv files may be concatenated (that is, have  multiple repetitions of
+%   [header]; column headers; data)
+% xls* files may have one or more sheets
 %
 % samtable contains the data; variable names come either from header line(s)
 %   or as specified in input argument iopts.VariableNames
@@ -26,23 +28,27 @@ function [samtable, samhead] = load_samdata(infile, varargin)
 % you can supply iopts, a structure, containing options for importing using
 %   readtable (e.g. VariableNames, VariableTypes)
 %
-% hcpat gives the contents of an indicative column header over one or more
-%   rows; the number of elements in hcpat determines how many rows are in
-%   each column header before switching to data rows
+% other inputs are passed as parameter-value pairs
 %
-% you must supply at least one of iopts.VariableNames and hcpat***
+% if iopts is not supplied or does not set VariableNames, use either:
+%   hcpat to give the contents of an indicative column header over one or
+%     more rows, to be searched for, or
+%   numhead (default 0) to set how many lines to skip before column headers
+%     start on the following line
+% in either case, icolhead (default 1) and icolunits (default []) set which
+%   of the subsequent lines to turn into variable names and units,
+%   respectively
 %
-% to use only the first N column header rows as data fieldnames,
-%   supply the parameter-value pair 'chrows', N (where N<=length(hcpat))
-%
-% to also save column units found in the Pth row of the column header rows
-%   as samtable.Properties.VariableUnits, supply the parameter-value pair
-%   'chunits', P
+% numhead can also be used if iopts.VariableNames is supplied, to specify
+%   how many header lines including column headers to skip before data rows
+%   start
 %
 % sheets gives the list of sheets to read in and append; if you specify
-%     hcpat it will detect when you've reached the end of the data sheets
+%   hcpat it will stop when it reaches a sheet where this patter is not
+%   found (i.e. detect when you've reached the end of the data sheets)
 %
-% 2) oxygen csv file with multiple column header rows, e.g.
+% e.g., infile points to an oxygen csv file with multiple column header
+%   rows:
 %     Cruise,JC211,,,,,,,,,,,,,
 %     Cast,3,,,Analysis Set,,,,,,,Volume (ml),,,
 %     Sampler,EPA,,,Analyst,YF,,,,Manganese Chloride,,1,,,
@@ -56,127 +62,182 @@ function [samtable, samhead] = load_samdata(infile, varargin)
 %     8,1,,1013,139.8594804,0.01394,5,0.4619,0.8,137.835634405743,1.445,0.001667,3.99406814224484E-05,289.218978780914,
 %     8,5,,25,137.8955138,0.01394,5,0.4619,0.8,135.87214308566,1.5295,0.001667,4.22990644253951E-05,310.755858165685,
 %
-% [ds, hs] = load_samdata(infile, {'Niksin'; 'Bottle'; 'Number'}, 'chrows', 2, 'chunits', 3);
-%
+% [ds, hs] = load_samdata(infile, 'hcpat', {'Niksin'; 'Bottle'; 'Number'}, 'icolhead', [1 2], 'icolunits', 3);
+% or
+% [ds, hs] = load_samdata(infile, 'numhead', 7, 'icolhead', [1 2], 'icolunits', 3);
+% will return hs containing the first 7 lines, and table ds with
+% ds.Properties.VariableNames = {'cast_number', 'niskin_bottle', 'depth__m_', ...}
+% ds.Properties.VariableUnits = {'', 'number', '', ...}
+% or
+% iopts.VariableNames = {'statnum','position','depth','obot','botvol','blank','stdvol','standard','fixtemp','botvol_tfix','titre','iodmol','n_O2','c_O2','notes'};
+% [ds, hs] = load_samdata(infile, iopts, 'numhead', 10);
+% will return hs containing the first 10 lines, and table ds with
+% ds.Properties.VariableNames = iopts.VariableNames
+% ds.Properties.VariableUnits = {};
 
 sheets = 1;
-chunits = [];
-
+hcpat = {};
+icolunits = [];
+iopts = struct([]);
 %inputs
 n = 1;
 while n<=length(varargin)
     if isstruct(varargin{n})
         iopts = varargin{n};
         n = n+1;
-    elseif iscell(varargin{n})
-        hcpat = varargin{n};
-        n = n+1;
     elseif ischar(varargin{n})
         eval([varargin{n} '= varargin{n+1};'])
         n = n+2;
+    else
+        error('input arguments can only be a structure and/or one or more parameter-value pairs')
     end
 end
-if exist('hcpat','var') && ~exist('chrows','var')
-    chrows = 1:length(hcpat);
+if ~isempty(hcpat) && ~exist('icolhead','var')
+    icolhead = 1:length(hcpat);
+end
+if isempty(hcpat) && (~exist('iopts','var') || ~isfield(iopts,'VariableNames'))
+    icolhead = 1; %default is to get names from first row (error if these don't start with chars?)***
 end
 
-nhead = 1;
+warning('off','MATLAB:table:ModifiedAndSavedVarnames')
+warning('off','MATLAB:textscan:AllNatSuggestFormat')
+
 for fno = 1:length(infile)
     [~,~,ext] = fileparts(infile{fno});
     if strncmp(ext(2:end),'xls',3); isss = 1; else; isss = 0; end
+    domtl = 0;
     
-    try %using readtable
+    %first try using readtable, looping through sheets
+    for sno = 1:length(sheets)
         
-        %loop through sheets
-        for sno = 1:length(sheets)
-            
+        if exist('icolhead','var')
             %first load as char cells to get header
-            warning('off','MATLAB:table:ModifiedAndSavedVarnames')
-            warning('off','MATLAB:textscan:AllNatSuggestFormat')
+            %[hdr, iih, ch, un] = sd_read_header(infile{fno}, hcpat);
             opts = detectImportOptions(infile{fno});
             opts = setvartype(opts,'char');
             if isss
+                opts.DataRange = 'A1';
                 hdr = readtable(infile{fno}, opts, 'sheet', sheets(sno));
             else
+                opts.DataLines = [1 Inf];
                 hdr = readtable(infile{fno}, opts);
             end
-            keyboard
             hdr = hdr{:,:};
-            %identify header lines and parse variable names and units
-            try
-                if exist('hcpat','var')
-                    [iih, ch, un] = sd_find_colhead(hdr, hcpat, chrows, chunits);
-                end
-            catch
-                warning('did not find hcpat on sheet %d, stopping loop',sno)
-                %not a data sheet, stop loop here
-                break
+            [iih, ch, un] = sd_find_colhead(hdr, hcpat, icolhead, icolunits);
+            if ~isempty(hcpat) && isempty(iih)
+                warning('did not find hcpat on sheet %d, stopping loop',sno); break
             end
             if size(ch,1)>1
-                error('readtable branch of load_samdata does not work with concatenated files')
-            end
-            samhead{nhead} = hdr(1:iih(end),:); nhead = nhead+1;
-
-            %read in data
-            opts = detectImportOptions(infile{fno},'NumHeaderLines',iih(end));
-            %if input to function, overwrite detected version
-            if exist('iopts','var')
-                fn = fieldnames(iopts);
-                for no = 1:length(fn)
-                    if strcmp(fn{no},'VariableTypes')
-                        opts = setvartype(opts,iopts.VariableTypes);
-                    else
-                        opts.(fn{no}) = iopts.(fn{no});
-                    end
-                end
-            else
-                opts = setvartype(opts,'double');
-            end
-            if isss
-                opts.Sheet = sheets(sno);
-            end
-            dat = readtable(infile{fno}, opts);
-            if ~exist('iopts','var') || ~isfield(iopts,'VariableTypes')
-                %if we didn't specify check if some need to be strings
-                dat = sd_get_char_vars(dat, opts, infile{fno});
-            end
-            if exist('hcpat','var')
-                m = ~cellfun('isempty',ch);
-                dat.Properties.VariableNames(m) = ch(m);
-            end
-            if ~isempty(chunits)
-                m = ~cellfun('isempty',un);
-                dat.Properties.VariableUnits(m) = un(m);
-            end
-            warning('on','MATLAB:table:ModifiedAndSavedVarnames')
-            warning('on','MATLAB:textscan:AllNatSuggestFormat')
-            
-            %put in or append to samtable
-            if ~exist('samtable', 'var')
-                samtable = dat;
-            else
-                if exist('ch','var')
-                    %append, matching variables and adding new ones as necessary
-                    warning off all
-                    samtable = sd_combine_tables(samtable, dat);
-                    warning on all
+                if isss
+                    error('header found more than once in spreadsheet file one sheet %d',sno);
                 else
-                    %hcpat was not supplied so assume columns always the same
-                    samtable(s0(1)+[1:size(dat,1)],:) = dat;
+                    warning('looks like a concatenated file; trying mtextdload'); domtl = 1; break
+                end
+            elseif iih(1)>1
+                h = hdr(1:iih(1)-1,:);
+                h = cellfun(@(x) [x ','],h,'UniformOutput',false);
+                %h(:,end) = cellfun(@(x) [x '\n'],h(:,end),'UniformOutput',false);
+                %samhead{fno,sno} = strjoin(h');
+                for no = 1:iih(1)-1
+                    h{no,1} = strjoin(h(no,:));
+                end
+                samhead{fno,sno} = h(:,1);
+                %sprintf('%s\n',samhead{fno,sno}{:})
+            end
+        else
+            if exist('numhead','var') && numhead>0
+                iih = 1:numhead;
+            else
+                iih = 0;
+            end
+        end
+        
+        %get parameters for reading in data rows
+        opts = detectImportOptions(infile{fno},'NumHeaderLines',iih(1)-1); %exclude all before column header line
+        vt = opts.VariableTypes;
+        mt = strcmp(vt,'datetime');
+        if ~sum(mt)
+            mo = ~ismember(vt,{'double'});
+            vt(mo) = {'double'};
+            opts = setvartype(opts, vt); %***what was problem with datetimes before?
+        else
+            mo = [];
+        end
+        if ~isempty(hcpat)
+            mc = ~cellfun('isempty',ch);
+            opts.VariableNames(mc) = ch(mc);
+        end
+        %if options were passed as input args, use them
+        if ~isempty(iopts)
+            %change variable names first
+            fn = fieldnames(iopts);
+            if sum(strcmp(fn,'VariableNames'))
+                if ~isempty(hcpat)
+                    warning('overwriting variable names detected using hcpat with those passed in iopts')
+                    mc = true(size(ch));
+                end
+                opts.VariableNames = iopts.VariableNames;
+                fn = setdiff(fn,{'VariableNames'});
+            end
+            %now other parameters
+            for no = 1:length(fn)
+                if strcmp(fn{no},'VariableTypes')
+                    opts = setvartype(opts,iopts.VariableTypes);
+                    mo = [];
+                elseif strcmp(fn{no},'datetimeformat')
+                    opts = setvaropts(opts,opts.VariableNames(mt),'InputFormat',iopts.datetimeformat);
+                else
+                    opts.(fn{no}) = iopts.(fn{no});
                 end
             end
-
-        end %loop through sheets
+        end
+        if isss
+            opts.Sheet = sheets(sno);
+        end
         
-    catch me
+        %get data
+        dat = readtable(infile{fno}, opts);
+        %only keep the columns with good variable names
+        dat = dat(:,mc);
+        %only keep rows with some numeric (non-nan) data
+        mr = sum(~ismissing(dat),2)>0;
+        dat = dat(mr,:);
+        if ~isempty(mo)
+            %if we made everything doubles, check if some cols need to be strings
+            dat = sd_get_char_vars(dat, opts, infile{fno}, mr, mc);
+        end
+        if ~isempty(icolunits)
+            %units are not a property of importoptions so set now
+            mc = ~cellfun('isempty',un);
+            dat.Properties.VariableUnits(mc) = un(mc);
+        end
         
-        warning(me.message)
-        if exist('hcpat','var')
+        %add to samtable
+        if ~exist('samtable', 'var')
+            samtable = dat;
+        else
+            if exist('ch','var')
+                %append, matching variables and adding new ones as necessary
+                warning off all
+                samtable = sd_combine_tables(samtable, dat);
+                warning on all
+            else
+                %hcpat was not supplied so assume columns always the same
+                samtable(s0(1)+[1:size(dat,1)],:) = dat;
+            end
+        end
+    end %loop through sheets
+    
+    if domtl
+        if isempty(hcpat)
+            warning('input hcpat required for mtextdload branch of load_samdata')
+            warning('skipping %s',infile{fno})
+        else
             warning('readtable failed; using mtextdload')
             maxcol = 2e3;
             %load as cell array
             indata = mtextdload(infile{fno}, ',', maxcol);
-            [iih, ch, un] = sd_find_colhead(indata, hcpat, chrows, chunits);
+            [iih, ch, un] = sd_find_colhead(indata, hcpat, icolhead, icolunits);
             nb = size(ch,1);
             %figure out data indices
             mn = sum(cellfun(@(x) ~isnan(str2double(x)), indata(10:end,:)),2);
@@ -186,10 +247,10 @@ for fno = 1:length(infile)
             for bno = 1:nb
                 dat = array2table(cellfun(@(x) str2double(x), indata(iid1(bno):iid2(bno),:)));
                 dat.Properties.VariableNames = ch(bno,:);
-                if ~isempty(chunits)
+                if ~isempty(icolunits)
                     dat.Properties.VariableUnits = un(bno,:);
                 end
-                samhead{nhead} = indata(iih(1,:),:); nhead = nhead+1;
+                samhead{fno,bno} = indata(iih(1,:),:);
                 if ~exist('samtable','var')
                     %initialise
                     samtable = dat;
@@ -197,29 +258,37 @@ for fno = 1:length(infile)
                     %append
                     samtable = sd_combine_tables(samtable, dat);
                 end
-            end           
-        else
-            warning('to use mtextdload branch of load_samdata, must supply input hcpat')
-            warning('skipping %s',infile{fno})
+            end
         end
         
-    end %catch
+    end
     
     disp(['loaded ' infile{fno}])
     
 end %loop through files
 
+warning('on','MATLAB:table:ModifiedAndSavedVarnames')
+warning('on','MATLAB:textscan:AllNatSuggestFormat')
 
 
-function varargout = sd_find_colhead(hdr, hcpat, chrows, chunits)
-% function [iih, ch, un] = sd_find_colhead(hdr, hcpat, chrows, chunits);
-% hdr is cell array
+function varargout = sd_find_colhead(hdr, hcpat, icolhead, icolunits)
+% function [iih, ch, un] = sd_find_colhead(hdr, hcpat, icolhead, icolunits);
 %
-% outputs:
-% iih, contiguous row indices in hdr where hcpat was found
-% ch, column headers constructed by turning each column of
-% hdr(iih(chrows),:) into acceptable matlab variable names
-% un, units constructed by same process on hdr(iih(chunits),:)
+% find and parse 1 or more column header (and optionally column units)
+%   lines from cell array hdr, optionally by searching for pattern hcpat
+%
+% hdr (MxN) and hcpat (Kx1, or empty) are cell arrays
+% icolhead and icolunits are vector indices; if K>0 then
+%   max([icolhead(:);icolunits(:)])<=K
+%
+% if hcpat is empty, iih = 1:max([icolhead(:);icolunits(:)])
+% if hcpat is not empty, searches hdr for the rows where each element
+%   of hcpat is found in a column, and iih starts from the first such row
+%   (rather than from 1)
+% hdr(iih(icolhead),:) are turned into acceptable matlab variable names
+%   (appending contents of multiple rows for each column if
+%   length(icolhead)>1) and output as ch;  hdr(iih(chunts),:) is parsed the
+%   same way and output as un.
 %
 % e.g.
 % hdr = {'this is file', '', '' '';
@@ -228,56 +297,71 @@ function varargout = sd_find_colhead(hdr, hcpat, chrows, chunits)
 %        '', 'bottle', ''
 %        '', '', '(units)'
 %        '1', '5', '21.5729'};
-% hcpat = {'niskin';'bottle'}; chrows = 1:2; chunits = 3;
+% hcpat = {'niskin';'bottle'}; icolhead = 1:2; icolunits = 3;
 % produces
 % iih = 3:5;
 % ch = {'cast_no_', 'niskin_bottle', 'data'};
 % un = {'', '', '_units_'};
 %
-% if hcpat occurs N times, iih will contain all N sets of indices
-% (concatenated) and ch and un will be Nxncol
+% if hcpat occurs P times, iih will contain all P sets of indices
+% (concatenated) and ch and un will be Pxncol
 %
-% length([chrows; chunits]) must = length(hcpat)
 
-nhl = length(hcpat);
-if length(chrows)+length(chunits)~=nhl
-    error('chrows and chunits must cover hcpat')
+if isempty(icolhead)
+    error('icolhead must have at least one element')
 end
+
+nhl = max([icolhead(:);icolunits(:)]);
+np = length(hcpat);
 s = size(hdr);
 
 %get rid of leading and trailing whitespace
 hdr = strtrim(hdr);
 
-%header rows are those where one column matches rows of hcpat
-m = true(s(1)-nhl+1,s(2));
-for no = 1:nhl
-    m = m & strcmp(hcpat{no}, hdr(no+[0:s(1)-nhl],:));
+if np==0
+    iih = 1:nhl;
+else
+    %header rows are those where one column matches rows of hcpat
+    m = true(s(1)-np+1,s(2));
+    for no = 1:np
+        m = m & strcmp(hcpat{no}, hdr(no+[0:s(1)-np],:));
+    end
+    [iih,~] = find(m); %first row in each instance of header rows
+    if isempty(iih)
+        return
+    end
+    %now for each of these, keep as many following as needed for icolhead and
+    %icolunits
+    iih = repmat(iih,1,nhl)+repmat([0:nhl-1],length(iih),1);
+    varargout{1} = iih;
+    nb = size(iih,1);
 end
-[iih,~] = find(m); %first row in header rows
-iih = repmat(iih,1,nhl)+repmat([chrows chunits]-1,length(iih),1);
-varargout{1} = iih;
-nb = size(iih,1);
 
-%convert these to matlab variable name forms
+%convert the relevant rows from iih to matlab variable name forms
 if nargout>1
-    ch = cell(nb,size(hdr,2));
-    un = ch;
     npat = cellstr(['()=-:.?><][{}#~$%^&*!;']');
     npat = [npat; ' '];
     hdr = replace(hdr, npat, '_');
     hdr = replace(replace(replace(hdr,'+','_plus_'),'/','_per_'),'%','_percent');
     hdr = replace(hdr, '__', '_');
+    
+    ch = cell(nb,size(hdr,2));
+    un = ch;
     %loop through blocks/occurrences
     for bno = 1:nb
-        h = hdr(iih(bno,chrows), :);
-        if ~isempty(chunits)
-            u = hdr(iih(bno,chunits),:);
+        h = hdr(iih(bno,icolhead), :);
+        if ~isempty(icolunits)
+            u = hdr(iih(bno,icolunits),:);
         end
         %loop through columns
         for no = 1:size(hdr,2)
             a = replace(lower(sprintf('%s_', h{:,no})),'__','_');
+            if ~isvarname(a)
+                warning('invalid variable name in row %d; unless variable names were supplied in input structure, column %d will be skipped',iih(icolhead(1)),no)
+                a = '_'; %will make ch empty
+            end
             ch{bno,no} = a(1:end-1);
-            if ~isempty(chunits)
+            if ~isempty(icolunits)
                 a = replace(lower(sprintf('%s_', u{:,no})),'__','_');
                 un{bno,no} = a(1:end-1);
             end
@@ -288,15 +372,18 @@ if nargout>1
 end
 
 
-function dat = sd_get_char_vars(dat, opts, filename)
-% function dat = sd_get_char_vars(dat, opts, filename);
+function dat = sd_get_char_vars(dat, opts, filename, mr, mc)
+% function dat = sd_get_char_vars(dat, opts, filename, mr, mc);
 %
-% if necessary, replace some columns with string equivalents
+% replace table columns with no valid numbers by reading in again as
+%   strings
 
 m = sum(isnan(table2array(dat)))==size(dat,1);
 if sum(m)
     optss = setvartype(opts,'string');
     dats = readtable(filename, optss);
+    dats = dats(:,mc);
+    dats = dats(mr,:);
     m = m & sum(cellfun(@(x) ismissing(x),table2cell(dats)))<size(dats,1);
     iicc = find(m);
     fn = dat.Properties.VariableNames;
@@ -310,12 +397,11 @@ end
 function table1 = sd_combine_tables(table1, table2)
 % function table_out = sd_combine_tables(table1, table2);
 %
-% concatentate table2 onto end of table1
-% matching variable names (and units, if applicable) and adding new
-% variables as necessary
-% may also change type of variable if necessary
+% concatentate table2 onto end of table1,
+%   matching variable names (and units, if applicable) and adding new
+%   variables where no match is found. may also change type of variable if
+%   necessary
 %
-% ***keep track of rearrangements and put info in header?
 
 s0 = size(table1);
 

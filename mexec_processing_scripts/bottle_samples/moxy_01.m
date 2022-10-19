@@ -25,7 +25,7 @@ else
 end
 
 %load data
-[ds_oxy, oxyhead] = load_samdata(ofiles, hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets);
+[ds_oxy, oxyhead] = load_samdata(ofiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets);
 if isempty(ds_oxy)
     error('no data loaded')
 end
