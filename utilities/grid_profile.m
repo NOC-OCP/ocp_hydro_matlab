@@ -8,8 +8,8 @@ function dg = grid_profile(d, gridvar, gridvec, method, varargin)
 %   one of the following methods: 
 % 'meanbin': means of data in (contiguous) bins with edges gridvec
 % 'medbin': as above but median
-% 'meannum': means of each *** segment of data
-%   note if your data are regularly-spaced such that the same number of
+% 'meannum': means of each num-points segment (starting from the first
+%   point). note: if data are regularly-spaced such that the same number of
 %   input points go into each bin (e.g. averaging 24-hz series with no
 %   missing times to 1-hz), this is much more efficient than meanbin!    
 % 'lfitbin': prediction, at midpoints of bins, of linear fit to data in
@@ -56,6 +56,7 @@ function dg = grid_profile(d, gridvar, gridvec, method, varargin)
 % d.(gridvar) must be a vector
 % when d.(gridvar) is 1xM, other fields in d can be 1xM or NxM
 % when d.(gridvar) is Mx1, other fields in d can be Mx1 or MxN
+%   fields of different size will be skipped (left as-is)
 %
 % dg.(gridvar) depends on method: 
 %   'meanbin' or 'medbin': the average (mean or median) of d.(gridvar)
@@ -183,7 +184,7 @@ ngv = length(gridvec);
 %initialise gridded fields and concatenated data, and check size of input
 %variables
 ng_in = length(d.(gridvar));
-usevar = ones(1,nvar);
+usevar = true(1,nvar);
 data = []; datainds = [];
 for vno = 1:nvar
     s = size(d.(fn{vno}));
@@ -207,6 +208,7 @@ for vno = 1:nvar
         datainds = [datainds repmat(vno,1,size(d.(fn{vno}),2))];
     end
 end
+skipvar = find(~usevar);
 usevar = find(usevar);
 
 %fill NaNs if specified
@@ -261,3 +263,8 @@ if isrow && size(dg.(gridvar),1)>1
 elseif ~isrow && size(dg.(gridvar),2)>1
     dg.(gridvar) = dg.(gridvar).';
 end
+
+for sno = skipvar
+    dg.(fn{sno}) = d.(fn{sno});
+end
+

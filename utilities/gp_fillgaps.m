@@ -57,6 +57,7 @@ if dofirst
     [fv, ii] = min(indm);
     yfill = repmat(fv,s(1),1);
     yfill(ind>repmat(ii,s(1),1)) = NaN;
+    yfill(isnan(yf)) = NaN;
     yfill = sub2ind(size(yf),yfill,repmat(1:s(2),s(1),1));
     m = isnan(yf) & ~isnan(yfill);
     yf(m) = yf(yfill(m));
@@ -68,6 +69,7 @@ if dolast
     [fv, ii] = max(indm);
     yfill = repmat(fv,s(1),1);
     yfill(ind<repmat(ii,s(1),1)) = NaN;
+    yfill(isnan(yf)) = NaN;
     yfill = sub2ind(size(yf),yfill,repmat(1:s(2),s(1),1));
     m = isnan(yf) & ~isnan(yfill);
     yf(m) = yf(yfill(m));

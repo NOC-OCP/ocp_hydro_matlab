@@ -58,9 +58,9 @@ tp,                  phos,      umol/kg
 dop,                 phos,      umol/kg
 totnit,              no2_no3,   umol/L
 no2no3,              no2_no3,   umol/kg
-no2+no3,             no2_no3,   umol/kg
+no2_plus_no3,        no2_no3,   umol/kg
 no2_no3,             no2_no3,   umol/kg
-nitrate+nit,         no2_no3,   umol/L
+nitrate_plus_nit,    no2_no3,   umol/L
 nitrate_nit,         no2_no3,   umol/L
 nitrate_nitrite,     no2_no3,   umol/L
 totnit_per_kg,       no2_no3,   umol/kg

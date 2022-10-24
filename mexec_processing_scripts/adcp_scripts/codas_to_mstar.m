@@ -15,7 +15,7 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 root_vmadcp = mgetdir('M_VMADCP');
-fnin = fullfile(root_vmadcp, 'postprocessing', upper(mcruise), 'proc_editing', inst, 'contour', [inst '.nc']);
+scriptname = mfilename; oopt = 'codas_file'; get_cropt
 if ~exist(fnin, 'file')
     error(['input file ' fnin ' not found'])
 end

@@ -98,6 +98,9 @@ end
 if isempty(hcpat) && (~exist('iopts','var') || ~isfield(iopts,'VariableNames'))
     icolhead = 1; %default is to get names from first row (error if these don't start with chars?)***
 end
+if ~iscell(infile)
+    infile = {infile};
+end
 
 warning('off','MATLAB:table:ModifiedAndSavedVarnames')
 warning('off','MATLAB:textscan:AllNatSuggestFormat')
@@ -143,6 +146,8 @@ for fno = 1:length(infile)
                 end
                 samhead{fno,sno} = h(:,1);
                 %sprintf('%s\n',samhead{fno,sno}{:})
+            else
+                samhead{fno,sno} = '';
             end
         else
             if exist('numhead','var') && numhead>0

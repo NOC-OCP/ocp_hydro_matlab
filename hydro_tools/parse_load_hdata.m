@@ -100,8 +100,9 @@ for fno = 1:size(infile,1)
         else
             ds = load(fullfile(opts.predir, infile{fno}), '-mat');
         end
-        if isfield(ds, 'data')
-            ds = ds.data;
+        v = fieldnames(ds);
+        if length(v)==1
+            ds = ds.(v{1});
         end
         %find GLODAP cruise *** this could also come up for csv data
         if isfield(opts, 'expocode') && ~isempty(opts.expocode) && isfield(ds, 'expocode')
@@ -185,12 +186,19 @@ for fno = 1:size(infile,1)
             chunits = length(hcpat); %default: last row of header is units
         end
         try
-            [ds, hs] = load_samdata(fullfile(opts.predir, infile{fno}), hcpat, 'chrows', chrows, 'chunits', chunits);
-        catch
-            warning(['unknown file type or header not properly specified: ' infile{fno}])
+            [ds, samhead] = load_samdata(fullfile(opts.predir, infile{fno}), 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits);
+        catch me
+            warning('in %s on line %d: %s',me.stack(1).name,me.stack(1).line,me.message)
+            warning(['may be unknown file type or header not properly specified: ' infile{fno}])
             keyboard
         end
-        ds = dataset2struct(ds,'AsScalar',1);
+        clear hs
+        hs.colunit = ds.Properties.VariableUnits;
+        if isempty(hs.colunit)
+            hs.colunit = cell(size(ds.Properties.VariableNames));
+        end
+        hs.header = samhead;
+        ds = table2struct(ds,'ToScalar',1);
         
     end %switch/case: mat, nc, or other
     
@@ -362,4 +370,15 @@ data.unts = data.unts(:)';
 
 
 %NaN bad data, apply flags (mask), and make sure they match
+fn0 = fieldnames(data);
 data = hdata_flagnan(data, 'sam_missflags', opts.badflags);
+if ~isfield(data,'niskin_flag')
+    %get rid of new (flag) fields because they don't add information
+    fn = fieldnames(data);
+    fn = setdiff(fn,fn0);
+    data = rmfield(data, fn);
+else
+    %add to list of variables
+    data.vars = [data.vars fn];
+    data.unts = [data.unts repmat({'woce_flag'},1,length(fn))];
+end

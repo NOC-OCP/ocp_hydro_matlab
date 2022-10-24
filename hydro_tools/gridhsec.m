@@ -62,6 +62,7 @@ for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
 
+if ~isfield(mgrid,'method'); mgrid.method = 'msec_maptracer'; end
 if strcmp(mgrid.method,'msec_maptracer')
     readme_g = {'ctd data gridded by linear interpolation in vertical (after filling uniform mixed layer)'};
     readme_g = [readme_g; 'sample data as in m_maptracer, using CTD T,S for sigma'];
@@ -89,20 +90,21 @@ end
 
 %%%%% load and concatenate ctd and sample data %%%%%
 file_listc = dir(fullfile(info.ctddir, info.ctdpat));
-if isfield(info, 'samfile')
-    file_lists = {};
-    for no = 1:length(info.samfile)
-        file_lists = dir(fullfile(info.samdir, info.samfile{no}));
-    end
-else
-    file_lists = dir(fullfile(info.samdir, info.sampat));
-end
-
 if ~isempty(file_listc)
    file_listc = struct2cell(file_listc); file_listc = file_listc(1,:)';
 end
-if ~isempty(file_lists)
-   file_lists = struct2cell(file_lists); file_lists = file_lists(1,:)';
+if isfield(info, 'samfile')
+    file_lists = {};
+    for no = 1:length(info.samfile)
+        a = dir(fullfile(info.samdir, info.samfile{no}));
+        a = struct2cell(a);
+        file_lists = [file_lists; a(1)];
+    end
+else
+    file_lists = dir(fullfile(info.samdir, info.sampat));
+    if ~isempty(file_lists)
+        file_lists = struct2cell(file_lists); file_lists = file_lists(1,:)';
+    end
 end
 
 %if multiple ctd files, probably by station; if exchange format, try to only load the ones we need

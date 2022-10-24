@@ -69,7 +69,7 @@ switch cruise
         info.ctddir = fullfile(predir1, 'andrex', 'jr18005', '2db'); 
         info.ctdpat = '*_cal.2db.mat'; %salcal, need to apply ocal*** could have option to apply inline
         info.samdir = fullfile(predir1, 'andrex', 'jr18005');
-        info.sampat = 'ANDREX_II_*BODC.csv'; %***need to convert xlsx to csv for dic, ph, talk, but wait for vas to fix?
+        info.samfile = {'jr18005_hy_pjb_final_v2021_sep.mat','ANDREX_II_2019_CTD_Nuts_BODC.csv'};
         info.sam_hcpat = {{'niskin'}};
         info.statind = [98:-1:75 73:-1:69 66 63:-1:3]; %E to W
         mgrid.xstatnumgrid = [info.statind; 98:-1:75 [73:-1:69 66 63:-1:24]+1 [23:-1:6] [5:-1:3]-1]; %no actual gap between 75 and 73 or 69, 66, 63, but topography between 24 and 23 and 6 and 5

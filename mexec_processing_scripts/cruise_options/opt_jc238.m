@@ -429,4 +429,10 @@ switch scriptname
                 end
         end
         
+            case 'codas_to_mstar'
+        switch oopt
+            case 'codas_file'
+                fnin = fullfile(root_vmadcp, 'spprocessing', 'JC238_merged', 'proc', [inst '.uvship'], 'contour', [inst '_merged_uvship.nc']);
+        end
+        
 end

@@ -78,7 +78,7 @@ end
 
 %sort out nitrate vs no2+no3 in sdata (make sure we have something called nitr if possible)
 iin = find(strcmp('nitrate', sdata.vars));
-iit = find(strcmp('no2_no3', sdata.vars));
+iit = find(ismember(sdata.vars,{'no2_no3','totnit'}) | strncmp('nitrate',sdata.vars,7)); iit = setdiff(iit,iin);
 if ~isempty(iit) %if there's the sum, use it
     sdata.nitr = sdata.no2_no3;
     sdata.vars = [sdata.vars 'nitr'];

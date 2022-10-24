@@ -51,7 +51,7 @@ oxyunits.sample_titre = {'ml' 'mls'};
 oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
 oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
 if ~isempty(chunits)
-    check_units(ds_oxy, oxyunits)
+    [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
 end
 
 %compute or fill some fields

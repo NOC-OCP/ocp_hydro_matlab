@@ -15,26 +15,28 @@
 if reloads
     clear unts_expect
     unts_expect.nitr = 'umol/kg';
+    unts_expect.nitrate = 'umol/kg';
+    unts_expect.nitrite = 'umol/kg';
     unts_expect.phos = 'umol/kg';
     unts_expect.silc = 'umol/kg';
     unts_expect.dic = 'umol/kg';
     unts_expect.oxygen = 'umol/kg';
     unts_expect.sf6 = 'pmol/kg';
-    vb = check_units(sdata, unts_expect);
+    [sdata, vb] = check_units(sdata, unts_expect, 1);
     if ~isempty(vb)
-        if isfield(cdata, 'SA')
+        if isfield(sdata, 'SA')
             SA = cdata.SA;
-        elseif isfield(cdata, 'asal')
+        elseif isfield(sdata, 'asal')
             SA = cdata.asal;
         else
-            SA = gsw_SA_from_SP(cdata.psal,cdata.press,cdata.lon,cdata.lat);
+            SA = gsw_SA_from_SP(sdata.psal,sdata.press,sdata.lon,sdata.lat);
         end
-        dens = gsw_rho_t_exact(SA,cdata.temp,cdata.press);
+        dens = gsw_rho_t_exact(SA,sdata.temp,sdata.press);
     end
     for no = 1:length(vb)
         ii = find(strcmp(vb{no},sdata.vars));
         if strcmpi(sdata.unts{ii}(end-1:end), '/l')
-            sdata.(sdata.vars{ii}) = sdata.(sdata.vars{ii})/(dens/1000);
+            sdata.(sdata.vars{ii}) = sdata.(sdata.vars{ii})./(dens/1000);
             sdata.unts{ii} = [sdata.unts(1:end-1) 'kg'];
         end
     end

@@ -30,22 +30,25 @@ ns = length(sdata.x);
 nvars = length(sdata.vars);
 
 %ctd data: weighted average in vertical (using midpoint of linear fit),
-%including fill-to-surface,
-%then linearly interpolate in x to fill in missing profiles
+%including fill-to-surface; linearly interpolate in x (but do not fill as
+%this risks filling through topography)
 mgrid.vars = cdata.vars;
 mgrid.unts = cdata.unts;
-gpopts.grid_extrap = [1 0];
-gpopts.profile_extrap = [1 0];
-gpopts.postfill = inf;
+zgopts.grid_extrap = [1 0];
+zgopts.profile_extrap = [1 0];
+zgopts.postfill = inf;
+xgopts.grid_extrap = [1 1];
+xgopts.profile_extrap = [0 0];
+xgopts.postfill = 0;
 dz1 = mgrid.z(2,1)-mgrid.z(1,1); dz2 = mgrid.z(end,1)-mgrid.z(end-1,1);
 zg = [mgrid.z(1,1)-dz1/2; .5*(mgrid.z(1:end-1,1)+mgrid.z(2:end,1)); mgrid.z(end,1)+dz2/2];
-clear d; d.z = cdata.z;
+xg = mgrid.x(1,:);
+dgz = grid_profile(cdata, 'z', zg, 'lfitbin', zgopts);
+dgzx = grid_profile(dgz, 'x', xg, 'linterp', xgopts);
 for vno = 1:length(mgrid.vars)
-    d.data = cdata.(mgrid.vars{vno});
-    dg = grid_profile(d, 'z', zg, 'lfitbin', gpopts);
-    dg.data(mgrid.mask==1) = NaN;
-    m = double(isnan(dg.data));
-    mgrid.(mgrid.vars{vno}) = dg.data;
+    dgzx.(mgrid.vars{vno})(mgrid.mask==1) = NaN;
+    m = double(isnan(dgzx.(mgrid.vars{vno})));
+    mgrid.(mgrid.vars{vno}) = dgzx.(mgrid.vars{vno});
     mgrid.datam(:,:,vno) = m;
 end
 
@@ -156,7 +159,7 @@ if isfield(mgrid, 'ctd_fill')
                 mfs = (m>0 & ~isnan(dat));
                 mgrid.(cvarsfill{vno})(mfs) = dat(mfs);
                 mgrid.(cvarsfill{vno})(mgrid.mask==1) = NaN;
-                m(iifs) = 0.5; m(mgrid.mask==1) = 1;
+                m(mfs) = 0.5; m(mgrid.mask==1) = 1;
                 mgrid.datam(:,:,iic) = m;
             end
         end

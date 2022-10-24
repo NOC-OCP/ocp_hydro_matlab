@@ -230,7 +230,7 @@ salunits.flag = {'woce_9.4'};
 salunits.salinity = {'psu'};
 salunits.salinity_adj = {'psu'};
 if ~isempty(ds_sal.Properties.VariableUnits)
-    check_units(ds_sal, salunits)
+    [ds_sal, ~] = check_units(ds_sal, salunits);
 end
 
 dataname = ['sal_' mcruise '_01'];

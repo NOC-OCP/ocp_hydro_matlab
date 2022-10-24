@@ -248,4 +248,10 @@ switch scriptname
                 isul = 1;
         end
         
+    case 'codas_to_mstar'
+        switch oopt
+            case 'codas_file'
+                fnin = fullfile(root_vmadcp, 'postprocessing', upper(mcruise), 'proc_editing', inst, 'contour', [inst '.nc']);
+        end
+        
 end
