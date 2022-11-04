@@ -10,7 +10,6 @@ function [mgrid, cdata, sdata] = gridhsec(cruise, varargin)
 % containing mgrid as well
 %
 % option 1: use the same gridding methods as msec_run_mgridp (formerly run_mgridp_ctd), mgridp, m_maptracer
-% option 2: use something more like objective mapping, i don't even know what was being done with ctd data before, possibly nothing? possibly just interpolating to coarser depth grid in mgridp. but recently it wasn't even calling mgridp.
 %
 % locations of files to load, QC, and mapping parameters can be passed as
 %     input arguments (see below) or set by a file 

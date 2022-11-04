@@ -1,0 +1,19 @@
+The functions in hydro_tools/ can be used to ingest, combine, do some very basic QC on, and grid hydrographic (CTD and bottle sample) data. The input data can be CSV, excel, netcdf, or Matlab files. The gridding is designed to take into account some information about varying length scales and isopycnal-following, while being quicker than a full objective mapping. The wrapper script, gridhsec.m, finds out what to load, what the parameters to be mapped are called, and how to map them, either from optional input arguments or by looking in another script (for example, set_hsecpars_orch.m); it will output three structures containing gridded data, CTD data, and sample data, as well as saving them to .mat files. Some examples are given below. 
+
+The gridding for CTD data starts from a form of bin-averaging of CTD profiles (actually linear fits in each bin, projected onto the midpoint). For discrete bottle sample data it averages using weights that depend on both potential density difference and horizontal and vertical "distances". For the latter it can take into account varying length scales by varying the coordinates. For example, stations on a hydrographic section are usually closer over the continental slopes/in boundary currents, and farther apart in the middle of the basin, so using station number as the horizontal grid coordinate (and a constant horizontal length scale expressed as number-of-stations-apart) is a simple way to allow for the expected shorter scales of variability relevant over the slopes. Similarly, discrete bottle samples are generally taken closer together in the upper ocean, reflecting expectations about stronger/more variable signals there; the default settings for the gridding reflect this by using for the vertical coordinate a series of depth levels that gets farther apart with depth. 
+
+% map jr18005 with defaults plus parameters under jr18005 case in set_hsecpars_orch.m
+>> gridhsec('jr18005', 'hsecpars_file', 'set_hsecpars_orch')
+
+% as above but overwrite some of the settings in set_hsecpars_orch.m using mgrid: 
+% (for the sake of example, ignore topographic barriers, and use a really long length scale)
+>> mgrid.xstatnumgrid = repmat([98:-1:75 73:-1:69 66 63:-1:3],2,1);
+>> mgrid.xL = 20; 
+>> gridhsec('jr18005', 'hsecpars_file', 'set_hsecpars_orch', 'mgrid', mgrid)
+
+% map the A23 part of dy113
+>> info.section = 'a23'; [mgrid, cdata, sdata] = gridhsec('dy113', 'hsecpars_file', 'set_hsecpars_orch', 'info', info);
+
+
+More information on how to combine multi-cruise sections, how to map profile-only, etc. will be added ***.
+

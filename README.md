@@ -13,7 +13,7 @@ b) comparing and secondary QC, gridding/mapping, and plotting of hydrographic (C
     │
     ├── m_setup.m                  <- run this first to set paths and global variables
     │
-    ├── docs                       <- mexec user guide
+    ├── docs                       <- mexec user guide (for at-sea processing) and mapping guide (for gridding CTD and bottle profiles/sections)
     │
     ├── file_tools                 <- mostly just called by other scripts/functions
     │   ├── mexec                  <- specifically for interacting with mexec .nc files and data history logs
