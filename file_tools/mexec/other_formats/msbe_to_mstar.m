@@ -1,13 +1,24 @@
-function ncfile = msbe_to_mstar(varargin)
+function varargout = msbe_to_mstar(varargin)
 %
-% % load sbe ctd  file into mstar file
+% ncfile = msbe_to_mstar(varargin)
+% [d, h, ncfile] = msbe_to_mstar(varargin)
+% [d, h] = msbe_to_mstar(varargin)
 %
+% load sbe ctd file into mstar file (ncfile)
+% and/or into mstar-format data (d) and header (h) structures
+
 m_common
 m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = mfilename;
 m_proghd
+
+if nargout==2
+    savefile = 0;
+else
+    savefile = 1;
+end
 
 m = 'Type name of sbe file ';
 sfile = m_getinput(m,'s');
@@ -34,13 +45,13 @@ if sum(index)==0
     index = strncmp('# start_time',head,12);
 end
 if sum(index)
-% parse NMEA start time string
-st = head{index};
-isp = strfind(st,'=');
-string = st(isp+2:end);
-dnum = datenum(string,'mmm dd yyyy  HH:MM:SS');
-h.data_time_origin = datevec(dnum);
-head(index) = [];
+    % parse NMEA start time string
+    st = head{index};
+    isp = strfind(st,'=');
+    string = st(isp+2:end);
+    dnum = datenum(string,'mmm dd yyyy  HH:MM:SS');
+    h.data_time_origin = datevec(dnum);
+    head(index) = [];
 end
 
 %unpack scan interval e.g.
@@ -133,7 +144,7 @@ if sum(index)
 else
     index = strncmp('** Latitude',head,11);
     if sum(index)
-        st = head{index};    
+        st = head{index};
         m1 = 'NMEA Latitude string not found but operator-entered latitude found';
         m2 = 'Do you want to use it in the mstar file header (n or carriage return (default) or y)?';
         m = sprintf('%s\n',m1,m2);
@@ -257,23 +268,30 @@ h.instrument_identifier = 'ctd';
 h.dataname = 'sbe_ctd_rawdata';
 
 
-
-%get mstar filename and check it is not open
-ncfile.name = m_getfilename;
-ncfile = m_openot(ncfile);
-
-nc_attput(ncfile.name,nc_global,'dataname',h.dataname); %set the dataname
-nc_attput(ncfile.name,nc_global,'instrument_identifier',h.instrument_identifier);
-
-%write header variables
-if ~isempty(h.platform_type); nc_attput(ncfile.name,nc_global,'platform_type',h.platform_type); end
-if ~isempty(h.platform_identifier); nc_attput(ncfile.name,nc_global,'platform_identifier',h.platform_identifier); end
-if ~isempty(h.platform_number); nc_attput(ncfile.name,nc_global,'platform_number',h.platform_number); end
-if ~isempty(h.instrument_identifier); nc_attput(ncfile.name,nc_global,'instrument_identifier',h.instrument_identifier); end
-if ~isempty(h.recording_interval); nc_attput(ncfile.name,nc_global,'recording_interval',h.recording_interval); end
-if ~isempty(h.latitude); nc_attput(ncfile.name,nc_global,'latitude',h.latitude); end
-if ~isempty(h.longitude);nc_attput(ncfile.name,nc_global,'longitude',h.longitude); end
-nc_attput(ncfile.name,nc_global,'data_time_origin',h.data_time_origin);
+if savefile
+    
+    %get mstar filename and check it is not open
+    ncfile.name = m_getfilename;
+    ncfile = m_openot(ncfile);
+    
+    nc_attput(ncfile.name,nc_global,'dataname',h.dataname); %set the dataname
+    nc_attput(ncfile.name,nc_global,'instrument_identifier',h.instrument_identifier);
+    
+    %write header variables
+    if ~isempty(h.platform_type); nc_attput(ncfile.name,nc_global,'platform_type',h.platform_type); end
+    if ~isempty(h.platform_identifier); nc_attput(ncfile.name,nc_global,'platform_identifier',h.platform_identifier); end
+    if ~isempty(h.platform_number); nc_attput(ncfile.name,nc_global,'platform_number',h.platform_number); end
+    if ~isempty(h.instrument_identifier); nc_attput(ncfile.name,nc_global,'instrument_identifier',h.instrument_identifier); end
+    if ~isempty(h.recording_interval); nc_attput(ncfile.name,nc_global,'recording_interval',h.recording_interval); end
+    if ~isempty(h.latitude); nc_attput(ncfile.name,nc_global,'latitude',h.latitude); end
+    if ~isempty(h.longitude);nc_attput(ncfile.name,nc_global,'longitude',h.longitude); end
+    nc_attput(ncfile.name,nc_global,'data_time_origin',h.data_time_origin);
+    
+else
+    h.fldnam = {}; h.fldunt = {};
+    h.comment = [];
+    clear d %unnecessary? but acts as marker
+end
 
 % get data
 
@@ -295,9 +313,15 @@ for k = 1:noflds
     v.data = data1(k,:)';
     v.data(v.data == sbe_bad_flag) = nan; % set sbe bad data to nan
     v.units = varunits{k};
-    m = ['writing data for variable ' v.name];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m);
-    m_write_variable(ncfile,v);
+    if savefile
+        m = ['writing data for variable ' v.name];
+        fprintf(MEXEC_A.Mfidterm,'%s\n',m);
+        m_write_variable(ncfile,v);
+    else
+        h.fldnam = [h.fldnam v.name];
+        h.fldunt = [h.fldunt v.units];
+        d.(v.name) = v.data;
+    end
 end
 
 
@@ -312,36 +336,49 @@ while ~isempty(head)
     inl = strfind(c,newline);
     c(inl) = []; % strip out the newline chars that were read in with fgets
     c = strrep(c,'\','\\');
-    m_add_comment(ncfile,c);
+    if savefile
+        m_add_comment(ncfile,c);
+    else
+        h.comment = [h.comment c];
+    end
 end
 
 nowstring = datestr(now,31);
-m_add_comment(ncfile,'This mstar file created from sbe file');
-m_add_comment(ncfile,sfile);
-m_add_comment(ncfile,['at ' nowstring]);
+if savefile
+    m_add_comment(ncfile,'This mstar file created from sbe file');
+    m_add_comment(ncfile,sfile);
+    m_add_comment(ncfile,['at ' nowstring]);
+    
+    
+    % finish up
+    
+    
+    m_finis(ncfile);
+    
+    h = m_read_header(ncfile);
+    if ~MEXEC_G.quiet; m_print_header(h); end
+    
+    hist = h;
+    hist.filename = ncfile.name;
+    MEXEC_A.Mhistory_ot{1} = hist;
+    % fake the input file details so that write_history works
+    histin = h;
+    histin.filename = sfile;
+    histin.dataname = [];
+    histin.version = [];
+    histin.mstar_site = [];
+    MEXEC_A.Mhistory_in{1} = histin;
+    m_write_history;
+end
 
-
-
-% finish up
-
-
-m_finis(ncfile);
-
-h = m_read_header(ncfile);
-if ~MEXEC_G.quiet; m_print_header(h); end
-
-hist = h;
-hist.filename = ncfile.name;
-MEXEC_A.Mhistory_ot{1} = hist;
-% fake the input file details so that write_history works
-histin = h;
-histin.filename = sfile;
-histin.dataname = [];
-histin.version = [];
-histin.mstar_site = [];
-MEXEC_A.Mhistory_in{1} = histin;
-m_write_history;
-
+if nargout==1
+    varargout = ncfile;
+else
+    varargout{1} = d; varargout{2} = h;
+    if nargout==3
+        varargout{3} = ncfile;
+    end
+end
 
 if numcycles ~= num_expected
     m = ['Warning number of cycles read in ('  sprintf('%d',numcycles) ')'];

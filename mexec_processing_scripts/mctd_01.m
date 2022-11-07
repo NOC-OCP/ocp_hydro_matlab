@@ -1,8 +1,8 @@
-% mctd_01: 
-% 
+% mctd_01:
+%
 % read in ctd data from SBE .cnv file (either _align_ctm version, or _noctm);
-% rename variables according to ctd_renamelist.csv (formerly done by mctd_02a), 
-% add units***, 
+% rename variables according to ctd_renamelist.csv (formerly done by mctd_02a),
+% add units***,
 % add NaN fields for variables that are not present on this cast (as set in
 % opt_cruise)
 % add position at bottom of cast to header (formerly done by mctd_02a)
@@ -12,7 +12,7 @@
 % Use: mctd_01        and then respond with station number, or for station 16
 %      stn = 16; mctd_01;
 %
-% calls: 
+% calls:
 %     msbe_to_mstar
 %     mheadr
 %     mcalib
@@ -21,32 +21,28 @@
 %%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
-scriptname = 'castpars'; oopt = 'minit'; get_cropt 
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
-root_cnv = mgetdir('M_CTD_CNV');
-root_ctd = mgetdir('M_CTD'); 
-
-dataname = ['ctd_' mcruise '_' stn_string];
-
 scriptname = mfilename; oopt = 'redoctm'; get_cropt
-scriptname = mfilename; oopt = 'cnvfilename'; get_cropt
+
+root_ctd = mgetdir('M_CTD');
+dataname = ['ctd_' mcruise '_' stn_string];
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
-    cnvfile = fullfile(root_cnv, cnvfile);
     otfile = fullfile(root_ctd, [dataname '_raw.nc']);
 else %in some cases, operate on original file (to remove large spikes), then apply align and CTM
-    cnvfile = fullfile(root_cnv, cnvfile); %align and ctm will be reapplied
     otfile = fullfile(root_ctd, [dataname '_raw_noctm.nc']);
     disp('starting from noctm file')
 end
 
+scriptname = mfilename; oopt = 'cnvfilename'; get_cropt
 if ~exist(cnvfile,'file')
     warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
     pause
 end
 
-if exist(otfile,'file') 
+if exist(otfile,'file')
     m = ['File' ];
     m1 = otfile ;
     m2 = ['already exists and is probably write protected'];
@@ -187,4 +183,12 @@ if ~isempty(botlat)
 end
 
 system(['chmod 444 ' m_add_nc(otfile)]);
+
+% in special cases, read extra/new variables from a different set of files
+% (e.g. if a variable was mistakenly not exported in initial conversion to
+% .cnv, and has been exported on its own later); merge on scan
+scriptname = mfilename; oopt = 'extracnv'; get_cropt
+if ~isempty(extracnv) && ~isempty(extravars)
+    mctd_extra_cnv
+end
 

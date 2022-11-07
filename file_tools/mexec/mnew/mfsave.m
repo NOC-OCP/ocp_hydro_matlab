@@ -109,6 +109,9 @@ for argn = 1:length(varargin)
         elseif strcmp(varargin{argn},'-nosort')
             nosort = 1;
         else
+            if sum(strcmp(varargin{argn},{'addvar','addvars','merge','nosort'}))
+                warning('did you forget a ''-'' before %s?',varargin{argn}); pause
+            end
             indepvar = varargin{argn};
         end
     else

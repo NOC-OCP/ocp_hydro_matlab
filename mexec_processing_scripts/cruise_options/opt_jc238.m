@@ -40,8 +40,12 @@ switch scriptname
                 else
                     cnvfile = sprintf('%s_CTD_%03d_align_ctm.cnv', upper(mcruise), stnlocal);
                 end
-            case 'ctdvars'
+                cnvfile = fullfile(mgetdir('M_CTD_CNV'),cnvfile);
+            case 'ctdvars' %post-cruise, could just do extracnv instead
                 ctdvars_add = {'ph','ph','number'};
+            case 'extracnv'
+                extracnv = {fullfile(mgetdir('M_CTD_CNV'),'ctd_ph',sprintf('%s_CTD_%03d_downcast.cnv',upper(mcruise),stnlocal))};
+                extravars = {'ph'};
         end
 
     case 'mctd_02'

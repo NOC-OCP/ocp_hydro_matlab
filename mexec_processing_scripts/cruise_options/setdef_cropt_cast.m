@@ -78,12 +78,13 @@ switch scriptname
                     'suf is the .cnv file suffix in either case (defaults ''_align_ctm'' or ''_align_noctm'')'};
                 redoctm = 0;
             case 'cnvfilename'
-                crhelp_str = {'infile is the name of the .cnv file to read in'};
+                crhelp_str = {'cnvfile is the name of the .cnv file to read in'};
                 if redoctm
                     cnvfile = sprintf('%s_%03d.cnv', upper(mcruise), stnlocal);
                 else
                     cnvfile = sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal);
                 end
+                cnvfile = fullfile(mgetdir('M_CTD_CNV'),cnvfile);
             case 'ctdvars'
                 crhelp_str = {'Place to put additional (ctdvars_add) or replacement (ctdvars_replace)'
                     'triplets of SBE variable name, mstar variable name, mstar variable units to '
@@ -95,6 +96,11 @@ switch scriptname
                     'for given station(s); if applicable should be set in opt_cruise for selected stations '
                     '(variables that are never present should be removed from ctd_renamelist.csv instead)'};
                 absentvars = {}; %default: don't skip any variables
+            case 'extracnv' %post-jc238
+                crhelp_str = {'extracnv (default {}) is the name(s) of "extra" .cnv file(s) from which to read in'
+                    'the added/edited/re-extracted parameters listed in extravars (default {})'};
+                extracnv = {};
+                extravars = {};
         end
         %%%%%%%%%% end mctd_01 %%%%%%%%%%
         
