@@ -134,7 +134,7 @@ switch scriptname
             case 'woce_vars_exclude'
                 vars_exclude_ctd = {};
             case 'woce_ctd_flags'
-                ctfflag(ctfflag==2) = 3;
+                d.fluor_flag(d.fluor_flag==2) = 3;
             case 'woce_ctd_headstr'
                 headstring = {['CTD,' datestr(now,'yyyymmdd') 'OBGNOCAF'];...
                     '#SHIP: RRS Discovery';...

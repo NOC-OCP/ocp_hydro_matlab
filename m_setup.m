@@ -1,4 +1,3 @@
-function m_setup(varargin)
 %  m_setup: to be run before attempting any mexec processing of
 %  cruise data; sets up environment (global variables and paths)
 %
@@ -7,14 +6,13 @@ function m_setup(varargin)
 %  items to be edited on each site/cruise" 
 %
 %  you can also pass selected fields (those in the first block of code
-%    below) to MEXEC_G by calling as: 
-%    m_setup(opts)
-%    where opts is a structure with some or all of the following fields: 
+%    below) to MEXEC_G by setting them in structure MEXEC_G_override.
+%    fields to override: 
 %      MSCRIPT_CRUISE_STRING (e.g. 'jc238')
 %      MDEFAULT_DATA_TIME_ORIGIN (e.g. [2022 1 1 0 0 0] -- but note that
 %        changing this mid-processing, or between processing and reading
 %        data, causes problems)  
-%      SITE (e.g. 'jc238_atsea' or 'jc238_atnoc')
+%      SITE_suf (e.g. 'atsea' or 'atnoc' to make SITE 'jc238_atsea' etc.)
 %      mexec_source_root (e.g. '~/programs/ocp/ocp_hydro_matlab/')
 %      other_programs_root (e.g. '~/programs/others/')
 %      mexec_data_root (e.g. '~/cruises/jc238/mcruise/data/' but see below)
@@ -25,40 +23,46 @@ function m_setup(varargin)
 %  to use to add paths necessary for reading mexec files, but without
 %    setting up data processing and housekeeping directories, set
 %    mexec_data_root to 'readonly': 
-%      opts.mexec_data_root = 'readonly'; m_setup(opts)
+%      MEXEC_G.override.mexec_data_root = 'readonly';
 %
 
 clear MEXEC_G
 global MEXEC_G
 
-%defaults
-MEXEC_G.MSCRIPT_CRUISE_STRING='jc238';
-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
-MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_atnoc']; % common suffixes '_atsea', '_athome', '', etc.
-MEXEC_G.mexec_source_root = '~/programs/ocp/ocp_hydro_matlab/';
-MEXEC_G.other_programs_root = '~/programs/others/';
+%what are we processing and where? 
+MEXEC_G.MSCRIPT_CRUISE_STRING='jc238'; 
+%default data time origin is now set in opt_cruise
+MEXEC_G.SITE_suf = 'atnoc'; % common suffixes '_atsea', '_athome', '', etc.
+MEXEC_G.other_programs_root = '~/programs/others/'; 
 MEXEC_G.mexec_data_root = ''; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 1; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 
 %replace with any parameters passed as inputs
-if nargin>0 && isstruct(varargin{1})
-    fn = fieldnames(varargin{1});
+if exist('MEXEC_G_force','var') && isstruct(MEXEC_G_force)
+    fn = fieldnames(MEXEC_G_force);
     fn0 = fieldnames(MEXEC_G);
     for fno = 1:length(fn)
         if ~ismember(fn{fno},fn0)
             warning('setting unset %s in MEXEC_G; may be overwritten below',fn{fno})
         end
-        MEXEC_G.(fn{fno}) = varargin{1}.(fn{fno});
+        MEXEC_G.(fn{fno}) = MEXEC_G_force.(fn{fno});
     end
+else
+    disp('MEXEC_G_force not set; using defaults')
 end
+clear MEXEC_G_force
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 %%%%% (or it can be edited in opt_{cruise}.m instead) %%%%%
 
+MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_' MEXEC_G.SITE_suf]; 
+MEXEC_G = rmfield(MEXEC_G, 'SITE_suf');
+
 disp(['m_setup for ' MEXEC_G.MSCRIPT_CRUISE_STRING ' mexec (ocp_hydro_matlab)'])
 
-%ocp_hydro_tools version, add to path if necessary
+%add ocp_hydro_tools to path
+MEXEC_G.mexec_source_root = fileparts(which('m_setup'));
 cdir = pwd; pdir = MEXEC_G.mexec_source_root;
 cd(pdir)
 [s,c] = system('git log -1 | head -1');
@@ -77,13 +81,21 @@ if isempty(which('get_cropt')) || isempty(which('m_common'))
     rmpath(genpath(fullfile(MEXEC_G.mexec_source_root,'.git')))
 end
 
+% set more defaults
+MEXEC_G.PLATFORM_TYPE= 'ship';
+MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normally be changed
+MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
+% including some specific to the cruise
+scriptname = mfilename; oopt = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
+scriptname = mfilename; oopt = 'setup_datatypes'; get_cropt %use_ix_ladcp and skipunderway set here (and used below)
+
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
-scriptname = mfilename; oopt = 'setup_datatypes'; get_cropt %use_ix_ladcp and skipunderway set here (and used below)
 if ~isempty(MEXEC_G.other_programs_root)
     switch use_ix_ladcp
         case 'yes'
             MEXEC_G.ix_ladcp = 1;
+            pathpath = 1;
         case 'query'
             disp('LDEO_IX and m_moorproc_toolbox/rodbload contain functions with the same names')
             pathpath = input('are you processing LADCP data (1),\n mooring/caldip data (2),\n or neither (0)?\n');
@@ -92,40 +104,21 @@ if ~isempty(MEXEC_G.other_programs_root)
             else
                 MEXEC_G.ix_ladcp = 0;
             end
-        otherwise
+        otherwise %e.g. 'no'
+            pathpath = 0;
             MEXEC_G.ix_ladcp = 0;
     end
     MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
-    % %mooring processing software if selected
-    % if exist('pathpath','var') && pathpath==2
-    %     cdir = pwd;
-    %     odir = '/local/users/pstar/osnap';
-    %     moorstart = ['startup' MEXEC_G.MSCRIPT_CRUISE_STRING];
-    %     rmoordir = fullfile(fileparts(MEXEC_G.mexec_source_root),'moor_exec');
-    %     if exist([odir moorstart '.m'],'file')
-    %         addpath(odir)
-    %         eval(moorstart)
-    %         cd(cdir)
-    %         rwidgdir = fullfile(rmoordir,'mfiles','rapid_widgit_lite');
-    %         addpath(genpath(rwidgdir))
-    %     elseif exist(rmoordir,'dir')
-    %         addpath(genpath(rmoordir))
-    %     else
-    %         disp('no mooring processing paths found to add')
-    %     end
-    % end
 else
     MEXEC_G.ix_ladcp = 0;
 end
-
 
 if strcmp(MEXEC_G.mexec_data_root, 'readonly')
     warning('MEXEC_G.mexec_data_root set to ''readonly''; you will be able to use mload(q)')
     return
 end
 
-% set up for processing and writting mexec files
-
+% location processing and writing mexec files
 if isempty(MEXEC_G.mexec_data_root)
     setup_dataroot_find
 end
@@ -181,15 +174,14 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     case 'kn'
         MEXEC_G.Mship = 'knorr';
         MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
+    case 'en'
+        MEXEC_G.Mship = 'endeavor';
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
     otherwise
         merr = ['Ship ''' MEXEC_G.Mship ''' not recognised'];
         fprintf(2,'%s\n',merr);
         return
 end
-MEXEC_G.PLATFORM_TYPE= 'ship';
-
-MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normally be changed
-MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 
 % add underway system information and directories
 if skipunderway<2

@@ -2,20 +2,17 @@ function d = hdata_flagnan(d, varargin)
 % function d = hdata_flagnan(d);
 % function d = hdata_flagnan(d, 'parameter', value);
 %
-% 1) for each sample field/column of structure/table/dataset d, replace
-%   -999s with NaNs. some fields are skipped: by default, if addflags (see
-%   below) is set to 1 (default), the skipped fields are sampnum, statnum,
-%   station, niskin, position, press, upress, depth and udepth; all other
-%   numeric fields not ending in _flag are treated as sample fields, and
-%   optional input argument vars_exclude is a cell array list of additional
-%   fields to ignore (e.g. {'sbe35temp'}). if addflags is set to 0, every
-%   field (and only those fields) with a corresponding _flag field, except
-%   niskin, is treated as a sample field
-% 2) for each corresponding flag field (*_flag), replace -999s or NaNs with
-%   9, or if there is no flag field create it with values of 2 or 9 for
-%   non-NaN or NaN sample values, respectively (unless optional input
-%   addflags is set to 0).
-% 3) make sample and flag fields consistent with each other and with
+% 1) for each field/column of structure/table/dataset d, replace
+%   -999s with NaNs (default) or use optional input nanval to replace
+%   nanval(1) with nanval(2).  
+% 2) for each flag field (*_flag), replace -999s or NaNs with 9
+% 3) unless optional input addflags is set to 0, for each sample field,
+%   that is fields not ending in _flag and not in the list {sampnum,
+%   statnum, station, niskin, position, press, upress, depth, udepth, scan,
+%   time, pumps} or in optional input vars_exclude (default {}), if there
+%   is no corresponding flag field, create it with values of 2 or 9 for
+%   non-NaN or NaN sample values, respectively. 
+% 4) make sample and flag fields consistent with each other and with
 %   niskin_flag (if this is a field in d), using nisk_badflags
 %   (default: [3 4 9]) and sam_missflags (default: [9 1 5]), such that:
 %     where niskin_flag is a member of nisk_badflags, sample values are
@@ -24,10 +21,11 @@ function d = hdata_flagnan(d, varargin)
 %     where sample values are NaN but corresponding flags are not in
 %       sam_missflags, flags are replaced by sam_missflags(end).
 %   default values come from woce tables 4.8 and 4.9 and the assumption
-%     that only not-sampled, not-analysed, and not-reported values are NaN,
-%     while questionable and bad values are still reported. If you want to
-%     also NaN "bad" samples, for instance, set sam_missflags = [9 1 4 5]
-% 4) depending on optional input keepemptyvars, either:
+%     that only not-sampled (9), not-analysed (1), and not-reported (5) are
+%     NaNed, while questionable and bad values are still reported. If you
+%     want to also NaN "bad" samples (flag 4), for instance, set 
+%     sam_missflags = [9 1 4 5] 
+% 5) depending on optional input keepemptyvars, either:
 %    1: do nothing,
 %    0 (default): remove flag fields that are all 9s, and their associated
 %    sample fields, or
@@ -35,7 +33,7 @@ function d = hdata_flagnan(d, varargin)
 %      NaNs (whether or not they are linked; so for instance if you have
 %      not-analysed data outstanding, the parameter column could be removed
 %      and only the flag column kept)
-% 5) depending on optional input keepemptysamps, either:
+% 6) depending on optional input keepemptyrows, either:
 %    1 (default): do nothing,
 %    0: remove, from every field, rows where none of the considered flag
 %      fields have values other than sam_missflags(1)
@@ -52,6 +50,8 @@ keepemptyvars = 0;
 keepemptyrows = 1;
 %default: add flag fields where not present
 addflags = 1;
+%default: replace -999 with nan
+nanval = [-999 NaN];
 
 %optional inputs
 for no = 1:2:length(varargin)
@@ -61,11 +61,7 @@ if ~ismember(keepemptyvars,[-1 0 1])
     keepemptyvars = 0;
 end
 
-if addflags
-    skipvars = {'sampnum' 'statnum' 'station' 'niskin' 'position' 'press' 'upress' 'depth' 'udepth'};
-else
-    skipvars = {'niskin'};
-end
+skipvars = {'sampnum' 'statnum' 'station' 'niskin' 'position' 'press' 'upress' 'depth' 'udepth' 'scan' 'time' 'pumps'};
 if istable(d)
     skipvars = [skipvars 'Properties' 'Row' 'Variables'];
 end
@@ -82,7 +78,7 @@ fnames = fieldnames(d);
 fnames = setdiff(fnames, skipvars);
 snames = {};
 for no = 1:length(fnames)
-    if ~endsWith(fnames{no},'_flag')
+    if ~endsWith(fnames{no},'flag')
         snames = [snames fnames{no}];
     end
 end
@@ -93,7 +89,7 @@ keepf = true(size(fnames));
 for no = 1:length(fnames)
     if isnumeric(d.(fnames{no}))
         flag = d.(fnames{no});
-        flag(flag<-900) = 9;
+        flag(flag==nanval(1)) = 9;
         d.(fnames{no}) = flag;
     else
         keepf(no) = 0;
@@ -106,20 +102,28 @@ keeps = true(size(snames));
 for no = 1:length(snames)
     if isnumeric(d.(snames{no}))
         sam = d.(snames{no});
-        sam(sam<-900) = NaN;
+        sam(sam==nanval(1)) = nanval(2);
         d.(snames{no}) = sam;
         fn = [snames{no} '_flag'];
+        if ~ismember(fn,fnames)
+            %some backwards compatibility
+            ii = find(strcmp([snames{no} 'flag'],fnames));
+            if ~isempty(ii)
+                d.(fn) = d.(fnames{ii});
+                fnames{ii} = fn;
+            end
+        end
         
         if ~ismember(fn,fnames)
             if addflags
                 flag = 9+zeros(size(sam));
-                flag(~isnan(sam)) = 2;
+                flag(sam~=nanval(2)) = 2;
                 d.(fn) = flag;
                 fnames = [fnames; fn];
             end
         else
             flag = d.(fn);
-            flag(isnan(sam) & isnan(flag)) = 9;
+            flag(sam==nanval(2) & ismember(flag,nanval)) = 9;
             d.(fn) = flag;
         end
     else
@@ -127,6 +131,14 @@ for no = 1:length(snames)
     end
 end
 snames = snames(keeps);
+
+%also replace -999s in skipvars
+skipvars = setdiff(skipvars,{'Properties' 'Row' 'Variables'});
+for no = 1:length(skipvars)
+    if isfield(d,skipvars{no})
+        d.(skipvars{no})(d.(skipvars{no})==nanval(1)) = nanval(2);
+    end
+end
 
 %apply niskin_flags to samples and their flags
 if keepemptyrows==0
@@ -141,13 +153,13 @@ if isfield(d, 'niskin_flag')
         flag(niskbad & flag~=sam_missflags(1)) = sam_missflags(end);
         d.(fnames{no}) = flag;
         if keepemptyrows==0
-            anysam = anysam | flag<sam_missflags(1);
+            anysam = anysam | flag~=sam_missflags(1);
         end
     end
     
     for no = 1:length(snames)
         sam = d.(snames{no});
-        sam(niskbad) = NaN;
+        sam(niskbad) = nanval(2);
         d.(snames{no}) = sam;
     end
     
@@ -160,7 +172,7 @@ for no = 1:length(snames)
         flag = d.([snames{no} '_flag']);
         sam = d.(snames{no});
         mf = ismember(flag,sam_missflags);
-        flag(isnan(sam) & ~mf) = sam_missflags(end);
+        flag(sam==nanval(2) & ~mf) = sam_missflags(end);
         sam(mf) = NaN;
         d.([snames{no} '_flag']) = flag;
         d.(snames{no}) = sam;
@@ -195,7 +207,7 @@ if keepemptyvars<1
 end
 
 if keepemptyrows==0 && sum(anysam)<length(anysam)
-    %discard empty rows
+    %discard empty rows from every (numeric) field
     
     fn = fieldnames(d);
     for fno = 1:length(fn)

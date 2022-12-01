@@ -16,6 +16,8 @@ switch scriptname
         switch oopt
             case 'setup_datatypes'
                 use_ix_ladcp = 'query';
+            case 'time_origin'
+                MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
         end
         
     case 'ship'

@@ -1,5 +1,20 @@
 switch scriptname
     
+    case 'm_setup'
+        switch oopt
+            case 'setup_datatypes'
+                use_ix_ladcp = 'no';
+        end
+        
+        
+    case 'castpars'
+        switch oopt
+            case 'nnisk'
+                nnisk = 12;
+            case 'oxy_align'
+                oxy_end = 1;
+        end
+        
     case 'm_daily_proc'
         switch oopt
             case 'excludestreams'
@@ -61,15 +76,7 @@ switch scriptname
         end
         %%%%%%%%%% end mtsg_bottle_compare %%%%%%%%%%
         
-        
-    case 'castpars'
-        switch oopt
-            case 'nnisk'
-                nnisk = 12;
-            case 'oxy_align'
-                oxy_end = 1;
-        end
-        
+
     case 'mfir_01'
         switch oopt
             case 'nispos'

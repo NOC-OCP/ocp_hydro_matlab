@@ -11,11 +11,12 @@ function time1_origin2 = m_commontime(varargin)
 % put one mstar file time variable into the same units (including origin)
 %   as another, using information on the current and desired units in a
 %   mixture of the following forms:
-% a) mstar file header variable containing data_time_origin (units assumed
-%   to be seconds) 
-% b) mstar file header containing timevar in fldnam, and cf-format time
-%   units in corresponding position in fldunt
-% c) data_time_origin vector (units assumed to be seconds)
+% a) structure (e.g. mstar file header variable) containing
+%   data_time_origin (units assumed to be seconds) 
+% b) structure containing timevar in cell array field fldnam, and cf-format
+%   time units in corresponding position in cell array field fldunt  
+% c) data_time_origin vector [yyyy mm dd HH MM SS] (units assumed to be
+%   seconds) 
 % d) cf-format units as string
 %
 % With 4 input arguments:
@@ -28,19 +29,19 @@ function time1_origin2 = m_commontime(varargin)
 %   1) vector of times
 %   2) current time units
 %   3) desired time units
-% only c and d can be used for the units
+% only c and/or d can be used for the units
 %
 % e.g.
 %
 % [d1,h1] = mload(file1,'/'); [d2,h2] = mload(file2,'/');
 % time1_origin2 = m_commontime(d1.time,h1.data_time_origin,h2.data_time_origin);
-% %time1_origin2 can now be compared with d2.time
+% % time1_origin2 can now be compared with d2.time
 %
 % [d1,h1] = mload('sam_dy146_all','/');
 % d1.utime = m_commontime(d1,'utime',h1,'days since 2022-01-01');
-% %d1.utime is now decimal days relative to 2022
+% % d1.utime is now decimal days in 2022
 % d1.utime = m_commontime(d1,'utime','days since 2022-1-1',[2021 1 1]);
-% %d1.utime has now had 365 added to it
+% % d1.utime has now had 365 added to it
 
 
 %figure out inputs

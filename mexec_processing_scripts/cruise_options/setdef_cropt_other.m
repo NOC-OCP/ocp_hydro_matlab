@@ -15,6 +15,9 @@ switch scriptname
     
     case 'm_setup'
         switch oopt
+            case 'time_origin'
+                crhelp_str = {'Set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN, 6-element vector [yyyy mm dd HH MM SS],'
+                    'usually the start of the cruise year'};
             case 'setup_datatypes'
                 crhelp_str = {'Set use_ix_ladcp to ''yes'' (default) if you are collecting '
                     'LADCP data and want to add LDEO IX scripts to the path; set to '

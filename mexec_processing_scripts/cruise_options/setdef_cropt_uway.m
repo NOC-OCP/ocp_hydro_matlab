@@ -36,6 +36,9 @@ switch scriptname
                         MEXEC_G.default_navstream = 'seatex_gll';
                         MEXEC_G.default_hedstream = 'seatex_hdt';
                         MEXEC_G.Mrsh_machine = 'jruj'; % remote machine for rvs datapup command
+                    case 'endeavor'
+                        MEXEC_G.Mshipdatasystem = 'scs';
+                        warning('add fields default_navstream and default_hedstream to MEXEC_G here or in opt_{cruise}.m');
                     otherwise
                         warning('No underway data system and default nav streams set for %s',MEXEC_G.Mship)
                 end

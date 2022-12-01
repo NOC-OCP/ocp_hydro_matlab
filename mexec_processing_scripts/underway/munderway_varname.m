@@ -98,7 +98,7 @@ varnames.lonvar = {'lon' 'long' 'longitude' 'seatex_gll_lon'};
 varnames.headvar = {'head' 'heading' 'head_gyr' 'heading_av_corrected' 'heading_av'};
 varnames.multibvar = {'em120' 'em122' 'multib' 'multib_t'};
 varnames.singlebvar = {'ea600' 'sim' 'singleb' 'singleb_t'};
-varnames.depvar = {'depth' 'waterdepth' 'water_depth_metres' 'waterdepth_meters' 'waterdepth_below_transducer'};
+varnames.depvar = {'depth' 'waterdepth' 'water_depth_metres' 'waterdepth_meters' 'waterdepth_below_transducer', 'depthm'};
 
 cats = fieldnames(varnames);
 
