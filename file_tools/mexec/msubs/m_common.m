@@ -9,6 +9,6 @@
 
 m_global
 m_global_args;
-if ~isempty(MEXEC_G)
+if isfield(MEXEC_G,'MSCRIPT_CRUISE_STRING')
     mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 end

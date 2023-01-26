@@ -6,33 +6,35 @@
 %  items to be edited on each site/cruise" 
 %
 %  you can also pass selected fields (those in the first block of code
-%    below) to MEXEC_G by setting them in structure MEXEC_G_override.
+%    below) to MEXEC_G by setting them in structure MEXEC_G_override. this
+%    may be useful if you want to reprocess an old cruise's data with a
+%    newer branch's software. 
 %    fields to override: 
 %      MSCRIPT_CRUISE_STRING (e.g. 'jc238')
 %      MDEFAULT_DATA_TIME_ORIGIN (e.g. [2022 1 1 0 0 0] -- but note that
 %        changing this mid-processing, or between processing and reading
-%        data, causes problems)  
+%        data, causes problems, so it should only be used in conjunction 
+%        with overriding MSCRIPT_CRUISE_STRING)
 %      SITE_suf (e.g. 'atsea' or 'atnoc' to make SITE 'jc238_atsea' etc.)
 %      mexec_source_root (e.g. '~/programs/ocp/ocp_hydro_matlab/')
 %      other_programs_root (e.g. '~/programs/others/')
-%      mexec_data_root (e.g. '~/cruises/jc238/mcruise/data/' but see below)
+%      mexec_data_root (e.g. '~/cruises/jc238/mcruise/data/')
 %      quiet (0 to make all programs verbose, 1 to make only
 %        mexec_processing_scripts verbose but file_tools/mexec quiet, 2 to
 %        make all quiet)
 %
-%  to use to add paths necessary for reading mexec files, but without
-%    setting up data processing and housekeeping directories, set
-%    mexec_data_root to 'readonly': 
-%      MEXEC_G.override.mexec_data_root = 'readonly';
+%  note: if you only want to use mexec tools to read/parse mexec-format
+%    files (e.g. use mload or mloadq, m_commontime or timeunits_mstar_cf),
+%    it is not necessary to run m_setup
 %
 
 clear MEXEC_G
 global MEXEC_G
 
 %what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='jc238'; 
+MEXEC_G.MSCRIPT_CRUISE_STRING='sd025'; 
 %default data time origin is now set in opt_cruise
-MEXEC_G.SITE_suf = 'atnoc'; % common suffixes '_atsea', '_athome', '', etc.
+MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.other_programs_root = '~/programs/others/'; 
 MEXEC_G.mexec_data_root = ''; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
@@ -111,11 +113,6 @@ if ~isempty(MEXEC_G.other_programs_root)
     MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
 else
     MEXEC_G.ix_ladcp = 0;
-end
-
-if strcmp(MEXEC_G.mexec_data_root, 'readonly')
-    warning('MEXEC_G.mexec_data_root set to ''readonly''; you will be able to use mload(q)')
-    return
 end
 
 % location processing and writing mexec files

@@ -6,21 +6,14 @@ function [d, h] = mloadq(varargin)
 % [d h] = mload('filename.nc');
 % or type mload to be prompted for answers
 m_common
+if ~isfield(MEXEC_G,'quiet')
+    MEXEC_G.quiet = 2;
+end
 m_margslocal
 m_varargs
 
 MEXEC_A.Mprog = 'mload';
 m_proghd
-
-% varg = varargin;nargi
-%
-% if ~isempty(varg) > 0
-%     v1 = varg{1};
-%     varg(1) = [];
-% else
-%     v1 = {};
-% end
-%
 
 fn = m_getfilename; % this uses the optional input argument if there is one
 if isstruct(fn) && isfield(fn,'name')
@@ -66,8 +59,7 @@ while endflag == 0
     for k = 1:length(vlist)
         vname = h.fldnam{vlist(k)};
         vname2 = m_check_nc_varname(vname);
-        cmd = ['d.' vname2 ' = nc_varget(ncfile.name,vname);'];
-        eval(cmd);
+        d.(vname2) = nc_varget(ncfile.name, vname);
         if ~MEXEC_G.quiet; disp([sprintf('%15s',vname) ' loaded as d.' vname2]); end
     end
     
