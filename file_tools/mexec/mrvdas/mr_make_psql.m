@@ -139,7 +139,7 @@ for kl = 2:size(vdef,1)
     end
 end
 varnums = find(varnums);
-if isempty(varnums); varnums = [2:size(vdef,1)]; end
+if isempty(varnums); varnums = 2:size(vdef,1); end
 
 for kl = varnums
     thisvar = vdef{kl,1};

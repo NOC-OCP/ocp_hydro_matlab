@@ -92,7 +92,7 @@ for kl = 1:length(n)
 end
 
 % if no matches found in user supplied list of variables, print them all
-if length(kvaruse) == 1;
+if length(kvaruse) == 1
     kall = setdiff(1:length(n),kdnum);
     kvaruse = [kvaruse kall(:)'];
 end
@@ -111,7 +111,7 @@ else
     while tstart < mtime(end)
         tend = tstart+tintd;
         kok = find(mtime >= tstart & mtime < tend);
-        if length(kok) > 0
+        if ~isempty(kok)
             kprint = [kprint ; kok(1)];
         end
         tstart = tend;
@@ -121,11 +121,11 @@ end
 % start with header, unitline and format for time, and then add other
 % variables
 
-header0 = ['                       '];
-header = ['                   time'];
+header0 = '                       ';
+header = '                   time';
 header1 = '';
 header2 = '';
-unitline = ['yy-mo-dd dnum  hh:mm:ss'];
+unitline = 'yy-mo-dd dnum  hh:mm:ss';
 format = '%23s'; % for date string
 
 % now add header, unitline, output format, and a column of data, for each

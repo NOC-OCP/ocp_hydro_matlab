@@ -22,6 +22,7 @@ if ~isfield(MEXEC_G.RVDAS, 'checked') || ~MEXEC_G.RVDAS.checked
     end
     
     fid = fopen('~/.pgpass','r');
+    MEXEC_G.RVDAS.checked = 0;
     while fid>0
         tline = fgetl(fid);
         if isempty(tline)

@@ -161,8 +161,8 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     case 'jc'
         MEXEC_G.Mship = 'cook';
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
-    case 'da'
-        MEXEC_G.Mship = 'attenborough';
+    case 'sd'
+        MEXEC_G.Mship = 'sda';
         MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
     case 'jr'
         MEXEC_G.Mship = 'jcr';
@@ -202,18 +202,23 @@ if skipunderway<2
         case 'rvdas'
             MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
             MEXEC_G.RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-            MEXEC_G.RVDAS.user = 'rvdas';
-            MEXEC_G.RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
             switch MEXEC_G.Mship
                 case 'cook'
                     MEXEC_G.RVDAS.machine = 'rvdas.cook.local';
                     MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/jcmeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
+                    MEXEC_G.RVDAS.user = 'rvdas';
+                    MEXEC_G.RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
                 case 'discovery'
                     MEXEC_G.RVDAS.machine = '192.168.62.12';
                     MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/dymeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
-                case 'attenborough'
-                    MEXEC_G.RVDAS.machine = '';
-                    MEXEC_G.RVDAS.jsondir = '';
+                    MEXEC_G.RVDAS.user = 'rvdas';
+                    MEXEC_G.RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+                case 'sda'
+                    MEXEC_G.RVDAS.machine = 'sdl-rvdas-s1.sda.bas.ac.uk';
+                    %local directory in this case (legwork)
+                    MEXEC_G.RVDAS.jsondir = '/local/users/pstar/mounts/public/data_management/documentation/json_sensor_files/';
+                    MEXEC_G.RVDAS.user = 'rvdas_ro';
+                    MEXEC_G.RVDAS.database = ['"' '20210321' '"'];
             end
             if ismac
                 MEXEC_G.RVDAS.psql_path = '/usr/local/bin/';
@@ -234,6 +239,7 @@ if skipunderway==0
             if strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
                 ud_is_current = 1;
             else
+                keyboard
                 error('')
             end
         catch
