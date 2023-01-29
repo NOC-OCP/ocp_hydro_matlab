@@ -132,6 +132,18 @@ switch scriptname
                             'gnss_saab_r5_supreme_gnrmc'];
                     otherwise
                 end
+            case 'rvdas_cruise_table_pre'
+                crhelp_str = {'Set sqlpre, a string to be prepended to the table names from the json files.'
+                    'This is only necessary if you want to access cruise-specific views rather than a whole '
+                    'table, so the default on the SDA is to use e.g. sd025_ to use only data from cruise '
+                    'sd025 out of the whole "forever" database, whereas the default on JC and DY is no prefix'
+                    'because there is already a separate database for each cruise'};
+                switch MEXEC_G.Mship
+                    case 'sda'
+                        sqlpre = [lower(MEXEC_G.MSCRIPT_CRUISE_STRING) '_'];
+                    otherwise
+                        sqlpre = '';
+                end
         end
 
         %%%%%%%%%% bathy (not a script) %%%%%%%%%%

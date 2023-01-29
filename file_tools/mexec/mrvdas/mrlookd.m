@@ -54,13 +54,7 @@ switch nargin
 end
 
 
-def = mrdefine;
-[extras,ia] = setdiff(def.mrtables_list, def.tablemap(:,2));
-def.mrtables = rmfield(def.mrtables,extras);
-def.mrtables_list(ia) = [];
-[extras,ia] = setdiff(def.renametables_list, def.tablemap(:,2));
-def.renametables = rmfield(def.renametables,extras);
-def.renametables_list(ia) = [];
+def = mrdefine('this_cruise');
 
 mrtables_list = def.mrtables_list;
 tablemap = def.tablemap;
@@ -121,11 +115,11 @@ for kl = 1:ntables
         };
     if isempty(warning_times); warning_times = cell(0,2); end
     kt = find(strcmp(mtable,warning_times(:,1)));
-    if ~isempty(kt); 
+    if ~isempty(kt)
         warn = warning_times{kt,2};
     end
     
-    if nc ~= 0 & nowsave-dn2 > warn/86400
+    if nc ~= 0 && nowsave-dn2 > warn/86400
         % print to err fid if end time was more than 'warn' seconds ago. But
         % only for tables with at least some data. This limit could be set
         % differently for each table, dpeending on the expected refresh

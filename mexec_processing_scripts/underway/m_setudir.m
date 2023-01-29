@@ -103,7 +103,7 @@ for sno = 1:size(matlist,1)
             elseif strncmp(sn, 'svel', 4)
                 dn = ['uother/' sn];
             elseif strncmp(sn, 'winch', 5)
-                dn = ['ctd/WINCH'];
+                dn = 'ctd/WINCH';
             end
         else
             sn = udirs{iid,1}; dn = udirs{iid,2};

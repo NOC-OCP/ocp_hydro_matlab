@@ -66,8 +66,11 @@ function argot = mrparseargs(argsin)
 % Any other datenum/datevec format, described below, converted to a
 %   datenum. Any large number, greater that 693959 = datenum([1899 12 29]) is
 %   assumed to be a datenum and added to the array argot.dnums.
-% Any numbers smaller than the datenum limit is returned in
+% Any numbers smaller than the datenum limit are returned in
 %   argot.othernums
+% A string specifying one of the following types of operations -- 'mlast',
+%   'mlookd', 'mlistit', 'mgaps', 'mposinfo' -- is returned in argot.oper
+%   (see mrshow_info help)
 % Any other strings, not yet recognised, eg a string that is a variable
 %   list, are returned in argot.otherstrings, in the order in which they
 %   appeared in the argsin cell array.
@@ -205,7 +208,7 @@ for ka = nargs:-1:1
             otherstring = arg;
         else
             argn = str2num(arg); % char strings that aren't char representations of numbers return empty
-            if isempty(argn);
+            if isempty(argn)
                 % it couldn't be turned into a number, so save it as an
                 % otherstring
                 otherstring = arg;

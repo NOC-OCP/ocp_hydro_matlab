@@ -1,4 +1,4 @@
-function mtlistit(varargin)
+function mrlistit(varargin)
 % function mrlistit(table,interval,dn1,dn2,qflag,varlist)
 %
 % *************************************************************************
@@ -65,8 +65,6 @@ else
     varstring = argot.otherstrings{1};
 end
 
-def = mrdefine;
-
 switch length(argot.dnums)
     case 2
         dn1 = argot.dnums(1);
@@ -81,7 +79,6 @@ end
 
 [d,n,u] = mrload(table,dn1,dn2,qflag,varstring);
 
-numdc = length(d.dnum);
 % find the dnum
 kdnum = find(strcmp('dnum',n));
 % for the rest, add the rvdas name if it appears in the varlist
@@ -147,8 +144,8 @@ for kv = kvaruse(2:end)
     
     pad = '                                                         ';
     
-    s1 = vn; s1 = [pad s1 ]; s1 = s1(end-30:end);
-    s2 = vu; s2 = [s2 pad];
+    s1 = [pad vn]; s1 = s1(end-30:end);
+    s2 = [vu pad];
     fprintf(MEXEC_A.Mfidterm,'%s %s %s\n',s1,' : ',s2);
     
     
@@ -162,13 +159,13 @@ for kv = kvaruse(2:end)
     if isempty(vnp1); vnp1 = pad; end
     vnp1 = vnp1(end-11:end);
     vnp2 = vnp(2,:);
-    while ~isempty(vnp2) & strcmp(vnp2(end),' '); vnp2(end) = []; end
+    while ~isempty(vnp2) && strcmp(vnp2(end),' '); vnp2(end) = []; end
     vnp2 = [pad vnp2];
     vnp2 = vnp2(end-11:end);
 
     vupad = [vu pad];
     vup = vupad(1:12);
-    while ~isempty(vup) & strcmp(vup(end),' '); vup(end) = []; end
+    while ~isempty(vup) && strcmp(vup(end),' '); vup(end) = []; end
     vup = [pad vup];
     vup = vup(end-11:end);
 

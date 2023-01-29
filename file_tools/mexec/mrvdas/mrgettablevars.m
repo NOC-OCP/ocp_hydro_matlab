@@ -30,7 +30,8 @@ function tablevars = mrgettablevars(table)
 
 m_common
 
-def = mrdefine; tablemap = def.tablemap;
+def = mrdefine('this_cruise'); 
+tablemap = def.tablemap;
 ktable = find(strcmp(table,tablemap(:,1)));
 if length(ktable) == 1
     % if table matches an mexec table name, convert it to rvdas table name.

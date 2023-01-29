@@ -55,13 +55,15 @@ argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparsear
 table = argot.table;
 qflag = argot.qflag;
 
+switch argot.oper
+    case 'mlast'
 d = mrdfinfo(table,qflag);
 
 dstart = floor(86400*d.dn2)/86400;
 dend = ceil(86400*d.dn2)/86400;
 
 if isempty(qflag); fprintf(MEXEC_A.Mfidterm,'\n'); end
-[dd,nn,uu] = mrload(table,dstart,dend,qflag);
+[dd,nn,uu] = mrload(table,dstart,dend,qflag,'');
 if isempty(qflag); fprintf(MEXEC_A.Mfidterm,'\n'); end
 
 nvar = length(nn);

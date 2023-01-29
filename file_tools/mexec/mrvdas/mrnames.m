@@ -21,7 +21,7 @@ function tablemap = mrnames(varargin)
 %
 % Input:
 % 
-% If called without an agrument, the table will be listed to the screen.
+% If called without an argument, the table will be listed to the screen.
 % If called with 'q', the listing to the screen is suppressed.
 %
 % Output: 
@@ -166,6 +166,10 @@ tablemap = {
 
     };
 
+scriptname = 'mrvdas_ingest'; oopt = 'rvdas_cruise_table_pre'; get_cropt
+if ~isempty(sqlpre)
+    tablemap(:,2) = cellfun(@(x) [sqlpre x], tablemap(:,2), 'UniformOutput', false);
+end
 
 if ~isempty(qflag); return; end
 

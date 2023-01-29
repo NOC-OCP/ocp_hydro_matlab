@@ -54,12 +54,9 @@ m_common
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
 table = argot.table;
 qflag = argot.qflag;
+def = mrdefine('this_cruise', 'has_mstarpre');
 if isempty(table)
-    tab = mrdefine; [~,ii,~] = intersect(tab.tablemap(:,2),tab.mrtables_list);
-    if isempty(ii)
-        error('mapping between rvdas tables and mexec names appears to be broken; check mrnames and mrtables_from_json')
-    end
-    disp(tab.tablemap(ii,:))
+    disp(def.tablemap)
     error('none of the input arguments matches an rvdas table name or its mexec short equivalent; try again with a table from either column of the list above')
 end
 
@@ -68,9 +65,6 @@ if length(argot.otherstrings) < 1
 else
     varstring = argot.otherstrings{1};
 end
-
-
-def = mrdefine;
 
 switch length(argot.dnums)
     case 2

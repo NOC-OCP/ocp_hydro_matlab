@@ -3,7 +3,8 @@ function status = mday_01(streamname,mstarprefix,day,year)
 %
 % use mdatapup to grab a day of data from a techsas NetCDF file or SCS file
 %
-% char: streamname is the techsas or scs stream name (mtnames or msnames 3rd column)
+% char: streamname is the techsas or scs stream name (mtnames or msnames
+%     3rd column) or rvdas table name
 % char: mstarprefix is the prefix used in mstar filenames
 % numeric: daynum is the day number
 % numeric: year is the required year in which daynum falls. If not set it
@@ -29,12 +30,9 @@ if MEXEC_G.quiet<=1; fprintf(1,'loading underway data stream %s to write to %s_%
 
 status = 1;
 root_out = mgetdir(mstarprefix);
+% make output directory if it doesn't exist
 if exist(root_out,'dir') ~= 7
-    % requested data stream/directory doesn't seem to exist
-    m = ['Directory ' mstarprefix ' not found - skipping'];
-    fprintf(MEXEC_A.Mfider,'%s\n',m);
-    status = 2;
-    return
+    mkdir(root_out)
 end
 
 switch MEXEC_G.Mshipdatasystem

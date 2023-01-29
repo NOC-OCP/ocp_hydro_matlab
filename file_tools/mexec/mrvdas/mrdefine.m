@@ -1,5 +1,8 @@
-function d = mrdefine
+function d = mrdefine(varargin)
 % function d = mrdefine
+% function d = mrdefine('this_cruise')
+% function d = mrdefine('has_mstarpre')
+% function d = mrdefine('this_cruise', 'has_mstarpre')
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -34,7 +37,10 @@ function d = mrdefine
 % d.mrtables: a structure with one field for each table in rvdas that we 
 %    are interested in, defined in mrtables_from_json. This is a subset of
 %    about 25 of all the possible rvdas tables, which number about 70. eg
-%    d.mrtables.ships_gyro_hehdt
+%    d.mrtables.ships_gyro_hehdt. If an input argument is supplied and is
+%    'this_cruise', tables will be further limited to those in the current
+%    cruise's database using mrgettables. (Once there is a metadata
+%    database rather than using json files this step may be obsolete). 
 % d.mrtables_list: A list of the fields in d.mrtables in a cell array. This
 %    would be equivalent to fieldnames(d.mrtables)
 % d.tablemap: The list that pairs RVDAS table names and mexec short names;
@@ -56,28 +62,51 @@ function d = mrdefine
 %    rvdas data are read in. Defined in mrmakeraw.m. This is because we
 %    expect some variables in these files to be modified in postprocessing
 %    and we want to be able to identify raw data.
+%
+% calls mrtables_from_json, mrnames, mrrename_varunits
+%
+% With optional input arguments: 
+%   'this_cruise': also calls mrgettables and limits lists to tables
+%     actually in database for current cruise 
+%   'has_mstarpre': limits mrtables to tables with a corresponding mstar
+%     short name (from mrnames)
 
 
 % Identify rvdas tables of interest from json files
 d.mrtables = mrtables_from_json; % d.mrtables_list is a list of RVDAS tables we want to be able to use
 d.mrtables_list = fieldnames(d.mrtables);
+if nargin>0 && ismember('this_cruise',varargin)
+    %compare to list of tables found by querying the database
+    rt = fieldnames(mrgettables);
+    [~, ia] = setdiff(d.mrtables_list,rt);
+    if ~isempty(ia)
+        d.mrtables = rmfield(d.mrtables,d.mrtables_list(ia));
+        d.mrtables_list(ia) = [];
+        warning('%d tables in .json files but not present for this cruise',length(ia))
+    end
+end
 
 % get table of mexec short names for RVDAS tables
 d.tablemap = mrnames('q'); % any argument suppresses listing to screen
 % limit to the names actually in mrtables_from_json
-[~,ii,~] = intersect(d.tablemap(:,2),d.mrtables_list,'stable');
-d.tablemap = d.tablemap(ii,:);
-[~,ii] = unique(d.tablemap(:,1),'first');
-if length(ii)<size(d.tablemap,1)
-    warning('rvdas:mrdefine:mnamedup','duplicate mexec short names detected; keeping first')
-    warning('off','rvdas:mrdefine:mnamedup'); %only once per session
+[~,ia,ib] = intersect(d.tablemap(:,2),d.mrtables_list,'stable');
+d.tablemap = d.tablemap(ia,:);
+if nargin>0 && ismember('has_mstarpre', varargin)
+    ii = setdiff(1:length(d.mrtables_list),ib);
+    d.mrtables = rmfield(d.mrtables,d.mrtables_list(ii));
+    d.mrtables_list(ii) = [];
 end
-d.tablemap = d.tablemap(ii,:);
+[~,ia] = unique(d.tablemap(:,1),'first');
+if length(ia)<size(d.tablemap,1)
+    warning('rvdas:mrdefine:mnamedup','duplicate mexec short names detected; keeping first')
+    warning('off','rvdas:mrdefine:mnamedup'); %only warn once per session
+end
+d.tablemap = d.tablemap(ia,:);
 
 % get a list of variables for which we want to change names when loaded
 % into mexec, and a list of tables whose variables should have _raw
 % appended
-[d.renametables, d.rawlist] = mrrename_tables(d.mrtables, 'q'); % any argument suppresses listing to screen
+[d.renametables, d.rawlist] = mrrename_varsunits(d.mrtables, 'q'); % any argument suppresses listing to screen
 d.renametables_list = fieldnames(d.renametables);
 
 

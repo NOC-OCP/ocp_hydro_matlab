@@ -1,5 +1,5 @@
-function [rtables,rawlist] = mrrename_tables(tables,varargin)
-% function [renametables,rawlist] = mrrename_tables(tables,qflag)
+function [rtables,rawlist] = mrrename_varsunits(tables,varargin)
+% function [renametables,rawlist] = mrrename_varsunits(tables,qflag)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -21,8 +21,8 @@ function [rtables,rawlist] = mrrename_tables(tables,varargin)
 %
 % Examples
 %
-%   [renametables,renametables_list] = mrrename_tables;
-%   [renametables,renametables_list] = mrrename_tables('q');
+%   [renametables,renametables_list] = mrrename_varsunits;
+%   [renametables,renametables_list] = mrrename_varsunits('q');
 %
 % Input:
 %   tables, the output of mrtables_from_json
@@ -49,12 +49,10 @@ m_common
 
 qflag = ''; % Don't use mrparseflags because that calls mrdefine which calls this function
 allargs = varargin;
-kq = find(strcmp('q',allargs));
-if ~isempty(kq)
+kq = strcmp('q',allargs);
+if sum(kq)>0
     qflag = 'q';
     allargs(kq) = [];
-else
-    qflag = ''; % qflag = '' if not present as an argument
 end
 
 fn = fieldnames(tables);

@@ -81,6 +81,8 @@ fprintf(fid,'\n\n%s%s %2d%s\n','%',js.filename,n_sentences,'  sentences');
 
 specchar = {' ', ',', '''', ';'};
 
+scriptname = 'mrvdas_ingest'; oopt = 'rvdas_cruise_table_pre'; get_cropt
+
 for ks = 1:n_sentences
 
     s = js.sentences(ks);
@@ -89,7 +91,7 @@ for ks = 1:n_sentences
     messageId = s.messageId;
     noflds = length(s.field); %s.fieldNo;
     msg = lower([talkId messageId]);
-    sqlname = [id '_' msg];
+    sqlname = [sqlpre id '_' msg];
     %skip this sentence?
     if sum(strcmpi(msg,msg_skip)) || sum(strcmpi(sqlname,sentence_skip))
         continue
@@ -98,7 +100,7 @@ for ks = 1:n_sentences
     str = ['rtables.' sqlname ' = {  % from ' js.filename '.json'];
     fprintf(fid,'\n%s%s%s%s\n','%','"',jsonname,'"'); % make this output a comment for cut and paste
     fprintf(fid,'%s\n',str);
-    fprintf(fid,'%s %2d %s %s\n',['''' sqlname ''''],noflds,['[]'],' % fields');
+    fprintf(fid,'%s %2d %s %s\n',['''' sqlname ''''],noflds,'[]',' % fields');
 
     for kf = 1:noflds
         sf = s.field(kf);

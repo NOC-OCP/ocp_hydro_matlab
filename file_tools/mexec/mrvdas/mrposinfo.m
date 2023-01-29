@@ -70,12 +70,19 @@ if isempty(table)
     table = MEXEC_G.default_navstream;
 end
 
+if 0
+    tablemap = mrnames('q');
+else
+    %replace above with slightly less efficient code but keeps all calls to
+    %mrnames inside mrdefine
+    def = mrdefine('this_cruise','has_mstarpre');
+    %def = mrdefine('this_cruise');
+    tablemap = def.tablemap;
+end
 % sort out the table name
 table = mrresolve_table(table); % table is now an RVDAS table name for sure.
-tablemap = mrnames('q');
 ktable = strcmp(table,tablemap(:,2));
 mtable = tablemap{ktable,1}; % mtable is the mexec tablename
-
 
 if length(argot.dnums) < 1
     dn = now-10/86400;

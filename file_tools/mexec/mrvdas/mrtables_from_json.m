@@ -29,8 +29,8 @@ function rtables = mrtables_from_json
 %anemometer_ft_technologies_ft702lt  1  sentences
 
 %"WIMWV – Wind Speed and Angle"
-rtables.anemometer_ft_technologies_ft702lt_wimwv = {  % from anemometer_ft_technologies_ft702lt.json
-'anemometer_ft_technologies_ft702lt_wimwv'  5 []  % fields
+rtables.sd025_anemometer_ft_technologies_ft702lt_wimwv = {  % from anemometer_ft_technologies_ft702lt.json
+'sd025_anemometer_ft_technologies_ft702lt_wimwv'  5 []  % fields
                'windDirection'                      'degrees'                                                                 'Wind_Direction'
 %          'windDirectionType'                             ''                                                            'Wind_Direction_Type'
                    'windSpeed'                          'm/s'                                                                     'Wind_Speed'
@@ -42,8 +42,8 @@ rtables.anemometer_ft_technologies_ft702lt_wimwv = {  % from anemometer_ft_techn
 %anemometer_metek_usonic3_1  1  sentences
 
 %"PMWIND – bespoke output from the Metek uSonic-3 anemometer "
-rtables.anemometer_metek_usonic3_1_pmwind = {  % from anemometer_metek_usonic3_1.json
-'anemometer_metek_usonic3_1_pmwind'  6 []  % fields
+rtables.sd025_anemometer_metek_usonic3_1_pmwind = {  % from anemometer_metek_usonic3_1.json
+'sd025_anemometer_metek_usonic3_1_pmwind'  6 []  % fields
 %             'dataOutputType'                             ''                                                               'Data_Output_Type'
                   'xComponent'                         'cm/s'                                                            'X_Component_of_Wind'
                   'yComponent'                         'cm/s'                                                            'Y_Component_of_Wind'
@@ -56,8 +56,8 @@ rtables.anemometer_metek_usonic3_1_pmwind = {  % from anemometer_metek_usonic3_1
 %anemometer_metek_usonic3_2  1  sentences
 
 %"PMWIND – bespoke output from the Metek uSonic-3 anemometer "
-rtables.anemometer_metek_usonic3_2_pmwind = {  % from anemometer_metek_usonic3_2.json
-'anemometer_metek_usonic3_2_pmwind'  6 []  % fields
+rtables.sd025_anemometer_metek_usonic3_2_pmwind = {  % from anemometer_metek_usonic3_2.json
+'sd025_anemometer_metek_usonic3_2_pmwind'  6 []  % fields
 %             'dataOutputType'                             ''                                                               'Data_Output_Type'
                   'xComponent'                         'cm/s'                                                            'X_Component_of_Wind'
                   'yComponent'                         'cm/s'                                                            'Y_Component_of_Wind'
@@ -70,8 +70,8 @@ rtables.anemometer_metek_usonic3_2_pmwind = {  % from anemometer_metek_usonic3_2
 %anemometer_metek_usonic3_3  1  sentences
 
 %"PMWIND – bespoke output from the Metek uSonic-3 anemometer "
-rtables.anemometer_metek_usonic3_3_pmwind = {  % from anemometer_metek_usonic3_3.json
-'anemometer_metek_usonic3_3_pmwind'  6 []  % fields
+rtables.sd025_anemometer_metek_usonic3_3_pmwind = {  % from anemometer_metek_usonic3_3.json
+'sd025_anemometer_metek_usonic3_3_pmwind'  6 []  % fields
 %             'dataOutputType'                             ''                                                               'Data_Output_Type'
                   'xComponent'                         'cm/s'                                                            'X_Component_of_Wind'
                   'yComponent'                         'cm/s'                                                            'Y_Component_of_Wind'
@@ -84,8 +84,8 @@ rtables.anemometer_metek_usonic3_3_pmwind = {  % from anemometer_metek_usonic3_3
 %anemometer_observator_omc116_1  1  sentences
 
 %"WIMWV – Wind Speed and Angle"
-rtables.anemometer_observator_omc116_1_wimwv = {  % from anemometer_observator_omc116_1.json
-'anemometer_observator_omc116_1_wimwv'  5 []  % fields
+rtables.sd025_anemometer_observator_omc116_1_wimwv = {  % from anemometer_observator_omc116_1.json
+'sd025_anemometer_observator_omc116_1_wimwv'  5 []  % fields
                'windDirection'                      'degrees'                                                                 'Wind_Direction'
 %          'windDirectionType'                             ''                                                            'Wind_Direction_Type'
                    'windSpeed'                          'm/s'                                                                     'Wind_Speed'
@@ -97,8 +97,8 @@ rtables.anemometer_observator_omc116_1_wimwv = {  % from anemometer_observator_o
 %anemometer_observator_omc116_2  1  sentences
 
 %"WIMWV – Wind Speed and Angle"
-rtables.anemometer_observator_omc116_2_wimwv = {  % from anemometer_observator_omc116_2.json
-'anemometer_observator_omc116_2_wimwv'  5 []  % fields
+rtables.sd025_anemometer_observator_omc116_2_wimwv = {  % from anemometer_observator_omc116_2.json
+'sd025_anemometer_observator_omc116_2_wimwv'  5 []  % fields
                'windDirection'                      'degrees'                                                                 'Wind_Direction'
 %          'windDirectionType'                             ''                                                            'Wind_Direction_Type'
                    'windSpeed'                          'm/s'                                                                     'Wind_Speed'
@@ -110,8 +110,8 @@ rtables.anemometer_observator_omc116_2_wimwv = {  % from anemometer_observator_o
 %attitude_ixblue_phins_surface_heading  1  sentences
 
 %"HEHDT – Heading – True Data"
-rtables.attitude_ixblue_phins_surface_heading_hehdt = {  % from attitude_ixblue_phins_surface_heading.json
-'attitude_ixblue_phins_surface_heading_hehdt'  2 []  % fields
+rtables.sd025_attitude_ixblue_phins_surface_heading_hehdt = {  % from attitude_ixblue_phins_surface_heading.json
+'sd025_attitude_ixblue_phins_surface_heading_hehdt'  2 []  % fields
                  'headingTrue'                      'degrees'                                                                   'Heading_True'
 %                'trueHeading'                             ''                                                               'True_Designation'
 };
@@ -120,8 +120,8 @@ rtables.attitude_ixblue_phins_surface_heading_hehdt = {  % from attitude_ixblue_
 %attitude_ixblue_phins_surface_motion  1  sentences
 
 %"KMATT – Motion Data"
-rtables.attitude_ixblue_phins_surface_motion_kmatt = {  % from attitude_ixblue_phins_surface_motion.json
-'attitude_ixblue_phins_surface_motion_kmatt'  6 []  % fields
+rtables.sd025_attitude_ixblue_phins_surface_motion_kmatt = {  % from attitude_ixblue_phins_surface_motion.json
+'sd025_attitude_ixblue_phins_surface_motion_kmatt'  6 []  % fields
 %      'syncByte1SensorStatus'                             ''                                                   'Sync_Byte_1_or_Sensor_Status'
 %                  'syncByte2'                             ''                                                                    'Sync_Byte_2'
                         'roll'             'hundreth degrees'                                                     'Roll__postive_port_side_up'
@@ -134,15 +134,15 @@ rtables.attitude_ixblue_phins_surface_motion_kmatt = {  % from attitude_ixblue_p
 %attitude_seapath_320_1_heading  2  sentences
 
 %"INHDT – Heading – True Data"
-rtables.attitude_seapath_320_1_heading_inhdt = {  % from attitude_seapath_320_1_heading.json
-'attitude_seapath_320_1_heading_inhdt'  2 []  % fields
+rtables.sd025_attitude_seapath_320_1_heading_inhdt = {  % from attitude_seapath_320_1_heading.json
+'sd025_attitude_seapath_320_1_heading_inhdt'  2 []  % fields
                  'headingTrue'                      'degrees'                                                                   'Heading_True'
 %                'trueHeading'                             ''                                                               'True_Designation'
 };
 
 %"INROT – Rate of Turn"
-rtables.attitude_seapath_320_1_heading_inrot = {  % from attitude_seapath_320_1_heading.json
-'attitude_seapath_320_1_heading_inrot'  2 []  % fields
+rtables.sd025_attitude_seapath_320_1_heading_inrot = {  % from attitude_seapath_320_1_heading.json
+'sd025_attitude_seapath_320_1_heading_inrot'  2 []  % fields
                   'rateOfTurn'           'degrees per minute'                                            'Rate_of_Turn___-__means_bow_to_port'
 %                  'rotStatus'                             ''                                                                         'Status'
 };
@@ -151,8 +151,8 @@ rtables.attitude_seapath_320_1_heading_inrot = {  % from attitude_seapath_320_1_
 %attitude_seapath_320_1_motion  1  sentences
 
 %"KMATT – Motion Data"
-rtables.attitude_seapath_320_1_motion_kmatt = {  % from attitude_seapath_320_1_motion.json
-'attitude_seapath_320_1_motion_kmatt'  6 []  % fields
+rtables.sd025_attitude_seapath_320_1_motion_kmatt = {  % from attitude_seapath_320_1_motion.json
+'sd025_attitude_seapath_320_1_motion_kmatt'  6 []  % fields
 %      'syncByte1SensorStatus'                             ''                                                   'Sync_Byte_1_or_Sensor_Status'
 %                  'syncByte2'                             ''                                                                    'Sync_Byte_2'
                         'roll'             'hundreth degrees'                                                     'Roll__postive_port_side_up'
@@ -165,15 +165,15 @@ rtables.attitude_seapath_320_1_motion_kmatt = {  % from attitude_seapath_320_1_m
 %attitude_seapath_320_2_heading  2  sentences
 
 %"INHDT – Heading – True Data"
-rtables.attitude_seapath_320_2_heading_inhdt = {  % from attitude_seapath_320_2_heading.json
-'attitude_seapath_320_2_heading_inhdt'  2 []  % fields
+rtables.sd025_attitude_seapath_320_2_heading_inhdt = {  % from attitude_seapath_320_2_heading.json
+'sd025_attitude_seapath_320_2_heading_inhdt'  2 []  % fields
                  'headingTrue'                      'degrees'                                                                   'Heading_True'
 %                'trueHeading'                             ''                                                               'True_Designation'
 };
 
 %"INROT – Rate of Turn"
-rtables.attitude_seapath_320_2_heading_inrot = {  % from attitude_seapath_320_2_heading.json
-'attitude_seapath_320_2_heading_inrot'  2 []  % fields
+rtables.sd025_attitude_seapath_320_2_heading_inrot = {  % from attitude_seapath_320_2_heading.json
+'sd025_attitude_seapath_320_2_heading_inrot'  2 []  % fields
                   'rateOfTurn'           'degrees per minute'                                            'Rate_of_Turn___-__means_bow_to_port'
 %                  'rotStatus'                             ''                                                                         'Status'
 };
@@ -182,8 +182,8 @@ rtables.attitude_seapath_320_2_heading_inrot = {  % from attitude_seapath_320_2_
 %attitude_seapath_320_2_motion  1  sentences
 
 %"KMATT – Motion Data"
-rtables.attitude_seapath_320_2_motion_kmatt = {  % from attitude_seapath_320_2_motion.json
-'attitude_seapath_320_2_motion_kmatt'  6 []  % fields
+rtables.sd025_attitude_seapath_320_2_motion_kmatt = {  % from attitude_seapath_320_2_motion.json
+'sd025_attitude_seapath_320_2_motion_kmatt'  6 []  % fields
 %      'syncByte1SensorStatus'                             ''                                                   'Sync_Byte_1_or_Sensor_Status'
 %                  'syncByte2'                             ''                                                                    'Sync_Byte_2'
                         'roll'             'hundreth degrees'                                                     'Roll__postive_port_side_up'
@@ -196,8 +196,8 @@ rtables.attitude_seapath_320_2_motion_kmatt = {  % from attitude_seapath_320_2_m
 %attitude_smc_imu108_2  2  sentences
 
 %"PSMCV – Roll, Pitch and Heave observations"
-rtables.attitude_smc_imu108_2_psmcv = {  % from attitude_smc_imu108_2.json
-'attitude_smc_imu108_2_psmcv'  6 []  % fields
+rtables.sd025_attitude_smc_imu108_2_psmcv = {  % from attitude_smc_imu108_2.json
+'sd025_attitude_smc_imu108_2_psmcv'  6 []  % fields
                         'roll'                      'degrees'                                                                     'Roll_Angle'
                        'pitch'                      'degrees'                                                                    'Pitch_Angle'
                        'heave'                       'metres'                                                                          'Heave'
@@ -207,8 +207,8 @@ rtables.attitude_smc_imu108_2_psmcv = {  % from attitude_smc_imu108_2.json
 };
 
 %"PSMCB – Roll, Pitch and Heave observations"
-rtables.attitude_smc_imu108_2_psmcb = {  % from attitude_smc_imu108_2.json
-'attitude_smc_imu108_2_psmcb' 18 []  % fields
+rtables.sd025_attitude_smc_imu108_2_psmcb = {  % from attitude_smc_imu108_2.json
+'sd025_attitude_smc_imu108_2_psmcb' 18 []  % fields
                         'roll'                      'degrees'                                                                     'Roll_Angle'
                        'pitch'                      'degrees'                                                                    'Pitch_Angle'
                          'yaw'                      'degrees'                                                                            'Yaw'
@@ -233,8 +233,8 @@ rtables.attitude_smc_imu108_2_psmcb = {  % from attitude_smc_imu108_2.json
 %cloud_vaisala_cl31_stbd1  1  sentences
 
 %"PVCEIL1 - Vaisala CL31 Ceilometer message format msg2_10x770"
-rtables.cloud_vaisala_cl31_stbd1_pvceil1 = {  % from cloud_vaisala_cl31_stbd1.json
-'cloud_vaisala_cl31_stbd1_pvceil1' 28 []  % fields
+rtables.sd025_cloud_vaisala_cl31_stbd1_pvceil1 = {  % from cloud_vaisala_cl31_stbd1.json
+'sd025_cloud_vaisala_cl31_stbd1_pvceil1' 28 []  % fields
      'identityMessageMetadata'                             ''                                                  'Identity_and_Message_Metadata'
 % 'cloudDetectionStatusAlarmWarningStatus'                             ''                                'Cloud_Detection_Status_and_Alarm/Warning_status'
                      'height1'                       'metres'                                'Lowest_Cloud_Base_Height_or_Vertical_Visibility'
@@ -269,8 +269,8 @@ rtables.cloud_vaisala_cl31_stbd1_pvceil1 = {  % from cloud_vaisala_cl31_stbd1.js
 %flowmeter_litremeter_lmx24_ucsw1  1  sentences
 
 %"PLMFLOW1 - bespoke set of variables from Modbus registers on a LitreMeter LMX.24 flowmeter "
-rtables.flowmeter_litremeter_lmx24_ucsw1_plmflow1 = {  % from flowmeter_litremeter_lmx24_ucsw1.json
-'flowmeter_litremeter_lmx24_ucsw1_plmflow1' 15 []  % fields
+rtables.sd025_flowmeter_litremeter_lmx24_ucsw1_plmflow1 = {  % from flowmeter_litremeter_lmx24_ucsw1.json
+'sd025_flowmeter_litremeter_lmx24_ucsw1_plmflow1' 15 []  % fields
 %               'serialNumber'                             ''                                                                  'Serial_Number'
                     'flowRate'                   'litres/min'                                                                      'Flow_Rate'
 %               'flowRateUnit'                             ''                                                                 'Flow_Rate_Unit'
@@ -292,8 +292,8 @@ rtables.flowmeter_litremeter_lmx24_ucsw1_plmflow1 = {  % from flowmeter_litremet
 %fluorometer_wetlabs_wschl_ucsw1  1  sentences
 
 %"PWLFLUOR1 - WETLabs WETStar (WSCHL) fluorometer message"
-rtables.fluorometer_wetlabs_wschl_ucsw1_pwlfluor1 = {  % from fluorometer_wetlabs_wschl_ucsw1.json
-'fluorometer_wetlabs_wschl_ucsw1_pwlfluor1'  1 []  % fields
+rtables.sd025_fluorometer_wetlabs_wschl_ucsw1_pwlfluor1 = {  % from fluorometer_wetlabs_wschl_ucsw1.json
+'sd025_fluorometer_wetlabs_wschl_ucsw1_pwlfluor1'  1 []  % fields
                  'chlorophyll'                       'counts'                                                                    'Chlorophyll'
 };
 
@@ -301,8 +301,8 @@ rtables.fluorometer_wetlabs_wschl_ucsw1_pwlfluor1 = {  % from fluorometer_wetlab
 %gnss_fugro_oceanstar  3  sentences
 
 %"GPVTG – Course Over Ground and Ground Speed Data"
-rtables.gnss_fugro_oceanstar_gpvtg = {  % from gnss_fugro_oceanstar.json
-'gnss_fugro_oceanstar_gpvtg'  9 []  % fields
+rtables.sd025_gnss_fugro_oceanstar_gpvtg = {  % from gnss_fugro_oceanstar.json
+'sd025_gnss_fugro_oceanstar_gpvtg'  9 []  % fields
             'courseOverGround'                      'degrees'                                                        'Course_Over_Ground_True'
 %                 'trueCourse'                             ''                                                               'True_Designation'
 %              'magneticTrack'                      'degrees'                                                    'Course_Over_Ground_Magnetic'
@@ -318,8 +318,8 @@ rtables.gnss_fugro_oceanstar_gpvtg = {  % from gnss_fugro_oceanstar.json
 %gnss_saab_r5_supreme  6  sentences
 
 %"GNVTG – Course Over Ground and Ground Speed Data"
-rtables.gnss_saab_r5_supreme_gnvtg = {  % from gnss_saab_r5_supreme.json
-'gnss_saab_r5_supreme_gnvtg'  9 []  % fields
+rtables.sd025_gnss_saab_r5_supreme_gnvtg = {  % from gnss_saab_r5_supreme.json
+'sd025_gnss_saab_r5_supreme_gnvtg'  9 []  % fields
             'courseOverGround'                      'degrees'                                                        'Course_Over_Ground_True'
 %                 'trueCourse'                             ''                                                               'True_Designation'
 %              'magneticTrack'                      'degrees'                                                    'Course_Over_Ground_Magnetic'
@@ -331,9 +331,27 @@ rtables.gnss_saab_r5_supreme_gnvtg = {  % from gnss_saab_r5_supreme.json
 %            'positioningMode'                             ''                                                             'FAA_Mode_Indicator'
 };
 
+%"GNRMC – RMC navigation data"
+rtables.sd025_gnss_saab_r5_supreme_gnrmc = {  % from gnss_saab_r5_supreme.json
+'sd025_gnss_saab_r5_supreme_gnrmc' 13 []  % fields
+                     'utcTime'                             ''                                                    'UTC_Time_of_Navigation_Data'
+%                      'vFlag'                             ''                                                                'Receiver_Status'
+                    'latitude' 'degrees, minutes and decimal minutes'                                                                       'Latitude'
+                      'latDir'                             ''                                                    'Latitude_Cardinal_Direction'
+                   'longitude' 'degrees, minutes and decimal minutes'                                                                      'Longitude'
+                      'lonDir'                             ''                                                   'Longitude_Cardinal_Direction'
+%                 'speedKnots'                        'knots'                                                              'Speed_over_ground'
+               'trackMadeGood'                      'degrees'                                                                'Track_Made_Good'
+                     'navDate'                             ''                                                    'UTC_Date_of_Navigation_Data'
+%                     'magvar'                      'degrees'                                                             'Magnetic_variation'
+%                  'magvarDir'                             ''                                                'Direction_of_magnetic_variation'
+%            'positioningMode'                             ''                                                                 'Mode_indicator'
+%         'navigationalStatus'                             ''                                                            'Navigational_Status'
+};
+
 %"GNGLL – Position data: Position fix, time of position fix and status"
-rtables.gnss_saab_r5_supreme_gngll = {  % from gnss_saab_r5_supreme.json
-'gnss_saab_r5_supreme_gngll'  7 []  % fields
+rtables.sd025_gnss_saab_r5_supreme_gngll = {  % from gnss_saab_r5_supreme.json
+'sd025_gnss_saab_r5_supreme_gngll'  7 []  % fields
                     'latitude' 'degrees, minutes and decimal minutes'                                                                       'Latitude'
                       'latDir'                             ''                                                    'Latitude_Cardinal_Direction'
                    'longitude' 'degrees, minutes and decimal minutes'                                                                      'Longitude'
@@ -347,8 +365,8 @@ rtables.gnss_saab_r5_supreme_gngll = {  % from gnss_saab_r5_supreme.json
 %gnss_seapath_320_1  3  sentences
 
 %"INGGA – Global Positioning Fix Data"
-rtables.gnss_seapath_320_1_ingga = {  % from gnss_seapath_320_1.json
-'gnss_seapath_320_1_ingga' 14 []  % fields
+rtables.sd025_gnss_seapath_320_1_ingga = {  % from gnss_seapath_320_1.json
+'sd025_gnss_seapath_320_1_ingga' 14 []  % fields
                      'utcTime'                             ''                                                                       'UTC_Time'
                     'latitude' 'degrees, minutes and decimal minutes'                                                                       'Latitude'
                       'latDir'                             ''                                                    'Latitude_Cardinal_Direction'
@@ -366,8 +384,8 @@ rtables.gnss_seapath_320_1_ingga = {  % from gnss_seapath_320_1.json
 };
 
 %"INVTG – Course Over Ground and Ground Speed Data"
-rtables.gnss_seapath_320_1_invtg = {  % from gnss_seapath_320_1.json
-'gnss_seapath_320_1_invtg'  9 []  % fields
+rtables.sd025_gnss_seapath_320_1_invtg = {  % from gnss_seapath_320_1.json
+'sd025_gnss_seapath_320_1_invtg'  9 []  % fields
             'courseOverGround'                      'degrees'                                                        'Course_Over_Ground_True'
 %                 'trueCourse'                             ''                                                               'True_Designation'
 %              'magneticTrack'                      'degrees'                                                    'Course_Over_Ground_Magnetic'
@@ -383,8 +401,8 @@ rtables.gnss_seapath_320_1_invtg = {  % from gnss_seapath_320_1.json
 %gnss_seapath_320_2  3  sentences
 
 %"INGGA – Global Positioning Fix Data"
-rtables.gnss_seapath_320_2_ingga = {  % from gnss_seapath_320_2.json
-'gnss_seapath_320_2_ingga' 14 []  % fields
+rtables.sd025_gnss_seapath_320_2_ingga = {  % from gnss_seapath_320_2.json
+'sd025_gnss_seapath_320_2_ingga' 14 []  % fields
                      'utcTime'                             ''                                                                       'UTC_Time'
                     'latitude' 'degrees, minutes and decimal minutes'                                                                       'Latitude'
                       'latDir'                             ''                                                    'Latitude_Cardinal_Direction'
@@ -402,8 +420,8 @@ rtables.gnss_seapath_320_2_ingga = {  % from gnss_seapath_320_2.json
 };
 
 %"INVTG – Course Over Ground and Ground Speed Data"
-rtables.gnss_seapath_320_2_invtg = {  % from gnss_seapath_320_2.json
-'gnss_seapath_320_2_invtg'  9 []  % fields
+rtables.sd025_gnss_seapath_320_2_invtg = {  % from gnss_seapath_320_2.json
+'sd025_gnss_seapath_320_2_invtg'  9 []  % fields
             'courseOverGround'                      'degrees'                                                        'Course_Over_Ground_True'
 %                 'trueCourse'                             ''                                                               'True_Designation'
 %              'magneticTrack'                      'degrees'                                                    'Course_Over_Ground_Magnetic'
@@ -419,8 +437,8 @@ rtables.gnss_seapath_320_2_invtg = {  % from gnss_seapath_320_2.json
 %gravimeter_dgs_at1m10_100_corrected  1  sentences
 
 %"Dynamic Gravity Systems AT1M-10 Gravity Meter QC output message"
-rtables.gravimeter_dgs_at1m10_100_corrected_pdgrav = {  % from gravimeter_dgs_at1m10_100_corrected.json
-'gravimeter_dgs_at1m10_100_corrected_pdgrav' 26 []  % fields
+rtables.sd025_gravimeter_dgs_at1m10_100_corrected_pdgrav = {  % from gravimeter_dgs_at1m10_100_corrected.json
+'sd025_gravimeter_dgs_at1m10_100_corrected_pdgrav' 26 []  % fields
             'gravityCorrected'                         'mGal'                                               'Cross_coupling_corrected_gravity'
           'gravityUncorrected'                         'mGal'                                                            'Uncorrected_gravity'
            'longAccelerometer'                          'Gal'                                                             'Long_Accelerometer'
@@ -453,15 +471,15 @@ rtables.gravimeter_dgs_at1m10_100_corrected_pdgrav = {  % from gravimeter_dgs_at
 %gyrocompass_raytheon_standard_30_mf_1  2  sentences
 
 %"HEHDT – Heading – True Data"
-rtables.gyrocompass_raytheon_standard_30_mf_1_hehdt = {  % from gyrocompass_raytheon_standard_30_mf_1.json
-'gyrocompass_raytheon_standard_30_mf_1_hehdt'  2 []  % fields
+rtables.sd025_gyrocompass_raytheon_standard_30_mf_1_hehdt = {  % from gyrocompass_raytheon_standard_30_mf_1.json
+'sd025_gyrocompass_raytheon_standard_30_mf_1_hehdt'  2 []  % fields
                  'headingTrue'                      'degrees'                                                                   'Heading_True'
 %                'trueHeading'                             ''                                                               'True_Designation'
 };
 
 %"HEROT – Rate of Turn"
-rtables.gyrocompass_raytheon_standard_30_mf_1_herot = {  % from gyrocompass_raytheon_standard_30_mf_1.json
-'gyrocompass_raytheon_standard_30_mf_1_herot'  2 []  % fields
+rtables.sd025_gyrocompass_raytheon_standard_30_mf_1_herot = {  % from gyrocompass_raytheon_standard_30_mf_1.json
+'sd025_gyrocompass_raytheon_standard_30_mf_1_herot'  2 []  % fields
                   'rateOfTurn'           'degrees per minute'                                            'Rate_of_Turn___-__means_bow_to_port'
 %                  'rotStatus'                             ''                                                                         'Status'
 };
@@ -470,15 +488,15 @@ rtables.gyrocompass_raytheon_standard_30_mf_1_herot = {  % from gyrocompass_rayt
 %gyrocompass_raytheon_standard_30_mf_2  2  sentences
 
 %"HEHDT – Heading – True Data"
-rtables.gyrocompass_raytheon_standard_30_mf_2_hehdt = {  % from gyrocompass_raytheon_standard_30_mf_2.json
-'gyrocompass_raytheon_standard_30_mf_2_hehdt'  2 []  % fields
+rtables.sd025_gyrocompass_raytheon_standard_30_mf_2_hehdt = {  % from gyrocompass_raytheon_standard_30_mf_2.json
+'sd025_gyrocompass_raytheon_standard_30_mf_2_hehdt'  2 []  % fields
                  'headingTrue'                      'degrees'                                                                   'Heading_True'
 %                'trueHeading'                             ''                                                               'True_Designation'
 };
 
 %"HEROT – Rate of Turn"
-rtables.gyrocompass_raytheon_standard_30_mf_2_herot = {  % from gyrocompass_raytheon_standard_30_mf_2.json
-'gyrocompass_raytheon_standard_30_mf_2_herot'  2 []  % fields
+rtables.sd025_gyrocompass_raytheon_standard_30_mf_2_herot = {  % from gyrocompass_raytheon_standard_30_mf_2.json
+'sd025_gyrocompass_raytheon_standard_30_mf_2_herot'  2 []  % fields
                   'rateOfTurn'           'degrees per minute'                                            'Rate_of_Turn___-__means_bow_to_port'
 %                  'rotStatus'                             ''                                                                         'Status'
 };
@@ -487,15 +505,15 @@ rtables.gyrocompass_raytheon_standard_30_mf_2_herot = {  % from gyrocompass_rayt
 %gyrocompass_safran_bluenaute  2  sentences
 
 %"HEHDT – Heading – True Data"
-rtables.gyrocompass_safran_bluenaute_hehdt = {  % from gyrocompass_safran_bluenaute.json
-'gyrocompass_safran_bluenaute_hehdt'  2 []  % fields
+rtables.sd025_gyrocompass_safran_bluenaute_hehdt = {  % from gyrocompass_safran_bluenaute.json
+'sd025_gyrocompass_safran_bluenaute_hehdt'  2 []  % fields
                  'headingTrue'                      'degrees'                                                                   'Heading_True'
 %                'trueHeading'                             ''                                                               'True_Designation'
 };
 
 %"HEROT – Rate of Turn"
-rtables.gyrocompass_safran_bluenaute_herot = {  % from gyrocompass_safran_bluenaute.json
-'gyrocompass_safran_bluenaute_herot'  2 []  % fields
+rtables.sd025_gyrocompass_safran_bluenaute_herot = {  % from gyrocompass_safran_bluenaute.json
+'sd025_gyrocompass_safran_bluenaute_herot'  2 []  % fields
                   'rateOfTurn'           'degrees per minute'                                            'Rate_of_Turn___-__means_bow_to_port'
 %                  'rotStatus'                             ''                                                                         'Status'
 };
@@ -504,8 +522,8 @@ rtables.gyrocompass_safran_bluenaute_herot = {  % from gyrocompass_safran_bluena
 %met_biral_sws_200_j11302_01  1  sentences
 
 %"PBPWS - Biral SWS200 Present Weather Sensor default message"
-rtables.met_biral_sws_200_j11302_01_pbpws = {  % from met_biral_sws_200_j11302_01.json
-'met_biral_sws_200_j11302_01_pbpws' 14 []  % fields
+rtables.sd025_met_biral_sws_200_j11302_01_pbpws = {  % from met_biral_sws_200_j11302_01.json
+'sd025_met_biral_sws_200_j11302_01_pbpws' 14 []  % fields
                'messagePrefix'                             ''                                                                 'Message_Prefix'
         'sensorIdentification'                             ''                                                          'Sensor_Identification'
                'averagingTime'                      'seconds'                                                                 'Averaging_Time'
@@ -526,8 +544,8 @@ rtables.met_biral_sws_200_j11302_01_pbpws = {  % from met_biral_sws_200_j11302_0
 %met_campbell_0871lh1_0490  1  sentences
 
 %"PCFRS - Campbell Scientific Freezing Rain Sensor message"
-rtables.met_campbell_0871lh1_0490_pcfrs = {  % from met_campbell_0871lh1_0490.json
-'met_campbell_0871lh1_0490_pcfrs' 22 []  % fields
+rtables.sd025_met_campbell_0871lh1_0490_pcfrs = {  % from met_campbell_0871lh1_0490.json
+'sd025_met_campbell_0871lh1_0490_pcfrs' 22 []  % fields
                     'stringID'                             ''                                                                      'String_ID'
             'probeHeaterState'                             ''                                                             'Probe_Heater_State'
                    'iceOutput'                             ''                                                                     'Ice_Output'
@@ -556,8 +574,8 @@ rtables.met_campbell_0871lh1_0490_pcfrs = {  % from met_campbell_0871lh1_0490.js
 %met_eliasson_cbme80_2275  1  sentences
 
 %"PECEIL - Eliasson CBME80 Ceilometer message format 5 - ASCII"
-rtables.met_eliasson_cbme80_2275_peceil = {  % from met_eliasson_cbme80_2275.json
-'met_eliasson_cbme80_2275_peceil' 23 []  % fields
+rtables.sd025_met_eliasson_cbme80_2275_peceil = {  % from met_eliasson_cbme80_2275.json
+'sd025_met_eliasson_cbme80_2275_peceil' 23 []  % fields
 %                   'identity'                             ''                                                                       'Identity'
 %             'programVersion'                             ''                                                                'Program_Version'
 %               'serialNumber'                             ''                                                                  'Serial_Number'
@@ -587,8 +605,8 @@ rtables.met_eliasson_cbme80_2275_peceil = {  % from met_eliasson_cbme80_2275.jso
 %met_thies_clima_5_4110_2782  1  sentences
 
 %"PTDISD - Thies Clima 5.4110.00.000 disdrometer output telegram 4"
-rtables.met_thies_clima_5_4110_2782_ptdisd = {  % from met_thies_clima_5_4110_2782.json
-'met_thies_clima_5_4110_2782_ptdisd' 520 []  % fields
+rtables.sd025_met_thies_clima_5_4110_2782_ptdisd = {  % from met_thies_clima_5_4110_2782.json
+'sd025_met_thies_clima_5_4110_2782_ptdisd' 520 []  % fields
 %              'deviceAddress'                             ''                                                                 'Device_Address'
 %               'serialNumber'                             ''                                                                  'Serial_Number'
 %            'softwareVersion'                             ''                                                               'Software_Version'
@@ -1115,8 +1133,8 @@ rtables.met_thies_clima_5_4110_2782_ptdisd = {  % from met_thies_clima_5_4110_27
 %met_vaisala_hmp155e_foremast1  1  sentences
 
 %"PVTNH2 - Vaisala custom output message, extended from version 1"
-rtables.met_vaisala_hmp155e_foremast1_pvtnh2 = {  % from met_vaisala_hmp155e_foremast1.json
-'met_vaisala_hmp155e_foremast1_pvtnh2'  9 []  % fields
+rtables.sd025_met_vaisala_hmp155e_foremast1_pvtnh2 = {  % from met_vaisala_hmp155e_foremast1.json
+'sd025_met_vaisala_hmp155e_foremast1_pvtnh2'  9 []  % fields
             'relativeHumidity'                   'percentage'                                                         'Relative_Humidity_-_RH'
               'airTemperature'               'degreesCelsius'                                            'Additional_T-probe_Temperature_-_Ta'
 'dewPointFrostPointTemperature'               'degreesCelsius'                                      'Dew_Point_/_Frost_Point_Temparature_-_TDF'
@@ -1132,8 +1150,8 @@ rtables.met_vaisala_hmp155e_foremast1_pvtnh2 = {  % from met_vaisala_hmp155e_for
 %met_vaisala_hmp155e_scimast1  1  sentences
 
 %"PVTNH2 - Vaisala custom output message, extended from version 1"
-rtables.met_vaisala_hmp155e_scimast1_pvtnh2 = {  % from met_vaisala_hmp155e_scimast1.json
-'met_vaisala_hmp155e_scimast1_pvtnh2'  9 []  % fields
+rtables.sd025_met_vaisala_hmp155e_scimast1_pvtnh2 = {  % from met_vaisala_hmp155e_scimast1.json
+'sd025_met_vaisala_hmp155e_scimast1_pvtnh2'  9 []  % fields
             'relativeHumidity'                   'percentage'                                                         'Relative_Humidity_-_RH'
               'airTemperature'               'degreesCelsius'                                            'Additional_T-probe_Temperature_-_Ta'
 'dewPointFrostPointTemperature'               'degreesCelsius'                                      'Dew_Point_/_Frost_Point_Temparature_-_TDF'
@@ -1149,8 +1167,8 @@ rtables.met_vaisala_hmp155e_scimast1_pvtnh2 = {  % from met_vaisala_hmp155e_scim
 %met_vaisala_hmp155e_scimast2  1  sentences
 
 %"PVTNH2 - Vaisala custom output message, extended from version 1"
-rtables.met_vaisala_hmp155e_scimast2_pvtnh2 = {  % from met_vaisala_hmp155e_scimast2.json
-'met_vaisala_hmp155e_scimast2_pvtnh2'  9 []  % fields
+rtables.sd025_met_vaisala_hmp155e_scimast2_pvtnh2 = {  % from met_vaisala_hmp155e_scimast2.json
+'sd025_met_vaisala_hmp155e_scimast2_pvtnh2'  9 []  % fields
             'relativeHumidity'                   'percentage'                                                         'Relative_Humidity_-_RH'
               'airTemperature'               'degreesCelsius'                                            'Additional_T-probe_Temperature_-_Ta'
 'dewPointFrostPointTemperature'               'degreesCelsius'                                      'Dew_Point_/_Frost_Point_Temparature_-_TDF'
@@ -1166,8 +1184,8 @@ rtables.met_vaisala_hmp155e_scimast2_pvtnh2 = {  % from met_vaisala_hmp155e_scim
 %met_vaisala_ptb330_n2410065  1  sentences
 
 %"PVBAR - Vaisala custom output message"
-rtables.met_vaisala_ptb330_n2410065_pvbar = {  % from met_vaisala_ptb330_n2410065.json
-'met_vaisala_ptb330_n2410065_pvbar'  3 []  % fields
+rtables.sd025_met_vaisala_ptb330_n2410065_pvbar = {  % from met_vaisala_ptb330_n2410065.json
+'sd025_met_vaisala_ptb330_n2410065_pvbar'  3 []  % fields
                  'airPressure'                          'hPa'                                                                   'Air_Pressure'
   'heightCorrectedAirPressure'                          'hPa'                                                  'Height_Corrected_Air_Pressure'
          'internalTemperature'               'degreesCelsius'                                                           'Internal_Temperature'
@@ -1177,8 +1195,8 @@ rtables.met_vaisala_ptb330_n2410065_pvbar = {  % from met_vaisala_ptb330_n241006
 %met_vaisala_ptb330_n2410066  1  sentences
 
 %"PVBAR - Vaisala custom output message"
-rtables.met_vaisala_ptb330_n2410066_pvbar = {  % from met_vaisala_ptb330_n2410066.json
-'met_vaisala_ptb330_n2410066_pvbar'  3 []  % fields
+rtables.sd025_met_vaisala_ptb330_n2410066_pvbar = {  % from met_vaisala_ptb330_n2410066.json
+'sd025_met_vaisala_ptb330_n2410066_pvbar'  3 []  % fields
                  'airPressure'                          'hPa'                                                                   'Air_Pressure'
   'heightCorrectedAirPressure'                          'hPa'                                                  'Height_Corrected_Air_Pressure'
          'internalTemperature'               'degreesCelsius'                                                           'Internal_Temperature'
@@ -1188,8 +1206,8 @@ rtables.met_vaisala_ptb330_n2410066_pvbar = {  % from met_vaisala_ptb330_n241006
 %multibeam_kongsberg_em122  1  sentences
 
 %"KIDPT – Depth below EM122 Transducer"
-rtables.multibeam_kongsberg_em122_kidpt = {  % from multibeam_kongsberg_em122.json
-'multibeam_kongsberg_em122_kidpt'  3 []  % fields
+rtables.sd025_multibeam_kongsberg_em122_kidpt = {  % from multibeam_kongsberg_em122.json
+'sd025_multibeam_kongsberg_em122_kidpt'  3 []  % fields
 'waterDepthMetreFromTransducer'                       'metres'                                            'Depth_in_metres_from_the_Transducer'
    'offsetMetreFromTransducer'                       'metres'                 'Offset__in_metres__to_the_waterline_relative_to_the_transducer'
 %              'maxRangeScale'                       'metres'                                                     'Maximum_range_scale_in_use'
@@ -1199,8 +1217,8 @@ rtables.multibeam_kongsberg_em122_kidpt = {  % from multibeam_kongsberg_em122.js
 %multibeam_kongsberg_em712  1  sentences
 
 %"KODPT – Depth below EM712 Transducer"
-rtables.multibeam_kongsberg_em712_kodpt = {  % from multibeam_kongsberg_em712.json
-'multibeam_kongsberg_em712_kodpt'  3 []  % fields
+rtables.sd025_multibeam_kongsberg_em712_kodpt = {  % from multibeam_kongsberg_em712.json
+'sd025_multibeam_kongsberg_em712_kodpt'  3 []  % fields
 'waterDepthMetreFromTransducer'                       'metres'                                            'Depth_in_metres_from_the_Transducer'
    'offsetMetreFromTransducer'                       'metres'                 'Offset__in_metres__to_the_waterline_relative_to_the_transducer'
 %              'maxRangeScale'                       'metres'                                                     'Maximum_range_scale_in_use'
@@ -1210,8 +1228,8 @@ rtables.multibeam_kongsberg_em712_kodpt = {  % from multibeam_kongsberg_em712.js
 %radiometer_heitronics_ct15_85_13316  1  sentences
 
 %"PHSST - Heitronics CT15 infrared temperature of sea surface"
-rtables.radiometer_heitronics_ct15_85_13316_phsst = {  % from radiometer_heitronics_ct15_85_13316.json
-'radiometer_heitronics_ct15_85_13316_phsst'  2 []  % fields
+rtables.sd025_radiometer_heitronics_ct15_85_13316_phsst = {  % from radiometer_heitronics_ct15_85_13316.json
+'sd025_radiometer_heitronics_ct15_85_13316_phsst'  2 []  % fields
        'seaSurfaceTemperature'               'degreesCelsius'                                                        'Sea_Surface_Temperature'
 %  'seaSurfaceTemperatureUnit'                             ''                                                   'Sea_Surface_Temperature_Unit'
 };
@@ -1220,8 +1238,8 @@ rtables.radiometer_heitronics_ct15_85_13316_phsst = {  % from radiometer_heitron
 %radiometer_heitronics_ct15_85_13317  1  sentences
 
 %"PHSST - Heitronics CT15 infrared temperature of sea surface"
-rtables.radiometer_heitronics_ct15_85_13317_phsst = {  % from radiometer_heitronics_ct15_85_13317.json
-'radiometer_heitronics_ct15_85_13317_phsst'  2 []  % fields
+rtables.sd025_radiometer_heitronics_ct15_85_13317_phsst = {  % from radiometer_heitronics_ct15_85_13317.json
+'sd025_radiometer_heitronics_ct15_85_13317_phsst'  2 []  % fields
        'seaSurfaceTemperature'               'degreesCelsius'                                                        'Sea_Surface_Temperature'
 %  'seaSurfaceTemperatureUnit'                             ''                                                   'Sea_Surface_Temperature_Unit'
 };
@@ -1230,8 +1248,8 @@ rtables.radiometer_heitronics_ct15_85_13317_phsst = {  % from radiometer_heitron
 %radiometer_kipp_zonen_sgr4a_190056  1  sentences
 
 %"PKPYRGE - Bespoke Kipp and Zonen SGR4-A Pyrgeometer message read from a MODBUS interface"
-rtables.radiometer_kipp_zonen_sgr4a_190056_pkpyrge = {  % from radiometer_kipp_zonen_sgr4a_190056.json
-'radiometer_kipp_zonen_sgr4a_190056_pkpyrge' 34 []  % fields
+rtables.sd025_radiometer_kipp_zonen_sgr4a_190056_pkpyrge = {  % from radiometer_kipp_zonen_sgr4a_190056.json
+'sd025_radiometer_kipp_zonen_sgr4a_190056_pkpyrge' 34 []  % fields
 %                 'deviceType'                             ''                                                                    'Device_Type'
 %           'datamodelVersion'                             ''                                                             'Data_Model_Version'
              'operationalMode'                             ''                                                               'Operational_Mode'
@@ -1272,8 +1290,8 @@ rtables.radiometer_kipp_zonen_sgr4a_190056_pkpyrge = {  % from radiometer_kipp_z
 %radiometer_kipp_zonen_sgr4a_190057  1  sentences
 
 %"PKPYRGE - Bespoke Kipp and Zonen SGR4-A Pyrgeometer message read from a MODBUS interface"
-rtables.radiometer_kipp_zonen_sgr4a_190057_pkpyrge = {  % from radiometer_kipp_zonen_sgr4a_190057.json
-'radiometer_kipp_zonen_sgr4a_190057_pkpyrge' 34 []  % fields
+rtables.sd025_radiometer_kipp_zonen_sgr4a_190057_pkpyrge = {  % from radiometer_kipp_zonen_sgr4a_190057.json
+'sd025_radiometer_kipp_zonen_sgr4a_190057_pkpyrge' 34 []  % fields
 %                 'deviceType'                             ''                                                                    'Device_Type'
 %           'datamodelVersion'                             ''                                                             'Data_Model_Version'
              'operationalMode'                             ''                                                               'Operational_Mode'
@@ -1314,8 +1332,8 @@ rtables.radiometer_kipp_zonen_sgr4a_190057_pkpyrge = {  % from radiometer_kipp_z
 %radiometer_kipp_zonen_smp22a_190028  1  sentences
 
 %"PKPYRAN - Bespoke Kipp and Zonen SMP22-A Pyranometer message read from a MODBUS interface"
-rtables.radiometer_kipp_zonen_smp22a_190028_pkpyran = {  % from radiometer_kipp_zonen_smp22a_190028.json
-'radiometer_kipp_zonen_smp22a_190028_pkpyran' 34 []  % fields
+rtables.sd025_radiometer_kipp_zonen_smp22a_190028_pkpyran = {  % from radiometer_kipp_zonen_smp22a_190028.json
+'sd025_radiometer_kipp_zonen_smp22a_190028_pkpyran' 34 []  % fields
 %                 'deviceType'                             ''                                                                    'Device_Type'
 %           'datamodelVersion'                             ''                                                             'Data_Model_Version'
              'operationalMode'                             ''                                                               'Operational_Mode'
@@ -1356,8 +1374,8 @@ rtables.radiometer_kipp_zonen_smp22a_190028_pkpyran = {  % from radiometer_kipp_
 %radiometer_kipp_zonen_smp22a_190029  1  sentences
 
 %"PKPYRAN - Bespoke Kipp and Zonen SMP22-A Pyranometer message read from a MODBUS interface"
-rtables.radiometer_kipp_zonen_smp22a_190029_pkpyran = {  % from radiometer_kipp_zonen_smp22a_190029.json
-'radiometer_kipp_zonen_smp22a_190029_pkpyran' 34 []  % fields
+rtables.sd025_radiometer_kipp_zonen_smp22a_190029_pkpyran = {  % from radiometer_kipp_zonen_smp22a_190029.json
+'sd025_radiometer_kipp_zonen_smp22a_190029_pkpyran' 34 []  % fields
 %                 'deviceType'                             ''                                                                    'Device_Type'
 %           'datamodelVersion'                             ''                                                             'Data_Model_Version'
              'operationalMode'                             ''                                                               'Operational_Mode'
@@ -1398,8 +1416,8 @@ rtables.radiometer_kipp_zonen_smp22a_190029_pkpyran = {  % from radiometer_kipp_
 %radiometer_satlantic_par_ser_icsa_2039  1  sentences
 
 %"PSPAR - Satlantic PAR short-ascii message"
-rtables.radiometer_satlantic_par_ser_icsa_2039_pspar = {  % from radiometer_satlantic_par_ser_icsa_2039.json
-'radiometer_satlantic_par_ser_icsa_2039_pspar'  7 []  % fields
+rtables.sd025_radiometer_satlantic_par_ser_icsa_2039_pspar = {  % from radiometer_satlantic_par_ser_icsa_2039.json
+'sd025_radiometer_satlantic_par_ser_icsa_2039_pspar'  7 []  % fields
              'makeModelSerial'                             ''                                                              'Make_Model_Serial'
                        'timer'                      'seconds'                                                                          'Timer'
                          'par'                             ''                                                                            'Par'
@@ -1413,8 +1431,8 @@ rtables.radiometer_satlantic_par_ser_icsa_2039_pspar = {  % from radiometer_satl
 %radiometer_satlantic_par_ser_icsa_2040  1  sentences
 
 %"PSPAR - Satlantic PAR short-ascii message"
-rtables.radiometer_satlantic_par_ser_icsa_2040_pspar = {  % from radiometer_satlantic_par_ser_icsa_2040.json
-'radiometer_satlantic_par_ser_icsa_2040_pspar'  7 []  % fields
+rtables.sd025_radiometer_satlantic_par_ser_icsa_2040_pspar = {  % from radiometer_satlantic_par_ser_icsa_2040.json
+'sd025_radiometer_satlantic_par_ser_icsa_2040_pspar'  7 []  % fields
              'makeModelSerial'                             ''                                                              'Make_Model_Serial'
                        'timer'                      'seconds'                                                                          'Timer'
                          'par'                             ''                                                                            'Par'
@@ -1428,8 +1446,8 @@ rtables.radiometer_satlantic_par_ser_icsa_2040_pspar = {  % from radiometer_satl
 %singlebeam_kongsberg_ea640  1  sentences
 
 %"DBDBT – Depth below transducer"
-rtables.singlebeam_kongsberg_ea640_dbdbt = {  % from singlebeam_kongsberg_ea640.json
-'singlebeam_kongsberg_ea640_dbdbt'  6 []  % fields
+rtables.sd025_singlebeam_kongsberg_ea640_dbdbt = {  % from singlebeam_kongsberg_ea640.json
+'sd025_singlebeam_kongsberg_ea640_dbdbt'  6 []  % fields
 % 'waterDepthFeetFromTransducer'                         'feet'                                             'Depth_in_feets_from_the_Transducer'
 %                   'feetFlag'                             ''                                                               'Feet_Designation'
 'waterDepthMeterFromTransducer'                       'metres'                                            'Depth_in_meters_from_the_Transducer'
@@ -1442,16 +1460,27 @@ rtables.singlebeam_kongsberg_ea640_dbdbt = {  % from singlebeam_kongsberg_ea640.
 %singlebeam_skipper_gds102  6  sentences
 
 %"SDDPT – Depth of water"
-rtables.singlebeam_skipper_gds102_sddpt = {  % from singlebeam_skipper_gds102.json
-'singlebeam_skipper_gds102_sddpt'  3 []  % fields
+rtables.sd025_singlebeam_skipper_gds102_sddpt = {  % from singlebeam_skipper_gds102.json
+'sd025_singlebeam_skipper_gds102_sddpt'  3 []  % fields
              'waterDepthMeter'                       'metres'                                'Depth_in_meters_from_the_transducer_Centre_Beam'
                      'offsetT'                       'metres'                                  'Offset_of_transducer_from_waterline_in_meters'
 %                   'maxRange'                       'metres'                                                     'Maximum_range_Scale_in_Use'
 };
 
+%"SDDBS – Depth below surface"
+rtables.sd025_singlebeam_skipper_gds102_sddbs = {  % from singlebeam_skipper_gds102.json
+'sd025_singlebeam_skipper_gds102_sddbs'  6 []  % fields
+%  'waterDepthFeetFromSurface'                         'feet'                                                'Depth_in_feets_from_the_Surface'
+%                   'feetFlag'                             ''                                                               'Feet_Designation'
+  'waterDepthMeterFromSurface'                       'metres'                                               'Depth_in_meters_from_the_Surface'
+%                  'meterFlag'                             ''                                                              'Meter_Designation'
+% 'waterDepthFathomFromSurface'                       'fathom'                                              'Depth_in_fathoms_from_the_Surface'
+%                 'fathomFlag'                             ''                                                             'Fathom_Designation'
+};
+
 %"SDDBT – Depth below transducer"
-rtables.singlebeam_skipper_gds102_sddbt = {  % from singlebeam_skipper_gds102.json
-'singlebeam_skipper_gds102_sddbt'  6 []  % fields
+rtables.sd025_singlebeam_skipper_gds102_sddbt = {  % from singlebeam_skipper_gds102.json
+'sd025_singlebeam_skipper_gds102_sddbt'  6 []  % fields
 % 'waterDepthFeetFromTransducer'                         'feet'                                             'Depth_in_feets_from_the_Transducer'
 %                   'feetFlag'                             ''                                                               'Feet_Designation'
 'waterDepthMeterFromTransducer'                       'metres'                                            'Depth_in_meters_from_the_Transducer'
@@ -1460,12 +1489,44 @@ rtables.singlebeam_skipper_gds102_sddbt = {  % from singlebeam_skipper_gds102.js
 %                 'fathomFlag'                             ''                                                             'Fathom_Designation'
 };
 
+%"SDDBK – Depth below keel"
+rtables.sd025_singlebeam_skipper_gds102_sddbk = {  % from singlebeam_skipper_gds102.json
+'sd025_singlebeam_skipper_gds102_sddbk'  6 []  % fields
+%     'waterDepthFeetFromKeel'                         'feet'                                                   'Depth_in_feets_from_the_Keel'
+%                   'feetFlag'                             ''                                                               'Feet_Designation'
+     'waterDepthMeterFromKeel'                       'metres'                                                  'Depth_in_meters_from_the_Keel'
+%                  'meterFlag'                             ''                                                              'Meter_Designation'
+%   'waterDepthFathomFromKeel'                       'fathom'                                                 'Depth_in_fathoms_from_the_Keel'
+%                 'fathomFlag'                             ''                                                             'Fathom_Designation'
+};
+
+%"PSKPDPT – Depth of water"
+rtables.sd025_singlebeam_skipper_gds102_pskpdpt = {  % from singlebeam_skipper_gds102.json
+'sd025_singlebeam_skipper_gds102_pskpdpt'  6 []  % fields
+             'waterDepthMeter'                       'metres'                                'Depth_in_meters_from_the_transducer_Centre_Beam'
+                     'offsetT'                       'metres'                                  'Offset_of_transducer_from_waterline_in_meters'
+%                   'maxRange'                       'metres'                                                     'Maximum_range_Scale_in_Use'
+          'bottomEchoStrength'                             ''                                                           'Bottom_Echo_Strength'
+    'echosounderChannelNumber'                             ''                                                     'Echosounder_Channel_Number'
+          'TransducerLocation'                             ''                                                            'Transducer_Location'
+};
+
+%"SDALR – Water Depth Alarm"
+rtables.sd025_singlebeam_skipper_gds102_sdalr = {  % from singlebeam_skipper_gds102.json
+'sd025_singlebeam_skipper_gds102_sdalr'  5 []  % fields
+      'utcTimeLastAlarmChange'                             ''                                                  'UTC_Time_of_Last_Alarm_Change'
+                     'alarmID'                             ''                                                                       'Alarm_ID'
+%                'alarmStatus'                             ''                                                                   'Alarm_Status'
+%          'acknowledgeStatus'                             ''                                                             'Acknowledge_Status'
+%           'alarmDescription'                             ''                                                              'Alarm_Description'
+};
+
 
 %soundvelocity_valeport_minisvs_ucsw1  1  sentences
 
 %"PVSV1 – Sound Velocity"
-rtables.soundvelocity_valeport_minisvs_ucsw1_pvsv1 = {  % from soundvelocity_valeport_minisvs_ucsw1.json
-'soundvelocity_valeport_minisvs_ucsw1_pvsv1'  1 []  % fields
+rtables.sd025_soundvelocity_valeport_minisvs_ucsw1_pvsv1 = {  % from soundvelocity_valeport_minisvs_ucsw1.json
+'sd025_soundvelocity_valeport_minisvs_ucsw1_pvsv1'  1 []  % fields
                'soundVelocity'                'metres/second'                                                                 'Sound_Velocity'
 };
 
@@ -1473,8 +1534,8 @@ rtables.soundvelocity_valeport_minisvs_ucsw1_pvsv1 = {  % from soundvelocity_val
 %speedlog_northern_solutions_eme_s60  4  sentences
 
 %"VMVBW –Dual ground/water speed"
-rtables.speedlog_northern_solutions_eme_s60_vmvbw = {  % from speedlog_northern_solutions_eme_s60.json
-'speedlog_northern_solutions_eme_s60_vmvbw' 10 []  % fields
+rtables.sd025_speedlog_northern_solutions_eme_s60_vmvbw = {  % from speedlog_northern_solutions_eme_s60.json
+'sd025_speedlog_northern_solutions_eme_s60_vmvbw' 10 []  % fields
         'longitudalWaterSpeed'                        'Knots'                                                'Longitudal_Water_Speed_in_Knots'
         'transverseWaterSpeed'                        'Knots'                                                'Transverse_Water_Speed_in_Knots'
 %           'waterSpeedStatus'                             ''                                                               'waterSpeedStatus'
@@ -1488,8 +1549,8 @@ rtables.speedlog_northern_solutions_eme_s60_vmvbw = {  % from speedlog_northern_
 };
 
 %"VMVHW – Water speed & heading"
-rtables.speedlog_northern_solutions_eme_s60_vmvhw = {  % from speedlog_northern_solutions_eme_s60.json
-'speedlog_northern_solutions_eme_s60_vmvhw'  8 []  % fields
+rtables.sd025_speedlog_northern_solutions_eme_s60_vmvhw = {  % from speedlog_northern_solutions_eme_s60.json
+'sd025_speedlog_northern_solutions_eme_s60_vmvhw'  8 []  % fields
                  'headingTrue'                      'degrees'                                                                   'Heading_True'
 %            'headingTrueFlag'                             ''                                                               'True_Designation'
 %            'headingMagnetic'                      'degrees'                                                               'Heading_Magnetic'
@@ -1501,8 +1562,8 @@ rtables.speedlog_northern_solutions_eme_s60_vmvhw = {  % from speedlog_northern_
 };
 
 %"VMVLW – Distance travelled through the water"
-rtables.speedlog_northern_solutions_eme_s60_vmvlw = {  % from speedlog_northern_solutions_eme_s60.json
-'speedlog_northern_solutions_eme_s60_vmvlw'  8 []  % fields
+rtables.sd025_speedlog_northern_solutions_eme_s60_vmvlw = {  % from speedlog_northern_solutions_eme_s60.json
+'sd025_speedlog_northern_solutions_eme_s60_vmvlw'  8 []  % fields
                'totalDistance'                             ''                                                                 'Total_Distance'
 %         'totalDistanceUnits'                             ''                                                            'True_Distance_Units'
           'distanceSinceReset'                             ''                                                           'Distance_since_Reset'
@@ -1514,8 +1575,8 @@ rtables.speedlog_northern_solutions_eme_s60_vmvlw = {  % from speedlog_northern_
 };
 
 %"VMMTW – Water Temperature"
-rtables.speedlog_northern_solutions_eme_s60_vmmtw = {  % from speedlog_northern_solutions_eme_s60.json
-'speedlog_northern_solutions_eme_s60_vmmtw'  2 []  % fields
+rtables.sd025_speedlog_northern_solutions_eme_s60_vmmtw = {  % from speedlog_northern_solutions_eme_s60.json
+'sd025_speedlog_northern_solutions_eme_s60_vmmtw'  2 []  % fields
      'waterTemperatureCelsius'               'DegreesCelsius'                                           'Water_Temperature_in_Degrees_Celsius'
 %                'celsiusFlag'                             ''                                                     'Units_of_Water_Temperature'
 };
@@ -1524,8 +1585,8 @@ rtables.speedlog_northern_solutions_eme_s60_vmmtw = {  % from speedlog_northern_
 %speedlog_skipper_dl850  3  sentences
 
 %"VDVBW –Dual ground/water speed"
-rtables.speedlog_skipper_dl850_vdvbw = {  % from speedlog_skipper_dl850.json
-'speedlog_skipper_dl850_vdvbw' 10 []  % fields
+rtables.sd025_speedlog_skipper_dl850_vdvbw = {  % from speedlog_skipper_dl850.json
+'sd025_speedlog_skipper_dl850_vdvbw' 10 []  % fields
         'longitudalWaterSpeed'                        'Knots'                                                'Longitudal_Water_Speed_in_Knots'
         'transverseWaterSpeed'                        'Knots'                                                'Transverse_Water_Speed_in_Knots'
 %           'waterSpeedStatus'                             ''                                                               'waterSpeedStatus'
@@ -1539,8 +1600,8 @@ rtables.speedlog_skipper_dl850_vdvbw = {  % from speedlog_skipper_dl850.json
 };
 
 %"VDVHW – Water speed & heading"
-rtables.speedlog_skipper_dl850_vdvhw = {  % from speedlog_skipper_dl850.json
-'speedlog_skipper_dl850_vdvhw'  8 []  % fields
+rtables.sd025_speedlog_skipper_dl850_vdvhw = {  % from speedlog_skipper_dl850.json
+'sd025_speedlog_skipper_dl850_vdvhw'  8 []  % fields
                  'headingTrue'                      'degrees'                                                                   'Heading_True'
 %            'headingTrueFlag'                             ''                                                               'True_Designation'
 %            'headingMagnetic'                      'degrees'                                                               'Heading_Magnetic'
@@ -1552,8 +1613,8 @@ rtables.speedlog_skipper_dl850_vdvhw = {  % from speedlog_skipper_dl850.json
 };
 
 %"VDVLW – Distance travelled through the water"
-rtables.speedlog_skipper_dl850_vdvlw = {  % from speedlog_skipper_dl850.json
-'speedlog_skipper_dl850_vdvlw'  8 []  % fields
+rtables.sd025_speedlog_skipper_dl850_vdvlw = {  % from speedlog_skipper_dl850.json
+'sd025_speedlog_skipper_dl850_vdvlw'  8 []  % fields
                'totalDistance'                             ''                                                                 'Total_Distance'
 %         'totalDistanceUnits'                             ''                                                            'True_Distance_Units'
           'distanceSinceReset'                             ''                                                           'Distance_Since_Reset'
@@ -1568,8 +1629,8 @@ rtables.speedlog_skipper_dl850_vdvlw = {  % from speedlog_skipper_dl850.json
 %thermometer_seabird_sbe38_ucsw1  1  sentences
 
 %"PSBSST1 – Seabird temperature message"
-rtables.thermometer_seabird_sbe38_ucsw1_psbsst1 = {  % from thermometer_seabird_sbe38_ucsw1.json
-'thermometer_seabird_sbe38_ucsw1_psbsst1'  1 []  % fields
+rtables.sd025_thermometer_seabird_sbe38_ucsw1_psbsst1 = {  % from thermometer_seabird_sbe38_ucsw1.json
+'sd025_thermometer_seabird_sbe38_ucsw1_psbsst1'  1 []  % fields
                  'temperature'                      'celcius'                                                            'Temperature__ITS-90'
 };
 
@@ -1577,8 +1638,8 @@ rtables.thermometer_seabird_sbe38_ucsw1_psbsst1 = {  % from thermometer_seabird_
 %thermometer_seabird_sbe38_ucsw2  1  sentences
 
 %"PSBSST1 – Seabird temperature message"
-rtables.thermometer_seabird_sbe38_ucsw2_psbsst1 = {  % from thermometer_seabird_sbe38_ucsw2.json
-'thermometer_seabird_sbe38_ucsw2_psbsst1'  1 []  % fields
+rtables.sd025_thermometer_seabird_sbe38_ucsw2_psbsst1 = {  % from thermometer_seabird_sbe38_ucsw2.json
+'sd025_thermometer_seabird_sbe38_ucsw2_psbsst1'  1 []  % fields
                  'temperature'                      'celcius'                                                            'Temperature__ITS-90'
 };
 
@@ -1586,8 +1647,8 @@ rtables.thermometer_seabird_sbe38_ucsw2_psbsst1 = {  % from thermometer_seabird_
 %thermosalinograph_seabird_sbe45_ucsw1  1  sentences
 
 %"PSBTSG1 - Sea-Bird SBE45 thermosalinograph output format 0 ascii csv message"
-rtables.thermosalinograph_seabird_sbe45_ucsw1_psbtsg1 = {  % from thermosalinograph_seabird_sbe45_ucsw1.json
-'thermosalinograph_seabird_sbe45_ucsw1_psbtsg1'  4 []  % fields
+rtables.sd025_thermosalinograph_seabird_sbe45_ucsw1_psbtsg1 = {  % from thermosalinograph_seabird_sbe45_ucsw1.json
+'sd025_thermosalinograph_seabird_sbe45_ucsw1_psbtsg1'  4 []  % fields
                  'temperature'                            'c'                                                           'Temperature_(ITS-90)'
                 'conductivity'                          'S/m'                                                                   'Conductivity'
                     'salinity'                          'psu'                                                                       'Salinity'
@@ -1598,8 +1659,8 @@ rtables.thermosalinograph_seabird_sbe45_ucsw1_psbtsg1 = {  % from thermosalinogr
 %transmissometer_wetlabs_cstar_ucsw1  1  sentences
 
 %"PWLTRAN1 - Seb-Bird WETLabs C-Star transmissometer default ascii csv message"
-rtables.transmissometer_wetlabs_cstar_ucsw1_pwltran1 = {  % from transmissometer_wetlabs_cstar_ucsw1.json
-'transmissometer_wetlabs_cstar_ucsw1_pwltran1'  6 []  % fields
+rtables.sd025_transmissometer_wetlabs_cstar_ucsw1_pwltran1 = {  % from transmissometer_wetlabs_cstar_ucsw1.json
+'sd025_transmissometer_wetlabs_cstar_ucsw1_pwltran1'  6 []  % fields
 %         'modelSerialVersion'                             ''                                                           'Model_Serial_Version'
                    'reference'                       'counts'                                                                'Reference_value'
                       'signal'                       'counts'                                                                         'Signal'
@@ -1612,8 +1673,8 @@ rtables.transmissometer_wetlabs_cstar_ucsw1_pwltran1 = {  % from transmissometer
 %wave_rutter_sigma_s6_wamos_ii_bridge1  1  sentences
 
 %"PWAM1 - Rutter WaMoS PWAM proprietary message extended with extra variables by BAS"
-rtables.wave_rutter_sigma_s6_wamos_ii_bridge1_pwam1 = {  % from wave_rutter_sigma_s6_wamos_ii_bridge1.json
-'wave_rutter_sigma_s6_wamos_ii_bridge1_pwam1' 37 []  % fields
+rtables.sd025_wave_rutter_sigma_s6_wamos_ii_bridge1_pwam1 = {  % from wave_rutter_sigma_s6_wamos_ii_bridge1.json
+'sd025_wave_rutter_sigma_s6_wamos_ii_bridge1_pwam1' 37 []  % fields
        'significantWaveHeight'                            'm'                                                  'Significant_Wave_Height_(XHS)'
            'maximumWaveHeight'                            'm'                                                    'Maximum_Wave_Height_(HSMAX)'
                    'periodTM2'                            's'                                                              'Period_(TM2_def.)'
@@ -1657,8 +1718,8 @@ rtables.wave_rutter_sigma_s6_wamos_ii_bridge1_pwam1 = {  % from wave_rutter_sigm
 %winch_sda_v3  1  sentences
 
 %"SDAWINCH – Cable logging system data based on ODIM telegram v3"
-rtables.winch_sda_v3_sdawinch = {  % from winch_sda_v3.json
-'winch_sda_v3_sdawinch' 72 []  % fields
+rtables.sd025_winch_sda_v3_sdawinch = {  % from winch_sda_v3.json
+'sd025_winch_sda_v3_sdawinch' 72 []  % fields
              'headerMessageID'                             ''                                                              'Header_Message_ID'
        'headerNumberOfRetries'                             ''                                                       'Header_Number_of_Retries'
            'headerWantReceipt'                             ''                                                            'Header_Want_Receipt'

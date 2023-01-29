@@ -53,8 +53,7 @@ end
 %     error('error, no arguments in mrdfinfo')
 % end
 
-def = mrdefine;
-
+def = mrdefine('this_cruise');
 
 % sort out the table name
 table = mrresolve_table(table); % table is now an RVDAS table name for sure.

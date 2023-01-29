@@ -1,5 +1,5 @@
-function d = mrvars(varargin)
-% function d = mrvars(table,qflag)
+function d = mrvars_info(varargin)
+% function d = mrvars_info(table,qflag)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -39,7 +39,7 @@ if nargin < 1
     error('error, no arguments in mrdfinfo')
 end
 
-def = mrdefine;
+def = mrdefine('this_cruise');
 
 
 % sort out the table name

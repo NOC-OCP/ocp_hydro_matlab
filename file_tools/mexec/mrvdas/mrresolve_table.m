@@ -35,7 +35,7 @@ if isempty(tablein)
     error('Must specify non-empty tablein to lookup')
 end
 
-def = mrdefine;
+def = mrdefine('this_cruise','has_mstarpre');
 
 tmap_mexec = def.tablemap(:,1);
 tmap_rvdas = def.tablemap(:,2);

@@ -18,21 +18,18 @@
 %
 % Contents.m                  this file
 %
-% % These files generally do useful things
+% % These files generally do useful things:
 %
+% mrdfinfo.m                  Get info about start and end time and number of cycles (interfaces with database directly)
 % mrgaps.m                    Load data from rvdas and search for gaps
+% mrgettables.m               Make a list of all the tables in the rvdas database
 % mrlast.m                    Load the last data cycle from the rvdas table
 % mrlistit.m                  Load data from rvdas into matlab and list it to the screen
-% mrlookd.m                   Show earliest and latest time in each rvdas table and number of cycles
-% mrposinfo.m                 Get position from an rvdas table at the specified time
-% mrrvdas2mstar.m             Load data from rvdas and save it to an mexec file
-%
-% % These files access the database (and may be called by the programs above): 
-%
-% mrdfinfo.m                  Get info about start and end time and number of cycles
 % mrload.m                    Load rvdas data into matlab
-% mrgettables.m               Make a list of all the tables in the rvdas database
-% mrgettablevars.m            Look in the rvdas database and find the vars that are present for a table
+% mrlookd.m                   Show earliest and latest time in each rvdas table and number of cycles
+% mrnames.m                   Define and show rvdas table names and their mexec short equivalents
+% mrposinfo                   Get position from an rvdas table at the specified time
+% mrrvdas2mstar.m             Load data from rvdas and save it to an mexec file; calls mrload.m
 % mrvars_info.m               List the variables names and units in a rvdas table
 %
 % % These files are mainly called by the programs above
@@ -44,6 +41,7 @@
 % mrparseargs.m               Parse the varargin cell arrays of most functions
 % mrresolve_table.m           Return the name of the rvdas table
 % mrgetrvdascontents.m        Get a list of the entire contents of the rvdas database
+% mrgettablevars              Look in the rvdas database and find the vars that are present for a table
 %
 % % These files are called by mrdefine to set up the relationship between rvdas and mexec
 %
@@ -51,7 +49,7 @@
 % mrrename_varsunits.m           A lookup function for regularising rvdas variable names and units to our preferred format (also corrects for known spelling errors, and produces a list of variables which should have _raw appended to their name). This may need to be edited at the start of a cruise but should eventually pass through many cruises unchanged. 
 % mrtables_from_json.m        Makes the list of rvdas tables that mexec may want to copy. This should be (re)generated at the start of a cruise by running mrjson_get_list, and can then be edited by hand to comment out additional variables to be skipped (or these can be added to the cruise options file). 
 %
-% % These files are used for converting .json files to .mat files and reading information from them
+% % These files are used for converting .json files to .mat files and reading information out of them
 %   The json files describe the contents of the rvdas tables - variable names
 %   and units. On JC211 (28 Jan 2021) to JC238 (12 Jul 2022) units were not 
 %   stored in the database so we got them from .json files. 

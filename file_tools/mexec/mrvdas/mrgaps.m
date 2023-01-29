@@ -51,8 +51,6 @@ else
     gap = argot.othernums(1);
 end
 
-def = mrdefine;
-
 switch length(argot.dnums)
     case 2
         dn1 = argot.dnums(1);
@@ -65,7 +63,7 @@ switch length(argot.dnums)
         dn2 = now+50*365; % far in future
 end
 
-[d,n,u] = mrload(table,dn1,dn2,qflag);
+[d,~,~] = mrload(table,dn1,dn2,qflag);
 
 mtime = d.dnum;
 mtime = [dn1 ; mtime(:) ; dn2];
@@ -111,10 +109,5 @@ for k = 1:ng
     fprintf(MEXEC_A.Mfidterm,'%11s  %8s%6s %8s  %s  %3s %8s   %8s %15.3f %s\n','time gap : ',str1,daystr1,str1a,'to',daystr2,str2a,str2,dt,'seconds');
 end
     
-
-
-
-
-
 
 return

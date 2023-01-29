@@ -21,8 +21,9 @@ function rvdas_tables = mrgettables
 % Output:
 %
 %   A structure in which the fieldnames are the names of the tables in
-%   rvdas. The list of tables is determined from the psql \dt command.
-%   ***for sda, needs to be updated to just look for current tables***
+%   rvdas. The list of tables is determined from the psql \dt command, or
+%   for the SDA, \dv (meaning that they will be prefixed with cruise_ e.g.
+%   sda025_anemometer_metek_ ... etc.)
 %
 %   So fieldnames(rvdas_tables) is a cell array of the table names.
 %   Each field is []
@@ -32,10 +33,16 @@ m_common
 % place to temporarily put list of tables
 
 csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
+switch MEXEC_G.Mship
+    case 'sda'
+        sqltext = ['"\dv ' lower(MEXEC_G.MSCRIPT_CRUISE_STRING) '*" >'];
+    otherwise
+        sqltext = '"\dt" >';
+end
 if ismac
-    sqltext = ['"\dt" > ' csvname];
+    sqltext = [sqltext '! ' csvname];
 else
-    sqltext = ['"\dt" >! ' csvname];
+    sqltext = [sqltext ' ' csvname];
 end
 mr_try_psql(sqltext);
 
@@ -58,7 +65,7 @@ for kl = 1:nlines
     if length(kbar) < 3; continue; end
     s1 = t(kbar(2)+1:kbar(3)-1);
     s2 = t(kbar(1)+1:kbar(2)-1);
-    if strfind(s1,'table') % this line lists a table
+    if contains(s1,'table') % this line lists a table
         tabname = s2;
         while strcmp(tabname(1),' '); tabname(1) = []; end
         while strcmp(tabname(end),' '); tabname(end) = []; end

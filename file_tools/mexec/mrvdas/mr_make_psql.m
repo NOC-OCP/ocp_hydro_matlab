@@ -99,7 +99,7 @@ dv2str = datestr(dv2,'yyyy-mm-dd HH:MM:SS');
 try
     vdef = def.mrtables.(table);
 catch
-    error([table ' is not in mrtables']);
+    error([table ' is not defined in mrtable (see mrdefine and mrtables_from_json)']);
 end
 
 sqlname = vdef{1,1};
@@ -149,7 +149,7 @@ for kl = varnums
         thisunit = 'json_empty';
         vdef(kl,2) = {thisunit}; % don't want empty units string, even if json defs allow it.
     end
-    sqlunits = [sqlunits;thisunit];
+    sqlunits = [sqlunits; thisunit];
 end
 
 % where time between '2021-01-25' and '2021-01-27'

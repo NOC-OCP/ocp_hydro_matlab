@@ -36,7 +36,7 @@ MEXEC_G.MSCRIPT_CRUISE_STRING='sd025';
 %default data time origin is now set in opt_cruise
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.other_programs_root = '~/programs/others/'; 
-MEXEC_G.mexec_data_root = ''; %if empty, will search for cruise directory near current directory and near home directory
+MEXEC_G.mexec_data_root = '/local/users/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 1; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 
@@ -77,7 +77,7 @@ MEXEC_G.mexec_version = mexecs_version;
 cd(cdir)
 clear mexecs_version s c cdir pdir
 if isempty(which('get_cropt')) || isempty(which('m_common'))
-    disp(['adding ocp_hydro_matlab source' mexecs_version ' to path'])
+    disp(['adding ocp_hydro_matlab source' MEXEC_G.mexec_version ' to path'])
     % add paths at and below source
     addpath(genpath(MEXEC_G.mexec_source_root))
     rmpath(genpath(fullfile(MEXEC_G.mexec_source_root,'.git')))
@@ -218,7 +218,8 @@ if skipunderway<2
                     %local directory in this case (legwork)
                     MEXEC_G.RVDAS.jsondir = '/local/users/pstar/mounts/public/data_management/documentation/json_sensor_files/';
                     MEXEC_G.RVDAS.user = 'rvdas_ro';
-                    MEXEC_G.RVDAS.database = ['"' '20210321' '"'];
+                    %MEXEC_G.RVDAS.database = ['"' '20210321' '"'];
+                    MEXEC_G.RVDAS.database = ['"' lower(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
             end
             if ismac
                 MEXEC_G.RVDAS.psql_path = '/usr/local/bin/';
