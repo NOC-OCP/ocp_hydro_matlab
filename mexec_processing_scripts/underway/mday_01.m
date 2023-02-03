@@ -1,5 +1,5 @@
-function status = mday_01(streamname,mstarprefix,day,year)
-% function status = mday_01(streamname,mstarprefix,day,year)
+function status = mday_01(streamname,mstarprefix,root_out,day,year)
+% function status = mday_01(streamname,mstarprefix,root_out,day,year)
 %
 % use mdatapup to grab a day of data from a techsas NetCDF file or SCS file
 %
@@ -29,7 +29,6 @@ day_string = sprintf('%03d',day);
 if MEXEC_G.quiet<=1; fprintf(1,'loading underway data stream %s to write to %s_%s_d%s_raw.nc\n',streamname,mstarprefix,mcruise,day_string); end
 
 status = 1;
-root_out = mgetdir(mstarprefix);
 % make output directory if it doesn't exist
 if exist(root_out,'dir') ~= 7
     mkdir(root_out)

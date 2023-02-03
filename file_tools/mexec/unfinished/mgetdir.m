@@ -1,4 +1,4 @@
-function mpath = mgetdir(M_ABBREV);
+function mpath = mgetdir(M_ABBREV)
 %function mpath = mgetdir(M_ABBREV);
 %function mpath = mgetdir(abbrev);
 %

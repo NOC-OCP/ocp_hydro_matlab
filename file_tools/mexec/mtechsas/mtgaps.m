@@ -29,7 +29,7 @@ tstream = mtresolve_stream(instream);
 if ~exist('g','var'); g = 5; end  % look for gaps > 5 seconds by default
 if ischar(g); g = str2num(g); end % g comes in as a char if it is simply typed on the command line
 
-[mt1 mt2] = mtgetdfinfo(tstream,'f'); % get time limits in case they are required for default
+[mt1, mt2] = mtgetdfinfo(tstream,'f'); % get time limits in case they are required for default
 
 if ~exist('dn1','var'); dn1 = mt1; end
 if isempty(dn1); dn1 = mt1; end
@@ -55,8 +55,8 @@ if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
 
 for kf = 1:nf
     fn = fnames{kf};
-    fullfn = fullfile(MEXEC_G.uway_root, fn);
-    [dc1(kf) dc2(kf)] = mtgetdcrange(fn,dn1,dn2);
+    fullfn = fullfile(uway_root, fn);
+    [dc1(kf), dc2(kf)] = mtgetdcrange(fn,dn1,dn2);
     totdc = totdc + dc2(kf)-dc1(kf)+1;
 end
        
@@ -70,9 +70,10 @@ kount = 0;
 m = ['loading variable ' 'time'];
 if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
 
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
 for kf = 1:nf
     fn = fnames{kf};
-    fullfn = fullfile(MEXEC_G.uway_root, fn);
+    fullfn = fullfile(uway_root, fn);
     nk = dc2(kf)-dc1(kf)+1; % load this many data cycles on this operation
     vin = nc_varget(fullfn,'time',dc1(kf)-1,nk);
     vuse(kount+1:kount+nk) = vin;
@@ -80,7 +81,7 @@ for kf = 1:nf
 end
 
 ttime = vuse;
-mtime = MEXEC_G.uway_torg + ttime;
+mtime = uway_torg + ttime;
 mtime = [dn1 mtime(:)' dn2];
 dtime = diff(mtime)*86400; % time difference in seconds
 kgaps = find(dtime > g);

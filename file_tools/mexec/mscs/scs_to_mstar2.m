@@ -5,8 +5,8 @@ function scs_to_mstar2
 % load scs file into mstar file
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is MEXEC_G.uway_root, which for example can be
-% /data/cruise/jcr/20090310/scs_copy/Compress
+% The searched directory is uway_root, set in cruise options, which for
+% example can be /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL
 % for example.
@@ -66,13 +66,9 @@ instrument = ' '; % null for the time being
 
 % bak for jr195 2009-sep-17
 % load data before creating mstar file in case no data cycles found
-[tdata tunits] = msload(tstream,dn1,dn2,loadvlist);
+[tdata, tunits] = msload(tstream,dn1,dn2,loadvlist);
 if isempty(tdata.time) 
-%    if isfield(MEXEC_G, 'uway_writeempty') & MEXEC_G.uway_writeempty % no data cycles found
-%        warning(['no data for ' tstream ' between ' dn1 ' and ' dn2])
-%    else
         return
-%    end
 end
 
 ncfile.name = mstar_fn;

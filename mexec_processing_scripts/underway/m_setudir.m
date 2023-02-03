@@ -20,18 +20,20 @@
 %%%%%%% and which directories they go with %%%%%%%
 
 isrvdas = 0;
-switch(MEXEC_G.Mshipdatasystem)
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+
+switch(shipdatasystem)
     case 'techsas'
         % based on m_check_mtnames by bak on jc184 4 july 2019 uhdas trials
         matlist = mtnames; matlist = matlist(:,[1 3]); am = matlist(:,2); % mtnames list
         as = mtgetstreams; % list of all streams found
         f = 'mtnames';
-        udirs = muwaydirs(MEXEC_G.Mshipdatasystem);
+        udirs = muwaydirs(shipdatasystem);
     case 'scs'
         matlist = msnames; matlist = matlist(:,[1 3]); am = matlist(:,2); %msnames list
         as = msgetstreams; %list of all streams found
         f = 'msnames';
-        udirs = muwaydirs(MEXEC_G.Mshipdatasystem);
+        udirs = muwaydirs(shipdatasystem);
     case 'rvdas'
         d = mrdefine('this_cruise','has_mstarpre'); 
         matlist = d.tablemap(ismember(d.tablemap(:,2),d.mrtables_list),:);
@@ -39,7 +41,7 @@ switch(MEXEC_G.Mshipdatasystem)
 end
 
 if ~isrvdas
-    fprintf(2,'\n\n%s\n\n',['The following ' MEXEC_G.Mshipdatasystem ' stream names are not identified in ' f])
+    fprintf(2,'\n\n%s\n\n',['The following ' shipdatasystem ' stream names are not identified in ' f])
     for kl = 1:length(as)
         if sum(strcmp(as{kl},am))==0
             fprintf(1,'%s\n',as{kl});
@@ -47,7 +49,7 @@ if ~isrvdas
     end
     fprintf(1,'\n%s\n\n\n\n','End of list')
 
-    fprintf(1,'%s\n\n',['The following ' f ' stream names are not found in ' MEXEC_G.Mshipdatasystem])
+    fprintf(1,'%s\n\n',['The following ' f ' stream names are not found in ' shipdatasystem])
     m = zeros(length(am),1);
     for kl = 1:length(am)
         if sum(strcmp(am{kl},as))==0

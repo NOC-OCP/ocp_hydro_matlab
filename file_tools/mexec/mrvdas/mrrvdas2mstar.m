@@ -116,8 +116,3 @@ end
 hnew.dataname = dataname;
 hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER ' calling msave'];
 mfsave(otfile, dd, hnew);
-
-%MEXEC_G.PLATFORM_TYPE
-%MEXEC_G.PLATFORM_IDENTIFIER
-%MEXEC_G.PLATFORM_NUMBER
-%MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN

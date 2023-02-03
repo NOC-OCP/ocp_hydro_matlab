@@ -1,5 +1,5 @@
-function [vdata vunits] = mtload(instream,dn1,dn2,varlist)
-% function [vdata vunits] = mtload(instream,dn1,dn2,varlist)
+function [vdata, vunits] = mtload(instream,dn1,dn2,varlist)
+% function [vdata, vunits] = mtload(instream,dn1,dn2,varlist)
 %
 % USE, eg
 %   mtload('winch',[2009 4 4],[2009 5 4 12 0 0])
@@ -74,10 +74,11 @@ dc1 = nan+ones(nf,1); dc2 = dc1; totdc = 0;
 m = 'Counting data cycles';
 if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
 
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
 for kf = 1:nf
     fn = fnames{kf};
-    fullfn = fullfile(MEXEC_G.uway_root, fn);
-    [dc1(kf) dc2(kf)] = mtgetdcrange(fn,dn1,dn2);
+    fullfn = fullfile(uway_root, fn);
+    [dc1(kf), dc2(kf)] = mtgetdcrange(fn,dn1,dn2);
     totdc = totdc + dc2(kf)-dc1(kf)+1;
 end
        
@@ -95,7 +96,7 @@ for kv = varnums
 
     for kf = 1:nf
         fn = fnames{kf};
-        fullfn = fullfile(MEXEC_G.uway_root, fn);
+        fullfn = fullfile(uway_root, fn);
         nk = dc2(kf)-dc1(kf)+1; % load this many data cycles on this operation
         vin = nc_varget(fullfn,vars{kv},dc1(kf)-1,nk);
         vuse(kount+1:kount+nk) = vin;

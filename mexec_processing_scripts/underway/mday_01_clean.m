@@ -1,5 +1,5 @@
-function mday_01_clean(abbrev,day)
-%function mday_01_clean(abbrev,day)
+function mday_01_clean(abbrev,root_out,day)
+%function mday_01_clean(abbrev,root_out,day)
 %
 % abbrev (char) is the mexec short name prefix for the data stream
 % day (char or numeric) is the day number
@@ -29,8 +29,6 @@ function mday_01_clean(abbrev,day)
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-root_out = mgetdir(abbrev);
 
 day_string = sprintf('%03d',day);
 if MEXEC_G.quiet<=1; fprintf(1,'performing any automatic cleaning/editing/averaging from %s_%s_d%s_raw.nc to %s_%s_d%s_edt.nc\n',abbrev,mcruise,day_string,abbrev,mcruise,day_string); end

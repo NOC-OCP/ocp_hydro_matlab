@@ -12,36 +12,51 @@
 
 
 switch scriptname
-    
+
     %%%%%%%%%% ship (not a script) %%%%%%%%%%
     case 'ship'
         %parameters used by multiple scripts, related to ship underway data
         switch oopt
-            case 'default_nav'
+            case 'datasys_best'
                 crhelp_str = {'Set (or overwrite) ship-based defaults for data '
                     'system and best navigation and heading/attitude streams '
                     '(MEXEC_G.default_navstream and MEXEC_G.default_hedstream'};
-                switch MEXEC_G.Mship
-                    case {'discovery' 'cook'}
-                        %di: techsas, cnav, gyro_s
-                        %pre 2021: techsas, posmvpos, attposmv
-                        MEXEC_G.Mshipdatasystem = 'rvdas';
-                        MEXEC_G.default_navstream = 'pospmv';
-                        MEXEC_G.default_hedstream = 'attpmv';
-                    case 'sda'
-                        MEXEC_G.Mshipdatasystem = 'rvdas';
-                        MEXEC_G.default_navstream = 'possea1';
-                        MEXEC_G.default_hedstream = 'attsea1';
-                    case 'jcr'
-                        MEXEC_G.Mshipdatasystem = 'scs';
-                        MEXEC_G.default_navstream = 'seatex_gll';
-                        MEXEC_G.default_hedstream = 'seatex_hdt';
-                        MEXEC_G.Mrsh_machine = 'jruj'; % remote machine for rvs datapup command
-                    case 'endeavor'
-                        MEXEC_G.Mshipdatasystem = 'scs';
-                        warning('add fields default_navstream and default_hedstream to MEXEC_G here or in opt_{cruise}.m');
-                    otherwise
-                        warning('No underway data system and default nav streams set for %s',MEXEC_G.Mship)
+                if strcmp(MEXEC_G.Mship,'sda')
+                    shipdatasystem = 'rvdas';
+                    default_navstream = 'posseapath_320_1';
+                    default_hedstream = 'hdtseapath_320_1';
+                elseif ismember(MEXEC_G.Mship,{'cook','discovery'})
+                    if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
+                        shipdatasystem = 'rvdas';
+                        default_navstream = 'pospmv';
+                        default_hedstream = 'attpmv';
+                    else
+                        shipdatasystem = 'techsas';
+                        default_navstream = 'posmvpos';
+                        default_hedstream = 'attposmv';
+                    end
+                elseif strcmp(MEXEC_G.Mship,'jcr')
+                    shipdatasystem = 'scs';
+                    default_navstream = 'seatex_gll';
+                    default_hedstream = 'seatex_hdt';
+                elseif ismember(MEXEC_G.Mship,{'knorr','endeavor'})
+                    shipdatasystem = 'scs';
+                    warning('add fields default_navstream and default_hedstream here or in opt_{cruise}.m');
+                else
+                    warning('No underway data system and default nav streams set for %s',MEXEC_G.Mship)
+                end
+                switch shipdatasystem
+                    case 'techsas'
+                        uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
+                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
+                        if ismac; uway_root = [uway_root '_mac']; end
+                    case 'scs'
+                        uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
+                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs_raw'); % scs raw data on logger machine
+                        uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs_sed'); % scs raw data on logger machine
+                        uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs_mat'); % local directory for scs converted to matlab
+                    case 'rvdas'
+                        uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
                 end
             case 'ship_data_sys_names'
                 crhelp_str = {'Datasystem- (and possibly ship-) specific list of mexec directory names '
@@ -66,93 +81,118 @@ switch scriptname
         end
         %%%%%%%%%% end ship (not a script) %%%%%%%%%%
         
-                %%%%%%%%%% mrvdas_ingest (not a script) %%%%%%%%%%
+        %%%%%%%%%% mrvdas_ingest (not a script) %%%%%%%%%%
     case 'mrvdas_ingest'
         switch oopt
-            case 'rvdas_skip'
-                crhelp_str = {'Determine which tables and variables are listed in mrtables_from_json and'
-                    'therefore read into mexec processing, by adding to or modifying:'
-                    'table_skip: list of tables (id in the json files; also json file prefixes) to not load at all'
-                    '  (e.g. air2sea_gravity)'
-                    'msg_skip: list of messages (name or [talkId messageId]) to never read in from any '
-                    '  instrument (e.g. GPDTM)'
-                    'sentence_skip: list of instrument-message combinations ([id talkId messageId])'
-                    '  not to read in (often because they duplicate other messages from the same '
-                    '  instrument, e.g. phins_att_pixsepositi),'
-                    'pat_skip: list of patterns, variables containing any of which will never be read in'
-                    '  (e.g. unitsOf),'
-                    'var_skip: list of variables to never be read in from any table/message'
-                    '  (e.g. speedknots),'
-                    'sentence_var_skip: list of instrument_message_variable combinations to not read in'
-                    '  (e.g. sbe45_nanan_soundVelocity).'
-                    'All are case-insensitive.'
-                    'Defaults in msg_skip include datum, time zone, and satellite status,'
-                    'defaults in json_skip include gravimeters, USBL, and (depending on the ship)'
-                    'skipperlog and/or chernikeef E/M log,'
-                    'defaults in sentence_skip are ship-dependent and include many phins messages on DY';
-                    'defaults in pat_skip and var_skip include units, flags, and satellite-status related fields,'
-                    'and there are no defaults for sentence_var_skip.'};
-                msg_skip = {'glgsv', ...
-                    'gndtm', 'gngsa', 'gngst', 'gnzda', ...
-                    'gpdtm', 'gpgga', 'gpgsa', 'gpgst', 'gpgsv', ...
-                    'gprmc', 'gpzda', ...
-                    'heths', 'inzda', 'ppnsd', ...
-                    'pcrfs', 'pctnh'};
-                pat_skip = {'unitsOf', 'unitOf', 'Unit', 'des', 'geoid', 'dgnss', 'type', ...
-                    'magvar', 'status', 'vbw', 'depthfeet', 'fathom', ...
-                    'magnetic' 'flag' 'hdop' 'ggaqual' 'version' 'device' ...
-                    };
-                var_skip = {'speedknots' 'winchDatum' 'undefined' 'celsiusFlag' 'maxrangescale' ...
-                    'geoid' 'diffcAge' 'UTCDate' 'maxrange' 'trueheading' ...
-                    'truecourse' 'positioningmode' 'ggaqual' 'numsat' 'hdop' 'gllqual' ...
-                    'selftest' 'testmode' 'spare' 'checksum' 'syncbyte2' ...
-                    'identity' 'serialnumber'};
-                sentence_var_skip = {};
-                        table_skip = {};
-                        sentence_skip = {};
+            case 'rvdas_database'
+                RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
                 switch MEXEC_G.Mship
-                    case 'discovery'
-                        table_skip = [table_skip '10_at1m_uw' 'at1m_u12_uw' ...
-                            'air2sea_gravity' 'air2sea_s84' ...
-                            'posmv_att' 'posmv_gyro' 'seaspy'];
-                        sentence_skip = ['phins_att_pixsepositi', 'phins_att_pixsespeed', 'phins_att_pixseutmwgs',...
-                            'phins_att_pixsetime', 'phins_att_pixsestdhrp', 'phins_att_pixsestdpos',...
-                            'phins_att_pixsestdspd', 'phins_att_pixseutcin', 'phins_att_pixsegp2in', ...
-                            'phins_att_pixsealgsts', 'phins_att_pixsestatus', 'phins_att_pixseht0sts'];
                     case 'cook'
-                        table_skip = [table_skip 'airsea2', 'gravat1m', 'ranger2usbl', 'seaspy2', 'slogchernikeef', 'rex2'];
-                        sentence_skip = [sentence_skip 'cnav_gngll', 'cnav_gnrmc', 'posmv_prdid', ...
-                            'seapathatt_ingga', 'seapathatt_psxn20', 'seapathgps_inrmc', 'seapathgps_ingll'...
-                            'sgyro_hchdm', 'ea640_sddbs'];
-                        msg_skip = [msg_skip, ...
-                            'rex2_3rr0r'];
+                        RVDAS.machine = 'rvdas.cook.local';
+                        RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/jcmeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
+                        RVDAS.user = 'rvdas';
+                        RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+                    case 'discovery'
+                        RVDAS.machine = '192.168.62.12';
+                        RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/dymeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
+                        RVDAS.user = 'rvdas';
+                        RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
                     case 'sda'
-                        sentence_skip = [sentence_skip, 'singlebeam_skipper_gds_102_sddpt', 'singlebeam_skipper_gds102_sddbs',...
-                            'singlebeam_skipper_gds102_sddbk', 'singlebeam_skipper_gds102_pskpdpt', 'singlebeam_skipper_gds102_sdalr',...
-                            'gnss_saab_r5_supreme_gnrmc'];
-                    otherwise
+                        RVDAS.machine = 'sdl-rvdas-s1.sda.bas.ac.uk';
+                        %local(ly) mounted directory in this case (legwork)
+                        RVDAS.jsondir = '/local/users/pstar/mounts/public/data_management/documentation/json_sensor_files/';
+                        RVDAS.user = 'rvdas_ro';
+                        RVDAS.database = ['"' '20210321' '"'];
                 end
-            case 'use_cruise_views'
-                crhelp_str = {'If use_cruise_views = 1 (default 0), prepend string view_name'
-                    '(default lower(MEXEC_G.MSCRIPT_CRUISE_STRING)) to names from the json files.'};
-                if strcmp(MEXEC_G.Mship,'sda')
-                    use_cruise_views = 1;
-                    view_name = lower(MEXEC_G.MSCRIPT_CRUISE_STRING);
+                if ismac
+                    RVDAS.psql_path = '/usr/local/bin/';
                 else
-                    use_cruise_views = 0;
+                    RVDAS.psql_path = ''; %'/usr/bin/' but on linux matlab finds it on path on its own
                 end
-            case 'rvdas_nameform'
-                crhelp_str = {'Set npre, the number of prefixes (separated by underscores) in '
-                    'rvdas table names which are not part of the instrument name, e.g.'
-                    'with npre=1, ''anemometer_ft_technologies_ft702lt_wimwv'' the instrument'
-                    'name would be ft_technologies_ft702lt'};
-                switch MEXEC_G.Mship
-                    case 'sda'
-                        npre = 1;
-                    otherwise
-                        npre = 0;
-                end
+    case 'rvdas_skip'
+        crhelp_str = {'Determine which tables and variables are listed in mrtables_from_json and'
+            'therefore read into mexec processing, by adding to or modifying:'
+            'table_skip: list of tables (id in the json files; also json file prefixes) to not load at all'
+            '  (e.g. air2sea_gravity)'
+            'msg_skip: list of messages (name or [talkId messageId]) to never read in from any '
+            '  instrument (e.g. GPDTM)'
+            'sentence_skip: list of instrument-message combinations ([id talkId messageId])'
+            '  not to read in (often because they duplicate other messages from the same '
+            '  instrument, e.g. phins_att_pixsepositi),'
+            'pat_skip: list of patterns, variables containing any of which will never be read in'
+            '  (e.g. unitsOf),'
+            'var_skip: list of variables to never be read in from any table/message'
+            '  (e.g. speedknots),'
+            'sentence_var_skip: list of instrument_message_variable combinations to not read in'
+            '  (e.g. sbe45_nanan_soundVelocity).'
+            'All are case-insensitive.'
+            'Defaults in msg_skip include datum, time zone, and satellite status,'
+            'defaults in json_skip include gravimeters, USBL, and (depending on the ship)'
+            'skipperlog and/or chernikeef E/M log,'
+            'defaults in sentence_skip are ship-dependent and include many phins messages on DY';
+            'defaults in pat_skip and var_skip include units, flags, and satellite-status related fields,'
+            'and there are no defaults for sentence_var_skip.'};
+        msg_skip = {'glgsv', ...
+            'gndtm', 'gngsa', 'gngst', 'gnzda', ...
+            'gpdtm', 'gpgga', 'gpgsa', 'gpgst', 'gpgsv', ...
+            'gprmc', 'gpzda', ...
+            'heths', 'inzda', 'ppnsd', ...
+            'pcrfs', 'pctnh'};
+        pat_skip = {'unitsOf', 'unitOf', 'Unit', 'des', 'geoid', 'dgnss', 'type', ...
+            'magvar', 'status', 'vbw', 'depthfeet', 'fathom', ...
+            'magnetic' 'flag' 'hdop' 'ggaqual' 'version' 'device' ...
+            };
+        var_skip = {'speedknots' 'winchDatum' 'undefined' 'celsiusFlag' 'maxrangescale' ...
+            'geoid' 'diffcAge' 'UTCDate' 'maxrange' 'trueheading' ...
+            'truecourse' 'positioningmode' 'ggaqual' 'numsat' 'hdop' 'gllqual' ...
+            'selftest' 'testmode' 'spare' 'checksum' 'syncbyte2' ...
+            'identity' 'serialnumber'};
+        sentence_var_skip = {};
+        table_skip = {};
+        sentence_skip = {};
+        switch MEXEC_G.Mship
+            case 'discovery'
+                table_skip = [table_skip '10_at1m_uw' 'at1m_u12_uw' ...
+                    'air2sea_gravity' 'air2sea_s84' ...
+                    'posmv_att' 'posmv_gyro' 'seaspy'];
+                sentence_skip = ['phins_att_pixsepositi', 'phins_att_pixsespeed', 'phins_att_pixseutmwgs',...
+                    'phins_att_pixsetime', 'phins_att_pixsestdhrp', 'phins_att_pixsestdpos',...
+                    'phins_att_pixsestdspd', 'phins_att_pixseutcin', 'phins_att_pixsegp2in', ...
+                    'phins_att_pixsealgsts', 'phins_att_pixsestatus', 'phins_att_pixseht0sts'];
+            case 'cook'
+                table_skip = [table_skip 'airsea2', 'gravat1m', 'ranger2usbl', 'seaspy2', 'slogchernikeef', 'rex2'];
+                sentence_skip = [sentence_skip 'cnav_gngll', 'cnav_gnrmc', 'posmv_prdid', ...
+                    'seapathatt_ingga', 'seapathatt_psxn20', 'seapathgps_inrmc', 'seapathgps_ingll'...
+                    'sgyro_hchdm', 'ea640_sddbs'];
+                msg_skip = [msg_skip, ...
+                    'rex2_3rr0r'];
+            case 'sda'
+                sentence_skip = [sentence_skip, 'singlebeam_skipper_gds_102_sddpt', 'singlebeam_skipper_gds102_sddbs',...
+                    'singlebeam_skipper_gds102_sddbk', 'singlebeam_skipper_gds102_pskpdpt', 'singlebeam_skipper_gds102_sdalr',...
+                    'gnss_saab_r5_supreme_gnrmc'];
+            otherwise
         end
+    case 'use_cruise_views'
+        crhelp_str = {'If use_cruise_views = 1 (default 0), prepend string view_name'
+            '(default lower(MEXEC_G.MSCRIPT_CRUISE_STRING)) to names from the json files.'};
+        if strcmp(MEXEC_G.Mship,'sda')
+            use_cruise_views = 1;
+            view_name = lower(MEXEC_G.MSCRIPT_CRUISE_STRING);
+        else
+            use_cruise_views = 0;
+        end
+    case 'rvdas_nameform'
+        crhelp_str = {'Set npre, the number of prefixes (separated by underscores) in '
+            'rvdas table names which are not part of the instrument name, e.g.'
+            'with npre=1, ''anemometer_ft_technologies_ft702lt_wimwv'' the instrument'
+            'name would be ft_technologies_ft702lt'};
+        switch MEXEC_G.Mship
+            case 'sda'
+                npre = 1;
+            otherwise
+                npre = 0;
+        end
+end
 
         %%%%%%%%%% bathy (not a script) %%%%%%%%%%
     case 'bathy'

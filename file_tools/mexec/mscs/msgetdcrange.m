@@ -5,7 +5,7 @@ function [dc1 dc2 timem] = msgetdcrange(techsasfn,dn1,dn2)
 % return time of data as matlab datenum so we don't have to read it again later
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is MEXEC_G.uway_root, which for example can be
+% The searched directory is uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL

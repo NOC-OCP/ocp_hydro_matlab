@@ -5,13 +5,13 @@ function matnames = mtgetstreamfilenames(instream)
 %
 % mstar techsas (mt) routine; requires mexec to be set up
 %
-% The techsas files are searched for in a directory MEXEC_G.uway_root defined in
-% the mexec setup. At sea, this will typically be a data area exported from a
+% The techsas files are searched for in a directory uway_root defined in
+% cruise options. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 % This function searches for the set of techsas files whose name matches
 % the stream name provided in the argument. The search takes place in the
-% MEXEC_G.uway_root directory
+% uway_root directory
 %
 % Each tstream is the part of the techsas filename that does not include the
 % date; ie the first 16 chars have been removed; eg
@@ -22,7 +22,8 @@ m_common
 tstream = mtresolve_stream(instream);
 
 
-files = dir(fullfile(MEXEC_G.uway_root, ['*' tstream]));
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+files = dir(fullfile(uway_root, ['*' tstream]));
 
 if ~isempty(files)
 

@@ -63,9 +63,8 @@ sqlname = vdef{1,1};
 
 % Number of cycles. Skip if fastflag is set to 'f'
 if ~strcmp('f',fastflag)
-    csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
-    sqltext = ['"\copy (select count(*) from ' sqlname ' ) to ''' csvname ''' csv "'];
-    mr_try_psql(sqltext);
+    sqltext = ['"\copy (select count(*) from ' sqlname ' ) to '''];
+    [csvname, ~, ~] = mr_try_psql(sqltext);
     ncyc = load(csvname); % Should just load a number
 else
     ncyc = -1;

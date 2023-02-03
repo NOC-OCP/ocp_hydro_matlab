@@ -1,5 +1,5 @@
-function mtlookd(varargin)
-% function mtlookd(arg)
+function mtlookd2(varargin)
+% function mtlookd2(arg)
 %
 % All streams in the techsas directory are scanned, and mtdfinfo is used
 % to produce a summary of earliest and latest data for each stream.
@@ -9,8 +9,8 @@ function mtlookd(varargin)
 % 
 % mstar techsas (mt) routine; requires mexec to be set up
 %
-% The techsas files are searched for in a directory MEXEC_G.uway_root defined in
-% the mexec setup. At sea, this will typically be a data area exported from a
+% The techsas files are searched for in a directory uway_root defined in
+% cruise_options. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 % first draft BAK JC032
@@ -24,7 +24,7 @@ if nargin == 0
     argcell = {' ' tupdate_def}; % defaults
 end
 
-if nargin == 1; 
+if nargin == 1
     arg1 = varargin{1};
     argnum = str2num(arg1);
     if isempty(argnum) % string wasnt a time interval

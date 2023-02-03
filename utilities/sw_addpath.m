@@ -39,7 +39,9 @@ if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~force_ext_software_versio
     ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root
 end
 
-MEXEC_G.exsw_paths = {};
+if ~isfield(MEXEC_G,'exsw_paths')
+    MEXEC_G.exsw_paths = {};
+end
 
 for lno = 1:size(ld,1)
     

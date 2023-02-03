@@ -1,5 +1,5 @@
-function [sqltext,csvname,sqlunits]= mr_make_psql(varargin)
-% function [sqltext,csvname,sqlunits]= mr_make_psql(table,dv1,dv2,varlist)
+function [sqltext,sqlunits]= mr_make_psql(varargin)
+% function [sqltext,sqlunits]= mr_make_psql(table,dv1,dv2,varlist)
 % 
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -57,6 +57,7 @@ function [sqltext,csvname,sqlunits]= mr_make_psql(varargin)
 
 
 m_common
+scriptname = 'mrvdas_ingest'; oopt = 'rvdas_database'; get_cropt
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
 table = argot.table;
@@ -153,7 +154,6 @@ for kl = varnums
 end
 
 % where time between '2021-01-25' and '2021-01-27'
-csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
-sqltext = ['"\copy (select ' sqlvars ' from ' sqlname ' where time between ''' dv1str ''' and ''' dv2str ''' order by time asc) to ''' csvname ''' csv header"'];
+sqltext = ['"\copy (select ' sqlvars ' from ' sqlname ' where time between ''' dv1str ''' and ''' dv2str ''' order by time asc) to '''];
 
 return

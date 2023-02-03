@@ -38,10 +38,8 @@ if length(ktable) == 1
     table = tablemap{ktable,2}; 
 end
 
-
-csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
-sqltext = ['"\copy (select * from ' table ' order by time asc limit 0) to ''' csvname ''' csv header"'];
-mr_try_psql(sqltext)
+sqltext = ['"\copy (select * from ' table ' order by time asc limit 0) to '''];
+[csvname, ~, ~] = mr_try_psql(sqltext);
 
 fid = fopen(csvname,'r');
 t = fgetl(fid);  % t is now the comma delimited list of variable names

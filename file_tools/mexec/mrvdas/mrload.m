@@ -88,10 +88,10 @@ ktable = strcmp(table,tablemap(:,2));
 mtable = tablemap{ktable,1}; % mtable is the mexec tablename
 
 %get command
-[sqlcom, fnin, units] = mr_make_psql(table,dv1,dv2,varstring); % it should be fine if varstring is empty
+[sqlcom, units] = mr_make_psql(table,dv1,dv2,varstring); % it should be fine if varstring is empty
 
 %now run
-mr_try_psql(sqlcom);
+[fnin, ~, ~] = mr_try_psql(sqlcom);
 
 clear ds dd 
 ds = dataset('file',fnin,'delimiter',',');

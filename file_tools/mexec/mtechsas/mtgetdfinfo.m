@@ -16,8 +16,8 @@ function [firstm lastm numdc] = mgetdfinfo(instream,tonly)
 % 
 % mstar techsas (mt) routine; requires mexec to be set up
 %
-% The techsas files are searched for in a directory MEXEC_G.uway_root defined in
-% the mexec setup. At sea, this will typically be a data area exported from a
+% The techsas files are searched for in a directory uway_root defined in
+% cruise options. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 
@@ -36,16 +36,16 @@ firstm = 0; lastm = 0; numdc = 0;
 
 if strncmp(tonly,'f',1) % faster option; don't count numdc in every file
     for kn = 1:nm
-        [t1(kn) t2(kn) num(kn)] = mtgetfiletimes(matnames{kn});
+        [t1(kn), t2(kn), num(kn)] = mtgetfiletimes(matnames{kn});
         if num(kn) > 0; firstm = t1(kn); break; end % quit when we find the first value of t1
     end
 
     for kn = nm:-1:1
-        [t1(kn) t2(kn) num(kn)] = mtgetfiletimes(matnames{kn});
+        [t1(kn), t2(kn), num(kn)] = mtgetfiletimes(matnames{kn});
         if num(kn) > 0; lastm = t2(kn); break; end % quit when we find the first value of t2 starting at the end
     end
 
-    if firstm == 0; 
+    if firstm == 0
         numdc = nan;
     else
         numdc = -1;
@@ -53,12 +53,12 @@ if strncmp(tonly,'f',1) % faster option; don't count numdc in every file
 
 else
     for kn = 1:nm
-        [t1(kn) t2(kn) num(kn)] = mtgetfiletimes(matnames{kn});
+        [t1(kn), t2(kn), num(kn)] = mtgetfiletimes(matnames{kn});
     end
 
     firstm = min(t1(num>0));
     lastm = max(t2(num>0));
-    numdc = nansum(num);
+    numdc = m_nansum(num);
 end
 
 return

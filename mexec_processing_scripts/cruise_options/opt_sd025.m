@@ -1,4 +1,4 @@
-ticasts = [3 4 7];
+ticasts = [3 4 7 11];
 
 switch scriptname
 
@@ -13,7 +13,6 @@ switch scriptname
     case 'castpars'
         switch oopt
             case 'oxy_align'
-                %oxy_align = 2; %***? none? 
                 oxy_end = 1;
             case 'shortcasts'
                 shortcasts = [3 4 7];

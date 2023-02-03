@@ -32,7 +32,6 @@ m_common
 
 % place to temporarily put list of tables
 
-csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 scriptname = 'mrvdas_ingest'; oopt = 'use_cruise_views'; get_cropt
 if use_cruise_views
     sqltext = ['"\dv ' view_name '*" >'];
@@ -40,11 +39,11 @@ else
     sqltext = '"\dt" >';
 end
 if ismac
-    sqltext = [sqltext '! ' csvname];
+    sqltext = [sqltext '! '];
 else
-    sqltext = [sqltext ' ' csvname];
+    sqltext = [sqltext ' '];
 end
-mr_try_psql(sqltext);
+[csvname, ~, ~] = mr_try_psql(sqltext);
 
 fid = fopen(csvname,'r');
 tl = cell(0);

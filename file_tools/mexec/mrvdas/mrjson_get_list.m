@@ -9,11 +9,12 @@ end
 listfile = fullfile(jsondir,'..','list_json.txt');
 
 %sync json files
+scriptname = 'mrvdas_ingest'; oopt = 'rvdas_database'; get_cropt
 switch MEXEC_G.Mship
     case 'sda'
-        system(['rsync -au --delete ' MEXEC_G.RVDAS.jsondir '/ ' jsondir '/']);
+        system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);
     otherwise
-        system(['rsync -au --delete ' MEXEC_G.RVDAS.user '@' MEXEC_G.RVDAS.machine ':' MEXEC_G.RVDAS.jsondir '/ ' jsondir '/']);
+        system(['rsync -au --delete ' RVDAS.user '@' RVDAS.machine ':' RVDAS.jsondir '/ ' jsondir '/']);
 end
 
 %list them to file

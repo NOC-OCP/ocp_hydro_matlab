@@ -17,7 +17,7 @@ function [lat lon] = msposinfo(dn1,navstream)
 % first draft by BAK on JC032
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is MEXEC_G.uway_root, which for example can be
+% The searched directory is uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL
@@ -34,18 +34,18 @@ navminus = tstream;
 navunder = navminus;
 navunder(strfind(navunder,'-')) = '_';
 
-if ~exist('dn1','var')
-    [pdata u] = mslast(tstream);
-    cmd = ['lat = pdata.' navunder '_lat;']; eval(cmd);
-    cmd = ['lon = pdata.' navunder '_lon;']; eval(cmd);
-    dn = pdata.time+MEXEC_G.uway_torg;
-elseif isempty(dn1); 
-    [pdata u] = mslast(tstream);
-    cmd = ['lat = pdata.' navunder '_lat;']; eval(cmd);
-    cmd = ['lon = pdata.' navunder '_lon;']; eval(cmd);
-    dn = pdata.time+MEXEC_G.uway_torg;
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+if ~exist('dn1','var') || isempty(dn1)
+    [pdata, ~] = mslast(tstream);
+    lat = pdata.([navunder '_lat']);
+    lon = pdata.([navunder '_lon']);
+    if ~exist('dn1','var')
+        dn = pdata.time+uway_torg;
+    else
+        dn = pdata.time+MEXEC_G.uway_torg;
+    end
 else
-    if ischar(dn1);
+    if ischar(dn1)
         cmd =['dn1 = [' dn1 '];'];  % if the arg has come in as a string, convert from char to number
         eval(cmd);
     end
@@ -58,7 +58,7 @@ else
     tin = pdata.time+MEXEC_G.uway_torg;
     cmd = ['latin = pdata.' navunder '_lat;']; eval(cmd)
     cmd = ['lonin = pdata.' navunder '_lon;']; eval(cmd)
-    [tunique kun] = unique(tin); % bak on jr281 27 march 2013, repeated time in seatex-gll caused failure in ctd2a
+    [tunique, kun] = unique(tin); % bak on jr281 27 march 2013, repeated time in seatex-gll caused failure in ctd2a
     lat = interp1(tunique,latin(kun),dn);
     lon = interp1(tunique,lonin(kun),dn);
 % else
@@ -72,8 +72,8 @@ if nargout > 0 return; end
 % else print to screen
 
 
-[latd latm] = m_degmin_from_decdeg(lat);
-[lond lonm] = m_degmin_from_decdeg(lon);
+[latd, latm] = m_degmin_from_decdeg(lat);
+[lond, lonm] = m_degmin_from_decdeg(lon);
 
 % dvnow = datevec(now);
 dvnow = datevec(dn);

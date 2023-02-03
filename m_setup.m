@@ -69,7 +69,7 @@ cdir = pwd; pdir = MEXEC_G.mexec_source_root;
 cd(pdir)
 [s,c] = system('git log -1 | head -1');
 if s==0 && length(c)>=15 && ~contains(c, 'fatal:') && strcmp(c(1:6),'commit')
-    mexecs_version = [' last_commit_' c(8:15)];
+    mexecs_version = [c(8:15) ' (last commit)'];
 else
     mexecs_version = '';
 end
@@ -122,8 +122,7 @@ end
 fprintf(1,'working in %s\n',MEXEC_G.mexec_data_root)
 
 % Set path for directory with housekeeping files (in subdirectories version and history)
-MEXEC_G.housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
-MEXEC_G.version_file_name = ['mstar_versionfile_' MEXEC_G.SITE '.mat'];  % This setting should not normally be changed
+housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
 
 % set data directories within MEXEC_G.mexec_data_root
 MEXEC_G.MDIRLIST = {
@@ -180,57 +179,7 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         return
 end
 
-% add underway system information and directories
-if skipunderway<2
-    scriptname = 'ship'; oopt = 'default_nav'; get_cropt %set underway data system and best nav and heading streams
-    switch MEXEC_G.Mshipdatasystem
-        case 'techsas'
-            MEXEC_G.uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
-            MEXEC_G.uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
-            if strncmp(computer, 'MAC', 3); MEXEC_G.uway_root = [MEXEC_G.uway_root '_mac']; end
-            MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_TECHSAS' 'techsas'}];
-        case 'scs'
-            MEXEC_G.uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
-            MEXEC_G.uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs_raw'); % scs raw data on logger machine
-            MEXEC_G.uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs_sed'); % scs raw data on logger machine
-            MEXEC_G.uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs_mat'); % local directory for scs converted to matlab
-            MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
-                {'M_SCSRAW' 'scs_raw'}
-                {'M_SCSMAT' 'scs_mat'}
-                {'M_SCSSED' 'scs_sed'}
-                ];
-        case 'rvdas'
-            MEXEC_G.uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
-            MEXEC_G.RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-            switch MEXEC_G.Mship
-                case 'cook'
-                    MEXEC_G.RVDAS.machine = 'rvdas.cook.local';
-                    MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/jcmeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
-                    MEXEC_G.RVDAS.user = 'rvdas';
-                    MEXEC_G.RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-                case 'discovery'
-                    MEXEC_G.RVDAS.machine = '192.168.62.12';
-                    MEXEC_G.RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/dymeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
-                    MEXEC_G.RVDAS.user = 'rvdas';
-                    MEXEC_G.RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-                case 'sda'
-                    MEXEC_G.RVDAS.machine = 'sdl-rvdas-s1.sda.bas.ac.uk';
-                    %local directory in this case (legwork)
-                    MEXEC_G.RVDAS.jsondir = '/local/users/pstar/mounts/public/data_management/documentation/json_sensor_files/';
-                    MEXEC_G.RVDAS.user = 'rvdas_ro';
-                    MEXEC_G.RVDAS.database = ['"' '20210321' '"'];
-                    %MEXEC_G.RVDAS.database = ['"' lower(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-            end
-            if ismac
-                MEXEC_G.RVDAS.psql_path = '/usr/local/bin/';
-            else
-                MEXEC_G.RVDAS.psql_path = ''; %'/usr/bin/' but on linux matlab finds it on path on its own
-            end
-    end
-    MEXEC_G.uway_writeempty = 1; %if true, scs_to_mstar and techsas_to_mstar will write file even if no data in range
-end
-
-if skipunderway==0
+if skipunderway==0 %***change how this is done for scs and techsas so it can be moved to when needed!
     %create file connecting underway data directories and stream names
     %and create underway data directories (for processed data)
     try
@@ -240,7 +189,8 @@ if skipunderway==0
             [udirs, udcruise] = m_udirs;
         end
         MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,1:2)];
-        a = mgetdir(MEXEC_G.default_navstream); l = length(MEXEC_G.mexec_data_root);
+        scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+        a = mgetdir(default_navstream); l = length(MEXEC_G.mexec_data_root);
         MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
     catch me
         warning('%s\n','underway data directories could not be configured;','change skipunderway in cruise options file or check',me.message);
@@ -273,12 +223,13 @@ MEXEC_G.MUSER = [MEXEC.uuser ' on ' MEXEC.uname];
 if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
     % Make version file and lock file if version file doesn't already exist.
     % Should only happen once per cruise or data installation
-    MEXEC_G.Mhousekeeping_version = fullfile(MEXEC_G.housekeeping_root, 'version');
-    if ~exist(MEXEC_G.Mhousekeeping_version,'dir')
+    housekeeping_version = fullfile(housekeeping_root, 'version');
+    if ~exist(housekeeping_version,'dir')
         disp('making directory for tracking Mstar .nc data file versions')
-        mkdir(MEXEC_G.Mhousekeeping_version);
+        mkdir(housekeeping_version);
     end
-    MEXEC_G.VERSION_FILE = fullfile(MEXEC_G.Mhousekeeping_version, MEXEC_G.version_file_name);
+    version_file_name = ['mstar_versionfile_' MEXEC_G.SITE '.mat'];  % This setting should not normally be changed
+    MEXEC_G.VERSION_FILE = fullfile(housekeeping_version, version_file_name);
     MEXEC.versfile = MEXEC_G.VERSION_FILE;
     MEXEC.simplelockfile = [MEXEC.versfile(1:end-4) '_lock'];
     if exist(MEXEC_G.VERSION_FILE,'file') ~= 2
@@ -324,7 +275,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
             '  the standard name given above using the unix ''touch'' command, and'
             '  re-run m_setup.'
             'It would be a good idea to check in '
-            ['  ' MEXEC_G.Mhousekeeping_version]
+            ['  ' housekeeping_version]
             '  where you expect to find the version file'
             ['  ' MEXEC.versfile]
             '  but no lock files'
@@ -341,7 +292,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
 end
 
 % Check existence of history directory and make if necessary
-MEXEC_G.HISTORY_DIRECTORY = fullfile(MEXEC_G.housekeeping_root, 'history');
+MEXEC_G.HISTORY_DIRECTORY = fullfile(housekeeping_root, 'history');
 if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     disp('history directory does not seem to exist; will create it');
     mkdir(MEXEC_G.HISTORY_DIRECTORY);

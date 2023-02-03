@@ -16,12 +16,12 @@ function [firstm lastm numdc] = msgetdfinfo(instream,tonly)
 % 
 % mstar scs (mt) routine; requires mexec to be set up
 %
-% The scs files are searched for in a directory MEXEC_G.uway_root defined in
-% the mexec setup. At sea, this will typically be a data area exported from a
+% The scs files are searched for in a directory uway_root defined in
+% cruise options. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is MEXEC_G.uway_root, which for example can be
+% The searched directory is uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL

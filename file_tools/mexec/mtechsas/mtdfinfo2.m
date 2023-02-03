@@ -16,8 +16,8 @@ function  mess = mtdfinfo(instream,tonly)
 % 
 % mstar techsas (mt) routine; requires mexec to be set up
 %
-% The techsas files are searched for in a directory MEXEC_G.uway_root defined in
-% the mexec setup. At sea, this will typically be a data area exported from a
+% The techsas files are searched for in a directory uway_root defined in
+% cruise options. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 % first draft BAK JC032
@@ -28,7 +28,7 @@ m_common
 tstream = mtresolve_stream(instream);
 if nargin < 2; tonly = ' '; end
 
-[t1 t2 num] = mtgetdfinfo(tstream,tonly);
+[t1, t2, num] = mtgetdfinfo(tstream,tonly);
 
 dvnow = datevec(now);
 yyyy = dvnow(1);

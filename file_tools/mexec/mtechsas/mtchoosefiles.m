@@ -15,8 +15,8 @@ function fnames = mtchoosefiles(instream,dn1,dn2)
 % 
 % mstar techsas (mt) routine; requires mexec to be set up
 %
-% The techsas files are searched for in a directory MEXEC_G.uway_root defined in
-% the mexec setup. At sea, this will typically be a data area exported from a
+% The techsas files are searched for in a directory uway_root defined in
+% cruise options. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 

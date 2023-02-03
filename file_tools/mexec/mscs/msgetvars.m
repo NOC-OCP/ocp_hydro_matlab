@@ -1,5 +1,5 @@
-function [vars units] = msgetvars(instream)
-% function [vars units] = msgetvars(instream)
+function [vars, units] = msgetvars(instream)
+% function [vars, units] = msgetvars(instream)
 %
 % first draft BAK JC032
 % 
@@ -12,12 +12,12 @@ function [vars units] = msgetvars(instream)
 % 
 % The var and units list is taken from the first matching file in a dir command
 %
-% The scs files are searched for in a directory MEXEC_G.uway_root defined in
+% The scs files are searched for in a directory uway_root defined in
 % the mexec setup. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is MEXEC_G.uway_root, which for example can be
+% The searched directory is uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL
@@ -26,7 +26,8 @@ function [vars units] = msgetvars(instream)
 m_common
 tstream = msresolve_stream(instream);
 
-files = dir(fullfile(MEXEC_G.uway_sed, [tstream '.TPL']));
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+files = dir(fullfile(uway_sed, [tstream '.TPL']));
 
 if ~isempty(files)
 

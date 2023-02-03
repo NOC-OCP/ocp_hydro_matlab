@@ -44,26 +44,21 @@ for daynumber = days
         if loadstatus(sno)==0
             %load
             try
-                loadstatus(sno) = mday_01(streamnames{sno}, shortnames{sno}, daynumber, year);
+                loadstatus(sno) = mday_01(streamnames{sno}, shortnames{sno}, udirs{sno}, daynumber, year);
             catch
                 loadstatus(sno) = 1;
                 keyboard
             end
-            if loadstatus(sno)==2
-                %did not find directory in MEXEC_G.MDIRLIST, go to next shortname after single warning
-                fprintf(1,'%s (%s) not found in MEXEC_G.MDIRLIST,\n',shortnames{sno},streamnames{sno})
-                if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
-                    fprintf(1,'or is in m_udirs.m but not in mrtables_from_json.m (rerun m_setudir and m_setup?),\n')
-                end
+            if loadstatus(sno)==2 && strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
+                fprintf(1,'or is in m_udirs.m but not in mrtables_from_json.m (rerun m_setudir and m_setup?),\n')
                 warning('enter to continue skipping this stream, or Ctrl-C to quit');
-
                 pause
                 continue
             end
 
             %apply additional processing and cleaning (and renaming) for some streams
             if loadstatus(sno)==0
-                mday_01_clean(shortnames{sno}, daynumber);
+                mday_01_clean(shortnames{sno}, udirs{sno}, daynumber);
             end
         end
 

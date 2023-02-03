@@ -1,5 +1,5 @@
-function [vars units] = mtgetvars(instream)
-% function [vars units] = mtgetvars(instream)
+function [vars, units] = mtgetvars(instream)
+% function [vars, units] = mtgetvars(instream)
 %
 % first draft BAK JC032
 % 
@@ -12,14 +12,15 @@ function [vars units] = mtgetvars(instream)
 % 
 % The var and units list is taken from the first matching file in a dir command.
 %
-% The techsas files are searched for in a directory MEXEC_G.uway_root defined in
-% the mexec setup. At sea, this will typically be a data area exported from a
+% The techsas files are searched for in a directory uway_root defined in
+% cruise options. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 
 m_common
 tstream = mtresolve_stream(instream);
 
-files = dir(fullfile(MEXEC_G.uway_root, ['*' tstream]));
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+files = dir(fullfile(uway_root, ['*' tstream]));
 
 if ~isempty(files)
 
