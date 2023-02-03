@@ -132,17 +132,25 @@ switch scriptname
                             'gnss_saab_r5_supreme_gnrmc'];
                     otherwise
                 end
-            case 'rvdas_cruise_table_pre'
-                crhelp_str = {'Set sqlpre, a string to be prepended to the table names from the json files.'
-                    'This is only necessary if you want to access cruise-specific views rather than a whole '
-                    'table, so the default on the SDA is to use e.g. sd025_ to use only data from cruise '
-                    'sd025 out of the whole "forever" database, whereas the default on JC and DY is no prefix'
-                    'because there is already a separate database for each cruise'};
+            case 'use_cruise_views'
+                crhelp_str = {'If use_cruise_views = 1 (default 0), prepend string view_name'
+                    '(default lower(MEXEC_G.MSCRIPT_CRUISE_STRING)) to names from the json files.'};
+                if strcmp(MEXEC_G.Mship,'sda')
+                    use_cruise_views = 1;
+                    view_name = lower(MEXEC_G.MSCRIPT_CRUISE_STRING);
+                else
+                    use_cruise_views = 0;
+                end
+            case 'rvdas_nameform'
+                crhelp_str = {'Set npre, the number of prefixes (separated by underscores) in '
+                    'rvdas table names which are not part of the instrument name, e.g.'
+                    'with npre=1, ''anemometer_ft_technologies_ft702lt_wimwv'' the instrument'
+                    'name would be ft_technologies_ft702lt'};
                 switch MEXEC_G.Mship
                     case 'sda'
-                        sqlpre = [lower(MEXEC_G.MSCRIPT_CRUISE_STRING) '_'];
+                        npre = 1;
                     otherwise
-                        sqlpre = '';
+                        npre = 0;
                 end
         end
 
@@ -167,7 +175,7 @@ switch scriptname
                         uway_excludes = {'posmvtss'};
                         uway_excludep = {'satinfo';'aux';'dps'};
                     case 'rvdas'
-                        uway_excludes = {'gravity';'mag';'winch'};
+                        uway_excludes = {'gravity';'mag'};
                 end
             case 'comb_uvars'
                 crhelp_str = {'umtypes lists types underway files to combine'

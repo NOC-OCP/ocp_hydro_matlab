@@ -31,7 +31,8 @@ function [latout,lonout] = mrposinfo(varargin)
 %   help in that function for descriptions of the arguments.
 %
 % table: is the rvdas table name or the mexec shorthand. The default
-%   is taken from MEXEC_G.MEXEC_G.default_navstream
+%   is taken from MEXEC_G.MEXEC_G.default_navstream. The table must be one
+%   that has an mexec shorthand.
 % If qflag is 'q', fprintf will be suppressed in calls to 
 %   mrload, and so will a possible error message. Default is ''.
 % dnum is a datenum or datevec at which the position is to be reported.
@@ -70,15 +71,9 @@ if isempty(table)
     table = MEXEC_G.default_navstream;
 end
 
-if 0
-    tablemap = mrnames('q');
-else
-    %replace above with slightly less efficient code but keeps all calls to
-    %mrnames inside mrdefine
-    def = mrdefine('this_cruise','has_mstarpre');
-    %def = mrdefine('this_cruise');
-    tablemap = def.tablemap;
-end
+def = mrdefine('this_cruise','has_mstarpre');
+tablemap = def.tablemap;
+
 % sort out the table name
 table = mrresolve_table(table); % table is now an RVDAS table name for sure.
 ktable = strcmp(table,tablemap(:,2));

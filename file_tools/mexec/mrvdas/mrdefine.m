@@ -82,26 +82,29 @@ if nargin>0 && ismember('this_cruise',varargin)
     if ~isempty(ia)
         d.mrtables = rmfield(d.mrtables,d.mrtables_list(ia));
         d.mrtables_list(ia) = [];
-        warning('%d tables in .json files but not present for this cruise',length(ia))
+        warning('rvdas:mrdefine:mjsonextra','%d tables in .json files but not present for this cruise',length(ia))
+        warning('off','rvdas:mrdefine:mjsonextra')
     end
 end
 
 % get table of mexec short names for RVDAS tables
-d.tablemap = mrnames('q'); % any argument suppresses listing to screen
+d.tablemap = mrnames_new(d.mrtables_list,'q');
 % limit to the names actually in mrtables_from_json
 [~,ia,ib] = intersect(d.tablemap(:,2),d.mrtables_list,'stable');
 d.tablemap = d.tablemap(ia,:);
-if nargin>0 && ismember('has_mstarpre', varargin)
+if nargin>0 && ismember('has_mstarpre', varargin) && length(ib)<length(d.mrtables_list)
     ii = setdiff(1:length(d.mrtables_list),ib);
+    warning('rvdas:mstar:no_match','discarding %d tables with no mstar lookup in mrnames_new',length(ii));
+    warning('off','rvdas:mstar:no_match');
     d.mrtables = rmfield(d.mrtables,d.mrtables_list(ii));
     d.mrtables_list(ii) = [];
 end
 [~,ia] = unique(d.tablemap(:,1),'first');
 if length(ia)<size(d.tablemap,1)
-    warning('rvdas:mrdefine:mnamedup','duplicate mexec short names detected; keeping first')
+    warning('rvdas:mrdefine:mnamedup','duplicate mexec short names (with matching tables) detected; keeping first')
     warning('off','rvdas:mrdefine:mnamedup'); %only warn once per session
 end
-d.tablemap = d.tablemap(ia,:);
+%d.tablemap = d.tablemap(ia,:);
 
 % get a list of variables for which we want to change names when loaded
 % into mexec, and a list of tables whose variables should have _raw

@@ -33,11 +33,11 @@ m_common
 % place to temporarily put list of tables
 
 csvname = fullfile(MEXEC_G.RVDAS.csvroot, ['table_list' '_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
-switch MEXEC_G.Mship
-    case 'sda'
-        sqltext = ['"\dv ' lower(MEXEC_G.MSCRIPT_CRUISE_STRING) '*" >'];
-    otherwise
-        sqltext = '"\dt" >';
+scriptname = 'mrvdas_ingest'; oopt = 'use_cruise_views'; get_cropt
+if use_cruise_views
+    sqltext = ['"\dv ' view_name '*" >'];
+else
+    sqltext = '"\dt" >';
 end
 if ismac
     sqltext = [sqltext '! ' csvname];
@@ -57,15 +57,13 @@ fclose(fid);
 
 nlines = length(tl);
 
-clear rvdas_tables
-
 for kl = 1:nlines
     t = tl{kl};
     kbar = strfind(t,'|');
     if length(kbar) < 3; continue; end
     s1 = t(kbar(2)+1:kbar(3)-1);
     s2 = t(kbar(1)+1:kbar(2)-1);
-    if contains(s1,'table') % this line lists a table
+    if contains(s1,'table') || contains(s1,'view') % this line lists a table or a view
         tabname = s2;
         while strcmp(tabname(1),' '); tabname(1) = []; end
         while strcmp(tabname(end),' '); tabname(end) = []; end

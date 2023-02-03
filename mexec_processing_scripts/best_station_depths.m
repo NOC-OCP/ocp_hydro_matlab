@@ -22,8 +22,9 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %find statnums with ctd data
-fn = dir(fullfile(mgetdir('M_CTD'), ['ctd_' mcruise '_*_raw.nc']));
-stns = struct2cell(fn); stns = cell2mat(stns(1,:)'); stns = str2num(stns(:,end-9:end-7));
+fn = dir(fullfile(mgetdir('M_CTD'), ['ctd_' mcruise '_*_raw*.nc']));
+stns = struct2table(fn).name; 
+stns = unique(cellfun(@(x) str2double(x(length(mcruise)+[6:8])), stns));
 %which stations need depths
 scriptname = mfilename; oopt = 'depth_recalc'; get_cropt
 if ~isempty(recalcdepth_stns)

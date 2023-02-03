@@ -74,10 +74,11 @@ end
 if castopts.redoctm
     d.cond1 = apply_ctd_celltm(d.time, d.temp1, d.cond1);
     d.cond2 = apply_ctd_celltm(d.time, d.temp2, d.cond2);
-    h.comment = [h.comment; '\n cond corrected for cell thermal mass by ctd_apply_celltm'];
+    h.comment = [h.comment '\n cond corrected for cell thermal mass by ctd_apply_celltm'];
     scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
-    for no = 1:length(ovars)
-        d.(ovars{no}) = interp1(d.time, d.(ovars{no}), d.time+oxy_align);
+    scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
+    for no = 1:length(oxyvars)
+        d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+oxy_align);
     end
     h.comment = [h.comment '\n oxygen shifted by ' oxy_align ' s'];
     didedits = 1;

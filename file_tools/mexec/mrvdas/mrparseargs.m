@@ -70,7 +70,7 @@ function argot = mrparseargs(argsin)
 %   argot.othernums
 % A string specifying one of the following types of operations -- 'mlast',
 %   'mlookd', 'mlistit', 'mgaps', 'mposinfo' -- is returned in argot.oper
-%   (see mrshow_info help)
+%   (see mrshow_info help)***
 % Any other strings, not yet recognised, eg a string that is a variable
 %   list, are returned in argot.otherstrings, in the order in which they
 %   appeared in the argsin cell array.

@@ -47,6 +47,7 @@ for daynumber = days
                 loadstatus(sno) = mday_01(streamnames{sno}, shortnames{sno}, daynumber, year);
             catch
                 loadstatus(sno) = 1;
+                keyboard
             end
             if loadstatus(sno)==2
                 %did not find directory in MEXEC_G.MDIRLIST, go to next shortname after single warning
@@ -61,7 +62,9 @@ for daynumber = days
             end
 
             %apply additional processing and cleaning (and renaming) for some streams
-            mday_01_clean(shortnames{sno}, daynumber);
+            if loadstatus(sno)==0
+                mday_01_clean(shortnames{sno}, daynumber);
+            end
         end
 
     end

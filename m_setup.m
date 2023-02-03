@@ -218,8 +218,8 @@ if skipunderway<2
                     %local directory in this case (legwork)
                     MEXEC_G.RVDAS.jsondir = '/local/users/pstar/mounts/public/data_management/documentation/json_sensor_files/';
                     MEXEC_G.RVDAS.user = 'rvdas_ro';
-                    %MEXEC_G.RVDAS.database = ['"' '20210321' '"'];
-                    MEXEC_G.RVDAS.database = ['"' lower(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+                    MEXEC_G.RVDAS.database = ['"' '20210321' '"'];
+                    %MEXEC_G.RVDAS.database = ['"' lower(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
             end
             if ismac
                 MEXEC_G.RVDAS.psql_path = '/usr/local/bin/';
@@ -233,45 +233,18 @@ end
 if skipunderway==0
     %create file connecting underway data directories and stream names
     %and create underway data directories (for processed data)
-    ud_is_current = 0; ud_runs = 0; sud_runs = 0; ufail = 0;
-    while ud_is_current == 0 && ud_runs == 0 && ufail == 0
-        try
+    try
+        [udirs, udcruise] = m_udirs;
+        if ~strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
+            m_setudir
             [udirs, udcruise] = m_udirs;
-            if strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
-                ud_is_current = 1;
-            else
-                keyboard
-                error('')
-            end
-        catch
-            try
-                ufile = fullfile(mps_pre, 'underway', 'm_udirs.m');
-                if exist(ufile,'file'); delete(ufile); end
-                m_setudir
-                sud_runs = 1;
-                try
-                    [udirs, ~] = m_udirs;
-                    ud_runs = 1;
-                catch
-                    ufail = 1;
-                end
-            catch
-                ufail = 1;
-            end
         end
-    end
-    if ufail
-        if ~sud_runs
-            warning('no underway directories yet, m_setudir failed, rerun when they are available/linked')
-        elseif ~ud_runs
-            warning('no underway directories yet, m_udirs failed, rerun m_setudir when they are available/linked')
-        end
-    elseif ~isempty(udirs)
         MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,1:2)];
         a = mgetdir(MEXEC_G.default_navstream); l = length(MEXEC_G.mexec_data_root);
         MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
+    catch me
+        warning('%s\n','underway data directories could not be configured;','change skipunderway in cruise options file or check',me.message);
     end
-    clear sud_runs ufail ud_* udirs udcruise mps_pre
 end
 
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'

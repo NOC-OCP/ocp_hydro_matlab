@@ -49,16 +49,11 @@
 %
 % mrnames.m                   This lists the translations between rvdas table names and mexec short names (also called by mrposinfo.m)
 % mrrename_varsunits.m           A lookup function for regularising rvdas variable names and units to our preferred format (also corrects for known spelling errors, and produces a list of variables which should have _raw appended to their name). This may need to be edited at the start of a cruise but should eventually pass through many cruises unchanged. 
-% mrtables_from_json.m        Makes the list of rvdas tables that mexec may want to copy. This should be (re)generated at the start of a cruise by running mrjson_get_list, and can then be edited by hand to comment out additional variables to be skipped (or these can be added to the cruise options file). 
+% mrtables_from_json.m        The list of rvdas tables that mexec may want to copy. This should be (re)generated at the start of a cruise by running mrjson_get_list, and can then be edited by hand to comment out additional variables to be skipped (or these can be added to the cruise options file). 
 %
-% % These files are used for converting .json files to .mat files and reading information from them
-%   The json files describe the contents of the rvdas tables - variable names
-%   and units. On JC211 (28 Jan 2021) to JC238 (12 Jul 2022) units were not 
-%   stored in the database so we got them from .json files. 
-% % mrjson_get_list should be run at the start of a cruise (and again if tables are added or variables modified)
-% mrjson_get_list.m           Sync json files from rvdas machine, parse and print out (calling mrjson_load_all)
-% mrjson_load_all.m           Load json files, run jsondecode, then mrshow_json
-% mrjson_show.m               Show the sentences in the rvdas json file, and store variable names and units.
+% % These files are used for converting .json files to .mat files and reading information from them; mrjson_get_list should be run at the start of a cruise (and again if tables are added or variables modified)
+% mrjson_get_list.m           Sync json files from rvdas machine, allow for editing list, then call mrjson_load_all to write to mrtables_from_json.m
+% mrjson_load_all.m           Load json files, run jsondecode, then call internal function mrjson_show to parse sentences and output varible names and units to .m file
 %
 
 

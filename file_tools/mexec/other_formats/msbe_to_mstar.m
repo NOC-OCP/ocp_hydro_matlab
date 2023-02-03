@@ -177,7 +177,7 @@ if sum(index)
         londegs = st(1+isp(4):3+isp(4));
         lonmins = st(1+isp(5):5+isp(5));
         lonhems = st(1+isp(6));
-        lon = str2num(londegs) + str2num(lonmins)/60;
+        lon = str2double(londegs) + str2double(lonmins)/60;
         if strcmp(lonhems,'W'); lon = -lon; end
         h.longitude = lon;
     end
@@ -373,7 +373,7 @@ end
 
 if nargout==1
     varargout = ncfile;
-else
+elseif ~savefile
     varargout{1} = d; varargout{2} = h;
     if nargout==3
         varargout{3} = ncfile;

@@ -33,6 +33,7 @@ ld(n,:) = {other_programs_root 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
 ld(n,:) = {other_programs_root 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
 if ~isfield(MEXEC_G, 'ix_ladcp') || MEXEC_G.ix_ladcp
     ld(n,:) = {other_programs_root 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
+    ld(n,:) = {[other_programs_root '/ladcp'] 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
 end
 if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~force_ext_software_versions
     ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root

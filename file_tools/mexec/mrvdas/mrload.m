@@ -123,8 +123,7 @@ end
 if ~isempty(find(strcmp(table,def.rawlist), 1)) % this table has all variabls renamed raw
     nvars = size(ds,2);
     for kv = 2:nvars % no need to rename time, which is always first
-        dsname = ds.Properties.VarNames{kv};
-        dsname = [dsname '_raw'];
+        dsname = [ds.Properties.VarNames{kv} '_raw'];
         ds.Properties.VarNames{kv} = dsname;
     end
     names = ds.Properties.VarNames; 
@@ -163,7 +162,6 @@ units = [units; {'matlab_datenum'}];
 % Any variables requiring this conversion should have been renamed to
 % variable name latdegm, londegm. 
 % strncmp compares first 7 characters in case raw has been added.
-
 
 klat1 = find(strncmp('latdegm',names,7));
 klat2 = find(strncmp('latdir',names,6));
@@ -208,9 +206,6 @@ if ~isempty(klon1) && ~isempty(klon2) % longitude variables found
         units([klon1 klon2]) = [];
 
 end
-
-
-
 
 
 if isempty(qflag)

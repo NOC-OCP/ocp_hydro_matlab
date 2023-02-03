@@ -1,7 +1,7 @@
 mctd_01; %read in sbe .cnv data to mstar
 
 root_ctd = mgetdir('M_CTD');
-[d, h] = mloadq(fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_raw']), 'press', ' ');
+[d, h] = mloadq(otfile, 'press', ' ');
 if min(d.press)<=-10
     m = {['negative pressures <-10 in ctd_' mcruise '_' stn_string '_raw']
     'check d.press here; if there are large spikes also affecting temperature, dbquit'

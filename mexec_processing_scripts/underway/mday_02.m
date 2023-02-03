@@ -25,8 +25,7 @@ mstarprefix = m_getinput(m4,'s');
 
 m5 = 'Type day number of data to append,                   eg: 33   ';
 reply = m_getinput(m5,'s');
-cmd = ['daynum = ' reply ';']; eval(cmd);
-day = daynum;
+daynum = eval(reply);
 
 day_string = sprintf('%03d',daynum);
 if MEXEC_G.quiet<=1; fprintf(1,'appending %s_%s_d%s_edt.nc or _edt_av.nc to %s_%s_01.nc\n',mstarprefix,mcruise,day_string,mstarprefix,mcruise); end

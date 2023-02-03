@@ -1,5 +1,5 @@
 function [rtables,rawlist] = mrrename_varsunits(tables,varargin)
-% function [renametables,rawlist] = mrrename_varsunits(tables,qflag)
+% function [renametables,rawlist] = mrrename_varsunits(tables)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -22,12 +22,9 @@ function [rtables,rawlist] = mrrename_varsunits(tables,varargin)
 % Examples
 %
 %   [renametables,renametables_list] = mrrename_varsunits;
-%   [renametables,renametables_list] = mrrename_varsunits('q');
 %
 % Input:
 %   tables, the output of mrtables_from_json
-%   [optional] qflag: if qflag has the value 'q', listing to screen is
-%     supressed
 %
 % Output:
 %
@@ -47,14 +44,6 @@ function [rtables,rawlist] = mrrename_varsunits(tables,varargin)
 
 m_common
 
-qflag = ''; % Don't use mrparseflags because that calls mrdefine which calls this function
-allargs = varargin;
-kq = strcmp('q',allargs);
-if sum(kq)>0
-    qflag = 'q';
-    allargs(kq) = [];
-end
-
 fn = fieldnames(tables);
 for no = 1:length(fn)
         
@@ -67,10 +56,10 @@ for no = 1:length(fn)
     m = strcmpi('utctime',a(:,1));
     a(m,n+1) = {'utctime'};
     a(m,n+2) = {'hhmmss_fff'};
-    m = strcmpi('latitude',a(:,1)) & strcmpi('degrees and decimal minutes',a(:,2));
+    m = strcmpi('latitude',a(:,1)) & (strcmpi('degrees and decimal minutes',a(:,2)) | strcmpi('degrees, minutes and decimal minutes',a(:,2)));
     a(m,n+1) = {'latdegm'};
     a(m,n+2) = {'dddmm'};
-    m = strcmpi('longitude',a(:,1)) & strcmpi('degrees and decimal minutes',a(:,2));
+    m = strcmpi('longitude',a(:,1)) & (strcmpi('degrees and decimal minutes',a(:,2)) | strcmpi('degrees, minutes and decimal minutes',a(:,2)));
     a(m,n+1) = {'londegm'};
     a(m,n+2) = {'dddmm'};
     m = strcmpi('waterDepthMeterTransducer',a(:,1)) | strcmpi('waterDepthMeterFromTransducer',a(:,1));

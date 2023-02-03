@@ -96,49 +96,43 @@ h.comment = [h.comment '\n vector-averaged heading interpolated onto position ti
 mfsave(bstfile, dg, h);
 
 %--------------------------------
-wkfile = ['wk_' mfilename '_' datestr(now,30)];
-switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
-    % bak on jr281 march 23 2013: bad weather break, adding to edits from jc069
-    case {'jc' 'jcr' 'dy' 'jr'} % ashtech broken on jr281 and not needed on cook
-        copyfile(m_add_nc(bstfile), m_add_nc(wkfile));
-        calcvar = 'heading_av';
-        calcstr = ['y = mcrange(x1+0,0,360);']; % no ashtech correction on jr281 yet
-    case 'di' % old discovery techsas with ashtech present
-        root_ash = mgetdir('M_ASH'); infile4 = fullfile(root_ash, ['ash_' mcruise '_01']);
-        calcvar = 'heading_av a_minus_g';
-        calcstr = ['y = mcrange(x1+x2,0,360);']; % prepare to add a_minus_g on discovery
-        
-        %--------------------------------
-        % merge in the a-minus-g heading correction from the ashtech file into the
-        % bestnav file
-        MEXEC_A.MARGS_IN = {
-            wkfile
-            bstfile
-            '/'
-            'time'
-            infile4
-            'time'
-            'a_minus_g'
-            'k'
-            };
-        mmerge
-        
-        %calculate the corrected heading <heading_av_corrected> using the a-minus-g
-        %heading correction. mcrange is used to ensure that this heading variable
-        %is always between 0 and 360 degrees.
-        % bak on jr281: on cook and jcr, there correction is zero because heading
-        % comes from an absolute source instead of the gyro.
-        MEXEC_A.MARGS_IN = {
-            wkfile
-            bstfile
-            '/'
-            calcvar
-            calcstr
-            'heading_av_corrected'
-            'degrees'
-            ' '
-            };
-        mcalc
-        
+if strncmp(MEXEC_G.MSCRIPT_CRUISE_STRING,'di',2) % old discovery techsas with ashtech present
+    wkfile = ['wk_' mfilename '_' datestr(now,30)];
+    root_ash = mgetdir('M_ASH'); infile4 = fullfile(root_ash, ['ash_' mcruise '_01']);
+    calcvar = 'heading_av a_minus_g';
+    calcstr = ['y = mcrange(x1+x2,0,360);']; % prepare to add a_minus_g on discovery
+
+    %--------------------------------
+    % merge in the a-minus-g heading correction from the ashtech file into the
+    % bestnav file
+    MEXEC_A.MARGS_IN = {
+        wkfile
+        bstfile
+        '/'
+        'time'
+        infile4
+        'time'
+        'a_minus_g'
+        'k'
+        };
+    mmerge
+
+    %calculate the corrected heading <heading_av_corrected> using the a-minus-g
+    %heading correction. mcrange is used to ensure that this heading variable
+    %is always between 0 and 360 degrees.
+    % bak on jr281: on cook and jcr, there correction is zero because heading
+    % comes from an absolute source instead of the gyro.
+    MEXEC_A.MARGS_IN = {
+        wkfile
+        bstfile
+        '/'
+        calcvar
+        calcstr
+        'heading_av_corrected'
+        'degrees'
+        ' '
+        };
+    mcalc
+    delete(m_add_nc(wkfile))
+
 end
-delete(m_add_nc(wkfile))

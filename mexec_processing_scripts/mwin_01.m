@@ -59,7 +59,12 @@ daynum_start=1+floor(daynum_start);
 daynum_end=t_end-datenum([t_end_vec(1) 1 1 0 0 0]);
 daynum_end=1+floor(daynum_end);
 
-rvsstreamname='winch';
+switch MEXEC_G.Mship
+    case 'sda'
+        rvsstreamname = 'winchsda_v3';
+    otherwise
+        rvsstreamname='winch';
+end
 datapupflags='';
 yy_start =t_start_vec(1)-2000;
 yy_end = t_end_vec(1)-2000;

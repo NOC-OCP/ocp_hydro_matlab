@@ -227,7 +227,7 @@ switch scriptname
             case '1hz_fname'
                 crhelp_str = {'name, fnot, for text file of 1Hz CTD data (e.g. for IX LADCP processing'};
                 root_out = mgetdir('M_LADCP');
-                fnot = fullfile(root_out, 'CTD', ['ctd.' stn_string '.02.asc']);
+                fnot = fullfile(root_out, 'ctd', ['ctd.' stn_string '.02.asc']);
         end
         
         %%%%%%%%%% ix_cast_params %%%%%%%%%%

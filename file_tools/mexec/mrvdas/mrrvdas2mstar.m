@@ -24,7 +24,7 @@ function mrrvdas2mstar(varargin)
 % table: is the rvdas table name or the mexec shorthand
 % dn1 and dn2 are datevecs or datenums for the start and end of data.
 % If qflag is 'q', fprintf will be suppressed in the call to mrload. Note
-%   that this does not suppress the mexec processing outputfrom msave.
+%   that this does not suppress the mexec processing output from msave.
 % otfile is the mexec file name. Default is the same as the mexec table
 %   name
 % dataname is the mexec dataname. Default is the same as the mexec table
@@ -43,11 +43,13 @@ function mrrvdas2mstar(varargin)
 m_common
  
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-table = argot.table;
+table = argot.table; 
+if isempty(table)
+    disp(varargin)
+    error('no rvdas table or mstar shorthand found in inputs (above)');
+end
 qflag = argot.qflag;
 clear varargin % because otherwise they confuse msave
-
-
 
 if length(argot.otherstrings) < 1
     otfile = argot.table;
@@ -80,18 +82,13 @@ switch length(argot.dnums)
         dn1 = now-50*365; % far in past
         dn2 = now+50*365; % far in future
 end
-dv1 = datevec(dn1); % this will convert a datenum to a datevec if it isn't already
-dv2 = datevec(dn2);
 
 
 [dd, names, units] = mrload(table,dn1,dn2,varstring,qflag);
 
 if numel(dd.dnum) == 0
-    if isempty(qflag)
-        % no data found, quit without writing a file
-        fprintf(MEXEC_A.Mfidterm,'%s\n','No data cycles loaded with mrload')
-    end
-    return
+    % no data found, quit without writing a file
+    error('No data cycles loaded with mrload')
 end
 
 %change dnum to mexec time in seconds

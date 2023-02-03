@@ -25,8 +25,10 @@ for kloop = klistl
     stn = kloop; mctd_04;
     
     %output to csv files
+    if 0
     stn = stnlocal; mout_exch_ctd
-
+    end
+    
     infile2 = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
     if exist(m_add_nc(infile2),'file') ~= 2
         warning('File %s not found, skipping',m_add_nc(infile2))
@@ -38,9 +40,11 @@ for kloop = klistl
    
     
 end
-mout_exch_sam
+if 0
+    mout_exch_sam
 
 %and sync
 scriptname = 'batchactions'; oopt = 'output_for_others'; get_cropt
 
 
+end

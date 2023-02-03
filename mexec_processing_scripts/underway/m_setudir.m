@@ -33,36 +33,33 @@ switch(MEXEC_G.Mshipdatasystem)
         f = 'msnames';
         udirs = muwaydirs(MEXEC_G.Mshipdatasystem);
     case 'rvdas'
-        d = mrdefine; 
+        d = mrdefine('this_cruise','has_mstarpre'); 
         matlist = d.tablemap(ismember(d.tablemap(:,2),d.mrtables_list),:);
-        am = matlist(:,2); %mrnames list
-        as = fieldnames(mrgettables); %list of tables found in database
-        f = 'mrnames';
         isrvdas = 1;
 end
 
-fprintf(2,'\n\n%s\n\n',['The following ' MEXEC_G.Mshipdatasystem ' stream names are not identified in ' f])
-for kl = 1:length(as)
-    if sum(strcmp(as{kl},am))==0
-        fprintf(1,'%s\n',as{kl}); 
-    end
-end
-fprintf(1,'\n%s\n\n\n\n','End of list')
-
 if ~isrvdas
+    fprintf(2,'\n\n%s\n\n',['The following ' MEXEC_G.Mshipdatasystem ' stream names are not identified in ' f])
+    for kl = 1:length(as)
+        if sum(strcmp(as{kl},am))==0
+            fprintf(1,'%s\n',as{kl});
+        end
+    end
+    fprintf(1,'\n%s\n\n\n\n','End of list')
+
     fprintf(1,'%s\n\n',['The following ' f ' stream names are not found in ' MEXEC_G.Mshipdatasystem])
-    iim = zeros(length(am),1);
+    m = zeros(length(am),1);
     for kl = 1:length(am)
         if sum(strcmp(am{kl},as))==0
             fprintf(1,'%s\n',am{kl});
         else
             iid = find(strcmp(matlist{kl,1}, udirs(:,1)));
-            if ~isempty(iid); iim(kl) = iid; end
+            if ~isempty(iid); m(kl) = iid; end
         end
     end
     fprintf(1,'\n%s\n\n','End of list')
 else
-    iim = ones(length(am),1);
+    m = ones(size(matlist,1),1);
 end
 
 %%%%%%% write m_udirs function using available underway streams %%%%%%%
@@ -76,7 +73,7 @@ fprintf(fid, '%s\n', 'udirs = {');
 
 
 for sno = 1:size(matlist,1)
-    iid = iim(sno);
+    iid = m(sno);
     if iid>0
         if isrvdas
             sn = matlist{sno,1};
@@ -105,6 +102,10 @@ for sno = 1:size(matlist,1)
             elseif strncmp(sn, 'winch', 5)
                 dn = 'ctd/WINCH';
             end
+            a = str2double(dn(end-1)); b = str2double(dn(end));
+            if (isfinite(b) && isreal(b)) && (~isfinite(a) || ~isreal(a))
+                dn = dn(1:end-1);
+            end
         else
             sn = udirs{iid,1}; dn = udirs{iid,2};
         end
@@ -114,7 +115,7 @@ for sno = 1:size(matlist,1)
         end
     end
 end
-matlist = matlist(iim>0,:);
+matlist = matlist(m>0,:);
 
 %wrap up
 fprintf(fid, '%s\n', '};');

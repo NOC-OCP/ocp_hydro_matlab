@@ -19,16 +19,13 @@ if exist('ncreadatt','file') == 2 % ncreadatt.m is an available command
         s = ncreadatt(ncfile.name,'/','mstar_string');
     catch 
         if exist(ncfile.name,'file') ~= 2
-            errstr0 = sprintf('\n%s',['The file ' ncfile.name ' does not exist']);
-            error(errstr0);
+            error('\n%s',['The file ' ncfile.name ' does not exist']);
         else
-            errstr0 = sprintf('\n%s',['The file ' ncfile.name ' exists but does not contain the mstar_string']);
-            error(errstr0);
+            error('\n%s',['The file ' ncfile.name ' exists but does not contain the mstar_string']);
         end
     end
     if ~strcmp(s(1:5),'mstar')
-        errstr0 = sprintf('\n%s',['The file ' ncfile.name ' exists but the mstar_string contents are wrong']);
-        error(errstr0);
+        error('\n%s',['The file ' ncfile.name ' exists but the mstar_string contents are wrong']);
     end
     return
 end
@@ -51,22 +48,19 @@ end
 metadata = nc_info(ncfile.name); %refresh metadata
 % ncfile.metadata = metadata;
 globatt = metadata.Attribute;
-for k = 1:length(globatt);
+for k = 1:length(globatt)
     gattname = globatt(k).Name;
     gattvalue = globatt(k).Value;
-    com = ['h.' gattname ' = gattvalue;'];
-    eval(com)
+    h.(gattname) = gattvalue;
 end
 
 if ~isfield(h,'mstar_string')
-    errstr0 = sprintf('\n%s',['The file ' ncfile.name ' exists but is not an mstar file']);
-    error(errstr0);
+    error('\n%s',['The file ' ncfile.name ' exists but is not an mstar file']);
 end
 
 s = h.mstar_string;
 if ~strcmp(s(1:5),'mstar')
-    errstr0 = sprintf('\n%s',['The file ' ncfile.name ' exists but is not an mstar file']);
-    error(errstr0);
+    error('\n%s',['The file ' ncfile.name ' exists but is not an mstar file']);
 end
 
 % If we get here without exiting, the file exists and is a NetCDF file with a global

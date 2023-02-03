@@ -21,7 +21,12 @@ tave_period = round(avmet);
 clear dnew hnew
 
 %wind data
-[dw, hw] = mloadq(infilew, '/');
+if exist(infilew,'file')
+    [dw, hw] = mloadq(infilew, '/');
+else
+    warning('no surfmet file; skipping mwind_true')
+    return
+end
 
 %variable names
 ws = munderway_varname('rwindsvar',hw.fldnam,1,'s');

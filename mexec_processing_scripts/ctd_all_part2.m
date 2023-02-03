@@ -3,7 +3,7 @@ mctd_04;
 
 %bottle firing data
 stn = stnlocal; mfir_01;
-if exist(blotfile,'file')
+if exist(m_add_nc(blotfile),'file')
     stn = stnlocal; mfir_03;
 
     %winch data
@@ -18,9 +18,11 @@ end
 stations_to_reload = stnlocal; station_summary
 stn = stnlocal; mdep_01
 
-%output to csv files
+if 0
+    %output to csv files
 stn = stnlocal; mout_exch_ctd
 mout_exch_sam
 
 %and sync
 scriptname = 'batchactions'; oopt = 'output_for_others'; get_cropt
+end

@@ -55,18 +55,17 @@ switch MEXEC_G.Mshipdatasystem
         otfile2 = fullfile(root_out, fnmstar);
         dataname = [prefix1 'd' day_string];
         
-        mrrvdas2mstar(table,dn1,dn2,otfile2,dataname,'q');
-        % mrrvdas2mstar will quit without writing a file if no data found.
-
-        if ~exist(m_add_nc(otfile2),'file')
-            % mrrvdas2mstar didn't make an output file, probably because no data cycles
-            % found
-            m = [otfile2 ' not created. Possibly no data cycles found in time range.'];
+        try
+            mrrvdas2mstar(table,dn1,dn2,otfile2,dataname,'q');
+        catch me
+            if strcmp(me.message,'No data cycles loaded with mrload')
+               m = [otfile2 ' not created because no data cycles found in time range.'];
+            else
+                m = ['mrrvdas2mstar failed with ' me.message];
+            end
             fprintf(MEXEC_A.Mfider,'%s\n',' ',m,' ');
-            %cmd = ['cd ' currentdir]; eval(cmd);
             return
         end
-
         
         
     otherwise

@@ -56,12 +56,6 @@ switch scriptname
         %%%%%%%%%% mctd_02 %%%%%%%%%%
     case 'mctd_02'
         switch oopt
-            case 'rawedit_auto'
-                if castopts.redoctm
-                    if isempty(castopts.pvars) && isempty(castopts.sevars) && isempty(castopts.revars) && isempty(castopts.sevars) && isempty(castopts.dsvars)
-                        warning(['rerunning cell thermal mass correction on raw file for station ' stn_string 'but no raw edits are specified under mctd_02, editraw in opt_' mcruise])
-                    end
-                end
             case 'raw_corrs'
                 if castopts.dooxyrev
                     if sum(sum(isnan(cell2mat(struct2cell(castopts.oxyrev)))))>0

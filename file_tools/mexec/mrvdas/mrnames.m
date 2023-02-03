@@ -45,12 +45,10 @@ m_common
 
 qflag = '';
 allargs = varargin;
-kq = find(strcmp('q',allargs));
-if ~isempty(kq)
+mq = strcmp('q',allargs);
+if sum(mq)
     qflag = 'q';
-    allargs(kq) = [];
-else
-    qflag = '';
+    allargs(mq) = [];
 end
 
 
@@ -134,7 +132,7 @@ tablemap = {
 'vtgsea1'                        'gnss_seapath_320_1_invtg'
 'possea2'                        'gnss_seapath_320_2_ingga'
 'vtgsea2'                        'gnss_seapath_320_2_invtg'
-'hdtgryo1'     'gyrocompass_raytheon_standard_30_mf_1_hehdt'
+'hdtgyro1'     'gyrocompass_raytheon_standard_30_mf_1_hehdt'
 'rotgyro1'     'gyrocompass_raytheon_standard_30_mf_1_herot'
 'hdtgyro2'     'gyrocompass_raytheon_standard_30_mf_2_hehdt'
 'rotgyro2'     'gyrocompass_raytheon_standard_30_mf_2_herot'
@@ -166,9 +164,9 @@ tablemap = {
 
     };
 
-scriptname = 'mrvdas_ingest'; oopt = 'rvdas_cruise_table_pre'; get_cropt
-if ~isempty(sqlpre)
-    tablemap(:,2) = cellfun(@(x) [sqlpre x], tablemap(:,2), 'UniformOutput', false);
+scriptname = 'mrvdas_ingest'; oopt = 'use_cruise_views'; get_cropt
+if use_cruise_views
+    tablemap(:,2) = cellfun(@(x) [view_name '_' x], tablemap(:,2), 'UniformOutput', false);
 end
 
 if ~isempty(qflag); return; end
