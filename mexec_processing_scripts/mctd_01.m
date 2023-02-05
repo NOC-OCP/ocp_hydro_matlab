@@ -85,49 +85,45 @@ mheadr
 
 %%%%% rename variables, and add units where necessary %%%%%
 
-dsv = dataset('File', 'ctd_renamelist.csv', 'Delimiter', ','); %on the matlab path
-scriptname = mfilename; oopt = 'ctdvars'; get_cropt
-if ~isempty(ctdvars_add)
-    l = length(dsv.sbename); ln = size(ctdvars_add,1);
-    dsv.sbename(l+[1:ln]) = ctdvars_add(:,1);
-    dsv.varname(l+[1:ln]) = ctdvars_add(:,2);
-    dsv.varunit(l+[1:ln]) = ctdvars_add(:,3);
-end
-if length(unique(dsv.sbename))<length(dsv.sbename)
-    error(['There is a duplicate name in the list of variables to rename; use ctdvars_replace rather than ctdvars_add in opt_' mcruise]);
-end
 h = m_read_header(otfile);
-[~,ia,ib] = intersect(dsv.sbename,h.fldnam);
-dsv = dsv(ia,:);
-varnames_units = cell(3,length(dsv));
-for vno = 1:length(dsv)
-    varnames_units{1,vno} = dsv.sbename{vno};
-    if ~isempty(ctdvars_replace)
-        iir = find(strcmp(ctdvars_replace(:,1), dsv.sbename{vno}));
-    else
-        iir = [];
+scriptname = mfilename; oopt = 'ctdvars'; get_cropt
+names_new = h.fldnam; 
+for no = 1:length(h.fldnam)
+    iis = find(strcmp(h.fldnam{no},ctdvarmap(:,1)));
+    if ~isempty(iis)
+        if length(iis)>1
+            warning('more than one mstar name listed for variable %s; using first',h.fldnam{no})
+        end
+        iis = iis(1);
+        newname = ctdvarmap{iis,2};
+        if ~strcmp(h.fldnam{no},newname)
+            mm = strcmp(newname,names_new([1:no-1 no+1:end]));
+            if sum(mm)
+                error('more than one SBE variable with the same mstar name %s; edit ctdvarmap',newname);
+            end
+            names_new{no} = newname;
+            nc_varrename(otfile,h.fldnam{no},newname);
+        end
     end
-    if isempty(iir)
-        varnames_units(2:3,vno) = {dsv.varname{vno}; dsv.varunit{vno}};
-    else
-        varnames_units(2:3,vno) = {ctdvars_replace{iir,2}; ctdvars_replace{iir,3}};
-    end
-end
-varnames_units = varnames_units(:);
 
-%edit file names and units in header
-MEXEC_A.MARGS_IN_1 = {
-    otfile
-    'y'
-    '8'
-    };
-MEXEC_A.MARGS_IN_2 = varnames_units;
-MEXEC_A.MARGS_IN_3 = {
-    '-1'
-    '-1'
-    };
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3];
-mheadr
+    %units
+    newunits = [];
+    if isempty(h.fldunt{no})
+        newunits = m_remove_outside_spaces(ctdvarmap{iis(1),3});
+    elseif strcmpi(h.fldunt{no},'ITS-90, deg C') || strcmpi(h.fldunt{no},'deg C')
+        newunits = 'degc90';
+    elseif strcmpi(h.fldunt{no},'deg')
+        newunits = 'degrees';
+    elseif strcmpi(h.fldunt{no},'db')
+        newunits = 'dbar';
+    elseif strcmp(h.fldunt{no},'%')
+        newunits = 'percent';
+    end
+    if ~isempty(newunits)
+        nc_attput(otfile,names_new{no},'units',newunits);
+    end
+
+end
 
 % create NaN variables that are in mcvars_list but not present for this station
 scriptname = mfilename; oopt = 'absentvars'; get_cropt
@@ -156,7 +152,8 @@ else
     kbot = find(d.press == max(d.press), 1 );
     tbot = d.time(kbot);
     tbotmat = datenum(h.data_time_origin) + tbot/86400; % bottom time as matlab datenum
-    switch MEXEC_G.Mshipdatasystem
+    scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+    switch shipdatasystem
         case 'scs'
             [botlat, botlon] = msposinfo(tbotmat);
         case 'techsas'

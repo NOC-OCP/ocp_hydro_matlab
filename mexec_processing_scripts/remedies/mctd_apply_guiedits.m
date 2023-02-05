@@ -35,7 +35,7 @@ for fno = 1:length(edfiles)
     ii = find(strcmp(a,'ot_version')) + 3;
     if length(a)>ii
         for lno = ii:length(a)
-            s = str2num(a{lno});
+            s = str2double(a{lno});
             if isempty(s)
                 var = a{lno}; %variable name
                 if ~exist('donan','var') || ~isfield(donan,var)

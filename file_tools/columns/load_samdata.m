@@ -47,6 +47,8 @@ function [samtable, samhead] = load_samdata(infile, varargin)
 %   hcpat it will stop when it reaches a sheet where this patter is not
 %   found (i.e. detect when you've reached the end of the data sheets)
 %
+% 
+%
 % e.g., infile points to an oxygen csv file with multiple column header
 %   rows:
 %     Cruise,JC211,,,,,,,,,,,,,
@@ -105,6 +107,8 @@ end
 warning('off','MATLAB:table:ModifiedAndSavedVarnames')
 warning('off','MATLAB:textscan:AllNatSuggestFormat')
 
+samhead = cell(length(infile),length(sheets));
+maxsheets = 1;
 for fno = 1:length(infile)
     [~,~,ext] = fileparts(infile{fno});
     if strncmp(ext(2:end),'xls',3); isss = 1; else; isss = 0; end
@@ -156,6 +160,7 @@ for fno = 1:length(infile)
                 iih = 0;
             end
         end
+        maxsheets = max(maxsheets,sno);
         
         %get parameters for reading in data rows
         opts = detectImportOptions(infile{fno},'NumHeaderLines',iih(1)-1); %exclude all before column header line
@@ -256,6 +261,7 @@ for fno = 1:length(infile)
                     dat.Properties.VariableUnits = un(bno,:);
                 end
                 samhead{fno,bno} = indata(iih(1,:),:);
+                maxsheets = max(maxsheets,bno);
                 if ~exist('samtable','var')
                     %initialise
                     samtable = dat;
@@ -271,8 +277,7 @@ for fno = 1:length(infile)
     disp(['loaded ' infile{fno}])
     
 end %loop through files
+samhead(:,maxsheets+1:end) = [];
 
 warning('on','MATLAB:table:ModifiedAndSavedVarnames')
 warning('on','MATLAB:textscan:AllNatSuggestFormat')
-
-

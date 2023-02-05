@@ -42,8 +42,7 @@ if exist(m_add_nc(infile),'file') == 2
         d.stndepth = repmat(h.water_depth_metres,ns);
         h.fldnam = [h.fldnam 'stndepth']; h.fldunt = [h.fldunt 'metres'];
         h.latitude = -999; h.longitude = -999; h.water_depth_metres = -999; % sam file has multiple stations
-        %h.comment = sprintf('CTD data from station %03d added',stnlocal); 
-        h.comment = []; % BAK fixing comment problem: Don't pass in this comment string
+        h.comment = sprintf('CTD data from station %03d added',stnlocal); 
         h.dataname = ['sam_' mcruise '_all'];
         MEXEC_A.Mprog = mfilename;
         mfsave(otfile, d, h, '-merge', 'sampnum');

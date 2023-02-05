@@ -164,7 +164,7 @@ while ~exist(sprintf('%s_%d.mat',f.checkpoints,last_checkpoint),'file')
 end
 
 pcs.target_begin_step = pcs.begin_step;	% backtrack to last valid checkpoint
-if last_checkpoint >= 0 & pcs.begin_step > last_checkpoint+1
+if last_checkpoint >= 0 && pcs.begin_step > last_checkpoint+1
     disp(sprintf('Backtracking begin_step from %d to %d',...
         pcs.begin_step,last_checkpoint+1));
     pcs.begin_step = last_checkpoint + 1;
@@ -231,7 +231,7 @@ if pcs.begin_step <= pcs.cur_step
   pcs.step_name = 'LOAD GPS DATA'; begin_processing_step_cfgstr;
 
   p.navdata = 0;
-  if length(f.nav)>1 & exist('loadnav')==exist('loadrdi')
+  if length(f.nav)>1 && exist('loadnav')==exist('loadrdi')
     [d,p]=loadnav(f,d,p);
   else
     d.slon=NaN*d.time_jul; d.slat=d.slon;

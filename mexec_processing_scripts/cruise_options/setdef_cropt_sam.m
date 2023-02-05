@@ -120,8 +120,10 @@ switch scriptname
                 crhelp_str = {'Place to parse/store additional info from each file, for instance from header hs,'
                     'or to compute things from fields of ds, for instance looking up bottle volumes from bottle '
                     'numbers, or to specify mapping between file and mstar variable names in cell array oxyvarmap '
-                    '(first column: mstar names, second column: names in file).'};
+                    '(first column: mstar names, second column: names in file), or to set fillstat to call'
+                    'fill_samdata_statnum to fill in missing station numbers on rows 2:N (default 0).'};
                 oxyvarmap = {}; %default: don't rename anything
+                fillstat = 0; %default: no need to fill in station numbers on some rows
             case 'oxy_calc'
                 crhelp_str = {'Place to set oxygen titration parameters required if you want to calculate conc_o2 '
                     '(rather than reading it in): '

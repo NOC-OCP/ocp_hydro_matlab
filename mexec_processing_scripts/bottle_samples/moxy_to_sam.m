@@ -25,7 +25,7 @@ if ~exist(oxyfile,'file')
     end
     [d0,h0] = mload(fullfile(root_oxy,fnames{end}),'/');
     hnew.fldnam = h0.fldnam; hnew.fldunt = h0.fldunt;
-    hnew.comment = sprintf('\n data appended from oxy_%s_???.nc',mcruise);
+    hnew.comment = sprintf('\n data appended from oxy_%s_???.nc \n ',mcruise);
     mfsave(oxyfile, d0, hnew, '-merge', 'sampnum');
     h = m_read_header(oxyfile);
     renamevars = {'botoxytempa' 'botoxya_temp'
@@ -110,6 +110,7 @@ ds.botoxya_temp = NaN+ds.sampnum;
 ds.botoxya_temp(iis) = d.botoxya_temp(iio);
 hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxya_temp' 'botoxy_flag'];
 hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
+hnew.comment = [h.comment ' converted to umol/kg using CTD salinity (uasal) and fixing temperature \n '];
 
 %apply niskin flags (and also confirm consistency between sample and flag)
 ds = hdata_flagnan(ds, 'keepempty', 1);

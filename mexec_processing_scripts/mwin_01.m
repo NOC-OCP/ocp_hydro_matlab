@@ -77,7 +77,8 @@ instream = rvsstreamname; % this should be set in m_setup and picked up from a g
 flags = datapupflags;
 varlist = '-';
 
-switch MEXEC_G.Mshipdatasystem
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+switch shipdatasystem
     case 'scs'
     mdatapupscs(yy_start,daystart,timestart,yy_end,dayend,timeend,...
         flags,instream,otfile2,varlist);

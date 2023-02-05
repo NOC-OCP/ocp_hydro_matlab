@@ -1,4 +1,4 @@
-function cond = apply_ctd_celltm(time,temp,cond);
+function cond = apply_ctd_celltm(time,temp,cond)
 
 % dy040 bak 21 dec 2015
 % code up celltm algorithm

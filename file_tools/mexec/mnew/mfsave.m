@@ -214,7 +214,7 @@ else %overwrite existing variables and keep record of new ones in varsnew and un
     if length(d.(fn{1}))~=max(h0.rowlength,h0.collength)
         error(['fields in d must have same length as those in file ' filename ', else use ''-merge''']);
     end
-    varsold = h0.fldnam;
+    %varsold = h0.fldnam;
     
     %open file for write
     ncfile = m_openio(ncfile);
@@ -230,7 +230,7 @@ else %overwrite existing variables and keep record of new ones in varsnew and un
             %sort out units
             if isfield(h, 'fldunt') && ~strcmp(h.fldunt{vno}, h0.fldunt{ii})
                 if mergemode
-                    warning(['unit ' h.fldunt{vno} ' in new header does not match ' h0.fldunt{ii} ' in existing ' filename]);
+                    warning(['unit ' h.fldunt{vno} ' in new header does not match ' h0.fldunt{ii} ' for variable ' h.fldnam{vno} ' in existing ' filename]);
                     cont = input('overwrite (1) or keep old (0)? (or control-C to quit)\n');
                     if cont==1
                         h0.fldunt(ii) = h.fldunt(vno);

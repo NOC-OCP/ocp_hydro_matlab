@@ -87,10 +87,10 @@ else
     else
         vared = find(strcmp(vared,h.fldnam(ynumlist)));
     end
-    if isempty(vared) || vared<=0 || vared>length(hplot)
-        vared = m_getinput('try again (number): ', 'd');
-    elseif isnan(vared)
+    if isempty(vared) || isnan(vared)
         disp('exiting mplxyed'); return
+    elseif vared<=0 || vared>length(hplot)
+        vared = m_getinput('try again (number): ', 'd');
     end
 end
 

@@ -24,18 +24,18 @@ while endflag == 0
     var = m_getinput(m,'s');
     if strcmp(var,' ') == 1; var = '-1'; end
     if strcmp(var,'/') == 1; var = '-1'; end
-    if strcmp(var,'-1') == 1;
+    if strcmp(var,'-1') == 1
         endflag = 1;
         break;
     end
 
-    if strcmp(var,'1') == 1 | strcmp(var,'0') == 1
+    if strcmp(var,'1') == 1 || strcmp(var,'0') == 1
         eflag = 0;
         while eflag == 0
             m = ['Type new dataname (return or / to keep as '  h.dataname ') : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 h.dataname = m_remove_spaces(var2);
             end
@@ -53,27 +53,27 @@ while endflag == 0
         end
     end
 
-    if strcmp(var,'2') == 1 | strcmp(var,'0') == 1
+    if strcmp(var,'2') == 1 || strcmp(var,'0') == 1
         eflag = 0;
         while eflag == 0
             m = ['Type new platform type (return or / to keep as '  h.platform_type ') : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 h.platform_type = m_remove_outside_spaces(var2);
             end
             m = ['Type new platform identifier (return or / to keep as '  h.platform_identifier ') : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 h.platform_identifier = m_remove_outside_spaces(var2);
             end
             m = ['Type new platform number (return or / to keep as '  h.platform_number ') : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 h.platform_number = m_remove_outside_spaces(var2);
             end
@@ -91,20 +91,20 @@ while endflag == 0
         end
     end
 
-    if strcmp(var,'3') == 1 | strcmp(var,'0') == 1
+    if strcmp(var,'3') == 1 || strcmp(var,'0') == 1
         eflag = 0;
         while eflag == 0
             m = ['Type new instrument identifier (return or / to keep as '  h.instrument_identifier ') : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 h.instrument_identifier = m_remove_outside_spaces(var2);
             end
             m = ['Type new recording interval (return or / to keep as '  h.recording_interval ') : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 h.recording_interval = m_remove_outside_spaces(var2);
             end
@@ -122,13 +122,13 @@ while endflag == 0
         end
     end
 
-    if strcmp(var,'4') == 1 | strcmp(var,'0') == 1
+    if strcmp(var,'4') == 1 || strcmp(var,'0') == 1
         eflag = 0;
         while eflag == 0
             m = ['Type new data_time_origin (return or / to keep as ['  sprintf('%d ',h.data_time_origin) '] ) : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 cmd = ['h.data_time_origin = [' var2 '];']; %convert char response to number
                 eval(cmd);
@@ -148,13 +148,13 @@ while endflag == 0
         end
     end
 
-    if strcmp(var,'5') == 1 | strcmp(var,'0') == 1
+    if strcmp(var,'5') == 1 || strcmp(var,'0') == 1
         eflag = 0;
         while eflag == 0
             m = ['Type new lat (return or / to keep as '  sprintf('%12.6f',h.latitude) ' ) : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 cmd = ['lat = [' var2 '];']; %convert char response to number
                 eval(cmd);
@@ -162,8 +162,8 @@ while endflag == 0
             end
             m = ['Type new lon (return or / to keep as '  sprintf('%12.6f',h.longitude) ' ) : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 cmd = ['lon = [' var2 '];']; %convert char response to number
                 eval(cmd);
@@ -184,13 +184,13 @@ while endflag == 0
         end
     end
 
-    if strcmp(var,'6') == 1 | strcmp(var,'0') == 1
+    if strcmp(var,'6') == 1 || strcmp(var,'0') == 1
         eflag = 0;
         while eflag == 0
             m = ['Type new water_depth_metres      (return or / to keep as '  sprintf('%9.1f',h.water_depth_metres) ' ) : '];
             var2 = m_getinput(m,'s');
-            if strcmp(var2,' ') == 1;
-            elseif strcmp(var2,'/') == 1;
+            if strcmp(var2,' ') == 1
+            elseif strcmp(var2,'/') == 1
             else
                 cmd = ['water_depth_metres = [' var2 '];']; %convert char response to number
                 eval(cmd);
@@ -220,7 +220,7 @@ while endflag == 0
         end
     end
 
-    if strcmp(var,'7') == 1 | strcmp(var,'0') == 1
+    if strcmp(var,'7') == 1 || strcmp(var,'0') == 1
         eflag = 0;
         while eflag == 0
 
@@ -253,13 +253,13 @@ while endflag == 0
                         cstring = ['comment     : ' sprintf('%s',c(k1:k2))];
                         m = sprintf('%s\n%s',cstring, 'Type d to delete,  return or / to accept, or any other string to replace: ');
                         var2 = m_getinput(m,'s');
-                        if strcmp(var2,'d') == 1;
+                        if strcmp(var2,'d') == 1
                             c(k1-length(delim):k2) = [];
                             delimindex = strfind(c,delim); % start locations of delim strings
                             ncoms = length(delimindex)-1; % number of comments remaning after one has been deleted
                             nreview = nreview-1;
                             continue
-                        elseif strcmp(var2,' ') == 1 | strcmp(var2,'/') == 1;
+                        elseif strcmp(var2,' ') == 1 || strcmp(var2,'/') == 1
                             nreview = nreview-1;
                             continue
                         else
@@ -287,9 +287,9 @@ while endflag == 0
             while eflag2 == 0
                 var2 = m_getinput(m,'s');
                 % if you want a comment consisting of space or slash you need to put something like '  ' or '/ '
-                if strcmp(var2,' ') == 1;
+                if strcmp(var2,' ') == 1
                     eflag2 = 1;
-                elseif strcmp(var2,'/') == 1;
+                elseif strcmp(var2,'/') == 1
                     eflag2 = 1;
                 else
                     cstringnew = var2;
@@ -313,7 +313,7 @@ while endflag == 0
         end
     end
 
-    if strcmp(var,'8') == 1 | strcmp(var,'0') == 1
+    if strcmp(var,'8') == 1 || strcmp(var,'0') == 1
 
         eflag = 0;
         while eflag == 0
@@ -326,7 +326,7 @@ while endflag == 0
             var = m_getinput(m,'s');
             if strcmp(var,' ') == 1; var = '-1'; end
             if strcmp(var,'/') == 1; var = '-1'; end
-            if strcmp(var,'-1') == 1;
+            if strcmp(var,'-1') == 1
                 eflag = 1;
                 break;
             end
@@ -342,8 +342,8 @@ while endflag == 0
                     m2 = ['Type new name  (return or / to keep as '  h.fldnam{kvar} ') : '];
                     m = sprintf('%s\n%s',m1,m2);
                     var2 = m_getinput(m,'s');
-                    if strcmp(var2,' ') == 1;
-                    elseif strcmp(var2,'/') == 1;
+                    if strcmp(var2,' ') == 1
+                    elseif strcmp(var2,'/') == 1
                     else
                         oldname = h.fldnam{kvar};
                         newname = m_check_nc_varname(var2);
@@ -362,7 +362,7 @@ while endflag == 0
                         % name is a clash with an existing name for another
                         % variable, then prompt the user again.
                         if ~isempty(kclash)
-                            if (length(kclash) == 1) & (kclash(1) == kvar)
+                            if (length(kclash) == 1) && (kclash(1) == kvar)
                                 m1 = 'Warning: renaming with the same name';
                                 fprintf(MEXEC_A.Mfider,'%s\n',' ',m1);
                                 %  no call to rename

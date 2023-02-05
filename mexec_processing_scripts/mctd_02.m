@@ -13,12 +13,13 @@
 %      stn = 16; mctd_02;
 %
 % calls:
-%     mcalib2
-%     mctd_rawedit
-%     m_write_variable
-%     m_add_comment
-%     mheadr
+%     
+%     apply_autoedits
+%     (optionally) apply_ctd_celltm
 %     mfsave
+%     apply_oxyhyst
+%     select_calibrations
+%     apply_calibrations
 
 %%%%% setup %%%%%
 
@@ -37,14 +38,14 @@ infile0 = fullfile(root_ctd, [prefix '_raw_noctm.nc']);
 otfile24 = fullfile(root_ctd, [prefix '_24hz']);
 
 %figure out which file to start from
-if exist(cleanfile, 'file') && exist(infile0, 'file')
-    m = {'both _raw_noctm and _raw_cleaned exist, so will start from _raw_cleaned;'
-        'if mctd_01 has just been rerun with redoctm set, remove _raw_cleaned file'
-        'now to start from _raw_noctm instead.'
-        'return to continue'};
-    fprintf(MEXEC_A.Mfider,'%s\n',m{:});
-    pause
-end
+% if exist(cleanfile, 'file') && exist(infile0, 'file')
+%     m = {'both _raw_noctm and _raw_cleaned exist, so will start from _raw_cleaned;'
+%         'if mctd_01 has just been rerun with redoctm set, remove _raw_cleaned file'
+%         'now to start from _raw_noctm instead.'
+%         'return to continue'};
+%     fprintf(MEXEC_A.Mfider,'%s\n',m{:});
+%     pause
+% end
 castopts.redoctm = 0;
 if ~exist(cleanfile, 'file')
     if ~exist(infile0, 'file')

@@ -11,7 +11,7 @@
 % dy146 ylf treat start of cast the same
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-fprintf(1,'interactively select (or confirm) start, bottom, and end of cast,\n written to dcs_%s_%s.nc. if you set\n end of cast based on T and C, check oxy_align\n and turn on flag oxy_end in opt_%s under castpars',mcruise,stn_string,mcruise);
+fprintf(1,'interactively select (or confirm) start, bottom, and end of cast,\n written to dcs_%s_%s.nc. if you set\n end of cast based on T and C, check oxy_align\n and turn on flag oxy_end in opt_%s under castpars\n\n',mcruise,stn_string,mcruise);
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 

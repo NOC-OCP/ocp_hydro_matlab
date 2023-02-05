@@ -25,7 +25,7 @@ else
 end
 
 %load data
-[ds_oxy, oxyhead] = load_samdata(ofiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets);
+[ds_oxy, oxyhead] = load_samdata(ofiles, 'hcpat', hcpat, 'icolhead', chrows, 'icolunits', chunits, 'sheets', sheets);
 if isempty(ds_oxy)
     error('no data loaded')
 end
@@ -50,11 +50,14 @@ oxyunits.bot_vol_tfix = {'ml' 'mls'};
 oxyunits.sample_titre = {'ml' 'mls'};
 oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
 oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
-if ~isempty(chunits)
+if ~isempty(chunits) && ~isempty(ds_oxy.Properties.VariableUnits)
     [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
 end
 
 %compute or fill some fields
+if fillstat
+    ds_oxy = fill_samdata_statnum(ds_oxy,'statnum');
+end
 if sum(strcmp('sampnum',ds_oxy_fn))==0
     ds_oxy.sampnum = 100*ds_oxy.statnum + ds_oxy.position;
 else
@@ -123,7 +126,7 @@ clear d hnew
 [d.sampnum, iia, iic] = unique(ds_oxy.sampnum);
 d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
 hnew.dataname = ['oxy_' mcruise '_01'];
-hnew.comment = ['data loaded from ' fullfile(root_oxy, ofpat)];
+hnew.comment = ['data loaded from ' fullfile(root_oxy, ofpat) ' \n '];
 hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
 

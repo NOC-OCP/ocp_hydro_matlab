@@ -86,11 +86,36 @@ switch scriptname
                 end
                 cnvfile = fullfile(mgetdir('M_CTD_CNV'),cnvfile);
             case 'ctdvars'
-                crhelp_str = {'Place to put additional (ctdvars_add) or replacement (ctdvars_replace)'
-                    'triplets of SBE variable name, mstar variable name, mstar variable units to '
-                    'supplement those in ctd_renamelist.csv. Default is both empty.'};
-                ctdvars_replace = {};
-                ctdvars_add = {};
+                crhelp_str = {'ctdvarmap is a list of sbe variable names, corresponding mstar names,'
+                    'and default units (only to be filled in if units are empty).'};
+                ctdvarmap = {'prDM','press','dbar'
+                    't090C','temp1','degc90'
+                    't190C','temp2','degc90'
+                    'altM','altimeter','meters'
+                    'ptempC','pressure_temp','degc90'
+                    'timeS','time','seconds'
+                    'scan','scan','number'
+                    'pumps','pumps','pump_status'
+                    'latitude','latitude','degrees'
+                    'longitude','longitude','degrees'
+                    'c0mS_slash_cm','cond1','mS/cm'
+                    'c1mS_slash_cm','cond2','mS/cm'
+                    'sbeox0V','sbeoxyV1','volts'
+                    'sbox0Mm_slash_Kg','oxygen_sbe1','umol/kg'
+                    'sbeox1V','sbeoxyV2','volts'
+                    'sbox1Mm_slash_Kg','oxygen_sbe2','umol/kg'
+                    'T2_minus_T190C','t2_minus_t1','degc90'
+                    'C2_minus_C1mS_slash_cm','c2_minus_c1','mS/cm'
+                    'flECO_minus_AFL','fluor','mg/m^3'
+                    'flC','fluor','ug/l'
+                    'wetCDOM','fluor_cdom','mg/m^3'
+                    'xmiss','transmittance','percent'
+                    'CStarTr0','transmittance','percent'
+                    'transmittance','transmittance','percent'
+                    'CStarAt0','attenuation','1/m'
+                    'turbWETbb0','turbidity','m^-1/sr'
+                    'par','par_up','umol photons/m^2/sec'
+                    'par1','par_dn','umol photons/m^2/sec'};
             case 'absentvars' % introduced new on jc191
                 crhelp_str = {'absentvars (default {}) is a cell array of strings listing variables not present '
                     'for given station(s); if applicable should be set in opt_cruise for selected stations '
@@ -103,7 +128,7 @@ switch scriptname
                 extravars = {};
         end
         %%%%%%%%%% end mctd_01 %%%%%%%%%%
-        
+
         %%%%%%%%%% mctd_02 %%%%%%%%%%
     case 'mctd_02'
         switch oopt
