@@ -198,6 +198,10 @@ if pcs.begin_step <= pcs.cur_step
     %  2) merge down-up data
     %  3) do some fist order error checks
     [d,p]=loadrdi(f,p);
+    if length(d.time_jul)<10
+        warning('not enough data in %s or %s; skipping',f.ladcpdo,f.ladcpup)
+        return
+    end
     
     % get instrument serial number
     p=getserial(f,p);

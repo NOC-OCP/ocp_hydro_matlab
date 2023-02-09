@@ -5,8 +5,10 @@
 
 scriptname = 'uway_daily_proc'; oopt = 'excludestreams'; get_cropt
 
+udirs = udirs([7:15 21:24 26:31],:);
+
 if exist('uway_proc_list', 'var') %only from this list
-    [~,iik,~] = intersect(udirs(:,1),uway_proc_list);
+    [~,iik,~] = intersect(udirs(:,1),uway_proc_list,'stable');
     udirs = udirs(iik,:);
 else
     if exist('uway_excludes','var')

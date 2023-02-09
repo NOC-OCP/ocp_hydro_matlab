@@ -23,7 +23,7 @@ if ~MEXEC_G.quiet
 fprintf(MEXEC_A.Mfidterm,'%s\n',m1,m2,m3,m4,m5,' ');
 end
 
-if length(MEXEC_A.MARGS_IN_LOCAL)==0
+if isempty(MEXEC_A.MARGS_IN_LOCAL)
    fprintf(MEXEC_A.Mfidterm,'%s','Enter name of output disc file  '); ncfile.name = m_getfilename;
 else
    ncfile.name = m_getfilename(MEXEC_A.MARGS_IN_LOCAL{1}); MEXEC_A.MARGS_IN_LOCAL(1) = [];
@@ -35,7 +35,7 @@ while ok == 0
    m = 'next var name or, return or ''/'' to end ';
    reply = m_getinput(m,'s');
 
-   if strcmp(reply, ' ') | strcmp(reply,'/')
+   if strcmp(reply, ' ') || strcmp(reply,'/')
       ok = 1;
    else
       reply = m_remove_outside_spaces(reply);

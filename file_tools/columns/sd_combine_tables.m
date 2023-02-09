@@ -15,7 +15,7 @@ un0 = table1.Properties.VariableUnits;
 un = table2.Properties.VariableUnits;
 
 %compare to existing
-[~, iio, iin] = intersect(ch0, ch);
+[~, iio, iin] = intersect(ch0, ch, 'stable');
 if ~isempty(un)
     iinu = find(~strcmp(un0(iio), un(iin)));
     if ~isempty(iinu)
@@ -24,7 +24,7 @@ if ~isempty(un)
             ch{cno} = [ch{cno} '_' un{cno}];
         end
         %recalculate intersection
-        [~, iio, iin] = intersect(ch0, ch);
+        [~, iio, iin] = intersect(ch0, ch, 'stable');
     end
 end
 

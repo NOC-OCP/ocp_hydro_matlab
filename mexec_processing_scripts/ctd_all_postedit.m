@@ -42,9 +42,7 @@ for kloop = klistl
 end
 if 0
     mout_exch_sam
+end
 
 %and sync
 scriptname = 'batchactions'; oopt = 'output_for_others'; get_cropt
-
-
-end

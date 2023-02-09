@@ -68,7 +68,8 @@ qflag = argot.qflag;
 m_common
 
 if isempty(table)
-    table = MEXEC_G.default_navstream;
+    scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+    table = default_navstream;
 end
 
 def = mrdefine('this_cruise','has_mstarpre');

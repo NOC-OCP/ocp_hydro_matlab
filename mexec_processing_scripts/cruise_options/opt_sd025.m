@@ -1,4 +1,4 @@
-ticasts = [3 4 7 11 12:21];
+ticasts = [3 4 7 11 12:24 31 32 33];
 
 switch scriptname
 
@@ -16,8 +16,22 @@ switch scriptname
                 oxy_end = 1;
             case 'shortcasts'
                 shortcasts = [3 4 7 11 12 13];
-            case 'ctdsens_groups'
-        end
+             case 'ctdsens_groups'
+                                crhelp_str = {'ctdsens is a structure with fields corresponding to the CTD sensors e.g.'
+                    'temp1, oxygen1, temp2, etc. (temp1 applies to both temp1 and cond1); '
+                    'their values are 2xN cell arrays listing stations and corresponding sensor/serial number, '
+                    'in case one or more sensors was changed during the cruise.'
+                    'all default to [1:999] in the first row and 1 in the second (no change of sensors), '
+                    'but, for example, you could set ctdsens.oxygen1 = [1:30; [ones(1,8) ones(2,22)];'
+                    'if the CTD1 oxygen sensor was changed between stations 8 and 9.'};
+                a = [1:999; ones(1,999)];
+                ctdsens.temp1 = [[1 2 5 6 8 9]; 2191]; 
+                ctdsens.oxygen1 = [[1 2 5 6 8 9]; 0242];
+                ctdsens.temp2 = [[1 2 5 6 8 9]; 5649];
+                ctdsens.oxygen2 = [[1 2 5]; 0620, [6 8 9]; 2291];
+                ctdsens.fluor = a;
+                ctdsens.transmittance = a;
+       end
 
     case 'mctd_01'
         switch oopt
@@ -84,13 +98,38 @@ switch scriptname
                         niskin_flag(ismember(position,[24])) = 7; %fired on the fly?
                     case 20
                         niskin_flag(~ismember(position,[4 20 22 24])) = 9; % :(
+                    case 21
+		                niskin_flag(position==6) = 3; % log sheet says open from the bottom - assume that means its also leaking
+		                niskin_flag(position==24) = 3 ;
+                        niskin_flag(ismember(position,[12 16])) = 7 ; % top open
+                    case 22
+                        niskin_flag(position==2) = 4 ;
+                        niskin_flag(position==6) = 3 ;
+                        niskin_flag(position==16) = 7 ; % leaking at top. top open when exiting water
+                    case 23
+                        niskin_flag(ismember(position,[2 4 6 14])) = 3 ; % 2 and 6 fell off frame after exiting water
+                        niskin_flag(position==12) = 7 ; % partially open at top
+                    case 25
+                        niskin_flag(ismember(position,[2 8 10])) = 3 ;
+                        niskin_flag(ismember(position,[17 22 24])) = 7 ; % leaking once open
+                        niskin_flag(position==21) = 4 ;
+                    case 26
+                        niskin_flag(ismember(position,[2 8 16 17 23 24])) = 3 ; % wire caught in 23
+                        niskin_flag(position==21) = 4 ;
+                    case 27
+                        niskin_flag(~ismember(position,[12 21])) = 7 ; % top valve open/no valve
+                        niskin_flag(position==21) = 4 ; 
                 end
         end
 
     case 'msbe35_01'
         switch oopt
-            case 'sbe35file'              
-                sbe35file = sprintf('%s_*_sbe35.asc', upper(mcruise));
+            case 'sbe35file'
+                if ismember(stnlocal,ticasts)
+                    sbe35file = 'none';
+                else
+                    sbe35file = sprintf('%s_*_sbe35.asc', upper(mcruise));
+                end
         end
 
             case 'moxy_01'
@@ -118,10 +157,116 @@ switch scriptname
                                 fillstat = 1;
         end
 
+    case 'msal_01'
+        switch oopt
+            case 'sal_parse'
+                cellT = 21;
+                ssw_k15 = 0.99986;
+            case 'sal_calc'
+                sal_off = [008 -3
+                    009 +1
+                    010 -2
+                    011 +0
+                    012 +0
+                    013 -0
+                    ];
+                sal_off(:,1) = sal_off(:,1)+999e3;
+                sal_off(:,2) = sal_off(:,2)*1e-5;
+                sal_off_base = 'sampnum_list';
+                            case 'sal_sample_inspect'
+                plotss = 1; 
+            case 'sal_flags'
+                ds_sal.flag(ismember(ds_sal.sampnum,[214 618 812 813 817 912 913 918])) = 3;
+                ds_sal.flag(ismember(ds_sal.sampnum,[820 901])) = 4;
+                ds_sal.sample_1(ismember(ds_sal.sampnum,[210 502 609 611 620 623 812 903 917])) = NaN;
+                ds_sal.sample_2(ismember(ds_sal.sampnum,[501])) = NaN;
+                ds_sal.sample_3(ismember(ds_sal.sampnum,[812 817 904 906])) = NaN;
+                ds_sal.sample_4(ismember(ds_sal.sampnum,[609 620])) = NaN;
+        end
+
     case 'best_station_depths'
         switch oopt
             case 'bestdeps'
                 replacedeps = [];
         end
+
+    case 'batchactions'
+        switch oopt
+            case 'output_for_others'
+                pdir = '~/mounts/public/scientific_work_areas/physics/processed_data_hydro/';
+                n = 1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/ctd*24hz.nc ' pdir '24hz/']);
+                n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/ctd*2db.nc ' pdir]);
+                n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/collected_files/ ' pdir '/collected_files/']);
+                if sum(s)>0; warning('some or all syncing failed'); end
+        end
+
+            case 'mout_exch'
+        switch oopt
+            case 'woce_expo'
+                expocode = '74JC20230131';
+                sect_id = 'SR1b';
+                submitter = 'OCPNOCYLF'; %group institution person
+                common_headstr = {'#SHIP: RRS Sir David Attenboroug';...
+                    '#Cruise SD025; Polar Science Trials';...
+                    '#Region: Eastern subpolar North Atlantic';...
+                    ['#EXPOCODE: ' expocode];...
+                    '#DATES: 20230131 - 20230320';...
+                    '#Chief Scientist: S. Fielding (BAS)';...
+                    '#Supported by grants from the UK Natural Environment Research Council.'};
+            case 'woce_ctd_headstr'
+                headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
+                headstring = [headstring; common_headstr;
+                    {'#NN stations with 12-place rosette, NN stations with 12-place Ti rosette, NN stations with 24-place Ti rosette';...
+                    '#CTD: Who - Y. Firing; Status - uncalibrated.';...
+                    %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                    '# DEPTH_TYPE   : COR';...
+                    %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom, or speed of sound corrected ship-mounted bathymetric echosounding'...
+                    }];
+            case 'woce_sam_headstr'
+                headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
+                headstring = [headstring; common_headstr;
+                    {'#NN stations with 12-place rosette';...
+                    '#CTD: Who - Y. Firing; Status - uncalibrated';...
+                    '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
+                    %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                    %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom'...
+                    '#Salinity: Who - Y. Firing; Status - preliminary; SSW batch P165.';...
+                    '#Oxygen: Who - I Seguro Requejo; Status - preliminary.';...
+                    '#Nutrients: Who - M. Woodward; Status - not yet analysed';...
+                    '#Carbon: Who - D. Pickup and X. Shi; Status - not yet analysed';...
+                    }];
+            case 'woce_vars_exclude'
+                vars_exclude_ctd = {'ph'}; %cal is no good in current version
+                %rename CTDTURB to be more specific (so, the whole list should be in
+                %cropt?)
+                m = strcmp('CTDTURB',vars(:,1));
+                if sum(m)
+                    vars{m,1} = 'CTDBETA650_124';
+                end
+                m = strcmp('CTDTURB_FLAG_W',vars(:,1));
+                if sum(m)
+                    vars{m,1} = 'CTDBETA650_124_FLAG_W';
+                end
+                %use this space to calculate sigma0 (for sam file only)
+                %if isfield(d,'upsal')
+                %    d.upden = sw_pden(d.upsal,d.utemp,d.upress,0);
+                %end
+                %if isfield(d,'botpsal')
+                %    d.pden = sw_pden(d.botpsal,d.utemp,d.upress,0);
+                %end
+                vars_exclude_sam = {'uph'};
+        end
+
+            case 'msec_grid'
+        switch oopt
+            case 'sections_to_grid'
+	    sections = {'sr1b'};
+            case 'sec_stns_grids'
+                      zpressgrid = [0 5 25 50 75 100 175 250 375 500 625 750 875 1000 1250 1500 1750 2000 2250 2500 2750 3000 3250 3500 3750 4000 4250 4500 4750]';  
+                      kstns = [2 5 6 8 9 10 14:21 23:25 27:30 32];
+            case 'sam_gridlist'
+                sam_gridlist = {'botoxy'};
+        end
+
 
 end

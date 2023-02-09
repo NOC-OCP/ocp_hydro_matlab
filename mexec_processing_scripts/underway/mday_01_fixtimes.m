@@ -27,7 +27,7 @@ switch abbrev
     
     case {'gys', 'gyr', 'gyro_s', 'gyropmv' 'posmvpos'}
         %work on the latest file, which already be an edited version; always output to otfile
-        if exist([otfile '.nc'])
+        if exist([otfile '.nc'],'file')
             movefile(m_add_nc(otfile), m_add_nc(wkfile)); infile1 = wkfile;
         else
             infile1 = infile;

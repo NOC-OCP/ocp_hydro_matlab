@@ -24,7 +24,7 @@ end
 ds.botpsal_flag(isam) = d.flag(isal);
 
 %apply niskin flags (and also confirm consistency between sample and flag)
-ds = hdata_flagnan(ds, 'keepempty', 1);
+ds = hdata_flagnan(ds, 'keepemptyvars', 1);
 %don't need to rewrite them though
 ds = rmfield(ds,'niskin_flag');
 

@@ -17,11 +17,12 @@ end
 
 clear in out
 in.type = 'ctd'; in.stnlist = stnlocal;
+out.type = 'exch';
 
 %which vars to write
 [vars, varsh] = m_exch_vars_list(1);
 scriptname = 'mout_exch'; oopt = 'woce_vars_exclude'; get_cropt
-[~,ia,~] = setdiff(vars(:,1),vars_exclude_ctd);
+[~,ia] = setdiff(vars(:,1),vars_exclude_ctd);
 out.vars_units = vars(ia,:);
 
 %header

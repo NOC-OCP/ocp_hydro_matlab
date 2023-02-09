@@ -44,15 +44,20 @@ switch scriptname
                 crhelp_str = {'place to change fieldnames, combine fields, etc. after '
                     'loading; also to specify datform (default: ''dd/mm/yyyy'') and timform'
                     '(default: ''hh:mm:ss'') for converting date and time strings to datevec.'
-                    'also a place to add information like cellT (bath temperature) or k15'
+                    'also a place to add information like cellT (bath temperature) or ssw_k15'
                     'if it is not a column in the file (or if it in the header, code to parse'
                     'it from salhead).'};
                 datform = 'dd/mm/yyyy';
                 timform = 'HH:MM:SS';
+            case 'sal_sample_inspect'
+                crhelp_str = {'Set plotss to 1 (default 0) to plot individual reading values for '
+                    'salinity samples, to use to set flags below.'};
+                plotss = 0; 
             case 'sal_flags'
-                crhelp_str = {'Place to set flags on salinity bottles or readings: change ds_sal.flag'
+                crhelp_str = {'Place to set flags on salinity bottles or readings: for bottles, change ds_sal.flag'
                     'based on ds_sal.sampnum. Note: sample flags: 1 not yet analysed, 2 good, 3 questionable,'
-                '4 bad, 5 not reported (?), 6 average of replicates, 9 not drawn'};
+                '4 bad, 5 not reported (?), 6 average of replicates, 9 not drawn.'
+                'For readings, change (NaN) the values in ds_sal.sample_N directly.'};
             case 'sal_calc'
                 crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive, default []) for ranges'
                     'of sampnum, while sal_off_base (default ''sampnum_run'') to specify how to match them to samples.'

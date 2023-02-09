@@ -104,12 +104,12 @@ for ksec = 1:length(sections)
                 cdata.lon(1,kstn) = h.latitude;
                 cdata.lat(1,kstn) = h.longitude;
             end
-            [~,ii,iic] = intersect(d.press,cdata.press(:,1));
+            [~,ii,iic] = intersect(d.press,cdata.press(:,1),'stable');
             for vno = 1:length(ctd_regridlist)
                 cdata.(ctd_regridlist{vno})(iic,kstn) = d.(ctd_regridlist{vno})(ii);
             end
         end
-        [~,ia,~] = intersect(h.fldnam,ctd_regridlist);
+        [~,~,ia] = intersect(ctd_regridlist,h.fldnam,'stable');
         cdata.vars = ctd_regridlist;
         cdata.unts = h.fldunt(ia);
         m = sum(isnan(cdata.temp),2)==size(cdata.temp,2);
@@ -130,11 +130,17 @@ for ksec = 1:length(sections)
     sdata.ctdtmp = d.utemp(mstn);
     sdata.ctdsal = d.upsal(mstn);
     sdata.ctdoxy = d.uoxygen(mstn);
+    mv = zeros(1,length(sam_gridlist));
     for vno = 1:length(sam_gridlist)
-        sdata.(sam_gridlist{vno}) = d.(sam_gridlist{vno})(mstn);
+        if isfield(d,sam_gridlist{vno})
+            sdata.(sam_gridlist{vno}) = d.(sam_gridlist{vno})(mstn);
+            mv(vno) = 1;
+        else
+            warning('sample variable %s not found; skipping',sam_gridlist{vno})
+        end
     end
-    sdata.vars = sam_gridlist;
-    [~,ia,~] = intersect(h.fldnam,sam_gridlist);
+    sdata.vars = sam_gridlist(mv);
+    [~,~,ia] = intersect(sam_gridlist(mv),h.fldnam,'stable');
     sdata.unts = h.fldunt(ia);
 
     if strcmp(section,'ungridded') %this is just a way to compile some or all of the stations into a .mat file

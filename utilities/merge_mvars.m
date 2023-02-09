@@ -34,7 +34,7 @@ end
 %place combined variables
 [~,iico,iio] = intersect(d.(indepvar), mvo);
 [~,iicn,iin] = intersect(d.(indepvar), mvn);
-vars = setdiff([h0.fldnam h.fldnam], indepvar);
+vars = setdiff([h0.fldnam h.fldnam], indepvar, 'stable');
 a = zeros(size(d.(indepvar))); %add fill value to pad
 for vno = 1:length(vars)
     varname = vars{vno};

@@ -5,7 +5,7 @@ scriptname = mfilename; oopt = 'uway_factory_cal'; get_cropt
 if exist('sensorcals','var') && isstruct(sensorcals)
     fn = fieldnames(sensorcals);
     h = m_read_header(otfile);
-    [vars,iic,iiv0] = intersect(fn,h.fldnam);
+    [vars,iic,iiv0] = intersect(fn,h.fldnam,'stable');
 
     for m = 1:length(vars)
         iiv = find(strncmp(vars{m},h.fldnam,length(sensors_to_cal{m})));

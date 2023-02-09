@@ -51,7 +51,7 @@ for k2 = 1:nswaps
     s1 = char(swap(k2,1));
     s2 = char(swap(k2,2));
     sindex = findstr(vn,s1);
-    if length(sindex) > 0
+    if ~isempty(sindex)
         vnew = '';
         count = 1;
         for kswap = 1:length(sindex)
@@ -67,14 +67,14 @@ end
 %replace any other odd characters with underscore. We'll permit alphanumeric and underscore in matlab var names.
 okchars = '_0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 for k2 = 1:length(vn)
-    if length(findstr(okchars,vn(k2))) == 0
+    if isempty(findstr(okchars,vn(k2)))
         vn(k2) = '_';
         renamed = 1;
     end
 end
 
 okfirstchar = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'; %must start with an alpha; if not, insert 'v_'
-if length(findstr(okfirstchar,vn(1))) == 0
+if isempty(findstr(okfirstchar,vn(1)))
     vn = ['v_' vn];
     renamed = 1;
 end

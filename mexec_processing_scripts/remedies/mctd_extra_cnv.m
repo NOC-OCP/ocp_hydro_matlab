@@ -26,7 +26,7 @@ for fno = 1:length(extracnv)
         h.fldnam = {'scan'}; h.fldunt = {'number'};
         %don't use mfsave merge because it might keep some old data;
         %instead, merge here
-        [~,i0,in] = intersect(d0.scan, dn.scan);
+        [~,i0,in] = intersect(d0.scan, dn.scan, 'stable');
         for vno = 1:length(extravars)
             d.(extravars{vno}) = NaN+d.scan;
             d.(extravars{vno})(i0) = dn.(extravars{vno})(in);

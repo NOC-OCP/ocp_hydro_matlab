@@ -60,6 +60,7 @@ while endflag == 0
         vname = h.fldnam{vlist(k)};
         vname2 = m_check_nc_varname(vname);
         d.(vname2) = nc_varget(ncfile.name, vname);
+        h.fldnam{strcmp(h.fldnam,vname)} = vname2;
         if ~MEXEC_G.quiet; disp([sprintf('%15s',vname) ' loaded as d.' vname2]); end
     end
     

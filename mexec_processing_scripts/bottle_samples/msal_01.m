@@ -27,6 +27,7 @@ m_common
 if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
 
 std_samp_range = [999000 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
+sub_samp_range = [998000 998999]; %substandards
 %ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
 
 % find list of files and information on variables
@@ -40,6 +41,9 @@ else
         salfiles{flno} = fullfile(root_sal,salfiles{flno});
     end
 end
+
+
+%%%%%% load and parse %%%%%%
 
 %load
 [ds_sal, salhead] = load_samdata(salfiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts);
@@ -56,6 +60,7 @@ clear samevars
 samevars.sample_1 = {'sample1' 'reading_1' 'reading1' 'r1'};
 samevars.sample_2 = {'sample2' 'reading_2' 'reading2' 'r2'};
 samevars.sample_3 = {'sample3' 'reading_3' 'reading3' 'r3'};
+samevars.sample_4 = {'sample4' 'reading_4' 'reading4' 'r4'};
 samevars.runavg = {'average'};
 vars = fieldnames(samevars);
 fn = ds_sal.Properties.VariableNames;
@@ -102,8 +107,7 @@ if sum(strcmp('runtime',fn))
     ds_sal = ds_sal(ii,:);
 end
 
-%fill in information about cellt or Bath Temp and k15 from header
-%***load_samdata should keep track of which header lines correspond to which data lines
+%fill in information about cellt or Bath Temp and k15 from header***
 
 if ~sum(strcmp('flag',fn))
     ds_sal.flag = 2+zeros(size(ds_sal,1),1);
@@ -119,11 +123,15 @@ if 0 %***
     end
 end
 
-ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3],2);
-
 scriptname = mfilename; oopt = 'sal_flags'; get_cropt
 
-%check for offsets in cruise options
+if ~ismember('sample_4',fn)
+    ds_sal.sample_4 = NaN+ds_sal.sample_1;
+end
+ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4],2);
+
+%%%%%% standards offsets %%%%%%
+
 scriptname = mfilename; oopt = 'sal_calc'; get_cropt
 fn = ds_sal.Properties.VariableNames;
 if ~sum(strcmp('cellt',fn)) || sum(isfinite(ds_sal.cellt))==0
@@ -138,10 +146,18 @@ if ~sum(strcmp('k15',fn)) && exist('ssw_k15','var')
     ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1); 
 end    
 fn = ds_sal.Properties.VariableNames;
+[~,ii] = unique(ds_sal.sampnum,'stable');
+if length(ii)<length(ds_sal.sampnum)
+    warning('duplicate sample numbers will be discarded: ')
+    disp(ds_sal.sampnum(setdiff(1:length(ds_sal.sampnum),ii))')
+    ds_sal = ds_sal(ii,:);
+end
 
-%plot standards
+%plot standards and optionally samples
+iistd = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<std_samp_range(2));
+iisu = find(ds_sal.sampnum>=sub_samp_range(1) & ds_sal.sampnum<sub_samp_range(2));
+iis = setdiff(1:length(ds_sal.sampnum),[iistd; iisu]);
 if sum(strcmp('k15',fn))
-    iis = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<std_samp_range(2));
     figure(10); clf
     subplot(211)
     st = ds_sal.k15*2;
@@ -151,25 +167,74 @@ if sum(strcmp('k15',fn))
         disp('cyan o: all sample averages recorded')
         ist = 1;
     else
-        x = ds_sal.sampnum;
+        x = ds_sal.sampnum-std_samp_range(1);
+        xsu = NaN+zeros(size(iisu));
+        m = ismember(iisu+1,iistd);
+        xsu(m) = x(iisu(m)+1);
+        m = ismember(iisu-1,iistd);
+        xsu(m) = x(iisu(m)-1);
+        m = isnan(xsu);
+        xsu(m) = interp1(find(~m),xsu(~m),find(m));
         ist = 0;
     end
-    plot(x(iis),ds_sal.sample_1(iis)-st(iis),'k.',...
-    x(iis),ds_sal.sample_2(iis)-st(iis),'r.',...
-    x(iis),ds_sal.sample_3(iis)-st(iis),'m.',...
-    x(iis),ds_sal.runavg(iis)-st(iis),'sb');
+    plot(xsu,ds_sal.sample_1(iisu)-st(iisu),'.y', ...
+        xsu,ds_sal.sample_2(iisu)-st(iisu),'.y', ...
+        xsu,ds_sal.sample_3(iisu)-st(iisu),'.y', ...
+        xsu,ds_sal.sample_4(iisu)-st(iisu),'.y', ...
+        x(iistd),ds_sal.sample_1(iistd)-st(iistd),'kx', ...
+    x(iistd),ds_sal.sample_2(iistd)-st(iistd),'r+', ...
+    x(iistd),ds_sal.sample_3(iistd)-st(iistd),'m.', ...
+    x(iistd),ds_sal.sample_4(iistd)-st(iistd),'go', ...
+    x(iistd),ds_sal.runavg(iistd)-st(iistd),'sb');
     if ist
-        s = ds_sal.sampnum(iis)-999000;
-        text(x(iis),zeros(1,length(iis)),num2str(s(:)));
+        s = ds_sal.sampnum(iistd)-std_samp_range(1);
+        text(x(iistd),zeros(1,length(iistd)),num2str(s(:)));
     end
     ylim([-1 1]*4e-5); ylabel('autosal value - 2K15')
     grid on
-    disp('dots (k,r,m): run1, run2, run3 of standards; blue squares: run average of standards');
+    disp('(k,r,m): run1, run2, run3 of standards; blue squares: run average of standards');
     cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
     if strcmp(cont,'k'); keyboard; end
+else
+    warning('no standards plotted because no K15 found')
+end
+scriptname = mfilename; oopt = 'sal_sample_inspect'; get_cropt
+if plotss
+    xs = x+std_samp_range(1);
+figure(10);
+subplot(211)
+    plot(xs(iis),ds_sal.sample_1(iis),'kx', ...
+    xs(iis),ds_sal.sample_2(iis),'r+', ...
+    xs(iis),ds_sal.sample_3(iis),'mo', ...
+    xs(iis),ds_sal.sample_4(iis),'g.', ...
+    xs(iis),ds_sal.runavg(iis),'sb'); grid
+    subplot(212)
+    plot(xs(iis),ds_sal.sample_1(iis)-ds_sal.runavg(iis),'kx', ...
+    xs(iis),ds_sal.sample_2(iis)-ds_sal.runavg(iis),'r+', ...
+    xs(iis),ds_sal.sample_3(iis)-ds_sal.runavg(iis),'mo', ...
+    xs(iis),ds_sal.sample_4(iis)-ds_sal.runavg(iis),'g.', ...
+    [min(xs(iis)) max(xs(iis)); min(xs(iis)) max(xs(iis))]',[-1 -1; 1 1]'*2.5e-5,'b');
+    ylim([-1 1]*1e-4); ylabel('run - avg')
+    grid on
+    disp('stepping through CTD casts')
+    x = unique(floor(xs(iis)/100)); x = x(~isnan(x));
+    for no = 1:length(x)
+        xl = x(no)*100+[0 25];
+        subplot(211); xlim(xl); subplot(212); xlim(xl)
+        pause
+    end
+    disp('(k,r,m): run1, run2, run3 of samples; blue squares: run average of samples');
+    cont = input('examine samples, ''k'' for keyboard prompt, enter to continue (without changing flags) \n','s');
+    if strcmp(cont,'k')
+        keyboard
+        cf = input('flags changed (y/n)?\n','s');
+        if strcmp('cf','y')
+            scriptname = mfilename; oopt = 'sal_flags'; get_cropt
+        end
+    end
 end
 
-%apply offsets
+%get offsets for samples
 if isempty(sal_adj_comment) && ~isempty(sal_off)
     sal_adj_comment = ['Adjustments specified in opt_' mcruise];
 end
@@ -181,8 +246,6 @@ elseif length(sal_off)==length(ds_sal.sampnum)
     ds_sal.sal_off = sal_off;
 else
     %interpolate
-    iistd = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<std_samp_range(2));
-    iis = setdiff(1:length(ds_sal.sampnum),iistd);
     switch sal_off_base
         case 'sampnum_run' %offsets given using standards sampnums; interpolate between them using runtime or order
             dt = ds_sal.runtime(iis)'-ds_sal.runtime(iistd);
@@ -203,7 +266,17 @@ else
                 ds_sal.sal_off(iis) = interp1(iistd,ds_sal.sal_off(iistd),iis); %***
             end
         case 'sampnum_list' %offsets given using sample sampnums
-            ds_sal.sal_off(iis) = sal_off; %***
+            [~,ia,ib] = intersect(ds_sal.sampnum(iistd),sal_off(:,1));
+            if ~isempty(ib) && length(ia)<length(iistd)
+                warning('no offsets for some standards: ')
+                disp(ds_sal.sampnum(iistd(setdiff(1:length(iistd),ia)))-std_samp_range(1))
+            end
+            if length(ib)<size(sal_off(:,1))
+                warning('offsets present for standards not in file: ')
+                disp(sal_off(setdiff(1:length(sal_off),ib))-std_samp_range(1))
+            end
+            ds_sal.sal_off(iistd(ia)) = sal_off(ib,2);
+            ds_sal.sal_off(iis) = interp1(iistd,ds_sal.sal_off(iistd),iis);
     end
 end
 
@@ -213,9 +286,13 @@ if ~isempty(sal_off)
     ds_sal.salinity_adj = gsw_SP_salinometer((ds_sal.runavg+ds_sal.sal_off)/2, ds_sal.cellt);
     iin = find(isnan(ds_sal.salinity_adj));
     ds_sal.flag(iin) = max(4,ds_sal.flag(iin));
-elseif isfield(ds_sal, 'salinity_adj')
-    ds_sal.salinity_adj = [];
+else
+    ds_sal.salinity_adj = NaN+ds_sal.salinity;
 end
+
+
+
+%%%%%% save %%%%%%
 
 %check or add units
 salunits.sampnum = {'number'};
@@ -238,7 +315,6 @@ salfile = fullfile(root_sal, [dataname '.nc']);
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
 tsgfile = fullfile(mgetdir(tsgpre), ['tsgsal_' mcruise '_all.nc']);
 
-%get list of files to load
 %select the variables we want to save
 fn = ds_sal.Properties.VariableNames;
 fn0 = fieldnames(salunits);

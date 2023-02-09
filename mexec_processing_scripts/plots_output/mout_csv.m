@@ -84,6 +84,7 @@ end
 %fields to list in header
 if strcmp(out.type,'exch')
     isw = 1;
+    varsh = out.varsh;
 else
     isw = 0;
     %these are already in h
@@ -175,7 +176,7 @@ for kloop = klist
     end
     
     %(constant) station positions and depths
-    if isw && issum
+    if isw && issam
         d = get_station_constants(d, mcruise);
     end
     

@@ -6,6 +6,7 @@
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %start with the original data in the same directory
+scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
 abbrev = MEXEC_G.default_navstream;
 headpre = MEXEC_G.default_hedstream;
 if strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING(1:2),'di')

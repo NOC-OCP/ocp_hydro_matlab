@@ -86,6 +86,22 @@ end
 
 [dd, names, units] = mrload(table,dn1,dn2,varstring,qflag);
 
+%check names that will have to be changed by mload, and change them now to
+%avoid mismatch between d and h
+m = false(length(names),1);
+for no = 1:length(names)
+    name2 = m_check_nc_varname(names{no});
+    if ~strcmp(name2,names{no})
+        dd.(name2) = dd.(names{no});
+        dd = rmfield(dd,names{no});
+        names{length(names)+1} = name2;
+        m(no) = true;
+    end
+end
+if sum(m)
+    names(m) = [];
+end
+
 if numel(dd.dnum) == 0
     % no data found, quit without writing a file
     error('No data cycles loaded with mrload')
@@ -96,7 +112,7 @@ dd.time = (dd.dnum-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
 names = [names; 'time'];
 units = [units; 'seconds'];
 dd = rmfield(dd, 'dnum');
-[names, ia] = setdiff(names, {'dnum'});
+[names, ia] = setdiff(names, {'dnum'}, 'stable');
 units = units(ia);
 
 %add variable names and units to hnew, or remove from dd

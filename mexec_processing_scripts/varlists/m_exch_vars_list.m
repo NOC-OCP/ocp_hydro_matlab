@@ -114,7 +114,7 @@ elseif typ==2 % this is for comparing with bottle samples
         'CTDSIG0', 'KG/M^3', 'upden', '%8.2f'
         'BOTSIG0', 'KG/M^3', 'pden', '%8.2f'
 };
-        
+        varsh = {};
 else
     
     error('pick variable list type 1 or 2')

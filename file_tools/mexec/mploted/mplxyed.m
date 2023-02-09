@@ -226,10 +226,12 @@ if kedit > 0
         if isempty(flpath) % if this is a simple run on a local file, the filename could just be 'surfmet_jc211_d050_edt.nc' and flpath is empty
             flpath = '.'; 
         end
+        flpath = fullfile(flpath,'editlogs');
+        if ~exist(flpath,'dir'); mkdir(flpath); end
     catch
         flpath = '.'; % flname and flext not needed.
     end
-    editfn = [flpath '/mplxyed_' nowtime '_' h.dataname];
+    editfn = fullfile(flpath, ['mplxyed_' nowtime '_' h.dataname]);
     % bak jc069 put more detailed information about source and output files in edit record file
     mess_4 = ['ot_file     : ' hist.filename];
     mess_5 = ['ot_dataname : ' hist.dataname];

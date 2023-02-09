@@ -17,11 +17,12 @@ end
 
 clear in out
 in.type = 'sam'; 
+out.type = 'exch';
 
 %which vars to write
-[vars, varsh] = m_exch_vars_list(2);
+[vars, out.varsh] = m_exch_vars_list(2);
 scriptname = 'mout_exch'; oopt = 'woce_vars_exclude'; get_cropt
-[~,ia,~] = setdiff(vars(:,1),vars_exclude_sam);
+[~,ia] = setdiff(vars(:,1),vars_exclude_sam);
 out.vars_units = vars(ia,:);
 
 %extras (variables to tile)

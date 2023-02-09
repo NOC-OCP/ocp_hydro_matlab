@@ -53,7 +53,7 @@ switch scriptname
             case 'ctdsens_groups'
                                 crhelp_str = {'ctdsens is a structure with fields corresponding to the CTD sensors e.g.'
                     'temp1, oxygen1, temp2, etc. (temp1 applies to both temp1 and cond1); '
-                    'their values are 2edit setdexN cell arrays listing stations and corresponding sensor/serial number, '
+                    'their values are 2xN cell arrays listing stations and corresponding sensor/serial number, '
                     'in case one or more sensors was changed during the cruise.'
                     'all default to [1:999] in the first row and 1 in the second (no change of sensors), '
                     'but, for example, you could set ctdsens.oxygen1 = [1:30; [ones(1,8) ones(2,22)];'

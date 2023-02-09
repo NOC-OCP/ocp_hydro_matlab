@@ -63,9 +63,7 @@ if ~isempty(kmatch) % It exists; check dimensions match;
         errstr2 = [errstr2 ' ' newtype];
         errstr3 = ['do not match data type of variable in file :'];
         errstr3 = [errstr3 ' ' oldtype];
-        errstr4 = sprintf('\n%s\n%s\n%s\n%s\n',errstr0,errstr1,errstr2,errstr3)
-        error(errstr4);
-
+        error('\n%s\n%s\n%s\n%s\n',errstr0,errstr1,errstr2,errstr3)
     end
 
 
@@ -90,8 +88,7 @@ for k = 1:length(dims_array)
         for kk = 1:length(dimnames)
             errstr3 = [errstr3 ' ' dimnames{kk} ' :'];
         end
-        errstr4 = sprintf('\n%s\n%s\n%s\n%s\n',errstr0,errstr1,errstr2,errstr3);
-        error(errstr4);
+        error('\n%s\n%s\n%s\n%s\n',errstr0,errstr1,errstr2,errstr3)
 
     end
 

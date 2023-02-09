@@ -96,7 +96,7 @@ h.fldnam = [h.fldnam 'truwind_dir']; h.fldunt = [h.fldunt 'degrees N of E'];
 
 %save
 clear hnew
-[~,ia,ib] = intersect(fieldnames(dg),h.fldnam);
+[~,ia,ib] = intersect(fieldnames(dg),h.fldnam,'stable');
 hnew.fldnam = h.fldnam(ib); hnew.fldunt = h.fldunt(ib);
 hnew.comment = [h.comment sprintf('\n truwind averaged over %d seconds from %s',tave_period,otfile1)];
 mfsave(otfile2, dg, hnew);

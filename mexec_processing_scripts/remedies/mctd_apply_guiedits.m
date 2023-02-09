@@ -7,7 +7,7 @@
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
 
 root_ctd = mgetdir('CTD');
-edfiles = dir(fullfile(root_ctd,['mplxyed_*_ctd_' mcruise '_' stn_string]));
+edfiles = dir(fullfile(root_ctd,'editlogs',['mplxyed_*_ctd_' mcruise '_' stn_string]));
 if isempty(edfiles)
     if MEXEC_G.quiet<=1; fprintf(1, 'no recorded edits to apply to ctd_%s_%s_raw_cleaned.nc\n', mcruise, stn_string); end
     return

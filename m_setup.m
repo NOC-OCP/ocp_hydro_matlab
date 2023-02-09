@@ -179,6 +179,24 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         return
 end
 
+switch MEXEC_G.Mship
+    case 'sda'
+        MEXEC_G.Mshipdatasystem = 'rvdas';
+    case {'jc','dy'}
+        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
+            MEXEC_G.Mshipdatasystem = 'rvdas';
+        else
+            MEXEC_G.Mshipdatasystem = 'techsas';
+        end
+    case {'di'}
+            MEXEC_G.Mshipdatasystem = 'techsas';
+    case {'jcr','kn','en'}
+                    MEXEC_G.Mshipdatasystem = 'scs';
+    otherwise
+        warning('ship underway data system not set')
+end
+
+
 if skipunderway==0 %***change how this is done for scs and techsas so it can be moved to when needed!
     %create file connecting underway data directories and stream names
     %and create underway data directories (for processed data)

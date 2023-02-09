@@ -69,7 +69,7 @@ else
     %find whether required dimension pair matches any existing pair
 
     for k = 1:size(dim_file_pairs,1)
-        if (dim_new_pair(1) == dim_file_pairs(k,1) & dim_new_pair(2) == dim_file_pairs(k,2))
+        if (dim_new_pair(1) == dim_file_pairs(k,1) && dim_new_pair(2) == dim_file_pairs(k,2))
             nrowsname = rowname{k};
             ncolsname = colname{k};
             matchok = 1;

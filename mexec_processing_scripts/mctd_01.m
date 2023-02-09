@@ -152,8 +152,7 @@ else
     kbot = find(d.press == max(d.press), 1 );
     tbot = d.time(kbot);
     tbotmat = datenum(h.data_time_origin) + tbot/86400; % bottom time as matlab datenum
-    scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
-    switch shipdatasystem
+    switch MEXEC_G.Mshipdatasystem
         case 'scs'
             [botlat, botlon] = msposinfo(tbotmat);
         case 'techsas'

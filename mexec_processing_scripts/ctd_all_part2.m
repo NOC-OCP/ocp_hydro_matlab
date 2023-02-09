@@ -22,7 +22,7 @@ if 0
     %output to csv files
 stn = stnlocal; mout_exch_ctd
 mout_exch_sam
+end
 
 %and sync
 scriptname = 'batchactions'; oopt = 'output_for_others'; get_cropt
-end

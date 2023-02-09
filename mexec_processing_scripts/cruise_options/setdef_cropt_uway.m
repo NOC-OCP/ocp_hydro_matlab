@@ -22,30 +22,25 @@ switch scriptname
                     'system and best navigation and heading/attitude streams '
                     '(MEXEC_G.default_navstream and MEXEC_G.default_hedstream'};
                 if strcmp(MEXEC_G.Mship,'sda')
-                    shipdatasystem = 'rvdas';
                     default_navstream = 'posseapath_320_1';
                     default_hedstream = 'hdtseapath_320_1';
                 elseif ismember(MEXEC_G.Mship,{'cook','discovery'})
-                    if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
-                        shipdatasystem = 'rvdas';
+                    if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
                         default_navstream = 'pospmv';
                         default_hedstream = 'attpmv';
                     else
-                        shipdatasystem = 'techsas';
                         default_navstream = 'posmvpos';
                         default_hedstream = 'attposmv';
                     end
                 elseif strcmp(MEXEC_G.Mship,'jcr')
-                    shipdatasystem = 'scs';
                     default_navstream = 'seatex_gll';
                     default_hedstream = 'seatex_hdt';
                 elseif ismember(MEXEC_G.Mship,{'knorr','endeavor'})
-                    shipdatasystem = 'scs';
                     warning('add fields default_navstream and default_hedstream here or in opt_{cruise}.m');
                 else
                     warning('No underway data system and default nav streams set for %s',MEXEC_G.Mship)
                 end
-                switch shipdatasystem
+                switch MEXEC_G.Mshipdatasystem
                     case 'techsas'
                         uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
                         uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
