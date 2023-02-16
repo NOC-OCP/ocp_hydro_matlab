@@ -54,7 +54,7 @@ m_common
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
 table = argot.table;
 qflag = argot.qflag;
-def = mrdefine('this_cruise', 'has_mstarpre');
+def = mrdefine('this_cruise');
 if isempty(table)
     disp(def.tablemap)
     error('none of the input arguments matches an rvdas table name or its mexec short equivalent; try again with a table from either column of the list above')

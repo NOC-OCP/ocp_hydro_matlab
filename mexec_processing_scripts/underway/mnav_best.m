@@ -7,14 +7,14 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %start with the original data in the same directory
 scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
-abbrev = MEXEC_G.default_navstream;
-headpre = MEXEC_G.default_hedstream;
+abbrev = default_navstream;
+headpre = default_hedstream;
 if strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING(1:2),'di')
     headpre = 'gys';
 end
 
 root_pos = mgetdir(abbrev);
-root_head = mgetdir(headpre);
+root_head = fullfile(MEXEC_G.mexec_data_root,'nav',[headpre(4:end) '_heading']);
 
 prefixp = [abbrev '_' mcruise '_'];
 prefixh = [headpre '_' mcruise '_'];

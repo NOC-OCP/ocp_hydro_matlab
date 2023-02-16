@@ -224,12 +224,28 @@ switch scriptname
         
     case 'mout_1hzasc'
         switch oopt
-            case '1hz_fname'
-                crhelp_str = {'name, fnot, for text file of 1Hz CTD data (e.g. for IX LADCP processing'};
+            case 'ctd_1hz_format'
+                crhelp_str = {'name, f.ctd, for text file of 1Hz '
+                    'CTD data (e.g. for IX LADCP processing)'};
                 root_out = mgetdir('M_LADCP');
-                fnot = fullfile(root_out, 'ctd', ['ctd.' stn_string '.02.asc']);
+                f.ctd = fullfile(root_out, 'ctd', ['ctd.' stn_string '.02.asc']);
+                ctdh = sprintf('year day (%d), press (dbar), temp (degC90), psal (psu), lat, lon');
+            	f.ctd_header_lines      = 1;
+            	f.ctd_fields_per_line	= 7;
+                f.ctd_time_base = 1;
+                f.ctd_time_field = 1;
+            	f.ctd_pressure_field	= 2;
+            	f.ctd_temperature_field = 3;
+            	f.ctd_salinity_field	= 4;
+            	f.nav                   = f.ctd;
+            	f.nav_header_lines	= f.ctd_header_lines;
+            	f.nav_fields_per_line	= f.ctd_fields_per_line;
+                f.nav_time_base = f.ctd_time_base;
+            	f.nav_time_field	= f.ctd_time_field;
+            	f.nav_lat_field 	= 5;
+            	f.nav_lon_field 	= 6;
         end
-        
+
         %%%%%%%%%% ix_cast_params %%%%%%%%%%
     case 'ix_cast_params'
         switch oopt
@@ -239,7 +255,7 @@ switch scriptname
                     'for instance: '
                     'p.ambiguity (ambiguity velocity), p.vlim (velocity limits), '
                     'p.btrk_mode (bottom track mode), p.up_sn and p.do_sn (instrument serial'
-                    'numbers), etc.; see ix_cast_params for more'};
+                    'numbers), etc.; see ix_cast_params for more.'};
         end
         %%%%%%%%%% end ix_cast_params %%%%%%%%%%
         

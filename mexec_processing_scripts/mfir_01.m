@@ -9,6 +9,7 @@ if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,s
 % resolve root directories for various file types
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
+scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt %define shortcasts and ticasts
 scriptname = mfilename; oopt = 'blinfile'; get_cropt
 m = ['infile = ' blinfile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 dataname = ['fir_' mcruise '_' stn_string];

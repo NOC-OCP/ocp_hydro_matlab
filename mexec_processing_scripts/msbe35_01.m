@@ -9,130 +9,135 @@
 
 if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
 
-if ~exist('klist','var')
-    if exist('stn','var')
-        klist = stn;
-    else
-        klist = input('enter list of stations to (re)load\n');
-    end
-end
-
 % load sbe35 data
 root_sbe35 = mgetdir('M_SBE35');
 scriptname = mfilename; oopt = 'sbe35file'; get_cropt
-if ~strcmp(sbe35file,'none')
-    ds = dir(fullfile(root_sbe35, sbe35file));
-    file_list = {ds.name};
-    kount = 0;
-    alldata = {}; statnum = [];
-    for kf = 1:length(file_list)
-        fn = fullfile(root_sbe35, file_list{kf});
-        iis = strfind(file_list{kf},'.asc')+[-3:-1];
-        fid2 = fopen(fn,'r');
-        while 1
-            str = fgetl(fid2);
-            if ~ischar(str); break; end % fgetl has returned -1 as a number
-            strlen = length(str);
-            % on jr281, the data lines have 77 characters. Discard anything
-            % else
-            if strlen ~= 77; continue; end % data are in 77 byte lines
-            kount = kount+1;
-            alldata = [alldata; str];
-            %statnum = [statnum; str2double(file_list{kf}(iis))]; %not used finally, but may be used by opt_cruise
-        end
-        fclose(fid2);
-    end
-
-    % unpick the values
-    numdata = length(alldata);
-    datnum = nan+ones(numdata,1);
-    bn = datnum;
-    tdiff = datnum;
-    val = datnum;
-    t90 = datnum;
-    kfields = {'bn' 'tdiff' 'val' 't90'};
-    months = {'Jan' 'Feb' 'Mar' 'Apr' 'May' 'Jun' 'Jul' 'Aug' 'Sep' 'Oct' 'Nov' 'Dec'}; % guess at month names
-    for kd = 1:numdata
-        data = alldata{kd};
-        dd = str2double(data(5:6));
-        mon = data(8:10);
-        mo = strmatch(mon,months);
-        yyyy = str2double(data(12:15));
-        hms = data(18:25);
-        hh = str2double(hms(1:2));
-        mm = str2double(hms(4:5));
-        ss = str2double(hms(7:8));
-        datnum(kd) = datenum([yyyy mo dd hh mm ss]);
-        bn(kd) = str2double(data(32:33));
-        tdiff(kd) = str2double(data(41:46));
-        val(kd) = str2double(data(53:61));
-        t90(kd) = str2double(data(68:77));
-    end
-    scriptname = mfilename; oopt = 'sbe35_datetime_adj'; get_cropt
-
-    %initialise
-    varnames = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag' 'statnum'};
-    varunits = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9' 'number'};
-    clear ds
-    for vno = 1:length(varnames)
-        ds.(varnames{vno}) = [];
-    end
-
-    %loop through stations to get data and add to structure ds
-    files = dir(fullfile(mgetdir('M_CTD'), ['dcs_' mcruise '_*.nc']));
-    for fno = 1:length(files)
-
-        infile1 = fullfile(mgetdir('M_CTD'), files(fno).name);
-        stnlocal = str2double(infile1(end-5:end-3));
-        if ismember(stnlocal,klist)
-            scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
-
-            % read the station dcs file to identify start and end of station
-            if exist(m_add_nc(infile1),'file') ~= 2
-                msg = ['dcs file ' infile1 ' not found'];
-                fprintf(MEXEC_A.Mfider,'%s\n',msg);
-                return
-            end
-            hd = m_read_header(infile1);
-            if sum(strcmp('time_start',hd.fldnam)) && sum(strcmp('time_end',hd.fldnam))
-
-                [dd, hd] = mloadq(infile1,'time_start time_end');
-                stn_start = datenum(hd.data_time_origin) + dd.time_start/86400;
-                stn_end = datenum(hd.data_time_origin) + dd.time_end/86400;
-
-                %append data from this station into structure ds
-                kok = find(datnum >= stn_start-15/1440 & datnum <= stn_end+15/1440);
-                if ~isempty(kok)
-                    time = 86400*(datnum(kok)-datenum(hd.data_time_origin));
-                    [timesort, ksort, junk] = unique(time); %YLF JR15003 in case of duplicates (recorder not erased between casts)
-                    % repopulate time, just to be sure all data variables are sorted identically
-                    ds.time = [ds.time; 86400*(datnum(kok(ksort))-datenum(hd.data_time_origin))];
-                    ds.position = [ds.position; bn(kok(ksort))];
-                    ds.tdiff = [ds.tdiff; tdiff(kok(ksort))];
-                    ds.val = [ds.val; val(kok(ksort))];
-                    ds.sbe35temp = [ds.sbe35temp; t90(kok(ksort))];
-                    ds.sbe35temp_flag = [ds.sbe35temp_flag; 2+zeros(length(ksort),1)];
-                    ds.statnum = [ds.statnum; stnlocal+zeros(length(ksort),1)];
-                end
-
-            end
-        end
-
-    end
-    ds.sampnum = 100*ds.statnum+ds.position;
-    scriptname = mfilename; oopt = 'sbe35flag'; get_cropt
-    %bottle not fired won't be in list, so nan must be bad
-    ds.sbe35temp_flag(isnan(ds.sbe35temp) & ds.sbe35temp_flag<4) = 4;
-
-    % now save the data
-    clear hnew
-    dataname = ['sbe35_' mcruise '_01'];
-    otfile1 = fullfile(mgetdir('M_SBE35'), dataname);
-    hnew.fldnam = varnames; hnew.fldunt = varunits; hnew.dataname = dataname;
-    hnew.comment = ['files ' sprintf('%s ', file_list{:})]; %***
-    MEXEC_A.Mprog = mfilename;
-    mfsave(otfile1, ds, hnew, '-merge', 'sampnum');
-
-    %and update sam_cruise_all file
-    msbe35_to_sam
+if strcmp(sbe35file,'none')
+    return
 end
+
+t = dir(fullfile(root_sbe35, sbe35file));
+file_list = {t.name};
+
+flag = 9+zeros(8000,1);
+t = table(flag);
+t.datnum = NaN+flag; t.bn = t.datnum; t.t90 = t.bn;
+t.val = t.bn; t.tdiff = t.bn; t.statnum = t.bn;
+t.files = cell(8000,1);
+clear flag
+
+kount = 1;
+for kf = 1:length(file_list)
+    fn = fullfile(root_sbe35, file_list{kf});
+    if stnind(1)<0; iis = length(file_list{kf})-stnind; else; iis = stnind; end
+    fid2 = fopen(fn,'r');
+    while 1
+        str = fgetl(fid2);
+        if ~ischar(str); break; end % fgetl has returned -1 as a number; next file
+        strlen = length(str);
+        if strlen==77 % data are in 77 byte lines
+            t.statnum(kount) = str2double(file_list{kf}(iis));
+            t.files{kount} = file_list{kf}; %for debugging
+            try
+                t.datnum(kount) = datenum(str(5:25));
+                %a = str2num(replace(replace(replace(replace(str(26:end),'bn = ',''),'diff = ',''),'val = ',''),'t90 = ',''));
+                %bn(kount) = a(1); tdiff(kount) = a(2); val(kount) = a(3); t90(kount) = a(4);
+                t.bn(kount) = str2double(str(32:33));
+                t.tdiff(kount) = str2double(str(42:46));
+                t.val(kount) = str2double(str(53:61));
+                t.t90(kount) = str2double(str(69:77));
+                t.flag(kount) = 2;
+            catch
+                t.flag(kount) = 4;
+            end
+            kount = kount+1;
+        end
+    end
+    fclose(fid2);
+end
+t.sampnum = t.statnum*100+t.bn;
+t(isnan(t.sampnum),:) = [];
+m = find(t.flag<9, 1, 'last');
+t = t(1:m,:);
+t.flag(isnan(sum(t{:,3:7},2))) = 4;
+jfiles = unique(t.files(t.flag==4));
+if ~isempty(jfiles)
+    warning('junk characters or bad values in files:')
+    sprintf('%s\n',jfiles{:})
+end
+
+scriptname = mfilename; oopt = 'sbe35_datetime_adj'; get_cropt
+%remove duplicate times (in case recorder not erased)
+[~,ii] = unique(t.datnum,'stable');
+t = t(ii,:);
+
+%modify flags or remove some erroneous lines 
+scriptname = mfilename; oopt = 'sbe35flags'; get_cropt
+
+%get station start and end times from station_summary file, and use to
+%match station numbers and discard duplicate (likely spurious) sampnums
+[dsum, hsum] = mloadq(fullfile(mgetdir('sum'),['station_summary_' mcruise '_all.nc']),'/');
+dsum.time_start = dsum.time_start/86400+datenum(hsum.data_time_origin);
+dsum.time_end = dsum.time_end/86400+datenum(hsum.data_time_origin);
+statnumc = NaN+t.statnum;
+m = repmat(dsum.statnum',length(t.datnum),1);
+tm = t.datnum>=dsum.time_start'-15/1440 & t.datnum<=dsum.time_end'+15/1440;
+m(~tm) = -1;
+m = max(m,[],2);
+statnumc(m>-1) = m(m>-1); %station numbers based on time rather than filename
+msta = statnumc~=t.statnum & ~isnan(statnumc); %mismatched station numbers
+msam = sum((t.sampnum'==t.sampnum) - eye(length(t.sampnum)),2); %duplicate sampnums
+mnan = isnan(t.datnum+t.sampnum+t.t90);
+iib = find((msta & msam) | (msta & mnan) | (msam & mnan)); %discard the duplicates that are mismatched on station number; these are probably leftovers in the wrong file; also discard NaNs that are otherwise suspicious/misplaced
+if sbe35_check
+    iic = setdiff(find(msam),iib); %check these first
+    ii_did = [];
+    for no = 1:length(iic)
+        if ~ismember(iic(no),ii_did)
+            ii = find(t.sampnum==t.sampnum(iic(no)));
+            if length(unique(t.files(ii)))==1 && isunix
+                system(['cat ' fullfile(root_sbe35,t.files{iic(no)})])
+                sprintf('sampnum %d on multiple lines (above)\n',t.sampnum(iic(no)))
+            else
+                sprintf('sampnum %d on multiple lines:\n',t.sampnum(iic(no)))
+                disp(datestr(t.datnum(ii)))
+                disp(t.files(ii))
+            end
+            pause
+            ii_did = [ii_did;ii];
+        end
+    end
+    iic = setdiff(find(msta),iib); 
+    if ~isempty(iic)
+        keyboard
+    end
+end
+
+%rename and save
+clear hnew
+hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+hnew.fldnam = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag' 'statnum'};
+hnew.fldunt = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9' 'number'};
+hnew.dataname = ['sbe35_' mcruise '_01'];
+hnew.comment = ['files ' sprintf('%s ', file_list{:})]; 
+
+t.position = t.bn;
+t.time = (t.datnum-datenum(hnew.data_time_origin))*86400;
+t.sbe35temp = t.t90;
+t.sbe35temp_flag = t.flag;
+scriptname = mfilename; oopt = 'sbe35flag'; get_cropt
+%bottle not fired won't be in list, so nan must be bad
+t.sbe35temp_flag(isnan(t.sbe35temp) & t.sbe35temp_flag<4) = 4;
+clear d %rather than using table2struct, loop so they'll be in same order as hnew.fldnam
+d.junk = [];
+for no = 1:length(hnew.fldnam)
+    d.(hnew.fldnam{no}) = t.(hnew.fldnam{no});
+end
+d = rmfield(d,'junk');
+
+otfile1 = fullfile(mgetdir('M_SBE35'), hnew.dataname);
+MEXEC_A.Mprog = mfilename;
+mfsave(otfile1, d, hnew);
+
+%and update sam_cruise_all file
+msbe35_to_sam

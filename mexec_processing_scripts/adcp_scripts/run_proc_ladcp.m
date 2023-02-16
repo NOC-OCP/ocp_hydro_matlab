@@ -77,7 +77,7 @@ if exist(infiled,'file')
 end
 
 %also bottom tracking, if cast was full-depth
-scriptname = 'castpars'; oopt = 'shortcasts'; get_cropt
+scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt
 if ~ismember(stn, shortcasts)
     cfg.constraints = [cfg.constraints 'BT'];
     if dlalone

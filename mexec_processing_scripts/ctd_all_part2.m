@@ -7,8 +7,13 @@ if exist(m_add_nc(blotfile),'file')
     stn = stnlocal; mfir_03;
 
     %winch data
-    stn = stnlocal; mwin_01;
-    stn = stnlocal; mwin_to_fir;
+    try
+        stn = stnlocal; mwin_01;
+        stn = stnlocal; mwin_to_fir;
+    catch me
+        warning('winch data not added to fir file')
+        warning(me.message)
+    end
 
     %add to sam file
     stn = stnlocal; mfir_to_sam;

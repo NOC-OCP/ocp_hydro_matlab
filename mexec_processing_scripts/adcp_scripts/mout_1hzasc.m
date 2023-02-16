@@ -14,7 +14,6 @@ if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s
 %%%%%%%%% write ctd data %%%%%%%%%
 
 root_ctd = mgetdir('M_CTD');
-%infile = fullfile(root_ctd, ['wk_dvars_' mcruise '_' stn_string]);
 infile = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
 
 if exist(m_add_nc(infile),'file') ~= 2
@@ -23,22 +22,35 @@ if exist(m_add_nc(infile),'file') ~= 2
 end
 
 dh = m_read_header(infile);
-if ~sum(strcmp(dh.fldnam, 'latitude'))
-    disp('not writing 1 hz ascii file for ladcp processing because no lat/lon series')
-    return
+if sum(strcmp(dh.fldnam, 'latitude'))
+    [dd, dh] = mload(infile,'time press temp psal latitude longitude','0');
+else
+    [dd, dh] = mload(infile,'time press temp psal','0');
+    dd.dnum = dd.time/86400+datenum(dh.data_time_origin);
+    dv1 = datevec(dd.dnum(1)-1/24);
+    dv2 = datevec(dd.dnum(end)+1/24);
+    scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+    switch MEXEC_G.Mshipdatasystem
+        case 'rvdas'
+            [dn, ~, ~] = mrload(default_navstream,dv1,dv2,'q');
+        case 'techsas'
+            [dn, ~, ~] = mtload(default_navstream,dv1,dv2);
+        case 'scs'
+            [dn, ~, ~] = msload(default_navstream,dv1,dv2);
+    end
+    dd.latitude = interp1(dn.dnum,dn.latitude,dd.dnum);
+    dd.longitude = interp1(dn.dnum,dn.longitude,dd.dnum);
 end
-[dd, dh] = mload(infile,'time press temp psal latitude longitude','0');
-
-dd.decday = datenum(dh.data_time_origin) + dd.time/86400 - datenum([dh.data_time_origin(1) 1 0 0 0 0]); % decimal day of year; noon on 1 jan = 1.5
-% noon on 1 jan = 1.5, to agree with loadctd and loadnav
+dd.decday = dd.time/86400 + datenum(dh.data_time_origin) - datenum([dh.data_time_origin(1) 1 1 0 0 0]); % decimal day of year
+dd.yearday = dd.decday + 1; %noon on 1 jan = 1.5
 
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
-scriptname = mfilename; oopt = '1hz_fname'; get_cropt
-fid = fopen(fnot,'w');
+scriptname = mfilename; oopt = 'ctd_1hz_format'; get_cropt
+fid = fopen(f.ctd,'w');
+fprintf(fid,'%s\n',ctdh);
 for kl = 1:length(kok)
    fprintf(fid,'%10.2f %8.2f %8.4f %8.4f %11.6f %10.6f %12.7f\n', dd.time(kok(kl)), dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)), dd.decday(kok(kl))); 
- %  fprintf(fid,'%10.2f %8.2f %8.4f %8.4f %11.6f %10.6f %12.7f\n', dd.decday(kok(kl))+1, dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)), dd.decday(kok(kl))); 
 end
 fclose(fid);
 
@@ -77,7 +89,7 @@ kount = 1;
 
 %get monotonic position(time) series
 for kloop = 2:nt
-    if data.time(kloop) > t1(kount);
+    if data.time(kloop) > t1(kount)
         kount = kount+1;
         t1(kount) = data.time(kloop);
         lat1(kount) = lat(kloop);

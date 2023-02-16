@@ -192,7 +192,7 @@ if sum(strcmp('k15',fn))
     end
     ylim([-1 1]*4e-5); ylabel('autosal value - 2K15')
     grid on
-    disp('(k,r,m): run1, run2, run3 of standards; blue squares: run average of standards');
+    disp('(k,r,m): reading1, 2, 3 of standards; blue squares: average of standards');
     cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
     if strcmp(cont,'k'); keyboard; end
 else
@@ -214,16 +214,15 @@ subplot(211)
     xs(iis),ds_sal.sample_3(iis)-ds_sal.runavg(iis),'mo', ...
     xs(iis),ds_sal.sample_4(iis)-ds_sal.runavg(iis),'g.', ...
     [min(xs(iis)) max(xs(iis)); min(xs(iis)) max(xs(iis))]',[-1 -1; 1 1]'*2.5e-5,'b');
-    ylim([-1 1]*1e-4); ylabel('run - avg')
-    grid on
+    ylabel('run - avg'); grid on
     disp('stepping through CTD casts')
     x = unique(floor(xs(iis)/100)); x = x(~isnan(x));
     for no = 1:length(x)
         xl = x(no)*100+[0 25];
         subplot(211); xlim(xl); subplot(212); xlim(xl)
-        pause
+        pause; ylim([-1 1]*1e-4); pause
     end
-    disp('(k,r,m): run1, run2, run3 of samples; blue squares: run average of samples');
+    disp(['(k,r,m): reading1, 2, 3 of samples; blue squares: run average of samples']);
     cont = input('examine samples, ''k'' for keyboard prompt, enter to continue (without changing flags) \n','s');
     if strcmp(cont,'k')
         keyboard

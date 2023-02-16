@@ -21,6 +21,9 @@ for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
 
+if size(xe,2)==1
+    error('xe must have two columns, giving low and high edges of bins')
+end
 xm = .5*(xe(:,1)+xe(:,2));
 
 s = size(y);

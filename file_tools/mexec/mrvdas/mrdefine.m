@@ -1,8 +1,6 @@
 function d = mrdefine(varargin)
 % function d = mrdefine
 % function d = mrdefine('this_cruise')
-% function d = mrdefine('has_mstarpre')
-% function d = mrdefine('this_cruise', 'has_mstarpre')
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -65,11 +63,9 @@ function d = mrdefine(varargin)
 %
 % calls mrtables_from_json, mrnames, mrrename_varunits
 %
-% With optional input arguments: 
+% With optional input argument: 
 %   'this_cruise': also calls mrgettables and limits lists to tables
 %     actually in database for current cruise 
-%   'has_mstarpre': limits mrtables to tables with a corresponding mstar
-%     short name (from mrnames)
 
 
 % Identify rvdas tables of interest from json files
@@ -92,7 +88,7 @@ d.tablemap = mrnames_new(d.mrtables_list,'q');
 % limit to the names actually in mrtables_from_json
 [~,ia,ib] = intersect(d.tablemap(:,2),d.mrtables_list,'stable');
 d.tablemap = d.tablemap(ia,:);
-if nargin>0 && ismember('has_mstarpre', varargin) && length(ib)<length(d.mrtables_list)
+if length(ib)<length(d.mrtables_list)
     ii = setdiff(1:length(d.mrtables_list),ib);
     warning('rvdas:mstar:no_match','discarding %d tables with no mstar lookup in mrnames_new',length(ii));
     warning('off','rvdas:mstar:no_match');

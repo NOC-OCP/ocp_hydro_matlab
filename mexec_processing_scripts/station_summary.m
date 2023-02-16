@@ -102,16 +102,16 @@ if ~isempty(stnall)
         %lat, lon, ctd depths and altimeter
         fnsal = fullfile(root_ctd, ['ctd_' mcruise '_' stnstr '_psal']);
         if exist(m_add_nc(fnsal),'file')
-        [dpsal, hpsal] = mloadq(fnsal,'/');
-        lat(k) = hpsal.latitude;
-        lon(k) = hpsal.longitude;
-        maxp(k) = max(dpsal.press);
-        maxd(k) = sw_dpth(maxp(k),lat(k));
-        if isfield(dpsal, 'altimeter')
-            minalt(k) = min(dpsal.altimeter(find(dpsal.press>(maxp(k)-30))));
-        else
-            minalt(k) = NaN;
-        end
+            [dpsal, hpsal] = mloadq(fnsal,'/');
+            lat(k) = hpsal.latitude;
+            lon(k) = hpsal.longitude;
+            maxp(k) = max(dpsal.press);
+            maxd(k) = sw_dpth(maxp(k),lat(k));
+            if isfield(dpsal, 'altimeter')
+                minalt(k) = min(dpsal.altimeter(find(dpsal.press>(maxp(k)-30))));
+            else
+                minalt(k) = NaN;
+            end
         end
 
         %winch
@@ -124,10 +124,10 @@ if ~isempty(stnall)
         %cast start, bottom, end times
         fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' stnstr]);
         if exist(m_add_nc(fndcs),'file')
-        [ddcs, h4] = mloadq(fndcs,'/');
-        time_start(k) = datenum(h4.data_time_origin) + ddcs.time_start/86400;
-        time_bottom(k) = datenum(h4.data_time_origin) + ddcs.time_bot/86400;
-        time_end(k) = datenum(h4.data_time_origin) + ddcs.time_end/86400;
+            [ddcs, h4] = mloadq(fndcs,'/');
+            time_start(k) = datenum(h4.data_time_origin) + ddcs.time_start/86400;
+            time_bottom(k) = datenum(h4.data_time_origin) + ddcs.time_bot/86400;
+            time_end(k) = datenum(h4.data_time_origin) + ddcs.time_end/86400;
         end
 
         %samples
@@ -188,14 +188,15 @@ if ~isempty(stnall)
     otfile2 = fullfile(root_sum, hnew.dataname);
     for k = 1:size(vars,1)
         if ~isempty(vars{k,2})
-            eval(['ds.(vars{k,1}) = ' vars{k,1} ';']);
+            ds.(vars{k,1}) = eval(vars{k,1});
             hnew.fldnam = [hnew.fldnam vars{k,1}];
             hnew.fldunt = [hnew.fldunt vars{k,2}];
         end
     end
-    ds.time_start = (ds.time_start - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
-    ds.time_bottom = (ds.time_bottom - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
-    ds.time_end = (ds.time_end - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
+    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+    ds.time_start = (ds.time_start - datenum(hnew.data_time_origin))*86400;
+    ds.time_bottom = (ds.time_bottom - datenum(hnew.data_time_origin))*86400;
+    ds.time_end = (ds.time_end - datenum(hnew.data_time_origin))*86400;
     mfsave(otfile2, ds, hnew, '-merge', 'statnum');
     
 else

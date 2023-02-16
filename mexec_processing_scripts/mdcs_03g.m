@@ -1,6 +1,6 @@
 % mdcs_03g: graphical user interface to check scan numbers corresponding to
-% start and bottom of cast (estimated in mdcs_01) and find scan number
-% corresponding to end of cast
+% start, bottom, and end of cast (estimated in mdcs_01, or selected in a
+% previous call to mdcs_03g) and modify if necessary
 %
 % Use: mdcs_03        and then respond with station number, or for station 16
 %      stn = 16; mdcs_03;
@@ -9,6 +9,7 @@
 % jc159 3 April2018 bak add option to identify bottom pressure scan if you
 % don't like the one it has chosen
 % dy146 ylf treat start of cast the same
+% sd025 ylf also end
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
 fprintf(1,'interactively select (or confirm) start, bottom, and end of cast,\n written to dcs_%s_%s.nc. if you set\n end of cast based on T and C, check oxy_align\n and turn on flag oxy_end in opt_%s under castpars\n\n',mcruise,stn_string,mcruise);
@@ -269,7 +270,15 @@ if exist('ds','var')
     hnew.fldunt(strncmp('scan',hnew.fldnam,2)) = {'number'};
     hnew.fldunt(strncmp('press',hnew.fldnam,5)) = {'dbar'};
     hnew.fldunt(strncmp('time',hnew.fldnam,4)) = {'seconds'};
+    hnew.comment = 'automatically detected ';
+    if isfield(ds,'dc_start'); hnew.comment = [hnew.comment 'start ']; end
+    if isfield(ds,'dc_bot'); hnew.comment = [hnew.comment 'bottom ']; end
+    if isfield(ds,'dc_end'); hnew.comment = [hnew.comment 'end ']; end
+    hnew.comment = [hnew.comment 'of cast overwritten with manual selections\n'];
 
     MEXEC_A.Mprog = mfilename;
     mfsave(otfile, ds, hnew, '-addvars');
+else
+    h = m_read_header(otfile); h.comment = [h.comment ' cast start/bottom/end inspected but not changed\n'];
+    ncfile.name = m_add_nc(otfile); m_write_header(ncfile,h);
 end

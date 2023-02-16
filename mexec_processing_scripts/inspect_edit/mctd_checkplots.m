@@ -100,21 +100,15 @@ for no = 1:length(klist)
     infile4 = m_add_nc(fullfile(root_ctd, [prefix2 sstring]));
     % skip stations that don't have a complete set of files
     if exist(infile1,'file') && exist(infile2,'file') && exist(infile3,'file') && exist(infile4,'file')
-    % If there is a station 0 this is a test stations and
-    if ks == 0
-        ks1 = 1;
-    else
-        ks1 = ks-klist(1)+1;
-    end
-    infiles{1,ks1} = infile1;
-    infiles{2,ks1} = infile2;
-    infiles{3,ks1} = infile3;
-    infiles{4,ks1} = infile4;
-    [d2db{no}, ~] = mloadq(infile1,'/');
-    [d2up{no}, ~] = mloadq(infile2,'/');
-    [dpsal{no}, ~] = mloadq(infile3,'/');
-    [ddcs{no}, ~] = mloadq(infile4,'/');
-    sused(no) = 1;
+        infiles{1,no} = infile1;
+        infiles{2,no} = infile2;
+        infiles{3,no} = infile3;
+        infiles{4,no} = infile4;
+        [d2db{no}, ~] = mloadq(infile1,'/');
+        [d2up{no}, ~] = mloadq(infile2,'/');
+        [dpsal{no}, ~] = mloadq(infile3,'/');
+        [ddcs{no}, ~] = mloadq(infile4,'/');
+        sused(no) = 1;
     end
 end
 infiles = infiles(:,sused);

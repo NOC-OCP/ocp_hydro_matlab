@@ -47,12 +47,18 @@ m_common
 fn = fieldnames(tables);
 for no = 1:length(fn)
         
-    a = tables.(fn{no});    
+    a = tables.(fn{no})(2:end,:);    
     
     %add columns for new-name and new-units
     n = size(a,2);
     a = [a a(:,1:2)];
+
+    %change any names that don't work for mexec (mostly, shorten ones that are too long)
+    for vno = 1:size(a,1)
+        a{vno,3} = m_check_nc_varname(a{vno,1},0);
+    end
     
+    %now do special cases
     m = strcmpi('utctime',a(:,1));
     a(m,n+1) = {'utctime'};
     a(m,n+2) = {'hhmmss_fff'};
@@ -62,18 +68,18 @@ for no = 1:length(fn)
     m = strcmpi('longitude',a(:,1)) & (strcmpi('degrees and decimal minutes',a(:,2)) | strcmpi('degrees, minutes and decimal minutes',a(:,2)));
     a(m,n+1) = {'londegm'};
     a(m,n+2) = {'dddmm'};
-    m = strcmpi('waterDepthMeterTransducer',a(:,1)) | strcmpi('waterDepthMeterFromTransducer',a(:,1));
-    a(m,n+1) = {'depth_below_xducer'};
-    a(m,n+2) = {'metres'};
     m = strcmpi('waterDepthMeterFromSurface',a(:,1));
     a(m,n+1) = {'waterdepth'};
     a(m,n+2) = {'metres'};
-    if strcmp(fn{no},'ea640_sddpt')
+    m = strcmpi('waterDepthMeterTransducer',a(:,1)) | strncmpi('waterDepthMeterFromTransdu',a(:,1),26);
+    a(m,n+1) = {'depth_below_xducer'};
+    a(m,n+2) = {'metres'};
+    if (contains(fn{no},'ea640') || contains(fn{no},'singlebeam_kongsberg')) && contains(fn{no},'sddpt')
         m = strcmpi('depth',a(:,1));
         a(m,n+1) = {'depth_below_xducer'};
         a(m,n+2) = {'metres'};
     end
-    if strcmp(fn{no},'em122_kidpt') 
+    if (contains(fn{no},'em122') || contains(fn{no},'multibeam_kongsberg')) && contains(fn{no},'kidpt')
         m = strcmpi('waterdepthmeter',a(:,1));
         a(m,n+1) = {'depth_below_xducer'}; %according to long name
         a(m,n+2) = {'metres'};

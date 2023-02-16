@@ -96,29 +96,10 @@ elseif sum(strcmp('SADCP',cfg.constraints))
     f.sadcp	= fullfile(mgetdir('M_LADCP'), '/SADCP', ['os75nb_' mcruise '_' stnstr '_forladcp.mat']);
 end
 
-%ctd and nav file
-scriptname = 'mout_1hzasc'; oopt = '1hz_fname'; get_cropt
-f.ctd = fnot;
-if exist(f.ctd,'file')
-	f.ctd_header_lines      = 0;		% file layout
-	f.ctd_fields_per_line	= 7;
-	f.ctd_pressure_field	= 2;
-	f.ctd_temperature_field = 3;
-	f.ctd_salinity_field	= 4;
-%	f.ctd_time_field	= 1;
-%	f.ctd_time_base 	= 0;		% elapsed
-    f.ctd_time_field    = 7;
-	f.ctd_time_base 	= 1;		% yearday
-	
-	f.nav                   = f.ctd;
-	f.nav_header_lines	= f.ctd_header_lines;
-	f.nav_fields_per_line	= f.ctd_fields_per_line;
-	f.nav_time_field	= f.ctd_time_field;
-	f.nav_lat_field 	= 5;
-	f.nav_lon_field 	= 6;
-	f.nav_time_base         = f.ctd_time_base;
-else
-	f.ctd = ' ';
+%ctd and nav file and its/their columns
+scriptname = 'mout_1hzasc'; oopt = 'ctd_1hz_format'; get_cropt
+if ~exist(f.ctd,'file')
+    f.ctd = ' ';
 end
 
 %======================================================================
@@ -136,7 +117,7 @@ if strcmp(cfg.orient,'DL') || strcmp(cfg.orient,'UL')
 end
 p.orig = 0; % save original data or not
 
-scriptname = 'castpars'; oopt = 'shortcasts'; get_cropt
+scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt
 if ismember(stnlocal, shortcasts)
     p.btrk_mode = 0;
 else

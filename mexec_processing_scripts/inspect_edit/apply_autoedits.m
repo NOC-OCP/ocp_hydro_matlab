@@ -10,14 +10,15 @@ comment = [];
 
 %edit out scans when pumps are off, plus expected recovery times
 if isfield(castopts,'pumpsNaN')
-    iip = find(d.pumps<1);
+    iip = find(d.pumps<1); n = length(d.pumps);
     fn = fieldnames(castopts.pumpsNaN);
     for no = 1:length(fn)
         delay = castopts.pumpsNaN.(fn{no});
         if delay>0 && round(delay)==delay
-            iib = repmat(iip(:),1,delay+1) + repmat(0:delay+1,length(iip),1);
+            iib = repmat(iip(:),1,delay+1) + repmat(0:delay,length(iip),1);
             iib = unique(iib(:));
             iib = setdiff(iib,isnan(d.(fn{no})));
+            iib = iib(iib<=n);
             if ~isempty(iib)
                 d.(fn{no})(iib) = NaN;
                 comment = [comment '\n edited out pumps off times plus ' num2str(delay) ' scans from ' fn{no}];
@@ -28,37 +29,6 @@ if isfield(castopts,'pumpsNaN')
     end
 end
 
-%formerly scanedit (for additional bad scan ranges)
-%now could also/alternately be applied to times or any other variable
-cfn = fieldnames(castopts);
-iibp = find(strncmp('bad',cfn,3));
-for bpno = 1:length(iibp)
-    xvar = cfn{iibp(bpno)};
-    if strcmp(xvar(end),'s') %it's badscans, badtimes, etc.
-        bads = castopts.(xvar);
-        x = d.(xvar(4:end-1))(:).'; %badscans --> scan, etc.
-        vars = fieldnames(bads);
-        for vno = 1:length(vars)
-            badranges = bads.(vars{vno});
-            if isnan(badranges)
-                mb = isnan(x);
-            else
-                mb = sum(x>=badranges(:,1) & x<=badranges(:,2),1)>0;
-            end
-            %disp(vars{vno})
-            nn = sum(isnan(d.(vars{vno})));
-            d.(vars{vno})(mb) = NaN;
-            if sum(isnan(d.(vars{vno})))>nn
-                if isnan(badranges)
-                    comment = [comment '\n NaNed ' vars{vno} ' when ' xvar ' was NaN'];
-                else
-                    comment = [comment '\n edited out ranges of ' xvar 's from ' vars{vno}];
-                end
-            end
-        end
-    end
-end
-    
 %remove out of range values
 if isfield(castopts,'rangelim')
     fn = fieldnames(castopts.rangelim);
@@ -90,3 +60,29 @@ if isfield(castopts,'despike')
         end
     end
 end
+
+%formerly scanedit (for additional bad scan ranges)
+%now can also/alternately be applied using time or any other variable (e.g.
+%press) as the indicative variable
+cfn = fieldnames(castopts);
+iibp = find(strncmp('bad',cfn,3));
+for bpno = 1:length(iibp)
+    xvar = cfn{iibp(bpno)};
+    x = d.(xvar(4:end))(:).'; %badscan --> scan, etc.
+    vars = fieldnames(castopts.(xvar)); %e.g. temp1, temp2, 
+    for vno = 1:length(vars)
+        badranges = castopts.(xvar).(vars{vno});
+        mn = isnan(badranges(:,1)); %handle NaNs separately
+        %badranges(mn,:) = [];
+        mb = sum(x<=badranges(:,1) | x>=badranges(:,2), 1)>0;
+        if sum(mn)
+            mb = mb | isnan(x);
+        end
+        nn = sum(isnan(d.(vars{vno})));
+        d.(vars{vno})(mb) = NaN;
+        if sum(isnan(d.(vars{vno})))>nn
+            comment = [comment '\n edited out ranges of ' xvar ' from ' vars{vno}];
+        end
+    end
+end
+    

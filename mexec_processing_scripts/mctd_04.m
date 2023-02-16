@@ -36,7 +36,10 @@ MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[dd, ~] = mloadq(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
+[dd, hd] = mloadq(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
+if isempty(strfind(hd.comment,'manual')) && isempty(strfind(hd.comment,'inspected'))
+    warning('using automatically detected cast start/bottom/end')
+end
 %***code to calculate dc24 from dc and scan if there is no dc24?***
 % allow for the possibility that the dcs file contains many stations
 kf = find(dd.statnum == stnlocal);

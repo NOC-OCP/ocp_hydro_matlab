@@ -17,13 +17,19 @@ switch scriptname
     case 'msbe35_01'
         switch oopt
             case 'sbe35file'
-                crhelp_str = {'Filename pattern for SBE35 files (including wildcard).'};
+                crhelp_str = {'Filename pattern for SBE35 files (including wildcard) and indices for '
+                    'finding station number in filename.'};
                 sbe35file = sprintf('%s_SBE35_CTD*.asc', upper(mcruise));
+                stnind = [-6:-4]; %end-6:end-4 e.g. dy113_SBE35_CTD_010.asc
             case 'sbe35_datetime_adj'
                 crhelp_str = {'Place to modify SBE35 file dates/times, as date is sometimes '
                     'not reset correctly before deployment. Only necessary if clock is far off.'};
             case 'sbe35flag'
-                crhelp_str = {'Place to modify flags (sbe35flag) on SBE35 temperature data'};
+                crhelp_str = {'Place to modify flags (t.flag, by t.sampnum) on SBE35 temperature data, and/or'
+                    'remove spurious lines (leftovers in the wrong file) in table t by NaNing t.datnum or t.sampnum.'
+                    'set sbe35_check to 1 (default 0) to look for and inspect problem lines (duplicate sampnums or '
+                    'mismatched station numbers and times.'};
+                sbe35_check = 0;
         end
         %%%%%%%%%% end msbe35_01 %%%%%%%%%%
         

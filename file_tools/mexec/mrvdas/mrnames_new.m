@@ -1,5 +1,5 @@
-function tablemap = mrnames(tablist,varargin)
-% function tablemap = mrnames(tablist,qflag)
+function tablemap = mrnames_new(tablist,varargin)
+% function tablemap = mrnames_new(tablist,qflag)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -51,42 +51,35 @@ n = 0;
 
 n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'hdt'; mt(n).msg = {'hehdt','gphdt','inhdt'}; 
 n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'att'; mt(n).msg = {'pashr','pixseatitud','prdid','psxn23','kmatt','psmcv','psmbc'}; 
-n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'hss'; mt(n).msg = {'pixseaheave0'};  
+% n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'hss'; mt(n).msg = {'pixseaheave0'};  
 n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gpgga','gpggk','gpgll','pixsegpsin0','gngga','ingga','gngll'}; 
-n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'vtg'; mt(n).msg = {'gpvtg','gnvtg','invtg'}; 
+% n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'vtg'; mt(n).msg = {'gpvtg','gnvtg','invtg'}; 
 n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'rot'; mt(n).msg = {'inrot','herot'}; 
-n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'dop'; mt(n).msg = {'gngsa','ingsa'}; 
+% n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'dop'; mt(n).msg = {'gngsa','ingsa'}; 
 
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'met'; mt(n).msg = {'gpxsm'}; %surfmet / combined file (?) n = n+1;
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wind'; mt(n).msg = {'iimwv','wimwv','pmwind'}; 
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wnd'; mt(n).msg = {'iimwv','wimwv','pmwind'}; 
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'sst'; mt(n).msg = {'sbe38','psbsst1'}; %things that are on the keel or remote n = n+1;
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'tsg'; mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1'}; %things that are on the ucsw pipe (in the lab) n = n+1;
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wave'; mt(n).msg = {'pwam1','pramr','pwam'}; 
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'atmo'; mt(n).msg = {'pbpws','pcfrs','ptdisd','pvtnh2','pvbar','pbpws','pmdew'}; %pressure, humidity, precip n = n+1;
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'sky'; mt(n).msg = {'pvceil1','peceil'}; 
+% n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wav'; mt(n).msg = {'pwam1','pramr','pwam'}; 
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'atm'; mt(n).msg = {'pcfrs','pvtnh2','pvbar','pmdew'}; %pressure, humidity, precip n = n+1;
+% n = n+1; mt(n).dir = 'met'; mt(n).pre = 'sky'; mt(n).msg = {'pvceil1','peceil','pbpws','ptdisd'}; %some of these are really too complex to read in our normal way, like the thies clima has hundreds of different variables starting with numberParticlesDiameter  
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'rad'; mt(n).msg = {'pkpyrge','pkpyran','phsst','pspar'}; %radiometers n = n+1;
 
-n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'singleb'; mt(n).msg = {'sddpt','sddbs','pskpdpt','sdalr','sddbk','sddbs','sddpt','dbdbt','sddbt'}; 
-n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'multib'; mt(n).msg = {'kidpt','kodpt'}; 
+n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'sbm'; mt(n).msg = {'sddpt','sddbs','pskpdpt','sdalr','sddbk','sddbs','sddpt','dbdbt','sddbt'}; 
+n = n+1; mt(n).dir = 'bathy'; mt(n).xpre = 'mbm'; mt(n).msg = {'kidpt','kodpt'}; 
 
-n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'env'; mt(n).msg = {'wimta','wimhu','ps8953','pytemp'}; %not sure about some of these n = n+1;
-n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'grav'; mt(n).msg = {'uw','pdgrav'}; 
-n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'mag'; mt(n).msg = {'inmag','3rr0r'}; 
-n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'log'; mt(n).msg = {'vmvbw','vdvbw','vmvhw','vmvlw','vmmtw','vdvhw','vdvlw'}; 
+% n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'env'; mt(n).msg = {'wimta','wimhu','ps8953','pytemp'}; %not sure about some of these n = n+1;
+% n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'grv'; mt(n).msg = {'uw','pdgrav'}; 
+% n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'mag'; mt(n).msg = {'inmag','3rr0r'}; 
+% n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'log'; mt(n).msg = {'vmvbw','vdvbw','vmvhw','vmvlw','vmmtw','vdvhw','vdvlw'}; 
 
 n = n+1; mt(n).dir = 'winch'; mt(n).pre = 'winch'; mt(n).msg = {'winch','sdawinch'}; 
 
-
 mt = struct2table(mt);
 dnames = mt.dir;
-% m = strcmp(dnames,'nav'); mt.insts(m) = repmat({'seapath_320','seapath','posmv','fugro_oceanstar','fugro','phins','cnav','ranger','r5_supreme'},sum(m),1);
-% mt.insts(strcmp(dnames,'att')) = {'seapath_320','seapath','posmv','phins','sgyro','imu108','standard_30_mf','bluenaute'};
-% mt.insts(strcmp(dnames,'met')) = {'sbe38','surfmet','windsonic','sbe45','rex2','wamos','ft702lt','usonic3','omc116','vaisala_cl3l','lmx24','wschl'};
-% mt.insts(strcmp(dnames,'bathy')) = {'em122','ea640','ea640'};
-% mt.insts(strcmp(dnames,'uother')) = {'env','at1m10_100'}
-% mt.insts(strcmp(dnames,'winch')) = {'winchlog'};
 
-%for each table, look through the dname
+
 scriptname = 'mrvdas_ingest'; oopt = 'use_cruise_views'; get_cropt
 scriptname = 'mrvdas_ingest'; oopt = 'rvdas_nameform'; get_cropt
 if use_cruise_views
@@ -95,38 +88,55 @@ else
     n0 = 1;
 end
 
+
 %tablemap will contain [mstar_prefix tablename mstar_directory]
+%at first mstar_prefix will be too long and granular; we will combine/
+%simplify below
 tablemap = [tablist tablist tablist tablist]; hasmp = zeros(length(tablist),1);
 for tno = 1:length(tablist)
     tabl = tablist{tno}(n0:end);
     ii = strfind(tabl,'_');
-    %if we have an extra prefix like anemometer_
-    if npre>0; ii = ii([npre end]); else; ii = [1 ii(end)]; end
-    msg = tabl(ii(2)+1:end); 
-    inst = tabl(ii(1)+1:ii(2)-1); %everything after the prefix and before the message
-%     %check for multiples
-%     ii = strfind(inst,'_');
-%     if ~isempty(ii) && isfinite(str2double(inst(ii(end)+1:end)))
-%         instt = inst(1:ii(end)-1);
-%     else
-%         instt = inst;
-%     end
+    %if we have an extra prefix like anemometer_ on this ship/database
+    if npre>0; ii = ii(npre:end); end
+    msg = tabl(ii(end)+1:end);
+    %inst1 = tabl(ii(1)+1:ii(2)-1);
+    inst1 = tabl(1:ii(2)-1);
+    inst2 = tabl(ii(end-1)+1:ii(end)-1);
+    if ~contains(inst2,digitsPattern) && length(ii)>=3
+        inst2 = tabl(ii(end-2)+1:ii(end-1)-1);
+        if ~contains(inst2,digitsPattern) && length(ii)>=4
+            inst2 = tabl(ii(end-3)+1:ii(end-2)-1);
+        end
+    end
+    %inst = tabl(ii(1)+1:ii(2)-1); %everything after the prefix and before the message
+    %for each table, look through the dnames
     for dno = 1:length(dnames)
         if sum(strcmp(mt.msg{dno},msg))
-            tablemap{tno,1} = [mt.pre{dno} inst];
+            tablemap{tno,1} = inst1;
             %tablemap{tno,3} = fullfile(mt.dir{dno},instt);
             tablemap{tno,3} = fullfile(mt.dir{dno},mt.pre{dno});
+            tablemap{tno,4} = inst2;
             hasmp(tno) = 1;
+            break
         end
     end
     %if hasmp(tno)==0; keyboard; end
 end
 tablemap(hasmp==0,:) = [];
 
-%scriptname = 'mrvdas_ingest'; oopt = 'use_cruise_views'; get_cropt
-%if use_cruise_views
-%    tablemap(:,2) = cellfun(@(x) [view_name '_' x], tablemap(:,2), 'UniformOutput', false);
-%end
+tablemap0 = tablemap;
+%simplify mstar_prefix and then discard extra column
+ii0 = 1:length(tablemap); 
+for no = 1:length(tablemap)
+    if ismember(no,ii0)
+        ii = find(strcmp(tablemap{no,1},tablemap(ii0,1)) & strcmp(tablemap{no,3},tablemap(ii0,3)));
+        if length(ii)>1
+            tablemap(ii0(ii),1) = cellfun(@(x,y) [x '_' y],tablemap(ii0(ii),1),tablemap(ii0(ii),4),'UniformOutput',false);
+        end
+    ii0(ii) = [];
+    end
+end
+tablemap(:,4) = [];
 
 if isempty(qflag)
     tablemapsort = sortrows(tablemap,1);

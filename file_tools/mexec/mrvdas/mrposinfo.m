@@ -71,14 +71,7 @@ if isempty(table)
     scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
     table = default_navstream;
 end
-
-def = mrdefine('this_cruise','has_mstarpre');
-tablemap = def.tablemap;
-
-% sort out the table name
-table = mrresolve_table(table); % table is now an RVDAS table name for sure.
-ktable = strcmp(table,tablemap(:,2));
-mtable = tablemap{ktable,1}; % mtable is the mexec tablename
+[rtable, mtable] = mrresolve_table(table); %make it an rvdas table name
 
 if length(argot.dnums) < 1
     dn = now-10/86400;
@@ -86,11 +79,11 @@ else
     dn = argot.dnums(1);
 end
 
-d = mrload(table,dn-5*60/86400,dn+5*60/86400,qflag); % load 30 minutes either side
+d = mrload(rtable,dn-5*60/86400,dn+5*60/86400,qflag); % load 30 minutes either side
 
 if ~isfield(d,'latitude') || ~isfield(d,'longitude')
     if isempty(qflag)
-    fprintf(MEXEC_A.Mfider,'%s %s\n','latitude or longitude not found in table',mtable);
+    fprintf(MEXEC_A.Mfider,'%s %s\n','latitude or longitude not found in table', table);
     end
     % create d.lat and d.lon as empty, so rest of code works
     d.latitude = [];
@@ -113,7 +106,7 @@ switch nargout
         latout.lat = lat;
         latout.lon = lon;
         latout.mexec_table = mtable;
-        latout.rvdas_table = table;
+        latout.rvdas_table = rtable;
         latout.dnum = dn;
         latout.datestring = datestr(latout.dnum,31);
         latout.latitude = lat;
@@ -122,5 +115,3 @@ switch nargout
         [latout.londeg,latout.lonmin] = m_degmin_from_decdeg(lon);
         lonout = nan;
 end
-
-return

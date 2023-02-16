@@ -61,7 +61,7 @@ daynum_end=1+floor(daynum_end);
 
 switch MEXEC_G.Mship
     case 'sda'
-        rvsstreamname = 'winchsda_v3';
+        rvsstreamname = 'winch_sda';
     otherwise
         rvsstreamname='winch';
 end

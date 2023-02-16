@@ -45,10 +45,11 @@ switch scriptname
                     'based on T, S rather than oxygen'};
                 oxy_align = 6;
                 oxy_end = 0;
-            case 'shortcasts'
+            case 'cast_groups'
                 crhelp_str = {'shortcasts (default: []) is a list of statnums with non full depth casts '
                     '(for which you would need to fill in depth in populate_station_depths,'
-                    'and wouldn''t bother with the BT constraint on LADCP processing, etc.)'};
+                    'and wouldn''t bother with the BT constraint on LADCP processing, etc.).'
+                    'You can also set other groupings, for instance on sd025 ticasts lists casts on the Ti frame.'};
                 shortcasts = [];
             case 'ctdsens_groups'
                                 crhelp_str = {'ctdsens is a structure with fields corresponding to the CTD sensors e.g.'
@@ -133,30 +134,47 @@ switch scriptname
     case 'mctd_02'
         switch oopt
             case 'rawedit_auto'
-                crhelp_str = {'Edits to the raw (or raw_cleaned, if that file already exists) data'
-                    'to be made in mctd_02 (calling apply_autoedits):'
+                crhelp_str = {'Several types of edits to the raw data (_raw or _raw_noctm) to be '
+                    'made by calling apply_autoedits. In order: '
+                    ' '
                     'castopts.pumpsNaN.var1 = N gives the number of bad points N expected for variable var1'
-                    '    after pumps come back on;'
-                    'castopts.badscans.var1 = [S1_low S1_hi; ... SN_low SN_hi] gives 1 ... N ranges of scans'
-                    '    over which to NaN variable var1 (inclusive);'
-                    '    and/or you can specify in terms of times using'
-                    'castopts.badtimes.var1 = [t1_low t1_hi; ...]; etc.'
-                    'castopts.rangelim.var1 = [V1 V2] gives the range of acceptable values for variable var1;'
-                    'castopts.despike.var1 = [T1 ... Tn] gives the successive thresholds T1 to Tn for '
-                    '    applying median despiking to variable var1.'
-                    'e.g.:'
+                    '    after pumps come back on, e.g.'
                     'castopts.pumpsNaN.temp1 = 12; '
                     'castopts.pumpsNaN.cond1 = 12; '
                     'castopts.pumpsNaN.sbe_oxygen2 = 8*24'
-                    'castopts.rangelim.press = [-10 8000];'
+                    ' '
+                    'castopts.rangelim.var1 = [V1 V2] gives the range of acceptable values for variable var1, e.g.'
+                    'castopts.rangelim.temp1 = [-2 40];'
+                    ' '
+                    'castopts.despike.var1 = [T1 ... Tn] gives the successive thresholds T1 to Tn for '
+                    '    applying median despiking to variable var1, e.g.'
                     'castopts.despike.fluor = [0.3 0.2 0.2];'
-                    'All default to not set (no action).'};
+                    ' '
+                    'castopts.badscan.var1 = [S1_low S1_hi; ... SN_low SN_hi] gives 1 ... N ranges of scans'
+                    '    over which to NaN variable var1 (inclusive);'
+                    '    and/or you can specify in terms of times using'
+                    'castopts.badtime.var1 = [t1_low t1_hi; ...]; etc.,'
+                    '    and/or other variable(s), e.g. if you have connection problems leading to pressure and/or temperature spikes:'
+                    'castopts.badpress.temp1 = [-1 8000; NaN NaN]; ' 
+                    'castopts.badtemp1.cond1 = [-2 40; NaN NaN]; ' 
+                    'castopts.badtemp1.oxygen1 = [-2 40; NaN NaN];'
+                    '    NaNs temp1, cond1, oxygen1 when press is <-1 or >8000, or is NaN,'
+                    '    and then cond1 and oxygen1 when temp1 is outside [-2 40] or is NaN '
+                    ' '
+                    'From sd025, pumpsNaN defaults to on; the rest default to off.'};
                 if exist('castopts','var')
-                    if isfield(castopts,'pumpsNaN'); castopts = rmfield(castopts,'pumpsNaN'); end
-                    if isfield(castopts,'badscans'); castopts = rmfield(castopts,'badscans'); end
-                    if isfield(castopts,'rangelim'); castopts = rmfield(castopts,'rangelim'); end
-                    if isfield(castopts,'despike'); castopts = rmfield(castopts,'despike'); end
+                    fn = fieldnames(castopts);
+                    ii = find(strncmp('bad',fn,3));
+                    castopts = rmfield(castopts,fn(ii));
+                    fn = intersect(fn,{'pumpsNaN';'rangelim';'despike'});
+                    castopts = rmfield(castopts,fn);
                 end
+                castopts.pumpsNaN.temp1 = 12; 
+                castopts.pumpsNaN.temp2 = 12;
+                castopts.pumpsNaN.cond1 = 12;
+                castopts.pumpsNaN.cond2 = 12;
+                castopts.pumpsNaN.oxygen_sbe1 = 8*24;
+                castopts.pumpsNaN.oxygen_sbe2 = 8*24;
             case 'raw_corrs'
                 crhelp_str = {'structure castopts contains:'
                     'flags for optional corrections to apply to the raw file (in this order): '
@@ -238,9 +256,16 @@ switch scriptname
         %%%%%%%%%% mdcs_01 %%%%%%%%%%
     case 'mdcs_01'
         switch oopt
-            case 'kbot'
-                crhelp_str = {'place to overwriteedit setde kbot, the index of the bottom of cast'
-                    '(defaults to max(press))'};
+            case 'cast_divide'
+                crhelp_str = {'set auto_start, auto_bot, auto_end (default 0, 1, 0) to overwrite'
+                    'any values for cast start, bottom, end already in dcs file (if it exists);'
+                    'optionally set kstart, kbot, kend (default []), indices in 1 hz file, to use those'
+                    'instead of automatically detected values. The defaults mean that the first time'
+                    'through all will be automatically detected, but if rerun after mdcs_03g, manual'
+                    'selections for start and end will not be overwritten (change auto_bot to 0 too if'
+                    'necessary to manually select cast bottom).'};
+                auto_start = 0; auto_bot = 1; auto_end = 0; 
+                kstart = []; kbot = []; kend = [];
         end
         %%%%%%%%%% end mdcs_01 %%%%%%%%%%
         

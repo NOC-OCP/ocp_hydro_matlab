@@ -1,5 +1,6 @@
-function vname = m_check_nc_varname(vname)
+function vname = m_check_nc_varname(vname, varargin)
 % function vname = m_check_nc_varname(vname)
+% function vname = m_check_nc_varname(vname,[printsummary=1])
 %
 % convert any characters found in var names in nc files that are illegal or troublesome in matlab
 % called from mload which tries to dump all nc file variables into matlab
@@ -7,13 +8,14 @@ function vname = m_check_nc_varname(vname)
 
 % pretty much cut and pasted from name checking in pload
 
+if nargin==1
+    printsummary = 1;
+else
+    printsummary = varargin{1};
+end
+
 varnames = '';
 
-% % %     if skip(k) == 1
-% % %         varnames{k} = '';
-% % %         continue
-% % %     end
-% % %     vn = h.fldnam{k};
 vn = vname;
 vnold = vn;
 renamed = 0;
@@ -88,13 +90,11 @@ end
 
 
 smatch = strmatch(vn,varnames,'exact');
-if length(smatch) > 0
+if ~isempty(smatch)
     vn = [vn '_' num2str(k) '_'];
     renamed = 1;
 end
-k = 1;
-if renamed == 1
-    printsummary = 1;
+if renamed == 1 && printsummary == 1
 %     disp(['Variable number ' sprintf('%3d',k) ':''' vnold ''' renamed to ''' vn '''']);
     disp(['Variable number :''' vnold ''' renamed to ''' vn '''']);
 end

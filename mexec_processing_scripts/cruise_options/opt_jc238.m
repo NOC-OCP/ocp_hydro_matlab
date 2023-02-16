@@ -54,16 +54,16 @@ switch scriptname
         switch oopt
             case 'rawedit_auto'
                 if stnlocal==3
-                   castopts.badscans.transmittance = [0 inf]; %instrument went bad pretty much the whole cast
+                   castopts.badscan.transmittance = [0 inf]; %instrument went bad pretty much the whole cast
                 elseif stnlocal==19
                     %needed cleaning
                     castopts.despike.cond1 = [0.2 0.1];
                     castopts.despike.cond2 = [0.2 0.1];
                 elseif stnlocal==38
                     %caught a fish
-                    castopts.badscans.temp1 = [135900 inf];
-                    castopts.badscans.cond1 = [135900 inf];
-                    castopts.badscans.oxygen_sbe1 = [135900 inf];
+                    castopts.badscan.temp1 = [135900 inf];
+                    castopts.badscan.cond1 = [135900 inf];
+                    castopts.badscan.oxygen_sbe1 = [135900 inf];
                 end
             case 'raw_corrs'
                 castopts.oxyhyst.H2 = {6000 6000};

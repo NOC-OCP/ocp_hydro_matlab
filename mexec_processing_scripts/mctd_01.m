@@ -1,8 +1,7 @@
 % mctd_01:
 %
 % read in ctd data from SBE .cnv file (either _align_ctm version, or _noctm);
-% rename variables according to ctd_renamelist.csv (formerly done by mctd_02a),
-% add units***,
+% rename variables based on cruise options, and add units if not present,
 % add NaN fields for variables that are not present on this cast (as set in
 % opt_cruise)
 % add position at bottom of cast to header (formerly done by mctd_02a)
@@ -36,6 +35,7 @@ else %in some cases, operate on original file (to remove large spikes), then app
     disp('starting from noctm file')
 end
 
+scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt %define shortcasts and ticasts
 scriptname = mfilename; oopt = 'cnvfilename'; get_cropt
 if ~exist(cnvfile,'file')
     warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])

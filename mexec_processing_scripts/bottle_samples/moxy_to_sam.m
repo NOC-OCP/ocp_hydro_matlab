@@ -41,7 +41,7 @@ if ~exist(oxyfile,'file')
         end
     end
 end
-d = mloadq(oxyfile, '/');
+[d,h] = mloadq(oxyfile, '/');
 
 samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
 [ds,hs] = mloadq(samfile,'sampnum','niskin_flag','uasal',' ');

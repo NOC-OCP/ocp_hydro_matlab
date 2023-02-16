@@ -38,32 +38,35 @@ infile0 = fullfile(root_ctd, [prefix '_raw_noctm.nc']);
 otfile24 = fullfile(root_ctd, [prefix '_24hz']);
 
 %figure out which file to start from
-% if exist(cleanfile, 'file') && exist(infile0, 'file')
-%     m = {'both _raw_noctm and _raw_cleaned exist, so will start from _raw_cleaned;'
-%         'if mctd_01 has just been rerun with redoctm set, remove _raw_cleaned file'
-%         'now to start from _raw_noctm instead.'
-%         'return to continue'};
-%     fprintf(MEXEC_A.Mfider,'%s\n',m{:});
-%     pause
-% end
-castopts.redoctm = 0;
-if ~exist(cleanfile, 'file')
-    if ~exist(infile0, 'file')
-        infile = infile1; %start from _raw
-    else
-        infile = infile0; %start from _raw_noctm
-        castopts.redoctm = 1;
-    end
-    didedits = 0;
+scriptname = 'mctd_01'; oopt = 'redo_ctm'; get_cropt
+castopts.redoctm = redoctm;
+if castopts.redoctm
+    infile = infile0;
 else
-    infile = cleanfile; %start from _raw_cleaned
+    infile = infile1;
+end
+[d, h] = mloadq(infile,'/');
+if min(d.press)<=-10
+        m = {['negative pressures <-10 in ' infile]};
+    if ~castopts.redoctm
+ m = [m; 
+     'check d.press; if there are large spikes also affecting temperature, Ctrl-C'
+     'here, edit mctd_01 case in opt_' mcruise ', and reprocess this station from _noctm; otherwise,'];
+    end
+       m = [m;
+           'you may want to edit mctd_02 case (rawedit_auto) to remove large'
+            'outlier values in pressure (and other variables) before the mctd_rawedit gui stage.'
+            'Enter to continue.'];
+        warning(sprintf('%s\n',m{:}));
+        pause
 end
 
 
-%%%%% automatic edits, either producing or modifying _raw_cleaned file %%%%%
+%%%%% edits and corrections, either producing or modifying _raw_cleaned file %%%%%
 
+%automatic
+scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt
 scriptname = mfilename; oopt = 'rawedit_auto'; get_cropt
-[d, h] = mloadq(infile, '/');
 [d, comment] = apply_autoedits(d, castopts);
 didedits = 0;
 if ~isempty(comment)
@@ -85,12 +88,25 @@ if castopts.redoctm
     didedits = 1;
 end
 
+%reapply hand edits
+edfilepat = fullfile(root_ctd,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stnlocal));
+[d, comment] = apply_guiedits(d, edfilepat);
+if ~isempty(comment)
+    h.comment = [h.comment comment];
+    didedits = 1;
+end
+
+%save to _raw_cleaned if there were any changes
 if didedits
+    if exist(m_add_nc(cleanfile),'file')
+        delete(cleanfile)
+    end
     mfsave(cleanfile, d, h);
     rawfile_use = cleanfile;
 else
     rawfile_use = infile;
 end
+
 
 %%%%% now do corrections to produce _24hz file %%%%%
 
