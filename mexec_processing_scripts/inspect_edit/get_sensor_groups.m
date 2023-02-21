@@ -4,13 +4,13 @@
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if ~exist('klist','var')
-    klist = input('list stations to search for sensor numbers (vector)','s');
+    klist = input('list stations to search for sensor numbers (vector)  ');
 end
 
 st = {'Temperature','Conductivity','Oxygen'};
 sa = {'temp','cond','oxygen'};
 
-clear sg
+clear sg sng
 for sno = 1:length(st)
     sg.([sa{sno} '1']) = [];
     sg.([sa{sno} '2']) = [];

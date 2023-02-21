@@ -4,22 +4,33 @@
 %but only process together if it's deep enough***, otherwise DL is version
 %of record
 
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-clear cfg
-scriptname = mfilename; oopt = 'is_uplooker'; get_cropt
-dopause = 0;
-cdir = pwd;
 
 if isempty(which('getinv'))
     error('LADCP processing functions not on path; try running m_setup again')
 end
+cdir = pwd;
+m_common; mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-%only cast nav and pressure time series as constraints (from mout_1hzasc)
+clear cfg
+scriptname = 'castpars'; oopt = 'minit'; get_cropt
+scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt
+scriptname = 'ladcp'; oopt = 'ladcp_castpars'; get_cropt
+cfg.p = p;
+cfg.rawdir = fullfile(MEXEC_G.mexec_data_root,'ladcp','ix','raw',cfg.stnstr);
+cfg.pdir_root = fullfile(MEXEC_G.mexec_data_root,'ladcp','ix');
+scriptname = 'ladcp'; oopt = 'is_uplooker'; get_cropt
+scriptname = 'ladcp'; oopt = 'ctd_1hz_format'; get_cropt
+scriptname = 'ladcp'; oopt = 'sadcp_file'; get_cropt
+cfg.f = f;
+dopause = 0;
+stn = stnlocal;
+
+%first, only cast nav and pressure time series as constraints (from mout_1hzasc)
 cfg.constraints = {'GPS'};
 
 %UL
 if isul
-    infileu = fullfile(mgetdir('M_IX'), 'raw', sprintf('%03d',stn), sprintf('%03dUL000.000',stn));
+    infileu = fullfile(mgetdir('M_IX'), 'raw', cfg.stnstr, sprintf('%sUL000.000',cfg.stnstr));
     if ~exist(infileu,'file')
         warning(['no uplooker file ' infileu ' found'])
         if dopause
@@ -38,7 +49,7 @@ if isul
     end
 end
 
-infiled = fullfile(mgetdir('M_IX'), 'raw', sprintf('%03d',stn), sprintf('%03dDL000.000',stn));
+infiled = fullfile(mgetdir('M_IX'), 'raw', cfg.stnstr, sprintf('%sDL000.000',cfg.stnstr));
 if ~exist(infiled,'file')
     warning(['no downlooker file ' infiled ' found; try sync again if you expect one; return to continue'])
     if dopause
@@ -77,7 +88,6 @@ if exist(infiled,'file')
 end
 
 %also bottom tracking, if cast was full-depth
-scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt
 if ~ismember(stn, shortcasts)
     cfg.constraints = [cfg.constraints 'BT'];
     if dlalone

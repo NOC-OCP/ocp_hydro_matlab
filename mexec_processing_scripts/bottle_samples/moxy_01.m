@@ -40,6 +40,7 @@ if ~isempty(oxyvarmap)
     ds_oxy_fn(ib) = oxyvarmap(ia,1)';
     ds_oxy.Properties.VariableNames = ds_oxy_fn;
 end
+ds_oxy(isnan(ds_oxy.position),:) = [];
 
 %check units
 clear oxyunits
@@ -70,7 +71,7 @@ else
 end
 
 %create flags if necessary, then make sure they match available data
-if isfield(ds_oxy,'sample_titre')
+if sum(strcmp('sample_titre',ds_oxy_fn))
     dname = 'sample_titre';
 else
     dname = 'conc_o2';
@@ -137,7 +138,8 @@ hnew.fldnam = [hnew.fldnam 'botoxya_per_l' 'botoxya_temp' 'botoxya_flag'];
 hnew.fldunt = [hnew.fldunt 'umol/L' 'degC' 'woce_9.4'];
 
 iib = setdiff(1:length(ds_oxy.sampnum),iia);
-if ~isempty(iib) %***do something different for different input, like duplicates on same line? or don't allow this
+%***add code to handle duplicates in different columns on same line? 
+if ~isempty(iib) 
     d.botoxyb_per_l = NaN+d.botoxya_per_l;
     d.botoxyb_temp = d.botoxyb_per_l;
     d.botoxyb_flag = 9+zeros(size(d.sampnum));

@@ -1,5 +1,5 @@
 %======================================================================
-%          S E T _ C A S T _ P A R A M S _ C F G S T R . M 
+%          I X_ C A S T _ P A R A M S . M 
 %                    doc: Mon Oct 30 23:25:48 2006
 %                    dlm: Fri Aug 19 13:50:14 2011
 %                    (c) 2006 ladder@
@@ -9,14 +9,24 @@
 %   selects options using cfg passed through from
 %   process_cast_cfgstr
 %
+% required fields: 
+% stnstr (string station number/name)
+% pdir_root (root of processing directory, e.g. data/ladcp/ix
+% rawdir (location of raw files)
+% orient ('DL', 'UL', or 'DLUL')
+% constraints (cell array list of one or more of 'GPS', 'BT', 'SADCP')
+% f, structure containing information on nav/ctd file and (if used)
+%   sadcp file
+%
+% optional fields:
+% p, structure containing processing parameters (otherwise set by default)
+%   as well as cruise_id, whoami, ladcp_station
+%
 %======================================================================
 
-m_global; m_common
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
-stnstr = stn_string; stn = stnlocal;
-cd(fullfile(MEXEC_G.mexec_data_root, 'ladcp', 'ix'));
-rawdir = 'raw';
+cd(cfg.pdir_root)
 
+%set directories
 if strcmp(cfg.orient, 'DL')
     isdo = 1; isup = 0;
 elseif strcmp(cfg.orient, 'UL')
@@ -29,22 +39,15 @@ end
 
 %enable (or not) SADCP and/or bottom tracking constraints,
 %and set up output directories accordingly
-subdir = cfg.orient;
 ps.botfac = 0; ps.sadcpfac = 0;
-for no = 1:length(cfg.constraints)
-   subdir = [subdir '_' cfg.constraints{no}];
-end
 if isempty(cfg.constraints)
-   subdir = [subdir 'SHR']; %***not sure this will work--what happens if f.ctd is not set?
+   subdir = [cfg.orient '_SHR']; %***not sure this will work--what happens if f.ctd is not set?
 else
+   subdir = [cfg.orient cell2mat(cellfun(@(x) ['_' x],cfg.constraints,'UniformOutput',false))];
    if sum(strcmp(cfg.constraints, 'BT')); ps.botfac = 1; end
    if sum(strcmp(cfg.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
-if isfield(cfg, 'pdir_root') && ~strcmp(cfg.pdir_root,'processed')
-   subdir = fullfile(subdir, cfg.pdir_root);
-else
-   subdir = fullfile(subdir, 'processed');
-end
+subdir = fullfile(cfg.pdir_root, subdir, 'processed');
 if ps.sadcpfac && isfield(cfg, 'SADCP_inst')
    subdir = [subdir '_' cfg.SADCP_inst];
 end
@@ -52,85 +55,81 @@ if ~exist(subdir, 'dir')
    mkdir(subdir);
 end
 
-%close all;
-more off;subplot(222)
+%transfer from cfg
+fn = fieldnames(cfg.f);
+for no = 1:length(fn)
+    f.(fn{no}) = cfg.f.(fn{no});
+end
+fn = fieldnames(cfg.p);
+for no = 1:length(fn)
+    p.(fn{no}) = cfg.p.(fn{no});
+end
+
+if ~exist(f.ctd,'file')
+    f.ctd = ' ';
+end
+if ~exist(f.sadcp,'file')
+    f.sadcp = ' ';
+end
 
 %find files and set f.ladcpdo and f.ladcpup (if applicable)
 %this code allows for the possiblity of multiple files
+f.ladcpdo = {}; f.ladcpup = {};
 if isdo
-   d = dir(fullfile(rawdir, stnstr, [stnstr 'DL*.000']));
-   dlfiles = {};
-   ii = [];
-   for no = 1:length(d)
-      if d(no).bytes>1024; ii = [ii no]; end
-      dlfiles{no} = fullfile(rawdir, stnstr, d(no).name);
+   d = dir(fullfile(cfg.rawdir, [cfg.stnstr 'DL*.000']));
+   n = 1;
+   while ~isempty(d)
+      if d(1).bytes>1024
+          f.ladcpdo{n} = fullfile(cfg.rawdir, d(1).name);
+          n = n+1;
+      end
+      d(1) = [];
    end
-   if length(ii)==1; dlfiles = dlfiles{ii}; else; dlfiles = dlfiles(ii); end
 end
 if isup
-   d = dir(fullfile(rawdir, stnstr, [stnstr 'UL*.000']));
-   ulfiles = {};
-   ii = [];
-   for no = 1:length(d)
-      if d(no).bytes>1024; ii = [ii no]; end
-      ulfiles{no} = fullfile(rawdir, stnstr, d(no).name);
+   d = dir(fullfile(cfg.rawdir, [cfg.stnstr 'UL*.000']));
+   n = 1;
+   while ~isempty(d)
+      if d(1).bytes>1024
+          f.ladcpup{n} = fullfile(cfg.rawdir, d(1).name);
+          n = n+1;
+      end
+      d(1) = [];
    end
-   if length(ii)==1; ulfiles = ulfiles{ii}; else; ulfiles = ulfiles(ii); end
+end
+if length(f.ladcpdo)==1
+    f.ladcpdo = f.ladcpdo{1};
+end
+if length(f.ladcpup)==1
+    f.ladcpup = f.ladcpup{1};
 end
 if isdo && ~isup % downlooker only
-   f.ladcpdo = dlfiles;
    f.ladcpup = ' ';
 elseif ~isdo && isup % uplooker only, put it in ladcpdo as required by code
-   f.ladcpdo = ulfiles;
+   f.ladcpdo = f.ladcpup;
    f.ladcpup = ' ';
-elseif isdo && isup % both
-   f.ladcpdo = dlfiles;
-   f.ladcpup = ulfiles;
 end
 
-f.res = fullfile(subdir, stnstr);
-f.checkpoints = fullfile('checkpoints', sprintf('%03d', stnlocal));
-if isfield(cfg, 'SADCP_inst')
-    f.sadcp	= fullfile(mgetdir('M_LADCP'), 'SADCP', [cfg.SADCP_inst '_' mcruise '_' stnstr '_forladcp.mat']);
-elseif sum(strcmp('SADCP',cfg.constraints))
-    f.sadcp	= fullfile(mgetdir('M_LADCP'), '/SADCP', ['os75nb_' mcruise '_' stnstr '_forladcp.mat']);
+if ~isfield(f,'res') || length(f.res)<=1
+    f.res = fullfile(subdir, sprintf('%03d',p.ladcp_station));
 end
-
-%ctd and nav file and its/their columns
-scriptname = 'mout_1hzasc'; oopt = 'ctd_1hz_format'; get_cropt
-if ~exist(f.ctd,'file')
-    f.ctd = ' ';
+if ~isfield(f,'checkpoints')
+    f.checkpoints = fullfile(cfg.pdir_root, 'checkpoints', sprintf('%03d',p.ladcp_station));
 end
 
 %======================================================================
 
-p.cruise_id	= mcruise;
-%p.whoami	= 'Y. Firing';
-p.ladcp_station = stnlocal;
-p.name = sprintf('%s cast #%d (processing version %s)',p.cruise_id,p.ladcp_station,subdir);
+[s,~,~] = fileparts(subdir); [~,s,~] = fileparts(s);
+p.name = sprintf('%s cast #%d (processing version %s)',p.cruise_id,p.ladcp_station,s);
 
 p.saveplot = [];
-p.saveplot_pdf	= [1:7 10:14];
-if isfield(f,'sadcp'); p.saveplot_pdf = [p.saveplot_pdf 9]; end
-if strcmp(cfg.orient,'DL') || strcmp(cfg.orient,'UL')
-    p.saveplot_pdf = setdiff(p.saveplot_pdf,[8 10]);
+p.saveplot_png = [];
+if ~isfield(p,'saveplot_pdf') || isempty(p.saveplot_pdf)
+    p.saveplot_pdf	= [1:7 10:14];
+    if isfield(f,'sadcp')
+        p.saveplot_pdf = [p.saveplot_pdf 9]; 
+    end
+    if strcmp(cfg.orient,'DL') || strcmp(cfg.orient,'UL')
+        p.saveplot_pdf = setdiff(p.saveplot_pdf,[8 10]);
+    end
 end
-p.orig = 0; % save original data or not
-
-scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt
-if ismember(stnlocal, shortcasts)
-    p.btrk_mode = 0;
-else
-    p.btrk_mode = 2;
-    %p.btrk_ts = 30; 
-end
-
-%p.getdepth = 1; %for very shallow casts
-
-p.edit_mask_dn_bins = [1]; %***is this what we want? it's to be used to account for 0 blanking distance but we don't usually set things that way!
-p.edit_mask_up_bins = [1];
-
-p.checkpoints = [1];
-
-%some parameters may be set in cruise options file
-scriptname = mfilename; oopt = 'ladcpopts'; get_cropt %vlim etc.

@@ -37,8 +37,7 @@ m_common
 if MEXEC_G.quiet<=1; fprintf(1,'plotting bottle sample residuals (from ctd, or from gridded fields) to allow selection of outliers\n and identification of where flags need to be changed\n'); end
 
 root_ctd = mgetdir('M_CTD'); % identify CTD directory
-root_asc = mgetdir('M_CTD_CNV'); %this is where the bottle data flags script will live
-bdffile = fullfile(root_asc, 'bottle_data_flags.txt'); %the name of this file is not a cruise option, partially because it always needs to be a m-file
+bdffile = fullfile(root_ctd, 'bottle_data_flags.txt'); 
 
 % check for existence of sam file and load; exit if absent;
 

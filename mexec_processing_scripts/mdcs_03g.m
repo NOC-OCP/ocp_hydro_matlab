@@ -12,7 +12,8 @@
 % sd025 ylf also end
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-fprintf(1,'interactively select (or confirm) start, bottom, and end of cast,\n written to dcs_%s_%s.nc. if you set\n end of cast based on T and C, check oxy_align\n and turn on flag oxy_end in opt_%s under castpars\n\n',mcruise,stn_string,mcruise);
+fprintf(1,'interactively select (or confirm) start, bottom, and end of cast,\n written to dcs_%s_%s.nc.',mcruise,stn_string)
+scripname = 'castpars'; oopt = 'oxy_align'; get_cropt
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 
@@ -166,8 +167,11 @@ while 1
         case 'se'
             % select upcast end scan
             disp('select end scan on any panel');
-            disp('you may want to select based on T and C, and add oxy_end in cruise options');
-            disp('file (under castpars, oxy_align) so that O will be truncated when it goes bad (earlier)');
+            if oxy_end
+                fprintf(1,'oxygen will be truncated %d s before T and C\n',oxy_align)
+            else
+                fprintf(1,'oxygen will be truncated at the same point as T and C,\n unless you change settings under oxy_align in opt_%s',mcruise)
+            end
             [x, y] = ginput(1);
             [~,k_end] = min(abs(d.scan-x));
 

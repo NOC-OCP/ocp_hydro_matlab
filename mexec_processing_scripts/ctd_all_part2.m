@@ -1,6 +1,12 @@
 %average to 2 dbar
 mctd_04;
 
+    try
+        stn = stnlocal; mwin_01;
+    catch me
+        warning('could not extract winch data')
+        warning(me.message)
+    end
 %bottle firing data
 stn = stnlocal; mfir_01;
 if exist(m_add_nc(blotfile),'file')
@@ -8,13 +14,12 @@ if exist(m_add_nc(blotfile),'file')
 
     %winch data
     try
-        stn = stnlocal; mwin_01;
         stn = stnlocal; mwin_to_fir;
     catch me
-        warning('winch data not added to fir file')
+        warning('no winch data added to fir file')
         warning(me.message)
     end
-
+    
     %add to sam file
     stn = stnlocal; mfir_to_sam;
 end

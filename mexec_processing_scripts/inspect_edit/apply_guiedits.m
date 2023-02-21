@@ -1,9 +1,9 @@
-function [d, comment] = apply_guiedits(d, edfilepat)
-% [d, comment] = apply_guiedits(d, edfilepat)
+function [d, comment] = apply_guiedits(d, xvar, edfilepat)
+% [d, comment] = apply_guiedits(d, indepvar, edfilepat)
 %
-% find any edits previously selected in mctd_rawedit and recorded in
+% find any edits previously selected (e.g. in mctd_rawedit) and recorded in
 % files with names like edfilepat (including full path), and apply to
-% fields of d 
+% fields of d using variable indepvar (e.g. scan, for mctd_rawedit output)
 %
 % useful if you've clobbered the _raw_cleaned.nc files after running
 % mctd_rawedit (for instance, if you've gone back to _noctm versions)
@@ -24,6 +24,7 @@ for fno = 1:length(edfiles)
     a = textscan(fid,'%s'); a = a{1};
     fclose(fid);
     ii = find(strcmp(a,'ot_version')) + 3;
+    if isempty(ii); ii = 1; end
     if length(a)>ii
         for lno = ii:length(a)
             s = str2double(a{lno});
@@ -49,7 +50,7 @@ end
 vars = fieldnames(donan);
 comment = '';
 for vno = 1:length(vars)
-    m = ismember(d.scan,donan.(vars{vno}));
+    m = ismember(d.(xvar),donan.(vars{vno}));
     if sum(m)
         d.(vars{vno})(m) = NaN;
         comment = '\n saved GUI edits reapplied';

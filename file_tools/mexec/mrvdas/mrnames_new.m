@@ -99,17 +99,16 @@ for tno = 1:length(tablist)
     %if we have an extra prefix like anemometer_ on this ship/database
     if npre>0; ii = ii(npre:end); end
     msg = tabl(ii(end)+1:end);
-    %inst1 = tabl(ii(1)+1:ii(2)-1);
     inst1 = tabl(1:ii(2)-1);
-    inst2 = tabl(ii(end-1)+1:ii(end)-1);
-    if ~contains(inst2,digitsPattern) && length(ii)>=3
-        inst2 = tabl(ii(end-2)+1:ii(end-1)-1);
-        if ~contains(inst2,digitsPattern) && length(ii)>=4
-            inst2 = tabl(ii(end-3)+1:ii(end-2)-1);
-        end
-    end
+    inst2 = tabl(ii(2)+1:ii(end)-1);
+%     inst2 = tabl(ii(end-1)+1:ii(end)-1);
+%     if ~contains(inst2,digitsPattern) && length(ii)>=3
+%         n = length(ii)-1;
+%         inst2 = tabl(ii(end-n)+1:ii(end-n+1)-1);
+%     end
     %inst = tabl(ii(1)+1:ii(2)-1); %everything after the prefix and before the message
     %for each table, look through the dnames
+%     disp(tabl); disp(msg); disp(inst1); disp(inst2)
     for dno = 1:length(dnames)
         if sum(strcmp(mt.msg{dno},msg))
             tablemap{tno,1} = inst1;

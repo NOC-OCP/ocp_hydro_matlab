@@ -54,8 +54,7 @@ end
 %parse, for instance getting information from header
 scriptname = mfilename; oopt = 'sal_parse'; get_cropt 
 
-%rename*** a lot of this code and the time variable code is specific to nmf
-%autosal output files, right? put in setdef_cropt_sam? 
+%rename
 clear samevars
 samevars.sample_1 = {'sample1' 'reading_1' 'reading1' 'r1'};
 samevars.sample_2 = {'sample2' 'reading_2' 'reading2' 'r2'};
@@ -123,12 +122,55 @@ if 0 %***
     end
 end
 
-scriptname = mfilename; oopt = 'sal_flags'; get_cropt
-
 if ~ismember('sample_4',fn)
     ds_sal.sample_4 = NaN+ds_sal.sample_1;
 end
+scriptname = mfilename; oopt = 'sal_flags'; get_cropt
+ds_sal0 = ds_sal;
+if reapply_saledits
+    [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+end
 ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4],2);
+%optionally inspect readings
+scriptname = mfilename; oopt = 'sal_sample_inspect'; get_cropt
+if plotss
+    %standards and substandards
+    iis = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<=std_samp_range(2));
+    iis = [iis; find(ds_sal.sampnum>=sub_samp_range(1) & ds_sal.sampnum<=sub_samp_range(2))];
+    iis_all = {iis};
+    %stations
+    n = max(floor(ds_sal.sampnum(ds_sal.sampnum<=30000)/100));
+    for no = 1:n
+        iis_all{no+1} = find(floor(ds_sal.sampnum/100)==no);
+    end
+    %underway option 1
+    iis = find(ds_sal.sampnum>std_samp_range(2));
+    if ~isempty(iis); iis_all{n+1} = iis; n = n+1; end
+    %underway option 2
+    iis = find(ds_sal.sampnum<0);
+    if ~isempty(iis); iis_all{n+1} = iis; n = n+1; end
+    %everything else
+    iis = find(ds_sal.sampnum>30000 & ds_sal.sampnum<sub_samp_range(1));
+    if ~isempty(iis); iis_all{n+1} = iis; n = n+1; end
+    d = struct();
+    d.sampnum = ds_sal.sampnum; 
+    d.sample_1 = ds_sal.sample_1-ds_sal.runavg;
+    d.sample_2 = ds_sal.sample_2-ds_sal.runavg;
+    d.sample_3 = ds_sal.sample_3-ds_sal.runavg;
+    d.sample_4 = ds_sal.sample_4-ds_sal.runavg;
+    d.ref_hi = ones(size(ds_sal.sampnum))*2.5e-5;
+    d.ref_low = -d.ref_hi;
+    markers = {'o';'s';'<';'.';'none';'none'};
+    lines = {'none';'none';'none';'none';'-';'-'};
+    bads = gui_editpoints(d,'sampnum','edfilepat',edfile,'markers',markers,'lines',lines,'xgroups',iis_all);
+    clear d
+end
+if ~isempty(bads)
+    [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+    a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
+    ds_sal.runavg = m_nanmean(a,2);
+end
+ds_sal.flag(sum(isnan(a),2)>1) = max(ds_sal.flag(sum(isnan(a),2)>1),3);
 
 %%%%%% standards offsets %%%%%%
 
@@ -153,7 +195,7 @@ if length(ii)<length(ds_sal.sampnum)
     ds_sal = ds_sal(ii,:);
 end
 
-%plot standards and optionally samples
+%plot standards
 iistd = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<std_samp_range(2));
 iisu = find(ds_sal.sampnum>=sub_samp_range(1) & ds_sal.sampnum<sub_samp_range(2));
 iis = setdiff(1:length(ds_sal.sampnum),[iistd; iisu]);
@@ -177,11 +219,7 @@ if sum(strcmp('k15',fn))
         xsu(m) = interp1(find(~m),xsu(~m),find(m));
         ist = 0;
     end
-    plot(xsu,ds_sal.sample_1(iisu)-st(iisu),'.y', ...
-        xsu,ds_sal.sample_2(iisu)-st(iisu),'.y', ...
-        xsu,ds_sal.sample_3(iisu)-st(iisu),'.y', ...
-        xsu,ds_sal.sample_4(iisu)-st(iisu),'.y', ...
-        x(iistd),ds_sal.sample_1(iistd)-st(iistd),'kx', ...
+    plot(x(iistd),ds_sal.sample_1(iistd)-st(iistd),'kx', ...
     x(iistd),ds_sal.sample_2(iistd)-st(iistd),'r+', ...
     x(iistd),ds_sal.sample_3(iistd)-st(iistd),'m.', ...
     x(iistd),ds_sal.sample_4(iistd)-st(iistd),'go', ...
@@ -198,40 +236,7 @@ if sum(strcmp('k15',fn))
 else
     warning('no standards plotted because no K15 found')
 end
-scriptname = mfilename; oopt = 'sal_sample_inspect'; get_cropt
-if plotss
-    xs = x+std_samp_range(1);
-figure(10);
-subplot(211)
-    plot(xs(iis),ds_sal.sample_1(iis),'kx', ...
-    xs(iis),ds_sal.sample_2(iis),'r+', ...
-    xs(iis),ds_sal.sample_3(iis),'mo', ...
-    xs(iis),ds_sal.sample_4(iis),'g.', ...
-    xs(iis),ds_sal.runavg(iis),'sb'); grid
-    subplot(212)
-    plot(xs(iis),ds_sal.sample_1(iis)-ds_sal.runavg(iis),'kx', ...
-    xs(iis),ds_sal.sample_2(iis)-ds_sal.runavg(iis),'r+', ...
-    xs(iis),ds_sal.sample_3(iis)-ds_sal.runavg(iis),'mo', ...
-    xs(iis),ds_sal.sample_4(iis)-ds_sal.runavg(iis),'g.', ...
-    [min(xs(iis)) max(xs(iis)); min(xs(iis)) max(xs(iis))]',[-1 -1; 1 1]'*2.5e-5,'b');
-    ylabel('run - avg'); grid on
-    disp('stepping through CTD casts')
-    x = unique(floor(xs(iis)/100)); x = x(~isnan(x));
-    for no = 1:length(x)
-        xl = x(no)*100+[0 25];
-        subplot(211); xlim(xl); subplot(212); xlim(xl)
-        pause; ylim([-1 1]*1e-4); pause
-    end
-    disp(['(k,r,m): reading1, 2, 3 of samples; blue squares: run average of samples']);
-    cont = input('examine samples, ''k'' for keyboard prompt, enter to continue (without changing flags) \n','s');
-    if strcmp(cont,'k')
-        keyboard
-        cf = input('flags changed (y/n)?\n','s');
-        if strcmp('cf','y')
-            scriptname = mfilename; oopt = 'sal_flags'; get_cropt
-        end
-    end
-end
+
 
 %get offsets for samples
 if isempty(sal_adj_comment) && ~isempty(sal_off)
@@ -312,7 +317,7 @@ end
 dataname = ['sal_' mcruise '_01'];
 salfile = fullfile(root_sal, [dataname '.nc']);
 scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
-tsgfile = fullfile(mgetdir(tsgpre), ['tsgsal_' mcruise '_all.nc']);
+tsgfile = fullfile(root_sal, ['tsgsal_' mcruise '_all.nc']);
 
 %select the variables we want to save
 fn = ds_sal.Properties.VariableNames;

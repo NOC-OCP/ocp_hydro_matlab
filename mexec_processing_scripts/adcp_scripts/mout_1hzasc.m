@@ -9,7 +9,7 @@ function mout_1hzasc(stn)
 m_common
 
 scriptname = 'castpars'; oopt = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s.02.asc, and navstream to ladcp/gps/sm\n',stn_string); end
+if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s.02.asc\n',stn_string); end
 
 %%%%%%%%% write ctd data %%%%%%%%%
 
@@ -33,6 +33,16 @@ else
     switch MEXEC_G.Mshipdatasystem
         case 'rvdas'
             [dn, ~, ~] = mrload(default_navstream,dv1,dv2,'q');
+            m = diff(dn.dnum)<=0;
+            if sum(m)
+                warning('removing %d repeated or backwards times',sum(m))
+                ii = 1+find(~m); ii = [1; ii(:)];
+            else
+                ii = 1:length(dn.dnum);
+            end
+            dn.dnum = dn.dnum(ii);
+            dn.latitude = dn.latitude(ii);
+            dn.longitude = dn.longitude(ii);
         case 'techsas'
             [dn, ~, ~] = mtload(default_navstream,dv1,dv2);
         case 'scs'
@@ -48,9 +58,9 @@ kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
 scriptname = mfilename; oopt = 'ctd_1hz_format'; get_cropt
 fid = fopen(f.ctd,'w');
-fprintf(fid,'%s\n',ctdh);
+%fprintf(fid,'%s\n',ctdh);
 for kl = 1:length(kok)
-   fprintf(fid,'%10.2f %8.2f %8.4f %8.4f %11.6f %10.6f %12.7f\n', dd.time(kok(kl)), dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)), dd.decday(kok(kl))); 
+   fprintf(fid,'%12.7f %8.2f %8.4f %8.4f %11.6f %10.6f\n', dd.yearday(kok(kl)), dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)));
 end
 fclose(fid);
 

@@ -3,7 +3,7 @@ function [] = process_cast_cfgstr(stn,varargin)
 %
 % Process LADCP cast, including GPS, SADCP, and BT data.
 %
-% Before a cast is processed, [ix_cast_params.m] is called, and sets
+% Before a cast is processed, [set_cast_params_cfgstr.m] is called, and sets
 % cruise and/or cast-specific parameters based on inputs in structure cfg. 
 % After a cast is processed, [post_process_cast.m] is called (if it exists)
 % cruise- and/or cast-specific post-processing should be carried out there.
@@ -94,14 +94,6 @@ function [] = process_cast_cfgstr(stn,varargin)
 %  Mar 29, 2017: - added att and da to saveres
 %	 	 - added saveplot_pdf
 %		 - made fignums 2-digit
-%  Jun 01, 2017: ylf change how inputs and settings are specified: add
-%                optional input parameter-value pairs to be passed to  
-%                ix_cast_params to specify different settings to use:
-%                'orient' specifies downlooker ('DL', default), uplooker 
-%                   ('UL'), or both ('DL_UL')
-%                'constraints' is a cell array specifying whether to use 
-%                   bottom tracking ({'BT'}), SADCP ({'SADCP'}), or both
-%                   ({'BT', 'SADCP'})
 %  Sep 15, 2018: - disabled serial-number code
 %  Feb  8, 2019: - added pause before saving figures (TheThinMint requires this)
 %  Feb 16, 2019: - move cast post-processing to step 17 so that post-processing
@@ -109,13 +101,20 @@ function [] = process_cast_cfgstr(stn,varargin)
 %  Aug 30, 2019: - changed error message about p.getdepth
 %  Sep  4, 2019: - replaced [getshear2.m] by GK's new [calc_shear3.m]
 %
-%  Feb ??, 2021: - epa added code to step 1 to combine multiple files in
-%                  case instrument has split recording
-%  Feb 20, 2023: - ylf added checking for files that are too short (not
-%                  enough times or not enough good vertical velocities)
-%                  after loading (rather than failing later)
-%  Feb 20, 2023: - ylf added code after step 1 to optionally limit times
-%                  (for yo-yo cast) 
+% Jun 01, 2017: ylf change how inputs and settings are specified: add
+%               optional input parameter-value pairs to be passed to  
+%               ix_cast_params to specify different settings to use:
+%               'orient' specifies downlooker ('DL', default), uplooker 
+%                  ('UL'), or both ('DL_UL')
+%               'constraints' is a cell array specifying whether to use 
+%                  bottom tracking ({'BT'}), SADCP ({'SADCP'}), or both
+%                  ({'BT', 'SADCP'})
+% Feb 20, 2023: ylf brought in process_cast updates from LDEO_IX_14
+%               added checking for files that are too short (not enough
+%               times or not enough good vertical velocities) after loading
+%               rather than failing later
+
+startdir = pwd;
 
 %----------------------------------------------------------------------
 % STEP 0: EXECUTE ALWAYS
@@ -135,7 +134,7 @@ if ~isempty(varargin)
 end
 
 %defaults to pass to ix_cast_params in cfg
-if ~exist('cfg','var') || ~isfield(cfg, 'orient')
+if ~exist('cfg') || ~isfield(cfg, 'orient')
     cfg.orient = 'DL';
 end
 if ~isfield(cfg, 'constraints')
@@ -153,11 +152,11 @@ p = setdefv(p,'checkpoints',[]);        % disable checkpointing by default
 %call ix_cast_params to set fields of f and p as specified, and create directories if needed
 ix_cast_params %replaces set_cast_params
 
-%close all
+close all
 %openwindows_fewer;				% open all windows to be used
 
 if length(f.res) > 1			% open log file
-    if exist([f.res,'.log'],'file')==exist('loadrdi.m','file')
+    if exist([f.res,'.log'])==exist('loadrdi.m')
         eval(['delete ',f.res,'.log'])
     end
     diary([f.res,'.log'])
@@ -178,7 +177,8 @@ end
 
 pcs.target_begin_step = pcs.begin_step;	% backtrack to last valid checkpoint
 if last_checkpoint >= 0 && pcs.begin_step > last_checkpoint+1
-    fprintf(1,'Backtracking begin_step from %d to %d',pcs.begin_step,last_checkpoint+1);
+    disp(sprintf('Backtracking begin_step from %d to %d',...
+        pcs.begin_step,last_checkpoint+1));
     pcs.begin_step = last_checkpoint + 1;
 end
 
@@ -209,53 +209,21 @@ if pcs.begin_step <= pcs.cur_step
     %     apply magnetic deviation if given
     %  2) merge down-up data
     %  3) do some fist order error checks
-
-    if iscell(f.ladcpdo) && ~isempty(f.ladcpdo) %***what about ladcpup and combining?
-        [d,p] = loadrdi_mult(f,p);
-    else
-        [d,p]=loadrdi(f,p);
-    end
-
-    if isfield(p,'time_start_force')
-        %for separating out one yo from a yo-yo or tow-yo
-        p.time_end = p.time_end_force;
-        p.time_start = p.time_start_force;
-        iit = find(d.time_jul>=julian(p.time_start) & d.time_jul<=julian(p.time_end));
-        fn = fieldnames(d);
-        for no = 1:length(fn)
-            dat = d.(fn{no});
-            s = size(dat);
-            if s(1)==p.nt
-                if s(1)==s(2)
-                    error('cannot split cast %d; cannot tell which dimension is time',p.ladcp_station)
-                end
-                dat = dat(iit,:,:);
-            elseif s(2)==p.nt
-                dat = dat(:,iit,:);
-            elseif numel(s)>2 && s(3)==p.nt
-                dat = dat(:,:,iit);
-            end
-            d.(fn{no}) = dat;
-        end
-        p.nt = length(iit);
-        %some stats in p like xmc, xmv, outlier_n are not recalculated per yo
-    end
-
+    [d,p]=loadrdi(f,p);
     if length(d.time_jul)<10
-        warning('not enough data in %s or %s for cast %d; skipping',f.ladcpdo,f.ladcpup,p.ladcp_station)
+        warning('not enough data in %s or %s; skipping',f.ladcpdo,f.ladcpup)
         return
     end
     if sum(~isnan(d.rw(:)))==0
-        warning('no valid vertical velocities in %s or %s for cast %d; skipping',f.ladcpdo,f.ladcpup,p.ladcp_station)
+        warning('no valid vertical velocities in %s or %s; skipping',f.ladcpdo,f.ladcpup)
         return
     end
-
+    
     % get instrument serial number
     %p=getserial(f,p);
     
     end_processing_step;
 end % OF STEP 1: LOAD DATA
-
 
 %----------------------------------------------------------------------
 % STEP 2: FIX LADCP-DATA PROBLEMS
@@ -283,7 +251,7 @@ if pcs.begin_step <= pcs.cur_step
   pcs.step_name = 'LOAD GPS DATA'; begin_processing_step_cfgstr;
 
   p.navdata = 0;
-  if length(f.nav)>1 && exist('loadnav.m','file')==exist('loadrdi.m','file')
+  if length(f.nav)>1 && exist('loadnav')==exist('loadrdi')
     [d,p]=loadnav(f,d,p);
   else
     d.slon=NaN*d.time_jul; d.slat=d.slon;
@@ -331,7 +299,7 @@ if pcs.begin_step <= pcs.cur_step
   %  get processed ctd profile data
   %  We provide more than one version to support different file formats
   % 
-  if length(f.ctdprof)>1 && exist('loadctdprof.m','file')==exist('loadrdi.m','file')
+  if length(f.ctdprof)>1 & exist('loadctdprof')==exist('loadrdi')
     [d,p]=loadctdprof(f,d,p);
   end
 
@@ -451,7 +419,7 @@ if pcs.begin_step <= pcs.cur_step
   %
   if ps.outlier>0 || p.offsetup2down>0
      diary off
-     if exist('loadsadcp.m','file')==exist('loadrdi.m','file') 
+     if exist('loadsadcp')==exist('loadrdi') 
       [di,p]=loadsadcp(f,di,p);
      end
      dino=di;
@@ -491,7 +459,7 @@ pcs.cur_step = pcs.cur_step + 1;
 if pcs.begin_step <= pcs.cur_step
   pcs.step_name = '(RE-)LOAD SADCP DATA'; begin_processing_step_cfgstr;
 
-  if exist('loadsadcp.m','file')==exist('loadrdi.m','file') && isfield(ps, 'sadcpfac') && ps.sadcpfac>0
+  if exist('loadsadcp')==exist('loadrdi') && isfield(ps, 'sadcpfac') && ps.sadcpfac>0
     pcs.update_figures = [pcs.update_figures 9];
     di=loadsadcp(f,di,p);
   end
@@ -566,7 +534,7 @@ if pcs.begin_step <= pcs.cur_step
   % Convert p.warn to one line of text with newline characters
   p.warnings = [];
   for i = 1:size(p.warnp,1)
-     p.warnings = [p.warnings deblank(p.warnp(i,:)) newline];
+     p.warnings = [p.warnings deblank(p.warnp(i,:)) char(10)];
   end
   
   figure(11)
@@ -635,36 +603,24 @@ end
     disp(' save plots ')
     for jj = intersect(p.saveplot,pcs.update_figures)
         fprintf('  figure %d...\n',jj);
-        try
-            h = get(jj);
-        catch
-            h = [];
-        end
-        if ~isempty(h)
+        ok = 1; eval(sprintf('h = get(%d);',jj),'ok = 0;');
+        if ok
             figure(jj); pause(1);
             eval(sprintf('print -f%d -dpsc %s_%02d.ps',jj,f.res,jj))
         end
     end
     for jj = intersect(p.saveplot_png,pcs.update_figures)  
         fprintf('  figure %d...\n',jj);
-        try
-            h = get(jj);
-        catch
-            h = [];
-        end
-        if ~isempty(h)
+        ok = 1; eval(sprintf('h = get(%d);',jj),'ok = 0;');
+        if ok
             figure(jj); pause(1);
             eval(sprintf('print -f%d -dpng %s_%02d.png',jj,f.res,jj))
         end
     end
     for jj = intersect(p.saveplot_pdf,pcs.update_figures)
         fprintf('  figure %d...\n',jj);
-        try
-            h = get(jj);
-        catch
-            h = [];
-        end
-        if ~isempty(h)
+        ok = 1; eval(sprintf('h = get(%d);',jj),'ok = 0;');
+        if ok
             figure(jj); pause(1);
             eval(sprintf('print -f%d -dpdf %s_%02d.pdf',jj,f.res,jj))
         end
@@ -690,5 +646,7 @@ fclose('all');				%  close all files just to make sure
 
 disp(' ')				% final message
 disp(['==> The whole task took ',int2str(toc),' seconds'])
+cd(startdir)
+
 
 

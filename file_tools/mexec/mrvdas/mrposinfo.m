@@ -94,8 +94,15 @@ if isempty(d.latitude)
     lat = nan;
     lon = nan;
 else
-    lat = interp1(d.dnum,d.latitude,dn);
-    lon = interp1(d.dnum,d.longitude,dn);
+    m = diff(d.dnum)<=0;
+    if sum(m)
+        warning('removing %d repeated or backwards times',sum(m))
+        ii = 1+find(~m); ii = [1; ii(:)];
+    else
+        ii = 1:length(d.dnum);
+    end
+    lat = interp1(d.dnum(ii),d.latitude(ii),dn);
+    lon = interp1(d.dnum(ii),d.longitude(ii),dn);
 end
 
 switch nargout

@@ -197,7 +197,7 @@ switch MEXEC_G.Mship
 end
 
 
-if skipunderway==0 %***change how this is done for scs and techsas so it can be moved to when needed!
+if ~strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
     %create file connecting underway data directories and stream names
     %and create underway data directories (for processed data)
     try
@@ -207,11 +207,8 @@ if skipunderway==0 %***change how this is done for scs and techsas so it can be 
             [udirs, udcruise] = m_udirs;
         end
         MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,1:2)];
-        scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
-        a = mgetdir(default_navstream); l = length(MEXEC_G.mexec_data_root);
-        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_POS' a(l+2:end)}];
     catch me
-        warning('%s\n','underway data directories could not be configured;','change skipunderway in cruise options file or check',me.message);
+        warning('%s\n','underway data directories could not be configured',me.message)
     end
 end
 

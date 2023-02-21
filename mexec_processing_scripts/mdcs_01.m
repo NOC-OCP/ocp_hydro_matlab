@@ -36,8 +36,6 @@ if ~isfield(ds,'dc_bot') || auto_bot
         mp = max(d1.press);
         kbot = find(d1.press>=mp-0.5,1,'first');
         hnew.comment = [hnew.comment ' auto detected bottom time'];
-        m = ['Bottom of cast is at dc ' sprintf('%d',ds.dc_bot) ' pressure ' sprintf('%8.1f',ds.press_bot)];
-        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
     else
         hnew.comment = [hnew.comment ' bottom time set in opt_cruise'];
     end
@@ -45,6 +43,8 @@ if ~isfield(ds,'dc_bot') || auto_bot
     ds.scan_bot = d1.scan(ds.dc_bot);
     ds.press_bot = d1.press(ds.dc_bot);
     ds.time_bot = d1.time(ds.dc_bot);
+        m = ['Bottom of cast is at dc ' sprintf('%d',ds.dc_bot) ' pressure ' sprintf('%8.1f',ds.press_bot)];
+        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 end
 
 if ~isfield(ds,'dc_start') || auto_start
@@ -55,8 +55,6 @@ if ~isfield(ds,'dc_start') || auto_start
         p_minus_maxprev = pressd' - max(triu(repmat(pressd,1,min(kbot,3600))));
         [mnd, kstart] = min(p_minus_maxprev);
         hnew.comment = [hnew.comment ' auto detected start time'];
-        m = ['Start of cast is at dc ' sprintf('%d',ds.dc_start) ' pressure ' sprintf('%8.1f',ds.press_start)];
-        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
     else
         hnew.comment = [hnew.comment ' start time set in opt_cruise'];
     end
@@ -64,20 +62,23 @@ if ~isfield(ds,'dc_start') || auto_start
     ds.scan_start = d1.scan(ds.dc_start);
     ds.press_start = d1.press(ds.dc_start);
     ds.time_start = d1.time(ds.dc_start);
+        m = ['Start of cast is at dc ' sprintf('%d',ds.dc_start) ' pressure ' sprintf('%8.1f',ds.press_start)];
+        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 end
 
 if ~isfield(ds,'dc_end') || auto_end
     if isempty(kend)
-        % guess end index: when pumps go off finally with p<2, or when p<0, whichever is first
-        kend = find(d1.pumps(kbot+1:end)<1 & d1.pumps(kbot:end-1)==1 & d1.press(kbot+1:end)<2, 1, 'last') + kbot - 1;
+        % guess end index: when pumps go off finally with p<2, or just before p<0, whichever is first
+        kend = find(d1.pumps(kbot+1:end)<1 & d1.pumps(kbot:end-1)==1 & d1.press(kbot+1:end)<2, 1, 'last') + kbot - 2;
         if isempty(kend); kend = length(d1.pumps); end
-        ksurf2 = find(d1.press(kbot:end)<0, 1, 'first') + kbot - 1;
+        ksurf2 = find(d1.press(kbot:end)<0, 1, 'first') + kbot - 2;
         if ~isempty(ksurf2)
             kend = min(kend, ksurf2);
         end
+        %or when min p is reached for yo-yo cast with separate files
+        kmin = find(d1.press(kbot:end)==min(d1.press(kbot:end))) + kbot -1;
+        kend = min(kend, kmin);
         hnew.comment = [hnew.comment ' auto detected end time'];
-        m = ['End of cast is at dc ' sprintf('%d',ds.dc_end) ' pressure ' sprintf('%8.1f',ds.press_end)];
-        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
     else
         hnew.comment = [hnew.comment ' end time set in opt_cruise'];
     end
@@ -85,6 +86,8 @@ if ~isfield(ds,'dc_end') || auto_end
     ds.scan_end = d1.scan(ds.dc_end);
     ds.press_end = d1.press(ds.dc_end);
     ds.time_end = d1.time(ds.dc_end);
+        m = ['End of cast is at dc ' sprintf('%d',ds.dc_end) ' pressure ' sprintf('%8.1f',ds.press_end)];
+        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 end
 
 %corresponding indices in 24hz file

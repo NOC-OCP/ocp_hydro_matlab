@@ -105,8 +105,19 @@ g2opts.grid_extrap = [0 0]; %discard empty bins
 g2opts.postfill = maxfill2db; %fill after gridding?
 g2opts.ignore_nan = 1;
 g2opts.bin_partial = 1; %use bins with data in only one half
-dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
-up2 = grid_profile(up, 'press', pg, 'lfitbin', g2opts);
+if length(dn.press>1)
+    dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
+else
+    dn2 = [];
+end
+if length(up.press>1)
+    up2 = grid_profile(up, 'press', pg, 'lfitbin', g2opts);
+else
+    up2 = [];
+end
+if isempty(dn2) && isempty(up2)
+    return
+end
 hn.comment = 'gridded to 2 dbar using grid_profile method lfitbin\n';
 if maxfill2db>0
     if isfinite(maxfill2db)
@@ -119,19 +130,26 @@ end
 
 %%%%% add or recalculate depth and potemp %%%%%
 
-iigd = find(dn2.press>-1.495);
-iigu = find(up2.press>-1.495);
-
-dn2.depth = NaN+dn2.press; dn2.depth(iigd) = -gsw_z_from_p(dn2.press(iigd),h.latitude);
-up2.depth = NaN+up2.press; up2.depth(iigu) = -gsw_z_from_p(up2.press(iigu),h.latitude);
+if ~isempty(dn2)
+    iigd = find(dn2.press>-1.495);
+    dn2.depth = NaN+dn2.press; dn2.depth(iigd) = -gsw_z_from_p(dn2.press(iigd),h.latitude);
+end
+if ~isempty(up2)
+    iigu = find(up2.press>-1.495);
+    up2.depth = NaN+up2.press; up2.depth(iigu) = -gsw_z_from_p(up2.press(iigu),h.latitude);
+end
 hn.fldnam = [hn.fldnam 'depth']; hn.fldunt = [hn.fldunt 'metres'];
 
-dn2.potemp = NaN+dn2.press; dn2.potemp(iigd) = gsw_pt0_from_t(dn2.asal(iigd), dn2.temp(iigd), dn2.press(iigd));
-up2.potemp = NaN+up2.press; up2.potemp(iigu) = gsw_pt0_from_t(up2.asal(iigu), up2.temp(iigu), up2.press(iigu));
-dn2.potemp1 = NaN+dn2.press; dn2.potemp1(iigd) = gsw_pt0_from_t(dn2.asal1(iigd), dn2.temp1(iigd), dn2.press(iigd));
-up2.potemp2 = NaN+up2.press; up2.potemp2(iigu) = gsw_pt0_from_t(up2.asal2(iigu), up2.temp2(iigu), up2.press(iigu));
-dn2.potemp2 = NaN+dn2.press; dn2.potemp2(iigd) = gsw_pt0_from_t(dn2.asal2(iigd), dn2.temp2(iigd), dn2.press(iigd));
-up2.potemp1 = NaN+up2.press; up2.potemp1(iigu) = gsw_pt0_from_t(up2.asal1(iigu), up2.temp1(iigu), up2.press(iigu));
+if ~isempty(dn2)
+    dn2.potemp = NaN+dn2.press; dn2.potemp(iigd) = gsw_pt0_from_t(dn2.asal(iigd), dn2.temp(iigd), dn2.press(iigd));
+    dn2.potemp1 = NaN+dn2.press; dn2.potemp1(iigd) = gsw_pt0_from_t(dn2.asal1(iigd), dn2.temp1(iigd), dn2.press(iigd));
+    dn2.potemp2 = NaN+dn2.press; dn2.potemp2(iigd) = gsw_pt0_from_t(dn2.asal2(iigd), dn2.temp2(iigd), dn2.press(iigd));
+end
+if ~isempty(up2)
+    up2.potemp = NaN+up2.press; up2.potemp(iigu) = gsw_pt0_from_t(up2.asal(iigu), up2.temp(iigu), up2.press(iigu));
+    up2.potemp2 = NaN+up2.press; up2.potemp2(iigu) = gsw_pt0_from_t(up2.asal2(iigu), up2.temp2(iigu), up2.press(iigu));
+    up2.potemp1 = NaN+up2.press; up2.potemp1(iigu) = gsw_pt0_from_t(up2.asal1(iigu), up2.temp1(iigu), up2.press(iigu));
+end
 if ~sum(strcmp('potemp',hn.fldnam))
     hn.fldnam = [hn.fldnam 'potemp']; hn.fldunt = [hn.fldunt 'degc90'];
     hn.fldnam = [hn.fldnam 'potemp1']; hn.fldunt = [hn.fldunt 'degc90'];
@@ -143,11 +161,15 @@ hn.comment = [hn.comment 'depth and potemp calculated using gsw\n'];
 
 %%%%% save %%%%%
 
-hnd = hn;
-if ~isempty(commentd)
-    hnd.comment = [commentd hnd.commentd];
+if ~isempty(dn2)
+    hnd = hn;
+    if ~isempty(commentd)
+        hnd.comment = [commentd hnd.commentd];
+    end
+    mfsave(otfile1d, dn2, hnd);
 end
-mfsave(otfile1d, dn2, hnd);
 
-hnu = hn;
-mfsave(otfile1u, up2, hnu);
+if ~isempty(up2)
+    hnu = hn;
+    mfsave(otfile1u, up2, hnu);
+end

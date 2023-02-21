@@ -63,7 +63,10 @@ switch scriptname
                 crhelp_str = {'Place to set flags on salinity bottles or readings: for bottles, change ds_sal.flag'
                     'based on ds_sal.sampnum. Note: sample flags: 1 not yet analysed, 2 good, 3 questionable,'
                 '4 bad, 5 not reported (?), 6 average of replicates, 9 not drawn.'
-                'For readings, change (NaN) the values in ds_sal.sample_N directly.'};
+                'For readings, NaN directly, or (default) search for files in ctd/BOTTLE_SAL/editlogs and apply previously selected'
+                'edits (gui to select more runs later in msal_01).'};
+                reapply_saledits = 1;
+                edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
             case 'sal_calc'
                 crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive, default []) for ranges'
                     'of sampnum, while sal_off_base (default ''sampnum_run'') to specify how to match them to samples.'

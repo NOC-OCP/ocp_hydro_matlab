@@ -1,7 +1,7 @@
 function dataout = median_despike(data,s)
 % function dataout = median_despike(data,s)
 %
-% 1-D data and spike size s
+% 1-D data and spike amplitude s (absolute, not relative)
 % 5-point median despike
 %
 % based on m_median_despike BAK

@@ -38,7 +38,7 @@ infile0 = fullfile(root_ctd, [prefix '_raw_noctm.nc']);
 otfile24 = fullfile(root_ctd, [prefix '_24hz']);
 
 %figure out which file to start from
-scriptname = 'mctd_01'; oopt = 'redo_ctm'; get_cropt
+scriptname = 'mctd_01'; oopt = 'redoctm'; get_cropt
 castopts.redoctm = redoctm;
 if castopts.redoctm
     infile = infile0;
@@ -57,7 +57,7 @@ if min(d.press)<=-10
            'you may want to edit mctd_02 case (rawedit_auto) to remove large'
             'outlier values in pressure (and other variables) before the mctd_rawedit gui stage.'
             'Enter to continue.'];
-        warning(sprintf('%s\n',m{:}));
+        fprintf(1,'%s\n',m{:})
         pause
 end
 
@@ -90,7 +90,7 @@ end
 
 %reapply hand edits
 edfilepat = fullfile(root_ctd,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stnlocal));
-[d, comment] = apply_guiedits(d, edfilepat);
+[d, comment] = apply_guiedits(d, 'scan', edfilepat);
 if ~isempty(comment)
     h.comment = [h.comment comment];
     didedits = 1;

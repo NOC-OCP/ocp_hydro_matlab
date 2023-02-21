@@ -179,26 +179,6 @@ switch scriptname
                     'default is botpsal, botoxy.'};
                 sam_gridlist = {'botpsal' 'botoxy'};
         end
-        %            case 'xzlim'
-        %                flaglim = 2; % default 2; highest flag to be used for gridding
-        %                s.xlim = 2; % default 1; width of gridding window, +/- xlim, measured in statnum
-        %                s.zlim = 4; % default 4; vertical extent of gridding window measured in plev
-        %                % bak jc191 reset s.xlim and s.zlim in a cruise option.
-        %                % s.xlim and s.zlim are the half-width of the number of points used in the
-        %                % local fit. ie s.xlim = 1 means three stations used. This one and one
-        %                % either side.
-        %            case 'scales_xz'
-        %                % bak jc191 feb 2020 . scale_x and scale_z are scalings on the distances xu and zu.
-        %                % xu and zu measure the distance away in counts of stations for x and
-        %                % levels for z. s.xlim and s.zlim control the number of stations/levels
-        %                % included. scale_x and scale_z control the relative importance of
-        %                % those distances in the weight. So low values of scale_x and scale_z
-        %                % make the map smoother by not reducing the weight of more distant points.
-        %                % High values of scale_x and scale_z give high weight to nearby points
-        %                % and low weight to distant points. Default for scale_x and scale_z is
-        %                % unity, unless changed in opt_cruise.
-        %                scale_x = 0.5; % choose value < 1 for smoother
-        %                scale_z = 1;
         
         %%%%%%%%%% msec_plot_contrs %%%%%%%%%%
     case 'msec_plot_contrs'
@@ -221,9 +201,31 @@ switch scriptname
                 
         end
         %%%%%%%%%% end set_clev_col %%%%%%%%%%
-        
-    case 'mout_1hzasc'
+
+    case 'ladcp'
         switch oopt
+            case 'ladcp_castpars'
+                crhelp_str = {'place to change parameters for IX ladcp processing that are set in'
+                    '(or can be set in) ix_cast_params as fields of (existing) structure p,'
+                    'for instance: '
+                    'p.ambiguity (ambiguity velocity), p.vlim (velocity limits), '
+                    'p.btrk_mode (bottom track mode), p.up_sn and p.do_sn (instrument serial'
+                    'numbers), etc.'};
+                cfg.stnstr = stn_string;
+                clear p
+                p.cruise_id = mcruise;
+                p.ladcp_station = stnlocal;
+                if ismember(stnlocal,shortcasts)
+                    p.btrk_mode = 0;
+                    p.getdepth = 1;
+                else
+                    p.btrk_mode = 2;
+                    %p.btrk_ts = 30;
+                end
+                p.magdec_source = 1;
+                %p.edit_mask_dn_bins = 1;
+                %p.edit_mask_up_bins = 1;
+                p.orig = 0; % save original data or not
             case 'ctd_1hz_format'
                 crhelp_str = {'name, f.ctd, for text file of 1Hz '
                     'CTD data (e.g. for IX LADCP processing)'};
@@ -231,7 +233,7 @@ switch scriptname
                 f.ctd = fullfile(root_out, 'ctd', ['ctd.' stn_string '.02.asc']);
                 ctdh = sprintf('year day (%d), press (dbar), temp (degC90), psal (psu), lat, lon');
             	f.ctd_header_lines      = 1;
-            	f.ctd_fields_per_line	= 7;
+            	f.ctd_fields_per_line	= 6;
                 f.ctd_time_base = 1;
                 f.ctd_time_field = 1;
             	f.ctd_pressure_field	= 2;
@@ -244,28 +246,14 @@ switch scriptname
             	f.nav_time_field	= f.ctd_time_field;
             	f.nav_lat_field 	= 5;
             	f.nav_lon_field 	= 6;
-        end
-
-        %%%%%%%%%% ix_cast_params %%%%%%%%%%
-    case 'ix_cast_params'
-        switch oopt
-            case 'ladcpopts'
-                crhelp_str = {'place to change parameters for IX ladcp processing that are set in'
-                    '(or can be set in) ix_cast_params as fields of (existing) structure p,'
-                    'for instance: '
-                    'p.ambiguity (ambiguity velocity), p.vlim (velocity limits), '
-                    'p.btrk_mode (bottom track mode), p.up_sn and p.do_sn (instrument serial'
-                    'numbers), etc.; see ix_cast_params for more.'};
-        end
-        %%%%%%%%%% end ix_cast_params %%%%%%%%%%
-        
-    case 'run_proc_ladcp'
-        switch oopt
+            case 'sadcp_file'
+                f.sadcp = fullfile(mgetdir('M_LADCP'),'SADCP',['os75nb_' mcruise '_' cfg.stnstr '_for_ladcp.mat']);
             case 'is_uplooker'
                 crhelp_str = {'isul (default 1) sets whether there is an uplooking as well as a'
                     'downlooking LADCP'};
                 isul = 1;
         end
+        %%%%%%%%%% end ladcp %%%%%%%%%%
         
     case 'codas_to_mstar'
         switch oopt

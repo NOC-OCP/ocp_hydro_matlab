@@ -173,7 +173,7 @@ for plotlist = cklist
             pf1.startdc = first; % good data only
             pf1.stopdc = last;
             if oxy_end
-                pf1.stopdcv.oxygen = pf1.stopdc-oxy_align*24;
+                pf1.stopdcv.oxygen = pf1.stopdc-oxy_align;
             end
             pf1.ncfile.name = infiles{3,end}; % psal file
             
@@ -706,18 +706,18 @@ for plotlist = cklist
             subplot(321); grid on; title ('temp diff'); xlabel('minutes away from bottom');
             subplot(322); grid on; title ('temp diff'); xlabel('minutes away from bottom');
             axoff = m_nanmedian(dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok)); % bak on jr302 17 jun 2014; centre axes on data if out of range
-            if abs(axoff)<0.004; axoff = 0; end
+            if abs(axoff)>0.004 || isnan(axoff); axoff = 0; end
             ax = axis; ax(3:4) = [-0.005 0.005]+axoff; axis(ax);
             subplot(323); grid on; title ([saltype ' diff']); xlabel('minutes away from bottom');
             subplot(324); grid on; title ([saltype ' diff']); xlabel('minutes away from bottom');
             axoff = m_nanmedian(sd1(kok)-sd2(kok)); % bak on jr302 17 jun 2014; centre axes on data if out of range
-            if abs(axoff)<0.004; axoff = 0; end
+            if abs(axoff)<0.004 || isnan(axoff); axoff = 0; end
             ax = axis; ax(3:4) = [-0.005 0.005]+axoff; axis(ax);
             if nox>1
                 subplot(325); grid on; title ('oxy diff'); xlabel('minutes away from bottom');
                 subplot(326); grid on; title ('oxy diff'); xlabel('minutes away from bottom');
                 axoff = m_nanmedian(od1(kok)-od2(kok));
-                if abs(axoff)<15; axoff = 0; end
+                if abs(axoff)<15 || isnan(axoff); axoff = 0; end
                 ax = axis; ax(3:4) = [-20 20]+axoff; axis(ax);
             end
             

@@ -12,6 +12,9 @@ prefix1 = ['ctd_' mcruise '_'];
 infile1 = fullfile(root_ctd, [prefix1 stn_string '_raw_cleaned']);
 if ~exist(m_add_nc(infile1),'file')
     infile1 = fullfile(root_ctd, [prefix1 stn_string '_raw']);
+    if ~exist(m_add_nc(infile1),'file')
+        infile1 = fullfile(root_ctd, [prefix1 stn_string '_raw_noctm']);
+    end
 end
 infile2 = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
 infile3 = fullfile(root_ctd, [prefix1 stn_string '_psal']);

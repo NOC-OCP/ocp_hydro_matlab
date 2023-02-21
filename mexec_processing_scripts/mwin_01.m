@@ -85,7 +85,29 @@ switch MEXEC_G.Mshipdatasystem
      mdatapuptechsas(yy_start,daystart,timestart,yy_end,dayend,timeend,...
         flags,instream,otfile2,varlist);
     case 'rvdas'
-        mrrvdas2mstar(instream,t_start_vec,t_end_vec,otfile2,varlist);
+        if strcmp(MEXEC_G.Mship,'sda')
+            %limit variables
+            varlist = 'ctdoutboardtension ctdcablelengthout ctddeployeddepth ctdlinespeed ctdoverboardpointselected ';
+            varlist = [varlist 'mfctdoutboardtension mfctdinboardtension mfctdcablelengthout mfctddeployeddepth mfctdlinespeed mfctdoverboardpointselected '];
+            varlist = [varlist 'deeptowoutboardtension deeptowinboardtension deeptowcablelengthout deeptwodeployeddepth deeptowlinespeed '];
+            varlist = [varlist 'biowireoutboardtension biowireinboardtension biowirecablelengthout biowiredeployeddepth biowireoverboardpointselec'];
+        end
+        if exist(m_add_nc(otfile2),'file')
+            %mrrvdas2mstar will merge if file exists, don't want that here
+            movefile(m_add_nc(otfile2),[otfile2 '.tmp'])
+        end
+        mrrvdas2mstar(instream,t_start_vec,t_end_vec,otfile2,dataname,varlist);
+        delete([otfile2 '.tmp']);
+%         if strcmp(MEXEC_G.Mship,'sda')
+%             %subsample to 1 Hz (from 4 Hz)
+%             [d,h] = mloadq(otfile2,'/');
+%             fn = fieldnames(d);
+%             for fno = 1:length(fn)
+%                 d.(fn{fno}) = d.(fn{fno})(1:4:end);
+%             end
+%             mfsave(otfile2,d,h);
+%         end
+
 end
 
 

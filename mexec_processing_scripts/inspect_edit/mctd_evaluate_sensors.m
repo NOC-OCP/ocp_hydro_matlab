@@ -1,10 +1,11 @@
-function mctd_evaluate_sensors(sensname, varargin)
-% mctd_evaluate_sensors(sensname)
-% mctd_evaluate_sensors(sensname, testcal, varargin)
+function mctd_evaluate_sensors(parameter, varargin)
+% mctd_evaluate_sensors(parameter)
+% mctd_evaluate_sensors(parameter, testcal, varargin)
 %
 % compare CTD temperature, conductivity, or oxygen to calibration values
 %   in order to choose calibration functions; inspect casts with outlier
 %   residuals
+% loops through different sensor serial numbers 
 %
 % produces plots comparing them and a suggested calibration function
 %     depending on quantity:
@@ -14,7 +15,7 @@ function mctd_evaluate_sensors(sensname, varargin)
 %   linear station number drift + *** for oxy
 %
 % inputs:
-% sensname: 'temp1' 'cond1' 'cond2' 'oxygen1' 'oxygen2' etc.
+% parameter: 'temp', 'cond', 'oxygen' etc.
 %
 % [optional] testcal: structure whose fieldnames are variables (temp, cond,
 %   etc.) and values are 1 to apply calibrations or 0 (or missing) to not
@@ -23,8 +24,6 @@ function mctd_evaluate_sensors(sensname, varargin)
 %   calibration strings (see setdef_cropt_cast.m under mctd_02, ctd_cals);
 %   if not supplied or empty, the calstr set in opt_cruise will be used
 % [optional] parameter-value pairs:
-%   sens_stns (list of stations with the same sensor, default: all
-%     available)
 %   useoxyratio (default 0) set to 1 to plot oxygen in terms of ratio
 %     rather than difference
 %   usedn (default 0) set to 1 to use neutral density-matched downcast ctd
@@ -40,11 +39,11 @@ function mctd_evaluate_sensors(sensname, varargin)
 %
 % e.g.
 %   testcal.temp = 1;
-%   mctd_evaluate_sensors('temp1',testcal)
+%   mctd_evaluate_sensors('temp',testcal)
 %     will apply the calibrations coded into the mctd_02 case in opt_cruise
 %     (for both temp1 and temp2) before plotting
 %   testcal.temp = 1; calstr0.temp1.jc238 = 'dcal.temp1 = d0.temp1+1e-4;';
-%   mctd_evaluate_sensors('temp1',testcal,calstr0)
+%   mctd_evaluate_sensors('temp',testcal,calstr0)
 %     will instead apply this calibration function
 % if you want to test out a conductivity calibration and have an estimated
 %   but not yet applied (to the ctd and sam files) temperature calibration,
@@ -55,7 +54,7 @@ function mctd_evaluate_sensors(sensname, varargin)
 %   them to the (ctd and sam) files first, then run this script to
 %   determine the final oxygen calibration
 %
-% loads sam_cruise_all
+% loads sam_{cruise}_all.nc and sensor_groups.mat
 %
 
 %***add fluor
@@ -65,7 +64,6 @@ m_common
 %defaults and optional input arguments
 testcal.temp = 0; testcal.cond = 0; testcal.oxygen = 0; testcal.fluor = 0;
 calstr0 = []; %get calibration from opt_cruise -- but may depend on station number
-sens_stns = 1:999; %all
 useoxyratio = 0;
 usedn = 0; %set to 1 to use downcast rather than upcast ctd data
 okf = [2 6]; %2 and 6 are good (6 is average of replicates); 3 is questionable
@@ -77,15 +75,15 @@ stns_examine = [];
 if strncmp(sensname, 'temp', 4)
     rlabel = 'SBE35 T - CTD T (degC)';
     rlim = [-1 1]*1e-2;
-    vrlim = [-2 32];
+    %vrlim = [-2 32];
 elseif strncmp(sensname, 'cond', 4)
     rlabel = 'C_{bot}/C_{ctd} (equiv. psu)';
     rlim = [-1 1]*2e-2;
-    vlim = [25 60];
+    %vlim = [25 60];
 elseif strncmp(sensname, 'oxy', 3)
     rlabel = 'O_{bot} - O_{ctd} (umol/kg)';
     rlim = [-5 5];
-    vlim = [50 450];
+    %vlim = [50 450];
 else
     error('sensname not recognised')
 end
@@ -98,14 +96,6 @@ if nargin>1 && isstruct(varargin{1})
 end
 for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
-end
-
-if ~isempty(str2double(sensname(end)))
-    sensnum = sensname(end);
-    sensor = sensname(1:end-1);
-else
-    sensnum = [];
-    sensor = sensname;
 end
 
 dirstr = '';
@@ -121,7 +111,7 @@ rootdir = mgetdir('ctd');
 %load data
 [d, h] = mloadq(fullfile(rootdir, ['sam_' mcruise '_all']), '/');
 %and turn utemp etc into temp etc. so apply_calibrations will work
-uflds = {'press' 'temp1' 'temp2' 'psal1' 'psal2' 'cond1' 'cond2'};
+uflds = {'press' 'temp1' 'temp2' 'psal1' 'psal2' 'cond1' 'cond2' 'oxygen1' 'oxygen2' 'fluor'};
 scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
 for no = 1:size(oxyvars,1)
     uflds = [uflds oxyvars(no,2)];
@@ -167,8 +157,22 @@ if sum(cell2mat(struct2cell(testcal)))
 end
 
 edges = [-1:.05:1]*rlim(2);
+
 presrange = [-max(d.press(~isnan(d.(sensname)))) 0];
 statrange = [0 max(d.statnum(~isnan(d.(sensname))))+1];
+
+scriptname = 'castpars'; oopt = 'ctdsens_groups'; get_cropt
+
+lp = length(parameter);
+fn = fieldnames(sng);
+fn = fn(strncmp(parameter,fn,lp));
+sns = str2num(cell2mat(cellfun(@(x) x(lp+2:end),fn,'UniformOutput',false)));
+
+
+%sg
+
+%***
+
 
 sensother = num2str(setdiff([1 2],str2num(sensnum)));
 

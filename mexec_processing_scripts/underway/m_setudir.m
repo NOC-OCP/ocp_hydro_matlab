@@ -32,35 +32,29 @@ switch(MEXEC_G.Mshipdatasystem)
         as = msgetstreams; %list of all streams found
         f = 'msnames';
         udirs = muwaydirs(MEXEC_G.Mshipdatasystem);
-    case 'rvdas'
-        d = mrdefine('this_cruise','has_mstarpre'); 
-        matlist = d.tablemap(ismember(d.tablemap(:,2),d.mrtables_list),:);
-        isrvdas = 1;
+    otherwise
+        error('m_setudir is used for scs or techsas (unnecessary for rvdas)')
 end
 
-if ~isrvdas
-    fprintf(2,'\n\n%s\n\n',['The following ' MEXEC_G.Mshipdatasystem ' stream names are not identified in ' f])
-    for kl = 1:length(as)
-        if sum(strcmp(as{kl},am))==0
-            fprintf(1,'%s\n',as{kl});
-        end
+fprintf(2,'\n\n%s\n\n',['The following ' MEXEC_G.Mshipdatasystem ' stream names are not identified in ' f])
+for kl = 1:length(as)
+    if sum(strcmp(as{kl},am))==0
+        fprintf(1,'%s\n',as{kl});
     end
-    fprintf(1,'\n%s\n\n\n\n','End of list')
-
-    fprintf(1,'%s\n\n',['The following ' f ' stream names are not found in ' MEXEC_G.Mshipdatasystem])
-    m = zeros(length(am),1);
-    for kl = 1:length(am)
-        if sum(strcmp(am{kl},as))==0
-            fprintf(1,'%s\n',am{kl});
-        else
-            iid = find(strcmp(matlist{kl,1}, udirs(:,1)));
-            if ~isempty(iid); m(kl) = iid; end
-        end
-    end
-    fprintf(1,'\n%s\n\n','End of list')
-else
-    m = ones(size(matlist,1),1);
 end
+fprintf(1,'\n%s\n\n\n\n','End of list')
+
+fprintf(1,'%s\n\n',['The following ' f ' stream names are not found in ' MEXEC_G.Mshipdatasystem])
+m = zeros(length(am),1);
+for kl = 1:length(am)
+    if sum(strcmp(am{kl},as))==0
+        fprintf(1,'%s\n',am{kl});
+    else
+        iid = find(strcmp(matlist{kl,1}, udirs(:,1)));
+        if ~isempty(iid); m(kl) = iid; end
+    end
+end
+fprintf(1,'\n%s\n\n','End of list')
 
 %%%%%%% write m_udirs function using available underway streams %%%%%%%
 %%%%%%% and make directories as necessary %%%%%%%

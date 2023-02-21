@@ -6,7 +6,7 @@ stn = stnlocal; mctd_02;
 stn = stnlocal; mctd_03; %average to 1 hz, compute salinity
 
 if MEXEC_G.ix_ladcp
-%    mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
+    mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
 end
 
 stn = stnlocal; mdcs_01; % now does mdcs_01 and mdcs_02 in one step
