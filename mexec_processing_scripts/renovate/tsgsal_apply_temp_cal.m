@@ -6,7 +6,7 @@ function tempout = tsgsal_apply_temp_cal(time,tempin)
 
 m_common
 
-scriptname = 'tsgsal_apply_cal';
+opt1 = 'tsgsal_apply_cal';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 switch MEXEC_G.Mship
    case {'cook','discovery'} % used on jc069
@@ -15,4 +15,4 @@ switch MEXEC_G.Mship
       prefix = 'oceanlogger';
 end
 root_tsg = mgetdir(prefix);
-oopt = 'tempadj'; get_cropt
+scriptname = mfilename; opt2 = 'tempadj'; get_cropt

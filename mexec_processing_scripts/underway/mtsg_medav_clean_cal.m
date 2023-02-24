@@ -12,7 +12,7 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 % bak jc211 ship_data_sys_names sets metpre and tsgpre
 
 if MEXEC_G.quiet<=1
@@ -33,7 +33,7 @@ end
 [d,h] = mload(infile1,'/');
 
 %clean
-scriptname = mfilename; oopt = 'tsg_edits'; get_cropt
+opt1 = mfilename; opt2 = 'tsg_edits'; get_cropt
 if ~isempty(tsgedits)
     [d, comment] = apply_autoedits(d, tsgedits);
     h.comment = [h.comment comment];
@@ -41,7 +41,7 @@ if ~isempty(tsgedits)
 end
 
 %average
-scriptname = 'ship'; oopt = 'avtime'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'avtime'; get_cropt
 avtsg = round(avtsg);
 MEXEC_A.MARGS_IN = {
     infile1
@@ -55,7 +55,7 @@ mavmed
 
 
 %calibrate
-scriptname = mfilename; oopt = 'tsgcals'; get_cropt
+opt1 = 'calibration'; opt2 = 'tsg_cals'; get_cropt
 if isfield(tsgopts, 'calstr') && isfield(tsgopts, 'docal') && tsgopts.docal.salinity
     cmd = ['!/bin/cp -p ' otfile1 '.nc ' otfile2 '.nc']; eval(cmd)
     d.time = (d.time-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1))+1; %year-day

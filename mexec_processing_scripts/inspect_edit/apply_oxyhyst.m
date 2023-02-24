@@ -2,7 +2,7 @@ function [dnew, hnew] = apply_oxyhyst(d, h, castopts)
 %reverse and/or apply oxygen hysteresis correction to _raw_cleaned file,
 %producing _24hz file
 
-scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
+opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
 nox = size(oxyvars,1); 
 
 nvar = 0;

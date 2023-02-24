@@ -9,14 +9,17 @@ dataname = ['sbe35_' mcruise '_01'];
 infile = fullfile(mgetdir('M_SBE35'), dataname);
 otfile2 = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all']);
 [ds,hnew] = mloadq(infile,'/');
+vars = {'sampnum'; 'sbe35temp'; 'sbe35temp_flag'};
+[~,ii] = setdiff(hnew.fldnam,vars);
+ds = rmfield(ds,hnew.fldnam(ii)); hnew.fldnam(ii) = []; hnew.fldunt(ii) = [];
 
 %exclude sbe35 data not corresponding to real niskins (as set in mfir_01 cruise options)
 [dsam,hsam] = mloadq(otfile2,'sampnum');
 m = ismember(ds.sampnum,dsam.sampnum);
 if sum(m)<length(ds.sampnum)
     warning('excluding sbe35 data; see mfir_01 cruise options for list of niskins on carousel')
-    for fno = 1:length(hnew.fldnam)
-        ds.(hnew.fldnam{fno}) = ds.(hnew.fldnam{fno})(m);
+    for fno = 1:length(hs.fldnam)
+        ds.(hs.fldnam{fno}) = ds.(hs.fldnam{fno})(m);
     end
 end
 

@@ -1,10 +1,10 @@
 m_common; MEXEC_A.mprog = mfilename;
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adding selected variables from extra .cnv to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
 
 root_ctd = mgetdir('M_CTD');
 dataname = ['ctd_' mcruise '_' stn_string];
-scriptname = 'mctd_01'; oopt = 'redoctm'; get_cropt
+opt1 = 'mctd_01'; opt2 = 'redoctm'; get_cropt
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
     otfile = fullfile(root_ctd, [dataname '_raw.nc']);
 else %in some cases, operate on original file (to remove large spikes), then apply align and CTM
@@ -12,7 +12,7 @@ else %in some cases, operate on original file (to remove large spikes), then app
     disp('starting from noctm file')
 end
 
-scriptname = 'mctd_01'; oopt = 'extracnv'; get_cropt
+opt1 = 'mctd_01'; opt2 = 'extracnv'; get_cropt
 [d0, h0] = mloadq(otfile,'/');
 ow = intersect(h0.fldnam,extravars);
 if ~isempty(ow) && MEXEC_G.quiet<=1

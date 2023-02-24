@@ -9,7 +9,7 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-scriptname = 'mout_exch'; oopt = 'woce_expo'; get_cropt
+opt1 = 'outputs'; opt2 = 'exch'; get_cropt
 if ~exist('expocode','var')
     warning('no expocode set in opt_%s.m; skipping', mcruise)
     return
@@ -21,7 +21,6 @@ out.type = 'exch';
 
 %which vars to write
 [vars, out.varsh] = m_exch_vars_list(2);
-scriptname = 'mout_exch'; oopt = 'woce_vars_exclude'; get_cropt
 [~,ia] = setdiff(vars(:,1),vars_exclude_sam);
 out.vars_units = vars(ia,:);
 
@@ -29,9 +28,6 @@ out.vars_units = vars(ia,:);
 out.extras.expocode = expocode;
 out.extras.sect_id = sect_id;
 out.extras.castno = 1;
-
-%header
-scriptname = 'mout_exch'; oopt = 'woce_sam_headstr'; get_cropt
 
 %%%%% write %%%%%
 out.csvpre = fullfile(mgetdir('sum'), sprintf('%s_hy1',expocode));

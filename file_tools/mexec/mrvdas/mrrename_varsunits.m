@@ -147,3 +147,14 @@ rawlist = {
     %     'u12_at1m_uw'
     %     'seaspy_mag_inmag'
     };
+
+%         if strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc211' 'dy146'})
+%             nn.em120.new = {'swath_depth'}; nn.em120.old = {'waterdepth'};
+%             nn.ea600.new = {'depth_uncor'}; nn.ea600.old = {'waterdepth'};
+%             nn.multib.new = {'swath_depth'}; nn.multib.old = {'waterdepth'};
+%             nn.singleb.new = {'depth_uncor'}; nn.singleb.old = {'waterdepth'};
+%         end %after this, apply transducer offset and correction at once in mday_01_cordep
+% 
+%         nn.surfmet.old = {'windspeed_raw';'winddirection_raw'}; nn.surfmet.new = {'relwind_spd_raw';'relwind_dirship_raw'};
+%         nu.surfmet.name = {'relwind_dirship'}; nu.surfmet.unit = {'degrees relative to ship 0 = from bow'};
+

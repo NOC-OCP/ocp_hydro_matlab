@@ -7,7 +7,7 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 root_pos = mgetdir('M_POS');
 root_met = mgetdir(metpre);
 infilen = fullfile(root_pos, ['bst_' mcruise '_01.nc']);
@@ -15,7 +15,7 @@ infilew = fullfile(root_met, [metpre '_' mcruise '_01.nc']);
 otfile1 = fullfile(root_met, [metpre '_' mcruise '_01_true.nc']);
 otfile2 = fullfile(root_met, [metpre '_' mcruise '_01_trueav.nc']);
 
-scriptname = 'ship'; oopt = 'avtime'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'avtime'; get_cropt
 tave_period = round(avmet);
 
 clear dnew hnew

@@ -5,7 +5,7 @@
 %
 % formerly mfir_04
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'pasting CTD data at bottle firing times from fir_%s_%s.nc to sam_%s_all.nc\n',mcruise,stn_string,mcruise); end
 
 root_ctd = mgetdir('M_CTD'); % change working directory

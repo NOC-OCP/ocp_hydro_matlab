@@ -14,7 +14,16 @@ if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file specified in o
 
 % find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');
-scriptname = mfilename; oopt = 'oxy_files'; get_cropt
+ofpat = ['oxy_' mcruise '_*.csv'];
+ofiles = dir(fullfile(root_oxy, ofpat));
+ofiles = struct2cell(ofiles); ofiles = ofiles(1,:)';
+hcpat = {'Niskin' 'Bottle' 'Number'};
+chrows = 1:2;
+chunits = 3;
+opt1 = 'botoxy'; opt2 = 'oxy_files'; get_cropt
+if ~exist('sheets','var')
+    sheets = 1:99;
+end
 if isempty(ofiles)
     warning(['no oxygen data files found in ' root_oxy '; skipping'])
     return
@@ -32,7 +41,20 @@ end
 
 %parse, for instance combining duplicates, or getting information from header
 cellT = 25; %default
-scriptname = mfilename; oopt = 'oxy_parse'; get_cropt
+oxyvarmap = {
+    'statnum',       'cast_number'
+    'position',      'niskin_bottle'
+    'vol_blank',     'blank_titre'
+    'vol_std',       'std_vol'
+    'vol_titre_std', 'standard_titre'
+    'fix_temp',      'fixing_temp'
+    'sample_titre',  'sample_titre'
+    'flag',          'flag'
+    'oxy_bottle'     'bottle_no'
+    'date_titre',    'dnum'
+    'bot_vol_tfix'   'botvol_at_tfix'
+    'conc_o2'        'c_o2_'};
+opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt
 %rename according to lookup table, if supplied
 if ~isempty(oxyvarmap)
     ds_oxy_fn = ds_oxy.Properties.VariableNames;
@@ -41,6 +63,9 @@ if ~isempty(oxyvarmap)
     ds_oxy.Properties.VariableNames = ds_oxy_fn;
 end
 ds_oxy(isnan(ds_oxy.position),:) = [];
+if ~exist('fillstat','var') && sum(isnan(ds_oxy.statnum))>0
+    fillstat = 1; %fill in station numbers on some rows
+end
 
 %check units
 clear oxyunits
@@ -105,7 +130,11 @@ end
 
 %compute concentration if not present
 if sum(strcmp('conc_o2',ds_oxy_fn))==0
-    scriptname = mfilename; oopt = 'oxy_calc'; get_cropt
+                    mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
+                std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
+                sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
+                mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
+opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
     n_o2_reag = mol_o2_reag*vol_reag_tot;
     % molarity (mol/mL) of titrant
     mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);
@@ -124,13 +153,12 @@ ds_oxy.flag((isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2)) & ~isnan(ds_oxy
 
 %now put into structure and output
 clear d hnew
-[d.sampnum, iia, iic] = unique(ds_oxy.sampnum);
-d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
 hnew.dataname = ['oxy_' mcruise '_01'];
 hnew.comment = ['data loaded from ' fullfile(root_oxy, ofpat) ' \n '];
 hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
-
+[d.sampnum, iia, iic] = unique(ds_oxy.sampnum, 'stable');
+d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
 d.botoxya_per_l = ds_oxy.conc_o2(iia);
 d.botoxya_temp = ds_oxy.fix_temp(iia);
 d.botoxya_flag = ds_oxy.flag(iia);
@@ -163,7 +191,25 @@ if ~isempty(iib)
     end
 end
 
-scriptname = mfilename; oopt = 'oxy_flags'; get_cropt
+opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
+
+opt1 = 'check_sams'; get_cropt
+if check_oxy
+    m0 = abs(d.botoxya_per_l-d.botoxyb_per_l)>1;
+    if sum(m0)
+        stns = unique(d.statnum(m0));
+        ds = mloadq(fullfile(mgetdir('ctd'),sprintf('sam_%s_all.nc',mcruise)),'sampnum statnum uoxygen position ');
+        for sno = 1:length(stns)
+            ii = find(d.statnum==stns(sno));
+            [~,~,iis] = intersect(d.sampnum(ii),ds.sampnum,'stable');
+            disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), Niskin'])
+            [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii)]
+            pause
+        end
+        opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
+    end
+    clear ds stns m0
+end
 
 mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 

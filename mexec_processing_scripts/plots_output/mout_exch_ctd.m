@@ -7,9 +7,9 @@
 % from all_ctd_renamelist and write to outfileall rather than outfile (both
 % are set in opt_cruise)***
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 
-scriptname = 'mout_exch'; oopt = 'woce_expo'; get_cropt
+opt1 = 'mout_exch'; opt2 = 'woce_expo'; get_cropt
 if ~exist('expocode','var')
     warning('no expocode set in opt_%s.m; skipping', mcruise)
     return
@@ -21,12 +21,12 @@ out.type = 'exch';
 
 %which vars to write
 [vars, varsh] = m_exch_vars_list(1);
-scriptname = 'mout_exch'; oopt = 'woce_vars_exclude'; get_cropt
+opt1 = 'mout_exch'; opt2 = 'woce_vars_exclude'; get_cropt
 [~,ia] = setdiff(vars(:,1),vars_exclude_ctd);
 out.vars_units = vars(ia,:);
 
 %header
-scriptname = 'mout_exch'; oopt = 'woce_ctd_headstr'; get_cropt
+opt1 = 'mout_exch'; opt2 = 'woce_ctd_headstr'; get_cropt
 out.header = [headstring; sprintf('%s %d', 'NUMBER_HEADERS = ', size(varsh,1)+1)];
 dh.expocode = expocode;
 dh.sect_id = sect_id;

@@ -10,7 +10,8 @@
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 if ~exist('samtype', 'var') && ~exist('samtypes', 'var')
-    scriptname = mfilename; oopt = 'shore_sam_types'; get_cropt
+                   samtypes = {};
+ opt1 = mfilename; opt2 = 'shore_sam_types'; get_cropt
     if ~exist('samtype', 'var') && (~exist('samtypes', 'var') || isempty(samtypes))
         samtype = input('sample type? ','s');
     end
@@ -26,7 +27,10 @@ end
 for stno = 1:length(samtypes)
     samtype = samtypes{stno};
     
-    scriptname = mfilename; oopt = ['sam_ashore_' samtype]; get_cropt
+            do_empty_vars = 0;
+        fillstat = 0;
+        varmap = {};
+opt1 = mfilename; opt2 = ['sam_ashore_' samtype]; get_cropt
     if ~iscell(fnin); fnin = {fnin}; end
     
     %figure out some things about the file(s)

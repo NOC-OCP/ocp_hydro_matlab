@@ -57,7 +57,7 @@ function [sqltext,sqlunits]= mr_make_psql(varargin)
 
 
 m_common
-scriptname = 'mrvdas_ingest'; oopt = 'rvdas_database'; get_cropt
+opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
 table = argot.table;

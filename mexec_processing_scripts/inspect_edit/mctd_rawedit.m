@@ -11,7 +11,7 @@
 %      stn = 16; mctd_rawedit;
 
 m_common; MEXEC_A.mprog = mfilename;
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'calling mplxyed for GUI editing of raw data, saving to ctd_%s_%s_raw_cleaned.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
@@ -47,8 +47,8 @@ else
     pshow0.ncfile.name = otfile;
     pshow0.xlist = 'time';
     pshow0.ylist = ['temp1 temp2 cond1 cond2 press'];
-    scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
-    scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
+    opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
+    opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
     nox = size(oxyvars,1); % bak add
     for no = 1:nox
         pshow0.ylist = [pshow0.ylist ' ' oxyvars{no,1}];

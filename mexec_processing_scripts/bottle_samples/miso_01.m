@@ -8,7 +8,7 @@
 %    Station, Niskin, d13C DIC PDB
 %    or otherwise as specified in opt_cruise file
 
-scriptname = 'miso_01';
+opt1 = 'miso_01';
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 if MEXEC_G.quiet<=1; fprintf(1, 'reading bottle del13C, Del14C, del18O data from .csv files into iso_%s_01.nc',mcruise); end
 
@@ -16,14 +16,14 @@ if MEXEC_G.quiet<=1; fprintf(1, 'reading bottle del13C, Del14C, del18O data from
 root_iso = mgetdir('M_BOT_ISO');
 dataname = ['iso_' mcruise '_01'];
 otfile2 = fullfile(root_iso, dataname);
-scriptname = mfilename; oopt = 'iso_files'; get_cropt
+opt1 = mfilename; opt2 = 'iso_files'; get_cropt
 
 %load data
 if ~iscell(isofiles); isofiles = {isofiles}; end
 [ds_iso, isohead] = load_samdata(isofiles, hcpat, 'chrows', 1, 'chunits', 2);
 
 %parse (rename variables)
-scriptname = mfilename; oopt = 'iso_parse'; get_cropt %***what about file-dependent parsing, like if we have multiple sources of 13c to rename?
+opt1 = mfilename; opt2 = 'iso_parse'; get_cropt %***what about file-dependent parsing, like if we have multiple sources of 13c to rename?
 if ~isempty(isovarmap)
     ds_iso_fn = ds_iso.Properties.VariableNames;
     [~,ia,ib] = intersect(isovarmap(:,2)',ds_iso_fn);
@@ -90,7 +90,7 @@ end
 sg = unique(sg);
 iisg = ismember(statnum, sg);
 
-oopt = 'iso_flags'; get_cropt %additional modifications to flags if required
+opt2 = 'iso_flags'; get_cropt %additional modifications to flags if required
 
 %prepare for writing mstar file
 varnames = {'sampnum';'statnum';'position'};

@@ -20,11 +20,11 @@
 %%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
-scriptname = mfilename; oopt = 'redoctm'; get_cropt
+redoctm = 0; opt1 = mfilename; opt2 = 'redoctm'; get_cropt
 
 root_ctd = mgetdir('M_CTD');
 dataname = ['ctd_' mcruise '_' stn_string];
@@ -35,8 +35,14 @@ else %in some cases, operate on original file (to remove large spikes), then app
     disp('starting from noctm file')
 end
 
-scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt %define shortcasts and ticasts
-scriptname = mfilename; oopt = 'cnvfilename'; get_cropt
+opt1 = 'castpars'; opt2 = 'cast_groups'; get_cropt %define shortcasts and ticasts
+if redoctm
+    cnvfile = sprintf('%s_%03d.cnv', upper(mcruise), stnlocal);
+else
+    cnvfile = sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal);
+end
+cnvfile = fullfile(mgetdir('M_CTD_CNV'),cnvfile);
+opt1 = mfilename; opt2 = 'cnvfilename'; get_cropt
 if ~exist(cnvfile,'file')
     warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
     pause
@@ -86,7 +92,35 @@ mheadr
 %%%%% rename variables, and add units where necessary %%%%%
 
 h = m_read_header(otfile);
-scriptname = mfilename; oopt = 'ctdvars'; get_cropt
+                ctdvarmap = {'prDM','press','dbar'
+                    't090C','temp1','degc90'
+                    't190C','temp2','degc90'
+                    'altM','altimeter','meters'
+                    'ptempC','pressure_temp','degc90'
+                    'timeS','time','seconds'
+                    'scan','scan','number'
+                    'pumps','pumps','pump_status'
+                    'latitude','latitude','degrees'
+                    'longitude','longitude','degrees'
+                    'c0mS_slash_cm','cond1','mS/cm'
+                    'c1mS_slash_cm','cond2','mS/cm'
+                    'sbeox0V','sbeoxyV1','volts'
+                    'sbox0Mm_slash_Kg','oxygen_sbe1','umol/kg'
+                    'sbeox1V','sbeoxyV2','volts'
+                    'sbox1Mm_slash_Kg','oxygen_sbe2','umol/kg'
+                    'T2_minus_T190C','t2_minus_t1','degc90'
+                    'C2_minus_C1mS_slash_cm','c2_minus_c1','mS/cm'
+                    'flECO_minus_AFL','fluor','mg/m^3'
+                    'flC','fluor','ug/l'
+                    'wetCDOM','fluor_cdom','mg/m^3'
+                    'xmiss','transmittance','percent'
+                    'CStarTr0','transmittance','percent'
+                    'transmittance','transmittance','percent'
+                    'CStarAt0','attenuation','1/m'
+                    'turbWETbb0','turbidity','m^-1/sr'
+                    'par','par_up','umol photons/m^2/sec'
+                    'par1','par_dn','umol photons/m^2/sec'};
+opt1 = mfilename; opt2 = 'ctdvars'; get_cropt
 names_new = h.fldnam; 
 for no = 1:length(h.fldnam)
     iis = find(strcmp(h.fldnam{no},ctdvarmap(:,1)));
@@ -126,7 +160,7 @@ for no = 1:length(h.fldnam)
 end
 
 % create NaN variables that are in mcvars_list but not present for this station
-scriptname = mfilename; oopt = 'absentvars'; get_cropt
+absentvars = {}; opt1 = mfilename; opt2 = 'absentvars'; get_cropt
 if ~isempty(absentvars)
     MEXEC_A.MARGS_IN = {otfile; 'y'};
     for kabs = 1:length(absentvars)
@@ -183,7 +217,7 @@ system(['chmod 444 ' m_add_nc(otfile)]);
 % in special cases, read extra/new variables from a different set of files
 % (e.g. if a variable was mistakenly not exported in initial conversion to
 % .cnv, and has been exported on its own later); merge on scan
-scriptname = mfilename; oopt = 'extracnv'; get_cropt
+extracnv = {}; extravars = {}; opt1 = mfilename; opt2 = 'extracnv'; get_cropt
 if ~isempty(extracnv) && ~isempty(extravars)
     mctd_extra_cnv
 end

@@ -1,5 +1,5 @@
-function status = mday_01(streamname,mstarprefix,root_out,day,year)
-% function status = mday_01(streamname,mstarprefix,root_out,day,year)
+function status = mday_00_load(streamname,mstarprefix,root_out,day,year)
+% function status = mday_00_load(streamname,mstarprefix,root_out,day,year)
 %
 % use mdatapup to grab a day of data from a techsas NetCDF file or SCS file
 %
@@ -10,13 +10,13 @@ function status = mday_01(streamname,mstarprefix,root_out,day,year)
 % numeric: year is the required year in which daynum falls. If not set it
 %            is current year obtained from the matlab 'datevec(now)' command
 %
-% eg mday_01('gps_nmea','gps',33)
+% eg mday_00_load('gps_nmea','gps',33)
 % or
-% eg mday_01('gps_nmea','gps',33,09)
+% eg mday_00_load('gps_nmea','gps',33,09)
 % or
-% eg mday_01('gps_nmea','gps',33,2009)
+% eg mday_00_load('gps_nmea','gps',33,2009)
 % or
-% eg mday_01('gps_nmea','gps','33','2009')
+% eg mday_00_load('gps_nmea','gps','33','2009')
 %
 
 m_common
@@ -37,9 +37,7 @@ end
 switch MEXEC_G.Mshipdatasystem
     
     case 'rvdas'
-        
-        % function mrrvdas2mstar(table, dn1, dn2, otfile, dataname)
-        
+                
         table = mstarprefix;
         if contains(mstarprefix,'not_rvdas')
             status = 2;

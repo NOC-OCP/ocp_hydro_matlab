@@ -5,7 +5,7 @@
 %
 % formerly mwin_03
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adding winch data from bottle firing times to fir_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
@@ -46,7 +46,7 @@ if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     clear d h
     d.utime = df.utime;
     d.wireout = interp1(dwin.time(iig), dwin.(cabvar)(iig), df.utime);
-    scriptname = mfilename; oopt = 'winch_fix'; get_cropt
+    opt1 = mfilename; opt2 = 'winch_fix'; get_cropt
     if sum(~isnan(d.wireout))>0
         h.fldnam = {'utime' 'wireout'}; h.fldunt = {'seconds' 'metres'};
         h.dataname = hwin.dataname; h.mstar_string = hwin.mstar_string;

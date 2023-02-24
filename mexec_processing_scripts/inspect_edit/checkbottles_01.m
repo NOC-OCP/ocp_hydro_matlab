@@ -59,7 +59,7 @@ if nargin >= 3
         load(fngrid,'mgrid'); dg = mgrid;
         clear hg; hg.fldnam = dg.vars; hg.fldunt = dg.unts;
         dg = rmfield(dg,{'vars' 'unts'});
-        scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
+        opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
         if isfield(castopts, 'calstr')
             calstr = select_calibrations(castopts.docal, castopts.calstr);
             if ~isempty(calstr)

@@ -5,7 +5,7 @@ function c = set_clev_col_jc159(c)
 % the defaults are what I figured out from the WOCE atlases on jc159
 
 m_common
-scriptname = 'msec_plot_contours_set_clev_col';
+opt1 = 'msec_plot_contours_set_clev_col';
 
 
 z = c.zlist; % variable to be plotted
@@ -27,7 +27,7 @@ switch z
             250 066 075
             251 000 038
             ]/255;
-        oopt = 'potemp'; get_cropt % possibly change contour levels, boundaries or colours
+        opt2 = 'potemp'; get_cropt % possibly change contour levels, boundaries or colours
         
     case 'psal'
         c.clev = [ 34.3:.1:35.5 35.5:.5:38 34.88 34.96]; 
@@ -45,7 +45,7 @@ switch z
             254 182 064
             255 158 015
             ]/255;
-        oopt = 'psal'; get_cropt % possibly change contour levels
+        opt2 = 'psal'; get_cropt % possibly change contour levels
         
     case {'oxygen' 'botoxy'}
         c.clev = [150:10:300];
@@ -63,7 +63,7 @@ switch z
             188 117 183
             157 058 153
             ]/255;
-        oopt = 'oxygen'; get_cropt % possibly change contour levels
+        opt2 = 'oxygen'; get_cropt % possibly change contour levels
         
     case {'fluor' }
         c.clev = [0:.05:.5];
@@ -76,7 +76,7 @@ switch z
             188 117 183
             157 058 153
             ]/255;
-        oopt = 'fluor'; get_cropt % possibly change contour levels
+        opt2 = 'fluor'; get_cropt % possibly change contour levels
         
     case {'silc' 'silc_per_kg'}
         c.clev = [ 1 2 5 10:10:70 70:20:130]; c.clev = unique(c.clev);
@@ -93,7 +93,7 @@ switch z
             255 076 076
             255 000 000
             ]/255;
-        oopt = 'silc'; get_cropt % possibly change contour levels
+        opt2 = 'silc'; get_cropt % possibly change contour levels
         
     case {'phos' 'phos_per_kg'}
         c.clev = [0:.2:3]; c.clev = unique(c.clev);
@@ -117,7 +117,7 @@ switch z
             110 255 110
             000 255 000
             ]/255;
-        oopt = 'phos'; get_cropt % possibly change contour levels
+        opt2 = 'phos'; get_cropt % possibly change contour levels
         
     case {'totnit' 'totnit_per_kg'}
         c.clev = [0:2:40]; c.clev = unique(c.clev);
@@ -151,7 +151,7 @@ switch z
              157 058 153
              129 001 126
              ]/255;
-        oopt = 'totnit'; get_cropt % possibly change contour levels
+        opt2 = 'totnit'; get_cropt % possibly change contour levels
         
         
     case 'dic'
@@ -184,7 +184,7 @@ switch z
             255 255 102
             255 255 000
             ]/255;
-        oopt = 'dic'; get_cropt % possibly change contour levels
+        opt2 = 'dic'; get_cropt % possibly change contour levels
         
         
     case 'alk'
@@ -198,7 +198,7 @@ switch z
             254 207 122
             254 182 064
             ]/255;
-        oopt = 'alk'; get_cropt % possibly change contour levels
+        opt2 = 'alk'; get_cropt % possibly change contour levels
         
         
         
@@ -214,7 +214,7 @@ switch z
             248 129 191
             244 068 159
             ]/255;
-        oopt = 'cfc11'; get_cropt % possibly change contour levels
+        opt2 = 'cfc11'; get_cropt % possibly change contour levels
         
     case 'cfc12'
         c.clev = [ 0.01 0.02 0:0.05:.2 .5 1 1.25 1.5:.1:2 2:.2:4]; c.clev = unique(c.clev);
@@ -228,7 +228,7 @@ switch z
             248 129 191
             244 068 159
             ]/255;
-        oopt = 'cfc12'; get_cropt % possibly change contour levels
+        opt2 = 'cfc12'; get_cropt % possibly change contour levels
         
 
     case 'f113'
@@ -243,7 +243,7 @@ switch z
             248 129 191
             244 068 159
             ]/255;
-         oopt = 'f113'; get_cropt % possibly change contour levels
+         opt2 = 'f113'; get_cropt % possibly change contour levels
        
     case 'ccl4'
         c.clev = [0.01 0.02 0:0.05:.25 .5 1:.5:5 ]; c.clev = unique(c.clev);
@@ -257,7 +257,7 @@ switch z
             248 129 191
             244 068 159
             ]/255;
-        oopt = 'ccl4'; get_cropt % possibly change contour levels
+        opt2 = 'ccl4'; get_cropt % possibly change contour levels
         
     case 'sf6'
         c.clev = [0 .01 .02 .05 .1:.05:.3 .2:.2:2 .7 ]; c.clev = unique(c.clev);
@@ -271,7 +271,7 @@ switch z
             248 129 191
             244 068 159
             ]/255;
-        oopt = 'sf6'; get_cropt % possibly change contour levels
+        opt2 = 'sf6'; get_cropt % possibly change contour levels
 
     otherwise
         fprintf(2,'%s\n','Must set a recognised parameter in set_clev_col');

@@ -7,6 +7,18 @@ switch scriptname
         end
         
         
+    case 'ship'
+        switch opt2
+            case 'datasys_best'
+                                    default_navstream = 'pospmv';
+                        default_hedstream = 'attpmv';
+case 'rvdas_database'
+                        RVDAS.machine = '192.168.62.12';
+                        RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/dymeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
+                        RVDAS.user = 'rvdas';
+                        RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+        end
+
     case 'castpars'
         switch oopt
             case 'nnisk'

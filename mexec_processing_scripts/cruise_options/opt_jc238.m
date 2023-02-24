@@ -22,6 +22,9 @@ switch scriptname
         
     case 'ship'
         switch oopt
+            case 'datasys_best'
+                        default_navstream = 'pospmv';
+                        default_hedstream = 'attpmv';
             case 'default_nav'
                 MEXEC_G.default_hedstream = 'attsea'; %posmv was 4 degrees out most of the trip
         end
@@ -215,6 +218,15 @@ switch scriptname
                 vars_exclude_sam = {'uph'};
         end
 
+    case 'mrvdas_ingest'
+        switch opt2
+            case 'rvdas_database'
+                RVDAS.machine = 'rvdas.cook.local';
+                        RVDAS.jsondir = ['/home/rvdas/ingester/sensorfiles/jcmeta/' MEXEC_G.MSCRIPT_CRUISE_STRING];
+                        RVDAS.user = 'rvdas';
+                        RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+        end
+        
                 %%%%%%%%%% mday_01_fcal %%%%%%%%%%
     case 'mday_01_fcal'
         switch oopt

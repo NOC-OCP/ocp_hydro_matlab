@@ -6,7 +6,7 @@
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %start with the original data in the same directory
-scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 abbrev = default_navstream;
 headpre = default_hedstream;
 if strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING(1:2),'di')
@@ -33,7 +33,7 @@ if MEXEC_G.quiet<=1
 end
 
 
-scriptname = 'ship'; oopt = 'avtime'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'avtime'; get_cropt
 tave_period = round(avnav); % seconds
 tav2 = round(tave_period/2);
 
@@ -41,13 +41,16 @@ tav2 = round(tave_period/2);
 %%%%% create smoothed nav file from 1-Hz positions %%%%%
 
 [d, h] = mloadq(infile,'/');
+timvar = 'time'; %dnum?
+d = m_commontime(d, timvar, h, MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
+h.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 tg = (floor(min(d.time)/86400)*86400 - tav2):tave_period:(ceil(max(d.time)/86400)*86400+1);
 clear opts
 opts.ignore_nan = 1;
 opts.grid_extrap = [0 0];
 opts.postfill = 30;
-dg = grid_profile(d, 'time', tg, 'lfitbin', opts);
-h.comment = [h.comment '\n averaged to by finding midpoint of linear fit in bins of width ' num2str(tave_period)];
+dg = grid_profile(d, 'time', tg, 'medbin', opts);
+h.comment = [h.comment '\n median over bins of width ' num2str(tave_period)];
 mfsave(avfile, dg, h);
 
 
@@ -76,15 +79,17 @@ h.comment = [h. comment '\n speed, course over ground, and distance run calculat
 headvar = munderway_varname('headvar', hh.fldnam, 1, 's');
 [dh.dum_e, dh.dum_n] = uvsd(ones(size(dh.(headvar))), dh.(headvar), 'sduv');
 dh = rmfield(dh,headvar);
+dh = m_commontime(dh, timvar, hh, MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
+hh.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 tg = (floor(min(d.time)/86400)*86400 - tav2):tave_period:1e10;
 clear opts
 opts.ignore_nan = 1;
 opts.grid_extrap = [0 0];
-dgh = grid_profile(dh, 'time', tg, 'lfitbin', opts);
+dgh = grid_profile(dh, 'time', tg, 'medbin', opts);
 %convert back to heading
 [~, dgh.(headvar)] = uvsd(dgh.dum_e, dgh.dum_n, 'uvsd');
 dgh = rmfield(dgh, {'dum_e'; 'dum_n'});
-hh.comment = [hh.comment '\n averaged to by finding midpoint of linear fit in bins of width ' num2str(tave_period)];
+hh.comment = [hh.comment '\n median over bins of width ' num2str(tave_period)];
 mfsave(avfileh, dgh, hh);
 
 

@@ -18,7 +18,7 @@ function nsubs = checkbottles_02(stn, varargin)
 % requires a gridded section file (mstar .mat)
 
 m_common
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 
 %subplots will be psal (and botpsal), oxygen (and botoxygen), and potemp (and botoxytemp and sbe35temp [if avail]),
 %as well as the variable input names
@@ -39,18 +39,17 @@ root_ctd = mgetdir('M_CTD');
 
 fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal']);
 fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
-scriptname = 'msec_grid'; oopt = 'sections_to_grid'; get_cropt
+opt1 = 'msec_grid'; opt2 = 'sections_to_grid'; get_cropt
 if exist('sections')
     section = sections{1}; 
-    scriptname = 'msec_grid'; oopt = 'sec_stns_grids'; get_cropt
-    stnlist = intersect(stnlocal-2:stnlocal+2,kstns);
-    if length(stnlist)<5
-        warning('fewer than 4 neighbouring stations in section list; skipping')
-        return
-    end
+else
+    section = 'profiles_only';
 end
-if ~exist('section')
-    error('checkbottles_02 requires a gridded section file')
+opt1 = 'outputs'; opt2 = 'grid'; get_cropt
+stnlist = intersect(stnlocal-2:stnlocal+2,kstns);
+if length(stnlist)<5
+    warning('fewer than 4 neighbouring stations in section list; skipping')
+    return
 end
 fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section '.mat']);
 fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' sprintf('%03d',stnlocal)]);
@@ -97,7 +96,8 @@ if ~isfield(dsam, 'sbe35temp')
 end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
-scriptname = 'mctd_02'; oopt = 'ctd_cals'; get_cropt
+                dotcal = 0; doccal = 0; doocal = 0; %default is not to apply calibrations
+opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
 if isfield(castopts,'calstr')
     if exist('testcal','var')
         castopts.docal = testcal;

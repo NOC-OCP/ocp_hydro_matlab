@@ -26,13 +26,14 @@ fn = dir(fullfile(mgetdir('M_CTD'), ['ctd_' mcruise '_*_raw*.nc']));
 stns = struct2table(fn).name; 
 stns = unique(cellfun(@(x) str2double(x(length(mcruise)+[6:8])), stns));
 %which stations need depths
-scriptname = mfilename; oopt = 'depth_recalc'; get_cropt
+recalcdepth_stns = []; opt1 = mfilename; opt2 = 'depth_recalc'; get_cropt
 if ~isempty(recalcdepth_stns)
     stns = intersect(stns, recalcdepth_stns);
 end
 
 %preferred method(s) for calculating depths
-scriptname = mfilename; oopt = 'depth_source'; get_cropt
+                depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
+opt1 = mfilename; opt2 = 'depth_source'; get_cropt
 
 %override with optional inputs if specified
 for no = 1:length(varargin)
@@ -65,7 +66,9 @@ for sno = 1:length(depth_source)
 end
 
 %finally look to cruise options for any changes
-scriptname = mfilename; oopt = 'bestdeps'; get_cropt
+                replacedeps = [];
+                stnmiss = [];
+opt1 = mfilename; opt2 = 'bestdeps'; get_cropt
 if ~isempty(stnmiss)
     bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
 end

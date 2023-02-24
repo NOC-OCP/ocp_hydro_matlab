@@ -80,8 +80,7 @@ mt = struct2table(mt);
 dnames = mt.dir;
 
 
-scriptname = 'mrvdas_ingest'; oopt = 'use_cruise_views'; get_cropt
-scriptname = 'mrvdas_ingest'; oopt = 'rvdas_nameform'; get_cropt
+opt1 = 'ship'; opt2 = 'rvdas_form'; get_cropt
 if use_cruise_views
     n0 = length(view_name)+2; %assume it's followed by underscore
 else

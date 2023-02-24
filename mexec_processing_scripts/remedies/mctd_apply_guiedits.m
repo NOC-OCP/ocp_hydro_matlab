@@ -4,7 +4,7 @@
 %all edits to a given station file (i.e. from multiple mplxyed_* files
 %generated at multiple times/passes of the mctd_rawedit GUI)
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 
 root_ctd = mgetdir('CTD');
 edfiles = dir(fullfile(root_ctd,'editlogs',['mplxyed_*_ctd_' mcruise '_' stn_string]));

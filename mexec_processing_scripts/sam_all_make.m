@@ -9,7 +9,9 @@
 %   'shore' to run msam_ashore_flag
 
 if ~exist('sam_all_restart','var')
-    scriptname = mfilename; oopt = 'sam_all_restart_steps'; get_cropt
+                    sam_all_restart = {'sam', 'sbe35', 'sal', 'oxy'};
+                klist = [];
+opt1 = mfilename; opt2 = 'sam_all_restart_steps'; get_cropt
 end
 
 root_ctd = mgetdir('M_CTD'); % change working directory

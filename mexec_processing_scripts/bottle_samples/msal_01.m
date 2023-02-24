@@ -26,13 +26,16 @@
 m_common
 if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
 
-std_samp_range = [999000 1e7]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
+std_samp_range = [999000 1e6]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
 sub_samp_range = [998000 998999]; %substandards
 %ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
 
 % find list of files and information on variables
 root_sal = mgetdir('M_BOT_SAL');
-scriptname = mfilename; oopt = 'sal_files'; get_cropt %list of files to load
+salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); salfiles = {salfiles.name};
+hcpat = {'sampnum'}; chrows = 1; chunits = [];
+sheets = 1; iopts = struct([]);
+opt1 = 'botpsal'; opt2 = 'sal_files'; get_cropt %list of files to load
 if isempty(salfiles)
     warning(['no salinity data files found in ' root_sal '; skipping']);
     return
@@ -52,7 +55,9 @@ if isempty(ds_sal)
 end
 
 %parse, for instance getting information from header
-scriptname = mfilename; oopt = 'sal_parse'; get_cropt 
+                datform = 'dd/mm/yyyy';
+                timform = 'HH:MM:SS';
+opt1 = 'botpsal'; opt2 = 'sal_parse'; get_cropt 
 
 %rename
 clear samevars
@@ -125,23 +130,33 @@ end
 if ~ismember('sample_4',fn)
     ds_sal.sample_4 = NaN+ds_sal.sample_1;
 end
-scriptname = mfilename; oopt = 'sal_flags'; get_cropt
-ds_sal0 = ds_sal;
+
+%shift tsg sampnum times if using >0 method
+ii = find(ds_sal.sampnum>1000e8);
+ds_sal.sampnum(ii) = ds_sal.sampnum(ii)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
+
+%edits
+reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
+opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
 if reapply_saledits
     [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
 end
+
 ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4],2);
-%optionally inspect readings
-scriptname = mfilename; oopt = 'sal_sample_inspect'; get_cropt
-if plotss
-    %standards and substandards
+
+%inspect for new edits
+opt1 = 'check_sams'; get_cropt
+if check_sal
+    %standards and substandards (999NNN and 998NNN): plot together
     iis = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<=std_samp_range(2));
     iis = [iis; find(ds_sal.sampnum>=sub_samp_range(1) & ds_sal.sampnum<=sub_samp_range(2))];
     iis_all = {iis};
-    %stations
-    n = max(floor(ds_sal.sampnum(ds_sal.sampnum<=30000)/100));
-    for no = 1:n
-        iis_all{no+1} = find(floor(ds_sal.sampnum/100)==no);
+    %regular stations (including test casts)
+    maxstsam = 99936;
+    stns = check_sal:max(floor(ds_sal.sampnum(ds_sal.sampnum<=maxstsam)/100));
+    n = 1;
+    for no = stns
+        iis_all{n+1} = find(floor(ds_sal.sampnum/100)==no); n = n+1;
     end
     %underway option 1
     iis = find(ds_sal.sampnum>std_samp_range(2));
@@ -150,7 +165,7 @@ if plotss
     iis = find(ds_sal.sampnum<0);
     if ~isempty(iis); iis_all{n+1} = iis; n = n+1; end
     %everything else
-    iis = find(ds_sal.sampnum>30000 & ds_sal.sampnum<sub_samp_range(1));
+    iis = find(ds_sal.sampnum>maxstsam & ds_sal.sampnum<sub_samp_range(1));
     if ~isempty(iis); iis_all{n+1} = iis; n = n+1; end
     d = struct();
     d.sampnum = ds_sal.sampnum; 
@@ -165,16 +180,29 @@ if plotss
     bads = gui_editpoints(d,'sampnum','edfilepat',edfile,'markers',markers,'lines',lines,'xgroups',iis_all);
     clear d
 end
-if ~isempty(bads)
+if ~isempty(bads) %new edits to apply
     [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
-    a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
-    ds_sal.runavg = m_nanmean(a,2);
 end
-ds_sal.flag(sum(isnan(a),2)>1) = max(ds_sal.flag(sum(isnan(a),2)>1),3);
+%recalculate mean
+a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
+ds_sal.runavg = m_nanmean(a,2);
+%flag based on stdev and number of remaining points
+s3 = 3e-5; s4 = 5e-5;
+opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+an = sum(~isnan(a),2);
+ds_sal.flag(an==2) = max(ds_sal.flag(an==2),3);
+ds_sal.flag(an==1) = 4;
+as = m_nanstd(a,2);
+ds_sal.flag(as>s3) = max(ds_sal.flag(as>s3),3);
+ds_sal.flag(as>s4) = 4;
+
+%609 619 620
 
 %%%%%% standards offsets %%%%%%
 
-scriptname = mfilename; oopt = 'sal_calc'; get_cropt
+sal_off = []; sal_off_base = 'sampnum_run'; sal_adj_comment = '';
+opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
+
 fn = ds_sal.Properties.VariableNames;
 if ~sum(strcmp('cellt',fn)) || sum(isfinite(ds_sal.cellt))==0
     ds_sal.cellt = repmat(cellT,size(ds_sal,1),1);
@@ -316,7 +344,7 @@ end
 
 dataname = ['sal_' mcruise '_01'];
 salfile = fullfile(root_sal, [dataname '.nc']);
-scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 tsgfile = fullfile(root_sal, ['tsgsal_' mcruise '_all.nc']);
 
 %select the variables we want to save
@@ -348,9 +376,11 @@ title('CTD'); xlabel('sampnum'); legend('sal', 'sal adj')
 %write some fields for CTD samples to sam_ file
 msal_to_sam
 
-%get TSG samples, figure out times: either -dddhhmmss (where ddd is
-%year-day starting at 1), or yyyymmddhhmmss 
-iiu = find(d.sampnum<0 | d.sampnum>=1e7);
+%get TSG samples, figure out times: either -dddhhmm (where ddd is
+%year-day starting at 1), or yyyymmddhhmm, or mmddhhmm
+ii = find(d.sampnum>=1e6 & d.sampnum<1e7);
+d.sampnum(ii) = d.sampnum(ii) + MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;  
+iiu = find(d.sampnum<0 | d.sampnum>=1e6);
 if ~isempty(iiu)
 
     fnd = fieldnames(d);
@@ -358,7 +388,21 @@ if ~isempty(iiu)
         dsu.(fnd{no}) = d.(fnd{no})(iiu,:);
     end
 
-    scriptname = mfilename; oopt = 'tsg_sampnum'; get_cropt
+    tsg.sampnum = dsu.sampnum;
+    tsg.dnum = NaN+zeros(size(tsg.sampnum));
+    ii = find(tsg.sampnum>1e7);
+    if ~isempty(ii)
+        tsg.dnum(ii) = datenum(num2str(tsg.sampnum(ii)),'yyyymmddHHMM');
+    end
+    ii = find(tsg.sampnum<0);
+    if ~isempty(ii)
+        s = num2str(-tsg.sampnum(ii));
+        jjj = str2num(s(:,1:3));
+        HH = str2num(s(:,4:5));
+        MM = str2num(s(:,6:7));
+        tsg.dnum(ii) = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1) + jjj-1 + (HH+MM/60)/24;
+    end
+    opt1 = 'botpsal'; opt2 = 'tsg_sampnum'; get_cropt
     [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
     dsu.time = NaN+dsu.sampnum;
     dsu.time(ia) = 86400*(tsg.dnum(ib)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
@@ -377,6 +421,6 @@ if ~isempty(iiu)
     figure(10); subplot(224)
     x = dsu.time/86400+1;
     plot(x,dsu.salinity,'o',x,dsu.salinity_adj,'s')
-    title('TSG'); xlabel('yearday'); 
+    title('TSG'); xlabel('yearday');
 
 end

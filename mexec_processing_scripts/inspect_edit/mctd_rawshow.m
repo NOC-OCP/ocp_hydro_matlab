@@ -3,7 +3,7 @@
 % Use: mctd_rawshow        and then respond with station number, or for station 16
 %      stn = 16; mctd_rawshow;
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'plotting 24 hz and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
 
 % resolve root directories for various file types
@@ -27,7 +27,7 @@ dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
 dn_end = datenum(hdcs.data_time_origin)+dcs_te/86400;
 startdc = datevec(dn_start);
 stopdc = datevec(dn_end);
-scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
+opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
 if oxy_end
     stopdco = stopdc; 
     stopdco = datevec(datenum(stopdc)-oxy_align/3600/24);
@@ -35,7 +35,7 @@ end
 
 close all
 
-scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt; nox = size(oxyvars,1);
+opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt; nox = size(oxyvars,1);
 
 % 1 hz file, so we can see if any small spikes survive into final data for
 % key variables

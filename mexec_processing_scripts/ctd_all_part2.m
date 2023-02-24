@@ -25,8 +25,9 @@ if exist(m_add_nc(blotfile),'file')
 end
 
 %calculate and apply depths
-stations_to_reload = stnlocal; station_summary
+station_summary(stnlocal)
 stn = stnlocal; mdep_01
+get_sensor_groups(stnlocal)
 
 if 0
     %output to csv files
@@ -35,4 +36,4 @@ mout_exch_sam
 end
 
 %and sync
-scriptname = 'batchactions'; oopt = 'output_for_others'; get_cropt
+opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt

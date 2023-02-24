@@ -40,7 +40,8 @@ root_co2 = mgetdir('M_BOT_CO2');
 root_ctd = mgetdir('M_CTD');
 
 % Set the name of the input file, and load into structure indata
-scriptname = mfilename; oopt = 'infile'; get_cropt
+                input_file_name = fullfile(root_co2, ['co2_' mcruise '_01.mat']);
+opt1 = mfilename; opt2 = 'infile'; get_cropt
 if ~exist('indata','var'); indata = load(input_file_name); end
 
 % Set up the output file name
@@ -49,7 +50,13 @@ dataname = [prefix1 '01'];
 otfile = fullfile(root_co2, [prefix1 '01']);
 
 % standardise the field names into structure data
-scriptname = mfilename; oopt = 'varnames'; get_cropt
+                varnames = {'alk' 'TA'
+                    'alk_flag' 'TAflag'
+                    'dic' 'DIC'
+                    'dic_flag' 'DICflag'
+                    'sample_id' 'SAMPLE'
+                    };
+opt1 = mfilename; opt2 = 'varnames'; get_cropt
 for no = 1:size(varnames,1)
    indata = setfield(indata, varnames{no,1}, getfield(indata, varnames{no,2}));
 end
@@ -95,7 +102,7 @@ d.alk_flag = 9+zeros(size(sampnum)); d.dic_flag = d.alk_flag;
 %average duplicates according to flags
 d = sam_dupl(indata, {'alk' 'dic'}, 'good');
 
-scriptname = mfilename; oopt = 'flags'; get_cropt
+opt1 = mfilename; opt2 = 'flags'; get_cropt
 
 %and check for flags matching NaNs
 d = hdata_flagnan(d);

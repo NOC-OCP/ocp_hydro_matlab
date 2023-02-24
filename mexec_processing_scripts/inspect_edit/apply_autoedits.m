@@ -2,8 +2,7 @@ function [d, comment] = apply_autoedits(d, castopts)
 % function [d, comment] = apply_autoedits(d, castopts)
 % apply edits specified in castops structure to data in structure d
 % 
-% see setdef_cropt_cast mctd_02 case and setdef_cropt_uway
-% mtsg_medav_clean_cal case for information on castopts 
+% see mctd_02 and mday_01_clean_av cases for information on castopts
 % 
 
 comment = [];
@@ -33,9 +32,6 @@ end
 if isfield(castopts,'rangelim')
     fn = fieldnames(castopts.rangelim);
     for no = 1:length(fn)
-        if strncmp(fn{no},'temp',4)
-            warning('editing temperature in mctd_02 is risky; are you sure spikes are not large enough to need to restart mctd_01 with redoctm?')
-        end
         r = castopts.rangelim.(fn{no});
         iir = find(d.(fn{no})<r(1) | d.(fn{no})>r(2));
         if ~isempty(iir)

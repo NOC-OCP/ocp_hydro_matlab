@@ -21,9 +21,6 @@ if ~exist('days','var')
     days = floor(now-datenum(year,1,1)); %default: yesterday
 end
 
-if ~exist('restart_uway_append','var'); restart_uway_append = 0; end
-if restart_uway_append; warning('will delete appended file and start from %d; this is probably not necessary as mday_02 merges on time',days(1)); end
-
 root_u = MEXEC_G.mexec_data_root;
 
 %%%%% get list of underway streams to process %%%%%
@@ -32,63 +29,48 @@ uway_set_streams
 %%%%% loop through processing steps for list of days %%%%%
 
 %which variables to merge from one file into another
-scriptname = mfilename; oopt = 'comb_uvars'; get_cropt 
+combvars = {}; %***
+opt1 = 'uway_proc'; opt2 = 'comb_uvars'; get_cropt 
 
 
 for daynumber = days
-    daystr = sprintf('%03d', daynumber);
-
     loadstatus = zeros(1,length(shortnames));
     for sno = 1:length(shortnames)
-
         if loadstatus(sno)==0
             %load
             try
-                loadstatus(sno) = mday_01(streamnames{sno}, shortnames{sno}, udirs{sno}, daynumber, year);
+                loadstatus(sno) = mday_00_load(streamnames{sno}, shortnames{sno}, udirs{sno}, daynumber, year);
             catch
                 loadstatus(sno) = 1;
                 keyboard
             end
             if loadstatus(sno)==2 && strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
-                fprintf(1,'or is in m_udirs.m but not in mrtables_from_json.m (rerun m_setudir and m_setup?),\n')
-                warning('enter to continue skipping this stream, or Ctrl-C to quit');
+                warning('enter to continue, skipping this stream, or Ctrl-C to quit');
                 pause
                 continue
             end
-
-            %apply additional processing and cleaning (and renaming) for some streams
+            %apply additional processing and cleaning for some
+            %streams/variables, appending/merging edited data to _01 file
             if loadstatus(sno)==0
-                mday_01_clean(shortnames{sno}, udirs{sno}, daynumber);
+                mday_01_clean_append(shortnames{sno}, udirs{sno}, daynumber);
             end
         end
-
-    end
-
-end
-
-%edit bathymetry files
-if sum(strcmp('bathy', umtypes))
-    for daynumber = days
-        daystr = sprintf('%03d',daynumber);
-        mbathy_edit_av
     end
 end
- 
 
 shortnames(loadstatus==1) = [];
 streamnames(loadstatus==1) = [];
 udirs(loadstatus==1) = [];
 
-%append to _01 files
-%ii = find(strcmp('singleb',shortnames) | strcmp('multib',shortnames));
-ii = 1:length(shortnames);
-m_uway_append(shortnames(ii), udirs(ii), days, restart_uway_append)
-clear restart_uway_append
+% run scripts to average, edit, and combine data
 
-%%%%% further processing %%%%%
-
+%combine best nav and heading into bst_ file
 mnav_best %get best nav stream into bst_ file
 
+%combine wind with bestnav to get truewind
+mwind_true
+
+%edit (and calibrate) tsg; combine tsg and surfmet in some cases
 try
     mtsg_medav_clean_cal
 catch
@@ -100,4 +82,8 @@ if sum(strcmp('tsgsurfmet', umtypes))
     mtsgsurfmet_merge
 end
 
-mwind_true % combine nav and met to get truewind, in surfmet file
+%edit bathymetry (uses bestnav)
+
+
+% make plots
+%***

@@ -12,15 +12,29 @@ cdir = pwd;
 m_common; mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 clear cfg
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
-scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt
-scriptname = 'ladcp'; oopt = 'ladcp_castpars'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'cast_groups'; get_cropt
+cfg.stnstr = stn_string;
+clear p
+p.cruise_id = mcruise;
+p.ladcp_station = stnlocal;
+if ismember(stnlocal,shortcasts)
+    p.btrk_mode = 0;
+    p.getdepth = 1;
+else
+    p.btrk_mode = 2;
+    %p.btrk_ts = 30;
+end
+p.magdec_source = 1;
+%p.edit_mask_dn_bins = 1;
+%p.edit_mask_up_bins = 1;
+p.orig = 0; % save original data or not
+isul = 1;
 cfg.p = p;
-cfg.rawdir = fullfile(MEXEC_G.mexec_data_root,'ladcp','ix','raw',cfg.stnstr);
-cfg.pdir_root = fullfile(MEXEC_G.mexec_data_root,'ladcp','ix');
-scriptname = 'ladcp'; oopt = 'is_uplooker'; get_cropt
-scriptname = 'ladcp'; oopt = 'ctd_1hz_format'; get_cropt
-scriptname = 'ladcp'; oopt = 'sadcp_file'; get_cropt
+cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
+cfg.rawdir = fullfile(cfg.pdir_root,'raw',cfg.stnstr);
+opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
+opt1 = 'ladcp_proc'; get_cropt
 cfg.f = f;
 dopause = 0;
 stn = stnlocal;
@@ -39,9 +53,9 @@ if isul
         end
     end
     if exist(infileu,'file')
-        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); 
+        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg);
         if dopause
-            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
             pause
         end
     else
@@ -60,9 +74,9 @@ if exist(infiled,'file')
 
     %DL
     try
-        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); 
+        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
         if dopause
-            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
             pause
         end
         dlalone = 1;
@@ -75,16 +89,16 @@ if exist(infiled,'file')
             throw(me)
         end
     end
-    
+
     %DLUL
     if isul
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
         if dopause
-            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
             pause
         end
     end
-    
+
 end
 
 %also bottom tracking, if cast was full-depth
@@ -93,39 +107,39 @@ if ~ismember(stn, shortcasts)
     if dlalone
         cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
         if dopause
-            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
             pause
         end
     end
     if isul
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
         if dopause
-            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
+            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
             pause
         end
-    end    
+    end
 end
 
 if 0
-%SADCP, if it's been processed and output to file for ladcp
-sfile = fullfile(mgetdir('M_LADCP'), 'SADCP', sprintf('os75nb_%s_%03d_forladcp.mat',mcruise,stn));
-if exist(sfile,'file')
-    cfg.constraints = [cfg.constraints 'SADCP'];
-    cfg.SADCP_inst = 'os75nb';
-    if isul
-        cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
-        if dopause
-            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause
-        end
-    elseif dlalone
-        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
-        if dopause
-            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:}); 
-            pause
+    %SADCP, if it's been processed and output to file for ladcp
+    sfile = fullfile(mgetdir('M_LADCP'), 'SADCP', sprintf('os75nb_%s_%03d_forladcp.mat',mcruise,stn));
+    if exist(sfile,'file')
+        cfg.constraints = [cfg.constraints 'SADCP'];
+        cfg.SADCP_inst = 'os75nb';
+        if isul
+            cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
+            if dopause
+                fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
+                pause
+            end
+        elseif dlalone
+            cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
+            if dopause
+                fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
+                pause
+            end
         end
     end
-end
 end
 
 cd(cdir)

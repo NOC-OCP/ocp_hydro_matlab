@@ -8,7 +8,7 @@ function mout_1hzasc(stn)
 
 m_common
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s.02.asc\n',stn_string); end
 
 %%%%%%%%% write ctd data %%%%%%%%%
@@ -29,7 +29,7 @@ else
     dd.dnum = dd.time/86400+datenum(dh.data_time_origin);
     dv1 = datevec(dd.dnum(1)-1/24);
     dv2 = datevec(dd.dnum(end)+1/24);
-    scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+    opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
     switch MEXEC_G.Mshipdatasystem
         case 'rvdas'
             [dn, ~, ~] = mrload(default_navstream,dv1,dv2,'q');
@@ -56,7 +56,8 @@ dd.yearday = dd.decday + 1; %noon on 1 jan = 1.5
 
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
-scriptname = mfilename; oopt = 'ctd_1hz_format'; get_cropt
+cfg.stnstr = stn_string;
+opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
 fid = fopen(f.ctd,'w');
 %fprintf(fid,'%s\n',ctdh);
 for kl = 1:length(kok)

@@ -32,7 +32,7 @@ m_common
 
 % place to temporarily put list of tables
 
-scriptname = 'mrvdas_ingest'; oopt = 'use_cruise_views'; get_cropt
+opt1 = 'ship'; opt2 = 'rvdas_form'; get_cropt
 if use_cruise_views
     sqltext = ['"\dv ' view_name '*" >'];
 else

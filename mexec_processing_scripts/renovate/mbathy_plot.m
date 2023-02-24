@@ -72,7 +72,7 @@ dt = 300;
 latvar = munderway_varname('latvar',fieldnames(dnav),1,'s');
 lonvar = munderway_varname('lonvar',fieldnames(dnav),1,'s');
 
-scriptname = 'bathy'; oopt = 'bathy_grid'; get_cropt
+opt1 = 'bathy'; opt2 = 'bathy_grid'; get_cropt
 if mean(dnav.(lonvar))<0 && mean(top.lon)>0; top.lon = top.lon-360; end
 iix = find(top.lon>=min(dnav.(lonvar))-1 & top.lon<=max(dnav.(lonvar))+1); iiy = find(top.lat>=min(dnav.(latvar))-1 & top.lat<=max(dnav.(latvar))+1);
 ssdeps = -interp2(top.lon(iix), top.lat(iiy)', top.depth(iiy,iix), dnav.(lonvar)(1:dt:end), dnav.(latvar)(1:dt:end));

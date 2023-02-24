@@ -3,7 +3,7 @@
 % Use: mfir_03        and then respond with station number, or for station 16
 %      stn = 16; mfir_03;
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to fir_%s_%s.nc\n', mcruise, stn_string); end
 
 root_ctd = mgetdir('M_CTD');
@@ -24,7 +24,11 @@ var_copycell = mcvars_list(2); %which variables to copy from 24hz CTD file
 [var_copycell, var_copystr] = mvars_in_file(var_copycell, infile1);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
-scriptname = mfilename; oopt = 'fir_fill'; get_cropt
+                firmethod = 'medint';
+                clear firopts;
+                firopts.int = [-1 120];
+                firopts.prefill = 24*5; %fill gaps up to 5 s first
+opt1 = mfilename; opt2 = 'fir_fill'; get_cropt
 
 [dfir, hfir] = mloadq(infilef,'scan',' ');
 [dc, hc] = mloadq(infile1, var_copystr);

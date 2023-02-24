@@ -6,7 +6,7 @@
 % dy146 ylf added start of cast estimate; sd025 ylf added end of cast
 % estimate
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'finding scan numbers corresponding to cast segments for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
@@ -28,7 +28,8 @@ else
     hnew.comment = '';
 end
 
-scriptname = mfilename; oopt = 'cast_divide'; get_cropt
+auto_start = 0; auto_bot = 1; auto_end = 0; kstart = []; kbot = []; kend = []; 
+opt1 = mfilename; opt2 = 'cast_divide'; get_cropt
 
 if ~isfield(ds,'dc_bot') || auto_bot
     if isempty(kbot)

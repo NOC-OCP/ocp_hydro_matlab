@@ -18,9 +18,8 @@ function status = mout_csv(in, out)
 %   variables to write (see m_exch_varlist.m)
 %   extras (optional): structure giving values of variables not in (or
 %   calculated from) file to be repeated on every row (e.g. expocode)
-%   header (optional): cell array or string (possibly containing '\n') to
-%     print at top of file (before additional header information depending
-%     on file type)
+%   header (optional): cell array to print at top of file (before
+%   additional header information depending on file type)
 %   bin_size (only used if in.type=='ctd'): integer scalar (default 2)
 %   bin_units (only used if in.type=='ctd'): 'dbar', 'm', or 'hz' (default
 %     dbar)
@@ -85,6 +84,7 @@ end
 if strcmp(out.type,'exch')
     isw = 1;
     varsh = out.varsh;
+    opt1 = 'outputs'; opt2 = 'exch'; get_cropt
 else
     isw = 0;
     %these are already in h
@@ -106,13 +106,13 @@ else
     end
 end
 
+
 for kloop = klist
     
-    tic
     %load file
     if ~issam
         stn = kloop;
-        scriptname = 'castpars'; oopt = 'minit'; get_cropt
+        opt1 = 'castpars'; opt2 = 'minit'; get_cropt
         fname = sprintf('%s_%s_%s%s.nc',in.type,mcruise,stn_string,in.suf);
     else
         fname = sprintf('%s_%s_all.nc',in.type,mcruise);
@@ -126,8 +126,7 @@ for kloop = klist
         end
     end
     [d, h] = mloadq(infile, '/');
-    toc
-    
+
     
     %%% add/convert variables %%%
     
@@ -168,11 +167,10 @@ for kloop = klist
     
     %flags and missing data values
     if issam
-        d = hdata_flagnan(d,'nanval',[NaN -999],'addflags',0,'keepemptysamps',0);
+        d = hdata_flagnan(d,'nanval',[NaN -999],'addflags',0,'keepemptyrows',0);
     else
-        d = hdata_flagnan(d,'nanval',[NaN -999],'keepemptysamps',0);
+        d = hdata_flagnan(d,'nanval',[NaN -999],'keepemptyrows',0);
         h.comment = [h.comment '\n default flags used'];
-        scriptname = 'mout_exch'; oopt = 'woce_ctd_flags'; get_cropt
     end
     
     %(constant) station positions and depths
@@ -180,25 +178,31 @@ for kloop = klist
         d = get_station_constants(d, mcruise);
     end
     
-    %convert time units
+    %convert time variable and/or units
+    if isfield(out, 'datetimeform')
+        m = strcmp('datetime',out.vars_units(:,3));
+        if sum(m)
+            d.datetime = datestr(d.(timvar)/86400+datenum(h.data_time_origin), out.datetimeform);
+        end
+    end
     if isfield(out,'time_units')
         d.(timvar) = m_commontime(d.(timvar),h.data_time_origin,out.time_units);
     else
         out.time_units = sprintf('seconds since %s 00:00:00',datestr(h.data_time_origin,'yyyy-mm-dd'));
     end
     m = strcmp(timvar,h.fldnam); h.fldunt{m} = out.time_units;
-    
+
     %pressure to depth
     if isfield(out,'vars_units')
-        if sum(strcmpi(dvar,out.vars_units(:,1))) && ~isfield(d,dvar)
+        if sum(strcmpi(dvar,out.vars_units(:,3))) && ~isfield(d,dvar)
             d.(dvar) = sw_dpth(d.(pvar),d.(lvar));
             h.fldnam = [h.fldnam 'depth']; h.fldunt = [h.fldunt 'm'];
         end
-        if sum(strcmpi('dens',out.vars_units(:,1))) && ~isfield(d,'dens')
+        if sum(strcmpi('dens',out.vars_units(:,3))) && ~isfield(d,'dens')
             d.dens = sw_dens(d.psal,d.temp,d.press);
             h.fldnam = [h.fldnam 'dens']; h.fldunt = [h.fldunt 'kg/m3'];
         end
-        if sum(strcmpi('pden0',out.vars_units(:,1))) && ~isfield(d,'pden0')
+        if sum(strcmpi('pden0',out.vars_units(:,3))) && ~isfield(d,'pden0')
             d.pden0 = sw_pden(d.psal,d.temp,d.press,0);
             h.fldnam = [h.fldnam 'pden0']; h.fldunt = [h.fldunt 'kg/m3'];
         end
@@ -246,14 +250,14 @@ for kloop = klist
         out.vars_units(ic,2) = {'woce_table_4.9'};
         m = strncmp('woce_table_4',out.vars_units(:,2),12);
         out.vars_units(m,4) = {'%d'};
-        ii = find(strcmp(timvar,out.vars_units(:,1)));
-        if strncmp(out.vars_units{ii,2},'seconds',7)
-            out.vars_units{ii,4} = '%20.3f';
+        m = strcmp(timvar,out.vars_units(:,1));
+        if strncmp(out.vars_units{m,2},'seconds',7)
+            out.vars_units{m,4} = '%20.3f';
         end
         m = strcmp(pvar,out.vars_units(:,1));
         out.vars_units{m,4} = '%5.2f';
-        m = strcmp('depth',out.vars_units(:,1));
-        out.vars_units{m,4} = '%5.2f';
+        m = strcmp(dvar,out.vars_units(:,1));
+        if sum(m); out.vars_units{m,4} = '%5.2f'; end
     end
     
     %%% write %%%
@@ -311,7 +315,9 @@ for kloop = klist
     
     status = 1;
     
-    disp(['file ' num2str(kloop) '/' num2str(length(klist)) ' written'])
+    if klist~=0
+        disp(['file ' num2str(kloop) '/' num2str(length(klist)) ' written'])
+    end
 end
 
 

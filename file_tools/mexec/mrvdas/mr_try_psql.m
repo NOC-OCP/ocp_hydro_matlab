@@ -1,15 +1,15 @@
 function [csvname, result, psql_string] = mr_try_psql(sqltext)
 % constructs psql string and tries with and without LD_LIBRARY PATH
 % psql string is constructed by combining: 
-% 1) the database/access information, set here (using mrvdas_ingest,
+% 1) the database/access information, set here (using ship,
 %   rvdas_database cruise options);
 % 2) the query in sqltext specifying what to get from what table
-% 3) the csv file to which to write output, set here (using mrvdas_ingest,
+% 3) the csv file to which to write output, set here (using ship,
 %   rvdas_database cruise options)
 %
 
 m_common
-scriptname = 'mrvdas_ingest'; oopt = 'rvdas_database'; get_cropt
+opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
 
 %if we haven't checked before in this session, first see if we're connected to
 %the database, and if we have a .pgpass file with the correct permissions
@@ -47,6 +47,11 @@ end
         
 %now construct the string and try first without then with changes to
 %LD_LIBRARY_PATH
+                if ismac
+                    RVDAS.psql_path = '/usr/local/bin/';
+                else
+                    RVDAS.psql_path = ''; %'/usr/bin/' but on linux matlab finds it on path on its own
+                end
 sqlroot = [RVDAS.psql_path 'psql -h ' RVDAS.machine ' -U ' RVDAS.user ' -d ' RVDAS.database];
 csvname = fullfile(RVDAS.csvroot, ['table_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 psql_string = [sqlroot ' -c ' sqltext csvname];

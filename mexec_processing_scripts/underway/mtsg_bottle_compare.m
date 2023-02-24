@@ -21,12 +21,13 @@ end
 
 % get_cropt basically checks that file exists and sets defaults set
 % elsewhere
-% oopt are different case options to run through for setting various defaults
+% opt2 are different case options to run through for setting various defaults
 
-scriptname = mfilename; oopt = 'tsg_usecal'; get_cropt; % mfilename = name of current file
+                if ~exist('usecal','var'); usecal = 0; end
+opt1 = mfilename; opt2 = 'tsg_usecal'; get_cropt; % mfilename = name of current file
 usecallocal = usecal; clear usecal 
 
-scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 prefix = tsgpre; % prefix for tsg data
 root_tsg = mgetdir(tsgpre); %gets directory from MEXEC_g
 
@@ -96,7 +97,7 @@ if exist('tempsst','var') && ~isempty(tempsst)
     nsp = 4;
 end
 
-scriptname = mfilename; oopt = 'tsg_bad'; get_cropt %NaN some of the db.salinity_adj points
+opt1 = mfilename; opt2 = 'tsg_bad'; get_cropt %NaN some of the db.salinity_adj points
 
 sdiff = db.salinity_adj-tsals; %offset is bottle minus tsg, so that it is correction to be added to tsg
 sdiff_std = m_nanstd(sdiff); sdiff_mean = m_nanmean(sdiff);
@@ -117,7 +118,7 @@ sdiff(idx) = NaN; % set values where value>3*SD as NaN
 % set anytime tsg was not running (tbreaks)
 % bak jc211, break points in sdiffsm to allow for cleaning
 tbreak = []; % example of how to set tbreak in opt_jc211
-scriptname = mfilename; oopt = 'tsg_timebreaks'; get_cropt;
+opt1 = mfilename; opt2 = 'tsg_timebreaks'; get_cropt;
 
 
 tbreak = [datenum([1900 1 1]); tbreak; datenum([2200 1 1])]-datenum(ht.data_time_origin);
@@ -152,7 +153,8 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
     
     %smoothed difference--default is a two-pass filter on the whole time series
     clear sdiffsm
-    scriptname = mfilename; oopt = 'tsg_sdiff'; get_cropt
+                    sc1 = 0.5; sc2 = 0.02;
+opt1 = mfilename; opt2 = 'tsg_sdiff'; get_cropt
     if exist('sc1') & exist('sc2') & ~exist('sdiffsm')
         sdiffsm = filter_bak(ones(1,21),sdiff); % first filter
         sdiff(abs(sdiff-sdiffsm) > sc1) = NaN;

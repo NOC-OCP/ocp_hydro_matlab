@@ -21,7 +21,7 @@
 %      setdef_cropt_cast (castpars and mctd_03 cases)
 
 m_common; MEXEC_A.mprog = mfilename;
-scriptname = 'castpars'; oopt = 'minit'; get_cropt 
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt 
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
 
 root_ctd = mgetdir('M_CTD');
@@ -32,11 +32,11 @@ infile1 = fullfile(root_ctd, [prefix1 stn_string '_24hz']);
 otfile1 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
 
 %identify preferred sensors for (T,C) and O on this station
-scriptname = mfilename; oopt = 's_choice'; get_cropt 
+opt1 = 'castpars'; opt2 = 's_choice'; get_cropt 
 if ismember(stnlocal, stns_alternate_s)
     s_choice = setdiff([1 2], s_choice);
 end
-scriptname = mfilename; oopt = 'o_choice'; get_cropt 
+opt1 = 'castpars'; opt2 = 'o_choice'; get_cropt 
 if ismember(stnlocal, stns_alternate_o)
    o_choice = setdiff([1 2],o_choice);
 end
@@ -112,7 +112,7 @@ end
 hnew.fldnam = var_copycell;
 
 %average to 1hz, output to _psal file
-scriptname = mfilename; oopt = '1hz_interp'; get_cropt
+opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt
 tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_extrap to 0
 if size(dnew.time,1)>1; tg = tg'; end
 dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_extrap', [0 0], 'postfill', maxfill1);

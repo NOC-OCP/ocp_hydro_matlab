@@ -68,7 +68,7 @@ qflag = argot.qflag;
 m_common
 
 if isempty(table)
-    scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+    opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
     table = default_navstream;
 end
 [rtable, mtable] = mrresolve_table(table); %make it an rvdas table name

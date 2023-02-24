@@ -3,14 +3,15 @@
 % Use: mfir_01        and then respond with station number, or for station 16
 %      stn = 16; mfir_01;
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
-scriptname = 'castpars'; oopt = 'cast_groups'; get_cropt %define shortcasts and ticasts
-scriptname = mfilename; oopt = 'blinfile'; get_cropt
+opt1 = 'castpars'; opt2 = 'cast_groups'; get_cropt %define shortcasts and ticasts
+                blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stnlocal));
+opt1 = mfilename; opt2 = 'blinfile'; get_cropt
 m = ['infile = ' blinfile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 dataname = ['fir_' mcruise '_' stn_string];
 blotfile = fullfile(root_ctd, dataname);
@@ -38,8 +39,10 @@ end
 pos = pos(:);
 scn = scn(:);
 
-scriptname = 'castpars'; oopt = 'nnisk'; get_cropt
-scriptname = mfilename; oopt = 'nispos'; get_cropt
+opt1 = 'castpars'; opt2 = 'nnisk'; get_cropt
+                niskc = [1:nnisk]';
+                niskn = [1:nnisk]';
+opt1 = mfilename; opt2 = 'nispos'; get_cropt
 niskc = niskc(:);
 niskin = niskn(:);
 [~,ia,ib] = intersect(pos,niskc);
@@ -53,7 +56,7 @@ scan = scan(m);
 position = position(m); 
 niskin = niskin(m); 
 niskin_flag = niskin_flag(m);
-scriptname = mfilename; oopt = 'botflags'; get_cropt %change flags here
+opt1 = mfilename; opt2 = 'botflags'; get_cropt %change flags here
 
 %--------------------------------
 comment = ['input data from ' blinfile];

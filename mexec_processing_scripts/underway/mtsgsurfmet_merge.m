@@ -3,7 +3,7 @@
 %for techsas, will add tsg data to met data
 %for rvdas, add tsg and windsonic data to met data
 
-scriptname = 'ship'; oopt = 'ship_data_sys_names'; get_cropt
+opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 clear dnew hnew
 
 filemet = [mgetdir(metpre) '/' metpre '_' mcruise '_01.nc'];

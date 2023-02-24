@@ -11,13 +11,15 @@ if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s
 
 % load sbe35 data
 root_sbe35 = mgetdir('M_SBE35');
-scriptname = mfilename; oopt = 'sbe35file'; get_cropt
+sbe35file = sprintf('%s_SBE35_CTD*.asc', upper(mcruise));
+stnind = [-6:-4]; %end-6:end-4 e.g. dy113_SBE35_CTD_010.asc
+opt1 = 'sbe35'; opt2 = 'sbe35file'; get_cropt
 if strcmp(sbe35file,'none')
     return
 end
 
-t = dir(fullfile(root_sbe35, sbe35file));
-file_list = {t.name};
+d = dir(fullfile(root_sbe35, sbe35file));
+file_list = {d.name};
 
 flag = 9+zeros(8000,1);
 t = table(flag);
@@ -66,30 +68,31 @@ if ~isempty(jfiles)
     sprintf('%s\n',jfiles{:})
 end
 
-scriptname = mfilename; oopt = 'sbe35_datetime_adj'; get_cropt
+opt1 = 'sbe35'; opt2 = 'sbe35_datetime_adj'; get_cropt
 %remove duplicate times (in case recorder not erased)
 [~,ii] = unique(t.datnum,'stable');
 t = t(ii,:);
 
 %modify flags or remove some erroneous lines 
-scriptname = mfilename; oopt = 'sbe35flags'; get_cropt
+opt1 = 'sbe35'; opt2 = 'sbe35_flags'; get_cropt
 
 %get station start and end times from station_summary file, and use to
 %match station numbers and discard duplicate (likely spurious) sampnums
 [dsum, hsum] = mloadq(fullfile(mgetdir('sum'),['station_summary_' mcruise '_all.nc']),'/');
 dsum.time_start = dsum.time_start/86400+datenum(hsum.data_time_origin);
 dsum.time_end = dsum.time_end/86400+datenum(hsum.data_time_origin);
-statnumc = NaN+t.statnum;
-m = repmat(dsum.statnum',length(t.datnum),1);
-tm = t.datnum>=dsum.time_start'-15/1440 & t.datnum<=dsum.time_end'+15/1440;
-m(~tm) = -1;
-m = max(m,[],2);
-statnumc(m>-1) = m(m>-1); %station numbers based on time rather than filename
-msta = statnumc~=t.statnum & ~isnan(statnumc); %mismatched station numbers
-msam = sum((t.sampnum'==t.sampnum) - eye(length(t.sampnum)),2); %duplicate sampnums
-mnan = isnan(t.datnum+t.sampnum+t.t90);
-iib = find((msta & msam) | (msta & mnan) | (msam & mnan)); %discard the duplicates that are mismatched on station number; these are probably leftovers in the wrong file; also discard NaNs that are otherwise suspicious/misplaced
-if sbe35_check
+opt1 = 'check_sams'; get_cropt
+if check_sbe35
+    statnumc = NaN+t.statnum;
+    m = repmat(dsum.statnum',length(t.datnum),1);
+    tm = t.datnum>=dsum.time_start'-15/1440 & t.datnum<=dsum.time_end'+15/1440;
+    m(~tm) = -1;
+    m = max(m,[],2);
+    statnumc(m>-1) = m(m>-1); %station numbers based on time rather than filename
+    msta = statnumc~=t.statnum & ~isnan(statnumc); %mismatched station numbers
+    msam = sum((t.sampnum'==t.sampnum) - eye(length(t.sampnum)),2); %duplicate sampnums
+    mnan = isnan(t.datnum+t.sampnum+t.t90);
+    iib = find((msta & msam) | (msta & mnan) | (msam & mnan)); %discard the duplicates that are mismatched on station number; these are probably leftovers in the wrong file; also discard NaNs that are otherwise suspicious/misplaced
     iic = setdiff(find(msam),iib); %check these first
     ii_did = [];
     for no = 1:length(iic)
@@ -125,7 +128,7 @@ t.position = t.bn;
 t.time = (t.datnum-datenum(hnew.data_time_origin))*86400;
 t.sbe35temp = t.t90;
 t.sbe35temp_flag = t.flag;
-scriptname = mfilename; oopt = 'sbe35flag'; get_cropt
+opt1 = mfilename; opt2 = 'sbe35flag'; get_cropt
 %bottle not fired won't be in list, so nan must be bad
 t.sbe35temp_flag(isnan(t.sbe35temp) & t.sbe35temp_flag<4) = 4;
 clear d %rather than using table2struct, loop so they'll be in same order as hnew.fldnam

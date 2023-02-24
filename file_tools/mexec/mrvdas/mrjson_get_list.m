@@ -9,7 +9,7 @@ end
 listfile = fullfile(jsondir,'..','list_json.txt');
 
 %sync json files
-scriptname = 'mrvdas_ingest'; oopt = 'rvdas_database'; get_cropt
+opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
 switch MEXEC_G.Mship
     case 'sda'
         system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);

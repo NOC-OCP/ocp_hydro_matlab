@@ -43,7 +43,7 @@ function mvad_list_station(stn, inst)
 % tbuffer = 3600/86400; % days
 
 m_common
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 %reset constants, just in case
 i = sqrt(-1);
 pi = 4*atan(1);

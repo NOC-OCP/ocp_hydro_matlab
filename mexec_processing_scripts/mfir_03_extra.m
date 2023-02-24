@@ -11,7 +11,7 @@
 % Use: mfir_03_extra        and then respond with station number, or for station 16
 %      stn = 16; mfir_03d;
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adds bottle stop background gradient, standard deviation, and gamma_n-matched downcast data to fir_%s_%s.nc\n', mcruise, stn_string); end
 
 root_ctd = mgetdir('M_CTD');

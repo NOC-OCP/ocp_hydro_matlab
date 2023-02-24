@@ -50,8 +50,9 @@ if ~isfield(mgrid, 'background')
 end
 
 %lengths
-if sum(strcmp(mgrid.method, 'msec_maptracer')) && ~isfield(mgrid, 'xlim')
-    mgrid.xlim = 1; mgrid.zlim = 4;
+if sum(strcmp(mgrid.method, 'msec_maptracer'))
+    if ~isfield(mgrid, 'xlim'); mgrid.xlim = 1; end
+    if ~isfield(mgrid, 'zlim'); mgrid.zlim = 4; end
 elseif sum(strcmp(mgrid.method, 'om')) && ~isfield(mgrid, 'xL')
     mgrid.xL = 2; mgrid.zL = 4; mgrid.xL = 3;
 end

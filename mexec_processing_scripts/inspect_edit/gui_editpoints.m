@@ -17,8 +17,6 @@ function bads = gui_editpoints(d, xvar, varargin)
 %   more than once without overwriting previous edits)
 % colors, markers, lines[tyle] (to use for plot)
 % xgroups, cell array of indices in indepvar to step through
-% do_check (default 0): whether to replot and ask before adding selected
-%   points to list
 %
 % output bads is a structure with fieldnames matching those in input
 %   (besides indepvar) and values listing indices of selected points for
@@ -65,7 +63,6 @@ else
 end
 
 %parameter-value inputs for plot
-do_check = 0;
 for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
@@ -111,25 +108,26 @@ for gno = 1:length(xgroups)
         for no = 1:nl
             disp([num2str(no) ': ' fn{no} ' (' markers{no} ')'])
         end
-        edno = input('or ''w'' to finish and write to file, or enter to quit/step through to next indices\n','s');
-        if strcmp(edno,'w') || strcmp(edno,'q')
-            cont = edno;
-            done = 1; continue
+        edno = input('or enter to quit/step through to next indices without (more) edits\n','s');
+        if isempty(edno)
+            cont = 'n';
+            done = 1; continue %go on to next loop
         else
-            edno = str2num(edno);
+            edno = str2double(edno);
             if isempty(edno) %it was some other string
-                continue %try again
+                cont = 'e';
+                continue %try again, same loop because done hasn't been reset
             end
         end
 
-        ii = setdiff(1:nl,edno);
+        %chose something to edit
         set(hl(edno),'color',[0 0 0],'marker','x')
-
         disp(['select bottom left and top right corners of box around bad data from variable ' num2str(edno) ' (black xes)']);
-        [x,y] = ginput(2);
-        if x(1)>x(2); x = flipud(x); y = flipud(y); end
+        [x,y] = ginput(2); if x(1)>x(2); x = flipud(x(:)); y = flipud(y(:)); end
+
+        %check edits
         bad = d0(edno).(xvar)>=x(1) & d0(edno).(xvar)<=x(2) & d0(edno).(fn{edno})>=y(1) & d0(edno).(fn{edno})<=y(2);
-        if sum(bad) && do_check
+        if sum(bad)
             hle = plot(d0(edno).(xvar)(bad),d0(edno).(fn{edno})(bad),'p','color',[.5 .5 .5]);
             confirm = input('delete selected points (y/n)?\n','s');
             if ~strcmp(confirm,'y')
@@ -137,7 +135,8 @@ for gno = 1:length(xgroups)
             end
             delete(hle)
         end
-        if sum(bad)
+
+        if sum(bad) %kept edits; append to list
             if ~exist('bads','var') || ~isfield(bads,fn{edno})
                 bads.(fn{edno}) = [];
             end
@@ -145,33 +144,32 @@ for gno = 1:length(xgroups)
             d0(edno).(fn{edno})(bad) = NaN;
         end
 
-        cont = input('enter ''w'' to finish and write to file,\n or ''e'' to edit more points\n, or ''q'' to go on without saving\n','s');
-        if strcmp(cont,'w') || strcmp(cont,'q')
-            done = 1;
+        cont = input('enter ''e'' to edit more points here,\n ''n'' to go on to next,\n ''w'' to write to file and quit, \n or ''q'' to quit without saving any\n','s');
+        if strcmp(cont,'n') || strcmp(cont,'w') || strcmp(cont,'q')
+            done = 1; %leave while
         end
 
     end
 
-    if strcmp(cont,'q')
-        continue
-    end
-
-    %save edits to text file
-    if ~isempty(bads) && exist('edfilepat','var')
-        fname = [edfilepat '_' datestr(now,'yyyymmdd_HHMMSS')];
-        fp = fileparts(fname); if ~exist(fp,'dir'); mkdir(fp); end
-        fnb = fieldnames(bads);
-        fid = fopen(fname,'w');
-        fprintf(fid,'gui_editpoints with indepvar %s\n',xvar);
-        for no = 1:length(fnb)
-            fprintf(fid,'%s\n',fnb{no});
-            fprintf(fid,'%d\n',bads.(fnb{no})(:));
-        end
-        fclose(fid);
+    if strcmp(cont,'w') || strcmp(cont,'q')
+        break %leave for loop
     end
 
 end
 
+%output and write
 if ~exist('bads','var')
     bads = [];
+elseif ~isempty(bads) && exist('edfilepat','var') && ~strcmp(cont,'q')
+    fname = [edfilepat '_' datestr(now,'yyyymmdd_HHMMSS')];
+    fp = fileparts(fname); if ~exist(fp,'dir'); mkdir(fp); end
+    fnb = fieldnames(bads);
+    fid = fopen(fname,'w');
+    fprintf(fid,'gui_editpoints with indepvar %s\n',xvar);
+    for no = 1:length(fnb)
+        fprintf(fid,'%s\n',fnb{no});
+        fprintf(fid,'%d\n',bads.(fnb{no})(:));
+    end
+    fclose(fid);
 end
+

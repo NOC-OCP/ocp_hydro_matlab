@@ -61,7 +61,7 @@ if ~ismember(keepemptyvars,[-1 0 1])
     keepemptyvars = 0;
 end
 
-skipvars = {'sampnum' 'statnum' 'station' 'niskin' 'position' 'press' 'upress' 'depth' 'udepth' 'scan' 'time' 'pumps'};
+skipvars = {'sampnum' 'statnum' 'station' 'niskin' 'position' 'press' 'upress' 'depth' 'udepth' 'scan' 'time' 'utime' 'pumps'};
 if istable(d)
     skipvars = [skipvars 'Properties' 'Row' 'Variables'];
 end

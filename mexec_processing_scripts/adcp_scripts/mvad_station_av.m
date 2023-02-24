@@ -32,7 +32,7 @@ function mvad_station_av(stn, inst, cast_select, varargin)
 % YLF jc238, based on mvad_03 and mvad_for_ladcp (BAK jc069, jc159, jc211)
 
 m_common
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 
 %paths and filenames
 root_ctd = mgetdir('M_CTD');

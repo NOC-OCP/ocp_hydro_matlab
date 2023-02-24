@@ -14,4 +14,4 @@ switch MEXEC_G.Mship
       prefix = 'oceanlogger';
 end
 root_tsg = mgetdir(prefix);
-scriptname = mfilename; oopt = 'tsgsaladj'; get_cropt
+opt1 = mfilename; opt2 = 'tsgsaladj'; get_cropt

@@ -22,7 +22,7 @@
 % and via get_cropt:
 %     setdef_cropt_cast (castpars and mctd_04 cases)
 
-scriptname = 'castpars'; oopt = 'minit'; get_cropt
+opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from 24 hz to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
 root_ctd = mgetdir('M_CTD');
@@ -57,9 +57,9 @@ dcend = dd.dc24_end(kf);
 [var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
 
 %use oxy_end to NaN that many seconds before dcs scan_start
-scriptname = 'castpars'; oopt = 'oxy_align'; get_cropt
+opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
 if oxy_end==1
-    scriptname = 'castpars'; oopt = 'oxyvars'; get_cropt
+    opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
     oe = d.scan>=dd.scan_end-24*oxy_align;
     for no = 1:size(oxyvars,1)
         d.(oxyvars{no})(oe) = NaN;
@@ -83,7 +83,10 @@ end
 
 
 %%%%% optionally loopedit downcast %%%%%
-scriptname = mfilename; oopt = 'doloopedit'; get_cropt
+                doloopedit = 0;
+                ptol = 0.08; %default is not to apply, but this would be the default value if you did
+                spdtol = 0.24; %default value from SBE program
+opt1 = mfilename; opt2 = 'doloopedit'; get_cropt
 if doloopedit
     vars_other = setdiff(var_copycell, {'press'});
     disp(['applying loopediting for ' otfile1d])
@@ -98,7 +101,8 @@ end
 
 %%%%% grid to 2 dbar %%%%%
 pg = [0:2:1e4]';
-scriptname = mfilename; oopt = 'interp2db'; get_cropt
+                maxfill2db = 0;
+opt1 = mfilename; opt2 = 'interp2db'; get_cropt
 clear g2opts
 g2opts.int = [-1 1]; %interval for bins
 g2opts.grid_extrap = [0 0]; %discard empty bins

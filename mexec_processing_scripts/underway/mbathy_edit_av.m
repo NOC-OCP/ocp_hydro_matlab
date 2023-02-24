@@ -1,28 +1,35 @@
 %edit bathymetry data (ideally by comparing two streams)
 %then average each for _01 file
 
+avfile = fullfile(root_u,'bathy','bathy_%s_av',mcruise);
+mint = inf; maxt = -inf;
+
 %load singlebeam if we have it
 iss = 0;
-[~,iis,~] = intersect(shortnames,{'sim' 'ea600' 'ea640' 'singleb'});
+[~,iis,~] = intersect(shortnames,{'sim' 'ea600' 'ea640' 'singleb' 'sbm' 'singlebeam_kongsberg'});
 if ~isempty(iis)
-    filesbin = fullfile(root_u, udirs{iis}, [shortnames{iis} '_' mcruise '_d' daystr '_edt.nc']);
+    filesbin = fullfile(root_u, udirs{iis}, [shortnames{iis} '_' mcruise '_01.nc']);
     if exist(filesbin,'file')
         [ds,hs] = mload(filesbin,'/');
-        ds.time = ds.time/86400+1;
-        filesbot = fullfile(root_u, udirs{iis}, [shortnames{iis} '_' mcruise '_d' daystr '_edt_av.nc']);
+        ds.time = m_commontime(ds,'time',hs,MEXEC_G.MDEFAULT_DATA_TIME_ORIGN);
+        hs.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+        mint = min(mint,ds.time(1));
+        maxt = max(maxt,ds.time(end));
         iss = 1;
     end
 end
 
 %load multibeam if we have it
 ism = 0;
-[~,iim,~] = intersect(shortnames,{'em120' 'em122' 'multib'});
+[~,iim,~] = intersect(shortnames,{'em120' 'em122' 'multib' 'mbm' 'multibeam_kongsberg_em122'});
 if ~isempty(iim)
-    filembin = fullfile(root_u, udirs{iim}, [shortnames{iim} '_' mcruise '_d' daystr '_edt.nc']);
+    filembin = fullfile(root_u, udirs{iim}, [shortnames{iim} '_' mcruise '_01.nc']);
     if exist(filembin,'file')
         [dm,hm] = mload(filembin,'/');
-        dm.time = dm.time/86400+1;
-        filembot = fullfile(root_u, udirs{iim}, [shortnames{iim} '_' mcruise '_d' daystr '_edt_av.nc']);
+        dm.time = m_commontime(dm,'time',hs,MEXEC_G.MDEFAULT_DATA_TIME_ORIGN);
+        hm.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+        mint = min(mint,dm.time(1));
+        maxt = max(maxt,dm.time(end));
         ism = 1;
     end
 end
@@ -31,120 +38,72 @@ if ~iss && ~ism
     return
 end
 
-% %get gridded bathy interpolated to track
-% dn1 = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1)+str2num(daystr)-1;
-% dn2 = dn1+1;
-% switch MEXEC_G.Mshipdatasystem
-%     case 'rvdas'
-%         dnav = mrload(MEXEC_G.default_navstream,dn1,dn2);
-%     case 'techsas'
-%         dnav = mtload(MEXEC_G.default_navstream,dn1,dn2);
-%     case 'scs'
-%         dnav = msload(MEXEC_G.default_navstream,dn1,dn2);
-%     otherwise
-%         msg = ['choose ship navigation source and enter new case in msim_plot.m'];
-%         fprintf(2,'\n\n%s\n\n\n',msg);
-%         return
-% end
-% latvar = munderway_varname('latvar',fieldnames(dnav),1,'s');
-% lonvar = munderway_varname('lonvar',fieldnames(dnav),1,'s');
-% scriptname = 'bathy'; oopt = 'bathy_grid'; get_cropt
-% if mean(dnav.(lonvar))<0 && hs.longitude>0; top.lon = top.lon-360; end
-% iix = find(top.lon>=min(dnav.(lonvar))-1 & top.lon<=max(dnav.(lonvar))+1); iiy = find(top.lat>=min(dnav.(latvar))-1 & top.lat<=max(dnav.(latvar))+1);
-% ssdeps = -interp2(top.lon(iix), top.lat(iiy)', top.depth(iiy,iix), dnav.(lonvar)(1:dt:end), dnav.(latvar)(1:dt:end));
+%sbvar and mbvar***
+keyboard
 
-marker_s = 'o';
-marker_m = '.';
-
-figure(1); clf
-%plot(dnav.time,ssdeps,'k'); hold on
+%average to common time vector
+tave_period = 5/24/60;
+tg = mint-tave_period/4:tave_period:maxt+tave_period/4;
+m = true(size(tg));
+clear opts
+opts.ignore_nan = 1;
+opts.grid_extrap = [0 0];
+opts.postfill = 30;
 if iss
-    hls = plot(ds.time,ds.waterdepth,'b','marker',marker_s); hold on
+    dg = grid_profile(ds, 'time', tg, 'medbin', opts);
+    mfsave(avfile, dg, hs, '-merge', 'time')
+    m = m | sum(~isnan(dg.(sbvar)));
 end
 if ism
-    hlm = plot(dm.time,dm.waterdepth,'r','marker',marker_m);
+    dg = grid_profile(dm, 'time', tg, 'medbin', opts);
+    mfsave(avfile, dg, hm, '-merge', 'time')
+    m = m | sum(~isnan(dg.(mbvar)));
 end
-grid
+%***what about variable names?
 
-%add step to reapply previous edits***
-
-%editing gui
-done = 0;
-bads = []; badm = [];
-while ~done
-    typ = input('are you editing singlebeam (blue: ''s'') or multibeam (red: ''m'') or neither (enter)?\n','s');
-    if isempty(typ)
-        done = 1; continue
-    end
-    if strcmp(typ,'s')
-        delete(hls); hls = plot(ds.time,ds.waterdepth,'b.-'); hold on
-        delete(hlm); hlm = plot(dm.time,dm.waterdepth,'r'); 
-    elseif strcmp(typ,'m')
-        delete(hls); hls = plot(ds.time,ds.waterdepth,'b'); hold on
-        delete(hlm); hlm = plot(dm.time,dm.waterdepth,'r.-'); 
-    end
-    disp('select bottom left and top right corners of box around bad data');
-    [x,y] = ginput(2);
-    if strcmp(typ,'s') && ~isempty(x)
-        bad = ds.time>=x(1) & ds.time<=x(2) & ds.waterdepth>=y(1) & ds.waterdepth<=y(2);
-        if sum(bad)
-            ds.waterdepth(bad) = NaN;
-            delete(hls); hls = plot(ds.time,ds.waterdepth,'b','marker',marker_s); hold on
-            if ism; delete(hlm); hlm = plot(dm.time,dm.waterdepth,'r','marker',marker_m); end
-            bads = [bads; [x' y']];
-        end
-    elseif strcmp(typ,'m') && ~isempty(x)
-        bad = dm.time>=x(1) & dm.time<=x(2) & dm.waterdepth>=y(1) & dm.waterdepth<=y(2);
-        if sum(bad)
-            dm.waterdepth(bad) = NaN;
-            if iss; delete(hls); hls = plot(ds.time,ds.waterdepth,'b','marker',marker_s); hold on; end
-            delete(hlm); hlm = plot(dm.time,dm.waterdepth,'r','marker',marker_m);
-            badm = [badm; [x' y']];
-        end
-    else
-        disp('must enter ''s'' or ''m''; try again');
-        continue
-    end
-    cont = input('enter ''w'' to finish and write to file(s)\n, or zoom or pan then enter ''e'' to edit more points\n','s');
-    if strcmp(cont,'w')
-        done = 1;
-    end
+[dg, hg] = mloadq(avfile, '/');
+opt1 = mfilename; opt2 = 'bathy_grid'; get_cropt
+if exist('zbathy','var') && ~isempty(zbathy)
+    opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+    [dn, hn] =  mloadq(fullfile(mgetdir(default_navstream),sprintf('bst_%s_01_av',mcruise)),'/');
+    %hn.data_time_orign should already be MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
+    %(done in mnav_best)
+    lonvar = 'lon';
+    latvar = 'lat';
+    lon = interp1(dn.time,dn.(lonvar),dg.time);
+    lat = interp1(dn.time,dn.(latvar),dg.time);
+    xbathy = [xbathy-360 xbathy]; zbathy = [zbathy zbathy];
+    iix = find(xbathy>=min(lon)-1 & xbathy<=max(lon)+1);
+    iiy = find(ybathy>=min(lat)-1 & ybathy<=max(lat)+1);
+    dg.bathymap = interp2(xbathy(iix),ybathy(iiy),zbathy(iiy,iix),lon,lat);
 end
 
+%***take out extra variables?
+keyboard
 
-%save edited to file, also write edits to text file in case overwritten
-if ~isempty(bads)
-    ds.time = (ds.time-1)*86400;
-    mfsave(filesbin,ds,hs);
-    fid = fopen(fullfile(root_u,udirs{iis},['bathyed_' datestr(now,'yyyymmdd_HHMMSS') '_d' daystr]),'w');
-    for no = 1:size(bads,1)
-        fprintf(fid,'%f %f %f %f\n',bads(no,:));
-    end
-    fclose(fid);
+edfile = fullfile(MEXEC_G.mexec_data_root,'bathy','editlogs',sprintf('bathy_%s',mcruise));
+[dg, comment] = apply_guiedits(dg, 'time', [edfile '*']);
+if ~isempty(comment)
+    hg.comment = [hg.comment comment];
 end
-if ~isempty(badm)
-    dm.time = (dm.time-1)*86400;
-    mfsave(filembin,dm,hm);
-    fid = fopen(fullfile(root_u,udirs{iim},['bathyed_' datestr(now,'yyyymmdd_HHMMSS') '_d' daystr]),'w');
-    for no = 1:size(badm,1)
-        fprintf(fid,'%f %f %f %f\n',badm(no,:));
+t = dg.time/86400;
+iis_all = {};
+for no = 1:length(days)
+    ii = find(t>=days(no)-1.042 & t<=days(no)+.042);
+    if sum(m(ii))
+        iis_all = [iis_all; ii];
     end
-    fclose(fid);
+    %markers, lines
+    %+ or -?
+    bads = gui_editpoints(dg,'time','edfilepat',edfile,'xgroups',iis_all);
+    keyboard
+end
+%apply them again
+comment0 = comment;
+edfile = fullfile(MEXEC_G.mexec_data_root,'bathy','editlogs',sprintf('bathy_%s',mcruise));
+[dg, comment] = apply_guiedits(dg, 'time', [edfile '*']);
+if isempty(comment0) && ~isempty(comment)
+    hg.comment = [hg.comment comment];
 end
 
-%average each one
-if (iss || ism) && MEXEC_G.quiet<=1; fprintf(1,'5-minute median averaging bathymetry streams'); end
-if iss
-    wkfile = 'wkfile_bathyav1.nc';
-    MEXEC_A.MARGS_IN = {filesbin; wkfile; '/'; 'time'; '-150,1e10,300'; '/'};
-    mavmed
-    movefile(wkfile, filesbot);
-end
-clear filesbin
-if ism
-    wkfile = 'wkfile_bathyav2.nc';
-    MEXEC_A.MARGS_IN = {filembin; wkfile; '/'; 'time'; '-150,1e10,300'; '/'};
-    mavmed
-    movefile(wkfile, filembot);
-end
-clear filesbot
+mfsave(avfile, dg, hg);

@@ -5,6 +5,8 @@
 %second column: 2xK15
 %third column: batch offset (to be added to salinities calibrated with that
 %   batch), from Kawano et al. (2006) and H. Uchida (pers comm)
+%   note: values of 0 may mean those table rows have tno been updated here
+%   yet
 
 ssw_batches = [
               151 1.99994 -0.4e-3
@@ -16,5 +18,6 @@ ssw_batches = [
               160 1.99966  0
               161 1.99974  0
               163 1.99970  0
+              165 1.99972  0
 	      ];
 

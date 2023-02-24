@@ -19,7 +19,7 @@ if exist(m_add_nc(infile1),'file')~=2;
     return
 end
 
-oopt = 'vars'; get_cropt
+scriptname = mfilename; opt2 = 'vars'; get_cropt
 
 % 
 %--------------------------------

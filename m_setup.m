@@ -88,8 +88,12 @@ MEXEC_G.PLATFORM_TYPE= 'ship';
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normally be changed
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 % including some specific to the cruise
-scriptname = mfilename; oopt = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
-scriptname = mfilename; oopt = 'setup_datatypes'; get_cropt %use_ix_ladcp and skipunderway set here (and used below)
+opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
+if ~isfield(MEXEC_G,'MDEFAULT_DATA_TIME_ORIGIN')
+    error('you must set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN in opt_{cruise}.m under opt1=''setup''; opt2=''time_origin''')
+end
+use_ix_ladcp = 'yes';
+opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt %use_ix_ladcp set here (and used below)
 
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);

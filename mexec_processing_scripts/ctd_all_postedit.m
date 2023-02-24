@@ -44,4 +44,4 @@ if 0
 end
 
 %and sync
-scriptname = 'batchactions'; oopt = 'output_for_others'; get_cropt
+opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt
