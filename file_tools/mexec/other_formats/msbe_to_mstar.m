@@ -115,9 +115,6 @@ else
 end
 
 
-% * NMEA Latitude = 23 59.95 S
-% * NMEA Longitude = 027 01.98 W
-% * NMEA UTC (Time) = Mar 29 2009  02:25:31
 % BAK & GDM on JC032 29 March 2009; parse NMEA positions if present
 index = strncmp('* NMEA Latitude',head,15);
 if sum(index)

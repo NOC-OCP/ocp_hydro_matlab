@@ -83,9 +83,9 @@ end
 
 
 %%%%% optionally loopedit downcast %%%%%
-                doloopedit = 0;
-                ptol = 0.08; %default is not to apply, but this would be the default value if you did
-                spdtol = 0.24; %default value from SBE program
+doloopedit = 0;
+ptol = 0.08; %default is not to apply, but this would be the default value if you did
+spdtol = 0.24; %default value from SBE program
 opt1 = mfilename; opt2 = 'doloopedit'; get_cropt
 if doloopedit
     vars_other = setdiff(var_copycell, {'press'});
@@ -101,7 +101,7 @@ end
 
 %%%%% grid to 2 dbar %%%%%
 pg = [0:2:1e4]';
-                maxfill2db = 0;
+maxfill2db = 0;
 opt1 = mfilename; opt2 = 'interp2db'; get_cropt
 clear g2opts
 g2opts.int = [-1 1]; %interval for bins
@@ -109,13 +109,19 @@ g2opts.grid_extrap = [0 0]; %discard empty bins
 g2opts.postfill = maxfill2db; %fill after gridding?
 g2opts.ignore_nan = 1;
 g2opts.bin_partial = 1; %use bins with data in only one half
-if length(dn.press>1)
+if length(dn.press)>24
     dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
+    if length(dn2.press)<=1
+        dn2 = [];
+    end
 else
     dn2 = [];
 end
-if length(up.press>1)
+if length(up.press)>24
     up2 = grid_profile(up, 'press', pg, 'lfitbin', g2opts);
+    if length(up2.press)<=1
+        up2 = [];
+    end
 else
     up2 = [];
 end

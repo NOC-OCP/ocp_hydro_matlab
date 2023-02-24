@@ -89,7 +89,12 @@ keepf = true(size(fnames));
 for no = 1:length(fnames)
     if isnumeric(d.(fnames{no}))
         flag = d.(fnames{no});
-        flag(flag==nanval(1)) = 9;
+        if isnan(nanval(1))
+            m = isnan(flag);
+        else
+            m = flag==nanval(1);
+        end
+        flag(m) = 9;
         d.(fnames{no}) = flag;
     else
         keepf(no) = 0;
@@ -102,7 +107,12 @@ keeps = true(size(snames));
 for no = 1:length(snames)
     if isnumeric(d.(snames{no}))
         sam = d.(snames{no});
-        sam(sam==nanval(1)) = nanval(2);
+        if isnan(nanval(1))
+            m = isnan(sam);
+        else
+            m = sam==nanval(1);
+        end
+        sam(m) = nanval(2);
         d.(snames{no}) = sam;
         fn = [snames{no} '_flag'];
         if ~ismember(fn,fnames)
@@ -117,13 +127,28 @@ for no = 1:length(snames)
         if ~ismember(fn,fnames)
             if addflags
                 flag = 9+zeros(size(sam));
-                flag(sam~=nanval(2)) = 2;
+                if isnan(nanval(2))
+                    m = ~isnan(sam);
+                else
+                    m = sam~=nanval(2);
+                end
+                flag(m) = 2;
                 d.(fn) = flag;
                 fnames = [fnames; fn];
             end
         else
             flag = d.(fn);
-            flag(sam==nanval(2) & ismember(flag,nanval)) = 9;
+            if isnan(nanval(2))
+                m1 = isnan(sam);
+            else
+                m1 = sam==nanval(2);
+            end
+            if sum(isnan(nanval))
+                m2 = ismember(flag,nanval) | isnan(flag);
+            else
+                m2 = ismember(flag,nanval);
+            end
+            flag(m1 & m2) = 9;
             d.(fn) = flag;
         end
     else
@@ -136,33 +161,36 @@ snames = snames(keeps);
 skipvars = setdiff(skipvars,{'Properties' 'Row' 'Variables'});
 for no = 1:length(skipvars)
     if isfield(d,skipvars{no})
-        d.(skipvars{no})(d.(skipvars{no})==nanval(1)) = nanval(2);
+        if isnan(nanval(1))
+            m = isnan(d.(skipvars{no}));
+        else
+            m = d.(skipvars{no})==nanval(1);
+        end
+        d.(skipvars{no})(m) = nanval(2);
     end
 end
 
 %apply niskin_flags to samples and their flags
-if keepemptyrows==0
-    anysam = false(size(d.sampnum));
-end
 if isfield(d, 'niskin_flag')
     niskbad = ismember(d.niskin_flag, nisk_badflags);
     fnames = setdiff(fnames, {'niskin_flag'});
     
     for no = 1:length(fnames)
-        flag = d.(fnames{no});
-        flag(niskbad & flag~=sam_missflags(1)) = sam_missflags(end);
-        d.(fnames{no}) = flag;
-        if keepemptyrows==0
-            anysam = anysam | flag~=sam_missflags(1);
+        if ~strcmp(fnames{no}(1),'u') && ~strcmp(fnames{no},'sbe35temp_flag')
+            flag = d.(fnames{no});
+            flag(niskbad & flag~=sam_missflags(1)) = sam_missflags(end);
+            d.(fnames{no}) = flag;
         end
     end
     
     for no = 1:length(snames)
-        sam = d.(snames{no});
-        sam(niskbad) = nanval(2);
-        d.(snames{no}) = sam;
+        if ~strcmp(snames{no}(1),'u') && ~strcmp(snames{no},'sbe35temp')
+            sam = d.(snames{no});
+            sam(niskbad) = nanval(2);
+            d.(snames{no}) = sam;
+        end
     end
-    
+
 end
 
 for no = 1:length(snames)
@@ -172,8 +200,13 @@ for no = 1:length(snames)
         flag = d.([snames{no} '_flag']);
         sam = d.(snames{no});
         mf = ismember(flag,sam_missflags);
-        flag(sam==nanval(2) & ~mf) = sam_missflags(end);
-        sam(mf) = NaN;
+        if isnan(nanval(2))
+            m = isnan(sam);
+        else
+            m = sam==nanval(2);
+        end
+        flag(m & ~mf) = sam_missflags(end);
+        sam(mf) = nanval(2);
         d.([snames{no} '_flag']) = flag;
         d.(snames{no}) = sam;
         
@@ -190,25 +223,40 @@ end
 
 if keepemptyvars<1
     %check flag fields for discard
+    keepvar = true(length(fnames),1);
     
     for no = 1:length(fnames)
         if sum(d.(fnames{no})~=9)==0
             d = rmfield(d, fnames{no});
+            keepvar(no) = false;
             
             if keepemptyvars==0
                 %didn't remove data column above, but flags are all 9 so
                 %remove now
                 d = rmfield(d, fnames{no}(1:end-5));
+                keepvar(strcmp(fnames{no}(1:end-5),fnames)) = false;
             end
             
         end
     end
     
+    fnames = fnames(keepvar);
 end
 
-if keepemptyrows==0 && sum(anysam)<length(anysam)
-    %discard empty rows from every (numeric) field
+if keepemptyrows==0 && ~isempty(fnames) 
     
+    %check for rows with no good data
+    if isfield(d,'sampnum')
+        anysam = false(size(d.sampnum));
+    else
+        anysam = false(size(d.time));
+    end
+    for no = 1:length(fnames)
+        flag = d.(fnames{no});
+        anysam = anysam | flag~=sam_missflags(1);
+    end
+
+    %discard empty rows from every (numeric) field
     fn = fieldnames(d);
     for fno = 1:length(fn)
         if isnumeric(d.(fn{fno}))

@@ -161,7 +161,7 @@ switch opt1
                 sect_id = '';
                 vars_exclude_ctd = {}; %changed jc238 from {'fluor' 'transmittance'};
                 vars_exclude_sam = {};
-                varsexclude = {};
+                vars_rename = {}; %first column in m_exch_vars_list, newname (e.g. CTDTURB, CTDBETA650_124)
             case 'plot' %***
                 station_depth_width = 0;
                 bottle_depth_size = 0;

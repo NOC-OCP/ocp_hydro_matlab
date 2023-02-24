@@ -102,17 +102,14 @@ if isfield(castopts,'calstr')
     if exist('testcal','var')
         castopts.docal = testcal;
     end
-    calstr = select_calibrations(castopts.docal, castopts.calstr);
-    if ~isempty(calstr)
-        [dctd_c, hctd_c] = apply_calibrations(dctd, hctd, calstr);
-        for no = 1:length(hctd_c.fldnam)
-            dctd.(hctd_c.fldnam{no}) = dctd_c.(hctd_c.fldnam{no});
-        end
-        if castopts.docal.cond || castopts.docal.temp
-            dctd.psal = gsw_SP_from_C(dctd.cond2, dctd.temp2, dctd.press);
-            dctd.asal = gsw_SA_from_SP(dctd.psal2, dctd.press, hctd.longitude, hctd.latitude);
-            dctd.potemp = gsw_pt0_from_t(dctd.asal, dctd.temp2, dctd.press);
-        end
+    [dctd_c, hctd_c] = apply_calibrations(dctd, hctd, calstr, castopts.docal);
+    for no = 1:length(hctd_c.fldnam)
+        dctd.(hctd_c.fldnam{no}) = dctd_c.(hctd_c.fldnam{no});
+    end
+    if castopts.docal.cond || castopts.docal.temp
+        dctd.psal = gsw_SP_from_C(dctd.cond2, dctd.temp2, dctd.press);
+        dctd.asal = gsw_SA_from_SP(dctd.psal2, dctd.press, hctd.longitude, hctd.latitude);
+        dctd.potemp = gsw_pt0_from_t(dctd.asal, dctd.temp2, dctd.press);
     end
 end
 

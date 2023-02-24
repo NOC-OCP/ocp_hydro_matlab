@@ -21,10 +21,6 @@ for kloop = klistl
     stn = kloop; mctd_03;
     stn = kloop; mctd_04;
     
-    %output to csv files
-    if 0
-    stn = stnlocal; mout_exch_ctd
-    end
     if MEXEC_G.ix_ladcp
         mout_1hzasc(stnlocal);
     end
@@ -39,9 +35,9 @@ for kloop = klistl
     stn = kloop; mfir_to_sam;
     
 end
-if 0
-    mout_exch_sam
-end
+
+%output to csv files
+klist = klistl; mout_cchdo_exchangeform; clear klist
 
 %and sync
 opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt

@@ -105,15 +105,14 @@ end
 %load data
 rootdir = mgetdir('ctd');
 [d, h] = mloadq(fullfile(rootdir, ['sam_' mcruise '_all']), '/');
-
-edges = [-1:.05:1]*rlim(2);
-presrange = [-max(d.([prestr 'press'])(~isnan(d.([prestr parameter])))) 0];
-statrange = [0 max(d.statnum(~isnan(d.([prestr parameter]))))+1];
-
-%apply calibrations if specified
+%apply calibrations?
 if sum(cell2mat(struct2cell(testcal)))
-    d = apply_cal_samfile(d, usedn, oxyvars, testcal, calstr0);
+    d = apply_cal_samfile(d, h, testcal, calstr0);
 end
+
+p.edges = [-1:.05:1]*rlim(2);
+p.presrange = [-max(d.([prestr 'press'])(~isnan(d.([prestr parameter])))) 0];
+p.statrange = [0 max(d.statnum(~isnan(d.([prestr parameter]))))+1];
 
 %find which serial numbers we have for this sensor type
 sns = [d.statnum d.(['sn_' parameter '1'])]; l = size(sns,1);
@@ -133,48 +132,26 @@ for ks = 1:length(sn)
     iis2 = find(ismember(d.statnum,stns2));
 
     %get ctd and comparison fields for both sets of indices
-    [dc, clabel, isratio] = fields_to_compare(d,prestr,parameter,iis1,iis2,num2str(sn(ks)),useoxyratio);
+    [dc, p, mod] = sensor_cal_comparisons(d, parameter, num2str(sn(ks)), prestr, iis1, iis2, okf, rlim(2)*.8, rlim(2)*.8);
 
-    %limit to acceptable flag values
-    iig = find(ismember(dc.calflag,okf));
-    fn = fieldnames(dc);
-    for no = 1:length(fn)
-        dc.(fn{no}) = dc.(fn{no})(iig);
-    end
-
-    %check for high-variance bottle stops
-    dc.cqflag = 2+zeros(length(iig),1);
-    m = false(size(dc.cqflag));
-    if isfield(d,['std1_' parameter])
-        m = m | d.(['std1_' parameter])(iig)>rlim(2)*.8;
-    end
-    if isfield(d,['grad_' parameter])
-        m = m | abs(d.(['grad_' parameter])(iig))>rlim(2)*.8;
-    end
-    dc.cqflag(m) = 3;
-    iigc = find(dc.cqflag==2);
-    disp([length(iig) length(iigc)])
-
-%fit model
-[mc, mod] = calmodel(dc, iigc, parameter);
 
 %stats
-md = m_nanmedian(dc.res(iigc)); 
-ms = sqrt(m_nansum((dc.res(iigc))-md).^2)/(length(iigc)-1);
-deep = dc.press>=pdeep;
-ngp = length(iigc);
-c = dc.res(iigc); c = c(dc.press(iigc)>pdeep);
+p.md = m_nanmedian(dc.res(p.iigc)); 
+ms = sqrt(m_nansum((dc.res(p.iigc))-p.md).^2)/(length(p.iigc)-1);
+p.deep = dc.press>=pdeep;
+ngp = length(p.iigc);
+c = dc.res(p.iigc); c = c(dc.press(p.iigc)>pdeep);
 try
-    iqrd = iqr(c);
+    p.iqrd = iqr(c);
 catch
     c = sort(c);
     ii = [round(length(c)/4) round(length(c)*3/4)];
-    iqrd = c(ii(2))-c(ii(1));
+    p.iqrd = c(ii(2))-c(ii(1));
 end
 
 %plot residual or ratio vs statnum, pressure, and histogram
 figure(2); clf; orient tall
-plot_residuals(dc,uselegend,isratio,pdeep,rlabel,statrange,presrange,iigc,deep,edges,mcruise,md,iqrd,clabel,rlim,parameter);
+plot_residuals(dc, p, parameter);
 if ~isempty(printform)
     print(printform, fullfile(printdir, ['ctd_eval_' parameter '_' num2str(sn(ks)) 'hist' dirstr]))
 end
@@ -265,14 +242,12 @@ for sno = stns(:)'
         opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
         calstr0 = castopts.calstr;
     end
-    calstr = select_calibrations(testcal, calstr0);
-    %and apply them
     clear d0
     iig = find(d.statnum==stnlocal);
     for vno = 1:length(uflds)
         d0.(uflds{vno}) = d.(uflds{vno})(iig);
     end
-    [dcal, hcal] = apply_calibrations(d0, h, calstr, 'q');
+    [dcal, hcal] = apply_calibrations(d0, h, calstr0, testcal, 'q');
     %put calibrated data from this station only back into d
     for vno = 1:length(hcal.fldnam)
         d.(hcal.fldnam{vno})(iig) = dcal.(hcal.fldnam{vno});
@@ -290,117 +265,28 @@ for no = 1:length(uflds)-3
 end
 
 
-function [dc, clabel, isratio] = fields_to_compare(d,prestr,parameter,iis1,iis2,snstr,useoxyratio)
-% function [dc, clabel, isratio] = fields_to_compare(d,prestr,parameter,iis1,iis2,snstr,useoxyratio);
 
-%general fields we might need
-iig0 = [iis1; iis2];
-dc.press = d.([prestr 'press'])(iig0);
-dc.sampnum = d.sampnum(iig0);
-dc.statnum = d.statnum(iig0);
-dc.nisk = d.position(iig0);
-dc.niskf = d.niskin_flag(iig0);
-
-%ctd data
-dc.ctddata = d.([prestr parameter '1'])(iis1);
-dc.ctemp = d.([prestr 'temp1'])(iis1);
-dc.cpsal = d.([prestr 'psal1'])(iis1);
-if strcmp(parameter,'cond')
-    %cond of psal2 at temp1
-    dc.ctdother = gsw_C_from_SP(d.([prestr 'psal2'])(iis1),d.([prestr 'temp1'])(iis1),d.([prestr 'press'])(iis1));
-else
-    dc.ctdother = d.([prestr parameter '2'])(iis1);
-end
-if ~isempty(iis2)
-    dc.ctddata = [dc.ctddata; d.([prestr parameter '2'])(iis2)];
-    dc.ctemp = [dc.ctemp; d.([prestr 'temp2'])(iis2)];
-    dc.cpsal = [dc.cpsal; d.([prestr 'psal2'])(iis2)];
-    if strcmp(parameter,'cond')
-        %cond of psal1 at temp2
-        dc.ctdother = [dc.ctdother; gsw_C_from_SP(d.([prestr 'psal1'])(iis2),d.([prestr 'temp2'])(iis2),d.([prestr 'press'])(iis2))];
-    else
-        dc.ctdother = [dc.ctdother; d.([prestr parameter '1'])(iis2)];
-    end
-end
-
-%sample/comparison data and residuals
-switch parameter
-    case 'temp'
-        dc.caldata = d.sbe35temp(iig0);
-        dc.calflag = d.sbe35temp_flag(iig0);
-        dc.res = dc.caldata-dc.ctddata;
-        dc.ctdres = dc.ctdother-dc.ctddata;
-        clabel = ['ctd temp alternate - s/n ' num2str(snstr) ' temp'];
-        isratio = 0;
-    case 'cond'
-        dc.caldata = gsw_C_from_SP(d.botpsal(iig0), dc.ctemp, dc.press); %cond at CTD temp
-        dc.calflag = d.botpsal_flag(iig0);
-        dc.res = (dc.caldata./dc.ctddata - 1)*35;
-        dc.ctdres = (dc.ctdother./dc.ctddata - 1)*35;
-        clabel = ['ctd cond alternate (recalculated) - s/n ' num2str(snstr) ' cond'];
-        isratio = 1; %***
-    case 'oxygen'
-        dc.caldata = d.botoxy(iig0);
-        dc.calflag = d.botoxy_flag(iig0);
-        if useoxyratio
-            dc.res = dc.caldata./dc.ctddata;
-            isratio = 1;
-            dc.ctdres = dc.ctdother./dc.ctddata;
-            clabel = ['ctd oxygen alternate / s/n ' num2str(snstr) ' oxygen'];
-        else
-            dc.res = (dc.caldata - dc.ctddata);
-            isratio = 0;
-            dc.ctdres = dc.ctdother - dc.ctddata;
-            clabel = ['ctd oxygen alternate - s/n ' num2str(snstr) ' oxygen'];
-        end
-end
-
-
-function [mc, mod] = calmodel(dc, iigc, parameter)
-% function [mc, mod] = calmodel(dc, iigc, parameter);
-if strncmp(parameter,'temp',4)
-    mod = [ones(length(iigc),1) dc.press(iigc) dc.statnum(iigc)];
-    modform = 'tempcal = temp + C1 + C2(press) + C3(stn)';
-    mc = regress(dc.res(iigc),mod);
-elseif strncmp(parameter,'cond',4)
-    mod = [dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.statnum(iigc)];
-    modform = 'condcal = cond*(C1 + C2(press) + C3(stn))';
-    mc = regress(dc.caldata(iigc),mod);
-elseif strncmp(parameter,'oxygen',6)
-    mod = [ones(length(iigc),1) dc.press(iigc) dc.press(iigc).^2 dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.press(iigc).^2];
-    modform = 'oxycal = C1 + C2(press) + C3(press^2) + (C4 + C5(press) + C6(press^2))(oxy)';
-    mc = regress(dc.caldata(iigc),mod);
-end
-disp(modform); fprintf(1,'%f, ',mc(:))
-
-
-function plot_residuals(dc,uselegend,isratio,pdeep,rlabel,statrange,presrange,iigc,deep,edges,mcruise,md,iqrd,clabel,rlim,parameter)
+function plot_residuals(dc, p, parameter)
 %first plot
 subplot(5,5,[1:5])
-plot(dc.statnum, dc.ctdres, 'c.', dc.statnum, dc.res, 'og', dc.statnum(iigc), dc.res(iigc), '+b', dc.statnum(deep), dc.res(deep), 'xk'); grid
-if uselegend
-    if isratio
-        legend(clabel,'cal/ctd','cal/ctd steady',['cal/ctd, p>' num2str(pdeep)])
-    else
-        legend(clabel,'cal-ctd','cal-ctd steady',['cal-ctd, p>' num2str(pdeep)])
-    end
-end
-xlabel('statnum'); xlim(statrange); ylabel(rlabel); ylim(rlim)
-title(mcruise)
+hl = plot(dc.statnum, dc.ctdres, 'c.', dc.statnum, dc.res, 'og', dc.statnum(p.iigc), dc.res(p.iigc), '+b', dc.statnum(p.deep), dc.res(p.deep), 'xk'); grid
+xlabel('statnum'); xlim(p.statrange); ylim(p.rlim)
+legend(hl([1 2 4]),p.colabel,p.cclabel,'deep'); title(p.mcruise)
 subplot(5,5,[9:10 14:15 19:20 24:25])
-plot(dc.ctdres, -dc.press, 'c.', dc.res, -dc.press, 'og', dc.res(iigc), -dc.press(iigc), '+b', [0 0], presrange, 'r'); grid
-ylabel('press'); ylim(presrange); xlabel(rlabel); xlim(rlim)
+plot(dc.ctdres, -dc.press, 'c.', dc.res, -dc.press, 'og', dc.res(p.iigc), -dc.press(p.iigc), '+b', [0 0]); grid
+ylabel('press'); ylim(p.presrange); xlim(p.rlim)
+legend(hl(1:2),p.colabel,p.cclabel)
 subplot(5,5,[6:8 11:13])
-plot(dc.caldata, dc.ctddata, 'o-k', dc.caldata(deep), dc.ctddata(deep), 'sb', dc.caldata, dc.caldata); grid;
+plot(dc.caldata, dc.ctddata, 'o-k', dc.caldata(p.deep), dc.ctddata(p.deep), 'sb', dc.caldata, dc.caldata); grid;
 axis image; xlabel(['cal ' parameter]); ylabel(['ctd ' parameter]);
 subplot(5,5,[16:18 21:23])
-nh = histc(dc.res, edges); nhgc = histc(dc.res(iigc),edges);
-plot(edges, nh, 'g', edges, nhgc, 'k');
-title([mcruise ' ' rlabel])
+nh = histc(dc.res, p.edges); nhgc = histc(dc.res(p.iigc), p.edges);
+plot(p.edges, nh, 'g', p.edges, nhgc, 'k');
+title([p.mcruise ' ' p.rlabel])
 ax = axis;
-text(edges(end)*.9, ax(4)*.95, ['median ' num2str(round(md*1e5)/1e5)], 'horizontalalignment', 'right')
-text(edges(end)*.9, ax(4)*.85, ['deep 25-75% ' num2str(round(iqrd*1e5)/1e5)], 'horizontalalignment', 'right')
-xlim(edges([1 end])); grid
+text(p.edges(end)*.9, ax(4)*.95, ['median ' num2str(round(p.md*1e5)/1e5)], 'horizontalalignment', 'right')
+text(p.edges(end)*.9, ax(4)*.85, ['deep 25-75% ' num2str(round(p.iqrd*1e5)/1e5)], 'horizontalalignment', 'right')
+xlim(p.edges([1 end])); grid
 
 
 function plot_comparison_quality(dc,ii,stns_examine,cropt_cal,testcal,calstr0,okf,llim)
@@ -429,10 +315,12 @@ for no = 1:length(s)
         if cropt_cal
             opt1 = 'mctd_02'; opt2 = 'ctd_cals'; get_cropt
             calstr0 = castopts.calstr;
+            if exist('testcal','var')
+                castopts.docal = testcal;
+            end
         end
-        calstr = select_calibrations(testcal, calstr0);
-        [dcal1, hcal1] = apply_calibrations(d1, h1, calstr);
-        [dcalu, hcalu] = apply_calibrations(du, hu, calstr);
+        [dcal1, hcal1] = apply_calibrations(d1, h1, calstr0, castopts.docal);
+        [dcalu, hcalu] = apply_calibrations(du, hu, calstr0, castopts.docal);
         %put calibrated fields back into d1 and du
         for vno = 1:length(hcal1.fldnam)
             d1.(hcal1.fldnam{vno}) = dcal1.(hcal1.fldnam{vno});

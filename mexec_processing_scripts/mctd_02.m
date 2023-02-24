@@ -18,7 +18,6 @@
 %     (optionally) apply_ctd_celltm
 %     mfsave
 %     apply_oxyhyst
-%     select_calibrations
 %     apply_calibrations
 
 %%%%% setup %%%%%
@@ -45,26 +44,8 @@ else
     infile = infile1;
     castopts.redoctm = 0;
 end
-[d, h] = mloadq(infile,'/');
-if min(d.press)<=-10
-        m = {['negative pressures <-10 in ' infile]};
-    if ~castopts.redoctm
- m = [m; 
-     'check d.press; if there are large spikes also affecting temperature, Ctrl-C'
-     'here, edit mctd_01 case in opt_' mcruise ', and reprocess this station from _noctm; otherwise,'];
-    end
-       m = [m;
-           'you may want to edit mctd_02 case (rawedit_auto) to remove large'
-            'outlier values in pressure (and other variables) before the mctd_rawedit gui stage.'
-            'Enter to continue.'];
-        fprintf(1,'%s\n',m{:})
-        pause
-end
 
-
-%%%%% edits and corrections, either producing or modifying _raw_cleaned file %%%%%
-
-%automatic
+%get edits to do
 opt1 = 'castpars'; opt2 = 'cast_groups'; get_cropt
 if exist('castopts','var')
     fn = fieldnames(castopts);
@@ -80,6 +61,27 @@ castopts.pumpsNaN.cond2 = 12;
 castopts.pumpsNaN.oxygen_sbe1 = 8*24;
 castopts.pumpsNaN.oxygen_sbe2 = 8*24;
 opt1 = mfilename; opt2 = 'rawedit_auto'; get_cropt
+
+[d, h] = mloadq(infile,'/');
+if min(d.press)<=-10 && (~isfield(castopts,'badpress') || ((isfield(castopts,'badtemp1') || isfield(castopts,'badtemp2')) && ~castopts.redoctm))
+    m = {['negative pressures <-10 in ' infile]};
+    if ~castopts.redoctm
+        m = [m;
+            'check d.press; if there are large spikes also affecting temperature, Ctrl-C'
+            'here, edit mctd_01 case in opt_' mcruise ', and reprocess this station from _noctm; otherwise,'];
+    end
+    m = [m;
+        'you may want to edit mctd_02 case (rawedit_auto) to remove large'
+        'outlier values in pressure (and other variables) before the mctd_rawedit gui stage.'
+        'Enter to continue.'];
+    fprintf(1,'%s\n',m{:})
+    pause
+end
+
+
+%%%%% edits and corrections, either producing or modifying _raw_cleaned file %%%%%
+
+%automatic
 [d, comment] = apply_autoedits(d, castopts);
 didedits = 0;
 if ~isempty(comment)
@@ -130,6 +132,8 @@ system(['chmod 644 ' m_add_nc(otfile24)]); %in case this was _raw (not _raw_clea
 castopts.dooxyrev = 0;
 castopts.dooxyhyst = 1;
 castopts.doturbV = 0;
+castopts.dooxy1V = 0; %make 1 or 2 to use temp1 or temp2 to recalculate from voltage
+castopts.dooxy2V = 0;
 castopts.oxyrev.H1 = -0.033;
 castopts.oxyrev.H2 = 5000;
 castopts.oxyrev.H3 = 1450;
@@ -163,6 +167,23 @@ end
 
 %%%%% oxygen hysteresis and/or renaming oxygen variables %%%%%
 [d, h] = mloadq(rawfile_use, '/');
+if castopts.dooxy1V>0 && isfield(castopts,'oxy1Vcoefs')
+    t = d.(['temp' num2str(castopts.dooxy1V)]);
+    c = d.(['cond' num2str(castopts.dooxy1V)]);
+    s = gsw_SP_from_C(c,t,d.press);
+    d.oxygen_sbe1 = mcoxy_from_V(d.sbeoxyV1, d.time, d.press, t, s, castopts.oxy1Vcoefs);
+    h.comment = [h.comment '\n oxygen_sbe1 recalculated from sbeoxyV1 using CTD' num2str(castopts.dooxy1V) ' '];
+else
+    castopts.dooxy1V = 0;
+end
+if castopts.dooxy2V>0 && isfield(castopts,'oxy2Vcoefs')
+    d0 = d;
+    t = d.(['temp' num2str(castopts.dooxy2V)]);
+    c = d.(['cond' num2str(castopts.dooxy2V)]);
+    s = gsw_SP_from_C(c,t,d.press);
+    d.oxygen_sbe2 = mcoxy_from_V(d.sbeoxyV2, d.time, d.press, t, s, castopts.oxy2Vcoefs);
+    h.comment = [h.comment '\n oxygen_sbe2 recalculated from sbeoxyV2 using CTD' num2str(castopts.dooxy2V) ' '];
+end
 if castopts.dooxyrev || castopts.dooxyhyst
     [dnew, hnew] = apply_oxyhyst(d, h, castopts);
 else
@@ -193,28 +214,22 @@ mfsave(otfile24, dnew, hnew, '-addvars');
 
 %%%%% sensor calibrations %%%%%
 opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
-if isfield(castopts, 'calstr')
+if isfield(castopts, 'calstr') && sum(cell2mat(struct2cell(castopts.docal)))
 
-    %select calibrations to apply and put in calstr
-    calstr = select_calibrations(castopts.docal, castopts.calstr);
-    
-    if ~isempty(calstr)
+    %load data and initialise
+    [d0,h0] = mloadq(otfile24, '/');
+    if ~isfield(d0, 'statnum')
+        d0.statnum = repmat(stnlocal, size(d0.scan));
+    end
 
-        %load data and initialise
-        [d0,h0] = mloadq(otfile24, '/');
-        if ~isfield(d0, 'statnum')
-            d0.statnum = repmat(stnlocal, size(d0.scan));
-        end
+    %apply calibrations
+    [dcal, hcal] = apply_calibrations(d0, h0, calstr, docal, 'q');
 
-        %apply calibrations
-        [dcal, hcal] = apply_calibrations(d0, h0, calstr);
-
-        %if there were calibrations applied to any variables, save those back
-        %to 24hz file (overwriting uncalibrated versions)
-        if ~isempty(hcal.fldnam)
-            mfsave(otfile24, dcal, hcal, '-addvars');
-        end
-
+    %if there were calibrations applied to any variables, save those back
+    %to 24hz file (overwriting uncalibrated versions)
+    if ~isempty(hcal.fldnam)
+        mfsave(otfile24, dcal, hcal, '-addvars');
     end
 
 end
+

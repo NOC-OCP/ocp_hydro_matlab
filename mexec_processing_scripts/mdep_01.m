@@ -8,7 +8,7 @@
 %      stn = 16; mdep_01;
 
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1,'adding water depth from station_depths/station_depths_%s.mat to all the files for station %s\n',mcruise,stn_string); end
+if MEXEC_G.quiet<=1; fprintf(1,'adding water depth from station_summary_%s_all.nc to all the files for station %s\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
@@ -20,7 +20,7 @@ deps_fn = fullfile(root_sum, ['station_summary_' mcruise '_all.nc']);
 [d,h] = mloadq(deps_fn,'/');
 iis = find(d.statnum==stnlocal);
 
-if isempty(iis)
+if isempty(iis) || isnan(d.cordep(iis(1)))
     warning([deps_fn ' does not contain depth for station ' stn_string '; not adding depth to any .nc files'])
 else
     if length(iis)>1 && length(unique(bestdeps(iis,2)))>1

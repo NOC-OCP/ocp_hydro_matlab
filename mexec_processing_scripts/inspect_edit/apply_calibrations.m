@@ -1,5 +1,6 @@
 function [dcal, hcal] = apply_calibrations(d0, h0, calstr, varargin)
 % [dcal, hcal] = apply_calibrations(d0, h0, calstr);
+% [dcal, hcal] = apply_calibrations(d0, h0, calstr, docal);
 % [dcal, hcal] = apply_calibrations(d0, h0, calstr, 'q');
 %
 % d0 and h0 are the uncalibrated data and header loaded from mstar file
@@ -29,12 +30,35 @@ function [dcal, hcal] = apply_calibrations(d0, h0, calstr, varargin)
 %     oxygen1 in calstr, as calibrations will be applied and fields of
 %     dcal created sequentially
 %
+% if optional input docal (structure) is included, only parameters set to 1
+%   in docal will be operated on
+%
 % see mctd_02, ctd_evaluate_sensors, and mtsg_medav_clean_cal for calling
 %     examples; 
-% see mctd_02 case in setdef_cropt_cast or opt_* and mtsg_medav_clean_cal
-%     case in setdef_cropt_uway or opt_* for calstr setting examples
+% see calibration, ctd_cals case in opt_* for calstr syntax examples
 
 m_common
+
+%select calibrations to apply (optional)
+for no = 1:length(varargin)
+    if isstruct(varargin{no})
+        docal = varargin{no};
+        varargin(no) = [];
+    end
+end
+if exist('docal','var')
+    cflag = fieldnames(docal);
+    csens = fieldnames(calstr);
+    for vno = 1:length(cflag) %loop through variables
+        if docal.(cflag{vno})==1
+            thisvar = find(strncmp(cflag{vno}, csens, length(cflag{vno})));
+            for sno = 1:length(thisvar)
+                calstr0.(csens{thisvar(sno)}) = calstr.(csens{thisvar(sno)});
+            end
+        end
+    end
+    calstr = calstr0;
+end
 
 hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
 

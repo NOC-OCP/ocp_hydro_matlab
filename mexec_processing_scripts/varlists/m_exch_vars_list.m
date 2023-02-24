@@ -14,10 +14,11 @@ if typ==1 % this is for ctd profiles
     
     varsh = {'EXPOCODE', ' ', 'expocode', '%s'
         'SECT_ID', ' ', 'sect_id', '%s'
-        'DATE, TIME', ' ', 'datetime', '%s'
+        'DATE', ' ', 'date', '%s'
+        'TIME', ' ', 'time', '%s'
         'LATITUDE', ' ', 'latitude', '%9.5f'
         'LONGITUDE', ' ', 'longitude', '%10.5f'
-        'DEPTH', ' ', 'depth', '%4.0f'
+        'DEPTH', ' ', 'water_depth_metres', '%4.0f'
         'STNNBR', ' ', 'statnum', '%3d'
         'CASTNO', ' ', 'castno', '%d'};
     vars = {'CTDPRS', 'DBAR', 'press', '%8.1f'
@@ -59,7 +60,7 @@ elseif typ==2 % this is for comparing with bottle samples
         'CTDPRS', 'DBAR', 'upress', '%6.1f'
         'CTDTMP', 'ITS-90', 'utemp', '%7.4f'
         'SBE35', 'ITS-90', 'sbe35temp', '%7.4f'
-        'SBE35_FLAG_W', ' ', 'sbe35temp_flag', '%7.4f'
+        'SBE35_FLAG_W', ' ', 'sbe35temp_flag', '%d'
         'CTDSAL', 'PSS-78', 'upsal', '%7.4f'
         'CTDSAL_FLAG_W', ' ', 'upsal_flag', '%d'
         'SALNTY', 'PSS-78', 'botpsal', '%7.4f'

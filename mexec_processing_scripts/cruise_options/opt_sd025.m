@@ -17,8 +17,8 @@ switch opt1
                 RVDAS.user = 'rvdas_ro';
                 RVDAS.database = ['"' '20210321' '"'];
             case 'datasys_best'
-                                    default_navstream = 'gnss_seapath_2';
-                    default_hedstream = 'heading_seapath_2';
+                default_navstream = 'gnss_seapath_320_2';
+                default_hedstream = 'heading_seapath_320_2';
         end
 
     case 'castpars'
@@ -31,7 +31,7 @@ switch opt1
                 racasts = [37 38 39 41 setdiff(48:65,ticasts)]; %for Radium
                 shortcasts = [3 7 11 12 13 37 38 39 41 48 51:53 67]; %no altimeter bottom depth / no LADCP BT
             case 'nnisk'
-                if ismember(stnlocal,[12 45 64 67 70 72:74 77 79 80 82 83 85:156 157:160 162:163])
+                if ismember(stnlocal,[12 45 64 67 70 72:74 77 79 80 82 83 85:156 157:160 162:167])
                     nnisk = 0;
                 elseif ismember(stnlocal,[13:21 23 42:44 46])
                     nnisk = 12;
@@ -66,7 +66,7 @@ switch opt1
                     castopts.badpress.temp2 = a;
                     castopts.badtemp1.temp1 = b; castopts.badtemp1.cond1 = b; castopts.badtemp1.oxygen_sbe1 = b;
                     castopts.badtemp2.temp2 = b; castopts.badtemp2.cond2 = b; castopts.badtemp2.oxygen_sbe2 = b;
-                elseif ismember(stnlocal,ticasts) && stnlocal>=23
+                elseif ismember(stnlocal,ticasts) && stnlocal>23
                     %sensor 2 is bad
                     castopts.badtemp2.temp2 = [-2 40; NaN NaN];
                     castopts.badtemp2.cond2 = [-2 40; NaN NaN];
@@ -75,7 +75,7 @@ switch opt1
                     castopts.rangelim.cond1 = [27 34];
                     castopts.rangelim.cond2 = [27 34];
                 end
-                if ismember(stnlocal,[43 64])
+                if ismember(stnlocal,[43 64]) %***still need hand editing
                     castopts.despike.press = [3 2 2];
                     castopts.despike.temp1 = [1 0.1];
                     castopts.despike.temp2 = [1 1 0.1 0.1];
@@ -83,10 +83,23 @@ switch opt1
                     castopts.despike.cond2 = [0.5 0.5 0.05 0.05];
                     castopts.despike.oxygen_sbe1 = [3 2 2 1 1];
                     castopts.despike.oxygen_sbe2 = [3 2 2 1 1];
-                    %castopts.despike.'transmittance' 0.3 0.2 0.2
-                    %castopts.despike. 'fluor' 0.2 0.1 0.1
-                    %castopts.despike. 'turbidityV' 0.05 0.05 0.05%***
-                    %castopts.despike.'pressure_temp' 0.1 0.1 0.1
+                end
+            case 'raw_corrs'
+                if ismember(stnlocal,ticasts) && stnlocal>23
+                    %recalculate oxygen2 using temp1 and cond1 
+                    castopts.dooxy2V = 1; 
+                    %and coefficients corresponding to oxygen sensor 2 from
+                    %xmlcon (should parse from header in future***)
+                    castopts.oxy2Vcoefs.Soc = 5.7890e-1;
+                    castopts.oxy2Vcoefs.Voff = -0.5201;
+                    castopts.oxy2Vcoefs.A = -4.1247e-3;
+                    castopts.oxy2Vcoefs.B = 1.5900e-4;
+                    castopts.oxy2Vcoefs.C = -2.8246e-6;
+                    castopts.oxy2Vcoefs.D0 = 2.5826e+0;
+                    castopts.oxy2Vcoefs.D1 = 1.92634e-4;
+                    castopts.oxy2Vcoefs.D2 = -4.64803e-2;
+                    castopts.oxy2Vcoefs.E = 3.6000e-2;
+                    castopts.oxy2Vcoefs.Tau20 = 1.3200;
                 end
         end
 
@@ -265,7 +278,6 @@ switch opt1
                 ii = find(strcmp('conc_o2',oxyvarmap(:,1)));
                 oxyvarmap(ii,:) = []; %don't rename, recalculate
             case 'oxy_calc'
-                %cal_temp = 25;
                 ds_oxy.vol_blank = repmat(-0.0081,size(ds_oxy.sampnum));
                 ds_oxy.vol_titre_std = repmat(0.4540,size(ds_oxy.sampnum));
                 ds_oxy.vol_blank(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = -0.0085;
@@ -282,10 +294,8 @@ switch opt1
                 d.botoxya_flag(ismember(d.sampnum,[1504 6811])) = 4;
                 d.botoxya_flag(ismember(d.sampnum,[1624 2913])) = 3;
                 d.botoxya_per_l(d.botoxya_flag==4) = NaN;
-                %d.botoxyb_flag(ismember(d.sampnum,[]) = 4;
                 d.botoxyb_flag(ismember(d.sampnum,[1512])) = 3;
                 d.botoxyb_per_l(d.botoxyb_flag==4) = NaN;
-                %4405
                 %duplicates that differ but not clear which is better
                 ii = find(abs(d.botoxya_per_l-d.botoxyb_per_l)>1 & d.botoxya_flag==2 & d.botoxyb_flag==2);
                 d.botoxya_flag(ii) = max(d.botoxya_flag(ii),3);
@@ -307,14 +317,11 @@ switch opt1
                     028 -4; 029 -4; 030 -1; ...
                     031 -2; 032 -2; 033 -2; 034 +0; ...
                     035 -2; 036 -0; ... 
-                    037 -4; 038 -3; ... %run on 12th
+                    037 -4; 038 -3; ... 
                     039 -6; 040 -6; ... 
-                    041 -6; 042 -5; ... 
-                    %43-46 missing? also no dates on neighbouring logsheets
-                    %but it doesn't seem any crates missing
-                    047 -5; 048 -8; ... %very large spread on 48, but it's -8 for the next run too
-                    %***flag everything between 47 and 48?
-                    049 -8; 050 -8; ... %run on 19th
+                    041 -6; 042 -5; ... %missed standards numbers (no skipped standards/sheets)
+                    047 -5; 048 -8; ... %very large spread on 48, but it's -8 for the next run too; flag all between 47 and 48?
+                    049 -8; 050 -8; ... %flag these for temperature being too high?
                     99 NaN %just to make sure we don't interpolate across the two machines!
                     101 0; 102 -1; 103 0 %very large spread/excluded 2 from 101 and 1 from 103***
                     ];
@@ -337,42 +344,28 @@ switch opt1
             case 'bestdeps'
                 %second column is water depth (from ea640 or ctd operator
                 %logsheet)
-                replacedeps = [3 164
-                    4 164
-                    7 667
-                    8 959
-                    11 2641
-                    12 2640
-                    13 3025
-                    14 3021
-                    %15 3865
-                    31 3473
-                    33 3459
-                    34 3460
-                    37 3179
-                    38 3178
-                    39 3049
-                    40 3049
-                    41 3048
-                    48 2729
-                    49 2730
-                    51 2562
-                    52 2562
-                    53 2563
-                    56 999
-                    64 2820
-                    65 2819
+                replacedeps = [3 164; 4 164; 7 667; 8 959; ...
+                    11 2641; 12 2640; ...
+                    13 3025; 14 3021; ...
+                    31 3473; 33 3459; 34 3460; ...
+                    37 3179; 38 3178; ...
+                    39 3049; 40 3049; 41 3048; ...
+                    48 2729; 49 2730; ...
+                    51 2562; 52 2562; 53 2563; ...
+                    56 999; ...
+                    64 2820; 65 2819; ...
                     77 440];
         end
 
     case 'batchactions'
         switch opt2
             case 'output_for_others'
-                pdir = '~/mounts/public/scientific_work_areas/physics/processed_data_hydro/';
+                pdir = '~/mounts/public/scientific_work_areas/hydrography/casts/';
                 n = 1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/ctd*24hz.nc ' pdir 'ctd_24hz/']);
                 n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/ctd*2db.nc ' pdir 'ctd_2dbar/']);
                 n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/sam_sd025_all.nc ' pdir]);
-                n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/collected_files/ ' pdir '/collected_files/']);
+                n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/collected_files/station_summary* ' pdir]);
+                n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/collected_files/740H* ' pdir]);
                 if sum(s)>0; warning('some or all syncing failed'); end
         end
 
@@ -385,6 +378,9 @@ switch opt1
                     cfg.stnstr = '089_156';
                 end
             case 'exch'
+                n0 = 95;
+                n12 = 14;
+                n24 = 167-1-n0-n12;
                 expocode = '74JC20230131';
                 sect_id = 'SR1b';
                 submitter = 'OCPNOCYLF'; %group institution person
@@ -395,10 +391,10 @@ switch opt1
                     '#DATES: 20230131 - 20230320';...
                     '#Chief Scientist: S. Fielding (BAS), K. Hendry (BAS)';...
                     '#Supported by grants from the UK Natural Environment Research Council.'};
-                if strcmp(out.type,'ctd')
+                if strcmp(in.type,'ctd')
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {'#NN stations with 12-place rosette, NN stations with 12-place Ti rosette, NN stations with 24-place Ti rosette';...
+                        {sprintf('#%d stations with 12-place rosette, %d stations with 24-place rosette, %d stations without bottles',n12,n24,n0);...
                         '#CTD: Who - Y. Firing; Status - uncalibrated.';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : COR';...
@@ -407,7 +403,7 @@ switch opt1
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {'#NN stations with 12-place rosette, NN stations with 24-place rosette';...
+                        {sprintf('#%d stations with 12-place rosette, %2d stations with 24-place rosette',n12,n24);...
                         '#CTD: Who - Y. Firing; Status - uncalibrated';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
@@ -420,16 +416,7 @@ switch opt1
                         '#POC, POM: Who - G. Dallolmo; Status - not yet analysed';...
                         }];
                 end
-                %rename CTDTURB to be more specific (so, the whole list should be in
-                %cropt?)
-                m = strcmp('CTDTURB',out.vars_units(:,1));
-                if sum(m)
-                    vars{m,1} = 'CTDBETA650_124';
-                end
-                m = strcmp('CTDTURB_FLAG_W',out.vars_units(:,1));
-                if sum(m)
-                    vars{m,1} = 'CTDBETA650_124_FLAG_W';
-                end
+                vars_rename = {'CTDTURB' 'CTDBETA650_124'}; %confirmed 650; probably 124? 
             case 'grid'
                 switch section
                     case 'sr1b'

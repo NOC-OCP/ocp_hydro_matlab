@@ -171,8 +171,7 @@ if ~isempty(klat1) && ~isempty(klat2) % latitude variables found
         deg = floor(lat1/100);
         min = lat1-100*deg;
         
-        lathc = char(lath); lathc = lathc(:)';
-        klats = strfind(lathc,'s');
+        klats = strcmpi('s',lath);
         
         dd.latitude = deg+min/60;
         dd.latitude(klats) = -dd.latitude(klats);
@@ -193,8 +192,7 @@ if ~isempty(klon1) && ~isempty(klon2) % longitude variables found
         deg = floor(lon1/100);
         min = lon1-100*deg;
         
-        lonhc = char(lonh); lonhc = lonhc(:)';
-        klons = strfind(lonhc,'w');
+        klons = strcmpi('w',lonh);
         
         dd.longitude = deg+min/60;
         dd.longitude(klons) = -dd.longitude(klons);

@@ -8,6 +8,10 @@ function status = mout_csv(in, out)
 %   type: 'sam' or 'ctd'
 %   stnlist (optional): list of stations to include/loop through (defaults
 %     to all)
+%   extras (optional): structure giving values of variables not in (or
+%     calculated from) file to be repeated on every row (e.g. expocode)
+%   extrah (optional): structure with variables not in individual input
+%     file headers to be added to header (should be included in out.varsh)
 %
 % out is a structure with fields:
 %   type: 'mstar' to keep mstar variable names and include mstar file
@@ -15,11 +19,12 @@ function status = mout_csv(in, out)
 %     parameter names and header information
 %   csvpre: prefix, including path for output csv file(s)
 %   vars_units (optional): Nx1 or Nx4 cell array containing list of
-%   variables to write (see m_exch_varlist.m)
-%   extras (optional): structure giving values of variables not in (or
-%   calculated from) file to be repeated on every row (e.g. expocode)
-%   header (optional): cell array to print at top of file (before
-%   additional header information depending on file type)
+%     variables to write (see m_exch_vars_list.m), with units and format
+%     strings
+%   varsh (optional): for exchange-format, Nx4 cell containing variables to
+%     add to header
+%   header (optional): cell array to print at top of file (before varsh
+%     information)
 %   bin_size (only used if in.type=='ctd'): integer scalar (default 2)
 %   bin_units (only used if in.type=='ctd'): 'dbar', 'm', or 'hz' (default
 %     dbar)
@@ -83,26 +88,26 @@ end
 %fields to list in header
 if strcmp(out.type,'exch')
     isw = 1;
-    varsh = out.varsh;
-    opt1 = 'outputs'; opt2 = 'exch'; get_cropt
 else
     isw = 0;
     %these are already in h
-    varsh = {'mstar_string', '%s', ' '
-        'dataname', '%s', ' '
-        'version', '%d', ' '
-        'platform_type', '%s', ' '
-        'platform_identifier', '%s', ' '
-        'platform_number', '%s', ' '
-        'water_depth_metres', '%d', ' '
-        'latitude', '%9.5f', ' '
-        'longitude', '%9.5f', ' '
-        'comment', '%s', ' '
-        'last_update_string', '%s', ' '};
-    varsh = varsh(:,[1 3 1 2]);
-    if issam
-        %no header depth, lat, lon for multi-station file
-        varsh = varsh([1:6 10:11],:);
+    if ~isfield(out,'varsh')
+        out.varsh = {'mstar_string', '%s', ' '
+            'dataname', '%s', ' '
+            'version', '%d', ' '
+            'platform_type', '%s', ' '
+            'platform_identifier', '%s', ' '
+            'platform_number', '%s', ' '
+            'water_depth_metres', '%d', ' '
+            'latitude', '%9.5f', ' '
+            'longitude', '%9.5f', ' '
+            'comment', '%s', ' '
+            'last_update_string', '%s', ' '};
+        out.varsh = out.varsh(:,[1 3 1 2]);
+        if issam
+            %no header depth, lat, lon for multi-station file
+            out.varsh = out.varsh([1:6 10:11],:);
+        end
     end
 end
 
@@ -126,7 +131,10 @@ for kloop = klist
         end
     end
     [d, h] = mloadq(infile, '/');
-
+    if strcmp(in.type,'ctd') && sum(~isnan(d.temp))==0
+        warning('skipping %s, no good data',fname)
+        continue
+    end
     
     %%% add/convert variables %%%
     
@@ -171,9 +179,16 @@ for kloop = klist
     else
         d = hdata_flagnan(d,'nanval',[NaN -999],'keepemptyrows',0);
         h.comment = [h.comment '\n default flags used'];
+        m = ~isnan(d.press+d.time);
+        if sum(~m)
+            fn = fieldnames(d);
+            for fno = 1:length(fn)
+                d.(fn{fno}) = d.(fn{fno})(m);
+            end
+        end
     end
     
-    %(constant) station positions and depths
+    %tile (constant) station positions and depths
     if isw && issam
         d = get_station_constants(d, mcruise);
     end
@@ -183,6 +198,15 @@ for kloop = klist
         m = strcmp('datetime',out.vars_units(:,3));
         if sum(m)
             d.datetime = datestr(d.(timvar)/86400+datenum(h.data_time_origin), out.datetimeform);
+        end
+    end
+    if isfield(out,'varsh') && ~isempty(out.varsh) && sum(strcmp('date',out.varsh(:,3)))
+        if ~isfield(h,'date') && (~isfield(in,'extrah') || ~isfield(in.extrah,'date'))
+            dn = d.time(d.press==max(d.press))/86400+datenum(h.data_time_origin);
+            if ~isfield(out,'dateform'); out.dateform = 'yyyymmdd'; end
+            if ~isfield(out,'timeform'); out.timeform = 'HHMM'; end
+            h.date = datestr(dn,out.dateform);
+            h.time = datestr(dn,out.timeform);
         end
     end
     if isfield(out,'time_units')
@@ -210,10 +234,10 @@ for kloop = klist
     
     
     %tile extra variables
-    if isfield(out,'extras')
-        fn = fieldnames(out.extras);
+    if isfield(in,'extras')
+        fn = fieldnames(in.extras);
         for fno = 1:length(fn)
-            d.(fn{fno}) = repmat(out.extras.(fn{fno}),size(d.(timvar)));
+            d.(fn{fno}) = repmat(in.extras.(fn{fno}),size(d.(timvar)));
         end
     end
     
@@ -263,8 +287,13 @@ for kloop = klist
     %%% write %%%
     
     %open csv file
-    if kloop>0 && ~isw
-        outfile = sprintf('%s_%s.csv',out.csvpre,stn_string);
+    if kloop>0
+        if isw
+            outfile = sprintf('%s%s_0001_ct1.csv',out.csvpre,stn_string);
+            h.statnum = stnlocal;
+        else
+            outfile = sprintf('%s_%s.csv',out.csvpre,stn_string);
+        end
     else
         outfile = sprintf('%s.csv',out.csvpre);
     end
@@ -272,7 +301,7 @@ for kloop = klist
     
     %write header
     if isfield(out,'header')
-        fprintf(fid, '%s\n', out.header{:})
+        fprintf(fid, '%s\n', out.header{:});
     end
     if ~isw
         [~,fn,ext] = fileparts(infile);
@@ -283,8 +312,12 @@ for kloop = klist
         end
         fprintf(fid, 'from file %s%s %s\n', fn, ext, avstr);
     end
-    for hno = 1:size(varsh,1)
-        fprintf(fid, ['%s = ' varsh{hno,4} '\n'], upper(varsh{hno,1}), h.(varsh{hno,3}));
+    for hno = 1:size(out.varsh,1)
+        if isfield(h,out.varsh{hno,3})
+            fprintf(fid, ['%s = ' out.varsh{hno,4} '\n'], upper(out.varsh{hno,1}), h.(out.varsh{hno,3}));
+        else
+            fprintf(fid, ['%s = ' out.varsh{hno,4} '\n'], upper(out.varsh{hno,1}), in.extrah.(out.varsh{hno,3}));
+        end
     end
     
     %column headers
@@ -293,7 +326,6 @@ for kloop = klist
     fprintf(fid, '%s, ', out.vars_units{1:end-1,2});
     fprintf(fid, '%s\n', out.vars_units{end,2});
     
-    tic
     %data rows
     iir = 1:length(d.(timvar));
     if issam && isfield(in,'stnlist')
@@ -306,7 +338,7 @@ for kloop = klist
         end
         fprintf(fid, [out.vars_units{end,4} '\n'], d.(out.vars_units{end,3})(sno,:));
     end
-    toc
+
     %finish up
     if isw
         fprintf(fid, '%s', 'END_DATA');
@@ -316,12 +348,14 @@ for kloop = klist
     status = 1;
     
     if klist~=0
-        disp(['file ' num2str(kloop) '/' num2str(length(klist)) ' written'])
+        disp(['file ' num2str(kloop) ' written'])
     end
 end
 
 
 function d = get_station_constants(d, mcruise)
+%tile certain variables that should be listed on every line but be constant
+
 stns = unique(d.statnum); ns = length(stns);
 if ~isfield(d,'stnlat')
     if isfield(d,'lat')
