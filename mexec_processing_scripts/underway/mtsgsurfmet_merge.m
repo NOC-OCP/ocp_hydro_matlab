@@ -9,7 +9,7 @@ clear dnew hnew
 filemet = [mgetdir(metpre) '/' metpre '_' mcruise '_01.nc'];
 if exist(filemet, 'file')
     [dm, hm] = mloadq(filemet, '/');
-    dm.timec = dm.time/3600/24+datenum(hm.data_time_origin);
+    dm.timec = m_commontime(dm,'time',hm,'datenum');
     hnew.fldnam = {}; hnew.fldunt = {};
     
     %use best available file
@@ -29,7 +29,7 @@ if exist(filemet, 'file')
     if exist(filetsg,'file')
         if MEXEC_G.quiet<=1; fprintf(1,'merging tsg data into %s_%s_01.nc\n',metpre,mcruise); end
         [dt, ht] = mloadq(filetsg, '/');
-        dt.timec = dt.time/3600/24+datenum(ht.data_time_origin);
+        dt.timec = m_commontime(dt,'time',ht,'datenum');
         
         %add tsg variables to structure to save into file
         addvars = munderway_varname({'salvar' 'tempvar' 'condvar' 'sstvar' 'svelvar'}, ht.fldnam, 's');
@@ -57,7 +57,7 @@ if exist(filemet, 'file')
             filesa = [mgetdir('windsonic') '/windsonic_' mcruise '_01.nc'];
             if exist(filesa, 'file')
                 [ds, hs] = mloadq(filesa, '/');
-                ds.timec = ds.time/3600/24+datenum(hs.data_time_origin);
+                ds.timec = m_commontime(ds,'time',hs,'datenum');
                 
                 windsin = munderway_varname('twindsvar', hs.fldnam, 1, 's');
                 winddin = munderway_varname('twinddvar', hs.fldnam, 1, 's');

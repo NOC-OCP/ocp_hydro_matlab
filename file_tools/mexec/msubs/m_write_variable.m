@@ -10,11 +10,11 @@ function m_write_variable(ncfile,v,opt)
 if nargin < 3; opt = ' '; end
 
 % if ~isfield(v,'type') v.type = 'double'; end
-if ~isfield(v,'units') v.units = ' '; end
-if ~isfield(v,'data') | ~isfield(v,'name')
+if ~isfield(v,'units'); v.units = ' '; end
+if ~isfield(v,'data') || ~isfield(v,'name')
     error('m_write_variable: the variable argument must have fields data and name');
 end
-if ~isfield(v,'type') v.type = class(v.data); end
+if ~isfield(v,'type'); v.type = class(v.data); end
 
 
 s  = size(v.data);
@@ -34,10 +34,10 @@ dimnames = m_unpack_dimnames(ncfile);
 krmatch = find(strncmp('nrows',dimnames,5));
 kcmatch = find(strncmp('ncols',dimnames,5));
 
+rowname = dimnames(krmatch);
+colname = dimnames(kcmatch);
 for k = 1:length(krmatch)
-    rowname{k} = dimnames{krmatch(k)};
     rowlength(k) = metadata.Dimension(krmatch(k)).Length;
-    colname{k} = dimnames{kcmatch(k)};
     collength(k) = metadata.Dimension(kcmatch(k)).Length;
 end
 
@@ -101,6 +101,7 @@ end
 m_add_variable_name(ncfile,v.name,{nrowsname ncolsname},v.type);
 if strcmp(opt,'nodata'); return; end
 if ~isempty(v.units); nc_attput(ncfile.name,v.name,'units',v.units); end
+if isfield(v,'serial') && ~isempty(v.serial); nc_attput(ncfile.name,v.name,'serial',v.serial); end
 nc_varput(ncfile.name,v.name,v.data);
 m_uprlwr(ncfile,v.name);
 

@@ -72,8 +72,7 @@ ph = .6/(np+1); % allow salin plot to be double height
 
 %start here
 
-time = d.time;
-dn = datenum(h.data_time_origin)+time/86400;
+dn = m_commontime(d,h,'datenum');
 dv = datevec(dn(1)); yyyy = dv(1);
 torg = datenum([yyyy 1 1 0 0 0]);
 decday = dn-torg; % noon on 1 Jan is 0.5

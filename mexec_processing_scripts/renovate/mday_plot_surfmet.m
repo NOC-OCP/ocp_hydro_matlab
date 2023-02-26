@@ -9,15 +9,14 @@ function pdf = mday_plot(day)
 %
 % Last updated: HP 04/01/10
 
-cruise = 'di368'
+m_setup
+cruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 today = sprintf('%02d',day);
 tomorrow = sprintf('%02d',day+1);
 daystr = sprintf('%03d',day);
 ext = '_edit' % or 'raw'
 ext = '_raw' % or 'raw'
-
-m_setup
 
 % met data plot
 
@@ -36,7 +35,7 @@ pdf.ylist='humid'
 pdf.yax=[20 100]
 % pdf.ntick = [25 10]
 pdf.ntick = [12 10]
-pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surfmet/met_' cruise '_d' daystr...
+pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surfmet/surfmet_' cruise '_d' daystr...
                                  ext '.nc'])
 
 
@@ -44,14 +43,14 @@ pdf.ylist='airtemp'
 pdf.yax=[10 30]
 pdf.newfigure='none'
 pdf.plotorg=[17,12]
-pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surfmet/met_' cruise '_d' daystr... 
+pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surfmet/surfmet_' cruise '_d' daystr... 
                                          ext '.nc'])
 
 pdf.ylist='speed'
 pdf.yax=[-1 29]
 pdf.newfigure='none'
 pdf.plotorg=[4,3]
-pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surfmet/met_' cruise '_d' daystr ...
+pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surfmet/surfmet_' cruise '_d' daystr ...
                                           ext '.nc'])
 
 pdf.ylist='direct'
@@ -60,6 +59,6 @@ pdf.newfigure='none'
 pdf.plotorg=[17,3]
 pdf.symbols = {'+'}
 pdf.styles = {' '}
-pdf=mplotxy(pdf,[MEXEC_G.mexec_data_root '/met/surfmet/met_' cruise '_d' daystr  ...
+pdf=mplotxy(pdf,[MEXEC_G.MEXEC_DATA_ROOT '/met/surfmet/surfmet_' cruise '_d' daystr  ...
                                           ext '.nc'])
 

@@ -1,13 +1,11 @@
-function bestdeps = best_station_depths(varargin)
-% function bestdeps = best_station_depths(stns,depth_source)
+function bestdeps = best_station_depths(stns,varargin)
 % function bestdeps = best_station_depths(stns)
-% function bestdeps = best_station_depths(depth_source)
-% function bestdeps = best_station_depths()
+% function bestdeps = best_station_depths(stns,depth_source)
 %
 % find station depths for stations stns (default: all with a ctd*raw.nc
 %     file, or as specified in opt_cruise)
-% using specified depth source or sources (cell array) (default: from
-%     opt_cruise)
+% using specified depth source or sources (cell array) 
+%        (default: {'ladcp' 'ctd'}, or as specified in opt_cruise)
 %     depth_source = 'file': load from a text file
 %         either csv with column headers including statnum and depth
 %         or two columns no header, first column is statnum, second depth
@@ -21,28 +19,22 @@ function bestdeps = best_station_depths(varargin)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-%find statnums with ctd data
-fn = dir(fullfile(mgetdir('M_CTD'), ['ctd_' mcruise '_*_raw*.nc']));
-stns = struct2table(fn).name; 
-stns = unique(cellfun(@(x) str2double(x(length(mcruise)+[6:8])), stns));
-%which stations need depths
-recalcdepth_stns = []; opt1 = mfilename; opt2 = 'depth_recalc'; get_cropt
-if ~isempty(recalcdepth_stns)
-    stns = intersect(stns, recalcdepth_stns);
+if isempty(stns)
+    %find statnums with ctd data
+    fn = dir(fullfile(mgetdir('M_CTD'), ['ctd_' mcruise '_*_raw*.nc']));
+    stns = struct2table(fn).name;
+    stns = unique(cellfun(@(x) str2double(x(length(mcruise)+[6:8])), stns));
+else
+    stns = stns(:);
 end
 
 %preferred method(s) for calculating depths
-                depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
-opt1 = mfilename; opt2 = 'depth_source'; get_cropt
-
-%override with optional inputs if specified
-for no = 1:length(varargin)
-    if ischar(varargin{no}) || iscell(varargin{no})
-        depth_source = varargin{no};
-    elseif isnumeric(varargin{no})
-        stns = intersect(stns, varargin{no});
-    end
+if nargin>1
+    depth_source = varargin{1};
+else
+    depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
 end
+opt1 = mfilename; opt2 = 'depth_source'; get_cropt
 
 if ~iscell(depth_source)
     depth_source = {depth_source};
@@ -66,8 +58,7 @@ for sno = 1:length(depth_source)
 end
 
 %finally look to cruise options for any changes
-                replacedeps = [];
-                stnmiss = [];
+replacedeps = []; stnmiss = [];
 opt1 = mfilename; opt2 = 'bestdeps'; get_cropt
 if ~isempty(stnmiss)
     bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
@@ -110,11 +101,14 @@ switch depth_source
             if exist(fn)
                 [d, h] = mloadq(fn, '/');
                 if ~isfield(d,'altimeter'); warning(['no altimeter record in ' fn]); continue; end
+                dd = mloadq(fullfile(mgetdir('ctd'),sprintf('dcs_%s_%03d.nc',mcruise,bestdeps(iif(no),1))),'/');
+                d.press = d.press(d.scan>=dd.scan_start & d.scan<=dd.scan_end);
+                d.altimeter = d.altimeter(d.scan>=dd.scan_start & d.scan<=dd.scan_end);
                 if ~isfield(d, 'depSM'); d.depSM = filter_bak(ones(1,21), sw_dpth(d.press, h.latitude)); end
                 [~,bot_ind] = max(d.depSM); % Find cast max depth
                 % Average altimeter and CTD depth for 30 seconds around max depth
                 ii = bot_ind-15:bot_ind+15;
-                if min(ii)>0 & max(ii)<=length(d.depSM)
+                if min(ii)>0 && max(ii)<=length(d.depSM)
                     ctd_bot = m_nanmean(d.depSM(bot_ind-15:bot_ind+15));
                     % Eliminate altim readings >20m (unlikely when CTD at bottom)
                     altim_select = d.altimeter(bot_ind-15:bot_ind+15); altim_select(altim_select>20) = NaN; alt_bot = m_nanmean(altim_select);
@@ -126,13 +120,21 @@ switch depth_source
     case 'ladcp' % load from IX LADCP .mat files
         
         for no = 1:length(iif)
-            lf = fullfile(mgetdir('M_IX'), 'DLUL_GPS', 'processed', sprintf('%03d', bestdeps(iif(no),1)), sprintf('%03d.mat',bestdeps(iif(no),1)));
-            if ~exist(lf, 'file')
-                lf = fullfile(mgetdir('M_IX'), 'DL_GPS', 'processed', sprintf('%03d', bestdeps(iif(no),1)), sprintf('%03d.mat',bestdeps(iif(no),1)));
+            lf = fullfile(mgetdir('M_IX'), 'DLUL_GPS_BT', 'processed', sprintf('%03d.mat',bestdeps(iif(no),1)));
+            if ~exist(lf,'file')
+                lf = fullfile(mgetdir('M_IX'), 'DL_GPS_BT', 'processed', sprintf('%03d.mat',bestdeps(iif(no),1)));
+                if ~exist(lf,'file')
+                    lf = fullfile(mgetdir('M_IX'), 'DLUL_GPS_BT', 'processed', sprintf('%03d', bestdeps(iif(no),1)), sprintf('%03d.mat',bestdeps(iif(no),1)));
+                    if ~exist(lf, 'file')
+                        lf = fullfile(mgetdir('M_IX'), 'DL_GPS_BT', 'processed', sprintf('%03d', bestdeps(iif(no),1)), sprintf('%03d.mat',bestdeps(iif(no),1)));
+                    end
+                end
             end
             if exist(lf, 'file')
                 load(lf, 'p');
                 bestdeps(iif(no),2) = round(p.zbottom);
+            else
+                warning('no ladcp for %03d',bestdeps(iif(no),1))
             end
         end
         
@@ -146,8 +148,8 @@ switch depth_source
                 for no = 1:length(iif)
                     fn = fullfile(mgetdir('M_CTD'), sprintf('dcs_%s_%03d.nc',mcruise,bestdeps(iif(no))));
                     if exist(fn, 'file')
-                        [ddcs,hdcs] = mloadq(fn,'/');
-                        btim = m_commontime(db.time, hb.data_time_origin, hdcs.data_time_origin); %put into dcs file time origin
+                        [ddcs, hdcs] = mloadq(fn,'/');
+                        btim = m_commontime(db, 'time', hb, hdcs); %put into dcs file time base
                         iig = find(~isnan(db.depth));
                         bestdeps(iif(no),2) = interp1(btim(iig),db.depth(iig),ddcs.time_bot);
                         dt = btim(iig)-ddcs.time_bot; dt = [min(dt(dt>0)) max(dt(dt<0))];

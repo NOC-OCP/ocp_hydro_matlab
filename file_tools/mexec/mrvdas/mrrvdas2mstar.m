@@ -92,9 +92,15 @@ if numel(dd.dnum) == 0
 end
 
 %change dnum to mexec time in seconds
-dd.time = (dd.dnum-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN))*86400;
+to = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+dd.time = m_commontime(dd.dnum,'datenum',to);
 names = [names; 'time'];
-units = [units; 'seconds'];
+opt1 = 'mstar'; get_cropt
+if docf
+    units = [units; to];
+else
+    units = [units; 'seconds'];
+end
 dd = rmfield(dd, 'dnum');
 [names, ia] = setdiff(names, {'dnum'}, 'stable');
 units = units(ia);
@@ -114,6 +120,13 @@ for kl = 1:length(names)
         dd = rmfield(dd,vname);
         warning('skipping non-numeric variable %s from table %s',vname,table)
     end
+end
+
+opt1 = 'mstar'; get_cropt
+if docf
+    hnew.data_time_origin = [];
+else
+    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 end
 
 hnew.dataname = dataname;

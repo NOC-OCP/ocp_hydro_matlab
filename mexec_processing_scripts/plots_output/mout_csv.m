@@ -197,12 +197,12 @@ for kloop = klist
     if isfield(out, 'datetimeform')
         m = strcmp('datetime',out.vars_units(:,3));
         if sum(m)
-            d.datetime = datestr(d.(timvar)/86400+datenum(h.data_time_origin), out.datetimeform);
+            d.datetime = datestr(m_commontime(d,timvar,h,'datenum'), out.datetimeform);
         end
     end
     if isfield(out,'varsh') && ~isempty(out.varsh) && sum(strcmp('date',out.varsh(:,3)))
         if ~isfield(h,'date') && (~isfield(in,'extrah') || ~isfield(in.extrah,'date'))
-            dn = d.time(d.press==max(d.press))/86400+datenum(h.data_time_origin);
+            dn = m_commontime(d.time(d.press==max(d.press),'time',h,'datenum');
             if ~isfield(out,'dateform'); out.dateform = 'yyyymmdd'; end
             if ~isfield(out,'timeform'); out.timeform = 'HHMM'; end
             h.date = datestr(dn,out.dateform);
@@ -210,9 +210,11 @@ for kloop = klist
         end
     end
     if isfield(out,'time_units')
-        d.(timvar) = m_commontime(d.(timvar),h.data_time_origin,out.time_units);
-    else
+        d.(timvar) = m_commontime(d,timvar,h,out.time_units);
+    elseif ~isempty(h.data_time_origin)
         out.time_units = sprintf('seconds since %s 00:00:00',datestr(h.data_time_origin,'yyyy-mm-dd'));
+    else
+        out.time_units = h.fldunt{strcmp(timvar,h.fldnam)};
     end
     m = strcmp(timvar,h.fldnam); h.fldunt{m} = out.time_units;
 

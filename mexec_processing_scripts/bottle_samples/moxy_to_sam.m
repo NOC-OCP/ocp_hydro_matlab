@@ -52,7 +52,7 @@ hnew.fldnam = {'sampnum'};
 hnew.fldunt = {'number'};
 
 %average replicates?
-                use_oxy_repl = 1;
+use_oxy_repl = 1;
 opt1 = mfilename; opt2 = 'use_oxy_repl'; get_cropt
 if use_oxy_repl>1 && ~isfield(d, 'botoxyc_per_l')
     use_oxy_repl = 1;

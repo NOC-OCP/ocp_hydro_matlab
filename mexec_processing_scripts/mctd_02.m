@@ -46,7 +46,6 @@ else
 end
 
 %get edits to do
-opt1 = 'castpars'; opt2 = 'cast_groups'; get_cropt
 if exist('castopts','var')
     fn = fieldnames(castopts);
     ii = find(strncmp('bad',fn,3));
@@ -171,7 +170,7 @@ if castopts.dooxy1V>0 && isfield(castopts,'oxy1Vcoefs')
     t = d.(['temp' num2str(castopts.dooxy1V)]);
     c = d.(['cond' num2str(castopts.dooxy1V)]);
     s = gsw_SP_from_C(c,t,d.press);
-    d.oxygen_sbe1 = mcoxy_from_V(d.sbeoxyV1, d.time, d.press, t, s, castopts.oxy1Vcoefs);
+    d.oxygen_sbe1 = calculate_oxy_from_V(d.sbeoxyV1, d.time, d.press, t, s, castopts.oxy1Vcoefs);
     h.comment = [h.comment '\n oxygen_sbe1 recalculated from sbeoxyV1 using CTD' num2str(castopts.dooxy1V) ' '];
 else
     castopts.dooxy1V = 0;

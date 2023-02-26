@@ -4,7 +4,6 @@
 %      stn = 16; mfir_03;
 
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to fir_%s_%s.nc\n', mcruise, stn_string); end
 
 root_ctd = mgetdir('M_CTD');
 infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
@@ -16,6 +15,7 @@ if ~exist(m_add_nc(infilef),'file')
         return
     end
 end
+if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to fir_%s_%s.nc\n', mcruise, stn_string); end
 %not using 24hz because we want at least some averaging
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']); 
 
@@ -24,10 +24,10 @@ var_copycell = mcvars_list(2); %which variables to copy from 24hz CTD file
 [var_copycell, var_copystr] = mvars_in_file(var_copycell, infile1);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
-                firmethod = 'medint';
-                clear firopts;
-                firopts.int = [-1 120];
-                firopts.prefill = 24*5; %fill gaps up to 5 s first
+firmethod = 'medint';
+clear firopts;
+firopts.int = [-1 120];
+firopts.prefill = 24*5; %fill gaps up to 5 s first
 opt1 = mfilename; opt2 = 'fir_fill'; get_cropt
 
 [dfir, hfir] = mloadq(infilef,'scan',' ');
@@ -42,7 +42,7 @@ for no = 1:length(var_copycell)
     dnew.(['u' var_copycell{no}]) = dc.(var_copycell{no});
 end
 % bak: need to fix time offset
-dnew.utime = m_commontime(dnew.utime,hc.data_time_origin,hfir.data_time_origin);
+dnew.utime = m_commontime(dnew,'utime',hc,hfir);
 
 hnew.latitude = hc.latitude; hnew.longitude = hc.longitude; hnew.water_depth_metres = hc.water_depth_metres;
 hnew.comment = hc.comment;

@@ -1,4 +1,9 @@
 %cruise-specific options for sd025
+testcasts = [3 4 7 11:12]; %***dips too short to process?
+ticasts = [3 4 7 11:24 31:32 36 40 45:47 50 54 57 59 61 63 68 76 161:172]; %Ti frame
+racasts = [37 38 39 41 setdiff(48:65,ticasts)]; %for Radium
+shortcasts = [3 4 7 11 12 13 37 38 39 41 48 51:53 67]; %no altimeter bottom depth / no LADCP BT
+shallowcasts = [3 4 7 11:12 171]; %too shallow to process ladcp
 
 switch opt1
 
@@ -25,15 +30,10 @@ switch opt1
         switch opt2
             case 'oxy_align'
                 oxy_end = 1;
-            case 'cast_groups'
-                testcasts = [3 7 11:12]; %***dips too short to process?
-                ticasts = [3 7 11:24 31:32 36 40 45:47 50 54 57 59 61 63 68 76 161:167]; %Ti frame
-                racasts = [37 38 39 41 setdiff(48:65,ticasts)]; %for Radium
-                shortcasts = [3 7 11 12 13 37 38 39 41 48 51:53 67]; %no altimeter bottom depth / no LADCP BT
             case 'nnisk'
-                if ismember(stnlocal,[12 45 64 67 70 72:74 77 79 80 82 83 85:156 157:160 162:167])
+                if ismember(stnlocal,[12 45 64 67 70 72:74 77 79 80 82 83 85:156 157:160 162:166 169:170])
                     nnisk = 0;
-                elseif ismember(stnlocal,[13:21 23 42:44 46])
+                elseif ismember(stnlocal,[13:21 23 42:44 46 169])
                     nnisk = 12;
                 end
         end
@@ -52,6 +52,12 @@ switch opt1
             case 'ctdvars'
                 ctdvars_add = {};
             case 'absentvars'
+            case 'cast_split'
+                if stnlocal==3
+                    %this file contains 3 and 4
+                    otfiles = {otfile; fullfile(mgetdir('ctd'),sprintf('ctd_%s_%03d_raw_noctm.nc',mcruise,4))};
+                    cast_scan_ranges = [1 20276; 20277 47077];
+                end
         end
 
     case 'mctd_02'
@@ -75,6 +81,11 @@ switch opt1
                     castopts.rangelim.cond1 = [27 34];
                     castopts.rangelim.cond2 = [27 34];
                 end
+                if ~ismember(stnlocal,ticasts) && stnlocal<=35 
+                    %bad coefficients for transmittance/attenuation on SS rosette
+                    castopts.rangelim.transmittance = [50 110];
+                    castopts.rangelim.attenuation = [-0.5 5];
+                end
                 if ismember(stnlocal,[43 64]) %***still need hand editing
                     castopts.despike.press = [3 2 2];
                     castopts.despike.temp1 = [1 0.1];
@@ -85,7 +96,7 @@ switch opt1
                     castopts.despike.oxygen_sbe2 = [3 2 2 1 1];
                 end
             case 'raw_corrs'
-                if ismember(stnlocal,ticasts) && stnlocal>23
+                if 0 %ismember(stnlocal,ticasts) && stnlocal>23
                     %recalculate oxygen2 using temp1 and cond1 
                     castopts.dooxy2V = 1; 
                     %and coefficients corresponding to oxygen sensor 2 from
@@ -106,7 +117,11 @@ switch opt1
     case 'mfir_01'
         switch opt2
             case 'blinfile'
-                blinfile = fullfile(root_botraw,sprintf('%s_%03d_',upper(mcruise),stnlocal));
+                if stnlocal==4 %ctd wasn't stopped and restarted, has been split in mctd_01, so 003.bl is actually for cast 004
+                    blinfile = fullfile(root_botraw,sprintf('%s_%03d_',upper(mcruise),3));
+                elseif stnlocal~=3
+                    blinfile = fullfile(root_botraw,sprintf('%s_%03d_',upper(mcruise),stnlocal));
+                end
                 if ismember(stnlocal,ticasts)
                     blinfile = [blinfile 'Ti.bl'];
                 else
@@ -240,12 +255,49 @@ switch opt1
                     case 55
                         niskin_flag(position==7) = 7 ; % once opened at top
                         niskin_flag(ismember(position,[21 24])) = 7 ; % small drip
+                    case 57
+                        niskin_flag(ismember(position,[2 12 14 19])) = 7 ; % issues with pressurizing
+                        niskin_flag(position==8) = 7 ; % potential contamination, TdFe sample still taken
+                        niskin_flag(position==17) = 7 ; % might have knocked the top after taking off
+                        niskin_flag(ismember(position,[13 14 22 23])) = 3 ; % open at the top
+                    case 60
+                        niskin_flag(ismember(position,[6 12])) = 3 ;
+                    case 61
+                        niskin_flag(position==10) = 4 ;
+                        niskin_flag(ismember(position,[12 24])) = 3 ;
+                    case 63
+                        niskin_flag(ismember(position,[10 14 20 22])) = 3 ;
+                    case 66
+                        niskin_flag(ismember(position,[4 8 16])) = 3 ;
+                    case 68
+                        niskin_flag(ismember(position,[11 22 24])) = 7 ; % assuming bottles were open, don't understand the comments
+                    case 69
+                        niskin_flag(ismember(position,[4 6 16 21])) = 3 ;
+                    case 71
+                        niskin_flag(ismember(position,[6 21])) = 3 ;
+                    case 75
+                        niskin_flag(ismember(position,[1 8 9 13 22])) = 3 ; % from tap
+                    case 76
+                        niskin_flag(ismember(position,[10 22])) = 4 ; % 'did not close', 'open'
+                        niskin_flag(position==15) = 7 ; % 'popped off' ?
+                    case 78
+                        niskin_flag(position==21) = 3 ;
+                    case 81
+                        niskin_flag(ismember(position,[6 7 19])) = 3 ; % 'after tap opened'
+                        niskin_flag(ismember(position,[21 23 24])) = 3 ;
+                    case 84
+                        niskin_flag(position==8) = 3 ; % 'slight leak'
+                        niskin_flag(position==18) = 3 ; % when tap opened
+
+                    case 161
+                        niskin_flag(ismember(position,[6 8 10 14 22])) = 4 ; % 'not closed'
+
 
                 end
         end
 
     case 'check_sams'
-        check_sal = 80; %start plotting sample readings from this station
+        check_sal = 78; %start plotting sample readings from this station
         check_oxy = 1;
         check_sbe35 = 1;
 
@@ -300,6 +352,14 @@ switch opt1
                 ii = find(abs(d.botoxya_per_l-d.botoxyb_per_l)>1 & d.botoxya_flag==2 & d.botoxyb_flag==2);
                 d.botoxya_flag(ii) = max(d.botoxya_flag(ii),3);
                 d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),3);
+                m = ismember(d.sampnum,[1001 1003 1004]) & d.botoxya_flag<4;
+                d.botoxya_flag(m) = 4; 
+                m = ismember(d.sampnum,[1001 1003 1004]) & d.botoxyb_flag<4;
+                d.botoxyb_flag(m) = 4; 
+                m = ismember(d.sampnum,[503]) & d.botoxya_flag<3;
+                d.botoxya_flag(m) = 3; 
+                m = ismember(d.sampnum,[503]) & d.botoxyb_flag<3;
+                d.botoxyb_flag(m) = 3; 
         end
 
     case 'botpsal'
@@ -322,6 +382,8 @@ switch opt1
                     041 -6; 042 -5; ... %missed standards numbers (no skipped standards/sheets)
                     047 -5; 048 -8; ... %very large spread on 48, but it's -8 for the next run too; flag all between 47 and 48?
                     049 -8; 050 -8; ... %flag these for temperature being too high?
+                    051 -20; 052 -20; ... %temperature fixed but clearly there has been significant drift in standardisation
+                    053 -20; 054 -18; ...
                     99 NaN %just to make sure we don't interpolate across the two machines!
                     101 0; 102 -1; 103 0 %very large spread/excluded 2 from 101 and 1 from 103***
                     ];
@@ -329,14 +391,11 @@ switch opt1
                 sal_off(:,2) = sal_off(:,2)*1e-5;
                 sal_off_base = 'sampnum_list';
             case 'sal_flags'
-                %all flags now based on stdev or number of readings,
-                %calculated in msal_01, but display some before running
-                %through checks: 
-                s3 = 5e-5; s4 = 1e-4;
-                a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
-                as = m_nanstd(a,2);
-                disp('will be bad:')
-                disp(ds_sal.sampnum(as>s4))
+                ii = find(ds_sal.sampnum==999047):find(ds_sal.sampnum==999050);
+                ds_sal.flag(ii) = 3;
+                ii = find(ds_sal.sampnum==999051):find(ds_sal.sampnum==999054);
+                ds_sal.flag(ii) = 3;
+                ds_sal.flag(ismember(ds_sal.sampnum,[6619 6622 1002 3515 3516 1924])) = 4;
         end
 
     case 'best_station_depths'
@@ -361,11 +420,11 @@ switch opt1
         switch opt2
             case 'output_for_others'
                 pdir = '~/mounts/public/scientific_work_areas/hydrography/casts/';
-                n = 1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/ctd*24hz.nc ' pdir 'ctd_24hz/']);
-                n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/ctd*2db.nc ' pdir 'ctd_2dbar/']);
+                n = 1; [s(n),~] = system(['rsync -au --delete ~/cruise/data/ctd/ctd*24hz.nc ' pdir 'ctd_24hz/']);
+                n = n+1; [s(n),~] = system(['rsync -au --delete ~/cruise/data/ctd/ctd*2db.nc ' pdir 'ctd_2dbar/']);
                 n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/sam_sd025_all.nc ' pdir]);
                 n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/collected_files/station_summary* ' pdir]);
-                n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/collected_files/740H* ' pdir]);
+                n = n+1; [s(n),~] = system(['rsync -au --delete ~/cruise/data/collected_files/74JC* ' pdir]);
                 if sum(s)>0; warning('some or all syncing failed'); end
         end
 
@@ -376,7 +435,7 @@ switch opt1
                     cfg.stnstr = '085_088';
                 elseif stnlocal>=89 && stnlocal<=156
                     cfg.stnstr = '089_156';
-                end
+               end
             case 'exch'
                 n0 = 95;
                 n12 = 14;
@@ -427,6 +486,7 @@ switch opt1
                         mgrid.zpressgrid = [0 5 25 50 75 100 175 250 375 500 625 750 875 1000 1250 1500 1750 2000 2250 2500 2750 3000 3250 3500]';
                     case 'picbox'
                     case 'picyo'
+                        kstns = [85:156] ;
                     case 'profiles_only'
                         %kstns = [1:3 5:167]; %must specify because of skipped station (what about 26/77?)
                         kstns = [1 2 5 6 8:12 14:30 32:76 78:167];
@@ -437,8 +497,10 @@ switch opt1
     case 'ladcp_proc'
         if contains(cfg.stnstr,'_')
             [dd,hd] = mloadq(fullfile(mgetdir('ctd'),sprintf('dcs_%s_%03d',mcruise,stnlocal)),'time_start time_end ');
-            p.time_start_force = round(datevec((dd.time_start-120)/86400+datenum(hd.data_time_origin)));
-            p.time_end_force = round(datevec((dd.time_end+120)/86400+datenum(hd.data_time_origin)));
+            dd.dnum_start = m_commontime(dd,'time_start',hd,'datenum');
+            dd.dnum_end = m_commontime(dd,'time_end',hd,'datenum');
+            cfg.p.time_start_force = round(datevec(dd.dnum_start-2/60/24));
+            cfg.p.time_end_force = round(datevec(dd.dnum_end+2/60/24));
         end
 
     case 'calibrations'
@@ -449,13 +511,17 @@ switch opt1
                 castopts.docal.oxygen = 0;
 
                 % temperature sensors
-                if ~ismember(stnlocal,ticasts) && stnlocal<=84%***
-                    castopts.calstr.temp1.sd025 = 'dcal.temp1 = (d0.temp1 - (-0.0056847)) / 1.0001 ;' ; %2191
-                    castopts.calstr.temp2.sd025 = 'dcal.temp2 = (d0.temp2 - 0.0074999) / 1.004 ;' ; %
-                else
-                    % ???
+                if ~ismember(stnlocal,ticasts)
+                    castopts.calstr.temp1.sd025 = 'dcal.temp1 = d0.temp1 - 1e-3;'; %2191
+                    castopts.calstr.temp2.sd025 = 'dcal.temp2 = interp1([0 5000],[1e-3 -1e-3],d0.press);'; %5649
+                    %castopts.calstr.temp1.calms = 'from stations 1-85***';
+                    %castopts.calstr.temp2.calms = 'from stations 1-85***';
                 end
 
+%c3488: [0 1000 5000], [0 0 -3e-3]
+%c3491: [0 5000],[-2 -4]e-3
+%c4876: [0 5000],[0.5 -1]e3
+%c4918: not enough points
                 % conductivity sensors
                 if ismember(stnlocal,ticasts)
                     castops.calstr.cond1.sd025 = 'dcal.cond1 = (d0.cond1 - (-0.30117)) / 1.0088 ;' ;

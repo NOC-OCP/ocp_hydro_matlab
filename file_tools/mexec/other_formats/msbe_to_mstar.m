@@ -265,6 +265,7 @@ h.instrument_identifier = 'ctd';
 h.dataname = 'sbe_ctd_rawdata';
 
 
+opt1 = 'mstar'; get_cropt %use cf-compliant units or not?
 if savefile
     
     %get mstar filename and check it is not open
@@ -282,10 +283,14 @@ if savefile
     if ~isempty(h.recording_interval); nc_attput(ncfile.name,nc_global,'recording_interval',h.recording_interval); end
     if ~isempty(h.latitude); nc_attput(ncfile.name,nc_global,'latitude',h.latitude); end
     if ~isempty(h.longitude);nc_attput(ncfile.name,nc_global,'longitude',h.longitude); end
-    nc_attput(ncfile.name,nc_global,'data_time_origin',h.data_time_origin);
+    if docf
+        nc_attput(ncfile.name,nc_global,'data_time_origin',[]); %now use cf-compliant units instead
+    else
+        nc_attput(ncfile.name,nc_global,'data_time_origin',h.data_time_origin);
+    end
     
 else
-    h.fldnam = {}; h.fldunt = {};
+    h.fldnam = {}; h.fldunt = {}; h.fldsn = {};
     h.comment = [];
     clear d %unnecessary? but acts as marker
 end
@@ -304,12 +309,35 @@ if numcycles ~= num_expected
     fprintf(MEXEC_A.Mfider,'%s\n',m,m2)
 end
 
+%parse (some) sensor serial numbers from header and store temporarily
+sa = {'t090C' 't190C'; 'c0mS/cm' 'c1mS/cm'; 'sbox0Mm/Kg' 'sbox1Mm/Kg'}; %***this needs to be a cruise option
+st = {'#     <TemperatureSensor'; '#     <ConductivitySensor'; '#     <OxygenSensor'};
+sns = {};
+for sno = 1:length(st)
+    ii = find(strncmp(st{sno},head,length(st{sno})));
+    if ~isempty(ii)
+        sn = cellfun(@(x) x(findstr('<SerialNumber>',x)+14:findstr('</Serial',x)-1),head(ii+1),'UniformOutput',false);
+        sns = [sns; [sa(sno,1) sn(1)]];
+        if length(sn)>1
+            sns = [sns; [sa(sno,2) sn(2)]];
+        end
+    end
+end
+
 for k = 1:noflds
     clear v
     v.name = m_check_nc_varname(varname{k});
     v.data = data1(k,:)';
     v.data(v.data == sbe_bad_flag) = nan; % set sbe bad data to nan
-    v.units = varunits{k};
+    if docf && strcmp(varunits{k},'seconds')
+        v.units = ['seconds since ' datestr(h.data_time_origin, 'yyyy-mm-dd HH:MM:SS')];
+    else
+        v.units = varunits{k};
+    end
+    m = strcmp(varname{k},sns(:,1));
+    if sum(m)
+        v.serial = sns{m,2};
+    end
     if savefile
         m = ['writing data for variable ' v.name];
         fprintf(MEXEC_A.Mfidterm,'%s\n',m);
@@ -317,6 +345,11 @@ for k = 1:noflds
     else
         h.fldnam = [h.fldnam v.name];
         h.fldunt = [h.fldunt v.units];
+        if isfield(v,'serial')
+            h.fldsn = [h.fldsn v.serial];
+        else
+            h.fldsn = [h.fldsn ' '];
+        end
         d.(v.name) = v.data;
     end
 end
@@ -339,6 +372,7 @@ while ~isempty(head)
         h.comment = [h.comment c];
     end
 end
+
 
 nowstring = datestr(now,31);
 if savefile

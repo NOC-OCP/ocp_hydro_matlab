@@ -79,8 +79,8 @@ opt1 = 'sbe35'; opt2 = 'sbe35_flags'; get_cropt
 %get station start and end times from station_summary file, and use to
 %match station numbers and discard duplicate (likely spurious) sampnums
 [dsum, hsum] = mloadq(fullfile(mgetdir('sum'),['station_summary_' mcruise '_all.nc']),'/');
-dsum.time_start = dsum.time_start/86400+datenum(hsum.data_time_origin);
-dsum.time_end = dsum.time_end/86400+datenum(hsum.data_time_origin);
+dsum.time_start = m_commontime(dsum,'time_start',hsum,'datenum');
+dsum.time_end = m_commontime(dsum,'time_end',hsum,'datenum');
 opt1 = 'check_sams'; get_cropt
 if check_sbe35
     statnumc = NaN+t.statnum;
@@ -118,14 +118,20 @@ end
 
 %rename and save
 clear hnew
-hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 hnew.fldnam = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag' 'statnum'};
 hnew.fldunt = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9' 'number'};
+opt1 = 'mstar'; get_cropt
+if docf
+    hnew.fldunt{1} = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+    hnew.data_time_origin = [];
+else
+    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+end
 hnew.dataname = ['sbe35_' mcruise '_01'];
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; 
 
 t.position = t.bn;
-t.time = (t.datnum-datenum(hnew.data_time_origin))*86400;
+t.time = m_commontime(t.datnum,'time','datenum',hnew);
 t.sbe35temp = t.t90;
 t.sbe35temp_flag = t.flag;
 opt1 = mfilename; opt2 = 'sbe35flag'; get_cropt

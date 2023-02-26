@@ -3,11 +3,13 @@ function mday_plots(day,stream)
 % make a series of plots to display a day of underway data
 % function mday_plots(day,stream)
 % recognised streams are
-%     case 'pos'
-%     case 'gyr'
-%     case 'chf'
+%     case 'sim'
+%     case 'posmvpos'
+%     case 'attposmv'
+%     case 'gyro_s'
+%     case 'log_chf'
 %     case 'ash'
-%     case 'metraw'
+%     case 'surfmet'
 %     case 'airraw'
 %     case 'metpro'
 %     case 'met_light'
@@ -16,7 +18,7 @@ function mday_plots(day,stream)
 %bak on jc069
 % revised for ship options on jr281 bak march 2013
 m_setup
-pdfsroot = [MEXEC_G.mexec_data_root '/plots/uway'];
+pdfsroot = [MEXEC_G.MEXEC_DATA_ROOT '/plots/uway'];
 day_string = sprintf('%03d',day);
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
@@ -32,18 +34,19 @@ switch MEXEC_G.Mship
 end
 
 switch stream
-    case 'posmvpos'
-        root_dir = mgetdir('M_POSMVPOS');
-        prefix1 = ['posmvpos' '_' mcruise '_'];
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
-        prefix2 = ['bst' '_' mcruise '_'];
-        infile2 = fullfile(root_dir, [prefix1 '01']);
+    case 'sim'
+        root_dir = mgetdir('M_SIM');
+        prefix1 = ['sim' '_' mcruise '_'];
+        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
+        infile2 = [root_dir '/' prefix1 '01'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
-        p.xlist = lon_name;
-        p.ylist = 'lat';
+        p.xlist = 'time';
+        p.ylist = 'depth_uncor';
         p.ncfile.name = infile1;
+        p.symbols = {'+'}; %eg {'+' 'o' '*'} (cell array of symbols; default {''} if not set)
+        p.styles = {''};
         p.widths = 3;
         p = mplotxy(p); % plot daily file
         close
@@ -57,6 +60,42 @@ switch stream
         p2.over = 1;
         p2.ncfile.name = infile2;
         p2.cols = 'r';
+        p2.symbols = {'+'}; %eg {'+' 'o' '*'} (cell array of symbols; default {''} if not set)
+        p2.styles = {''};
+        p2.widths = 1;
+        p2.startdc = [day 0 0 0];
+        p2.stopdc = [day+1 0 0 0];
+        p2 = mplotxy(p2); 
+      
+    case 'posmvpos'
+        root_dir = mgetdir('M_POSMVPOS');
+        prefix1 = ['posmvpos' '_' mcruise '_'];
+        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
+        prefix2 = ['bst' '_' mcruise '_'];
+        infile2 = [root_dir '/' prefix2 '01'];
+        if exist(m_add_nc(infile1),'file') ~= 2; return; end
+
+        clear p
+        p.xlist = lon_name;
+        p.ylist = 'lat';
+        p.ncfile.name = infile1;
+        p.symbols = {'+'}; %eg {'+' 'o' '*'} (cell array of symbols; default {''} if not set)
+        p.styles = {''};
+        p.widths = 3;
+        p = mplotxy(p); % plot daily file
+        close
+        %p = maxmerc(p); % make mercator
+        p = mplotxy(p); % replot
+        hold on; grid on;
+        % now plot bst file for this day
+        if exist(m_add_nc(infile2),'file') ~= 2; return; end
+
+        p2 = p;
+        p2.over = 1;
+        p2.ncfile.name = infile2;
+        p2.cols = 'r';
+        p2.symbols = {'+'}; %eg {'+' 'o' '*'} (cell array of symbols; default {''} if not set)
+        p2.styles = {''};
         p2.widths = 1;
         p2.startdc = [day 0 0 0];
         p2.stopdc = [day+1 0 0 0];
@@ -64,7 +103,7 @@ switch stream
     case 'attposmv'
         root_dir = mgetdir('M_ATTPOSMV');
         prefix1 = ['attposmv' '_' mcruise '_'];
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
+        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
         if exist(m_add_nc(infile1),'file') ~= 2;
             % file does not exist
             m_figure
@@ -96,12 +135,13 @@ switch stream
     case 'gyro_s'
         root_dir = mgetdir('M_GYRO_S');
         prefix1 = ['gyro_s' '_' mcruise '_'];
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
+        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
         p.xlist = 'time';
         p.ylist = 'head_gyr';
+        p.styles = {'.'};
         p.ncfile.name = infile1;
         p.startdc = [day 0 0 0];
         p.stopdc = [day+1 0 0 0];
@@ -131,7 +171,7 @@ switch stream
                 fprintf(2,'\n\n%s\n\n\n',msg);
                 return
         end
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
+        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -155,7 +195,7 @@ switch stream
         end
         root_dir = mgetdir('M_ASH');
         prefix1 = ['ash' '_' mcruise '_'];
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string]);
+        infile1 = [root_dir '/' prefix1 'd' day_string ''];
         if exist(m_add_nc(infile1),'file') ~= 2;
             % file does not exist
             m_figure
@@ -210,7 +250,7 @@ switch stream
         root_dir = mgetdir('M_SURFMET');
         %raw wind 
         prefix1 = ['surfmet' '_' mcruise '_'];
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
+        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -248,7 +288,7 @@ switch stream
         root_dir = mgetdir('M_OCL');
         %raw wind 
         prefix1 = ['ocl' '_' mcruise '_'];
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
+        infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -268,7 +308,7 @@ switch stream
         root_dir = mgetdir('M_SURFMET');
         %processed wind 
         prefix1 = ['surfmet' '_' mcruise '_'];
-        infile1 = fullfile(root_dir, [prefix1 'trueav']);
+        infile1 = [root_dir '/' prefix1 'trueav' ''];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -329,9 +369,9 @@ switch stream
                 fprintf(2,'\n\n%s\n\n\n',msg);
                 return
         end
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
+        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
         if exist(m_add_nc(infile1),'file') ~= 2;
-            infile1 = fullfile(root_dir, [prefix1 'd' day_string '_raw']);
+            infile1 = [root_dir '/' prefix1 'd' day_string '_raw'];
             if exist(m_add_nc(infile1),'file') ~= 2; return; end
         end
         clear p
@@ -383,14 +423,14 @@ switch stream
                 p_yax = [
                     0 5
                     0 12 % fluor in percent
-                    40 100 % trans in percent
+                    0 100 % trans in percent
                     ];
             otherwise
                 msg = ['edit tsg details as new case in mday_plots.m'];
                 fprintf(2,'\n\n%s\n\n\n',msg);
                 return
         end
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
+        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p
@@ -438,7 +478,7 @@ switch stream
                 return
         end
         % met tsg including fluor & trans
-        infile1 = fullfile(root_dir, [prefix1 'd' day_string '_edt']);
+        infile1 = [root_dir '/' prefix1 'd' day_string '_edt'];
         if exist(m_add_nc(infile1),'file') ~= 2; return; end
 
         clear p

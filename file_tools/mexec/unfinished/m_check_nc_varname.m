@@ -96,7 +96,7 @@ if ~isempty(smatch)
 end
 if renamed == 1 && printsummary == 1
 %     disp(['Variable number ' sprintf('%3d',k) ':''' vnold ''' renamed to ''' vn '''']);
-    disp(['Variable number :''' vnold ''' renamed to ''' vn '''']);
+    disp(['Variable :''' vnold ''' renamed to ''' vn '''']);
 end
 vname = vn;
 

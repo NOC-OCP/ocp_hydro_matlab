@@ -34,6 +34,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 if nargin>0
     stations_to_reload = varargin{1};
 end
+timestring = ['seconds since ' datevec(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)];
 
 %variables, units, how to group samples for counting
 %names, units, fill values, table headers, formats for printing to table
@@ -89,28 +90,6 @@ end
 %%%%% load data and save to mstar file %%%%%
 if ~isempty(stnall)
 
-    if sum(strcmp('maxw',vars(:,1)))
-        %figure out winch variable
-        d = []; cabname = [];
-        try
-            root_win = mgetdir('M_CTD_WIN');
-            d = dir(fullfile(root_win, ['win_' mcruise '_*.nc']));
-            fnwin = d(1).name; % first winch file name
-            h = m_read_header(fullfile(root_win,fnwin));
-            cabname = munderway_varname('cabvar',h.fldnam,1,'s');
-        catch
-            if isempty(d)
-                m = 'No winch files found';
-                fprintf(MEXEC_A.Mfider,'%s\n',m)
-            elseif isempty(cabname)
-                m1 = ['No match for winch cable out in file '];
-                m2 = [fnwin];
-                m3 = 'skipping';
-                fprintf(MEXEC_A.Mfider,'%s\n',m1,m2,m3)
-            end
-        end
-    end
-
     %initialise
     a = zeros(size(stnall));
     for no = 1:size(vars,1)
@@ -146,9 +125,12 @@ if ~isempty(stnall)
         end
 
         %winch
+        root_win = mgetdir('M_CTD_WIN');
         fnwin = fullfile(root_win, ['win_' mcruise '_' stnstr]);
-        if exist(m_add_nc(fnwin),'file') == 2 && ~isempty(cabname)
-            [dwin, h3] = mloadq(fnwin,cabname,'/');
+        if exist(m_add_nc(fnwin),'file') == 2
+            h3 = m_read_header(fnwin);
+            cabname = munderway_varname('cabvar',h3.fldnam,1,'s');
+            [dwin, ~] = mloadq(fnwin,cabname,'/');
             maxw(k) = max(dwin.(cabname));
         end
 
@@ -156,9 +138,9 @@ if ~isempty(stnall)
         fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' stnstr]);
         if exist(m_add_nc(fndcs),'file')
             [ddcs, h4] = mloadq(fndcs,'/');
-            time_start(k) = datenum(h4.data_time_origin) + ddcs.time_start/86400;
-            time_bottom(k) = datenum(h4.data_time_origin) + ddcs.time_bot/86400;
-            time_end(k) = datenum(h4.data_time_origin) + ddcs.time_end/86400;
+            time_start(k) = m_commontime(ddcs.time_start,h4,timestring);
+            time_bottom(k) = m_commontime(ddcs.time_bot,h4,timestring);
+            time_end(k) = m_commontime(ddcs.time_end,h4,timestring);
         end
 
         %samples
@@ -201,8 +183,6 @@ if ~isempty(stnall)
     end
 
     opt1 = mfilename; opt2 = 'sum_edit'; get_cropt; %edit depths, times, etc. not captured from CTD data
-
-    %when not close enough to bottom to detect on altimeter
     bestdeps = best_station_depths(stnall);
     [~,ia,ib] = intersect(statnum,bestdeps(:,1));
     cordep(ia) = bestdeps(ib,2);
@@ -224,10 +204,14 @@ if ~isempty(stnall)
             hnew.fldunt = [hnew.fldunt vars{k,2}];
         end
     end
-    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
-    ds.time_start = (ds.time_start - datenum(hnew.data_time_origin))*86400;
-    ds.time_bottom = (ds.time_bottom - datenum(hnew.data_time_origin))*86400;
-    ds.time_end = (ds.time_end - datenum(hnew.data_time_origin))*86400;
+    opt1 = 'mstar'; get_cropt
+    if docf
+        m = strncmp('time_',hnew.fldnam,5);
+        hnew.fldunt(m) = timestring;
+        hnew.data_time_origin = [];
+    else
+        hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+    end
     mfsave(otfile2, ds, hnew, '-merge', 'statnum');
 
 else
@@ -250,9 +234,9 @@ opt1 = mfilename; opt2 = 'sum_extras'; get_cropt
 
 %reload file in case we only added some stations in workspace
 [ds, ~] = mloadq(otfile2,'/');
-ds.time_start = ds.time_start/86400+datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
-ds.time_bottom = ds.time_bottom/86400+datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
-ds.time_end = ds.time_end/86400+datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
+ds.time_start = m_commontime(ds.time_start,timestring,'datenum');
+ds.time_bottom = m_commontime(ds.time_bottom,timestring,'datenum');
+ds.time_end = m_commontime(ds.time_end,timestring,'datenum');
 stnall = unique(ds.statnum);
 
 stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.csv']);

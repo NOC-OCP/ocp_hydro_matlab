@@ -6,7 +6,6 @@
 % formerly mfir_04
 
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1,'pasting CTD data at bottle firing times from fir_%s_%s.nc to sam_%s_all.nc\n',mcruise,stn_string,mcruise); end
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 infile = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
@@ -17,22 +16,29 @@ if ~exist(m_add_nc(infile), 'file')
         return
     end
 end
+if MEXEC_G.quiet<=1; fprintf(1,'pasting CTD data at bottle firing times from fir_%s_%s.nc to sam_%s_all.nc\n',mcruise,stn_string,mcruise); end
 otfile = fullfile(root_ctd, ['sam_' mcruise '_all']);
 
+opt1 = 'mstar'; get_cropt
 if exist(otfile,'file')
     h0 = m_read_header(otfile);
 else
-    clear h0; h0.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+    clear h0
+    if docf
+        h0.data_time_origin = [];
+    else
+        h0.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+    end
 end
 
 if exist(m_add_nc(infile),'file') == 2
     [d,h] = mloadq(infile,'/');
     d.statnum = repmat(stnlocal,size(d.position));
     d.sampnum = stnlocal*100+d.position;
-    h.fldnam = ['statnum' 'sampnum' h.fldnam]; h.fldunt = ['number' 'number' h.fldunt];
+    h.fldnam = [h.fldnam 'statnum' 'sampnum']; h.fldunt = [h.fldunt 'number' 'number'];
     if sum(~isnan(d.sampnum))>0
         ns = size(d.sampnum);
-        d.utime = m_commontime(d.utime,h.data_time_origin,h0.data_time_origin);
+        d.utime = m_commontime(d,'utime',h,MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
         h.data_time_origin = h0.data_time_origin;
         %add station parameters
         d.stnlat = repmat(h.latitude,ns); 

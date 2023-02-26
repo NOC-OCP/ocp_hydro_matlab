@@ -72,7 +72,7 @@ end
 
 botfn = fullfile(root_tsg, ['tsgsal_' mcruise '_all']); % generate filename for bottle salinities
 [db, hb] = mload(botfn, '/'); % load bottle salinities
-db.time = m_commontime(db.time, hb.data_time_origin, ht.data_time_origin); %match up times
+db.time = m_commontime(db.time, hb, ht); %match up times
 %sort all variables
 [a, iibot] = sort(db.time);
 fn = fieldnames(db);
@@ -115,13 +115,12 @@ end
 sdiffall = sdiff;
 sdiff(idx) = NaN; % set values where value>3*SD as NaN
 
-% set anytime tsg was not running (tbreaks)
-% bak jc211, break points in sdiffsm to allow for cleaning
-tbreak = []; % example of how to set tbreak in opt_jc211
+% set breakpoints for sdiffsm anytime tsg was not running (tbreaks) to
+% allow for cleaning 
+tbreak = []; 
 opt1 = mfilename; opt2 = 'tsg_timebreaks'; get_cropt;
 
-
-tbreak = [datenum([1900 1 1]); tbreak; datenum([2200 1 1])]-datenum(ht.data_time_origin);
+tbreak = [datenum([1900 1 1]); tbreak; datenum([2200 1 1])];
 nseg = length(tbreak)-1;
 
 sdiffsm_all = [];

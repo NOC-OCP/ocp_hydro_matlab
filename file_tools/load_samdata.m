@@ -128,7 +128,11 @@ for fno = 1:length(infile)
             hdr = hdr{:,:};
             [iih, ch, un] = sd_find_colhead(hdr, hcpat, icolhead, icolunits);
             if ~isempty(hcpat) && isempty(iih)
-                warning('did not find hcpat on sheet %d, stopping loop',sno); break
+                if sno==1
+                    error('did not find hcpat on sheet 1');
+                else
+                    warning('did not find hcpat on sheet %d, stopping loop',sno); break
+                end
             end
             if size(ch,1)>1
                 if isss
@@ -214,7 +218,9 @@ for fno = 1:length(infile)
         if ~isempty(icolunits)
             %units are not a property of importoptions so set now
             mc = ~cellfun('isempty',un);
-            dat.Properties.VariableUnits(mc) = un(mc);
+            if sum(mc)==length(dat.Properties.VariableUnits)
+                dat.Properties.VariableUnits = un(mc);
+            end
         end
         
         %add to samtable

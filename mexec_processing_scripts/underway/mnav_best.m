@@ -42,8 +42,15 @@ tav2 = round(tave_period/2);
 
 [d, h] = mloadq(infile,'/');
 timvar = 'time'; %dnum?
-d = m_commontime(d, timvar, h, MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
-h.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+timestring = ['seconds since ' datevec(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+d.(timvar) = m_commontime(d, timvar, h, timestring);
+opt1 = 'mstar'; get_cropt
+if docf
+    h.data_time_origin = [];
+    h.fldunt{strcmp(timvar,h.fldnam)} = timestring;
+else
+    h.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+end
 tg = (floor(min(d.time)/86400)*86400 - tav2):tave_period:(ceil(max(d.time)/86400)*86400+1);
 clear opts
 opts.ignore_nan = 1;
@@ -79,8 +86,11 @@ h.comment = [h. comment '\n speed, course over ground, and distance run calculat
 headvar = munderway_varname('headvar', hh.fldnam, 1, 's');
 [dh.dum_e, dh.dum_n] = uvsd(ones(size(dh.(headvar))), dh.(headvar), 'sduv');
 dh = rmfield(dh,headvar);
-dh = m_commontime(dh, timvar, hh, MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
-hh.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+dh = m_commontime(dh, timvar, hh, timestring);
+hh.data_time_origin = h.data_time_origin;
+if docf
+    hh.fldunt{strcmp(timvar,h.fldnam)} = timestring;
+end
 tg = (floor(min(d.time)/86400)*86400 - tav2):tave_period:1e10;
 clear opts
 opts.ignore_nan = 1;
@@ -95,7 +105,7 @@ mfsave(avfileh, dgh, hh);
 
 %%%%% merge vector-averaged heading onto average speed, course %%%%%
 
-dg.(headvar) = interp1(dgh.time, dgh.(headvar), dg.time);
+dg.(headvar) = interp1(dgh.(timvar), dgh.(headvar), dg.time);
 h.fldnam = [h.fldnam headvar];
 h.fldunt = [h.fldunt 'degrees']; %***reference/coord sys?
 h.comment = [h.comment '\n vector-averaged heading interpolated onto position times'];

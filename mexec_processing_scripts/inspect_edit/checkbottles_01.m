@@ -59,15 +59,15 @@ if nargin >= 3
         load(fngrid,'mgrid'); dg = mgrid;
         clear hg; hg.fldnam = dg.vars; hg.fldunt = dg.unts;
         dg = rmfield(dg,{'vars' 'unts'});
-        opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
-        if isfield(castopts, 'calstr') 
-            [dg, hg] = apply_calibrations(dg, hg, calstr, castopts.docal);
-            if castopts.docal.cond || castopts.docal.temp
-                dg.psal = gsw_SP_from_C(dg.cond, dg.temp, dg.press);
-                 dg.asal = gsw_SA_from_SP(dg.psal, dg.press, hg.longitude, hg.latitude);
-                dg.potemp = gsw_pt0_from_t(dg.asal, dg.temp, dg.press);
-            end
-        end
+%         opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
+%         if isfield(castopts, 'calstr') 
+%             [dg, hg] = apply_calibrations(dg, hg, calstr, castopts.docal);
+%             if castopts.docal.cond || castopts.docal.temp
+%                 dg.psal = gsw_SP_from_C(dg.cond, dg.temp, dg.press);
+%                  dg.asal = gsw_SA_from_SP(dg.psal, dg.press, hg.longitude, hg.latitude);
+%                 dg.potemp = gsw_pt0_from_t(dg.asal, dg.temp, dg.press);
+%             end
+%         end
 
     else
         fprintf(2,'\n%s %s %s\n\n','File ',fngrid,' not found; anomalies will not be plotted');

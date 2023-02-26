@@ -6,7 +6,6 @@
 % formerly mwin_03
 
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1,'adding winch data from bottle firing times to fir_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
@@ -21,6 +20,7 @@ if ~exist(m_add_nc(firfile),'file')
         return
     end
 end
+if MEXEC_G.quiet<=1; fprintf(1,'adding winch data from bottle firing times to fir_%s_%s.nc\n',mcruise,stn_string); end
 
 clear d h
 
@@ -31,7 +31,7 @@ if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     dwin.time = m_commontime(dwin.time,hwin.data_time_origin,hf.data_time_origin);
     
     % scan input file to extract winch cable out variable name
-    cabvar = intersect({'cableout' 'cab' 'cable' 'wireout' 'out' 'ctdcablelengthout'}, hwin.fldnam);
+    cabvar = intersect({'cableout' 'cab' 'cable' 'wireout' 'out' 'mfctdcablelengthout' 'ctdcablelengthout'}, hwin.fldnam);
     if isempty(cabvar)
         error(['Winch cable/wireout variable not found in input file'])
     else

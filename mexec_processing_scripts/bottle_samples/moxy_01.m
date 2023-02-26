@@ -130,11 +130,11 @@ end
 
 %compute concentration if not present
 if sum(strcmp('conc_o2',ds_oxy_fn))==0
-                    mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
-                std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
-                sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
-                mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
-opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
+    mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
+    std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
+    sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
+    mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
+    opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
     n_o2_reag = mol_o2_reag*vol_reag_tot;
     % molarity (mol/mL) of titrant
     mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);

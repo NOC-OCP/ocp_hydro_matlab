@@ -87,7 +87,7 @@ while 1
             clear ha
             clf
             
-            subplot('position',[pl pb+4*ph pw 2*ph])
+            ha(1) = subplot('position',[pl pb+4*ph pw 2*ph]);
             if isfield(d, 'pumps'); ii = find(d.pumps<1); else; ii = []; end %overplotting red if pumps not on. bak and ylf jr306, jan2015.
             plot(d.scan,-d.press,'k+-',d.scan(ii),-d.press(ii),'r+');
             hold on; grid on
@@ -100,38 +100,40 @@ while 1
             if ~isnan(k_end)
                 plot(d.scan(k_end),-d.press(k_end),'c^','markersize',10,'markerfacecolor','c');
             end
-            ha(1) = gca;
             if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('-press'); end
             %             set(gca,'ylim',plims);
             ht = get(ha(1),'title');
             set(ht,'string',infile1,'interpreter','none');
-            
-            subplot('position',[pl pb+3*ph pw ph])
+            xlim(d.scan([1 end]))
+
+            ha(2) = subplot('position',[pl pb+3*ph pw ph]);
             plot(d.scan,d.cond1,'k+-');
             hold on; grid on
             plot(d.scan,d.cond2,'r+-');
-            ha(2) = gca; set(ha(2),'YAxisLocation','right');
+            xlim(d.scan([1 end]))
+            set(ha(2),'YAxisLocation','right');
             ylabel('cond');
             
-            subplot('position',[pl pb+2*ph pw ph])
+            ha(3) = subplot('position',[pl pb+2*ph pw ph]);
             plot(d.scan,d.psal1,'k+-');
             hold on; grid on
             plot(d.scan,d.psal2,'r+-');
-            ha(3) = gca;
+            xlim(d.scan([1 end]))
             ylabel('psal')
             
-            subplot('position',[pl pb+ph pw ph])
+            ha(4) = subplot('position',[pl pb+ph pw ph]);
             plot(d.scan,d.temp1,'k+-');
             hold on; grid on
             plot(d.scan,d.temp2,'r+-');
-            ha(4) = gca; set(ha(4),'YAxisLocation','right');
+            xlim(d.scan([1 end]))
+            set(ha(4),'YAxisLocation','right');
             ylabel('temp')
             
-            subplot('position',[pl pb pw ph])
+            ha(5) = subplot('position',[pl pb pw ph]);
             if isfield(d,'oxygen2'); plot(d.scan,d.oxygen1,'k+-',d.scan,d.oxygen2,'r+-');
             else; plot(d.scan,d.oxygen1,'k+-'); end
             hold on; grid on
-            ha(5) = gca;
+            xlim(d.scan([1 end]))
             ylabel('oxygen')
 
             figure(102)
@@ -190,43 +192,43 @@ while 1
             clear ha
             clf
             
-            subplot('position',[pl pb+4*ph pw 2*ph])
+            ha(1) = subplot('position',[pl pb+4*ph pw 2*ph]);
             if isfield(d, 'pumps'); ii = find(d.pumps(kok)<1); else; ii = []; end %overplotting red if pumps not on. bak and ylf jr306, jan2015.
             plot(d.scan(kok),-d.press(kok),'k+-',d.scan(kok(ii)),-d.press(kok(ii)),'r+');
             hold on ;grid on
             plot(d.scan(k_bot),-d.press(k_bot),'pc');
-            ha(1) = gca;
+            xlim(d.scan(kok([1 end])))
             if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('press'); end
             ht = get(ha(1),'title'); %handle for title
             set(ht,'string',infile1);
             set(ht,'interpreter','none');
             
-            subplot('position',[pl pb+3*ph pw ph])
+            ha(2) = subplot('position',[pl pb+3*ph pw ph]);
             plot(d.scan(kok),d.cond1(kok),'k+-');
             hold on ;grid on
             plot(d.scan(kok),d.cond2(kok),'r+-');
-            ha(2) = gca;
+            xlim(d.scan(kok([1 end])))
             ylabel('cond');
             
-            subplot('position',[pl pb+2*ph pw ph])
+            ha(3) = subplot('position',[pl pb+2*ph pw ph]);
             plot(d.scan(kok),d.psal1(kok),'k+-');
             hold on ;grid on
             plot(d.scan(kok),d.psal2(kok),'r+-');
-            ha(3) = gca;
+            xlim(d.scan(kok([1 end])))
             ylabel('psal')
             
-            subplot('position',[pl pb+ph pw ph])
+            ha(4) = subplot('position',[pl pb+ph pw ph]);
             plot(d.scan(kok),d.temp1(kok),'k+-');
             hold on ;grid on
             plot(d.scan(kok),d.temp2(kok),'r+-');
-            ha(4) = gca;
+            xlim(d.scan(kok([1 end])))
             ylabel('temp')
             
-            subplot('position',[pl pb pw ph])
+            ha(5) = subplot('position',[pl pb pw ph]);
             if isfield(d,'oxygen2'); plot(d.scan(kok),d.oxygen1(kok),'k+-',d.scan(kok),d.oxygen2(kok),'r+-');
             else; plot(d.scan(kok),d.oxygen1(kok),'k+-'); end
             hold on ;grid on
-            ha(5) = gca;
+            xlim(d.scan(kok([1 end])))
             ylabel('oxygen')
 
             figure(102)

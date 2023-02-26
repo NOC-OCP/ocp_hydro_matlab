@@ -4,21 +4,23 @@
 %      stn = 16; mfir_01;
 
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,stn_string); end
 
-% resolve root directories for various file types
+% input file names
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
-opt1 = 'castpars'; opt2 = 'cast_groups'; get_cropt %define shortcasts and ticasts
-                blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stnlocal));
+blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stnlocal));
 opt1 = mfilename; opt2 = 'blinfile'; get_cropt
-m = ['infile = ' blinfile]; fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
+if ~exist(blinfile,'file')
+    fprintf(2,'.bl file not found; try sync again and enter to continue\n');
+    pause
+    if ~exist(blinfile,'file')
+        warning('no .bl file %s; skipping',blinfile)
+        return
+    end
+end
+if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,stn_string); end
 dataname = ['fir_' mcruise '_' stn_string];
 blotfile = fullfile(root_ctd, dataname);
-if ~exist(blinfile,'file')
-    fprintf(2,'.bl file not found; try sync again and enter to continue, or Ctrl-C to quit \n (you can still run mctd_checkplots at this point)');
-    pause
-end
 
 cellall = mtextdload(blinfile,',',10); % load all text
 if size(cellall,2)<4
@@ -40,8 +42,7 @@ pos = pos(:);
 scn = scn(:);
 
 opt1 = 'castpars'; opt2 = 'nnisk'; get_cropt
-                niskc = [1:nnisk]';
-                niskn = [1:nnisk]';
+niskc = [1:nnisk]'; niskn = [1:nnisk]';
 opt1 = mfilename; opt2 = 'nispos'; get_cropt
 niskc = niskc(:);
 niskin = niskn(:);

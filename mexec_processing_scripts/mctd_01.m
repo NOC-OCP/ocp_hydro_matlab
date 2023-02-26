@@ -35,7 +35,6 @@ else %in some cases, operate on original file (to remove large spikes), then app
     disp('starting from noctm file')
 end
 
-opt1 = 'castpars'; opt2 = 'cast_groups'; get_cropt %define shortcasts and ticasts
 if redoctm
     cnvfile = sprintf('%s_%03d.cnv', upper(mcruise), stnlocal);
 else
@@ -46,16 +45,6 @@ opt1 = mfilename; opt2 = 'cnvfilename'; get_cropt
 if ~exist(cnvfile,'file')
     warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
     pause
-end
-
-if exist(otfile,'file')
-    m = ['File' ];
-    m1 = otfile ;
-    m2 = ['already exists and is probably write protected'];
-    m3 = ['If you want to overwrite it, return to continue; otherwise ctrl-c to quit'];
-    fprintf(MEXEC_A.Mfider,'%s\n',m,' ',m1,' ',m2,m3)
-    pause
-    system(['chmod 644 ' m_add_nc(otfile)]);
 end
 
 
@@ -174,46 +163,6 @@ if ~isempty(absentvars)
     mcalib
 end
 
-% Get position at bottom of cast either from ctd-logged nmea lat, lon or
-% from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
-h = m_read_header(otfile);
-if sum(strcmp('latitude',h.fldnam)) && sum(strcmp('longitude',h.fldnam))
-    d = mloadq(otfile,'press','latitude','longitude',' ');
-    kbot = find(d.press == max(d.press), 1 );
-    botlat = d.latitude(kbot); botlon = d.longitude(kbot);
-else
-    [d, h] = mloadq(otfile,'time','press',' ');
-    kbot = find(d.press == max(d.press), 1 );
-    tbot = d.time(kbot);
-    tbotmat = datenum(h.data_time_origin) + tbot/86400; % bottom time as matlab datenum
-    switch MEXEC_G.Mshipdatasystem
-        case 'scs'
-            [botlat, botlon] = msposinfo(tbotmat);
-        case 'techsas'
-            [botlat, botlon] = mtposinfo(tbotmat);
-        case 'rvdas'
-            [botlat, botlon] = mrposinfo(tbotmat);
-        otherwise
-            botlat = []; botlon = [];
-    end
-end
-if ~isempty(botlat)
-    latstr = sprintf('%14.8f',botlat);
-    lonstr = sprintf('%14.8f',botlon);
-    MEXEC_A.MARGS_IN = {
-        otfile
-        'y'
-        '5'
-        latstr
-        lonstr
-        ' '
-        ' '
-        };
-    mheadr
-end
-
-system(['chmod 444 ' m_add_nc(otfile)]);
-
 % in special cases, read extra/new variables from a different set of files
 % (e.g. if a variable was mistakenly not exported in initial conversion to
 % .cnv, and has been exported on its own later); merge on scan
@@ -222,3 +171,64 @@ if ~isempty(extracnv) && ~isempty(extravars)
     mctd_extra_cnv
 end
 
+% in special cases (i.e. yo-yo or tow-yo casts), split file into multiple
+% files
+otfile0 = otfile;
+otfiles = {otfile};
+opt1 = mfilename; opt2 = 'cast_split'; get_cropt
+if length(otfiles)>1
+    [d,h] = mload(otfile0,'/');
+    t = struct2table(d);
+    for fno = 1:length(otfiles)
+        m = d.scan>=cast_scan_ranges(fno,1) & d.scan<=cast_scan_ranges(fno,2);
+        dnew = table2struct(t(m,:),'ToScalar',true);
+        [~,dataname,~] = fileparts(otfiles{fno});
+        dataname = dataname(1:strfind(dataname,'_raw')-1);
+        if isempty(dataname)
+            error('otfiles %d must contain ''_raw''',fno)
+        end
+        hnew = h; hnew.dataname = dataname;
+        hnew.comment = [hnew.comment '\n split from original ' h.dataname ' using scan range in opt_' mcruise '.m'];
+        mfsave(otfiles{fno},dnew,hnew);
+    end
+end
+
+% Get position at bottom of cast either from ctd-logged nmea lat, lon or
+% from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
+for fno = 1:length(otfiles)
+    otfile = otfiles{fno};
+    h = m_read_header(otfile);
+    if sum(strcmp('latitude',h.fldnam)) && sum(strcmp('longitude',h.fldnam))
+        d = mloadq(otfile,'press','latitude','longitude',' ');
+        kbot = find(d.press == max(d.press), 1 );
+        botlat = d.latitude(kbot); botlon = d.longitude(kbot);
+    else
+        [d, h] = mloadq(otfile,'time','press',' ');
+        kbot = find(d.press == max(d.press), 1 );
+        tbotmat = m_commontime(d.time(kbot),'time',h,'datenum');
+        switch MEXEC_G.Mshipdatasystem
+            case 'scs'
+                [botlat, botlon] = msposinfo(tbotmat);
+            case 'techsas'
+                [botlat, botlon] = mtposinfo(tbotmat);
+            case 'rvdas'
+                [botlat, botlon] = mrposinfo(tbotmat);
+            otherwise
+                botlat = []; botlon = [];
+        end
+    end
+    if ~isempty(botlat)
+        latstr = sprintf('%14.8f',botlat);
+        lonstr = sprintf('%14.8f',botlon);
+        MEXEC_A.MARGS_IN = {
+            otfile
+            'y'
+            '5'
+            latstr
+            lonstr
+            ' '
+            ' '
+            };
+        mheadr
+    end
+end

@@ -90,11 +90,10 @@ switch MEXEC_G.Mshipdatasystem
     case 'rvdas'
         if strcmp(MEXEC_G.Mship,'sda')
             %limit variables
-            opt1 = 'castpars'; opt2 = 'cast_groups'; get_cropt
             if exist('ticasts','var') && ismember(stnlocal,ticasts)
-                varlist = 'mfctdoutboardtension mfctdinboardtension mfctdcablelengthout mfctddeployeddepth mfctdlinespeed mfctdoverboardpointselected ';
+                varlist = 'MFCTDOutboardTension MFCTDCableLengthOut MFCTDDeployedDepth MFCTDLineSpeed MFCTDOverboardPointSelected ';
             else
-                varlist = 'ctdoutboardtension ctdcablelengthout ctddeployeddepth ctdlinespeed ctdoverboardpointselected ';
+                varlist = 'CTDOutboardTension CTDCableLengthOut CTDDeployedDepth CTDLineSpeed CTDOverboardPointSelected ';
             end
             %varlist = [varlist 'deeptowoutboardtension deeptowinboardtension deeptowcablelengthout deeptwodeployeddepth deeptowlinespeed '];
             %varlist = [varlist 'biowireoutboardtension biowireinboardtension biowirecablelengthout biowiredeployeddepth biowireoverboardpointselec'];

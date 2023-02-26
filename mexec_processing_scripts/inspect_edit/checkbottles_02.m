@@ -59,11 +59,11 @@ fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' sprintf('%03d',stnlocal)]);
 load(fngrid,'mgrid'); dgrid = mgrid; 
 [ddcs, hdcs] = mload(fndcs,'/');
 
-dcstime1 = datenum(hdcs.data_time_origin) + ddcs.time_start/86400;
-dcstime2 = datenum(hdcs.data_time_origin) + ddcs.time_bot/86400;
-dcstime3 = datenum(hdcs.data_time_origin) + ddcs.time_end/86400;
+dcstime1 = m_commontime(ddcs,'time_start',hdcs,'datenum');
+dcstime2 = m_commontime(ddcs,'time_bot',hdcs,'datenum');
+dcstime3 = m_commontime(ddcs,'time_end',hdcs,'datenum');
 
-ctdtime = datenum(hctd.data_time_origin) + dctd.time/86400;
+ctdtime = m_commontime(dctd,'time',hctd,'datenum');
 
 kdown = find(ctdtime > dcstime1 & ctdtime < dcstime2);
 kup = find(ctdtime > dcstime2 & ctdtime < dcstime3);

@@ -81,7 +81,7 @@ function output = munderway_varname(varargin)
 
 %add new names, or lists of names, as necessary
 varnames.timvar = {'time' 'measureTS' 'utctime' 'dnum'};
-varnames.cabvar = {'cableout' 'cab' 'cable' 'wireout' 'winch_cable_out' 'out' 'ctdcablelengthout' 'mfctdcablelengthout'};
+varnames.cabvar = {'cableout' 'cab' 'cable' 'wireout' 'winch_cable_out' 'out' 'mfctdcablelengthout' 'ctdcablelengthout'};
 varnames.salvar = {'sal_cal' 'salinity_calibrated' 'salinity_cal' 'salinity' 'psal' 'salinity_raw'};
 varnames.tempvar = {'housingtemp' 'temp_h' 'tstemp' 'temp_raw' 'temph_raw' 'temp_m' 'temp_housing_cal' 'temp_housing' 'temp_housing_raw'};
 varnames.sstvar = {'remotetemp' 'temp_r' 'sstemp' 'temp_remote' 'temp_remote_raw'};

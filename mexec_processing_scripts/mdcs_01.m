@@ -28,7 +28,7 @@ else
     hnew.comment = '';
 end
 
-auto_start = 0; auto_bot = 1; auto_end = 0; kstart = []; kbot = []; kend = []; 
+auto_start = 0; auto_bot = 0; auto_end = 0; kstart = []; kbot = []; kend = []; 
 opt1 = mfilename; opt2 = 'cast_divide'; get_cropt
 
 if ~isfield(ds,'dc_bot') || auto_bot
@@ -44,8 +44,8 @@ if ~isfield(ds,'dc_bot') || auto_bot
     ds.scan_bot = d1.scan(ds.dc_bot);
     ds.press_bot = d1.press(ds.dc_bot);
     ds.time_bot = d1.time(ds.dc_bot);
-        m = ['Bottom of cast is at dc ' sprintf('%d',ds.dc_bot) ' pressure ' sprintf('%8.1f',ds.press_bot)];
-        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
+    m = ['Bottom of cast is at dc ' sprintf('%d',ds.dc_bot) ' pressure ' sprintf('%8.1f',ds.press_bot)];
+    fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 end
 
 if ~isfield(ds,'dc_start') || auto_start
@@ -101,7 +101,13 @@ d24 = mloadq(infile0,'scan',' ');
 varnames = fieldnames(ds);
 varunits = repmat({'number'},size(varnames));
 istime = strncmp('time', varnames, 4);
-varunits(istime) = {'seconds'};
+opt1 = 'mstar'; get_cropt
+if docf
+    varunits(istime) = {['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')]};
+    hnew.data_time_origin = [];
+else
+    varunits(istime) = {'seconds'};
+end
 ispress = strncmp('press', varnames, 5);
 varunits(ispress) = {'dbar'};
 

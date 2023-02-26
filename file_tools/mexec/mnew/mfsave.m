@@ -339,7 +339,11 @@ m_add_comment(ncfile,[comstring '  at ' datestr(now,31) '  by ' MEXEC_G.MUSER]);
 if writenew && ~oldheader
     %fake input file details for write_history
     hist0.filename = [];
-    hist0.dataname = [];
+    if isfield(h,'dataname')
+        hist0.dataname = h.dataname;
+    else
+        [~,hist0.dataname,~] = fileparts(ncfile.name);
+    end
     hist0.version = [];
     hist0.mstar_site = [];
 else

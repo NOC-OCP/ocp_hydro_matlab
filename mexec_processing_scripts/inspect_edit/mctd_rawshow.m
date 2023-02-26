@@ -21,10 +21,8 @@ infile3 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
 
 hraw = m_read_header(infile1);
 [ddcs, hdcs]  = mloadq(infile2,'/');
-dcs_ts = ddcs.time_start(1);
-dcs_te = ddcs.time_end(1);
-dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
-dn_end = datenum(hdcs.data_time_origin)+dcs_te/86400;
+dn_start = m_commontime(ddcs.time_start(1),'time_start',hdcs,'datenum');
+dn_end = m_commontime(ddcs.time_end(1),'time_end',hdcs,'datenum');
 startdc = datevec(dn_start);
 stopdc = datevec(dn_end);
 opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt

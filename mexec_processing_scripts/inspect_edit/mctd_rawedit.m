@@ -37,10 +37,8 @@ if ~exist(m_add_nc(infiled), 'file')
 else
     
     [ddcs, hdcs]  = mloadq(infiled,'/');
-    dcs_ts = ddcs.time_start(1);
-    dcs_te = ddcs.time_end(1);
-    dn_start = datenum(hdcs.data_time_origin)+dcs_ts/86400;
-    dn_end = datenum(hdcs.data_time_origin)+dcs_te/86400;
+    dn_start = m_commontime(ddcs.time_start(1),'time_start',hdcs,'datenum');
+    dn_end = m_commontime(ddcs.time_end(1),'time_end',hdcs,'datenum');
     clear pshow0
     pshow0.startdc = datevec(dn_start);
     pshow0.stopdc = datevec(dn_end);

@@ -15,11 +15,15 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 root_vmadcp = mgetdir('M_VMADCP');
-                fnin = fullfile(root_vmadcp, 'postprocessing', upper(mcruise), 'proc_editing', inst, 'contour', [inst '.nc']);
+fnin = fullfile(root_vmadcp, 'postprocessing', upper(mcruise), 'proc_editing', inst, 'contour', [inst '.nc']);
 opt1 = mfilename; opt2 = 'codas_file'; get_cropt
 if ~exist(fnin, 'file')
     error(['input file ' fnin ' not found'])
 end
+
+%start header
+h = m_default_attributes;
+h.dataname = [inst '_' mcruise '_01'];
 
 %load data
 allin.decday = double(nc_varget(fnin,'time'));
@@ -45,12 +49,18 @@ allin.uabs(allin.uabs > 1e10) = nan;
 allin.vabs(allin.vabs > 1e10) = nan;
 allin.uship(allin.uship > 1e10) = nan;
 allin.vship(allin.vship > 1e10) = nan;
-kf = strfind(unin.decday,'since');
-torgstr = unin.decday(kf+5:end);
-cotorg = datenum(torgstr);
-torgstr = datestr(cotorg,'yyyy mm dd HH MM SS');
-allin.time = 86400*allin.decday; % input time is decimal days past cotorg
-unin.time = 'seconds';
+
+unin.time = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+allin.time = m_commontime(allin,'decday',unin.decday,unin.time);
+opt1 = 'mstar'; get_cropt
+if docf
+    h.data_time_origin = [];
+    h.data_time_origin_string = '';
+else
+    unin.time = 'seconds';
+    h.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+    h.data_time_origin_string = datestr(h.data_time_origin,'yyyy mm dd HH MM SS');
+end
 
 % expand the 1-D vars to 2-D
 ndeps = size(allin.depth,1);
@@ -66,11 +76,7 @@ unin.speed = unin.uabs;
 d.shipspd = sqrt(d.uship.*d.uship + d.vship.*d.vship);
 unin.shipspd = unin.uship;
 
-%construct header
-h = m_default_attributes;
-h.dataname = [inst '_' mcruise '_01'];
-h.data_time_origin_string = torgstr;
-h.data_time_origin = datevec(cotorg);
+%more header
 h.fldnam = fieldnames(d);
 h.fldunt = {};
 for no = 1:length(h.fldnam)

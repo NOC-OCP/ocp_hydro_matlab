@@ -26,7 +26,7 @@ if sum(strcmp(dh.fldnam, 'latitude'))
     [dd, dh] = mload(infile,'time press temp psal latitude longitude','0');
 else
     [dd, dh] = mload(infile,'time press temp psal','0');
-    dd.dnum = dd.time/86400+datenum(dh.data_time_origin);
+    dd.dnum = m_commontime(dd,'time',dh,'datenum');
     dv1 = datevec(dd.dnum(1)-1/24);
     dv2 = datevec(dd.dnum(end)+1/24);
     opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
@@ -51,7 +51,14 @@ else
     dd.latitude = interp1(dn.dnum,dn.latitude,dd.dnum);
     dd.longitude = interp1(dn.dnum,dn.longitude,dd.dnum);
 end
-dd.decday = dd.time/86400 + datenum(dh.data_time_origin) - datenum([dh.data_time_origin(1) 1 1 0 0 0]); % decimal day of year
+opt1 = 'mstar'; get_cropt
+if docf
+    [~,to] = timeunits_mstar_cf(dh.fldunt{strcmp('time',dh.fldnam)});
+    y0 = to(1);
+else
+    y0 = dh.data_time_origin(1);
+end
+dd.decday = m_commontime(dd,'time',dh,sprintf('days since %d 1 1 0 0 0',y0)); % decimal day of year
 dd.yearday = dd.decday + 1; %noon on 1 jan = 1.5
 
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));

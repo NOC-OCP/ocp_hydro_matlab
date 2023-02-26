@@ -55,15 +55,12 @@ if ~exist(subdir, 'dir')
    mkdir(subdir);
 end
 
-%transfer from cfg
+%transfer from cfg (but some fields of f and p may already have been set by
+%setdefv)
 fn = fieldnames(cfg.f);
-for no = 1:length(fn)
-    f.(fn{no}) = cfg.f.(fn{no});
-end
+for no = 1:length(fn); f.(fn{no}) = cfg.f.(fn{no}); end
 fn = fieldnames(cfg.p);
-for no = 1:length(fn)
-    p.(fn{no}) = cfg.p.(fn{no});
-end
+for no = 1:length(fn); p.(fn{no}) = cfg.p.(fn{no}); end
 
 if ~exist(f.ctd,'file')
     f.ctd = ' ';
@@ -96,6 +93,9 @@ if isup
       end
       d(1) = [];
    end
+end
+if isempty(f.ladcpdo) && isempty(f.ladcpup)
+    error('no down or up files found')
 end
 if length(f.ladcpdo)==1
     f.ladcpdo = f.ladcpdo{1};

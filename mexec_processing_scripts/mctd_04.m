@@ -47,11 +47,18 @@ dcstart = dd.dc24_start(kf);
 dcbot = dd.dc24_bot(kf);
 dcend = dd.dc24_end(kf);
 
+minlen = 60*24; minbins = 5; %require at least 1 minute and 10 dbar to make a profile
+
+if dcbot-dcstart>=minlen; isdown = 1; end
+if dcend-dcbot>=minlen; isup = 1; end
+if ~isdown && ~isup
+    warning('neither down nor up cast is longer than %d minutes; skipping', round(minlen/24))
+    return
+end
+
 
 %%%%% determine what variables will go in 2 dbar averaged files %%%%%
-%%%%% copy those from wkfile4 (24 hz data with added vars) to working files %%%%%
-%%%%% for downcast and upcast %%%%%
-
+%%%%% copy for downcast and upcast %%%%%
 
 [d, h] = mload(infile, '/');
 [var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
@@ -74,8 +81,12 @@ clear dn up
 hn = h;
 hn.fldnam = {}; hn.fldunt = {};
 for vno = 1:length(var_copycell)
-    dn.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_start:dd.dc24_bot);
-    up.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_bot:dd.dc24_end);
+    if isdown
+        dn.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_start:dd.dc24_bot);
+    end
+    if isup
+        up.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_bot:dd.dc24_end);
+    end
     hn.fldnam = [hn.fldnam var_copycell{vno}];
     hn.fldunt = [hn.fldunt h.fldunt{iiv(vno)}];
 end
@@ -83,20 +94,22 @@ end
 
 
 %%%%% optionally loopedit downcast %%%%%
-doloopedit = 0;
-ptol = 0.08; %default is not to apply, but this would be the default value if you did
-spdtol = 0.24; %default value from SBE program
-opt1 = mfilename; opt2 = 'doloopedit'; get_cropt
-if doloopedit
-    vars_other = setdiff(var_copycell, {'press'});
-    disp(['applying loopediting for ' otfile1d])
-    dn.press = m_loopedit(dn.press, 'ptol', ptol, 'spdtol', spdtol);
-    for vno = 1:length(vars_other)
-        dn.(vars_other{vno})(isnan(dn.press)) = NaN;
-        commentd = sprintf('loopediting applied to downcast using ptol %f, spdtol %f\n',ptol,spdtol);
+if isdown
+    doloopedit = 0;
+    ptol = 0.08; %default is not to apply, but this would be the default value if you did
+    spdtol = 0.24; %default value from SBE program
+    opt1 = mfilename; opt2 = 'doloopedit'; get_cropt
+    if doloopedit
+        vars_other = setdiff(var_copycell, {'press'});
+        disp(['applying loopediting for ' otfile1d])
+        dn.press = m_loopedit(dn.press, 'ptol', ptol, 'spdtol', spdtol);
+        for vno = 1:length(vars_other)
+            dn.(vars_other{vno})(isnan(dn.press)) = NaN;
+            commentd = sprintf('loopediting applied to downcast using ptol %f, spdtol %f\n',ptol,spdtol);
+        end
+    else
+        commentd = '';
     end
-else
-    commentd = '';
 end
 
 %%%%% grid to 2 dbar %%%%%
@@ -109,23 +122,20 @@ g2opts.grid_extrap = [0 0]; %discard empty bins
 g2opts.postfill = maxfill2db; %fill after gridding?
 g2opts.ignore_nan = 1;
 g2opts.bin_partial = 1; %use bins with data in only one half
-if length(dn.press)>24
+if isdown
     dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
-    if length(dn2.press)<=1
-        dn2 = [];
+    if sum(~isnan(dn2.press))<minbins
+        isdown = 0;
     end
-else
-    dn2 = [];
 end
-if length(up.press)>24
+if isup
     up2 = grid_profile(up, 'press', pg, 'lfitbin', g2opts);
-    if length(up2.press)<=1
-        up2 = [];
+    if sum(~isnan(up2.press))<minbins
+        isup = 0;
     end
-else
-    up2 = [];
 end
-if isempty(dn2) && isempty(up2)
+if ~isdown && ~isup
+    warning('neither down nor up cast has enough good data; skipping')
     return
 end
 hn.comment = 'gridded to 2 dbar using grid_profile method lfitbin\n';
@@ -140,22 +150,22 @@ end
 
 %%%%% add or recalculate depth and potemp %%%%%
 
-if ~isempty(dn2)
+if isdown
     iigd = find(dn2.press>-1.495);
     dn2.depth = NaN+dn2.press; dn2.depth(iigd) = -gsw_z_from_p(dn2.press(iigd),h.latitude);
 end
-if ~isempty(up2)
+if isup
     iigu = find(up2.press>-1.495);
     up2.depth = NaN+up2.press; up2.depth(iigu) = -gsw_z_from_p(up2.press(iigu),h.latitude);
 end
 hn.fldnam = [hn.fldnam 'depth']; hn.fldunt = [hn.fldunt 'metres'];
 
-if ~isempty(dn2)
+if isdown
     dn2.potemp = NaN+dn2.press; dn2.potemp(iigd) = gsw_pt0_from_t(dn2.asal(iigd), dn2.temp(iigd), dn2.press(iigd));
     dn2.potemp1 = NaN+dn2.press; dn2.potemp1(iigd) = gsw_pt0_from_t(dn2.asal1(iigd), dn2.temp1(iigd), dn2.press(iigd));
     dn2.potemp2 = NaN+dn2.press; dn2.potemp2(iigd) = gsw_pt0_from_t(dn2.asal2(iigd), dn2.temp2(iigd), dn2.press(iigd));
 end
-if ~isempty(up2)
+if isup
     up2.potemp = NaN+up2.press; up2.potemp(iigu) = gsw_pt0_from_t(up2.asal(iigu), up2.temp(iigu), up2.press(iigu));
     up2.potemp2 = NaN+up2.press; up2.potemp2(iigu) = gsw_pt0_from_t(up2.asal2(iigu), up2.temp2(iigu), up2.press(iigu));
     up2.potemp1 = NaN+up2.press; up2.potemp1(iigu) = gsw_pt0_from_t(up2.asal1(iigu), up2.temp1(iigu), up2.press(iigu));
@@ -171,15 +181,13 @@ hn.comment = [hn.comment 'depth and potemp calculated using gsw\n'];
 
 %%%%% save %%%%%
 
-if ~isempty(dn2)
+if isdown
     hnd = hn;
-    if ~isempty(commentd)
-        hnd.comment = [commentd hnd.commentd];
-    end
+    hnd.comment = [commentd hnd.comment];
     mfsave(otfile1d, dn2, hnd);
 end
 
-if ~isempty(up2)
+if isup
     hnu = hn;
     mfsave(otfile1u, up2, hnu);
 end

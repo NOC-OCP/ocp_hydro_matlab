@@ -225,7 +225,7 @@ if sum(strcmp(abbrev,{'ea600' 'ea640' 'singleb'}))
         lon = dn.(lonstr);
         lat = dn.(latstr);
 
-        dn.time = m_commontime(dn.time,hn.data_time_origin,h.data_time_origin);
+        dn.time = m_commontime(dn.time,hn,h);
         lon = interp1(dn.time, lon, d.time);
         lat = interp1(dn.time, lat, d.time);
 

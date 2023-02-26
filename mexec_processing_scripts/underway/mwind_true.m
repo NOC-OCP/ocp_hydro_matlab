@@ -37,7 +37,7 @@ filenav = [mgetdir('M_POS') '/bst_' mcruise '_01'];
 [dn, hn] = mloadq(infilen, '/'); 
 
 %nav times in time coordinate of dw
-dn.timew = m_commontime(dn.time, hn.data_time_origin, hw.data_time_origin);
+dn.timew = m_commontime(dn.time, hn, hw);
 
 
 %ship heading as a vector

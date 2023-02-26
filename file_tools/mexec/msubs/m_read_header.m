@@ -18,7 +18,7 @@ dimnames = m_unpack_dimnames(ncfile);
 
 globatt = metadata.Attribute;
 
-for k = 1:length(globatt);
+for k = 1:length(globatt)
     gattname = globatt(k).Name;
     gattvalue = globatt(k).Value;
     com = ['h.' gattname ' = gattvalue;'];
@@ -40,7 +40,11 @@ torg = datenum(h.mstar_time_origin);
 % h.last_update_string = datestr(torg+h.date_file_updated,31);
 h.last_update_string = datestr(h.date_file_updated,31);
 % h.data_time_origin_string = datestr(torg+h.data_time_origin,31);
-h.data_time_origin_string = datestr(datenum(h.data_time_origin),31); 
+if isempty(h.data_time_origin)
+    h.data_time_origin_string = '';
+else
+    h.data_time_origin_string = datestr(datenum(h.data_time_origin),31); 
+end
 % for some reason datstr([X 1 1 0 0 0],31) doesn't work properly for X <
 % about 1481. This construct with datestr(datenum[],31) seems to work OK .
 
@@ -83,10 +87,15 @@ h.numdimsets = length(krmatch);
     h.dimrows = [];
     h.dimcols = [];
 
-
 for k = 1:h.noflds
     h.fldnam{k} = var_names{k+1};
     h.fldunt{k} = nc_attget(ncfile.name,h.fldnam{k},'units');
+    a = nc_getvarinfo(ncfile.name, h.fldnam{k}); a = {a.Attribute.Name};
+    if sum(strcmp('serial',a))
+      h.fldsn{k} = nc_attget(ncfile.name,h.fldnam{k},'serial');
+    else
+      h.fldsn{k} = ' ';
+    end
     h.alrlim(k) = nc_attget(ncfile.name,h.fldnam{k},'min_value');
     h.uprlim(k) = nc_attget(ncfile.name,h.fldnam{k},'max_value');
     h.absent(k) = nc_attget(ncfile.name,h.fldnam{k},'_FillValue');

@@ -51,8 +51,8 @@ end
 %get start and end times
 if strcmp(cast_select,'ctd')
     [dd, hd] = mloadq(fullfile(root_ctd,['dcs_' mcruise '_' stn_string]),'/');
-    tstart = dd.time_start/86400+datenum(hd.data_time_origin);
-    tend = dd.time_end/86400+datenum(hd.data_time_origin);
+    tstart = m_commontime(dd,'time_start',hd,'datenum');
+    tend = m_commontime(dd,'time_end',hd,'datenum');
 else
     tt = readtable(listfile);
     ii = find(tt(:,1)==stn); ii = ii(end);
@@ -70,7 +70,7 @@ sstart = datestr(tstart,31); send = datestr(tend,31);
 
 %get vmadcp data
 [d, h] = codas_to_mstar(inst);
-d.time = d.time/86400 + datenum(h.data_time_origin);
+d.time = m_commontime(d,'time',h,'datenum');
 
 %find indices of vmadcp data in interval, and check whether tstart and tend
 %are outside vmadcp time series
@@ -115,10 +115,16 @@ end
 %check dims
 mfsave(avfile,da,ha);
 
+opt1 = 'mstar'; get_cropt
+if docf
+    [~,to] = timeunits_mstar_cf(h.fldunt(strcmp('decday',h.fldnam)));
+else
+    to = h.data_time_origin;
+end
 %file for ladcp
 if ~isempty(root_ladcp) && sum(mt)>1
     % CV 2018/11/17: edit to get the right variable names and time for LDEO_IX_12
-    tim_sadcp = d.decday(1,mt) + julian(h.data_time_origin(1),h.data_time_origin(2),h.data_time_origin(3));
+    tim_sadcp = d.decday(1,mt) + julian(to(1),to(2),to(3));
     lat_sadcp = d.lat(1,mt);
     lon_sadcp = d.lon(1,mt);
     velun = h.fldunt(strcmp('uabs',h.fldnam));
