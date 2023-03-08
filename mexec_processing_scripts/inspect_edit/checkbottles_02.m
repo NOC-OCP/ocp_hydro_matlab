@@ -96,13 +96,10 @@ if ~isfield(dsam, 'sbe35temp')
 end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
-                dotcal = 0; doccal = 0; doocal = 0; %default is not to apply calibrations
+testcal = [];
 opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
-if isfield(castopts,'calstr')
-    if exist('testcal','var')
-        castopts.docal = testcal;
-    end
-    [dctd_c, hctd_c] = apply_calibrations(dctd, hctd, calstr, castopts.docal);
+if ~isempty(testcal) && isfield(castopts,'calstr')
+    [dctd_c, hctd_c] = apply_calibrations(dctd, hctd, castopts.calstr, testcal);
     for no = 1:length(hctd_c.fldnam)
         dctd.(hctd_c.fldnam{no}) = dctd_c.(hctd_c.fldnam{no});
     end
@@ -172,13 +169,13 @@ subplot(1,nsubs,3)
 plot(dctd.potemp(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
 title(['Stn ' sprintf('%03d',stnlocal)]);
-xlabel('potemp/botoxytemp/depths');
+xlabel('potemp/botoxytemp(b+)/sbe35temp(x)/nisks');
 plot(dctd.potemp(kup),-dctd.press(kup),'r-');
 plot(dsam.botoxya_temp,-dsam.upress,'b+','markersize',m1);
 plot(dsam.botoxya_temp(kbadoxy),-dsam.upress(kbadoxy),'k^','markersize',m2);
 plot(dsam.botoxya_temp(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
 plot(dsam.botoxya_temp(kqnisk),-dsam.upress(kqnisk),'mv','markersize',m2);
-plot(dsam.sbe35temp,-dsam.upress,'c+','markersize',m1);
+plot(dsam.sbe35temp,-dsam.upress,'cx','markersize',m1);
 plot(dsam.sbe35temp(kbadsbe35),-dsam.upress(kbadsbe35),'m<','markersize',m2);
 plot(max([dsam.botoxya_temp+1;0])+dsam.niskin_flag,-dsam.upress,'k+','markersize',m1);
 plot(max([dsam.botoxya_temp+1;0])+dsam.niskin_flag(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);
@@ -244,8 +241,8 @@ for veno = 1:nsubs-3
    if ~isempty(kok2); plot(d2(kok2),-dsam2.upress(kok2),'cs','markersize',m0); end %2 stations before % jc191 k and m are earlier, c and r are later
    if ~isempty(kok3); plot(d3(kok3),-dsam3.upress(kok3),'ms','markersize',m0); end
    if ~isempty(kok4); plot(d4(kok4),-dsam4.upress(kok4),'ro','markersize',m0); end %2 stations after
-   title(['Stn ' sprintf('%03d',stnlocal)]);
-   xlabel([vnam ' kcbmr'],'interpreter','none');
+   if veno==nsubs-4; title(['kc (left), b Stn ' sprintf('%03d',stnlocal) ' mr (right)']); end
+   xlabel(vnam,'interpreter','none');
    plot(d,-dsam.upress,'b+','markersize',m1);
    plot(d(kbad),-dsam.upress(kbad),'k^','markersize',m2);
    plot(d(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);

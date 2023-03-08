@@ -3,10 +3,21 @@ function [d,f,p] = loadrdi_mult(f,p)
 %
 % load multiple files (calls loadrdi)
 
-for no = 1:length(f.ladcpdo)
-    f1 = f; f1.ladcpdo = f1.ladcpdo{no};
-    [d1(no), p1(no)] = loadrdi(f1, p);
-    l(no) = length(d1(no).time_jul);
+n = 1;
+if iscell(f.ladcpdo) && ~isempty(f.ladcpdo)
+    for no = 1:length(f.ladcpdo)
+        f1 = f; f1.ladcpdo = f1.ladcpdo{no};
+        [d1(no), p1(no)] = loadrdi(f1, p);
+        l(no) = length(d1(no).time_jul);
+    end
+    n = no;
+end
+if iscell(f.ladcpup) && ~ isempty(f.ladcpup)
+    for no = 1:length(f.ladcpup)
+        f1 = f; f1.ladcpup = f1.ladcpup{no};
+        [d1(no+n), p1(no+n)] = loadrdi(f1, p);
+        l(no+n) = length(d1(no+n).time_jul);
+    end
 end
 ii = find(l==max(l)); ii = ii(1); %start with longest
 iia = setdiff(1:length(f.ladcpdo), ii);
@@ -20,9 +31,9 @@ for no = iia
         if isnumeric(dat)
             s = size(dat);
             if s(2)==l(no)
-                d.(fldnmes{fno}) = [d.(fldnms{fno}) d1(no).(fldnms{fno})];
+                d.(fldnms{fno}) = [d.(fldnms{fno}) d1(no).(fldnms{fno})];
             elseif s(1)==l(no)
-                d.(fldnmes{fno}) = [d.(fldnms{fno}); d1(no).(fldnms{fno})];
+                d.(fldnms{fno}) = [d.(fldnms{fno}); d1(no).(fldnms{fno})];
             end
         end
     end

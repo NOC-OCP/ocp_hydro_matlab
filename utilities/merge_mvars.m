@@ -1,14 +1,26 @@
 function [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort)
 % function [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort)
-%%%%% merge_mvars: do the extra actions to merge variables %%%%%
+%
+% combine data from structures d0 and d, using indepvar which is present in
+%   both
+%
+% fields fldnam and fldunt from structures h0 and h (corresponding to
+%   variables in d0 and d, respectively) will be combined in output
+%   structure hnew, as will any other fields matching 'fld*'; for any
+%   variables present in d0, h0.fldunt (etc.) will be used; h.fldunt (etc.)
+%   will be used only for variables present in d but not d0
+% no other fields from h0 or h (e.g. comment, data_time_origin) will be
+%   carried through (and common time base will not be checked)***
 
-clear hnew
-hnew.fldnam = h0.fldnam; hnew.fldunt = h0.fldunt;
+%initialise hnew with h0
+hnew.fldnam = h0.fldnam;
+hnew.fldunt = h0.fldunt;
+hnew = keep_hvatts(hnew, h0);
 
 %check indepvars
 mvo = d0.(indepvar);
 if length(unique(mvo))<length(mvo)
-    error(['merge variable ' indepvar ' has non-unique values in file ' filename]);
+    error(['merge variable ' indepvar ' has non-unique values for dataname ' h0.dataname]);
 end
 mvn = d.(indepvar);
 if length(unique(mvn))<length(mvn)
@@ -49,13 +61,15 @@ for vno = 1:length(vars)
     if isfield(d, varname)
         data(iicn) = d.(varname)(iin);
         if ~isfield(d0, varname)
-            nvno = find(strcmp(varname,h.fldnam));
+            nvno = strcmp(varname,h.fldnam);
             hnew.fldnam = [hnew.fldnam h.fldnam{nvno}];
             hnew.fldunt = [hnew.fldunt h.fldunt{nvno}];
         end
     end
     d.(varname) = data;
 end
+%add (or fill) other variable attributes from h to hnew
+hnew = keep_hvatts(hnew,h); 
 
 %remake fields that shouldn't be filled with NaN or 9
 if strcmp(indepvar,'sampnum') && isfield(d,'sampnum') && isfield(d,'statnum')

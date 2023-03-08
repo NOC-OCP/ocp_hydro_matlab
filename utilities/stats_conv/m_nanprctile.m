@@ -56,7 +56,7 @@ end
 
 
 if nargin <3
-    dim = min(find(size(x)~=1)); % default is first non-unity dimension
+    dim = find(size(x)~=1, 1); % default is first non-unity dimension
     if isempty(dim), dim = 1; end
 end
 

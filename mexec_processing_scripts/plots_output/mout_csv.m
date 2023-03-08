@@ -202,7 +202,7 @@ for kloop = klist
     end
     if isfield(out,'varsh') && ~isempty(out.varsh) && sum(strcmp('date',out.varsh(:,3)))
         if ~isfield(h,'date') && (~isfield(in,'extrah') || ~isfield(in.extrah,'date'))
-            dn = m_commontime(d.time(d.press==max(d.press),'time',h,'datenum');
+            dn = m_commontime(d.time(d.press==max(d.press)),'time',h,'datenum');
             if ~isfield(out,'dateform'); out.dateform = 'yyyymmdd'; end
             if ~isfield(out,'timeform'); out.timeform = 'HHMM'; end
             h.date = datestr(dn,out.dateform);

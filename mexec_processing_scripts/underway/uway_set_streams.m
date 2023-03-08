@@ -4,18 +4,18 @@
 if ~strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
     [udirs, udcruise] = m_udirs;
 else
-    def = mrdefine; 
+    def = mrdefine;
     udirs = def.tablemap(:,[1 3 2]); %shortnames, streamnames, directories
 end
 
-                switch MEXEC_G.Mshipdatasystem
-                    case 'techsas'
-                        uway_excludes = {'posmvtss'};
-                        uway_excludep = {'satinfo';'aux';'dps'};
-                    case 'rvdas'
-                        uway_excludes = {'gravity';'mag'};
-                end
-            case 'comb_uvars'
+switch MEXEC_G.Mshipdatasystem
+    case 'techsas'
+        uway_excludes = {'posmvtss'};
+        uway_excludep = {'satinfo';'aux';'dps'};
+    case 'rvdas'
+        uway_excludes = {'gravity';'mag'};
+end
+
 opt1 = 'uway_daily_proc'; opt2 = 'excludestreams'; get_cropt
 
 % udirs = udirs([7:15 21:24 26:31],:);

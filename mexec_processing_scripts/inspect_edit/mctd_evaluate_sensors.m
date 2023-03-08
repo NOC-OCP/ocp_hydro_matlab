@@ -65,7 +65,7 @@ calstr0 = []; %get calibration from opt_cruise -- but may depend on station numb
 useoxyratio = 1;
 usedn = 0; %set to 1 to use downcast rather than upcast ctd data
 okf = [2 6]; %2 and 6 are good (6 is average of replicates); 3 is questionable
-pdeep = 1000; %cutoff for "deep" samples
+pdeep = 1300; %cutoff for "deep" samples
 uselegend = 1;
 printform = '-dpdf';
 plotprof = 1; %first station from which to plot individual profiles with large residuals
@@ -109,6 +109,7 @@ sn = unique(sns(:,2));
 
 %loop through sensors
 for ks = 1:length(sn)
+    disp(['s/n' num2str(sn(ks))])
 
     %stations and indices with this sensor in position 1 or position 2
     stns1 = sns(sns(:,2)==sn(ks) & sns(:,3)==1, 1);
@@ -149,6 +150,7 @@ if ~isempty(printform)
     print(printform, fullfile(printdir, ['ctd_eval_' parameter '_' num2str(sn(ks)) '_hist' dirstr]))
 end
 
+
 % %plot residual or ratio in color vs 2 of statnum, press, temp, oxygen,
 % %T-S
 % figure(3); clf; orient portrait
@@ -187,7 +189,7 @@ end
 % end
 
 llim = [p.rlim(2) p.rlim(2)/2];
-ii = find( (abs(dc.res)>llim(1) & dc.press<pdeep) | (abs(dc.res)>llim(2) & dc.press>=pdeep) & dc.statnum>=plotprof);
+ii = find( (abs(dc.res)>llim(1)*2 & dc.press<pdeep) | (abs(dc.res)>llim(2) & dc.press>=pdeep) & dc.statnum>=plotprof);
 if ~isempty(ii)
     disp('to examine larger differences profile-by-profile to help pick bad or')
     disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01,')

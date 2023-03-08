@@ -51,6 +51,10 @@ end
 %%%%% convert to mstar %%%%%
 
 %generate file
+otfile = m_add_nc(otfile);
+if exist(otfile,'file')
+    delete(otfile)
+end
 MEXEC_A.MARGS_IN = {
     cnvfile
     'y'
@@ -81,34 +85,35 @@ mheadr
 %%%%% rename variables, and add units where necessary %%%%%
 
 h = m_read_header(otfile);
-                ctdvarmap = {'prDM','press','dbar'
-                    't090C','temp1','degc90'
-                    't190C','temp2','degc90'
-                    'altM','altimeter','meters'
-                    'ptempC','pressure_temp','degc90'
-                    'timeS','time','seconds'
-                    'scan','scan','number'
-                    'pumps','pumps','pump_status'
-                    'latitude','latitude','degrees'
-                    'longitude','longitude','degrees'
-                    'c0mS_slash_cm','cond1','mS/cm'
-                    'c1mS_slash_cm','cond2','mS/cm'
-                    'sbeox0V','sbeoxyV1','volts'
-                    'sbox0Mm_slash_Kg','oxygen_sbe1','umol/kg'
-                    'sbeox1V','sbeoxyV2','volts'
-                    'sbox1Mm_slash_Kg','oxygen_sbe2','umol/kg'
-                    'T2_minus_T190C','t2_minus_t1','degc90'
-                    'C2_minus_C1mS_slash_cm','c2_minus_c1','mS/cm'
-                    'flECO_minus_AFL','fluor','mg/m^3'
-                    'flC','fluor','ug/l'
-                    'wetCDOM','fluor_cdom','mg/m^3'
-                    'xmiss','transmittance','percent'
-                    'CStarTr0','transmittance','percent'
-                    'transmittance','transmittance','percent'
-                    'CStarAt0','attenuation','1/m'
-                    'turbWETbb0','turbidity','m^-1/sr'
-                    'par','par_up','umol photons/m^2/sec'
-                    'par1','par_dn','umol photons/m^2/sec'};
+ctdvarmap = {'prDM','press','dbar'
+    't090C','temp1','degc90'
+    't190C','temp2','degc90'
+    'altM','altimeter','meters'
+    'ptempC','pressure_temp','degc90'
+    'timeS','time','seconds'
+    'scan','scan','number'
+    'pumps','pumps','pump_status'
+    'latitude','latitude','degrees'
+    'longitude','longitude','degrees'
+    'c0mS_slash_cm','cond1','mS/cm'
+    'c1mS_slash_cm','cond2','mS/cm'
+    'sbeox0V','sbeoxyV1','volts'
+    'sbox0Mm_slash_Kg','oxygen_sbe1','umol/kg'
+    'sbeox1V','sbeoxyV2','volts'
+    'sbox1Mm_slash_Kg','oxygen_sbe2','umol/kg'
+    'T2_minus_T190C','t2_minus_t1','degc90'
+    'C2_minus_C1mS_slash_cm','c2_minus_c1','mS/cm'
+    'flECO_minus_AFL','fluor','mg/m^3'
+    'flC','fluor','ug/l'
+    'wetCDOM','fluor_cdom','mg/m^3'
+    'xmiss','transmittance','percent'
+    'CStarTr0','transmittance','percent'
+    'transmittance','transmittance','percent'
+    'CStarAt0','attenuation','1/m'
+    'turbWETbb0','turbidity','m^-1/sr'
+    'par','par','umol photons/m^2/sec'
+    'par_slash_sat_slash_log','par','umol photons/m^2/sec'
+    'par1','par_downlook','umol photons/m^2/sec'};
 opt1 = mfilename; opt2 = 'ctdvars'; get_cropt
 names_new = h.fldnam; 
 for no = 1:length(h.fldnam)

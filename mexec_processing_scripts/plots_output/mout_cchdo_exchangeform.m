@@ -1,3 +1,4 @@
+function mout_cchdo_exchangeform(klist)
 % write the sample data in sam_cruise_all.nc and the ctd
 % data in ctd_cruise_nnn.nc to CCHDO exchange-format files
 %
@@ -9,6 +10,7 @@
 %   m_exch_vars_list (sets the variable name mapping)
 %
 
+m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %first write the sam file

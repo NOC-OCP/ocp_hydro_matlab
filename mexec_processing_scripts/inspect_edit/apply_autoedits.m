@@ -6,11 +6,12 @@ function [d, comment] = apply_autoedits(d, castopts)
 % 
 
 comment = [];
+fnd = fieldnames(d);
 
 %edit out scans when pumps are off, plus expected recovery times
 if isfield(castopts,'pumpsNaN')
     iip = find(d.pumps<1); n = length(d.pumps);
-    fn = fieldnames(castopts.pumpsNaN);
+    fn = intersect(fieldnames(castopts.pumpsNaN),fnd);
     for no = 1:length(fn)
         delay = castopts.pumpsNaN.(fn{no});
         if delay>0 && round(delay)==delay
@@ -30,7 +31,7 @@ end
 
 %remove out of range values
 if isfield(castopts,'rangelim')
-    fn = fieldnames(castopts.rangelim);
+    fn = intersect(fieldnames(castopts.rangelim),fnd);
     for no = 1:length(fn)
         r = castopts.rangelim.(fn{no});
         iir = find(d.(fn{no})<r(1) | d.(fn{no})>r(2));
@@ -48,27 +49,29 @@ cfn = fieldnames(castopts);
 iibp = find(strncmp('bad',cfn,3));
 for bpno = 1:length(iibp)
     xvar = cfn{iibp(bpno)};
-    x = d.(xvar(4:end))(:).'; %badscan --> scan, etc.
-    vars = fieldnames(castopts.(xvar)); %e.g. temp1, temp2, 
-    for vno = 1:length(vars)
-        badranges = castopts.(xvar).(vars{vno});
-        mn = isnan(badranges(:,1)); %handle NaNs separately
-        %badranges(mn,:) = [];
-        mb = sum(x<=badranges(:,1) | x>=badranges(:,2), 1)>0;
-        if sum(mn)
-            mb = mb | isnan(x);
-        end
-        nn = sum(isnan(d.(vars{vno})));
-        d.(vars{vno})(mb) = NaN;
-        if sum(isnan(d.(vars{vno})))>nn
-            comment = [comment '\n edited out ranges of ' xvar ' from ' vars{vno}];
+    if isfield(d,xvar(4:end))
+        x = d.(xvar(4:end))(:).'; %badscan --> scan, etc.
+        vars = intersect(fieldnames(castopts.(xvar)),fnd); %e.g. temp1, temp2,
+        for vno = 1:length(vars)
+            badranges = castopts.(xvar).(vars{vno});
+            mn = isnan(badranges(:,1)); %handle NaNs separately
+            badranges(mn,:) = [];
+            mb = sum(x>=badranges(:,1) & x<=badranges(:,2), 1)>0;
+            if sum(mn)
+                mb = mb | isnan(x);
+            end
+            nn = sum(isnan(d.(vars{vno})));
+            d.(vars{vno})(mb) = NaN;
+            if sum(isnan(d.(vars{vno})))>nn
+                comment = [comment '\n edited out ranges of ' xvar ' from ' vars{vno}];
+            end
         end
     end
 end
     
 %despike
 if isfield(castopts,'despike')
-    fn = fieldnames(castopts.despike);
+    fn = intersect(fieldnames(castopts.despike),fnd);
     for no = 1:length(fn)
         if strncmp(fn{no},'temp',4)
             warning('editing temperature in mctd_02 is risky; are you sure spikes are not large enough to need to restart mctd_01 with redoctm?')

@@ -1,5 +1,5 @@
-function mrrvdas2mstar(varargin)
-% function mrrvdas2mstar(table, dn1, dn2, otfile, dataname, varlist, qflag);
+function status = mrrvdas2mstar(varargin)
+% function sttaus = mrrvdas2mstar(table, dn1, dn2, otfile, dataname, varlist, qflag);
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -41,7 +41,8 @@ function mrrvdas2mstar(varargin)
 
  
 m_common
- 
+status = 1;
+
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
 table = argot.table; 
 if isempty(table)
@@ -88,7 +89,8 @@ end
 
 if numel(dd.dnum) == 0
     % no data found, quit without writing a file
-    error('No data cycles loaded with mrload')
+    warning('No data cycles loaded with mrload')
+    return
 end
 
 %change dnum to mexec time in seconds
@@ -106,8 +108,22 @@ dd = rmfield(dd, 'dnum');
 units = units(ia);
 
 %add variable names and units to hnew, or remove from dd
-%also remove repeated times
-[~,iit] = unique(dd.time,'stable');
+%also subsample to 1 hz (if indicated) or remove repeated times
+save_1hz_uway = 1; tstep_force = [];
+opt1 = 'uway_proc'; opt2 = '1hz_max'; get_cropt
+tstep = 1;
+if save_1hz_uway && isempty(tstep_force)
+    dt = diff(dd.time); dt = dt(dt>0); 
+    dt = mode(dt);
+    tstep = max(round(1/dt),1);
+end
+if tstep>1
+    iits = 1:tstep:length(dd.time);
+    [~,iit] = unique(dd.time(iits),'stable');
+    iit = iits(iit);
+else
+    [~,iit] = unique(dd.time,'stable');
+end
 clear hnew
 hnew.fldnam = {}; hnew.fldunt = {};
 for kl = 1:length(names)
@@ -122,7 +138,6 @@ for kl = 1:length(names)
     end
 end
 
-opt1 = 'mstar'; get_cropt
 if docf
     hnew.data_time_origin = [];
 else
@@ -132,8 +147,8 @@ end
 hnew.dataname = dataname;
 hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER ' calling msave'];
 if exist(m_add_nc(otfile),'file')
-    mfsave(otfile, dd, hnew, '-merge', 'time')
+    mfsave(otfile, dd, hnew, '-merge', 'time');
 else
     mfsave(otfile, dd, hnew);
 end
-
+status = 0;

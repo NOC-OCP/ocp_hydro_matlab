@@ -1,3 +1,4 @@
+function moxy_01
 % moxy_01: read in bottle oxy data from csv or spreadsheet files, parse and
 % calculate concentrations if required, and save to appended mstar file
 % oxy_cruise_01.nc
@@ -195,7 +196,7 @@ opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
 
 opt1 = 'check_sams'; get_cropt
 if check_oxy
-    m0 = abs(d.botoxya_per_l-d.botoxyb_per_l)>1;
+    m0 = abs(d.botoxya_per_l-d.botoxyb_per_l)>0.75;
     if sum(m0)
         stns = unique(d.statnum(m0));
         ds = mloadq(fullfile(mgetdir('ctd'),sprintf('sam_%s_all.nc',mcruise)),'sampnum statnum uoxygen position ');

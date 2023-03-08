@@ -9,9 +9,10 @@
 %by default it will process yesterday's data, unless you specify days, a
 %vector of year-days to process
 %
-%by default it appends the days processed to existing _01 files (and overwrites them if they are already there), unless you
-%set restart_uway_append to 1, in which case it deletes the appended files
-%and starts over
+%by default it appends the days processed to existing _01 files (and
+%overwrites them if they are already there), unless you set
+%restart_uway_append to 1, in which case it deletes the appended files and
+%starts over 
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
@@ -33,57 +34,45 @@ combvars = {}; %***
 opt1 = 'uway_proc'; opt2 = 'comb_uvars'; get_cropt 
 
 
+loadstatus = zeros(1,length(shortnames));
 for daynumber = days
-    loadstatus = zeros(1,length(shortnames));
     for sno = 1:length(shortnames)
+        if daynumber==days(1)
+            udirs{sno} = fullfile(MEXEC_G.mexec_data_root,udirs{sno});
+        end
         if loadstatus(sno)==0
             %load
-            try
-                loadstatus(sno) = mday_00_load(streamnames{sno}, shortnames{sno}, udirs{sno}, daynumber, year);
-            catch
-                loadstatus(sno) = 1;
-                keyboard
-            end
-            if loadstatus(sno)==2 && strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
-                warning('enter to continue, skipping this stream, or Ctrl-C to quit');
-                pause
-                continue
-            end
-            %apply additional processing and cleaning for some
-            %streams/variables, appending/merging edited data to _01 file
-            if loadstatus(sno)==0
-                mday_01_clean_append(shortnames{sno}, udirs{sno}, daynumber);
-            end
+%             try
+                ls = mday_00_load(streamnames{sno}, shortnames{sno}, udirs{sno}, daynumber, year);
+%             catch
+%                 ls = 1; 
+%                 keyboard
+%             end
+            loadstatus(sno) = loadstatus(sno) + ls;
         end
     end
 end
+%***should 2 also be thrown out? what if loadstatus was 0 for some days but
+%1 for last?
+% shortnames(loadstatus>0) = [];
+% streamnames(loadstatus>0) = [];
+% udirs(loadstatus>0) = [];
 
-shortnames(loadstatus==1) = [];
-streamnames(loadstatus==1) = [];
-udirs(loadstatus==1) = [];
-
-% run scripts to average, edit, and combine data
-
-%combine best nav and heading into bst_ file
-mnav_best %get best nav stream into bst_ file
-
-%combine wind with bestnav to get truewind
-mwind_true
-
-%edit (and calibrate) tsg; combine tsg and surfmet in some cases
-try
-    mtsg_medav_clean_cal
-catch
+%apply additional processing and cleaning to data
+for sno = 1:length(shortnames)
+    mday_01_edit(udirs{sno}, shortnames{sno}, days)
 end
 
-%merge other related files into surfmet; tsg files are edited for the
-%appended series, so do merge on appended files
-if sum(strcmp('tsgsurfmet', umtypes))
-    mtsgsurfmet_merge
-end
-
-%edit bathymetry (uses bestnav)
-
-
-% make plots
-%***
+%combine streams, do hand edits (for some streams), and average to produce
+%output/best files
+mnav_best(days)
+mwind_true(days)
+mtsg_merge_av(days) %combines old mtsg_medav_clean_cal and mtsg_surfmet_merge
+% mbathy_edit_av
+% tsgnames = {'tsg' 'surfmet' 'thermosalinograph' 'flowmeter' 'fluorometer' 'thermometer' 'transmissometer'};
+% windnames = {'surfmet' 'windsonic' 'anemometer'};
+% %navnames = { %nav: everything in pos and att?
+% bathynames = {'singleb' 'multib' 'ea640' 'em122'};
+% 
+% % make plots
+% %***

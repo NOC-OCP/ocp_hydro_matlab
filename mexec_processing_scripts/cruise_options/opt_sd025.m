@@ -1,8 +1,8 @@
 %cruise-specific options for sd025
 testcasts = [3 4 7 11:12]; %***dips too short to process?
-ticasts = [3 4 7 11:24 31:32 36 40 45:47 50 54 57 59 61 63 68 76 161:172]; %Ti frame
+ticasts = [3 4 7 11:24 31:32 36 40 45:47 50 54 57 59 61 63 68 76 161:174]; %Ti frame
 racasts = [37 38 39 41 setdiff(48:65,ticasts)]; %for Radium
-shortcasts = [3 4 7 11 12 13 37 38 39 41 48 51:53 67]; %no altimeter bottom depth / no LADCP BT
+shortcasts = [3 4 7 11 12 13 37 38 39 41 48 51:53 67 175 178 180]; %no altimeter bottom depth / no LADCP BT
 shallowcasts = [3 4 7 11:12 171]; %too shallow to process ladcp
 
 switch opt1
@@ -23,7 +23,7 @@ switch opt1
                 RVDAS.database = ['"' '20210321' '"'];
             case 'datasys_best'
                 default_navstream = 'gnss_seapath_320_2';
-                default_hedstream = 'heading_seapath_320_2';
+                default_hedstream = 'attitude_seapath_320_2_heading';
         end
 
     case 'castpars'
@@ -49,9 +49,6 @@ switch opt1
                     cnvfile = sprintf('%s_%03d_SS.cnv',upper(mcruise),stnlocal);
                 end
                 cnvfile = fullfile(mgetdir('M_CTD_CNV'),cnvfile);
-            case 'ctdvars'
-                ctdvars_add = {};
-            case 'absentvars'
             case 'cast_split'
                 if stnlocal==3
                     %this file contains 3 and 4
@@ -65,8 +62,8 @@ switch opt1
             case 'rawedit_auto'
                 if ismember(stnlocal,[10 31 42 43 44 48 49 51:53 55:56 58 64])
                     %large spikes: SS cable problem (10) and cable and/or SBE9 problem(s)
-                    a = [-2 8000];
-                    b = [-2 40; NaN NaN];
+                    a = [-inf -2; 8000 inf];
+                    b = [-inf -2; 40 inf; NaN NaN];
                     castopts.badpress.press = a;
                     castopts.badpress.temp1 = a;
                     castopts.badpress.temp2 = a;
@@ -74,10 +71,10 @@ switch opt1
                     castopts.badtemp2.temp2 = b; castopts.badtemp2.cond2 = b; castopts.badtemp2.oxygen_sbe2 = b;
                 elseif ismember(stnlocal,ticasts) && stnlocal>23
                     %sensor 2 is bad
-                    castopts.badtemp2.temp2 = [-2 40; NaN NaN];
-                    castopts.badtemp2.cond2 = [-2 40; NaN NaN];
+                    castopts.badtemp2.temp2 = [-inf -2; 40 inf; NaN NaN];
+                    castopts.badtemp2.cond2 = [-inf -2; 40 inf; NaN NaN];
                 end
-                if ismember(stnlocal,[31 42 43 64])
+                if ismember(stnlocal,[31 42 43 64]) 
                     castopts.rangelim.cond1 = [27 34];
                     castopts.rangelim.cond2 = [27 34];
                 end
@@ -95,23 +92,30 @@ switch opt1
                     castopts.despike.oxygen_sbe1 = [3 2 2 1 1];
                     castopts.despike.oxygen_sbe2 = [3 2 2 1 1];
                 end
-            case 'raw_corrs'
-                if 0 %ismember(stnlocal,ticasts) && stnlocal>23
-                    %recalculate oxygen2 using temp1 and cond1 
-                    castopts.dooxy2V = 1; 
-                    %and coefficients corresponding to oxygen sensor 2 from
-                    %xmlcon (should parse from header in future***)
-                    castopts.oxy2Vcoefs.Soc = 5.7890e-1;
-                    castopts.oxy2Vcoefs.Voff = -0.5201;
-                    castopts.oxy2Vcoefs.A = -4.1247e-3;
-                    castopts.oxy2Vcoefs.B = 1.5900e-4;
-                    castopts.oxy2Vcoefs.C = -2.8246e-6;
-                    castopts.oxy2Vcoefs.D0 = 2.5826e+0;
-                    castopts.oxy2Vcoefs.D1 = 1.92634e-4;
-                    castopts.oxy2Vcoefs.D2 = -4.64803e-2;
-                    castopts.oxy2Vcoefs.E = 3.6000e-2;
-                    castopts.oxy2Vcoefs.Tau20 = 1.3200;
+                if stnlocal==177 %cond2 went bad (and is used for oxygen2)
+                    castopts.badscan.cond2 = [1.58588e5 inf];
+                    castopts.badscan.oxygen2 = [1.58588e5 inf];
+                elseif stnlocal==178 %not changed yet
+                    castopts.badscan.cond2 = [-inf inf];
+                    castopts.badscan.oxygen_sbe2 = [-inf inf];
                 end
+            case 'raw_corrs'
+%                 if ismember(stnlocal,ticasts) && stnlocal>23
+%                     %recalculate oxygen2 using temp1 and cond1 
+%                     castopts.dooxy2V = 1; 
+%                     %and coefficients corresponding to oxygen sensor 2 from
+%                     %xmlcon (should parse from header in future***)
+%                     castopts.oxy2Vcoefs.Soc = 5.7890e-1;
+%                     castopts.oxy2Vcoefs.Voff = -0.5201;
+%                     castopts.oxy2Vcoefs.A = -4.1247e-3;
+%                     castopts.oxy2Vcoefs.B = 1.5900e-4;
+%                     castopts.oxy2Vcoefs.C = -2.8246e-6;
+%                     castopts.oxy2Vcoefs.D0 = 2.5826e+0;
+%                     castopts.oxy2Vcoefs.D1 = 1.92634e-4;
+%                     castopts.oxy2Vcoefs.D2 = -4.64803e-2;
+%                     castopts.oxy2Vcoefs.E = 3.6000e-2;
+%                     castopts.oxy2Vcoefs.Tau20 = 1.3200;
+%                 end
         end
 
     case 'mfir_01'
@@ -133,104 +137,58 @@ switch opt1
                     niskn = [2:2:24]';
                 end
             case 'botflags'
-                %3 = leak (clear or confirmed after sampling), 4 = misfire, 7 = possible issue
-                %(unclear, investigate further), 9 = no samples
+                %3 = leak, 4 = misfire, 7 = possible leak (unclear,
+                %investigate further), 9 = no samples (can remove from list
+                %once confirmed there were no sample values loaded)
                 switch stnlocal
                     case 2 % CTD number
                         niskin_flag(ismember(position,[2 11 16])) = 4 ;
-                        niskin_flag(ismember(position,[20 21 22 23 24])) = 3 ;
-                    case 5
-                        niskin_flag(ismember(position,[1 2 4 5 7 8 10 15 16 21 22 24])) = 3 ;
-                        niskin_flag(position==1) = 4 ;
+                        niskin_flag(ismember(position,[20 21 22 23 24])) = 7 ;
                     case 6
-                        niskin_flag(ismember(position,[2 5 8 16 17])) = 3 ;
+                        niskin_flag(ismember(position, [2 8])) = 3;
                         niskin_flag(position==21) = 4 ;
                     case 8
-                        niskin_flag(ismember(position,[2 11 14])) = 3 ;
-                        % 5, 8, 10, 16 24 only leaking when top opened
-                        niskin_flag(ismember(position,[5 8 10 16 17 18 24])) = 7 ; % bottle cop sheet says 'little dribble'
+                        niskin_flag(ismember(position,[2 14])) = 3 ;
                         niskin_flag(position==21) = 4 ;
                     case 9
-                        niskin_flag(ismember(position,[23])) = 3 ; %23: cable stuck in tap
-                        niskin_flag(position==21) = 4 ;
-                        niskin_flag(ismember(position, [2 8 16 18])) = 7 ;
+                        niskin_flag(ismember(position,[2])) = 3 ; %23: cable stuck in tap
+                        niskin_flag(position==[21 23]) = 4 ;
                     case 10
-                        niskin_flag(position==2) = 7 ;
-                    case 11
-                        niskin_flag(position==3) = 7 ; % came off frame
-                        niskin_flag(position==10) = 7 ; % gets stuck
+                        niskin_flag(position==2) = 4 ; %from sample data, looks like it might have closed shallower
                     case 15
-                        niskin_flag(ismember(position,[2 6])) = 9;
                         niskin_flag(ismember(position,[12 20])) = 7; %possible leaks
-                    case 16
-                        niskin_flag(ismember(position,[2 6 8 16])) = 9; %did not close
-                    case 17
-                        niskin_flag(ismember(position,[2])) = 9; %did not close (presumably this is what leaking at top means)
-                        niskin_flag(ismember(position,[6 16])) = 3;
-                    case 18
-                        niskin_flag(ismember(position,[6 8 18])) = 9;
                     case 19
-                        niskin_flag(ismember(position,[8 18])) = 9;
-                        niskin_flag(ismember(position,[10])) = 3;
-                        niskin_flag(ismember(position,[24])) = 7; %fired on the fly?
-                    case 20
-                        niskin_flag(~ismember(position,[4 20 22 24])) = 9; % :(
-                    case 21
-                        niskin_flag(position==6) = 3; % log sheet says open from the bottom - assume that means its also leaking
-                        niskin_flag(position==24) = 3 ;
-                        niskin_flag(ismember(position,[12 16])) = 7 ; % top open
+                        niskin_flag(ismember(position,[24])) = 4; %fired on the fly? salt and nuts definitely bad
                     case 22
-                        niskin_flag(position==2) = 4 ;
-                        niskin_flag(position==6) = 3 ;
-                        niskin_flag(position==16) = 7 ; % leaking at top. top open when exiting water
+                        %niskin_flag(position==7) = 3; %leaking from handle. nuts look fine
                     case 23
-                        niskin_flag(ismember(position,[2 4 6 14])) = 3 ; % 2 and 6 fell off frame after exiting water
-                        niskin_flag(position==12) = 7 ; % partially open at top
+                        niskin_flag(ismember(position,[2 4 6 12 14])) = 3 ; 
                     case 24
                         niskin_flag(ismember(position,[6 8 10 14 18 20 22 24])) = 4 ;
                     case 25
-                        niskin_flag(ismember(position,[2 8 10])) = 3 ;
-                        niskin_flag(ismember(position,[17 22 24])) = 7 ; % leaking once open
+                        niskin_flag(ismember(position,[2])) = 3 ;
                         niskin_flag(position==21) = 4 ;
                     case 26
-                        niskin_flag(ismember(position,[2 8 16 17 23 24])) = 3 ; % wire caught in 23
+                        niskin_flag(position==2) = 3; %bad nuts and botoxytemp, could be closed shallow or could be leaked
                         niskin_flag(position==21) = 4 ;
                     case 27
-                        niskin_flag(~ismember(position,[12 21])) = 3 ; % top valve open/no valve
-                        niskin_flag(position==21) = 4 ;
+                        niskin_flag(~ismember(position,[13 23])) = 7 ; % top valve open/no valve
                     case 28
-                        niskin_flag(ismember(position,[2 8 16])) = 7 ; % from bottom
+                        niskin_flag(position==2) = 3; %bad nuts, hard to see as misfire, probably leak
                     case 29
-                        niskin_flag(ismember(position,[1 16 18 20 21 24])) = 7 ;
+                        niskin_flag(ismember(position,[1])) = 7 ;
                         niskin_flag(position==2) = 7 ; % valve pushed in, 'dodgy'
-                        niskin_flag(ismember(position,[4 5])) = 7 ; % screw loose
-                    case 30
-                        niskin_flag(position==2) = 9 ; % open
-                        niskin_flag(position==18) = 7 ; % leaking when top valve released
+                        niskin_flag(ismember(position,[4])) = 7 ; % screw loose
                     case 32
                         niskin_flag(position==2) = 3 ;
-                        niskin_flag(position==12) = 9 ; % top slightly open
-                        niskin_flag(position==19) = 7 ; % avoid for particles, tap has an issue
-                    case 33
-                        niskin_flag(position==21) = 7 ; % at bottom
                     case 35
-                        niskin_flag(ismember(position,[1 2])) = 7 ; % 'thin stream on opening'
+                        niskin_flag(ismember(position,[1 2])) = 3 ; % 'thin stream on opening', silc suspicious
                         niskin_flag(position==21) = 3 ; %'bottom seepage'
-                    case 36
-                        niskin_flag(ismember(position,[6 8])) = 3 ;
-                        niskin_flag(ismember(position,[10 20 22])) = 9 ; % open
-                    case 37
-                        niskin_flag(ismember(position,[8 21])) = 3 ;
-                    case 38
-                        niskin_flag(ismember(position,[18 21])) = 3 ;
                     case 39
                         niskin_flag(position==13) = 3 ; % 'total leak'
-                        niskin_flag(position==18) = 7 ; % 'slow leak'
                     case 40
-                        niskin_flag(ismember(position,[2 14])) = 3 ;
-                        niskin_flag(ismember(position,[8 10 24])) = 9 ; % open/empty
+                        niskin_flag(ismember(position,[18 19 20 21])) = 7 ; %nuts suspicious?
                     case 41
-                        niskin_flag(ismember(position,[5 18])) = 3 ; % 'leaking on release'
                         niskin_flag(position==21) = 3 ;
                     case 44
                         niskin_flag(ismember(position,[18 23])) = 3 ;  % O-ring?
@@ -238,68 +196,41 @@ switch opt1
                         niskin_flag(ismember(position,[18 22])) = 3 ; % open at bottom
                         niskin_flag(ismember(position,[2 4 8 10 16])) = 3 ; % open at top
                     case 48
-                        niskin_flag(ismember(position,[18 22])) = 4 ; % did not fire
-                    case 49
-                        niskin_flag(ismember(position,[8 21])) = 7 ; % little leak at the bottom
-                    case 50
-                        niskin_flag(ismember(position,[6 8 10 24])) = 9 ; % empty/open/did not fire
-                        niskin_flag(position==12) = 3 ; % not closed at top
+                        niskin_flag(ismember(position,[22])) = 4 ; % did not fire
                     case 51
                         niskin_flag(ismember(position,[8 21])) = 3 ;
                     case 53
                         niskin_flag(position==21) = 3 ;
                     case 54
-                        niskin_flag(position==2) = 7 ; % seems to be open, not fully closed. cannot pressurise
-                        niskin_flag(position==12) = 7 ; % could not pressurise
-                        niskin_flag(position==14) = 7 ; % released pressure and leaking from bottom
+                        niskin_flag(position==12) = 3 ; % cannot pressurise, and nuts suspicious
                     case 55
+                        niskin_flag(position==1) = 7; %nuts maybe suspicious? hard to tell as no other points this stn (though nuts drawn on 7,8,14,15,20,22)***
                         niskin_flag(position==7) = 7 ; % once opened at top
-                        niskin_flag(ismember(position,[21 24])) = 7 ; % small drip
                     case 57
-                        niskin_flag(ismember(position,[2 12 14 19])) = 7 ; % issues with pressurizing
-                        niskin_flag(position==8) = 7 ; % potential contamination, TdFe sample still taken
-                        niskin_flag(position==17) = 7 ; % might have knocked the top after taking off
-                        niskin_flag(ismember(position,[13 14 22 23])) = 3 ; % open at the top
+                        niskin_flag(ismember(position,[13 22 23])) = 3 ; % open at the top
                     case 60
                         niskin_flag(ismember(position,[6 12])) = 3 ;
-                    case 61
-                        niskin_flag(position==10) = 4 ;
-                        niskin_flag(ismember(position,[12 24])) = 3 ;
-                    case 63
-                        niskin_flag(ismember(position,[10 14 20 22])) = 3 ;
-                    case 66
-                        niskin_flag(ismember(position,[4 8 16])) = 3 ;
-                    case 68
-                        niskin_flag(ismember(position,[11 22 24])) = 7 ; % assuming bottles were open, don't understand the comments
-                    case 69
-                        niskin_flag(ismember(position,[4 6 16 21])) = 3 ;
-                    case 71
-                        niskin_flag(ismember(position,[6 21])) = 3 ;
-                    case 75
-                        niskin_flag(ismember(position,[1 8 9 13 22])) = 3 ; % from tap
-                    case 76
-                        niskin_flag(ismember(position,[10 22])) = 4 ; % 'did not close', 'open'
-                        niskin_flag(position==15) = 7 ; % 'popped off' ?
-                    case 78
+                    case 75 %***not plotted by checkbottles_02
+                        niskin_flag(ismember(position,[8 9 13 22])) = 7 ; % from tap
+                        niskin_flag(position==1) = 3;
+                    case 78 %***not plotted by checkbottles_02
                         niskin_flag(position==21) = 3 ;
                     case 81
-                        niskin_flag(ismember(position,[6 7 19])) = 3 ; % 'after tap opened'
                         niskin_flag(ismember(position,[21 23 24])) = 3 ;
-                    case 84
-                        niskin_flag(position==8) = 3 ; % 'slight leak'
-                        niskin_flag(position==18) = 3 ; % when tap opened
-
-                    case 161
-                        niskin_flag(ismember(position,[6 8 10 14 22])) = 4 ; % 'not closed'
-
-
+                    case 176
+                        niskin_flag(ismember(position,[21])) = 3 ;
+                        niskin_flag(position==2) = 7;
+                    case 179
+                        niskin_flag(position==8) = 3; %leak: water flowing
+                        niskin_flag(ismember(position,[5 14])) = 7; %possible leak; thin stream when tap pushed in
                 end
         end
 
     case 'check_sams'
-        check_sal = 78; %start plotting sample readings from this station
+        check_sal = 157; %start plotting sample readings from this station
         check_oxy = 1;
         check_sbe35 = 1;
+        %check_nuts = 1; %***nothing to do yet
 
     case 'sbe35'
         switch opt2
@@ -325,19 +256,29 @@ switch opt1
                 hcpat = {'Niskin';'Bottle'};
                 chrows = 1:2;
                 chunits = 3;
-                sheets = 1:80;
+                sheets = 1:100;
             case 'oxy_parse'
                 ii = find(strcmp('conc_o2',oxyvarmap(:,1)));
                 oxyvarmap(ii,:) = []; %don't rename, recalculate
             case 'oxy_calc'
+                ds_oxy.vol_std = repmat(5,size(ds_oxy.sampnum));
                 ds_oxy.vol_blank = repmat(-0.0081,size(ds_oxy.sampnum));
                 ds_oxy.vol_titre_std = repmat(0.4540,size(ds_oxy.sampnum));
                 ds_oxy.vol_blank(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = -0.0085;
                 ds_oxy.vol_titre_std(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = 0.4241;
-                ds_oxy.vol_std = repmat(5,size(ds_oxy.sampnum));
+                ds_oxy.vol_blank(ds_oxy.statnum>=177) = -0.00691666666666666;
+                ds_oxy.vol_titre_std(ds_oxy.statnum>=177) = 0.4264;
                 vol_reag_tot = 0.997*2;
             case 'oxy_flags'
-                %tm-clean samples taken with too-stiff tube (?)
+                %dispensers fixed around ctd9
+                ii = find(d.statnum<9); 
+                d.botoxya_flag(ii) = max(d.botoxya_flag(ii),4);
+                d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),4);
+                %tubing size fixed around 14 or 15
+                ii = find(d.statnum<15); 
+                d.botoxya_flag(ii) = max(d.botoxya_flag(ii),3);
+                d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),3);
+                %tm-clean samples taken with too-stiff tube
                 ii = find(ismember(d.statnum,[32 40 47 54 61]));
                 d.botoxya_flag(ii) = max(d.botoxya_flag(ii),4);
                 d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),4);
@@ -346,20 +287,19 @@ switch opt1
                 d.botoxya_flag(ismember(d.sampnum,[1504 6811])) = 4;
                 d.botoxya_flag(ismember(d.sampnum,[1624 2913])) = 3;
                 d.botoxya_per_l(d.botoxya_flag==4) = NaN;
-                d.botoxyb_flag(ismember(d.sampnum,[1512])) = 3;
+                d.botoxyb_flag(ismember(d.sampnum,[1512 17915])) = 3;
                 d.botoxyb_per_l(d.botoxyb_flag==4) = NaN;
                 %duplicates that differ but not clear which is better
-                ii = find(abs(d.botoxya_per_l-d.botoxyb_per_l)>1 & d.botoxya_flag==2 & d.botoxyb_flag==2);
-                d.botoxya_flag(ii) = max(d.botoxya_flag(ii),3);
-                d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),3);
-                m = ismember(d.sampnum,[1001 1003 1004]) & d.botoxya_flag<4;
-                d.botoxya_flag(m) = 4; 
-                m = ismember(d.sampnum,[1001 1003 1004]) & d.botoxyb_flag<4;
-                d.botoxyb_flag(m) = 4; 
-                m = ismember(d.sampnum,[503]) & d.botoxya_flag<3;
-                d.botoxya_flag(m) = 3; 
-                m = ismember(d.sampnum,[503]) & d.botoxyb_flag<3;
-                d.botoxyb_flag(m) = 3; 
+                ii = find(abs(d.botoxya_per_l-d.botoxyb_per_l)>=1 & d.botoxya_flag==2 & d.botoxyb_flag==2);
+                d.botoxya_flag(ii) = 3; d.botoxyb_flag(ii) = 3;
+%                 m = ismember(d.sampnum,[1001 1003 1004]) & d.botoxya_flag<4; d.botoxya_flag(m) = 4; 
+%                 m = ismember(d.sampnum,[1001 1003 1004]) & d.botoxyb_flag<4; d.botoxyb_flag(m) = 4; 
+%                 m = ismember(d.sampnum,503) & d.botoxya_flag<3; d.botoxya_flag(m) = 3; 
+%                 m = ismember(d.sampnum,503) & d.botoxyb_flag<3; d.botoxyb_flag(m) = 3;
+                %marked as bad but looks okay
+                d.botoxya_flag(d.sampnum==2320) = 2;
+                %outliers
+                d.botoxya_flag(ismember(d.sampnum,[2122])) = 3;
         end
 
     case 'botpsal'
@@ -384,6 +324,8 @@ switch opt1
                     049 -8; 050 -8; ... %flag these for temperature being too high?
                     051 -20; 052 -20; ... %temperature fixed but clearly there has been significant drift in standardisation
                     053 -20; 054 -18; ...
+                    055 +15; 056 +16; ... %temperature problems again: 17.6 C. restandardised before this to ???
+                    057 +20; 058 +22; ... %temperature problems again: 18.8 C
                     99 NaN %just to make sure we don't interpolate across the two machines!
                     101 0; 102 -1; 103 0 %very large spread/excluded 2 from 101 and 1 from 103***
                     ];
@@ -395,31 +337,65 @@ switch opt1
                 ds_sal.flag(ii) = 3;
                 ii = find(ds_sal.sampnum==999051):find(ds_sal.sampnum==999054);
                 ds_sal.flag(ii) = 3;
-                ds_sal.flag(ismember(ds_sal.sampnum,[6619 6622 1002 3515 3516 1924])) = 4;
+                %outliers?
+                ds_sal.flag(ismember(ds_sal.sampnum,[1002 1902 1904 3515 3516 6619 6622])) = 3;
+        end
+
+    case 'botnut'
+        switch opt2
+            case 'nut_parse_flag'
+                for no = 1:size(ds_nut,1)
+                    a = ds_nut.ctdbot(no);
+                    a = replace(replace(a{1},'CTD',''),'BOT','');
+                    ii = strfind(a,'_');
+                    if length(ii)<3; ii(3) = length(a)+1; end
+                    s = str2double(a(ii(1)+1:ii(2)-1))*100 + str2double(a(ii(2)+1:ii(3)-1));
+                    ds_nut.sampnum(no) = s;
+                end
+                m = strncmpi('suspect',ds_nut.comment,7);
+                ds_nut.flag(m) = 3;
+                %outliers in 2 or 3 parameters
+                m = ismember(ds_nut.sampnum,[904 1520 2519 2915 2916 4018 4019 4020 4021]);
+                ds_nut.flag(m) = 3;
+                %niskins at same depths different
+                m = ismember(ds_nut.sampnum,[16701 16702 16704 16706 16708 16709]);
+                ds_nut.flag(m) = 3;
+            case 'nut_param_flag'
+                %outliers in individual parameters
+                m = ismember(dnew.sampnum,[1504 1706 1816 1902 1904 2503 2603 2903 2917 2918 6216]);
+                dnew.silc_flag(m) = 3;
+                m = ismember(dnew.sampnum,[2221 2421 2622 2819 2821 3221 4201 6619 6622 7523 8413 16123 16124 16716 16717]);
+                dnew.phos_flag(m) = 3;
+                m = ismember(dnew.sampnum,[2509 2518 3308 3312 3314 3315 3318 3319 3321 6201 5901 5902 5904 16103 16812 16823 16824]);
+                dnew.totnit_flag(m) = 3; dnew.nitrite_flag(m) = 3; %***
         end
 
     case 'best_station_depths'
         switch opt2
             case 'bestdeps'
-                %second column is water depth (from ea640 or ctd operator
-                %logsheet)
+                iscor = 0; %these are depths from ea640 not em122, and have not had corrections applied
+                xducer_offset = 0; %to be added
                 replacedeps = [3 164; 4 164; 7 667; 8 959; ...
                     11 2641; 12 2640; ...
                     13 3025; 14 3021; ...
                     31 3473; 33 3459; 34 3460; ...
                     37 3179; 38 3178; ...
                     39 3049; 40 3049; 41 3048; ...
+                    45 593;
                     48 2729; 49 2730; ...
                     51 2562; 52 2562; 53 2563; ...
                     56 999; ...
                     64 2820; 65 2819; ...
-                    77 440];
+                    77 440; ...
+                    175 3386; ...
+                    178 5300; 180 5600];
         end
 
     case 'batchactions'
         switch opt2
             case 'output_for_others'
                 pdir = '~/mounts/public/scientific_work_areas/hydrography/casts/';
+                clear s
                 n = 1; [s(n),~] = system(['rsync -au --delete ~/cruise/data/ctd/ctd*24hz.nc ' pdir 'ctd_24hz/']);
                 n = n+1; [s(n),~] = system(['rsync -au --delete ~/cruise/data/ctd/ctd*2db.nc ' pdir 'ctd_2dbar/']);
                 n = n+1; [s(n),~] = system(['rsync -au ~/cruise/data/ctd/sam_sd025_all.nc ' pdir]);
@@ -435,7 +411,9 @@ switch opt1
                     cfg.stnstr = '085_088';
                 elseif stnlocal>=89 && stnlocal<=156
                     cfg.stnstr = '089_156';
-               end
+%                elseif stnlocal==175
+%                    cfg.p.timoff =  0.02083 ; %days
+                end
             case 'exch'
                 n0 = 95;
                 n12 = 14;
@@ -453,44 +431,50 @@ switch opt1
                 if strcmp(in.type,'ctd')
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {sprintf('#%d stations with 12-place rosette, %d stations with 24-place rosette, %d stations without bottles',n12,n24,n0);...
+                        {sprintf('#%d stations with 12-place rosette; %d stations with 24-place rosette; %d stations without bottles',n12,n24,n0);...
                         '#CTD: Who - Y. Firing; Status - uncalibrated.';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : COR';...
-                        %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom, or speed of sound corrected ship-mounted bathymetric echosounding'...
+                        %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounding'...
                         }];
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {sprintf('#%d stations with 12-place rosette, %2d stations with 24-place rosette',n12,n24);...
-                        '#CTD: Who - Y. Firing; Status - uncalibrated';...
+                        {sprintf('#%d stations with 12-place rosette; %2d stations with 24-place rosette',n12,n24);...
+                        '#CTD: Who - Y. Firing (NOC); Status - uncalibrated';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom'...
                         '#Salinity: Who - Y. Firing; Status - preliminary; SSW batch P165.';...
-                        '#Oxygen: Who - I Seguro; Status - preliminary.';...
-                        '#Nutrients: Who - M. Woodward; Status - not yet analysed';...
-                        '#Carbon: Who - D. Pickup and X. Shi; Status - not yet analysed';...
-                        '#Chlorophyll: Who - A. Belcher; Status - not yet analysed';...
-                        '#POC, POM: Who - G. Dallolmo; Status - not yet analysed';...
+                        '#Oxygen: Who - I Seguro (UEA); Status - preliminary.';...
+                        '#Nutrients: Who - M. Woodward (PML) and E. Mawji (NOC); Status - preliminary';...
+                        '#Carbon: Who - D. Pickup and D. Bakker (UEA); Status - not yet analysed '; ...
+                        '#Carbon isotopes: Who - X. Shi and Y. Wu (Ximeng University); Status - not yet analysed'; ...
+                        '#Chlorophyll: Who - A. Belcher (BAS); Status - not yet analysed';...
+                        '#POC, POM: Who - G. Dallolmo and G. Stowasser (BAS); Status - not yet analysed';...
                         }];
                 end
                 vars_rename = {'CTDTURB' 'CTDBETA650_124'}; %confirmed 650; probably 124? 
             case 'grid'
+                sam_gridlist = {'botoxy' 'silc' 'phos' 'totnit'};
                 switch section
                     case 'sr1b'
-                        kstns = [2 5 6 8 9 10 14:21 23:25 27:30 32 35 42:46];
+                        kstns = [5 6 8 9 10 14:21 23:30 32 35 42:46]; % 11 is also at DP6. 22 at DP14.
                         mgrid.zpressgrid = [0 5 25 50 75 100 175 250 375 500 625 750 875 1000 1250 1500 1750 2000 2250 2500 2750 3000 3250 3500 3750 4000 4250 4500 4750]';
-                    case 'tm'
-                        kstns = [32 36 40 47 50 54 57 59 63];
+                        mgrid.xlim = 2; mgrid.zlim = 4;
+                    case 'tm' %the line that branches off sr1b to the east
+                        kstns = [32 36 40 47 50 54 57 59 63] ; % 61 68 76 161: trace metals also sampled
                         mgrid.zpressgrid = [0 5 25 50 75 100 175 250 375 500 625 750 875 1000 1250 1500 1750 2000 2250 2500 2750 3000 3250 3500]';
                     case 'picbox'
-                    case 'picyo'
-                        kstns = [85:156] ;
+                        kstns = [68:70 72 71 73:75 79:83];
+                    case 'kgb'
+                        kstns = [167 162 174 163 173 164 166]; %165 just before 166
+                        mgrid.xstatnumgrid = [kstns; [1 2 4 5 6 7 9]];
+                    case 'ab'
+                        kstns = 168:172;
                     case 'profiles_only'
-                        %kstns = [1:3 5:167]; %must specify because of skipped station (what about 26/77?)
-                        kstns = [1 2 5 6 8:12 14:30 32:76 78:167];
-                        %ctd_regridlist = {}; %already done
+                        kstns = [1 2 5 6 8:12 14:30 32:76 78:180]; %ignore very shallow ones***
+                        %mgrid.x = [20 21 22 23];
                 end
         end
 
@@ -503,52 +487,54 @@ switch opt1
             cfg.p.time_end_force = round(datevec(dd.dnum_end+2/60/24));
         end
 
-    case 'calibrations'
+    case 'uway_rawedits'
+        check_tsg = 1;
+        switch opt2
+            case 'thermosalinograph_seabird'
+                b = [-2 15; NaN NaN];
+                uopts.badtemperature.temperature = b; uopts.badtemperature.conductivity = b; 
+                %***but pumps have to be integrated later
+        end
+
+    case 'calibration'
         switch opt2
             case 'ctd_cals'
                 castopts.docal.temp = 0;
                 castopts.docal.cond = 0;
                 castopts.docal.oxygen = 0;
-
-                % temperature sensors
-                if ~ismember(stnlocal,ticasts)
-                    castopts.calstr.temp1.sd025 = 'dcal.temp1 = d0.temp1 - 1e-3;'; %2191
-                    castopts.calstr.temp2.sd025 = 'dcal.temp2 = interp1([0 5000],[1e-3 -1e-3],d0.press);'; %5649
-                    %castopts.calstr.temp1.calms = 'from stations 1-85***';
-                    %castopts.calstr.temp2.calms = 'from stations 1-85***';
-                end
-
+                castopts.calstr.temp.sn2191.sd025 = 'dcal.temp = d0.temp + interp1([0 5000],[-1.2e-3 -2.1e-3],d0.press);';
+                castopts.calstr.temp.sn5649.sd025 = 'dcal.temp = d0.temp + interp1([0 5000],[0.8e-3 -1e-3],d0.press);';
+                %no SBE35 on Ti frame, so no cal for 6572, 6674, 6685
+%three C sensors on Ti frame
 %c3488: [0 1000 5000], [0 0 -3e-3]
 %c3491: [0 5000],[-2 -4]e-3
 %c4876: [0 5000],[0.5 -1]e3
 %c4918: not enough points
-                % conductivity sensors
-                if ismember(stnlocal,ticasts)
-                    castops.calstr.cond1.sd025 = 'dcal.cond1 = (d0.cond1 - (-0.30117)) / 1.0088 ;' ;
-                    castops.calstr.cond2.sd025 = 'dcal.cond2 = (d0.cond2 - (-0.44008)) / 1.0128 ;' ;
-                else
-                    castops.calstr.cond1.sd025 = 'dcal.cond1 = (d0.cond1 - (-0.87593)) / 1.0261 ;' ;
-                    castops.calstr.cond2.sd025 = 'dcal.cond2 = (d0.cond2 - (-0.77686)) / 1.0223 ;' ;
+                    castopts.calstr.cond.sn4876.sd025 = 'dcal.cond = (d0.cond - (-0.30117)) / 1.0088 ;' ;
+                    castopts.calstr.cond.sn4918.sd025 = 'dcal.cond = (d0.cond - (-0.44008)) / 1.0128 ;' ;
+                    castopts.calstr.cond.sn3491.sd025 = 'dcal.cond = (d0.cond - (-0.87593)) / 1.0261 ;' ;
+                    castopts.calstr.cond.sn3488.sd025 = 'dcal.cond = (d0.cond - (-0.77686)) / 1.0223 ;' ;
+%castopts.calstr.cond.sn3248.sd025 = '';
+                    castopts.calstr.oxygen.sn2291.sd025 = 'dcal.oxygen = (d0.oxygen - 6.1865) / 0.80215 ;' ;
+                    castopts.calstr.oxygen.sn242.sd025 = 'dcal.oxygen = (d0.oxygen - (-3.8767)) / 1.412 ;' ;
+                %castopts.calstr.oxygen.sn4244 = ''; 
+                    castopts.calstr.oxygen.sn4250.sd025 = 'dcal.oxygen = (d0.oxygen - (-3.5495)) / 0.98412 ;' ;
+                    castopts.calstr.oxygen.sn4252.sd025 = 'dcal.oxygen = (d0.oxygen - (-0.10704)) / 0.95246 ;' ;
+                    castopts.calstr.oxygen.sn620.sd025 = 'dcal.oxygen = (d0.oxygen - (-3.9425)) / 1.1566 ;' ;
+            case 'sensor_unit_conversions'
+                if contains(abbrev,'sonic')
+%                     sensors_to_cal={'fluo';'trans';'parport';'tirport';'parstarboard';'tirstarboard'};
+%                     sensorcals={
+%                         'y=(x1-0.055)*16.3'; % fluorometer: s/n WS3S-246 cal 13 Jan 2022
+%                         'y=(x1-0.058)/(4.707-0.058)*100' %transmissometer: s/n CST-112R cal 14 Mar 2021
+%                         'y=x1/1.059' % port PAR: s/n 28559 cal 23 Mar 2021
+%                         'y=x1/1.134' % port TIR: 994132 cal 6 Apr 2021
+%                         'y=x1/1.016' % stb PAR: s/n 28560 cal 23 Mar 2021
+%                         'y=x1/1.065'}; % stb TIR: 047463 cal 18 Aug 2021
+%                     %                         % the surfmet instrument box is outputting in V*1e-5 for PAR/TIR already
+%                     sensorunits={'ug/l';'percent';'W/m2';'W/m2';'W/m2';'W/m2'};
                 end
-
-                % oxygen sensors
-                if ismember(stnlocal,[6 8 9:10 25:30 33:35 37:39 41:44 48 49 51:53 55 56:2:62 65 66 69 71 75 78 81 84])
-                    castops.calstr.oxygen2.sd025 = 'dcal.oxygen2 = (d0.oxygen2 - 6.1865) / 0.80215 ;' ;
-                end % sensor 2291
-                if ismember(stnlocal,[1 2 5 6 8 9])
-                    castops.calstr.oxygen1.sd025 = 'dcal.oxygen1 = (d0.oxygen1 - (-3.8767)) / 1.412 ;' ;
-                end % sensor 242
-                % skipped sensor 4244 for now
-                if ismember(stnlocal,[13:24 31 32 36 40 46 47 50 54 57:2:63 68 76 161 167])
-                    castops.calstr.oxygen2.sd025 = 'dcal.oxygen2 = (d0.oxygen2 - (-3.5495)) / 0.98412 ;' ;
-                end % sensor 4250
-                if ismember(stnlocal,[3 7 11 13:24 31 32 36 40 46 47 50 54 57:2:63 68 76 161 167])
-                    castops.calstr.oxygen1.sd025 = 'dcal.oxygen1 = (d0.oxygen1 - (-0.10704)) / 0.95246 ;' ;
-                end % sensor 4252
-                if ismember(stnlocal,[10 25:30 33:35 37:39 41:44 48 49 51:53 55 56 58:2:62 65 66 69 71 75 78 81 84])
-                    castops.calstr.oxygen1.sd025 = 'dcal.oxygen1 = (d0.oxygen1 - (-3.9425)) / 1.1566 ;' ;
-                end % sensor 620, only for when it was in position 1
-
+                %case 'tsg_cals'
 
         end
 end

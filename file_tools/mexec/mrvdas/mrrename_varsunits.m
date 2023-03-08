@@ -58,7 +58,7 @@ for no = 1:length(fn)
         a{vno,3} = m_check_nc_varname(a{vno,1},0);
     end
     
-    %now do special cases
+    %special cases
     m = strcmpi('utctime',a(:,1));
     a(m,n+1) = {'utctime'};
     a(m,n+2) = {'hhmmss_fff'};
@@ -98,6 +98,14 @@ for no = 1:length(fn)
     a(m,n+1) = {'speed_forward'};
     m = strcmpi('transverseWaterSpeed',a(:,1)) | strcmpi('speedps',a(:,1));
     a(m,n+1) = {'speed_stbd'};
+    m = strcmpi('seasurfacetemperature',a(:,1));
+    a(m,n+1) = {'sst'};
+    m = strcmpi('temperature',a(:,1));
+    a(m,n+1) = {'temp'};
+    m = strcmpi('conductivity',a(:,1));
+    a(m,n+1) = {'cond'};
+    m = strcmpi('divalueallchannels',a(:,1));
+    a(m,n+1) = {'ucsw_hoist'};
 
     %cut the lines that are the same
     s = strcmp(a(:,1),a(:,n+1)) & strcmp(a(:,2),a(:,n+2));

@@ -28,8 +28,8 @@ xm = .5*(xe(:,1)+xe(:,2));
 
 s = size(y);
 
-yg = nan(length(xm),s(2));
 %loop through bins
+yg = NaN+zeros(length(xm),size(y,2));
 for bno = 1:length(xm)
     
     xmask = (x>=xe(bno,1) & x<=xe(bno,2));
@@ -68,7 +68,7 @@ for bno = 1:length(xm)
                     end
                     yg(bno,:) = .5*(yb(ind1)+yb(ind2));
                     yg(bno,ii1) = min(yb(:,ii1),[],1); %for nanmedian, only good value
-                    
+
                 case 'lfit'
                     w = sum(double(m),1);
                     for no2 = 1:s(2)
@@ -85,5 +85,3 @@ for bno = 1:length(xm)
         end
     end
 end
-
-

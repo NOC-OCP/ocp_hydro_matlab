@@ -19,22 +19,14 @@ function d = apply_cal_samfile(d, h, udstr, testcal, calstr)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
+%variables with a 'u' (or 'd') before them in the sam file, which might be
+%calibrated or used in calibration functions
 udvars = {'press' 'time' 'temp1' 'temp2' 'psal1' 'psal2' 'cond1' 'cond2' 'oxygen1' 'oxygen2' 'fluor'};
 
 if isempty(calstr)
     cropt_cal = 1;
 else
     cropt_cal = 0;
-    %modify calstr (which won't change) so it applies to e.g. utemp1 as
-    %function of upress, etc.
-    fn = fieldnames(calstr);
-    for no = 1:fn
-        s = calstr.(fn{no}).(mcruise);
-        for vno = 1:length(udvars)
-            s = replace(s,udvars{vno},[udstr udvars{vno}]);
-        end
-        calstr.([udstr fn{no}]).(mcruise) = s;
-    end
 end
 
 %loop through stations, since they might have different cal functions
@@ -49,39 +41,31 @@ for sno = stns(:)'
         else
             continue
         end
-        %modify calstr so it applies to e.g. utemp1 as function of upress, etc.
-        fn = fieldnames(calstr);
-        for no = 1:fn
-            s = calstr.(fn{no}).(mcruise);
-            for vno = 1:length(udvars)
-                s = replace(s,udvars{vno},[udstr udvars{vno}]);
-            end
-            calstr.([udstr fn{no}]).(mcruise) = s;
-        end
     end
 
-    %get the data from just this station
+    %get the data from just this station, and rename e.g. upress to press
     clear d0
     iig = find(d.statnum==stnlocal);
-    for vno = 1:length(udflds)
-        d0.([udstr udflds{vno}]) = d.([udstr udflds{vno}])(iig);
+    for vno = 1:length(udvars)
+        d0.(udvars{vno}) = d.([udstr udvars{vno}])(iig);
     end
     d0.statnum = d.statnum(iig);
-    [dcal, hcal] = apply_calibrations(d0, h, calstr, testcal, 'q');
-    %put calibrated data from this station only back into d
+    h0.fldnam = fieldnames(d0)';
+    h0.fldunt = repmat({' '},size(h0.fldnam));
+    %paste in serial numbers
+    if isfield(d,'sn_cond1') %assume if we have one we have all
+        snfs = {'cond1' 'cond2' 'temp1' 'temp2' 'oxygen1' 'oxygen2'};
+        h0.fldserial = repmat({' '},size(h0.fldnam));
+        for fno = 1:length(snfs)
+            h0.fldserial{strcmp(snfs{fno},h0.fldnam)} = num2str(d.(['sn_' snfs{fno}])(iig(1)));
+        end
+    end
+    [dcal, hcal] = apply_calibrations(d0, h0, calstr, testcal, 'q');
+    %put calibrated data from this station only back into d, re-prepending
+    %the 'u' or 'd'
     for vno = 1:length(hcal.fldnam)
-        d.(hcal.fldnam{vno})(iig) = dcal.(hcal.fldnam{vno});
+        d.([udstr hcal.fldnam{vno}])(iig) = dcal.(hcal.fldnam{vno});
     end
 
 end
-
-%rename back
-for no = 1:length(uflds)-3
-    if ~usedn
-        d.(['u' uflds{no}]) = d.(uflds{no});
-    else
-        d.(['d' uflds{no}]) = d.(uflds{no});
-    end
-end
-
 

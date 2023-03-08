@@ -1,3 +1,4 @@
+function msec_grid(section)
 % make gridded section(s) by calling maphsec; save to .mat file
 %
 % ylf jc238, based on msec_run_mgridp (calling mgridp)

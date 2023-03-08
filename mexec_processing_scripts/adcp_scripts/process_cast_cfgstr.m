@@ -209,11 +209,16 @@ if pcs.begin_step <= pcs.cur_step
     %     apply magnetic deviation if given
     %  2) merge down-up data
     %  3) do some fist order error checks
-
-    if iscell(f.ladcpdo) && ~isempty(f.ladcpdo) %***what about ladcpup and combining?
-        [d,p] = loadrdi_mult(f,p);
+    md = iscell(f.ladcpdo) && ~isempty(f.ladcpdo);
+    mu = iscell(f.ladcpup) && ~isempty(f.ladcpup);
+    if md && mu
+        warning('not configured to process multiple down and multiple uplooker files together; skipping')
+        return
+    end
+    if md || mu
+        [d,f,p] = loadrdi_mult(f,p);
     else
-        [d,p]=loadrdi(f,p);
+        [d,p] = loadrdi(f,p);
     end
 
     if isfield(p,'time_start_force')

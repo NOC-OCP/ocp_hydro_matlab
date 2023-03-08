@@ -48,9 +48,12 @@ for stn = klist
     psalfile = fullfile(root_ctd,sprintf('ctd_%s_%03d_psal.nc',mcruise,stn));
     if exist(psalfile,'file')
         [d1, h1] = mload(psalfile,'/');
+        [dd, hd] = mload(fullfile(root_ctd,sprintf('dcs_%s_%03d',mcruise,stn)),'/');
+        dd.time_start = m_commontime(dd,'time_start',hd,'datenum');
+        dd.time_end = m_commontime(dd,'time_end',hd,'datenum');
         te = d1.time-0.5; te(length(te)+1) = te(end)+1;
         te = m_commontime(te,h1,'datenum');
-        iig = find(drbr.time>te(1)-1/86400 & drbr.time<te(end)+1/86400);
+        iig = find(drbr.time>dd.time_start-1/86400 & drbr.time<dd.time_end+1/86400);
         if length(iig)>5*60
             clear d
             d.press = drbr.press(iig);

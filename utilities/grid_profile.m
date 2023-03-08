@@ -94,6 +94,10 @@ while ino<=length(varargin)
     end
 end
 
+if strcmp(method,'lfitbin') && bin_partial
+    warning('fitting in partial bins is not recommended!')
+end
+
 %variables to grid
 fn = fieldnames(d);
 if sum(strcmp(method, {'lfitbin' 'medint' 'meanint' 'linterp' 'smhan' 'meannum'}))
@@ -190,7 +194,9 @@ for vno = 1:nvar
     s = size(d.(fn{vno}));
     if isrow
         if s(2)~=ng_in
-            warning('size [%d %d] of variable %s does not match length %d of gridding variable %s; skipping.', s(1), s(2), fn{vno}, ng_in, gridvar)
+            if isnumeric(d.(fn{vno}))
+                warning('size [%d %d] of variable %s does not match length %d of gridding variable %s; skipping.', s(1), s(2), fn{vno}, ng_in, gridvar)
+            end
             usevar(vno) = 0;
             continue
         end
@@ -199,7 +205,9 @@ for vno = 1:nvar
         datainds = [datainds repmat(vno,1,size(d.(fn{vno}),1))];
     else
         if s(1)~=ng_in
-            warning('size [%d %d] of variable %s does not match length %d of gridding variable %s; skipping.', s(1), s(2), fn{vno}, ng_in, gridvar)
+            if isnumeric(d.(fn{vno}))
+                warning('size [%d %d] of variable %s does not match length %d of gridding variable %s; skipping.', s(1), s(2), fn{vno}, ng_in, gridvar)
+            end
             usevar(vno) = 0;
             continue
         end
@@ -217,6 +225,7 @@ if prefill>0
 end
 
 %grid
+tic
 switch method
     case {'meanbin' 'medbin' 'lfitbin'}
         data = gp_binav(data, d.(gridvar), ge, method(1:end-3), 'ignore_nan', ignore_nan, 'bin_partial', bin_partial);
@@ -236,6 +245,7 @@ switch method
     case {'linterp' 'smhan'}
         data = gp_smooth(data, d.(gridvar), gridvec, method, 'ignore_nan', ignore_nan);
 end
+toc
 
 %fill gaps and ends if specified
 if profile_extrap(1)==1

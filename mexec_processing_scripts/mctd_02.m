@@ -80,9 +80,18 @@ end
 
 %%%%% edits and corrections, either producing or modifying _raw_cleaned file %%%%%
 
-%automatic
+%automatic %***put in a warning that for oxygen scans selected in
+%mctd_rawedit may be off by 6 s (if align done here)
 [d, comment] = apply_autoedits(d, castopts);
 didedits = 0;
+if ~isempty(comment)
+    h.comment = [h.comment comment];
+    didedits = 1;
+end
+
+%reapply hand edits
+edfilepat = fullfile(root_ctd,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stnlocal));
+[d, comment] = apply_guiedits(d, 'scan', edfilepat, castopts.redoctm);
 if ~isempty(comment)
     h.comment = [h.comment comment];
     didedits = 1;
@@ -99,14 +108,6 @@ if castopts.redoctm
         d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+oxy_align);
     end
     h.comment = [h.comment '\n oxygen shifted by ' oxy_align ' s'];
-    didedits = 1;
-end
-
-%reapply hand edits
-edfilepat = fullfile(root_ctd,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stnlocal));
-[d, comment] = apply_guiedits(d, 'scan', edfilepat);
-if ~isempty(comment)
-    h.comment = [h.comment comment];
     didedits = 1;
 end
 
@@ -195,7 +196,9 @@ else
         kmatch = find(strcmp(oxyvars{no,1},h.fldnam));
         hnew.fldnam(no) = h.fldnam(kmatch);
         hnew.fldunt(no) = h.fldunt(kmatch);
+        h.fldnam(kmatch) = hnew.fldnam(no); %now overwrite, for keep_vatts
     end
+    hnew = keep_hvatts(hnew, h);
     hnew.comment = 'oxygen variables copied';
 end
 
@@ -205,6 +208,8 @@ if castopts.doturbV
     hnew.fldnam = [hnew.fldnam 'turbidity'];
     hnew.fldunt = [hnew.fldunt 'm^-1/sr'];
     hnew.comment = [hnew.comment '\n turbidity converted from turbidity volts'];
+    h.fldnam{strcmp('turbidityV',h.fldnam)} = 'turbidity';
+    hnew = keep_hvatts(hnew, h);
 end
 
 %%%%% save the new or overwritten variables %%%%%
@@ -222,7 +227,8 @@ if isfield(castopts, 'calstr') && sum(cell2mat(struct2cell(castopts.docal)))
     end
 
     %apply calibrations
-    [dcal, hcal] = apply_calibrations(d0, h0, calstr, docal, 'q');
+    [dcal, hcal] = apply_calibrations(d0, h0, castopts.calstr, castopts.docal, 'q');
+    hcal = keep_hvatts(hcal, h0);
 
     %if there were calibrations applied to any variables, save those back
     %to 24hz file (overwriting uncalibrated versions)

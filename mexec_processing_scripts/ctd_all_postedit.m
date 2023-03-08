@@ -37,7 +37,7 @@ for kloop = klistl
 end
 
 %output to csv files
-klist = klistl; mout_cchdo_exchangeform; clear klist
+mout_cchdo_exchangeform(klistl)
 
 %and sync
 opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt

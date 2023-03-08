@@ -132,19 +132,21 @@ if ~isempty(varstring)
     end
 end
 
-varnums = zeros(1,size(vdef,1));
+varnums = [];
 ii = findstr(varstring,' ');
-clear vars; vars{1,1} = lower(varstring(1:ii(1)-1));
-for no = 1:length(ii)-1
-    vars{no+1,1} = lower(varstring(ii(no)+1:ii(no+1)-1));
+if ~isempty(ii)
+    clear vars; vars{1,1} = lower(varstring(1:ii(1)-1));
+    for no = 1:length(ii)-1
+        vars{no+1,1} = lower(varstring(ii(no)+1:ii(no+1)-1));
+    end
+    if ii(end)<length(varstring)
+        vars{no+1,1} = lower(varstring(ii(end)+1:end));
+    end
+    for no = 1:size(vdef,1)
+        vdef{no,1} = lower(vdef{no,1});
+    end
+    [~,varnums,~] = intersect(vdef(:,1),vars);
 end
-if ii(end)<length(varstring)
-    vars{no+1,1} = lower(varstring(ii(end)+1:end));
-end
-for no = 1:size(vdef,1)
-    vdef{no,1} = lower(vdef{no,1});
-end
-[~,varnums,~] = intersect(vdef(:,1),vars);
 if isempty(varnums); varnums = 2:size(vdef,1); end
 
 for kl = varnums

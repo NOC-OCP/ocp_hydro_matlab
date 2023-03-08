@@ -77,29 +77,37 @@ h.numdimsets = length(krmatch);
 
 % initialise in case noflds == 0
 
+if h.noflds==0
     h.fldnam = {};
-    h.fldunt = {};
-    h.alrlim = [];
-    h.uprlim = [];
-    h.absent = [];
-    h.num_absent = [];
-    h.dimsset = {};
-    h.dimrows = [];
-    h.dimcols = [];
+else
+    h.fldnam = var_names(2:h.noflds+1);
+    h.fldnam = h.fldnam(:)';
+end
+h.fldunt = repmat({' '},size(h.fldnam));
+h.alrlim = zeros(size(h.fldnam));
+h.uprlim = zeros(size(h.fldnam));
+h.absent = zeros(size(h.fldnam));
+h.num_absent = zeros(size(h.fldnam));
+h.dimsset = cell(size(h.fldnam));
+h.dimrows = zeros(size(h.fldnam));
+h.dimcols = zeros(size(h.fldnam));
 
 for k = 1:h.noflds
-    h.fldnam{k} = var_names{k+1};
     h.fldunt{k} = nc_attget(ncfile.name,h.fldnam{k},'units');
-    a = nc_getvarinfo(ncfile.name, h.fldnam{k}); a = {a.Attribute.Name};
-    if sum(strcmp('serial',a))
-      h.fldsn{k} = nc_attget(ncfile.name,h.fldnam{k},'serial');
-    else
-      h.fldsn{k} = ' ';
-    end
     h.alrlim(k) = nc_attget(ncfile.name,h.fldnam{k},'min_value');
     h.uprlim(k) = nc_attget(ncfile.name,h.fldnam{k},'max_value');
     h.absent(k) = nc_attget(ncfile.name,h.fldnam{k},'_FillValue');
     h.num_absent(k) = nc_attget(ncfile.name,h.fldnam{k},'number_fillvalue');
+    %and any other "extra" attributes
+    a = nc_getvarinfo(ncfile.name, h.fldnam{k}); a = {a.Attribute.Name};
+    a = setdiff(a,{'long_name' 'units' 'min_value' 'max_value' '_FillValue' 'missing_value' 'number_fillvalue'});
+    for ano = 1:length(a)
+        if ~isfield(h,['fld' a{ano}])
+            %initialise
+            h.(['fld' a{ano}]) = repmat({' '},size(h.fldnam));
+        end
+        h.(['fld' a{ano}]){k} = nc_attget(ncfile.name,h.fldnam{k},a{ano});
+    end
     vinfo = nc_getvarinfo(ncfile.name,h.fldnam{k});
     nrowsname = vinfo.Dimension{1};
     h.dimsset{k} = nrowsname(6:end);

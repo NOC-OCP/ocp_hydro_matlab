@@ -166,42 +166,42 @@ units = [units; {'matlab_datenum'}];
 klat1 = find(strncmp('latdegm',names,7));
 klat2 = find(strncmp('latdir',names,6));
 if ~isempty(klat1) && ~isempty(klat2) % latitude variables found
-        lat1 = dd.(names{klat1});
-        lath = dd.(names{klat2});
-        deg = floor(lat1/100);
-        min = lat1-100*deg;
-        
-        klats = strcmpi('s',lath);
-        
-        dd.latitude = deg+min/60;
-        dd.latitude(klats) = -dd.latitude(klats);
-        names = [names;{'latitude'}];
-        units = [units;{'decimaldegrees'}];
-        dd = rmfield(dd,names{klat1});
-        dd = rmfield(dd,names{klat2});
-        names([klat1 klat2]) = [];
-        units([klat1 klat2]) = [];
+    lat1 = dd.(names{klat1});
+    lath = dd.(names{klat2});
+    deg = floor(lat1/100);
+    min = lat1-100*deg;
+
+    klats = strcmpi('s',lath);
+
+    dd.latitude = deg+min/60;
+    dd.latitude(klats) = -dd.latitude(klats);
+    names = [names;{'latitude'}];
+    units = [units;{'decimaldegrees'}];
+    dd = rmfield(dd,names{klat1});
+    dd = rmfield(dd,names{klat2});
+    names([klat1 klat2]) = [];
+    units([klat1 klat2]) = [];
 
 end
 
 klon1 = find(strncmp('londegm',names,7));
 klon2 = find(strncmp('londir',names,6));
 if ~isempty(klon1) && ~isempty(klon2) % longitude variables found
-        lon1 = dd.(names{klon1}); % use dynamic field names
-        lonh = dd.(names{klon2});
-        deg = floor(lon1/100);
-        min = lon1-100*deg;
-        
-        klons = strcmpi('w',lonh);
-        
-        dd.longitude = deg+min/60;
-        dd.longitude(klons) = -dd.longitude(klons);
-        names = [names;{'longitude'}];
-        units = [units;{'decimaldegrees'}];
-        dd = rmfield(dd,names{klon1});
-        dd = rmfield(dd,names{klon2});
-        names([klon1 klon2]) = [];
-        units([klon1 klon2]) = [];
+    lon1 = dd.(names{klon1}); % use dynamic field names
+    lonh = dd.(names{klon2});
+    deg = floor(lon1/100);
+    min = lon1-100*deg;
+
+    klons = strcmpi('w',lonh);
+
+    dd.longitude = deg+min/60;
+    dd.longitude(klons) = -dd.longitude(klons);
+    names = [names;{'longitude'}];
+    units = [units;{'decimaldegrees'}];
+    dd = rmfield(dd,names{klon1});
+    dd = rmfield(dd,names{klon2});
+    names([klon1 klon2]) = [];
+    units([klon1 klon2]) = [];
 
 end
 

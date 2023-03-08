@@ -27,7 +27,7 @@ cfg.p.magdec_source = 1;
 %cfg.p.edit_mask_dn_bins = 1;
 %cfg.p.edit_mask_up_bins = 1;
 cfg.p.orig = 0; % save original data or not
-isul = 1;
+isul = 1; %is there an uplooker? process it first
 cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
 opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
 opt1 = 'ladcp_proc'; get_cropt

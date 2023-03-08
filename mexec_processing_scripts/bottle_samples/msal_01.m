@@ -1,3 +1,4 @@
+function msal_01
 % msal_01: read in the bottle salinities from digitized autosal log(s)
 % and save to sal_cruise_01.nc, tsgsal_cruise_01.nc
 %

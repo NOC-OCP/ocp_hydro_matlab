@@ -84,18 +84,18 @@ varnames.timvar = {'time' 'measureTS' 'utctime' 'dnum'};
 varnames.cabvar = {'cableout' 'cab' 'cable' 'wireout' 'winch_cable_out' 'out' 'mfctdcablelengthout' 'ctdcablelengthout'};
 varnames.salvar = {'sal_cal' 'salinity_calibrated' 'salinity_cal' 'salinity' 'psal' 'salinity_raw'};
 varnames.tempvar = {'housingtemp' 'temp_h' 'tstemp' 'temp_raw' 'temph_raw' 'temp_m' 'temp_housing_cal' 'temp_housing' 'temp_housing_raw'};
-varnames.sstvar = {'remotetemp' 'temp_r' 'sstemp' 'temp_remote' 'temp_remote_raw'};
+varnames.sstvar = {'remotetemp' 'temp_r' 'sstemp' 'temp_remote' 'temp_remote_raw' 'seasurfacetemperature'};
 varnames.condvar = {'conductivity_calibrated' 'conductivity' 'cond' 'conductivity_raw'};
 varnames.svelvar = {'sndspeed' 'soundvelocity' 'soundvelocity_raw'};
 varnames.flowvar = {'flow' 'flow1'};
-varnames.rwindsvar = {'windspeed_raw' 'relwind_spd_raw'};
-varnames.rwinddvar = {'winddirection_raw' 'relwind_dirship_raw'};
+varnames.rwindsvar = {'windspeed_raw' 'relwind_spd_raw' 'windspeed'};
+varnames.rwinddvar = {'winddirection_raw' 'relwind_dirship_raw' 'winddirection'};
 varnames.twindsvar = {'windspeed' 'wind_speed_ms' 'truwind_spd'};
 varnames.twinddvar = {'direct' 'wind_dir' 'truwind_dir' 'winddirection'};
 varnames.twindvvar = {'truwind_e' 'truwind_n' 'truwind_u' 'truwind_v'};
 varnames.latvar = {'lat' 'latitude' 'seatex_gll_lat'};
 varnames.lonvar = {'lon' 'long' 'longitude' 'seatex_gll_lon'};
-varnames.headvar = {'head' 'heading' 'head_gyr' 'heading_av_corrected' 'heading_av'};
+varnames.headvar = {'head' 'heading' 'head_gyr' 'heading_av_corrected' 'heading_av' 'headingtrue'};
 varnames.multibvar = {'em120' 'em122' 'multib' 'multib_t'};
 varnames.singlebvar = {'ea600' 'sim' 'singleb' 'singleb_t'};
 varnames.depvar = {'depth' 'waterdepth' 'water_depth_metres' 'waterdepth_meters' 'waterdepth_below_transducer', 'depthm'};
@@ -164,12 +164,11 @@ for tno = 1:length(varname_try)
         %return the variable names in this category that are in fldnams
         %(second input)
         data = intersect(varnames.(cat), fldnams);
+        if isempty(data)
+            return
+        end
         if first
-            try
             data = data{1};
-            catch
-                keyboard
-            end
         end
         if singlecell
             output = [output data];

@@ -8,6 +8,8 @@ nox = size(oxyvars,1);
 nvar = 0;
 hnew.comment = '';
 
+h0.fldnam = h.fldnam; %for keep_hvatts
+
 if castopts.dooxyrev
     %calculate oxy_rev, the oxygen hysteresis reversed variables
     if ~iscell(castopts.oxyrev.H1)
@@ -22,6 +24,7 @@ if castopts.dooxyrev
     for no = 1:nox
         thisvar = find(strcmp(oxyvars{no,1}, h.fldnam)); %same units
         hnew.fldnam{nvar+no} = [oxyvars{no,1} '_rev'];
+        h0.fldnam{thisvar} = hnew.fldnam{nvar+no};
         hnew.fldunt(nvar+no) = h.fldunt(thisvar);
         dnew.(hnew.fldnam{nvar+no}) = mcoxyhyst_reverse(d.(oxyvars{no,1}), d.time, d.press, castopts.oxyrev.H1{no}, castopts.oxyrev.H2{no}, castopts.oxyrev.H3{no});
         hnew.comment = [hnew.comment 'reversed oxygen hysteresis\n '];
@@ -48,6 +51,7 @@ if castopts.dooxyhyst
         var0 = [oxyvars{no,1} revstring];
         thisvar = find(strcmp(var0, h.fldnam));
         hnew.fldnam{nvar+no} = oxyvars{no,2};
+        h0.fldnam{thisvar} = hnew.fldnam{nvar+no};
         hnew.fldunt(nvar+no) = h.fldunt(thisvar);
         dnew.(oxyvars{no,2}) = mcoxyhyst(d.(var0), d.time, d.press, castopts.oxyhyst.H1{no}, castopts.oxyhyst.H2{no}, castopts.oxyhyst.H3{no});
         %record whether a non-default calibration is set, for mstar comment
@@ -69,3 +73,7 @@ if castopts.dooxyhyst
     end
     
 end
+
+%transfer extra attributes like s/n
+h.fldnam = h0.fldnam;
+hnew = keep_hvatts(hnew, h);

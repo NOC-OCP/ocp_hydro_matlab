@@ -30,25 +30,38 @@ ns = length(sdata.x);
 nvars = length(sdata.vars);
 
 %ctd data: weighted average in vertical (using midpoint of linear fit),
-%including fill-to-surface; linearly interpolate in x (but do not fill as
-%this risks filling through topography)
+%including fill-to-surface; linearly interpolate in x, filling only between
+%neighbouring columns at levels with good points below in this column as
+%well as on both sides (so as not to fill through topography)
 mgrid.vars = cdata.vars;
 mgrid.unts = cdata.unts;
 zgopts.grid_extrap = [1 0];
 zgopts.profile_extrap = [1 0];
 zgopts.postfill = inf;
-xgopts.grid_extrap = [1 1];
-xgopts.profile_extrap = [0 0];
-xgopts.postfill = 0;
 dz1 = mgrid.z(2,1)-mgrid.z(1,1); dz2 = mgrid.z(end,1)-mgrid.z(end-1,1);
 zg = [mgrid.z(1,1)-dz1/2; .5*(mgrid.z(1:end-1,1)+mgrid.z(2:end,1)); mgrid.z(end,1)+dz2/2];
-xg = mgrid.x(1,:);
 dgz = grid_profile(cdata, 'z', zg, 'lfitbin', zgopts);
-dgzx = grid_profile(dgz, 'x', xg, 'linterp', xgopts);
+nz = size(mgrid.z,1); nx = size(mgrid.x,2);
 for vno = 1:length(mgrid.vars)
-    dgzx.(mgrid.vars{vno})(mgrid.mask==1) = NaN;
-    m = double(isnan(dgzx.(mgrid.vars{vno})));
-    mgrid.(mgrid.vars{vno}) = dgzx.(mgrid.vars{vno});
+    dat = dgz.(mgrid.vars{vno});
+    dat(mgrid.mask==1) = NaN;
+    iigl = find(~isnan(dat(:,1))); iig = find(~isnan(dat(:,2)));
+    %horizontal interpolation to fill gaps where there is data deeper
+    %(don't fill through topography, but do fill at surface)
+    for cno = 2:nx-1
+        iigr = find(~isnan(dat(:,cno+1)));
+        iib = setdiff([1:nz]',iig); 
+        if ~isempty(iib) && length(iig)>2
+            mx = min(min(max(iig),max(iigl)),max(iigr));
+            iib = iib(iib<mx);
+            if ~isempty(iib)
+                dat(iib,cno) = interp1([1 3]',dat(iib,[cno-1 cno+1])',2)';
+            end
+        end
+        iigl = iig; iig = iigr;
+    end
+    m = double(isnan(dat));
+    mgrid.(mgrid.vars{vno}) = dat;
     mgrid.datam(:,:,vno) = m;
 end
 
@@ -114,12 +127,11 @@ for gno = iig
             [Q,R] = qr(Vw(iisg,:),0); %V = QR, Q = Vinv(R)
             poly = R\(Q'*yw); % = inv(R)(Q'y)
             sw = s(iisg); 
-            sw(w(iisg)==0) = []; %this will never be the case, right?***
+%            sw(w(iisg)==0) = []; %this will never be the case, right?***
             if min(sw)*max(sw) < 0 %grid point density bracketed by input point densities with non-zero weight
                 datam(zno, xno, vno) = 0; %good point, set masking to zero (no mask)
                 datag(zno, xno, vno) = poly(1); %***first coef is mean?
             end
-            %if vno==6 && mgrid.z(gno)>=15 && poly(1)<2100; keyboard; end
         elseif ~isempty(iisg) && isfield(mgrid, 'sam_fill') && contains(mgrid.sam_fill, 'nearby')
             datag(zno, xno, vno) = mean(data(iis(iisg)));
             datam(zno, xno, vno) = 0.7; %***

@@ -31,7 +31,7 @@ stn = stnlocal; mdep_01
 get_sensor_groups(stnlocal)
 
 %output to csv files
-klist = stnlocal; mout_cchdo_exchangeform; clear klist
+mout_cchdo_exchangeform(stnlocal)
 
 %and sync
 opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt

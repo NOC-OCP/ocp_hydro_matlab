@@ -42,11 +42,12 @@ if ismember(stnlocal, stns_alternate_o)
 end
 h = m_read_header(infile1);
 if o_choice == 2 && ~sum(strcmp('oxygen2', h.fldnam))
-   error(['no oxygen2 found; edit opt_' mcruise ' and/or templates/ctd_renamelist.csv and try again'])
+   error(['no oxygen2 found; edit opt_' mcruise ' mctd_01 and try again'])
 end
 
 %copy selected sensor to new names without sensor number
 [d, h] = mloadq(infile1,'/');
+h0 = h;
 vars = {'temp' 'cond' 'oxygen'};
 for vno = 1:length(vars)
     name0 = [vars{vno} num2str(s_choice)];
@@ -55,8 +56,11 @@ for vno = 1:length(vars)
         d.(vars{vno}) = d.(name0);
         h.fldnam = [h.fldnam vars{vno}];
         h.fldunt = [h.fldunt h.fldunt{ii}];
+        h0.fldnam{ii} = vars{vno};
     end
 end
+h = keep_hvatts(h, h0);
+h0 = h;
 
 %calculate derived variables
 iig = find(d.press>-1.495); %gsw won't work on p<=-1.495
@@ -68,6 +72,10 @@ if length(iig)<length(d.press)
         warning('%s\n',m{:});
     end
 end
+if ~strcmp('mS/cm',h.fldunt{strcmp('cond',h.fldnam)})
+    warning('cond units should be mS/cm for psal calc, they are %s',h.fldunt(strcmp('cond',h.fldnam)))
+    keyboard
+end
 d.psal = NaN+d.cond; d.psal(iig) = gsw_SP_from_C(d.cond(iig),d.temp(iig),d.press(iig));
 d.psal1 = NaN+d.cond; d.psal1(iig) = gsw_SP_from_C(d.cond1(iig),d.temp1(iig),d.press(iig));
 d.psal2 = NaN+d.cond; d.psal2(iig) = gsw_SP_from_C(d.cond2(iig),d.temp2(iig),d.press(iig));
@@ -77,11 +85,6 @@ d.asal2 = NaN+d.cond; d.asal2(iig) = gsw_SA_from_SP(d.psal2(iig),d.press(iig),h.
 d.potemp = NaN+d.cond; d.potemp(iig) = gsw_pt0_from_t(d.asal(iig),d.temp(iig),d.press(iig));
 d.potemp1 = NaN+d.cond; d.potemp1(iig) = gsw_pt0_from_t(d.asal1(iig),d.temp1(iig),d.press(iig));
 d.potemp2 = NaN+d.cond; d.potemp2(iig) = gsw_pt0_from_t(d.asal2(iig),d.temp2(iig),d.press(iig));
-% h.fldnam = [hnew.fldnam 'contemp' 'contemp1' 'contemp2'];
-% h.fldunt = [hnew.fldunt 'degc90' 'degc90' 'degc90'];
-% d.contemp = NaN+d.cond; d.contemp(iig) = gsw_CT_from_t(d.asal(iig),d.temp(iig),d.press(iig));
-% d.contemp1  NaN+d.cond; d.contemp1(iig) = gsw_CT_from_t(d.asal1(iig),d.temp1(iig),d.press(iig));
-% d.contemp2  NaN+d.cond; d.contemp2(iig) = gsw_CT_from_t(d.asal2(iig),d.temp2(iig),d.press(iig));
 
 %new variable names and units
 h.fldnam = [h.fldnam 'psal' 'psal1' 'psal2' 'asal' 'asal1' 'asal2' 'potemp' 'potemp1' 'potemp2'];
@@ -89,6 +92,7 @@ h.fldunt = [h.fldunt 'pss-78' 'pss-78' 'pss-78' 'g/kg' 'g/kg' 'g/kg' 'degc90' 'd
 [h.fldnam, ii] = unique(h.fldnam);
 h.fldunt = h.fldunt(ii);
 h.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '];
+h = keep_hvatts(h, h0);
 
 %save to _24hz file
 mfsave(infile1, d, h);
@@ -110,6 +114,7 @@ for no = 1:length(var_copycell)
     dnew.(var_copycell{no}) = d.(var_copycell{no});
 end
 hnew.fldnam = var_copycell;
+hnew = keep_hvatts(hnew, h);
 
 %average to 1hz, output to _psal file
 opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt

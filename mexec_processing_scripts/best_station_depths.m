@@ -58,14 +58,27 @@ for sno = 1:length(depth_source)
 end
 
 %finally look to cruise options for any changes
-replacedeps = []; stnmiss = [];
+replacedeps = []; stnmiss = []; 
+xducer_offset = 0; iscor = 0;
 opt1 = mfilename; opt2 = 'bestdeps'; get_cropt
 if ~isempty(stnmiss)
     bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
 end
 if ~isempty(replacedeps)
     [~,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
-    bestdeps(ib,2) = replacedeps(ia,2);
+    y.cordep = replacedeps(ia,2);
+    if ~iscor
+        sd = replacedeps(ia,:) + xducer_offset;
+        %apply carter correction for these
+        [dsum,~] = mload(fullfile(mgetdir('sum'),sprintf('station_summary_%s_all.nc',mcruise)),'lat lon statnum ');
+        [~,ic,id] = intersect(sd(:,1),dsum.statnum);
+        if length(ic)<length(ia)
+            warning('position not found in summary/not applying carter correction for some stations')
+        else
+            y = mcarter(dsum.lat(id), dsum.lon(id), sd(ic,2));
+        end
+    end
+    bestdeps(ib,2) = y.cordep;
 end
 
 
@@ -134,7 +147,7 @@ switch depth_source
                 load(lf, 'p');
                 bestdeps(iif(no),2) = round(p.zbottom);
             else
-                warning('no ladcp for %03d',bestdeps(iif(no),1))
+                warning('no ladcp with BT for %03d',bestdeps(iif(no),1))
             end
         end
         

@@ -40,7 +40,7 @@ function mfsave(filename, d, varargin)
 %         them (so that, for example, if yesterday you merged into the sam
 %         file all the sal data available, and today you merged in all of
 %         it again, the comment string would only say 'merged from
-%         sal_cruise_01.nc once)
+%         sal_cruise_01.nc' once)
 % required argument if '-merge' or '-addvars' not specified, or if file
 %         filename does not exist, else optional:
 %     h, structure with information for mstar file header, such as some
@@ -88,15 +88,15 @@ function mfsave(filename, d, varargin)
 
 m_common %brings in MEXEC_G
 
-%%%%% handle input arguments %%%%%
+
+%%%%% parse inputs %%%%%
 
 filename = m_add_nc(filename);
-
 
 writenew = 1; %default: overwrite if exists, or create new
 mergemode = 0; %default: (if file exists) add new variables, don't change existing variables
 nosort = 0; %default: if mergemode==1, sort indepvar for output
-unitsnew = 0;
+unitsnew = 0; %default: ask before overwriting units***
 
 for argn = 1:length(varargin)
     if isstruct(varargin{argn})
@@ -122,25 +122,21 @@ if ~exist('h','var') || ~isfield(h, 'fldnam')
     h.fldnam = fieldnames(d);
 end
 
-if length(h.fldnam)~=length(fieldnames(d)) || (isfield(h,'fldunt') && length(h.fldunt)~=length(h.fldnam))
-    error('field names and units in header h must match each other and fields in data d');
-end
-
 if ~exist(filename, 'file') && ~writenew
     warning(['file ' filename ' not found, creating new']);
     writenew = 1;
     mergemode = 0;
 end
-ncfile.name = filename;
 
-% If the filename exists, get the header now and we'll figure out later
-% what to keep; otherwise, start with defaults and fill in from new header
-% (comments will be added separately later)
-if exist(filename, 'file') && ~writenew
-    h0 = m_read_header(filename);
-    oldheader = 1;
-else
-    oldheader = 0;
+if length(h.fldnam)~=length(fieldnames(d)) || (isfield(h,'fldunt') && length(h.fldunt)~=length(h.fldnam))
+    error('field names and units in header h must match each other and fields in data d');
+end
+
+%%%%% Initialise header, either from existing file or defaults %%%%%
+if writenew
+    if ~isfield(h,'fldunt')
+        error(['file ' filename ' does not yet exist, or you have chosen to overwrite it, so you must specify h.fldunt']);
+    end
     h0 = m_default_attributes;
     if isfield(h, 'dataname')
         h0.dataname = h.dataname;
@@ -148,27 +144,34 @@ else
         [~,fn,~] = fileparts(filename);
         h0.dataname = fn;
     end
-    h0.fldnam = []; h0.fldunt = [];
+    h0.fldnam = h.fldnam;
+    h0.fldunt = h.fldunt;
+    h0 = keep_hvatts(h0, h);
+else
+    h0 = m_read_header(filename);
+    if ~mergemode && length(d.(h.fldnam{1}))~=max(h0.rowlength,h0.collength)
+        error(['fields in d must have same length as those in file ' filename ', else use ''-merge''']);
+    end
+    if ~isfield(h,'fldunt') && ~isempty(setdiff(h.fldnam,h0.fldnam))
+        error(['d contains field(s) not already in file ' filename ', so h.fldunt must be supplied']);
+    end
 end
 hist0 = h0;
 
 
-
 %%%%% merge if specified %%%%%
-
 if mergemode 
-    
+
+    %check indepvar
     if ~exist('indepvar','var')
-        error('mergemode=1 requires the name of the variable to merge on to be supplied');
+        error('-merge also requires the name of the variable to merge on');
     end
     if ~isfield(d, indepvar) || sum(isfinite(d.(indepvar)))==0
-        error(['merge variable ' indepvar ' has no good values in input data structure']);
-    else
-        if ~sum(strcmp(indepvar, h0.fldnam))
+        error(['merge variable ' indepvar ' in input d has no good values']);
+    elseif ~sum(strcmp(indepvar, h0.fldnam))
             error([indepvar ' not found in file ' filename ' to merge on']);
-        end
     end
-    
+
     d0 = mloadq(filename, indepvar);
     d0.(indepvar) = d0.(indepvar)(:);
     if size(d.(indepvar),2)>1
@@ -177,17 +180,20 @@ if mergemode
     if length(d0.(indepvar))==length(d.(indepvar)) && max(abs(d0.(indepvar)-d.(indepvar)))==0
         mergemode = 0; %identical indepvar contents, including order, so can use -addvars mode
     else
-        %merge new variables and existing ones in workspace
+        %merge new and existing variables in workspace
         if length(d0.(indepvar))==length(d.(indepvar)) && max(abs(sort(d0.(indepvar)-d.(indepvar))))==0
             nosort = 1; %same contents though in different order, so put new vars into existing order
         end
-        [d0, h0] = mloadq(filename, '/');
+        d0 = mloadq(filename, '/');
         [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort);
-        
+        h = keep_hvatts(h, hnew);
+
         %determine whether dimension has increased and we actually need a new file
         if length(d.(indepvar))~=max(h0.rowlength,h0.collength)
             writenew = 1;
-            h.fldnam = hnew.fldnam; h.fldunt = hnew.fldunt;
+            h0.fldnam = h.fldnam;
+            h0.fldunt = h.fldunt;
+            h0 = keep_hvatts(h0, h);
         end
     end
     
@@ -196,38 +202,23 @@ end
 
 %%%%% write to file %%%%%
 
-if writenew %initialise new file and set varsnew and untsnew to write below
-        
-    %add variables from h
-    if ~isfield(h,'fldunt')
-        error(['file ' filename ' does not yet exist, or you have chosen to overwrite it, so you must specify h.fldunt']);
-    else
-        varsnew = h.fldnam; untsnew = h.fldunt;
-    end
+ncfile.name = filename;
+if writenew %initialise new file and set to write all variables
     
-    %initialise and open file for write
     ncfile = m_openot(ncfile);
+    isnew = 1:length(h.fldnam);
     
-else %overwrite existing variables and keep record of new ones in varsnew and untsnew to write below
+else %overwrite (some) existing variables, store list of rest
 
-    fn = fieldnames(d); 
-    if length(d.(fn{1}))~=max(h0.rowlength,h0.collength)
-        error(['fields in d must have same length as those in file ' filename ', else use ''-merge''']);
-    end
-    %varsold = h0.fldnam;
-    
-    %open file for write
     ncfile = m_openio(ncfile);
-    
-    %loop through variables in d, overwrite those that exist in file
-    varsnew = {}; untsnew = {}; %keep record of new variables
+    isnew = [];
+    h0 = keep_hvatts(h0, h);      
+
+    %check units
     for vno = 1:length(h.fldnam)
-        
-        ii = find(strcmp(h.fldnam{vno},h0.fldnam));
-        
+        ii = find(strcmp(h.fldnam{vno},h0.fldnam));    
+
         if ~isempty(ii) %existing
-            
-            %sort out units
             if isfield(h, 'fldunt') && ~strcmp(h.fldunt{vno}, h0.fldunt{ii})
                 if mergemode
                     warning(['unit ' h.fldunt{vno} ' in new header does not match ' h0.fldunt{ii} ' for variable ' h.fldnam{vno} ' in existing ' filename]);
@@ -245,47 +236,45 @@ else %overwrite existing variables and keep record of new ones in varsnew and un
                     h0.fldunt(ii) = h.fldunt(vno);
                 end
             end
-            
-            %write
+            %write variable (attributes later)
             nc_varput(ncfile.name, h.fldnam{vno}, d.(h.fldnam{vno}));
             m_uprlwr(ncfile, h.fldnam{vno});
             
         else %new variable, write below
-            
-            if isfield(h, 'fldunt')
-                varsnew = [varsnew h.fldnam{vno}];
-                untsnew = [untsnew h.fldunt{vno}];
-            else
-                error(['d contains field ' h.fldnam{vno} ' not already in file ' filename ', so h.fldunt must be supplied']);
-            end
-            
+            isnew = [isnew vno];     
+            h0.fldnam = [h0.fldnam h.fldnam{vno}];
+            h0.fldunt = [h0.fldunt h.fldunt{vno}];
+
         end
         
     end
     
 end
 
-% write just the new variables
-for vno = 1:length(varsnew)
+% write all the new variables (attributes other than units later)
+if ~isempty(isnew)
+    h0 = keep_hvatts(h0, h);
+    for vno = isnew
     clear v
-    v.data = d.(varsnew{vno}); 
+    v.data = d.(h.fldnam{vno});
     if ~isa(v.data, 'double')
         error(['writing from matlab to mstar not valid for variable of class ' class(v.data) '; must be double']);
     end
     if ~isempty(v.data)
-        v.name = varsnew{vno};
-        v.units = untsnew{vno};
+        v.name = h.fldnam{vno};
+        v.units = h.fldunt{vno};
         m_write_variable(ncfile,v);
     else
-        warning([varsnew{vno} ' empty, not writing']);
+        warning([h.fldnam{vno} ' empty, not writing']);
     end
 end
+end
 
+%%%%% edit header, attributes, comments, history %%%%%
 
-%%%%% edit comments, header, history %%%%%
-
-%modify global attributes
-fn = setdiff(fieldnames(h),{'comment' 'fldnam' 'fldunt' 'version' 'mstar_site'});
+% global attributes
+fn = setdiff(fieldnames(h),{'comment' 'version' 'mstar_site'});
+fn = fn(~strncmp('fld',fn,3));
 for fno = 1:length(fn)
     h0.(fn{fno}) = h.(fn{fno});
 end
@@ -293,19 +282,12 @@ if ~isempty(fn) || writenew
     m_write_header(ncfile,h0);
 end
 
-%modify variable attributes fldnam and fldunt
-if ~isempty(varsnew)
-    h0.fldnam = [h0.fldnam varsnew]; h0.fldunt = [h0.fldunt untsnew];
-    % now check that variable units match those in h. Note that
-    % m_write_header only writes the parts of h that are global attributes.
-    % fldnam and fldunt are variable attributes.
-    m_write_units_from_header(ncfile,h0);
-end
-if unitsnew
-    m_write_units_from_header(ncfile,h0);
+% variable attributes fldnam, fldunt, and others
+if ~isempty(isnew) || unitsnew
+    m_write_vatts_from_header(ncfile,h0);
 end
 
-%modify comments
+% comments
 if isfield(h,'comment') && ~isempty(h.comment)
     % The h.comment in ncfile should already terminate in a comment
     % delimiter. Make sure there aren't any stray ones at start of
@@ -335,8 +317,8 @@ else
 end
 m_add_comment(ncfile,[comstring '  at ' datestr(now,31) '  by ' MEXEC_G.MUSER]);
 
-%write history
-if writenew && ~oldheader
+% history
+if writenew
     %fake input file details for write_history
     hist0.filename = [];
     if isfield(h,'dataname')
@@ -359,10 +341,10 @@ hist.filename = ncfile.name;
 MEXEC_A.Mhistory_ot{1} = hist; 
 MEXEC_A.MARGS_IN = {}; 
 MEXEC_A.MARGS_OT = {};
-varstr = ' '; for vno = 1:length(varsnew); varstr = [varstr varsnew{vno} ' ']; end; varstr = varstr(2:end-1);
+varstr = ' '; for vno = isnew; varstr = [varstr h.fldnam{vno} ' ']; end; varstr = varstr(2:end-1);
 vastr = ' '; for vno = 1:length(varargin); if ~isstruct(varargin{vno}); vastr = [vastr varargin{vno} ' ']; end; end; vastr = vastr(2:end-1);
 MEXEC_A.MARGS_OT = [MEXEC_A.MARGS_OT; ['writing variables ' varstr]; ['called with ' vastr]];
-%***add some information on what was done. see hist.comment, varsnew, ...
+%***add some information on what was done? see hist.comment, varsnew, ...
 MEXEC_A.Mprog = 'mfsave';
 m_finis(ncfile); % need mfinis after setting MEXEC_A.Mhistory_in
 m_write_history;

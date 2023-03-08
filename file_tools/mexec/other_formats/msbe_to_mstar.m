@@ -290,7 +290,7 @@ if savefile
     end
     
 else
-    h.fldnam = {}; h.fldunt = {}; h.fldsn = {};
+    h.fldnam = {}; h.fldunt = {}; h.fldser = {};
     h.comment = [];
     clear d %unnecessary? but acts as marker
 end
@@ -310,8 +310,9 @@ if numcycles ~= num_expected
 end
 
 %parse (some) sensor serial numbers from header and store temporarily
-sa = {'t090C' 't190C'; 'c0mS/cm' 'c1mS/cm'; 'sbox0Mm/Kg' 'sbox1Mm/Kg'}; %***this needs to be a cruise option
+sa = {'t090C' 't190C'; 'c0mS/cm' 'c1mS/cm'; 'sbox0Mm/Kg' 'sbox1Mm/Kg'};
 st = {'#     <TemperatureSensor'; '#     <ConductivitySensor'; '#     <OxygenSensor'};
+opt1 = 'mctd_01'; opt2 = 'track_serials'; get_cropt
 sns = {};
 for sno = 1:length(st)
     ii = find(strncmp(st{sno},head,length(st{sno})));
@@ -346,9 +347,9 @@ for k = 1:noflds
         h.fldnam = [h.fldnam v.name];
         h.fldunt = [h.fldunt v.units];
         if isfield(v,'serial')
-            h.fldsn = [h.fldsn v.serial];
+            h.fldser = [h.fldser v.serial];
         else
-            h.fldsn = [h.fldsn ' '];
+            h.fldser = [h.fldser ' '];
         end
         d.(v.name) = v.data;
     end

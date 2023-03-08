@@ -1,3 +1,4 @@
+function varargout = m_setup(varargin)
 %  m_setup: to be run before attempting any mexec processing of
 %  cruise data; sets up environment (global variables and paths)
 %
@@ -6,9 +7,9 @@
 %  items to be edited on each site/cruise" 
 %
 %  you can also pass selected fields (those in the first block of code
-%    below) to MEXEC_G by setting them in structure MEXEC_G_override. this
-%    may be useful if you want to reprocess an old cruise's data with a
-%    newer branch's software. 
+%    below) to MEXEC_G by setting them in optional input, structure
+%    MEXEC_G_override. this may be useful if you want to reprocess an old
+%    cruise's data with a newer branch's software. 
 %    fields to override: 
 %      MSCRIPT_CRUISE_STRING (e.g. 'jc238')
 %      MDEFAULT_DATA_TIME_ORIGIN (e.g. [2022 1 1 0 0 0] -- but note that
@@ -23,6 +24,9 @@
 %        mexec_processing_scripts verbose but file_tools/mexec quiet, 2 to
 %        make all quiet)
 %
+%  optional output path_choose specifies whether LADCP programs have been
+%    added to the path or not
+%
 %  note: if you only want to use mexec tools to read/parse mexec-format
 %    files (e.g. use mload or mloadq, m_commontime or timeunits_mstar_cf),
 %    it is not necessary to run m_setup
@@ -31,6 +35,10 @@
 clear MEXEC_G
 global MEXEC_G
 
+if nargin>0
+    MEXEC_G_overrride = varargin{1};
+end
+
 %what are we processing and where? 
 MEXEC_G.MSCRIPT_CRUISE_STRING='sd025'; 
 %default data time origin is now set in opt_cruise
@@ -38,7 +46,7 @@ MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.other_programs_root = '~/programs/others/'; 
 MEXEC_G.mexec_data_root = '/local/users/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
-MEXEC_G.quiet = 1; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
+MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 
 %replace with any parameters passed as inputs
 if exist('MEXEC_G_force','var') && isstruct(MEXEC_G_force)
@@ -101,17 +109,17 @@ if ~isempty(MEXEC_G.other_programs_root)
     switch use_ix_ladcp
         case 'yes'
             MEXEC_G.ix_ladcp = 1;
-            pathpath = 1;
+            path_choose = 1;
         case 'query'
             disp('LDEO_IX and m_moorproc_toolbox/rodbload contain functions with the same names')
-            pathpath = input('are you processing LADCP data (1),\n mooring/caldip data (2),\n or neither (0)?\n');
-            if pathpath==1
+            path_choose = input('are you processing LADCP data (1),\n mooring/caldip data (2),\n or neither (0)?\n');
+            if path_choose==1
                 MEXEC_G.ix_ladcp = 1; %output 1-Hz CTD data for use by LDEO IX LADCP processing
             else
                 MEXEC_G.ix_ladcp = 0;
             end
         otherwise %e.g. 'no'
-            pathpath = 0;
+            path_choose = 0;
             MEXEC_G.ix_ladcp = 0;
     end
     MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
@@ -317,4 +325,3 @@ if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     mkdir(MEXEC_G.HISTORY_DIRECTORY);
 end
 
-clear MEXEC nsecwait

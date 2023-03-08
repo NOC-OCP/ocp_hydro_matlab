@@ -1,8 +1,5 @@
 % mctd_04:
 %
-% inputs: wk_dvars_ (from mctd_03),
-%         dcs_
-%
 % extract downcast and upcast data from 24hz file with derived vars
 %          (psal etc.) using index information in dcs file;
 %          optionally loopedit;
@@ -114,14 +111,13 @@ end
 
 %%%%% grid to 2 dbar %%%%%
 pg = [0:2:1e4]';
-maxfill2db = 0;
-opt1 = mfilename; opt2 = 'interp2db'; get_cropt
 clear g2opts
+g2opts.postfill = 0; %fill after gridding?
+g2opts.ignore_nan = 1;
+opt1 = mfilename; opt2 = 'interp2db'; get_cropt
 g2opts.int = [-1 1]; %interval for bins
 g2opts.grid_extrap = [0 0]; %discard empty bins
-g2opts.postfill = maxfill2db; %fill after gridding?
-g2opts.ignore_nan = 1;
-g2opts.bin_partial = 1; %use bins with data in only one half
+g2opts.bin_partial = 0; %only use bins with data in both halves
 if isdown
     dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
     if sum(~isnan(dn2.press))<minbins
@@ -175,6 +171,7 @@ if ~sum(strcmp('potemp',hn.fldnam))
     hn.fldnam = [hn.fldnam 'potemp1']; hn.fldunt = [hn.fldunt 'degc90'];
     hn.fldnam = [hn.fldnam 'potemp2']; hn.fldunt = [hn.fldunt 'degc90'];
 end
+hn = keep_hvatts(hn, h);
 
 hn.comment = [hn.comment 'depth and potemp calculated using gsw\n'];
 

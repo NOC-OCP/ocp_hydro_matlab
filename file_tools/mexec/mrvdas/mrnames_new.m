@@ -49,28 +49,28 @@ end
 %create lookup for potential types of messages (some of which may have been excluded from mrtables_from_json by rvdas_skip option in mrjson_load_all)
 n = 0;
 
-n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'hdt'; mt(n).msg = {'hehdt','gphdt','inhdt'}; 
+n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'hed'; mt(n).msg = {'hehdt','gphdt','inhdt'}; 
 n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'att'; mt(n).msg = {'pashr','pixseatitud','prdid','psxn23','kmatt','psmcv','psmbc'}; 
 % n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'hss'; mt(n).msg = {'pixseaheave0'};  
+%n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'att'; mt(n).msg = {'inrot','herot'}; 
 n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gpgga','gpggk','gpgll','pixsegpsin0','gngga','ingga','gngll'}; 
-% n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'vtg'; mt(n).msg = {'gpvtg','gnvtg','invtg'}; 
-n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'rot'; mt(n).msg = {'inrot','herot'}; 
-% n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'dop'; mt(n).msg = {'gngsa','ingsa'}; 
+% n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gpvtg','gnvtg','invtg'}; 
+% n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gngsa','ingsa'}; 
 
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'met'; mt(n).msg = {'gpxsm'}; %surfmet / combined file (?) n = n+1;
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wnd'; mt(n).msg = {'iimwv','wimwv','pmwind'}; 
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'sst'; mt(n).msg = {'sbe38','psbsst1'}; %things that are on the keel or remote n = n+1;
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'tsg'; mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1'}; %things that are on the ucsw pipe (in the lab) n = n+1;
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wnd'; mt(n).msg = {'iimwv','wimwv','pmwind','gpxsm'}; %gpxsm is surfmet
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'ocn'; mt(n).msg = {'sbe38','psbsst1','phsst'}; %things that are on the keel or remote 
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'ocn'; mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1'}; %things that are on the ucsw pipe (in the lab) n = n+1;
 % n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wav'; mt(n).msg = {'pwam1','pramr','pwam'}; 
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'atm'; mt(n).msg = {'pcfrs','pvtnh2','pvbar','pmdew'}; %pressure, humidity, precip n = n+1;
 % n = n+1; mt(n).dir = 'met'; mt(n).pre = 'sky'; mt(n).msg = {'pvceil1','peceil','pbpws','ptdisd'}; %some of these are really too complex to read in our normal way, like the thies clima has hundreds of different variables starting with numberParticlesDiameter  
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'rad'; mt(n).msg = {'pkpyrge','pkpyran','phsst','pspar'}; %radiometers n = n+1;
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'rad'; mt(n).msg = {'pkpyrge','pkpyran','pspar'}; %radiometers
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'ocn'; mt(n).msg = {'pc4rhoist1'}; %sda ucsw intake pole position
 
-n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'sbm'; mt(n).msg = {'sddpt','sddbs','pskpdpt','sdalr','sddbk','sddbs','sddpt','dbdbt','sddbt'}; 
-n = n+1; mt(n).dir = 'bathy'; mt(n).xpre = 'mbm'; mt(n).msg = {'kidpt','kodpt'}; 
+n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'sbm'; mt(n).msg = {'sddpt','sddbs','sdalr','sddbk','sddbs','sddpt','dbdbt','sddbt'}; %'pskpdpt',
+n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'mbm'; mt(n).msg = {'kidpt','kodpt'}; 
 
 % n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'env'; mt(n).msg = {'wimta','wimhu','ps8953','pytemp'}; %not sure about some of these n = n+1;
-% n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'grv'; mt(n).msg = {'uw','pdgrav'}; 
+% n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'grv'; mt(n).msg = {'uw','pdgrav','tnn','dtvnn','uwraw'}; 
 % n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'mag'; mt(n).msg = {'inmag','3rr0r'}; 
 % n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'log'; mt(n).msg = {'vmvbw','vdvbw','vmvhw','vmvlw','vmmtw','vdvhw','vdvlw'}; 
 

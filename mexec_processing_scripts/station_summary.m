@@ -34,7 +34,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 if nargin>0
     stations_to_reload = varargin{1};
 end
-timestring = ['seconds since ' datevec(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)];
+timestring = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
 
 %variables, units, how to group samples for counting
 %names, units, fill values, table headers, formats for printing to table
@@ -72,6 +72,8 @@ end
 %find list of processed stations
 root_ctd = mgetdir('ctd');
 root_sum = mgetdir('sum');
+dataname = ['station_summary_' mcruise '_all'];
+otfile2 = fullfile(root_sum, dataname);
 
 d = dir(fullfile(root_ctd, ['ctd_' mcruise '_*_psal.nc'])); d = {d.name}; d = cell2mat(d(:));
 
@@ -138,9 +140,9 @@ if ~isempty(stnall)
         fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' stnstr]);
         if exist(m_add_nc(fndcs),'file')
             [ddcs, h4] = mloadq(fndcs,'/');
-            time_start(k) = m_commontime(ddcs.time_start,h4,timestring);
-            time_bottom(k) = m_commontime(ddcs.time_bot,h4,timestring);
-            time_end(k) = m_commontime(ddcs.time_end,h4,timestring);
+            time_start(k) = m_commontime(ddcs.time_start,'time_start',h4,timestring);
+            time_bottom(k) = m_commontime(ddcs.time_bot,'time_bot',h4,timestring);
+            time_end(k) = m_commontime(ddcs.time_end,'time_end',h4,timestring);
         end
 
         %samples
@@ -194,9 +196,8 @@ if ~isempty(stnall)
     %%%%% write to mstar .nc file %%%%%
 
     clear hnew ds
-    hnew.dataname = ['station_summary_' mcruise '_all'];
+    hnew.dataname = dataname;
     hnew.fldnam ={}; hnew.fldunt = {};
-    otfile2 = fullfile(root_sum, hnew.dataname);
     for k = 1:size(vars,1)
         if ~isempty(vars{k,2})
             ds.(vars{k,1}) = eval(vars{k,1});
@@ -216,7 +217,7 @@ if ~isempty(stnall)
 
 else
 
-    disp('not regenerating station_summary file, just loading and printing table; clear reload or set to 0 to change this');
+    disp('not regenerating station_summary file, just loading and printing table');
     ds = mloadq(fullfile(root_sum, ['station_summary_' mcruise '_all']),'/');
     fn = fieldnames(ds);
     for k = 1:length(fn)
@@ -304,7 +305,7 @@ switch vars{cno,1}
         for pcno = 1:length(ii)
             co = co + length(vars{ii(pcno),4});
         end
-        svar = [repmat(' ',1,co) datestr(ds.time_start(k), ' yy/mm/dd HHMM ')];
+        svar = [repmat(' ',1,co-1) ',' datestr(ds.time_start(k), ' yy/mm/dd HHMM ')];
     case 'time_bottom'
         svar = datestr(ds.time_bottom(k), 'yy/mm/dd HHMM');
     case 'time_end'
@@ -313,7 +314,7 @@ switch vars{cno,1}
         for pcno = 1:length(ii)
             co = co + length(vars{ii(pcno),4});
         end
-        svar = [repmat(' ',1,co) datestr(ds.time_end(k), ' yy/mm/dd HHMM')];
+        svar = [repmat(' ',1,co-1) ',' datestr(ds.time_end(k), ' yy/mm/dd HHMM')];
     case 'lat'
         latd = floor(abs(ds.lat(k))); latm = 60*(abs(ds.lat(k))-latd); if latm>=59.995; latm = 0; latd = latd+1; end
         if ds.lat(k)>=0; lath = 'N'; else; lath = 'S'; end

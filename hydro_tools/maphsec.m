@@ -198,7 +198,7 @@ end
 
 %dynamic height relative to 2000 dbar (convenient for matching up to argo)
 p_ref = 2000;
-if isgsw
+if isgsw && max(mgrid.press(:))>2000
     mgrid.dh2000 = gsw_geo_strf_dyn_height(mgrid.SA,mgrid.CT,mgrid.press,p_ref);
 end
 

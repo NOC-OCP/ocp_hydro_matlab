@@ -55,8 +55,6 @@ argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparsear
 table = argot.table;
 qflag = argot.qflag;
 
-switch argot.oper
-    case 'mlast'
 d = mrdfinfo(table,qflag);
 
 dstart = floor(86400*d.dn2)/86400;

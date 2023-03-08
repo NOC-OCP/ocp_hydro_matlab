@@ -123,16 +123,6 @@ switch opt1
                 maxfill24 = 0; maxfill1 = 2; 
         end
         
-    case 'uway_proc'
-        switch opt2
-            case 'avtime'
-                avnav = 30; %average nav and heading data over 30 s
-                avmet = 60; %average met data over 60 s
-                avtsg = 60; %average tsg data over 60 s
-            case 'comb_uvars'
-                %combine *** variables in averaged files
-        end
-
     case 'outputs'
         switch opt2
             case 'grid'
