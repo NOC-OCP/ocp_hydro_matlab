@@ -44,7 +44,6 @@ for no = 1:length(wfiles)
     ws = munderway_varname('rwindsvar',hw.fldnam,1,'s');
     wd = munderway_varname('rwinddvar',hw.fldnam,1,'s');
     if isempty(ws) || isempty(wd)
-        warning('no wind speed/direction variable found in %s; skipping',wfiles(no).name)
         continue
     end
 
@@ -77,7 +76,7 @@ for no = 1:length(wfiles)
 
     hw.fldnam = [hw.fldnam 'truwind_e' 'truwind_n'];
     hw.fldunt = [hw.fldunt 'm/s eastward' 'm/s northward'];
-    hw.comment = [hw.comment sprintf('\n truwind calculated using %d-second average nav and heading data from %s along with %s',avnav,infilen,infilew)];
+    hw.comment = [hw.comment sprintf('\n truwind calculated using average nav and heading data from %s along with %s',infilen,infilew)];
 
     %average variables other than speed and direction
     excl = {ws wd};

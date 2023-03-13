@@ -135,9 +135,9 @@ if ~isdown && ~isup
     return
 end
 hn.comment = 'gridded to 2 dbar using grid_profile method lfitbin\n';
-if maxfill2db>0
-    if isfinite(maxfill2db)
-        hn.comment = [hn.comment 'gaps up to ' num2str(maxfill2db) ' in 2 dbar filled using linear interpolation\n'];
+if g2opts.postfill>0
+    if isfinite(g2opts.postfill)
+        hn.comment = [hn.comment 'gaps up to ' num2str(g2opts.postfill) ' in 2 dbar filled using linear interpolation\n'];
     else
         hn.comment = [hn.comment 'gaps in 2 dbar filled using linear interpolation\n'];
     end

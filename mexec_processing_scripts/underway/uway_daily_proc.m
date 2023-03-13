@@ -67,12 +67,7 @@ end
 %output/best files
 mnav_best(days)
 mwind_true(days)
-mtsg_merge_av(days) %combines old mtsg_medav_clean_cal and mtsg_surfmet_merge
+%mtsg_merge_av(days) %combines old mtsg_medav_clean_cal and mtsg_surfmet_merge
 % mbathy_edit_av
-% tsgnames = {'tsg' 'surfmet' 'thermosalinograph' 'flowmeter' 'fluorometer' 'thermometer' 'transmissometer'};
-% windnames = {'surfmet' 'windsonic' 'anemometer'};
-% %navnames = { %nav: everything in pos and att?
-% bathynames = {'singleb' 'multib' 'ea640' 'em122'};
-% 
+
 % % make plots
-% %***

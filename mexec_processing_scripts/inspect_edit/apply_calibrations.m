@@ -95,7 +95,6 @@ for pno = 1:length(params)
             m = strncmp(param, h0.fldnam, length(param));
             m = m & strcmp(sen(3:end), h0.fldserial);
             if ~sum(m)
-                warning('no %s, %s; skipping', param, sen);
                 continue
             end
             ii = find(m); ii = ii(1); 

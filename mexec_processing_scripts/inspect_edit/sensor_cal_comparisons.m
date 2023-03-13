@@ -36,17 +36,21 @@ end
 iig0 = [iis1; iis2];
 dc.press = d.([udstr 'press'])(iig0);
 
-%ctd data
-dc.ctddata = d.([udstr parameter '1'])(iis1);
-dc.ctemp = d.([udstr 'temp1'])(iis1);
-dc.cpsal = d.([udstr 'psal1'])(iis1);
-if strcmp(parameter,'cond')
-    %cond of psal2 at temp1
-    dc.ctdother = gsw_C_from_SP(d.([udstr 'psal2'])(iis1),d.([udstr 'temp1'])(iis1),d.([udstr 'press'])(iis1));
-else
-    dc.ctdother = d.([udstr parameter '2'])(iis1);
+dc.ctddata = []; dc.ctemp = []; dc.cpsal = []; dc.ctdother = [];
+if ~isempty(iis1)
+    %ctd data, where this is in position 1
+    dc.ctddata = d.([udstr parameter '1'])(iis1);
+    dc.ctemp = d.([udstr 'temp1'])(iis1);
+    dc.cpsal = d.([udstr 'psal1'])(iis1);
+    if strcmp(parameter,'cond')
+        %cond of psal2 at temp1
+        dc.ctdother = gsw_C_from_SP(d.([udstr 'psal2'])(iis1),d.([udstr 'temp1'])(iis1),d.([udstr 'press'])(iis1));
+    else
+        dc.ctdother = d.([udstr parameter '2'])(iis1);
+    end
 end
 if ~isempty(iis2)
+    %ctd data, where this is in position 2
     dc.ctddata = [dc.ctddata; d.([udstr parameter '2'])(iis2)];
     dc.ctemp = [dc.ctemp; d.([udstr 'temp2'])(iis2)];
     dc.cpsal = [dc.cpsal; d.([udstr 'psal2'])(iis2)];
@@ -76,7 +80,7 @@ switch parameter
         dc.caldata = gsw_C_from_SP(d.botpsal(iig0), dc.ctemp, dc.press); %cond at CTD temp
         dc.calflag = d.botpsal_flag(iig0);
         if isempty(p.rlim)
-            p.rlim = [-1 1]*2e-2;
+            p.rlim = [-1 1]*1e-2;
         end
 
     case 'oxygen'
@@ -93,7 +97,11 @@ switch parameter
 end
 
 %limit to acceptable samples
-iig = find(ismember(dc.calflag,okf));
+iig = find(ismember(dc.calflag,okf) & ~isnan(dc.caldata+dc.ctddata)); %caldata could be nan for cond even when flag is good if ctd temp is bad
+if isempty(iig)
+    dc = []; mod = [];
+    return
+end
 dc.calflag = dc.calflag(iig);
 dc.caldata = dc.caldata(iig);
 dc.ctddata = dc.ctddata(iig);
@@ -108,14 +116,16 @@ dc.ctemp = d.([udstr 'temp'])(iig0(iig));
 dc.cpsal = d.([udstr 'psal'])(iig0(iig));
 
 %for model fit, also limit to acceptable ctd background
-if ~isfield(p,'slim')
-    p.slim = p.rlim(2)*.8; %***
-end
-if ~isfield(p,'glim')
-    p.glim = p.rlim(2)*.8; %***
-end
 dc.cqflag = 2+zeros(length(iig),1);
 m = false(size(dc.cqflag));
+if ~isfield(p,'slim')
+    p.slim = p.rlim(2)*.5;
+    if strcmp(parameter,'cond'); p.slim = p.rlim(2)*.8; end
+end
+if ~isfield(p,'glim')
+    p.glim = p.rlim(2)*.5;
+    if strcmp(parameter,'cond'); p.glim = p.rlim(2)*.8; end
+end
 if isfield(d,['std1_' parameter])
     m = m | d.(['std1_' parameter])(iig)>p.slim;
 end
@@ -130,18 +140,18 @@ switch parameter
 
     case 'temp'
         dc.res = dc.caldata-dc.ctddata;
-        p.cclabel = ['sbe35 temp - ctd temp s/n ' snstr ' (degC)'];
+        p.cclabel = ['sbe35 T - ctd T s/n ' snstr ' (^oC)'];
         dc.ctdres = dc.ctdother-dc.ctddata;
-        p.colabel = ['ctd temp alternate - ctd temp s/n ' snstr ' (degC)'];
+        p.colabel = ['ctd T alt - ctd T s/n ' snstr ' (^oC)'];
         mod.r = [ones(length(iigc),1) dc.press(iigc) dc.statnum(iigc)];
         mod.form = 'tempcal = temp + C1 + C2(press) + C3(stn)';
         mod.b = regress(dc.res(iigc),mod.r);
 
     case 'cond'
         dc.res = (dc.caldata./dc.ctddata - 1)*35;
-        p.cclabel = ['bottle cond (at ctd temp) / ctd cond s/n ' snstr ' (eqiv. psu)'];
+        p.cclabel = ['(bottle C (ctd T)/ctd C s/n ' snstr '-1)/35 (~psu)'];
         dc.ctdres = (dc.ctdother./dc.ctddata - 1)*35;
-        p.colabel = ['ctd cond alternate (at ctd temp) / s/n ' snstr ' (equiv. psu)'];
+        p.colabel = ['(ctd C alt (ctd T)/ctd C s/n ' snstr '-1)/35 (~psu)'];
         mod.r = [dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.statnum(iigc)];
         mod.form = 'condcal = cond*(C1 + C2(press) + C3(stn))';
         mod.b = regress(dc.caldata(iigc),mod.r);
@@ -149,9 +159,9 @@ switch parameter
     case 'oxygen'
         if useoxyratio
             dc.res = dc.caldata./dc.ctddata;
-            p.cclabel = ['bottle oxygen / ctd oxygen s/n ' snstr];
+            p.cclabel = ['bottle O / ctd O s/n ' snstr];
             dc.ctdres = dc.ctdother./dc.ctddata;
-            p.colabel = ['ctd oxygen alternate / ctd oxygen s/n ' snstr];
+            p.colabel = ['ctd O alt / ctd O s/n ' snstr];
 
         else
             dc.res = (dc.caldata - dc.ctddata);

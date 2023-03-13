@@ -86,9 +86,9 @@ for fno = 1:length(files)
     dg = grid_profile(d, 'time', tg, 'medbin', opts);
     dg.time = .5*(tg(1:end-1)+tg(2:end))'; %need regular time for merging, grid_profile outputs median
 
-    %metadata and save
+    %metadata, rename, and save
     clear hnew
-    hnew.comment = [h.comment 'variables added from ' files{fno} '\n'];
+    hnew.comment = ['variables added from ' files{fno} '\n'];
     hnew.fldnam = fieldnames(dg)';
     [~,ia,ib] = intersect(h.fldnam,hnew.fldnam);
     hnew.fldunt(ib) = h.fldunt(ia);
@@ -100,31 +100,37 @@ for fno = 1:length(files)
         hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
         hnew.fldunt{m} = 'seconds';
     end
-    %track the source in hnew.fldin
-    [~,inst,~] = fileparts(files{fno}); inst = inst(1:end-(9+length(mcruise)));
-    ii = strfind(inst,'_'); 
+    %track the source in hnew.fldinst
+    [~,inst,~] = fileparts(files{fno}); 
+    inst = inst(1:end-(9+length(mcruise)));
+    ii = strfind(inst,'_');
     if npre>0 && ~isempty(ii)
-        inst = inst(ii(npre)+1:end); 
+        inst = inst(ii(npre)+1:end);
+        ii = strfind(inst,'_');
+        if length(ii)>2
+            inst = inst([1:ii(1)-1 ii(3):end]);
+        end
     end
-    hnew.fldin = repmat({inst},1,length(hnew.fldnam));
+    hnew.fldinst = repmat({inst},1,length(hnew.fldnam));
+    hnew.fldinst(strcmp('time',hnew.fldnam)) = {' '};
     %sort out repeated variable names
     if exist(otfile,'file')
         h = m_read_header(otfile);
-        %for previously-loaded variables from this source, rename the same
-        [~,ia,ib] = intersect(hnew.fldin,h.fldin,'stable'); 
-        if ~isempty(ia)
-            for vno = 1:length(ia)
-                nold = hnew.fldnam{ia(vno)};
-                nnew = h.fldnam{ib(vno)};
-                dg.(nnew) = dg.(nold); dg = rmfield(dg,nold);
-            end
-            hnew.fldnam(ia) = h.fldnam(ib);
-            dg = orderfields(dg,hnew.fldnam);
+        %potential new names combining name and inst
+        ni = cellfun(@(x,y) [y '_' x],hnew.fldinst,hnew.fldnam,'UniformOutput',false);
+        %rename any that have been renamed this way before
+        [~,ii] = intersect(ni,h.fldnam,'stable');
+        for vno = 1:length(ii)
+            dg.(ni{ii(vno)}) = dg.(hnew.fldnam{ii(vno)});
+            dg = rmfield(dg,hnew.fldnam{ii(vno)});
         end
+        hnew.fldnam(ii) = ni(ii);
+        dg = orderfields(dg,hnew.fldnam);
         %where there is a name conflict (with a different instrument),
         %attach inst to both existing and new variables
         [~,ia,ib] = intersect(hnew.fldnam,h.fldnam,'stable');
-        ia = ia(~strcmp('time',hnew.fldnam(ia)));
+        m = ~strcmp('time',hnew.fldnam(ia)) & ~strcmp(hnew.fldinst(ia),h.fldinst(ib));
+        ia = ia(m); ib = ib(m);
         if ~isempty(ia)
             for vno = 1:length(ia)
                 nold = hnew.fldnam{ia(vno)};
@@ -139,28 +145,41 @@ for fno = 1:length(files)
                     nold = h.fldnam{ib(vno)};
                     iu = strfind(nold,'_'); 
                     if isempty(iu); iu = length(nold)+1; end
-                    nnew = [nold(1:iu(1)-1) '_' h.fldin{ib(vno)}];
+                    nnew = [nold(1:iu(1)-1) '_' h.fldinst{ib(vno)}];
                     nc_varrename(ncfile.name,nold,nnew);
                 end
             end
             dg = orderfields(dg,hnew.fldnam);
         end
+        hnew.fldinst(strcmp('time',hnew.fldnam)) = {' '};
         mfsave(otfile, dg, hnew, '-merge', 'time')
     else
         hnew.comment = [hnew.comment 'all medians over bins of width ' num2str(tave_period) '\n'];
         mfsave(otfile, dg, hnew)
     end
-    for vno = 1:length(hnew.fldnam)
-        if ~strcmp('time',hnew.fldnam{vno})
-            nc_attput(ncfile.name,hnew.fldnam{vno},'inst',inst);
-        end
-    end
 
 end
 
 %now edit combined file
-check_tsg = 1;
-% opt1 = 'uway_rawedits'; get_cropt
+minflow = 0.4; pdel = 4; %pump rate, and how long after pumps back on to nan
+check_tsg = 0;
+opt1 = 'uway_avedits'; opt2 = 'tsg'; get_cropt
+pdel = round(pdel);
+if ~isempty(minflow)
+    [d, h] = mload(otfile, '/');
+    fvar = munderway_varname('flowvar',h.fldnam,1,'s');
+    vars = setdiff(h.fldnam,{fvar 'time' 'ucsw_hoist'});
+    m = d.(fvar)<minflow;
+    if sum(m)
+        iip = find(m); 
+        iip = repmat([0:pdel],length(iip),1) + repmat(iip(:),1,pdel+1);
+        iip = unique(iip(iip<length(d.(fvar))));
+        for vno = 1:length(vars)
+            d.(vars{vno})(iip) = NaN;
+        end
+    end
+    mfsave(otfile, d, h)
+end
 if check_tsg
     [d, h] = mload(otfile, '/');
     d.dday = m_commontime(d,'time',h,['days since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')]);
@@ -178,12 +197,11 @@ if check_tsg
     end
     d0 = d; d0 = rmfield(d0,'time');
     m = strncmp('count',h.fldunt,5);
-    d0 = rmfield(d0,[h.fldnam(m) 'soundvelocity']);
+    vr = intersect(h.fldnam, {'soundvelocity' 'flowrate' 'calculatedbeam' 'salinity' 'psal'});
+    d0 = rmfield(d0,[h.fldnam(m) vr]);
     fn = fieldnames(d0);
-    scale = [zeros(1,length(fn)); ones(1,length(fn))];
     edfile = fullfile(root_dir1,'editlogs','ucsw_');
-    disp(fn)
-    bads = gui_editpoints(d,'dday','edfilepat',edfile,'xgroups',iis_all,'scale','yes');
+    bads = gui_editpoints(d0,'dday','edfilepat',edfile,'xgroups',iis_all);
     if ~isempty(bads) %new edits to apply
         [d, ~] = apply_guiedits(d, 'time', [edfile '*']);
         mfsave(otfile, d, h)

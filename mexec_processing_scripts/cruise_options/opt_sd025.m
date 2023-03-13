@@ -36,6 +36,8 @@ switch opt1
                 elseif ismember(stnlocal,[13:21 23 42:44 46 169])
                     nnisk = 12;
                 end
+            case 'o_choice'
+                stns_alternate_o = [1 2 5 6 8 9];
         end
 
     case 'mctd_01'
@@ -64,57 +66,57 @@ switch opt1
                     %large spikes: SS cable problem (10) and cable and/or SBE9 problem(s)
                     a = [-inf -2; 8000 inf];
                     b = [-inf -2; 40 inf; NaN NaN];
-                    castopts.badpress.press = a;
-                    castopts.badpress.temp1 = a;
-                    castopts.badpress.temp2 = a;
-                    castopts.badtemp1.temp1 = b; castopts.badtemp1.cond1 = b; castopts.badtemp1.oxygen_sbe1 = b;
-                    castopts.badtemp2.temp2 = b; castopts.badtemp2.cond2 = b; castopts.badtemp2.oxygen_sbe2 = b;
+                    co.badpress.press = a; co.badpress.temp1 = a; co.badpress.temp2 = a;
+                    co.badtemp1.temp1 = b; co.badtemp1.cond1 = b; co.badtemp1.oxygen_sbe1 = b;
+                    co.badtemp2.temp2 = b; co.badtemp2.cond2 = b; co.badtemp2.oxygen_sbe2 = b;
                 elseif ismember(stnlocal,ticasts) && stnlocal>23
                     %sensor 2 is bad
-                    castopts.badtemp2.temp2 = [-inf -2; 40 inf; NaN NaN];
-                    castopts.badtemp2.cond2 = [-inf -2; 40 inf; NaN NaN];
+                    co.badtemp2.temp2 = [-inf -2; 40 inf; NaN NaN]; 
+                    co.badtemp2.cond2 = co.badtemp2.temp2;
+                    co.badtemp2.oxygen_sbe2 = co.badtemp2.temp2;
                 end
                 if ismember(stnlocal,[31 42 43 64]) 
-                    castopts.rangelim.cond1 = [27 34];
-                    castopts.rangelim.cond2 = [27 34];
+                    co.rangelim.cond1 = [27 34];
+                    co.rangelim.cond2 = [27 34];
                 end
                 if ~ismember(stnlocal,ticasts) && stnlocal<=35 
                     %bad coefficients for transmittance/attenuation on SS rosette
-                    castopts.rangelim.transmittance = [50 110];
-                    castopts.rangelim.attenuation = [-0.5 5];
+                    co.rangelim.transmittance = [50 110];
+                    co.rangelim.attenuation = [-0.5 5];
                 end
                 if ismember(stnlocal,[43 64]) %***still need hand editing
-                    castopts.despike.press = [3 2 2];
-                    castopts.despike.temp1 = [1 0.1];
-                    castopts.despike.temp2 = [1 1 0.1 0.1];
-                    castopts.despike.cond1 =[0.5 0.5 0.05 0.05];
-                    castopts.despike.cond2 = [0.5 0.5 0.05 0.05];
-                    castopts.despike.oxygen_sbe1 = [3 2 2 1 1];
-                    castopts.despike.oxygen_sbe2 = [3 2 2 1 1];
+                    co.despike.press = [3 2 2];
+                    co.despike.temp1 = [1 0.1];
+                    co.despike.temp2 = [1 1 0.1 0.1];
+                    co.despike.cond1 =[0.5 0.5 0.05 0.05];
+                    co.despike.cond2 = [0.5 0.5 0.05 0.05];
+                    co.despike.oxygen_sbe1 = [3 2 2 1 1];
+                    co.despike.oxygen_sbe2 = [3 2 2 1 1];
                 end
                 if stnlocal==177 %cond2 went bad (and is used for oxygen2)
-                    castopts.badscan.cond2 = [1.58588e5 inf];
-                    castopts.badscan.oxygen2 = [1.58588e5 inf];
-                elseif stnlocal==178 %not changed yet
-                    castopts.badscan.cond2 = [-inf inf];
-                    castopts.badscan.oxygen_sbe2 = [-inf inf];
+                    co.badscan.cond2 = [1.58588e5 inf];
+                    co.badscan.oxygen_sbe2 = [1.58588e5 inf];
+                elseif stnlocal==178 %not changed yet, still bad
+                    co.badscan.cond2 = [-inf inf];
+                    co.badscan.oxygen_sbe2 = [-inf inf];
                 end
             case 'raw_corrs'
 %                 if ismember(stnlocal,ticasts) && stnlocal>23
 %                     %recalculate oxygen2 using temp1 and cond1 
-%                     castopts.dooxy2V = 1; 
+%                     %*** for this to work, must smooth dV/dt***
+%                     co.dooxy2V = 1; 
 %                     %and coefficients corresponding to oxygen sensor 2 from
 %                     %xmlcon (should parse from header in future***)
-%                     castopts.oxy2Vcoefs.Soc = 5.7890e-1;
-%                     castopts.oxy2Vcoefs.Voff = -0.5201;
-%                     castopts.oxy2Vcoefs.A = -4.1247e-3;
-%                     castopts.oxy2Vcoefs.B = 1.5900e-4;
-%                     castopts.oxy2Vcoefs.C = -2.8246e-6;
-%                     castopts.oxy2Vcoefs.D0 = 2.5826e+0;
-%                     castopts.oxy2Vcoefs.D1 = 1.92634e-4;
-%                     castopts.oxy2Vcoefs.D2 = -4.64803e-2;
-%                     castopts.oxy2Vcoefs.E = 3.6000e-2;
-%                     castopts.oxy2Vcoefs.Tau20 = 1.3200;
+%                     co.oxy2Vcoefs.Soc = 5.7890e-1;
+%                     co.oxy2Vcoefs.Voff = -0.5201;
+%                     co.oxy2Vcoefs.A = -4.1247e-3;
+%                     co.oxy2Vcoefs.B = 1.5900e-4;
+%                     co.oxy2Vcoefs.C = -2.8246e-6;
+%                     co.oxy2Vcoefs.D0 = 2.5826e+0;
+%                     co.oxy2Vcoefs.D1 = 1.92634e-4;
+%                     co.oxy2Vcoefs.D2 = -4.64803e-2;
+%                     co.oxy2Vcoefs.E = 3.6000e-2;
+%                     co.oxy2Vcoefs.Tau20 = 1.3200;
 %                 end
         end
 
@@ -143,7 +145,7 @@ switch opt1
                 switch stnlocal
                     case 2 % CTD number
                         niskin_flag(ismember(position,[2 11 16])) = 4 ;
-                        niskin_flag(ismember(position,[20 21 22 23 24])) = 7 ;
+                        %niskin_flag(ismember(position,[20 21 22 23 24])) = 7 ;
                     case 6
                         niskin_flag(ismember(position, [2 8])) = 3;
                         niskin_flag(position==21) = 4 ;
@@ -156,7 +158,7 @@ switch opt1
                     case 10
                         niskin_flag(position==2) = 4 ; %from sample data, looks like it might have closed shallower
                     case 15
-                        niskin_flag(ismember(position,[12 20])) = 7; %possible leaks
+                        %niskin_flag(ismember(position,[12 20])) = 7; %possible leaks
                     case 19
                         niskin_flag(ismember(position,[24])) = 4; %fired on the fly? salt and nuts definitely bad
                     case 22
@@ -172,13 +174,13 @@ switch opt1
                         niskin_flag(position==2) = 3; %bad nuts and botoxytemp, could be closed shallow or could be leaked
                         niskin_flag(position==21) = 4 ;
                     case 27
-                        niskin_flag(~ismember(position,[13 23])) = 7 ; % top valve open/no valve
+                        niskin_flag(~ismember(position,[13 23])) = 3 ; % top valve open/no valve
                     case 28
                         niskin_flag(position==2) = 3; %bad nuts, hard to see as misfire, probably leak
                     case 29
-                        niskin_flag(ismember(position,[1])) = 7 ;
-                        niskin_flag(position==2) = 7 ; % valve pushed in, 'dodgy'
-                        niskin_flag(ismember(position,[4])) = 7 ; % screw loose
+                        %niskin_flag(ismember(position,[1])) = 7 ;
+                        %niskin_flag(position==2) = 7 ; % valve pushed in, 'dodgy'
+                        %niskin_flag(ismember(position,[4])) = 7 ; % screw loose
                     case 32
                         niskin_flag(position==2) = 3 ;
                     case 35
@@ -187,7 +189,7 @@ switch opt1
                     case 39
                         niskin_flag(position==13) = 3 ; % 'total leak'
                     case 40
-                        niskin_flag(ismember(position,[18 19 20 21])) = 7 ; %nuts suspicious?
+                        niskin_flag(ismember(position,[18 19 20 21])) = 3 ; %nuts suspicious?
                     case 41
                         niskin_flag(position==21) = 3 ;
                     case 44
@@ -204,14 +206,14 @@ switch opt1
                     case 54
                         niskin_flag(position==12) = 3 ; % cannot pressurise, and nuts suspicious
                     case 55
-                        niskin_flag(position==1) = 7; %nuts maybe suspicious? hard to tell as no other points this stn (though nuts drawn on 7,8,14,15,20,22)***
-                        niskin_flag(position==7) = 7 ; % once opened at top
+                        %niskin_flag(position==1) = 7; %nuts maybe suspicious? hard to tell as no other points this stn (though nuts drawn on 7,8,14,15,20,22)***
+                        %niskin_flag(position==7) = 7 ; % once opened at top
                     case 57
                         niskin_flag(ismember(position,[13 22 23])) = 3 ; % open at the top
                     case 60
                         niskin_flag(ismember(position,[6 12])) = 3 ;
                     case 75 %***not plotted by checkbottles_02
-                        niskin_flag(ismember(position,[8 9 13 22])) = 7 ; % from tap
+                        %niskin_flag(ismember(position,[8 9 13 22])) = 7 ; % from tap
                         niskin_flag(position==1) = 3;
                     case 78 %***not plotted by checkbottles_02
                         niskin_flag(position==21) = 3 ;
@@ -219,18 +221,19 @@ switch opt1
                         niskin_flag(ismember(position,[21 23 24])) = 3 ;
                     case 176
                         niskin_flag(ismember(position,[21])) = 3 ;
-                        niskin_flag(position==2) = 7;
+                        %niskin_flag(position==2) = 7;
                     case 179
                         niskin_flag(position==8) = 3; %leak: water flowing
-                        niskin_flag(ismember(position,[5 14])) = 7; %possible leak; thin stream when tap pushed in
+                        %niskin_flag(ismember(position,[5 14])) = 7; %possible leak; thin stream when tap pushed in
+                    case 181
+                        %niskin_flag(ismember(position,[16 24])) = 7; %continuous drip from bottom after opening
                 end
         end
 
     case 'check_sams'
-        check_sal = 157; %start plotting sample readings from this station
-        check_oxy = 1;
+        check_sal = 170; %start plotting sample readings from this station
+        check_oxy = 1; %done
         check_sbe35 = 1;
-        %check_nuts = 1; %***nothing to do yet
 
     case 'sbe35'
         switch opt2
@@ -262,11 +265,11 @@ switch opt1
                 oxyvarmap(ii,:) = []; %don't rename, recalculate
             case 'oxy_calc'
                 ds_oxy.vol_std = repmat(5,size(ds_oxy.sampnum));
-                ds_oxy.vol_blank = repmat(-0.0081,size(ds_oxy.sampnum));
+                ds_oxy.vol_blank = repmat(-0.00808333,size(ds_oxy.sampnum));
                 ds_oxy.vol_titre_std = repmat(0.4540,size(ds_oxy.sampnum));
-                ds_oxy.vol_blank(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = -0.0085;
+                ds_oxy.vol_blank(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = -0.00854167;
                 ds_oxy.vol_titre_std(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = 0.4241;
-                ds_oxy.vol_blank(ds_oxy.statnum>=177) = -0.00691666666666666;
+                ds_oxy.vol_blank(ds_oxy.statnum>=177) = -0.00691667;
                 ds_oxy.vol_titre_std(ds_oxy.statnum>=177) = 0.4264;
                 vol_reag_tot = 0.997*2;
             case 'oxy_flags'
@@ -274,8 +277,9 @@ switch opt1
                 ii = find(d.statnum<9); 
                 d.botoxya_flag(ii) = max(d.botoxya_flag(ii),4);
                 d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),4);
-                %tubing size fixed around 14 or 15
-                ii = find(d.statnum<15); 
+                %tubing size fixed around 14 or 15 (14 and 15 profiles look
+                %okay)
+                ii = find(d.statnum<14); 
                 d.botoxya_flag(ii) = max(d.botoxya_flag(ii),3);
                 d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),3);
                 %tm-clean samples taken with too-stiff tube
@@ -292,10 +296,6 @@ switch opt1
                 %duplicates that differ but not clear which is better
                 ii = find(abs(d.botoxya_per_l-d.botoxyb_per_l)>=1 & d.botoxya_flag==2 & d.botoxyb_flag==2);
                 d.botoxya_flag(ii) = 3; d.botoxyb_flag(ii) = 3;
-%                 m = ismember(d.sampnum,[1001 1003 1004]) & d.botoxya_flag<4; d.botoxya_flag(m) = 4; 
-%                 m = ismember(d.sampnum,[1001 1003 1004]) & d.botoxyb_flag<4; d.botoxyb_flag(m) = 4; 
-%                 m = ismember(d.sampnum,503) & d.botoxya_flag<3; d.botoxya_flag(m) = 3; 
-%                 m = ismember(d.sampnum,503) & d.botoxyb_flag<3; d.botoxyb_flag(m) = 3;
                 %marked as bad but looks okay
                 d.botoxya_flag(d.sampnum==2320) = 2;
                 %outliers
@@ -324,8 +324,11 @@ switch opt1
                     049 -8; 050 -8; ... %flag these for temperature being too high?
                     051 -20; 052 -20; ... %temperature fixed but clearly there has been significant drift in standardisation
                     053 -20; 054 -18; ...
-                    055 +15; 056 +16; ... %temperature problems again: 17.6 C. restandardised before this to ???
+                    055 +15; 056 +16; ... %temperature problems again: 17.6 C. restandardised before this to 1.99989 (mistake)
                     057 +20; 058 +22; ... %temperature problems again: 18.8 C
+                    059 -2; 060 +3; 061 +1; ... %restandardised before this to 1.99972
+                    062 -2; 063 -1; ...
+                    064 -1; 065 +2; ...
                     99 NaN %just to make sure we don't interpolate across the two machines!
                     101 0; 102 -1; 103 0 %very large spread/excluded 2 from 101 and 1 from 103***
                     ];
@@ -337,8 +340,10 @@ switch opt1
                 ds_sal.flag(ii) = 3;
                 ii = find(ds_sal.sampnum==999051):find(ds_sal.sampnum==999054);
                 ds_sal.flag(ii) = 3;
+                ii = find(ds_sal.sampnum==999055):find(ds_sal.sampnum==999058);
+                ds_sal.flag(ii) = 3;
                 %outliers?
-                ds_sal.flag(ismember(ds_sal.sampnum,[1002 1902 1904 3515 3516 6619 6622])) = 3;
+                ds_sal.flag(ismember(ds_sal.sampnum,[1002 1902 1904 3515 3516 6618 6619 6622])) = 3;
         end
 
     case 'botnut'
@@ -373,7 +378,7 @@ switch opt1
     case 'best_station_depths'
         switch opt2
             case 'bestdeps'
-                iscor = 0; %these are depths from ea640 not em122, and have not had corrections applied
+                iscor = 0; %these are depths from ea640 not em122, and have not had corrections applied***except when they're from other ctd?
                 xducer_offset = 0; %to be added
                 replacedeps = [3 164; 4 164; 7 667; 8 959; ...
                     11 2641; 12 2640; ...
@@ -473,7 +478,7 @@ switch opt1
                     case 'ab'
                         kstns = 168:172;
                     case 'profiles_only'
-                        kstns = [1 2 5 6 8:12 14:30 32:76 78:180]; %ignore very shallow ones***
+                        kstns = [1 2 5 6 8:12 14:30 32:76 78:181]; %ignore very shallow ones***
                         %mgrid.x = [20 21 22 23];
                 end
         end
@@ -487,40 +492,45 @@ switch opt1
             cfg.p.time_end_force = round(datevec(dd.dnum_end+2/60/24));
         end
 
-    case 'uway_rawedits'
-        check_tsg = 1;
+    case 'uway_avedits'
         switch opt2
-            case 'thermosalinograph_seabird'
-                b = [-2 15; NaN NaN];
-                uopts.badtemperature.temperature = b; uopts.badtemperature.conductivity = b; 
-                %***but pumps have to be integrated later
+            case 'tsg'
+                minflow = 400;
+%         check_tsg = 1;
         end
-
+    
     case 'calibration'
         switch opt2
             case 'ctd_cals'
-                castopts.docal.temp = 0;
-                castopts.docal.cond = 0;
-                castopts.docal.oxygen = 0;
-                castopts.calstr.temp.sn2191.sd025 = 'dcal.temp = d0.temp + interp1([0 5000],[-1.2e-3 -2.1e-3],d0.press);';
-                castopts.calstr.temp.sn5649.sd025 = 'dcal.temp = d0.temp + interp1([0 5000],[0.8e-3 -1e-3],d0.press);';
-                %no SBE35 on Ti frame, so no cal for 6572, 6674, 6685
-%three C sensors on Ti frame
-%c3488: [0 1000 5000], [0 0 -3e-3]
-%c3491: [0 5000],[-2 -4]e-3
-%c4876: [0 5000],[0.5 -1]e3
-%c4918: not enough points
-                    castopts.calstr.cond.sn4876.sd025 = 'dcal.cond = (d0.cond - (-0.30117)) / 1.0088 ;' ;
-                    castopts.calstr.cond.sn4918.sd025 = 'dcal.cond = (d0.cond - (-0.44008)) / 1.0128 ;' ;
-                    castopts.calstr.cond.sn3491.sd025 = 'dcal.cond = (d0.cond - (-0.87593)) / 1.0261 ;' ;
-                    castopts.calstr.cond.sn3488.sd025 = 'dcal.cond = (d0.cond - (-0.77686)) / 1.0223 ;' ;
-%castopts.calstr.cond.sn3248.sd025 = '';
-                    castopts.calstr.oxygen.sn2291.sd025 = 'dcal.oxygen = (d0.oxygen - 6.1865) / 0.80215 ;' ;
-                    castopts.calstr.oxygen.sn242.sd025 = 'dcal.oxygen = (d0.oxygen - (-3.8767)) / 1.412 ;' ;
-                %castopts.calstr.oxygen.sn4244 = ''; 
-                    castopts.calstr.oxygen.sn4250.sd025 = 'dcal.oxygen = (d0.oxygen - (-3.5495)) / 0.98412 ;' ;
-                    castopts.calstr.oxygen.sn4252.sd025 = 'dcal.oxygen = (d0.oxygen - (-0.10704)) / 0.95246 ;' ;
-                    castopts.calstr.oxygen.sn620.sd025 = 'dcal.oxygen = (d0.oxygen - (-3.9425)) / 1.1566 ;' ;
+                co.docal.temp = 1;
+                co.docal.cond = 1;
+                co.docal.oxygen = 0;
+                %stainless
+                co.calstr.temp.sn2191.sd025 = 'dcal.temp = d0.temp + interp1([0 6000],[-1.1e-3 -2.3e-3],d0.press);';
+                co.calstr.temp.sn2191.msg = 'temp s/n 2191 calibrated based on comparison with 597/1023 SBE35 measurements';
+                co.calstr.temp.sn5649.sd025 = 'dcal.temp = d0.temp + interp1([0 6000],[0.2e-3 -0.9e-3],d0.press);';
+                co.calstr.temp.sn5649.msg = 'temp s/n 5649 calibrated based on comparison with 597/1023 SBE35 measurements';
+                co.calstr.cond.sn3248.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.5e-3 1e-3],d0.press)/35);'; %***
+                co.calstr.cond.sn3248.msg = 'cond s/n 3248 calibrated based on comparison with 32/51 bottle samples'; 
+                co.calstr.cond.sn3488.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.5e-3 -3.5e-3],d0.press)/35);';
+                co.calstr.cond.sn3488.msg = 'cond s/n 3488 calibrated based on comparison with 123/189 bottle samples'; 
+                co.calstr.cond.sn3491.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[-4e-3 -3.5e-3],d0.press)/35);';
+                co.calstr.cond.sn3491.msg = 'cond s/n 3491 calibrated based on comparison with 183/269 bottle samples'; 
+                co.calstr.oxygen.sn2291.sd025 = 'dcal.oxygen = d0.oxygen*1.2;';%(d0.oxygen - 6.1865) / 0.80215 ;' ;
+                co.calstr.oxygen.sn2291.msg = 'oxygen s/n 2291 calibrated based on comparison with 105/170 bottle samples'; 
+                co.calstr.oxygen.sn620.sd025 = 'dcal.oxygen = d0.oxygen*0.89;';%(d0.oxygen - (-3.9425)) / 1.1566 ;' ;
+                co.calstr.oxygen.sn620.msg = 'oxygen s/n 620 calibrated based on comparison with 97/166 bottle samples'; 
+                %co.calstr.oxygen.sn242 only 4 comparison points
+                %Ti: no SBE35 on Ti frame, so no cal for 6572 (temp1) or 6685, 6674 (temp2)
+                co.calstr.cond.sn4876.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 2000 6000],[2.5e-3 -2e-3 -4e-3],d0.press)/35);';
+                co.calstr.cond.sn4876.msg = 'cond s/n 4876 calibrated based on comparison with 127/186 bottle samples'; 
+                co.calstr.cond.sn4918.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 2500 6000],[4e-3 0 -1e-3],d0.press)/35);';
+                co.calstr.cond.sn4918.msg = 'cond s/n 3248 calibrated based on comparison with 50/91 bottle samples';
+                %co.calstr.oxygen.sn4244 no good cal data
+                co.calstr.oxygen.sn4250.sd025 = 'dcal.oxygen = d0.oxygen*0.9;';%(d0.oxygen - (-3.5495)) / 0.98412 ;' ;
+                co.calstr.oxygen.sn4250.msg = 'oxygen s/n 4250 calibrated based on comparison with 16/73 bottle samples'; 
+                co.calstr.oxygen.sn4252.sd025 = 'dcal.oxygen = d0.oxygen*1.04;';%(d0.oxygen - (-0.10704)) / 0.95246 ;' ;
+                co.calstr.oxygen.sn4252.msg = 'oxygen s/n 4252 calibrated based on comparison with 26/73 bottle samples'; %***why no more points than for 4250?
             case 'sensor_unit_conversions'
                 if contains(abbrev,'sonic')
 %                     sensors_to_cal={'fluo';'trans';'parport';'tirport';'parstarboard';'tirstarboard'};
@@ -535,6 +545,46 @@ switch opt1
 %                     sensorunits={'ug/l';'percent';'W/m2';'W/m2';'W/m2';'W/m2'};
                 end
                 %case 'tsg_cals'
-
         end
+
+    case 'msam_ashore_flag'
+        switch opt2
+            case 'sam_ashore_clean'
+                fnin = {fullfile(mgetdir('M_BOT_ISO'),'CTD_bottle_cop_clean.xlsx')};...
+                varmap = {'statnum' 'CTDCastNumber' ' '
+                    'position' 'PositionNumber' ' '
+                    'dic_flag' 'DIC' 'num_samples'
+                    'd13dic_flag' 'd13DIC' 'num_samples'
+                    'silc_flag' 'Nuts' 'num_samples'
+                    'phos_flag' 'Nuts' 'num_samples'
+                    'totnit_flag' 'Nuts' 'num_samples'
+                    'botchl_flag' 'Chl' 'num_samples'
+                    'd30si_flag' 'd30Si' 'num_samples'
+                    'poc_flag' 'POC' 'num_samples'
+                    'pom_flag' 'POM' 'num_samples'
+                    'fe_flag' 'Dfe' 'num_samples'};
+                do_empty_vars = 1;
+                fillstat = 0;
+            case 'sam_ashore_unclean'
+                    fnin = {fullfile(mgetdir('M_BOT_ISO'),'CTD_bottle_cop_unclean.xlsx')};
+                varmap = {'statnum' 'CTDCastNumber' ' '
+                    'position' 'Position' ' '
+                    'dic_flag' 'DIC' 'num_samples'
+                    'd13dic_flag' 'd13DIC' 'num_samples'
+                    'silc_flag' 'Nuts' 'num_samples'
+                    'phos_flag' 'Nuts' 'num_samples'
+                    'totnit_flag' 'Nuts' 'num_samples'
+                    'botchl_flag' 'Chl' 'num_samples'
+                    'd30si_flag' 'd30Si' 'num_samples'
+                    'poc_flag' 'POC' 'num_samples'
+                    'pom_flag' 'POM' 'num_samples'
+                    'fe_flag' 'Dfe' 'num_samples'};
+                do_empty_vars = 1;
+                fillstat = 0;
+            case 'shore_samlog_edit'
+                %different names for the same thing, or we otherwise want
+                %to combine
+                st.d30Si = st.d30Si + st.BSi; %***
+        end
+
 end

@@ -48,13 +48,13 @@ switch opt1
     case 'calibration'
         switch opt2
             case 'ctd_cals'
-                castopts.docal.temp = 0; %do not apply any calibration to temp
-                castopts.docal.cond = 0; %do not apply any calibration to cond
-                castopts.docal.oxygen = 0; %do not apply any calibration to oxy
-                castopts.docal.fluor = 0; %etc
-                castopts.docal.transmittance = 0; %etc
-                if isfield(castopts,'calstr')
-                    castopts = rmfield(castopts,'calstr'); %no default, must be set by opt_{cruise}
+                co.docal.temp = 0; %do not apply any calibration to temp
+                co.docal.cond = 0; %do not apply any calibration to cond
+                co.docal.oxygen = 0; %do not apply any calibration to oxy
+                co.docal.fluor = 0; %etc
+                co.docal.transmittance = 0; %etc
+                if isfield(co,'calstr')
+                    co = rmfield(co,'calstr'); %no default, must be set by opt_{cruise}
                     %see *** for examples
                 end
             case 'sensor_factory_cals'

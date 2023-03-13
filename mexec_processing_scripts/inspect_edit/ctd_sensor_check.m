@@ -86,7 +86,7 @@ for pno = 1:length(sensors_to_check)
         disp([sens{sno} ' in position 2 on these stations with bottles:']); disp(s2')
         t = unique(sg.temp2(ismember(sg.temp2(:,1),s2),2))'; c = unique(sg.cond2(ismember(sg.cond2(:,1),s2),2))';
         disp('with these sensors for temp2, cond2:'); fprintf(1,'%d  ',t(:)); fprintf(1,'\n'); fprintf(1,'%d  ',c(:)); fprintf(1,'\n');
-        if isempty(dc.calflag)
+        if isempty(dc) || isempty(dc.calflag)
             disp('no good (enough) calibration data; skipping')
             continue
         else

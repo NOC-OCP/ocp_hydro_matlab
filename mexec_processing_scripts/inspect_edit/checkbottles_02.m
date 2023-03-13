@@ -47,8 +47,8 @@ else
 end
 opt1 = 'outputs'; opt2 = 'grid'; get_cropt
 stnlist = intersect(stnlocal-2:stnlocal+2,kstns);
-if length(stnlist)<5
-    warning('fewer than 4 neighbouring stations in section list; skipping')
+if length(stnlist)<3
+    warning('fewer than 2 neighbouring stations in section list; skipping')
     return
 end
 fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section '.mat']);
@@ -71,16 +71,17 @@ kup = find(ctdtime > dcstime2 & ctdtime < dcstime3);
 
 %distribute all sam data back into separate stations
 tall = struct2table(dsamall);
-for ks = 1:5
+for ks = 1:length(stnlist)
     ms = tall.statnum==stnlist(ks);
-    if ks==3
+    if stnlist(ks)==stnlocal
         if sum(ms)==0
             warning('no sample data for station %03d; skipping',stnlist(3))
             return
         end
         dsam = table2struct(tall(ms,:),'ToScalar',true);
     else
-       eval(['dsam' num2str(ks) ' = table2struct(tall(ms,:),''ToScalar'',true);']);
+        n = stnlist(ks)-stnlocal; if n<0; n = abs(n); s = 'l'; else; s = 'h'; end
+       eval(['dsam' num2str(n) s ' = table2struct(tall(ms,:),''ToScalar'',true);']);
     end
 end
 
@@ -194,19 +195,19 @@ for veno = 1:nsubs-3
    vnam = vnams{veno};
    
    d = dsam.(vnam);
-   if exist('dsam1','var') == 1; d1 = dsam1.(vnam); else; d1 = d+nan; end
-   if exist('dsam2','var') == 1; d2 = dsam2.(vnam); else; d2 = d+nan; end
-   if exist('dsam3','var') == 1; d3 = dsam3.(vnam); else; d3 = d+nan; end
-   if exist('dsam4','var') == 1; d4 = dsam4.(vnam); else; d4 = d+nan; end
+   if exist('dsam1l','var') == 1; d1l = dsam1l.(vnam); else; d1l = d+nan; end
+   if exist('dsam2l','var') == 1; d2l = dsam2l.(vnam); else; d2l = d+nan; end
+   if exist('dsam1h','var') == 1; d1h = dsam1h.(vnam); else; d1h = d+nan; end
+   if exist('dsam2h','var') == 1; d2h = dsam2h.(vnam); else; d2h = d+nan; end
    dg = dgrid.(vnam);
    clear und flagname
    if isfield(dsam,[vnam '_flag']); und = '_'; end
    if isfield(dsam,[vnam 'flag']); und = ''; end
    dflag = dsam.([vnam und 'flag']);
-   if exist('dsam1','var') == 1; dflag1 = dsam1.([vnam und 'flag']); else; dflag1 = d+nan; end
-   if exist('dsam2','var') == 1; dflag2 = dsam2.([vnam und 'flag']); else; dflag2 = d+nan; end
-   if exist('dsam3','var') == 1; dflag3 = dsam3.([vnam und 'flag']); else; dflag3 = d+nan; end
-   if exist('dsam4','var') == 1; dflag4 = dsam4.([vnam und 'flag']); else; dflag4 = d+nan; end
+   if exist('dsam1l','var') == 1; dflag1l = dsam1l.([vnam und 'flag']); else; dflag1l = d+nan; end
+   if exist('dsam2l','var') == 1; dflag2l = dsam2l.([vnam und 'flag']); else; dflag2l = d+nan; end
+   if exist('dsam1h','var') == 1; dflag1h = dsam1h.([vnam und 'flag']); else; dflag1h = d+nan; end
+   if exist('dsam2h','var') == 1; dflag2h = dsam2h.([vnam und 'flag']); else; dflag2h = d+nan; end
    if exist('und','var') == 1
        flagname = [vnam und 'flag']; % we managed to match the flag var
    end
@@ -221,14 +222,14 @@ for veno = 1:nsubs-3
    end
    
    dflag = dsam.(flagname); 
-   if exist('dsam1','var') == 1; dflag1 = dsam1.(flagname); else; dflag1 = d+nan; end
-   if exist('dsam2','var') == 1; dflag2 = dsam2.(flagname); else; dflag2 = d+nan; end
-   if exist('dsam3','var') == 1; dflag3 = dsam3.(flagname); else; dflag3 = d+nan; end
-   if exist('dsam4','var') == 1; dflag4 = dsam4.(flagname); else; dflag4 = d+nan; end
-   kok1 = find(dflag1 == 2);
-   kok2 = find(dflag2 == 2);
-   kok3 = find(dflag3 == 2);
-   kok4 = find(dflag4 == 2);
+   if exist('dsam1l','var') == 1; dflag1l = dsam1l.(flagname); else; dflag1l = d+nan; end
+   if exist('dsam2l','var') == 1; dflag2l = dsam2l.(flagname); else; dflag2l = d+nan; end
+   if exist('dsam1h','var') == 1; dflag1h = dsam1h.(flagname); else; dflag1h = d+nan; end
+   if exist('dsam2h','var') == 1; dflag2h = dsam2h.(flagname); else; dflag2h = d+nan; end
+   kok1 = find(dflag1l == 2);
+   kok2 = find(dflag2l == 2);
+   kok3 = find(dflag1h == 2);
+   kok4 = find(dflag2h == 2);
 
    kmat = find(dgrid.statnum == stnlocal);
    kbad = find(dflag ~= 2 & dflag~=6);
@@ -237,10 +238,10 @@ for veno = 1:nsubs-3
 
    plot(dg(kmat),-dgrid.press(kmat),'r-'); 
    hold on; grid on;
-   if ~isempty(kok1); plot(d1(kok1),-dsam1.upress(kok1),'ko','markersize',m0); end
-   if ~isempty(kok2); plot(d2(kok2),-dsam2.upress(kok2),'cs','markersize',m0); end %2 stations before % jc191 k and m are earlier, c and r are later
-   if ~isempty(kok3); plot(d3(kok3),-dsam3.upress(kok3),'ms','markersize',m0); end
-   if ~isempty(kok4); plot(d4(kok4),-dsam4.upress(kok4),'ro','markersize',m0); end %2 stations after
+   if ~isempty(kok1); plot(d1l(kok1),-dsam1l.upress(kok1),'ko','markersize',m0); end
+   if ~isempty(kok2); plot(d2l(kok2),-dsam2l.upress(kok2),'cs','markersize',m0); end %2 stations before % jc191 k and m are earlier, c and r are later
+   if ~isempty(kok3); plot(d1h(kok3),-dsam1h.upress(kok3),'ms','markersize',m0); end
+   if ~isempty(kok4); plot(d2h(kok4),-dsam2h.upress(kok4),'ro','markersize',m0); end %2 stations after
    if veno==nsubs-4; title(['kc (left), b Stn ' sprintf('%03d',stnlocal) ' mr (right)']); end
    xlabel(vnam,'interpreter','none');
    plot(d,-dsam.upress,'b+','markersize',m1);

@@ -46,7 +46,7 @@ if strcmp(abbrev,'cnav')
 end
 
 %apply automatic edits (e.g. bad time ranges), as set in opt_cruise
-uopts = mday_01_default_autoedits;
+uopts = mday_01_default_autoedits(h);
 opt1 = 'uway_rawedits'; opt2 = abbrev; get_cropt
 [d, comment] = apply_autoedits(d, uopts);
 if ~isempty(comment)
@@ -112,33 +112,27 @@ if ~isempty(headvar)
 end
 
 %salinity
-condvars = {'cond' 'conductivity' 'cond_raw' 'conductivity_raw'};
-[~,ic,~] = intersect(condvars,h.fldnam,'stable'); 
-if ~isempty(ic)
-    cvar = condvars{ic(1)};
-    if sum(strncmp('cond',h.fldnam,4))
-        tempvars = {'tstemp' 'temp_h' 'temp_m' 'temp_housing' 'temp_housing_raw' 'temperature'};
-        [~,it,~] = intersect(tempvars,h.fldnam,'stable');
-        if isempty(it)
-            warning('cond found but no temp to calculate psal in %s',abbrev)
+cvar = munderway_varname('condvar', h.fldnam, 1, 's');
+if ~isempty(cvar)
+    tvar = munderway_varname('tempvar', h.fldnam, 1, 's');
+    if isempty(tvar)
+        warning('cond found but no temp to calculate psal in %s',abbrev)
+    else
+        cu = h.fldunt{strcmp(cvar,h.fldnam)};
+        if strcmp('mS/cm',cu)
+            fac = 1;
+        elseif strcmp('S/m',cu)
+            fac = 10;
         else
-            tvar = tempvars{it(1)};
-            cu = h.fldunt{strcmp(cvar,h.fldnam)};
-            if strcmp('mS/cm',cu)
-                fac = 1;
-            elseif strcmp('S/m',cu)
-                fac = 10;
-            else
-                warning('cond units %s not recognised, skipping calculating psal in %s',cu,abbrev)
-                fac = [];
-            end
-            if ~isempty(fac)
-                d.psal = gsw_SP_from_C(fac*d.(cvar),d.(tvar),0);
-                h.fldnam = [h.fldnam 'psal'];
-                h.fldunt = [h.fldunt 'pss-78'];
-                h.comment = [h.comment '\n psal calculated from edited%s %s and %s',cpstr,cvar,tvar];
-                didedits = 1;
-            end
+            warning('cond units %s not recognised, skipping calculating psal in %s',cu,abbrev)
+            fac = [];
+        end
+        if ~isempty(fac)
+            d.psal = gsw_SP_from_C(fac*d.(cvar),d.(tvar),0);
+            h.fldnam = [h.fldnam 'psal'];
+            h.fldunt = [h.fldunt 'pss-78'];
+            h.comment = [h.comment '\n psal calculated from edited%s %s and %s',cpstr,cvar,tvar];
+            didedits = 1;
         end
     end
 end
@@ -192,56 +186,43 @@ if ismember(abbrev,{'gys', 'gyr', 'gyro_s', 'gyropmv', 'posmvpos'})
 end
 
 
-function uopts = mday_01_default_autoedits
-%default range limits and despiking settings 
+function uopts = mday_01_default_autoedits(h)
+%default range limits and despiking settings, and apply to variable names
+%we have here
+
 uopts.despike.depth_below_xducer = [10 5 3];
 
-uopts.rangelim.head = [0 360]; 
-uopts.rangelim.head_ash = uopts.rangelim.head;
-uopts.rangelim.heading = uopts.rangelim.head;
-uopts.rangelim.headingtrue = uopts.rangelim.head;
 uopts.rangelim.pitch = [-5 5];
 uopts.rangelim.roll = [-7 7];
-uopts.rangelim.mrms = [1e-5 1e-2];
-uopts.rangelim.brms =[1e-5 0.1];
-uopts.rangelim.lon = [-181 181]; 
-uopts.rangelim.long = uopts.rangelim.lon;
-uopts.rangelim.longitude = uopts.rangelim.lon;
-uopts.rangelim.lat = [-91 91];
-uopts.rangelim.latitude = uopts.rangelim.lat;
-uopts.rangelim.airtemp = [-50 50]; 
-uopts.rangelim.airtemperature = uopts.rangelim.airtemp;
-uopts.rangelim.humid = [0.1 110]; 
-uopts.rangelim.humidity = uopts.rangelim.humid;
-uopts.rangelim.winddirection = [-0.1 360.1]; 
-uopts.rangelim.direct = uopts.rangelim.winddirection;
-uopts.rangelim.windspeed = [-0.001 200]; 
-uopts.rangelim.speed = uopts.rangelim.windspeed;
-uopts.rangelim.airpressure = [0.01 1500];
-uopts.rangelim.pres = uopts.rangelim.airpressure;
-uopts.rangelim.ppar = [-10 1500]; 
-uopts.rangelim.ptir = uopts.rangelim.ppar;
-uopts.rangelim.spar = uopts.rangelim.ppar;
-uopts.rangelim.stir = uopts.rangelim.ppar;
-uopts.rangelim.parport = uopts.rangelim.ppar;
-uopts.rangelim.parstarboard = uopts.rangelim.ppar;
-uopts.rangelim.tirport = uopts.rangelim.ppar;
-uopts.rangelim.tirstarboard = uopts.rangelim.ppar;
-uopts.rangelim.sstemp = [-2 50]; 
-uopts.rangelim.temp_h = uopts.rangelim.sstemp;
-uopts.rangelim.temp_r = uopts.rangelim.sstemp;
-uopts.rangelim.temp_m = uopts.rangelim.sstemp;
-uopts.rangelim.tstemp = uopts.rangelim.sstemp;
-uopts.rangelim.temp_housing = uopts.rangelim.sstemp;
-uopts.rangelim.temp_remote = uopts.rangelim.sstemp;
-uopts.rangelim.cond = [0 10];
-uopts.rangelim.conductivity = uopts.rangelim.cond;
-uopts.rangelim.trans = [0 105]; 
-uopts.rangelim.depth = [20 1e4]; 
-uopts.rangelim.swath_depth = uopts.rangelim.depth;
-uopts.rangelim.waterdepth = uopts.rangelim.depth;
-uopts.rangelim.depth_below_xducer = uopts.rangelim.depth;
+uopts.rangelim.trans = [0 105];
 
+uvar.head = [0 360];
+uvar.lon = [-181 181];
+uvar.lat = [-91 91];
+uvar.airtemp = [-50 50];
+uvar.humid = [0.1 110];
+uvar.rwindd = [-0.1 360.1];
+uvar.twindd = [-0.1 360.1];
+uvar.rwinds = [-0.001 200];
+uvar.twinds = [-0.001 200];
+uvar.airpres = [0.01 1500];
+uvar.ppar = [-10 1500];
+uvar.ptir = uvar.ppar;
+uvar.spar = uvar.ppar;
+uvar.stir = uvar.ppar;
+uvar.sst = [-2 50];
+uvar.temp = uvar.sst;
+uvar.cond = [0 10];
+uvar.multib = [20 1e4];
+uvar.singleb = uvar.multib;
+
+fn = fieldnames(uvar);
+for pno = 1:length(fn)
+    n = munderway_varname([fn{pno} 'var'],h.fldnam); n = n{1};
+    for nno = 1:length(n)
+        uopts.rangelim.(n{nno}) = uvar.(fn{pno});
+    end
+end
 
 
 %%%%% apply transducer offset and (for singlebeam) carter table soundspeed correction %%%%%

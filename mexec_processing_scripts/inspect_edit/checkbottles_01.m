@@ -89,7 +89,7 @@ end
 % sort out the variable to be plotted and the anomaly if required
 
 if ~isfield(dsam,varname)
-    fprintf(2,'\n%s %s %s \n\n','Variable ',varname,' does not exist in dsam');
+    fprintf(2,'\n%s %s does not exist in %s\n\n','Variable ',varname,fnsamall)
     return
 end
 

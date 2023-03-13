@@ -7,8 +7,8 @@ function d = apply_cal_samfile(d, h, udstr, testcal, calstr)
 %
 % d and h are structures (e.g. from sam_{cruise}_all.nc)
 % udstr is either 'u' or 'd' to use upcast or downcast data (usually 'u')
-% testcal must be supplied (insted of opt_{cruise} castopts.docal)
-% calstr may be supplied, or set calstr = [] to use castopts.calstr from
+% testcal must be supplied (insted of opt_{cruise} co.docal)
+% calstr may be supplied, or set calstr = [] to use co.calstr from
 %   opt_{cruise}.m 
 %
 % returns d, same structure with calibrated fields (where indicated by
@@ -36,8 +36,8 @@ for sno = stns(:)'
     %get only the calibration functions we want to test here
     if cropt_cal
         opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
-        if exist('castopts','var') && isfield(castopts,'calstr')
-            calstr = castopts.calstr;
+        if exist('co','var') && isfield(co,'calstr')
+            calstr = co.calstr;
         else
             continue
         end

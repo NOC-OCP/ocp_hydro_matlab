@@ -48,14 +48,31 @@ end
 %copy selected sensor to new names without sensor number
 [d, h] = mloadq(infile1,'/');
 h0 = h;
-vars = {'temp' 'cond' 'oxygen'};
+vars = {'temp' 'cond'};
 for vno = 1:length(vars)
     name0 = [vars{vno} num2str(s_choice)];
     ii = find(strcmp(name0,h.fldnam));
     if ~isempty(ii)
         d.(vars{vno}) = d.(name0);
-        h.fldnam = [h.fldnam vars{vno}];
-        h.fldunt = [h.fldunt h.fldunt{ii}];
+        if ~sum(strcmp(vars{vno},h.fldnam))
+            h.fldnam = [h.fldnam vars{vno}];
+            h.fldunt = [h.fldunt h.fldunt{ii}];
+        end
+        h0.fldnam{ii} = vars{vno};
+    end
+end
+h = keep_hvatts(h, h0);
+h0 = h;
+vars = {'oxygen'};
+for vno = 1:length(vars)
+    name0 = [vars{vno} num2str(o_choice)];
+    ii = find(strcmp(name0,h.fldnam));
+    if ~isempty(ii)
+        d.(vars{vno}) = d.(name0);
+        if ~sum(strcmp(vars{vno},h.fldnam))
+            h.fldnam = [h.fldnam vars{vno}];
+            h.fldunt = [h.fldunt h.fldunt{ii}];
+        end
         h0.fldnam{ii} = vars{vno};
     end
 end

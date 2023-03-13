@@ -31,7 +31,7 @@ for kloop = klistl
         continue
     end
     stn = kloop; mfir_03;
-    %stn = kloop; mfir_03_extra;
+    stn = kloop; mfir_03_extra;
     stn = kloop; mfir_to_sam;
     
 end

@@ -63,6 +63,7 @@ m_common
 testcal.temp = 0; testcal.cond = 0; testcal.oxygen = 0; testcal.fluor = 0;
 calstr0 = []; %get calibration from opt_cruise -- but may depend on station number
 useoxyratio = 1;
+choose_sns = []; %only loop through these serial numbers
 usedn = 0; %set to 1 to use downcast rather than upcast ctd data
 okf = [2 6]; %2 and 6 are good (6 is average of replicates); 3 is questionable
 pdeep = 1300; %cutoff for "deep" samples
@@ -105,7 +106,17 @@ if isfield(d,['sn_' parameter '2'])
     sns = [sns; [d.statnum d.(['sn_' parameter '2'])]];
 end
 sns(1:l,3) = 1; sns(l+1:end,3) = 2;
-sn = unique(sns(:,2));
+sn = unique(sns(:,2)); sn = sn(~isnan(sn));
+if ~isempty(choose_sns)
+    sn = intersect(sn,choose_sns);
+end
+
+%time in days rather than seconds
+if isempty(h.data_time_origin)
+    d.utime = d.utime/86400;
+else
+    d.utime = m_commontime(d,'utime',h,['days since ' num2str(h.data_time_origin(1)) '-01-01 00:00:00']);
+end
 
 %loop through sensors
 for ks = 1:length(sn)
@@ -119,19 +130,31 @@ for ks = 1:length(sn)
 
     %get ctd and comparison fields for both sets of indices
     [dc, p, mod] = sensor_cal_comparisons(d, parameter, num2str(sn(ks)), udstr, iis1, iis2, okf, []);
+    if isempty(dc)
+        %keyboard
+        continue
+    end
     p.edges = [-1:.05:1]*p.rlim(2);
     p.presrange = [-max(d.([udstr 'press'])(~isnan(d.([udstr parameter])))) 0];
     p.statrange = [0 max(d.statnum(~isnan(d.([udstr parameter]))))+1];
     p.mcruise = mcruise;
-
+    %p.xvar = 'statnum'; p.xvarlabel = p.xvar;
+    p.xvar = 'time'; p.xvarlabel = 'days';
+    if strcmp(p.xvar,'statnum')
+        p.xrange = p.statrange;
+    else
+        p.xrange = [min(dc.(p.xvar)) max(dc.(p.xvar))];
+        p.xrange = p.xrange + [-1 1]*mean(p.xrange)*0.02;
+    end
 
     %stats
-    if length(p.iigc)<2
-        p.md = NaN; p.deep = []; p.iqrd = NaN;
+    p.deep = dc.press>=pdeep;
+    if length(p.iigc)<10
+        p.md = NaN; p.iqrd = NaN;
+        disp('too few comparison points'); continue
     else
         p.md = m_nanmedian(dc.res(p.iigc));
         ms = sqrt(m_nansum((dc.res(p.iigc))-p.md).^2)/(length(p.iigc)-1);
-        p.deep = dc.press>=pdeep;
         ngp = length(p.iigc);
         c = dc.res(p.iigc); c = c(dc.press(p.iigc)>pdeep);
         try
@@ -143,60 +166,25 @@ for ks = 1:length(sn)
         end
     end
 
-%plot residual or ratio vs statnum, pressure, and histogram
-figure(2); clf; orient tall
-plot_residuals(dc, p, parameter);
+%plot residual or ratio vs statnum, pressure, temperature, and histogram
+figure(2); clf
+plot_residuals(dc, p, parameter); 
 if ~isempty(printform)
     print(printform, fullfile(printdir, ['ctd_eval_' parameter '_' num2str(sn(ks)) '_hist' dirstr]))
 end
+keyboard %pause
 
-
-% %plot residual or ratio in color vs 2 of statnum, press, temp, oxygen,
-% %T-S
-% figure(3); clf; orient portrait
-% set(gcf,'defaultaxescolor',[.8 .8 .8])
-% load cmap_bo2; colormap(cmap_bo2)
-% subplot(4,4,[1 5]); scatter(ctemp, -press, 16, res, 'filled'); grid;
-% xlabel('temp'); xlim([min(ctemp) max(ctemp)])
-% ylabel('press'); ylim(presrange); caxis(rlim); colorbar
-% subplot(4,4,[2 6]); scatter(stn, -press, 16, res, 'filled'); grid;
-% xlabel('station'); xlim([min(stn) max(stn)])
-% ylabel('press'); ylim(presrange); caxis(rlim); colorbar
-% title([mcruise ' ' rlabel])
-% subplot(4,4,[3 7]); scatter(ctemp, d.uoxygen(iig), 16, res, 'filled'); grid;
-% xlabel('temp'); xlim([min(ctemp) max(ctemp)])
-% ylabel('oxygen'); ylim([min(d.uoxygen) max(d.uoxygen)]); caxis(rlim); colorbar
-% subplot(4,4,[4 8]); scatter(csal, ctemp, 16, res, 'filled'); grid;
-% xlabel('S'); ylabel('T'); caxis(rlim); colorbar
-% xlim([min(csal) max(csal)]); ylim([min(ctemp) max(ctemp)]);
-% if exist('cqflag','var')
-%     subplot(4,4,[1 5]+8); scatter(ctemp(iigc), -press(iigc), 16, res(iigc), 'filled'); grid;
-%     xlabel('temp'); xlim([min(ctemp) max(ctemp)])
-%     ylabel('press'); ylim(presrange); caxis(rlim); colorbar
-%     subplot(4,4,[2 6]+8); scatter(stn(iigc), -press(iigc), 16, res(iigc), 'filled'); grid;
-%     xlabel('station'); xlim([min(stn) max(stn)])
-%     ylabel('press'); ylim(presrange); caxis(rlim); colorbar
-%     title([mcruise ' ' rlabel])
-%     subplot(4,4,[3 7]+8); scatter(ctemp(iigc), d.uoxygen(iig(iigc)), 16, res(iigc), 'filled'); grid;
-%     xlabel('temp'); xlim([min(ctemp) max(ctemp)])
-%     ylabel('oxygen'); ylim([min(d.uoxygen) max(d.uoxygen)]); caxis(rlim); colorbar
-%     subplot(4,4,[4 8]+8); scatter(csal(iigc), ctemp(iigc), 16, res(iigc), 'filled'); grid;
-%     xlabel('S'); ylabel('T'); caxis(rlim); colorbar
-%     xlim([min(csal) max(csal)]); ylim([min(ctemp) max(ctemp)]);
-% end
-% if ~isempty(printform)
-%     print(printform, fullfile(printdir, ['ctd_eval_' sensname '_stns_' num2str(min(stn)) '_' num2str(max(stn)) dirstr]));
-% end
-
-llim = [p.rlim(2) p.rlim(2)/2];
-ii = find( (abs(dc.res)>llim(1)*2 & dc.press<pdeep) | (abs(dc.res)>llim(2) & dc.press>=pdeep) & dc.statnum>=plotprof);
+ii = find( (abs(dc.res(p.iigc))>p.rlim(2) & dc.press(p.iigc)<pdeep) | (abs(dc.res(p.iigc))>p.rlim(2)/2 & dc.press(p.iigc)>=pdeep) & dc.statnum(p.iigc)>=plotprof);
 if ~isempty(ii)
-    disp('to examine larger differences profile-by-profile to help pick bad or')
-    disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01,')
-    disp('press any key to continue (or ctrl-c to quit)') %***loop
-    pause
+    disp('examine larger differences profile-by-profile to help pick bad or')
+    disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01?')
+    next = input('y/n/keyboard?\n','s');
+    if strcmp(next,'y')
+        plot_comparison_quality(dc,parameter,dc.statnum(p.iigc(ii)),testcal,calstr0,okf,[p.rlim(2) p.rlim(2)/2])
+    elseif strcmp(next,'k')
+        keyboard
+    end
 end
-plot_comparison_quality(dc,parameter,dc.statnum(ii),testcal,calstr0,okf,llim)
 
 
 end %loop through serial numbers
@@ -204,26 +192,38 @@ end %loop through serial numbers
 %%%%%%%%%% subfunctions %%%%%%%%%%
 
 function plot_residuals(dc, p, parameter)
-%first plot
+
 subplot(5,5,[1:5])
-hl = plot(dc.statnum, dc.ctdres, 'c.', dc.statnum, dc.res, 'og', dc.statnum(p.iigc), dc.res(p.iigc), 'b+', dc.statnum(p.deep), dc.res(p.deep), 'xk'); grid
-xlabel('statnum'); xlim(p.statrange); ylim(p.rlim)
-legend(hl([1 2 4]),p.colabel,p.cclabel,'deep'); title(p.mcruise)
-subplot(5,5,[9:10 14:15 19:20 24:25])
-plot(dc.ctdres, -dc.press, 'c.', dc.res, -dc.press, 'og', dc.res(p.iigc), -dc.press(p.iigc), 'b+'); grid
-ylabel('press'); ylim(p.presrange); xlim(p.rlim)
-legend(hl(1:2),p.colabel,p.cclabel)
-subplot(5,5,[6:8 11:13])
-plot(dc.caldata, dc.ctddata, 'o-k', dc.caldata(p.deep), dc.ctddata(p.deep), 'sb', dc.caldata, dc.caldata); grid;
+hl = plot(dc.(p.xvar), dc.ctdres, 'c+', dc.(p.xvar), dc.res, '.g', dc.(p.xvar)(p.iigc), dc.res(p.iigc), 'b.', dc.(p.xvar)(p.deep), dc.res(p.deep), '.k'); grid
+xlabel(p.xvar); xlim(p.xrange); ylim(p.rlim); 
+legend(hl([1 3 4 2]),p.colabel,p.cclabel,'deep','high var','location','southeastoutside');
+set(gca,'xaxislocation','top')
+
+subplot(5,5,[10 15 20 25])
+plot(dc.ctdres, -dc.press, 'c+', dc.res, -dc.press, '.g', dc.res(p.iigc), -dc.press(p.iigc), 'b.'); grid
+ylabel('-press'); ylim(p.presrange); xlim(p.rlim)
+set(gca,'yaxislocation','right')
+
+subplot(5,5,[6:9])
+plot(dc.ctemp, dc.ctdres, 'c+', dc.ctemp, dc.res, '.g', dc.ctemp(p.iigc), dc.res(p.iigc), '.b', dc.ctemp(p.deep), dc.res(p.deep), '.k'); grid
+xlabel('T'); ylim(p.rlim);
+
+subplot(5,5,[11:12 16:17])
+plot(dc.caldata, dc.ctddata, 'b.', dc.caldata(p.deep), dc.ctddata(p.deep), 'k.', dc.caldata, dc.caldata); grid;
 axis image; xlabel(['cal ' parameter]); ylabel(['ctd ' parameter]);
-subplot(5,5,[16:18 21:23])
+
+subplot(5,5,[13:14 18:19])
+scatter(dc.(p.xvar), -dc.press, 12, dc.res, 'filled'); grid
+xlabel(p.xvar); xlim(p.xrange); ylim(p.presrange); ylabel('-press')
+caxis(p.rlim); colorbar
+
+subplot(5,5,[21:24])
 nh = histc(dc.res, p.edges); nhgc = histc(dc.res(p.iigc), p.edges);
-plot(p.edges, nh, 'g', p.edges, nhgc, 'k');
-title([p.mcruise ' ' p.cclabel])
+plot(p.edges, nh, 'g', p.edges, nhgc, 'b');
 ax = axis;
-text(p.edges(end)*.9, ax(4)*.95, ['median ' num2str(round(p.md*1e5)/1e5)], 'horizontalalignment', 'right')
-text(p.edges(end)*.9, ax(4)*.85, ['deep 25-75% ' num2str(round(p.iqrd*1e5)/1e5)], 'horizontalalignment', 'right')
-xlim(p.edges([1 end])); grid
+text(p.edges(end)*.9, ax(4)*.9, ['median ' num2str(round(p.md*1e5)/1e5)], 'horizontalalignment', 'right')
+text(p.edges(end)*.9, ax(4)*.7, ['deep 25-75% ' num2str(round(p.iqrd*1e5)/1e5)], 'horizontalalignment', 'right')
+xlim(p.edges([1 end])); grid; xlabel(p.cclabel); ylabel('number')
 
 
 function plot_comparison_quality(dc,parameter,stns_examine,testcal,calstr,okf,llim)
@@ -239,9 +239,9 @@ else
     stns_examine = unique(dc.statnum);
 end
 if isempty(calstr)
-    castopts_cal = 1;
+    co_cal = 1;
 else
-    castopts_cal = 0;
+    co_cal = 0;
 end
 rootdir = mgetdir('ctd');
 for no = 1:length(stns_examine)
@@ -253,10 +253,10 @@ for no = 1:length(stns_examine)
     [dcs, ~] = mloadq(fullfile(rootdir, ['dcs_' mcruise '_' stn_string '.nc']), '/');
     ii1u = find(d1.scan>=dcs.scan_bot & d1.scan<=dcs.scan_end);
     [du, hu] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
-    if castopts_cal
+    if co_cal
         opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
-        if exist('castopts','var') && isfield(castopts,'calstr')
-            calstr = castopts.calstr;
+        if exist('co','var') && isfield(co,'calstr')
+            calstr = co.calstr;
         else
             calstr = [];
         end

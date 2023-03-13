@@ -1,3 +1,4 @@
+function msam_ashore_flag(samtypes)
 % msam_ashore_flag
 %
 % set samtype (string or cell) before calling
@@ -7,22 +8,8 @@
 % use opt_cruise to specify which fields to look for in which file(s),
 % based on samtype
  
+m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
-if ~exist('samtype', 'var') && ~exist('samtypes', 'var')
-    samtypes = {};
-    opt1 = mfilename; opt2 = 'shore_sam_types'; get_cropt
-    if ~exist('samtype', 'var') && (~exist('samtypes', 'var') || isempty(samtypes))
-        samtype = input('sample type? ','s');
-    end
-end
-if ~exist('samtypes','var')
-    if ischar(samtype)
-        samtypes = {samtype};
-    else
-        samtypes = samtype;
-    end
-end
 
 for stno = 1:length(samtypes)
     samtype = samtypes{stno};
@@ -65,6 +52,7 @@ for stno = 1:length(samtypes)
             st.sampnum = st.(varsta)*100 + st.(varnis);
             varsam = 'sampnum';
         end
+        opt1 = mfilename; opt2 = 'shore_samlog_edit'; get_cropt %place to combine columns
         %assume we don't need to know about replicates as there will always be
         %a first sample***
         [~,ii] = unique(st.(varsam),'stable');
@@ -133,6 +121,9 @@ for stno = 1:length(samtypes)
             end
 
         end
+
+        %combine types
+        opt1 = mfilename; opt2 = 'samflags_combine'; get_cropt
 
         %apply niskin flags, and discard empty rows (sampnums with no samples
         %collected)

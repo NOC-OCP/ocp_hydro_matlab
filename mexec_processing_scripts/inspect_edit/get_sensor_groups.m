@@ -23,7 +23,7 @@ end
 root_ctd = mgetdir('ctd');
 for stn = klist
     if ~isempty(sg.temp1) && sum(sg.temp1(:,1)==stn)>0
-        continue
+        continue %don't redo
     end
 
     rfile = sprintf('%s/ctd_%s_%03d_raw.nc',root_ctd,mcruise,stn);

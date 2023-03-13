@@ -112,6 +112,7 @@ if ~isempty(find(strcmp(table,def.renametables_list), 1)) % some vars to be rena
         if ~isempty(kvar) % This renaming variable hasn't been read in
             ds.Properties.VarNames{kvar} = nnew;
             names{kvar} = nnew;
+            if isempty(unew); unew = ' '; end
             units{kvar} = unew;
         end
     end
@@ -153,7 +154,7 @@ end
 
 
 names = [names; {'dnum'}];
-units = [units; {'matlab_datenum'}];
+units = [units; {'seconds since 0000-00-00 00:00:00'}];
 
 
 

@@ -126,6 +126,7 @@ if ~isempty(MEXEC_G.other_programs_root)
 else
     MEXEC_G.ix_ladcp = 0;
 end
+if nargout>0; varargout{1} = path_choose; end
 
 % location processing and writing mexec files
 if isempty(MEXEC_G.mexec_data_root)

@@ -124,19 +124,22 @@ if tstep>1
 else
     [~,iit] = unique(dd.time,'stable');
 end
+
 clear hnew
-hnew.fldnam = {}; hnew.fldunt = {};
+hnew.fldnam = names(:)';
+hnew.fldunt = units(:)';
+m = false(1,length(names));
 for kl = 1:length(names)
     vname = names{kl};
     if isnumeric(dd.(vname))
-        hnew.fldnam = [hnew.fldnam vname];
-        hnew.fldunt = [hnew.fldunt units(kl)];
+        m(kl) = true;
         dd.(vname) = dd.(vname)(iit);
     else
         dd = rmfield(dd,vname);
         warning('skipping non-numeric variable %s from table %s',vname,table)
     end
 end
+hnew.fldnam = hnew.fldnam(m); hnew.fldunt = hnew.fldunt(m);
 
 if docf
     hnew.data_time_origin = [];
@@ -145,7 +148,7 @@ else
 end
 
 hnew.dataname = dataname;
-hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER ' calling msave'];
+hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER];
 if exist(m_add_nc(otfile),'file')
     mfsave(otfile, dd, hnew, '-merge', 'time');
 else

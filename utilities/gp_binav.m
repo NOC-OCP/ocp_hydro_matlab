@@ -27,16 +27,29 @@ end
 xm = .5*(xe(:,1)+xe(:,2));
 
 s = size(y);
+yg = nan(length(xm),s(2));
+
+%first sort x, y on x
+m = ~isnan(x); x = x(m); y = y(m,:);
+[x, ii] = sort(x); y = y(ii,:);
+%and for xm, xe, list bins that are within x range, to loop through in order
+[~,iib] = sort(xm);
+if bin_partial
+    iib = iib(xe(:,2)>x(1) & xe(:,1)<x(end));
+else
+    iib = iib(xm>x(1) & xm<x(end));
+end
+iib = iib(:)';
+
 
 %loop through bins
-yg = NaN+zeros(length(xm),size(y,2));
-for bno = 1:length(xm)
+for bno = iib
     
     xmask = (x>=xe(bno,1) & x<=xe(bno,2));
     if sum(xmask)
     
         xb = x(xmask);
-        if bin_partial || (min(xb)<xm(bno) && max(xb)>xm(bno))
+        if bin_partial || (xb(1)<xm(bno) && xb(end)>xm(bno))
         
             yb = y(xmask,:);
             if ignore_nan
@@ -58,13 +71,12 @@ for bno = 1:length(xm)
                     ii0 = find(mid==0); %for nanmedian, no good points
                     mid([ii0 ii1]) = size(yb,1); %these will be NaN but will fill in ii1 after
                     yb = sort(yb,1);
-                    s2 = size(yb,2);
-                    if s2==1
+                    if s(2)==1
                         ind1 = floor(mid);
                         ind2 = ceil(mid);
                     else
-                        ind1 = sub2ind(size(yb),floor(mid),1:s2);
-                        ind2 = sub2ind(size(yb),ceil(mid),1:s2);
+                        ind1 = sub2ind(size(yb),floor(mid),1:s(2));
+                        ind2 = sub2ind(size(yb),ceil(mid),1:s(2));
                     end
                     yg(bno,:) = .5*(yb(ind1)+yb(ind2));
                     yg(bno,ii1) = min(yb(:,ii1),[],1); %for nanmedian, only good value
@@ -74,14 +86,20 @@ for bno = 1:length(xm)
                     for no2 = 1:s(2)
                         if w(no2)>1
                             try
-                            b = [ones(w(no2),1) xb(m(:,no2))]\yb(m(:,no2),no2);
-                            yg(bno,no2) = b(1)+b(2)*xm(bno);
-                            catch; keyboard; end
+                                b = [ones(w(no2),1) xb(m(:,no2))]\yb(m(:,no2),no2);
+                                yg(bno,no2) = b(1)+b(2)*xm(bno);
+                            catch
+                                keyboard
+                            end
                         end
                     end    
 
             end
             
         end
+        %discard the already-used x, y (okay because they are in order)
+        iiu = 1:find(xmask, 1, 'last');
+        x(iiu) = []; y(iiu, :) = [];
+
     end
 end
