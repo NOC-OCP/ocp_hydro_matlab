@@ -158,7 +158,7 @@ hnew.dataname = ['oxy_' mcruise '_01'];
 hnew.comment = ['data loaded from ' fullfile(root_oxy, ofpat) ' \n '];
 hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
-[d.sampnum, iia, iic] = unique(ds_oxy.sampnum, 'stable');
+[d.sampnum, iia, ~] = unique(ds_oxy.sampnum, 'stable');
 d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
 d.botoxya_per_l = ds_oxy.conc_o2(iia);
 d.botoxya_temp = ds_oxy.fix_temp(iia);

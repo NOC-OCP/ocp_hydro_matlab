@@ -1,11 +1,11 @@
 % mctd_02:
 %
-% apply automatic edits to raw file (_raw_cleaned if it exists, otherwise
-% _raw_noctm, otherwise _raw),
-% apply align and celltm corrections if set in opt_cruise,
-% apply oxygen hysteresis and other corrections to raw (or raw_cleaned)
-% file
-% and applies calibrations if set in opt_cruise
+% apply automatic edits to raw or _raw_noctm file; if working from
+%   _raw_noctm, apply align and celltm coorections as set in opt_cruise;
+% save as _raw_cleaned
+% then apply oxygen hysteresis and calibrations, again as set in
+%   opt_cruise;
+% save as _24hz
 %
 % output: _raw_cleaned and _24hz
 %
@@ -60,7 +60,7 @@ co.pumpsNaN.cond1 = 12;
 co.pumpsNaN.cond2 = 12;
 co.pumpsNaN.oxygen_sbe1 = 8*24;
 co.pumpsNaN.oxygen_sbe2 = 8*24;
-opt1 = mfilename; opt2 = 'rawedit_auto'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt
 
 [d, h] = mloadq(infile,'/');
 if min(d.press)<=-10 && (~isfield(co,'badpress') || ((isfield(co,'badtemp1') || isfield(co,'badtemp2')) && ~co.redoctm))
@@ -126,44 +126,38 @@ end
 
 %%%%% now do corrections to produce _24hz file %%%%%
 
-copyfile(m_add_nc(rawfile_use), m_add_nc(otfile24));
-system(['chmod 644 ' m_add_nc(otfile24)]); %in case this was _raw (not _raw_cleaned, which is not write-protected)
-
 %which corrections to do?
 co.dooxyrev = 0;
 co.dooxyhyst = 1;
 co.doturbV = 0;
 co.dooxy1V = 0; %make 1 or 2 to use temp1 or temp2 to recalculate from voltage
 co.dooxy2V = 0;
-co.oxyrev.H1 = -0.033;
-co.oxyrev.H2 = 5000;
-co.oxyrev.H3 = 1450;
-co.oxyhyst.H1 = -0.033;
-co.oxyhyst.H2 = 5000;
-co.oxyhyst.H3 = 1450;
-co.H_0 = [co.oxyhyst.H1 co.oxyhyst.H2 co.oxyhyst.H3]; %this line stores defaults for later reference; don't change!
-co.turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
-opt1 = mfilename; opt2 = 'raw_corrs'; get_cropt
+clear oxyrev oxyhyst
+opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
 if co.dooxyrev
-    if sum(sum(isnan(cell2mat(struct2cell(co.oxyrev)))))>0
+    if sum(sum(isnan(cell2mat(struct2cell(oxyrev)))))>0
         error('oxygen hysteresis reversal parameters have NaNs; check opt_%s', mcruise)
     end
+    co.oxyrev = oxyrev;
 else
-    co = rmfield(co,'oxyrev');
+    oxyrev = [];
 end
 if co.dooxyhyst
     try
-        a = sum(sum(isnan(cell2mat(co.oxyhyst.H1)))) || sum(sum(isnan(cell2mat(co.oxyhyst.H2)))) || sum(sum(isnan(cell2mat(co.oxyhyst.H3))));
+        a = sum(sum(isnan(cell2mat(oxyhyst.H1)))) || sum(sum(isnan(cell2mat(oxyhyst.H2)))) || sum(sum(isnan(cell2mat(oxyhyst.H3))));
         if a
             error('oxygen hysteresis parameters have NaNs; check opt_%s', mcruise)
         end
     catch
     end
+    co.oxyhyst = oxyhyst;
 else
-    co = rmfield(co,'oxyhyst');
+    oxyhyst = [];
 end
-if ~co.doturbV
-    co = rmfield(co,'turbVpars');
+if co.doturbV
+    co.turbVpars = turbVpars;
+else
+    turbVpars = [];
 end
 
 %%%%% oxygen hysteresis and/or renaming oxygen variables %%%%%
@@ -182,43 +176,48 @@ if co.dooxy2V>0 && isfield(co,'oxy2Vcoefs')
     t = d.(['temp' num2str(co.dooxy2V)]);
     c = d.(['cond' num2str(co.dooxy2V)]);
     s = gsw_SP_from_C(c,t,d.press);
-    d.oxygen_sbe2 = mcoxy_from_V(d.sbeoxyV2, d.time, d.press, t, s, co.oxy2Vcoefs);
+    d.oxygen_sbe2 = calculate_oxy_from_V(d.sbeoxyV2, d.time, d.press, t, s, co.oxy2Vcoefs);
     h.comment = [h.comment '\n oxygen_sbe2 recalculated from sbeoxyV2 using CTD' num2str(co.dooxy2V) ' '];
 end
 if co.dooxyrev || co.dooxyhyst
     [dnew, hnew] = apply_oxyhyst(d, h, co);
-else
-    %just rename oxyvars(:,1) to oxyvars(:,2)
-    opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
-    nox = size(oxyvars,1);
-    clear dnew hnew
-    for no = 1:nox
-        dnew.(oxyvars{no,2}) = d.(oxyvars{no,1});
-        kmatch = find(strcmp(oxyvars{no,1},h.fldnam));
-        hnew.fldnam(no) = h.fldnam(kmatch);
-        hnew.fldunt(no) = h.fldunt(kmatch);
-        h.fldnam(kmatch) = hnew.fldnam(no); %now overwrite, for keep_vatts
+    fn = fieldnames(dnew);
+    for no = 1:length(fn)
+        d.(fn{no}) = dnew.(fn{no});
+        m = strcmp(fn{no},h.fldnam);
+        if ~sum(m)
+            h.fldnam = [h.fldnam fn(no)];
+            h.fldunt = [h.fldunt hnew.fldunt(m)];
+            h.fldserial = [h.fldserial hnew.fldserial(m)];
+        end
     end
-    hnew = keep_hvatts(hnew, h);
-    hnew.comment = 'oxygen variables copied';
 end
+%rename oxyvars(:,1) to oxyvars(:,2)
+opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
+nox = size(oxyvars,1);
+for no = 1:nox
+    d.(oxyvars{no,2}) = d.(oxyvars{no,1});
+    d = rmfield(d,oxyvars{no,1});
+    m = strcmp(oxyvars{no,1},h.fldnam);
+    h.fldnam(m) = oxyvars(no,2);
+end
+d = orderfields(d, h.fldnam);
 
 %%%%% turbidity conversion from turbidity volts %%%%%
 if co.doturbV
-    dnew.turbidity = (d.turbidityV-co.turbVpars(2))*co.turbVpars(1);
-    hnew.fldnam = [hnew.fldnam 'turbidity'];
-    hnew.fldunt = [hnew.fldunt 'm^-1/sr'];
+    d.turbidity = (d.turbidityV-co.turbVpars(2))*co.turbVpars(1);
+    d = rmfield(d,'turbidityV');
     hnew.comment = [hnew.comment '\n turbidity converted from turbidity volts'];
     h.fldnam{strcmp('turbidityV',h.fldnam)} = 'turbidity';
-    hnew = keep_hvatts(hnew, h);
+    d = orderfields(d,h.fldnam);
 end
 
-%%%%% save the new or overwritten variables %%%%%
-mfsave(otfile24, dnew, hnew, '-addvars');
+%%%%% save %%%%%
+mfsave(otfile24, d, h);
 
 
 %%%%% sensor calibrations %%%%%
-opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
 if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
 
     %load data and initialise
@@ -228,6 +227,9 @@ if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
     end
 
     %apply calibrations
+    ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00'];
+    d0.dday = m_commontime(d0,'time',h0,ddu);
+    h0.fldnam = [h0.fldnam 'dday']; h0.fldunt = [h0.fldunt ddu]; h0.fldserial = [h0.fldserial ' '];
     [dcal, hcal] = apply_calibrations(d0, h0, co.calstr, co.docal, 'q');
     hcal = keep_hvatts(hcal, h0);
 

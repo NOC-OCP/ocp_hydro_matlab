@@ -16,18 +16,19 @@ function [oxygen_unhyst]=mcoxyhyst_reverse(oxygen_hyst,time,press,H1,H2,H3)
 %
 
 %replicate any scalar parameters
-zz = zeros(size(oxygen_sbe));
+zz = zeros(size(oxygen_hyst));
 if length(H1)<length(zz); H1 = H1 + zz; end
 if length(H2)<length(zz); H2 = H2 + zz; end
 if length(H3)<length(zz); H3 = H3 + zz; end
 
 press(press<0) = 0; 
 iig = find(isfinite(press+oxygen_hyst));
+iig = iig(:)';
 kfirst = min(iig);
 
 %initialise
 oxygen_unhyst = NaN + zz; 
-oxygen_unhyst(kfirst) = oxygen_sbe(kfirst);
+oxygen_unhyst(kfirst) = oxygen_hyst(kfirst);
 klastgood = kfirst; % keep track of most recent good cycle
 
 for k = iig(2:end)

@@ -23,11 +23,13 @@ else
     cfg.p.btrk_mode = 2;
     %cfg.p.btrk_ts = 30;
 end
+cfg.p.ambiguity = 3.3;
+cfg.p.vlim = 3.3; %change from LDEO_IX default of 2.5***
 cfg.p.magdec_source = 1;
 %cfg.p.edit_mask_dn_bins = 1;
 %cfg.p.edit_mask_up_bins = 1;
 cfg.p.orig = 0; % save original data or not
-isul = 0; %is there an uplooker? process it first
+isul = 1; %is there an uplooker? process it first
 cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
 opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
 opt1 = 'ladcp_proc'; get_cropt
@@ -74,6 +76,7 @@ if isdl
 %     end
 end
 
+
 %DLUL
 if isul && isdl
     cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
@@ -83,7 +86,7 @@ if isul && isdl
     end
 end
 
-%also bottom tracking, if cast was full-depth
+%also bottom tracking, if cast was full-depth (and had down-looker)
 if ~ismember(stn, shortcasts)
     cfg.constraints = [cfg.constraints 'BT'];
     if isul && isdl
@@ -94,12 +97,6 @@ if ~ismember(stn, shortcasts)
         end
     elseif isdl && dlalone
         cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg);
-        if dopause
-            fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
-            pause
-        end
-    elseif isul
-        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg);
         if dopause
             fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
             pause

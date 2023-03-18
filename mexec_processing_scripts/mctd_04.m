@@ -33,7 +33,7 @@ MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[dd, hd] = mloadq(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
+[dd, hd] = mload(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
 if isempty(strfind(hd.comment,'manual')) && isempty(strfind(hd.comment,'inspected'))
     warning('using automatically detected cast start/bottom/end')
 end
@@ -44,12 +44,12 @@ dcstart = dd.dc24_start(kf);
 dcbot = dd.dc24_bot(kf);
 dcend = dd.dc24_end(kf);
 
-minlen = 60*24; minbins = 5; %require at least 1 minute and 10 dbar to make a profile
+minlen = 2*60*24; minbins = 10; %require at least 2 minutes and 10 dbar to make a profile
 
-if dcbot-dcstart>=minlen; isdown = 1; end
-if dcend-dcbot>=minlen; isup = 1; end
+if dcbot-dcstart>=minlen; isdown = 1; else; isdown = 0; end
+if dcend-dcbot>=minlen; isup = 1; else; isup = 0; end
 if ~isdown && ~isup
-    warning('neither down nor up cast is longer than %d minutes; skipping', round(minlen/24))
+    warning('neither down nor up cast is longer than %d minutes; skipping', round(minlen/24/60))
     return
 end
 

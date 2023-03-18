@@ -14,14 +14,14 @@ function d = apply_cal_samfile(d, h, udstr, testcal, calstr)
 % returns d, same structure with calibrated fields (where indicated by
 %   testcal)
 %
-% calls m_common, get_cropt (calibration, ctd_cals), and apply_calibrations
+% calls m_common, get_cropt (ctd_proc, ctd_cals), and apply_calibrations
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %variables with a 'u' (or 'd') before them in the sam file, which might be
 %calibrated or used in calibration functions
-udvars = {'press' 'time' 'temp1' 'temp2' 'psal1' 'psal2' 'cond1' 'cond2' 'oxygen1' 'oxygen2' 'fluor'};
+udvars = {'press' 'dday' 'time' 'temp1' 'temp2' 'psal1' 'psal2' 'cond1' 'cond2' 'oxygen1' 'oxygen2' 'fluor'};
 
 if isempty(calstr)
     cropt_cal = 1;
@@ -35,7 +35,7 @@ for sno = stns(:)'
     stnlocal = sno;
     %get only the calibration functions we want to test here
     if cropt_cal
-        opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
+        opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
         if exist('co','var') && isfield(co,'calstr')
             calstr = co.calstr;
         else
@@ -57,7 +57,7 @@ for sno = stns(:)'
         snfs = {'cond1' 'cond2' 'temp1' 'temp2' 'oxygen1' 'oxygen2'};
         h0.fldserial = repmat({' '},size(h0.fldnam));
         for fno = 1:length(snfs)
-            h0.fldserial{strcmp(snfs{fno},h0.fldnam)} = num2str(d.(['sn_' snfs{fno}])(iig(1)));
+            h0.fldserial{strcmp(snfs{fno},h0.fldnam)} = sprintf('%04d',d.(['sn_' snfs{fno}])(iig(1)));
         end
     end
     [dcal, hcal] = apply_calibrations(d0, h0, calstr, testcal, 'q');

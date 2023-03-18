@@ -36,6 +36,7 @@ function mctd_evaluate_sensors(parameter, varargin)
 %     inf or nan for none 
 %   stns_examine (no default) list of station numbers for which to plot
 %     individual profiles (supersedes plotprof)
+%   choose_sns serial number(s) to plot (default: all)
 %
 % e.g.
 %   testcal.temp = 1;
@@ -95,7 +96,11 @@ end
 %load data
 rootdir = mgetdir('ctd');
 [d, h] = mloadq(fullfile(rootdir, ['sam_' mcruise '_all']), '/');
-%apply calibrations?
+ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00'];
+d.([udstr 'dday']) = m_commontime(d, [udstr 'time'], h, ddu);
+h.fldnam = [h.fldnam [udstr 'dday']]; h.fldunt = [h.fldunt ddu];
+%optionally, apply calibrations (on all sensors)
+ds = d;
 if sum(cell2mat(struct2cell(testcal)))
     d = apply_cal_samfile(d, h, udstr, testcal, calstr0);
 end
@@ -111,13 +116,6 @@ if ~isempty(choose_sns)
     sn = intersect(sn,choose_sns);
 end
 
-%time in days rather than seconds
-if isempty(h.data_time_origin)
-    d.utime = d.utime/86400;
-else
-    d.utime = m_commontime(d,'utime',h,['days since ' num2str(h.data_time_origin(1)) '-01-01 00:00:00']);
-end
-
 %loop through sensors
 for ks = 1:length(sn)
     disp(['s/n' num2str(sn(ks))])
@@ -129,17 +127,26 @@ for ks = 1:length(sn)
     iis2 = find(ismember(d.statnum,stns2));
 
     %get ctd and comparison fields for both sets of indices
-    [dc, p, mod] = sensor_cal_comparisons(d, parameter, num2str(sn(ks)), udstr, iis1, iis2, okf, []);
+    clear p
+    %p.xvar = 'statnum'; p.xvarlabel = p.xvar;
+    p.xvar = 'dday'; p.xvarlabel = 'days';
+    if strcmp(parameter,'oxygen') && ~useoxyratio
+        [dc, p, mod] = sensor_cal_comparisons(d, [parameter '_diff'], num2str(sn(ks)), udstr, iis1, iis2, okf, p);
+    else
+        [dc, p, mod] = sensor_cal_comparisons(d, parameter, num2str(sn(ks)), udstr, iis1, iis2, okf, p);
+    end
     if isempty(dc)
         %keyboard
         continue
     end
-    p.edges = [-1:.05:1]*p.rlim(2);
+    if strcmp(parameter,'oxygen') && useoxyratio
+        p.edges = [.9:.005:1.1];
+    else
+        p.edges = [-1:.05:1]*p.rlim(2);
+    end
     p.presrange = [-max(d.([udstr 'press'])(~isnan(d.([udstr parameter])))) 0];
     p.statrange = [0 max(d.statnum(~isnan(d.([udstr parameter]))))+1];
     p.mcruise = mcruise;
-    %p.xvar = 'statnum'; p.xvarlabel = p.xvar;
-    p.xvar = 'time'; p.xvarlabel = 'days';
     if strcmp(p.xvar,'statnum')
         p.xrange = p.statrange;
     else
@@ -195,7 +202,7 @@ function plot_residuals(dc, p, parameter)
 
 subplot(5,5,[1:5])
 hl = plot(dc.(p.xvar), dc.ctdres, 'c+', dc.(p.xvar), dc.res, '.g', dc.(p.xvar)(p.iigc), dc.res(p.iigc), 'b.', dc.(p.xvar)(p.deep), dc.res(p.deep), '.k'); grid
-xlabel(p.xvar); xlim(p.xrange); ylim(p.rlim); 
+xlabel(p.xvarlabel); xlim(p.xrange); ylim(p.rlim); 
 legend(hl([1 3 4 2]),p.colabel,p.cclabel,'deep','high var','location','southeastoutside');
 set(gca,'xaxislocation','top')
 
@@ -219,7 +226,7 @@ caxis(p.rlim); colorbar
 
 subplot(5,5,[21:24])
 nh = histc(dc.res, p.edges); nhgc = histc(dc.res(p.iigc), p.edges);
-plot(p.edges, nh, 'g', p.edges, nhgc, 'b');
+plot(p.edges, nh, 'g', p.edges, nhgc, 'b'); xlim(p.edges([1 end]))
 ax = axis;
 text(p.edges(end)*.9, ax(4)*.9, ['median ' num2str(round(p.md*1e5)/1e5)], 'horizontalalignment', 'right')
 text(p.edges(end)*.9, ax(4)*.7, ['deep 25-75% ' num2str(round(p.iqrd*1e5)/1e5)], 'horizontalalignment', 'right')
@@ -254,7 +261,7 @@ for no = 1:length(stns_examine)
     ii1u = find(d1.scan>=dcs.scan_bot & d1.scan<=dcs.scan_end);
     [du, hu] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
     if co_cal
-        opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
+        opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
         if exist('co','var') && isfield(co,'calstr')
             calstr = co.calstr;
         else

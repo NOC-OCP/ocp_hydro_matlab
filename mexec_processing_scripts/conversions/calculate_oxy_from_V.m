@@ -1,4 +1,4 @@
-function oxygen_sbe = mcoxy_from_V(sbeoxyV, time, press, temp, psal, coefs)
+function oxygen_sbe = calculate_oxy_from_V(sbeoxyV, time, press, temp, psal, coefs)
 % oxygen_sbe = mcoxy_from_V(sbeoxyV, time, press, temp, psal, coefs)
 %
 % reproduces SBE conversion from volts to umol/kg using the Sea-Bird

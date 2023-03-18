@@ -62,6 +62,7 @@ switch scriptname
         switch oopt
             case 'raw_corrs'
                 doturbV = 1;
+co.turbVpars = [3.343e-3 6.600e-2]; %from XMLCON for BBRTD-182, calibration date 6 Mar 17
         end
         %%%%%%%%%% end mctd_02b %%%%%%%%%%
         

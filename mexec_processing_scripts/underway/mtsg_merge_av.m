@@ -8,11 +8,11 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 % bak jc211 ship_data_sys_names sets metpre and tsgpre
 
-%get the files
+%get list of files
 root_dir1 = fullfile(MEXEC_G.mexec_data_root, 'met', 'ocn');
 root_dir2 = fullfile(MEXEC_G.mexec_data_root, 'wnd', 'met');
-f1 = dir(fullfile(root_dir1, '*_all_raw.nc'));
-f2 = dir(fullfile(root_dir2, 'surfmet*_all_raw.nc'));
+f1 = dir(fullfile(root_dir1, '*_all_raw.nc')); %will change to _edt later if available
+f2 = dir(fullfile(root_dir2, 'surfmet*_all_raw.nc')); %will change to _edt later if available
 streams = {'surfmet' 'tsg' 'ocl' 'flowmeter' 'fluorometer' 'platform' 'thermometer' 'thermosalinograph' 'transmissometer' 'sst' 'radiometer'};
 fnames1 = {f1.name};
 fnames2 = {f2.name};
@@ -43,10 +43,14 @@ opt1 = 'uway_proc'; opt2 = 'avtime'; get_cropt
 tave_period = round(avocn); % seconds
 tav2 = round(tave_period/2);
 
-%first figure out time grid
+%first figure out time grid, and whether there is an _edt file
 tmin = inf; tmax = -inf;
 to = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
 for fno = 1:length(files)
+    ename = [files{fno}(1:end-6) 'edt.nc'];
+    if exist(ename,'file')
+        files{fno} = ename;
+    end
     h = m_read_header(files{fno});
     m = strcmp('time',h.fldnam);
     tmin = min(tmin,m_commontime(h.alrlim(m),'time',h,to));
@@ -80,7 +84,7 @@ for fno = 1:length(files)
     %grid (median average)
     clear opts
     opts.ignore_nan = 1;
-    opts.grid_extrap = [0 0];
+    opts.grid_extrap = [1 1];
     opts.postfill = 30;
     opts.bin_partial = 0;
     dg = grid_profile(d, 'time', tg, 'medbin', opts);
@@ -163,7 +167,7 @@ end
 %now edit combined file
 minflow = 0.4; pdel = 4; %pump rate, and how long after pumps back on to nan
 check_tsg = 0;
-opt1 = 'uway_avedits'; opt2 = 'tsg'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'tsg_avedits'; get_cropt
 pdel = round(pdel);
 if ~isempty(minflow)
     [d, h] = mload(otfile, '/');

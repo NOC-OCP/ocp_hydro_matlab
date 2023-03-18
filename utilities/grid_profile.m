@@ -225,7 +225,6 @@ if prefill>0
 end
 
 %grid
-tic
 switch method
     case {'meanbin' 'medbin' 'lfitbin'}
         data = gp_binav(data, d.(gridvar), ge, method(1:end-3), 'ignore_nan', ignore_nan, 'bin_partial', bin_partial);
@@ -245,7 +244,6 @@ switch method
     case {'linterp' 'smhan'}
         data = gp_smooth(data, d.(gridvar), gridvec, method, 'ignore_nan', ignore_nan);
 end
-toc
 
 %fill gaps and ends if specified
 if profile_extrap(1)==1

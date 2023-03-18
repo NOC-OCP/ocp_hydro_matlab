@@ -45,8 +45,18 @@ switch opt1
                 stns_alternate_o = []; %on these stations it's the other one
         end
 
-    case 'calibration'
+    case 'ctd_proc'
         switch opt2
+            case 'raw_corrs'
+                oxyrev.H1 = -0.033;
+                oxyrev.H2 = 5000;
+                oxyrev.H3 = 1450;
+                oxyhyst.H1 = -0.033;
+                oxyhyst.H2 = 5000;
+                oxyhyst.H3 = 1450;
+                co.H_0 = [oxyhyst.H1 oxyhyst.H2 oxyhyst.H3]; %this line stores defaults for later reference; don't change!
+            case '1hz_interp'
+                maxfill24 = 0; maxfill1 = 2; 
             case 'ctd_cals'
                 co.docal.temp = 0; %do not apply any calibration to temp
                 co.docal.cond = 0; %do not apply any calibration to cond
@@ -55,8 +65,11 @@ switch opt1
                 co.docal.transmittance = 0; %etc
                 if isfield(co,'calstr')
                     co = rmfield(co,'calstr'); %no default, must be set by opt_{cruise}
-                    %see *** for examples
-                end
+                end        
+        end
+
+    case 'uway_proc'
+        switch opt2
             case 'sensor_factory_cals'
                 sensorcals = struct(); %default: none
                 xducer_offset = []; %default: none
@@ -117,12 +130,6 @@ switch opt1
                 end
         end
 
-    case 'ctd_proc'
-        switch opt2
-            case '1hz_interp'
-                maxfill24 = 0; maxfill1 = 2; 
-        end
-        
     case 'outputs'
         switch opt2
             case 'grid'

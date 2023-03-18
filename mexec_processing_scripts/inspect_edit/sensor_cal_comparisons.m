@@ -4,8 +4,9 @@ function [dc, p, mod] = sensor_cal_comparisons(d, parameter, snstr, udstr, iis1,
 % arrange comparisons between a given sensor and calibration data as well
 %   as the other sensor on the same casts
 %
-% d is a structure containing ctd and sample data (e.g. from
-%   sam_{cruise}_all.nc) as well sensor serial numbers
+% d is a structure (e.g. from sam_{cruise}_all.nc) containing ctd and
+%   sample data as well as sensor serial numbers 
+%   sam_{cruise}_all.nc) as well as sensor serial numbers
 % parameter is 'temp', 'cond', 'oxygen', or 'oxygen_diff'
 % snstr is sensor serial number (string)
 % udstr is 'u' or 'd' depending on whether to use upcast or downcast
@@ -62,8 +63,7 @@ if ~isempty(iis2)
     end
 end
 
-if isempty(p)
-    clear p
+if ~isfield(p,'rlim')
     p.rlim = [];
 end
 
@@ -90,7 +90,7 @@ switch parameter
             if useoxyratio
                 p.rlim = 1+[-5 5]/100;
             else
-                p.rlim = [-1 1]*1.5;
+                p.rlim = [-1 1]*4;
             end
         end
 
@@ -110,6 +110,7 @@ dc.press = dc.press(iig);
 dc.sampnum = d.sampnum(iig0(iig));
 dc.statnum = d.statnum(iig0(iig));
 dc.time = d.([udstr 'time'])(iig0(iig));
+dc.dday = d.([udstr 'dday'])(iig0(iig));
 dc.nisk = d.position(iig0(iig));
 dc.niskf = d.niskin_flag(iig0(iig));
 dc.ctemp = d.([udstr 'temp'])(iig0(iig));
@@ -127,10 +128,10 @@ if ~isfield(p,'glim')
     if strcmp(parameter,'cond'); p.glim = p.rlim(2)*.8; end
 end
 if isfield(d,['std1_' parameter])
-    m = m | d.(['std1_' parameter])(iig)>p.slim;
+    m = m | d.(['std1_' parameter])(iig0(iig))>p.slim;
 end
 if isfield(d,['grad_' parameter])
-    m = m | abs(d.(['grad_' parameter])(iig))>p.glim;
+    m = m | abs(d.(['grad_' parameter])(iig0(iig)))>p.glim;
 end
 dc.cqflag(m) = 3;
 iigc = find(dc.cqflag==2);
@@ -143,8 +144,8 @@ switch parameter
         p.cclabel = ['sbe35 T - ctd T s/n ' snstr ' (^oC)'];
         dc.ctdres = dc.ctdother-dc.ctddata;
         p.colabel = ['ctd T alt - ctd T s/n ' snstr ' (^oC)'];
-        mod.r = [ones(length(iigc),1) dc.press(iigc) dc.statnum(iigc)];
-        mod.form = 'tempcal = temp + C1 + C2(press) + C3(stn)';
+        mod.r = [ones(length(iigc),1) dc.press(iigc) dc.(p.xvar)(iigc)];
+        mod.form = ['tempcal = temp + C1 + C2(press) + C3(' p.xvar ')'];
         mod.b = regress(dc.res(iigc),mod.r);
 
     case 'cond'
@@ -152,8 +153,8 @@ switch parameter
         p.cclabel = ['(bottle C (ctd T)/ctd C s/n ' snstr '-1)/35 (~psu)'];
         dc.ctdres = (dc.ctdother./dc.ctddata - 1)*35;
         p.colabel = ['(ctd C alt (ctd T)/ctd C s/n ' snstr '-1)/35 (~psu)'];
-        mod.r = [dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.statnum(iigc)];
-        mod.form = 'condcal = cond*(C1 + C2(press) + C3(stn))';
+        mod.r = [dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.(p.xvar)(iigc)];
+        mod.form = ['condcal = cond*(C1 + C2(press) + C3(' p.xvar '))'];
         mod.b = regress(dc.caldata(iigc),mod.r);
 
     case 'oxygen'
@@ -172,8 +173,8 @@ switch parameter
         end
         %mod.r = [ones(length(iigc),1) dc.press(iigc) dc.press(iigc).^2 dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.press(iigc).^2];
         %mod.form = 'oxycal = C1 + C2(press) + C3(press^2) + (C4 + C5(press) + C6(press^2))(oxy)';
-        mod.r = [ones(length(iigc),1) dc.press(iigc) dc.statnum(iigc) dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.statnum(iigc)];
-        mod.form = 'oxycal = C1 + C2(press) + C3(stn) + (C4 + C5(press) + C6(stn))(oxy)';
+        mod.r = [ones(length(iigc),1) dc.press(iigc) dc.(p.xvar)(iigc) dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.(p.xvar)(iigc)];
+        mod.form = ['oxycal = C1 + C2(press) + C3(' p.xvar ') + (C4 + C5(press) + C6(' p.xvar '))(oxy)'];
         mod.b = regress(dc.caldata(iigc),mod.r);
 
 end

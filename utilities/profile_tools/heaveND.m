@@ -1,4 +1,4 @@
-function [dp] = heaveND(dn_psal,dn_temp,up_psal,up_temp,pdn,lon0,lat0)
+function [dp] = heaveND(dn_psal,dn_temp,up_psal,up_temp,pdn,lon0,lat0,varargin)
 % Calculate amount of heave (dp) as the change in pressure of neutral
 % density levels between up and down casts 
 % Note dp is up pressure minus down pressure
@@ -17,11 +17,16 @@ function [dp] = heaveND(dn_psal,dn_temp,up_psal,up_temp,pdn,lon0,lat0)
 % Possibly arbitrary choice of filters
 % Output is a wieighted sum of the two filtered values
 % Weights change linearly 0 to 1 between pressures 0 and ptrans
-dpf1    =  25;
+dpf1    = 25;
 dpf2    = 100;
 ptrans = 3000;
 dmix =  0.005;  % Change of density in upper mixed layer
 idebug = 0;     % Chnage to 1 when testing
+if ~isempty(varargin)
+    for vno = 1:2:length(varargin)-1
+        eval([varargin{vno} ' = varargin{vno+1};'])
+    end
+end
 
 % Calculate neutral density
 dn_nd = gamma_n(dn_psal,dn_temp,pdn,lon0,lat0);
@@ -39,14 +44,14 @@ imix_dn = find(dn_nd < min(dn_nd) + dmix);
 imix_up = find(up_nd < min(up_nd) + dmix);
 imixS = 1:max([imix_dn(:); imix_up(:)]);
 dp0(imixS) = 0;
-fprintf(1,'(heaveND) Depth upper mixed layer: %5.0f db \n',pdn(imixS(end)))
+%fprintf(1,'(heaveND) Depth upper mixed layer: %5.0f db \n',pdn(imixS(end)))
 
 % If there is an bottom mixed layer
 imix_dn = find(dn_nd > max(dn_nd) - dmix/3);
 imix_up = find(up_nd > max(up_nd) - dmix/3);
 imixB = min([imix_dn(:); imix_up(:)]):length(pdn);
 dp0(imixB) = 0;
-fprintf(1,'(heaveND) Depth bottom mixed layer: %5.0f db \n',max(pdn)-pdn(imixB(1)))
+%fprintf(1,'(heaveND) Depth bottom mixed layer: %5.0f db \n',max(pdn)-pdn(imixB(1)))
 
 % Now filter 
 [pf1,df1] = das_filt(pdn,dp0,dpf1);
@@ -99,5 +104,4 @@ suspect=[1:round(N/2) nd-round(N/2)+1:nd];
 isel = ~ismember([1:nd],suspect);
 jg_filt = jg1(isel);
 m_filt = tmpd(isel);
-
 

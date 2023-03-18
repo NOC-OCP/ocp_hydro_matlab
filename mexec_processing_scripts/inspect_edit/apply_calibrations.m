@@ -47,7 +47,7 @@ function [dcal, hcal] = apply_calibrations(d0, h0, calstr, varargin)
 %
 % see mctd_02, ctd_evaluate_sensors, and mtsg_merge_av for calling
 %     examples; 
-% see calibration, ctd_cals case in opt_sd025 for calstr syntax examples
+% see ctd_proc, ctd_cals case in opt_sd025 for calstr syntax examples
 
 m_common
 
@@ -98,7 +98,11 @@ for pno = 1:length(params)
                 continue
             end
             ii = find(m); ii = ii(1); 
-            sensnum = h0.fldnam{ii}(length(param)+1:end); %could be empty
+            if length(param)<length(h0.fldnam{ii})
+                sensnum = h0.fldnam{ii}(end);
+            else
+                sensnum = '';
+            end
 
         elseif strncmp('pl',sen,2) %by place (ctd1 or ctd2)
             sensnum = sen(3:end); %could be empty

@@ -93,7 +93,7 @@ for no = 1:length(wfiles)
     end
     clear opts
     opts.ignore_nan = 1;
-    opts.grid_extrap = [0 0];
+    opts.grid_extrap = [1 1];
     opts.postfill = 30;
     opts.bin_partial = 0;
     dg = grid_profile(dw, 'time', tg, 'medbin', opts);

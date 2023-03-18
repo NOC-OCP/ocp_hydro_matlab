@@ -61,8 +61,8 @@ for stn = klist
         [dd, hd] = mload(fullfile(root_ctd,sprintf('dcs_%s_%03d',mcruise,stn)),'/');
         dd.time_start = m_commontime(dd,'time_start',hd,'datenum');
         dd.time_end = m_commontime(dd,'time_end',hd,'datenum');
-        te = d1.time(d1.time>=dd.time_start & d1.time<=dd.time_end)-0.5; 
-        te(length(te)+1) = te(end)+1;
+        te = d1.time(d1.time>=dd.time_start & d1.time<=dd.time_end)-0.5/86400; 
+        te(length(te)+1) = te(end)+1/86400;
         
         iig = find(drbr.time>dd.time_start-1/86400 & drbr.time<dd.time_end+1/86400 & ~isnan(drbr.press));
         if length(iig)>5*60
@@ -77,7 +77,7 @@ for stn = klist
             d.time = drbr.time(iig);
             d.psal = NaN+d.cond; iig = find(~isnan(d.cond+d.temp));
             d.psal(iig) = gsw_SP_from_C(d.cond(iig),d.temp(iig),d.press(iig));
-            dgr(stn) = grid_profile(d, 'time', te, 'meanbin', 'prefill', maxfill16, 'grid_extrap', [1 1], 'postfill', maxfill1);
+            dgr(stn) = grid_profile(d, 'time', te, 'meanbin', 'ignore_nan', 1, 'grid_extrap', [1 1]);
 
             if do24as16 %subsample SBE 24 to 16 hz, then bin average to same 1 hz grid
                 file24 = fullfile(root_ctd,sprintf('ctd_%s_%03d_24hz.nc',mcruise,stn));
@@ -97,7 +97,7 @@ for stn = klist
                 ds.psal(iig) = gsw_SP_from_C(ds.cond1(iig),ds.temp1(iig),ds.press(iig));
                 ds.temp = ds.temp1; ds.cond = ds.cond1; ds = rmfield(ds,{'temp1' 'cond1'});
                 ds.time = m_commontime(ds, 'time', h24, 'datenum');
-                dgs(stn) = grid_profile(ds, 'time', te, 'meanbin', 'prefill', maxfill16, 'grid_extrap', [1 1], 'postfill', maxfill1);
+                dgs(stn) = grid_profile(ds, 'time', te, 'meanbin', 'ignore_nan', 1, 'grid_extrap', [1 1]);
 
             else %just interpolate SBE (already bin averaged from 24 hz to 1 hz) to this 1 hz grid
                 dgs(stn).time = dgr(stn).time;

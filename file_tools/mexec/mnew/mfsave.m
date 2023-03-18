@@ -202,9 +202,16 @@ end
 
 %%%%% write to file %%%%%
 
+if strcmp(filename(1),'~') %nc create can't resolve ~
+    a = dir(filename);
+    filename = fullfile(a.folder,a.name);
+end
 ncfile.name = filename;
 if writenew %initialise new file and set to write all variables
     
+%     if exist(m_add_nc(ncfile.name),'file')
+%         delete(m_add_nc(ncfile.name))
+%     end
     ncfile = m_openot(ncfile);
     isnew = 1:length(h.fldnam);
     

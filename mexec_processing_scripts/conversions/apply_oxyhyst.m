@@ -1,63 +1,55 @@
-function [dnew, hnew] = apply_oxyhyst(d, h, castopts)
+function [dnew, hnew] = apply_oxyhyst(d, h, co, varargin)
 %reverse and/or apply oxygen hysteresis correction to _raw_cleaned file,
 %producing _24hz file
 
-opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
-nox = size(oxyvars,1); 
-
 nvar = 0;
 hnew.comment = '';
+m = strncmp('oxygen',h.fldnam,6);
+ovars = h.fldnam(m);
+ounts = h.fldunt(m);
+osns = h.fldserial(m);
+hnew.fldnam = {}; hnew.fldunt = {}; hnew.fldserial = {};
 
-h0.fldnam = h.fldnam; %for keep_hvatts
-
-if castopts.dooxyrev
-    %calculate oxy_rev, the oxygen hysteresis reversed variables
-    if ~iscell(castopts.oxyrev.H1)
-        castopts.oxyrev.H1 = repmat({castopts.oxyrev.H1},nox,1);
+if co.dooxyrev
+    %calculate the oxygen hysteresis reversed variables
+    for no = 1:length(ovars)
+        on = ['oxyrev' osns{no}];
+        if ~isfield(co,on)
+            on = 'oxyrev';
+        end
+        if size(co.(on).H3,2)==2
+            co.(on).H3 = interp1(co.(on).H3(:,1),co.(on).H3(:,2),d.press);
+        end
+        dnew.([ovars{no} '_rev']) = mcoxyhyst_reverse(d.(ovars{no}), d.time, d.press, co.(on).H1, co.(on).H2, co.(on).H3);
+        hnew.fldnam = [hnew.fldnam [ovars{no} '_rev']];
+        hnew.fldunt = [hnew.fldunt ounts{no}];
+        hnew.fldserial = [hnew.fldserial osns{no}];
     end
-    if ~iscell(castopts.oxyrev.H2)
-        castopts.oxyrev.H2 = repmat({castopts.oxyrev.H2},nox,1);
-    end
-    if ~iscell(castopts.oxyrev.H3)
-        castopts.oxyrev.H3 = repmat({castopts.oxyrev.H3},nox,1);
-    end
-    for no = 1:nox
-        thisvar = find(strcmp(oxyvars{no,1}, h.fldnam)); %same units
-        hnew.fldnam{nvar+no} = [oxyvars{no,1} '_rev'];
-        h0.fldnam{thisvar} = hnew.fldnam{nvar+no};
-        hnew.fldunt(nvar+no) = h.fldunt(thisvar);
-        dnew.(hnew.fldnam{nvar+no}) = mcoxyhyst_reverse(d.(oxyvars{no,1}), d.time, d.press, castopts.oxyrev.H1{no}, castopts.oxyrev.H2{no}, castopts.oxyrev.H3{no});
-        hnew.comment = [hnew.comment 'reversed oxygen hysteresis\n '];
-        %datastruct = struct('name',[oxyvars{no,1} '_rev'], 'units',hcal.fldunt{thisvar}, 'data',oxy_unhyst);
-        %m_write_variable(otfilestruct, datastruct);
-    end
+    hnew.comment = [hnew.comment '\n reversed oxygen hysteresis'];
     revstring = '_rev'; %if dooxyhyst will apply to _rev variables
 else
-    revstring = ''; %if dooxyhyst will apply to original variables
+    revstring = '';
 end
 
-if castopts.dooxyhyst
-    %calculate the variables with oxygen hysteresis applied
-    if ~iscell(castopts.oxyhyst.H1)
-        castopts.oxyhyst.H1 = repmat({castopts.oxyhyst.H1},nox,1);
-    end
-    if ~iscell(castopts.oxyhyst.H2)
-        castopts.oxyhyst.H2 = repmat({castopts.oxyhyst.H2},nox,1);
-    end
-    if ~iscell(castopts.oxyhyst.H3)
-        castopts.oxyhyst.H3 = repmat({castopts.oxyhyst.H3},nox,1);
-    end
-    for no = 1:nox
-        var0 = [oxyvars{no,1} revstring];
-        thisvar = find(strcmp(var0, h.fldnam));
-        hnew.fldnam{nvar+no} = oxyvars{no,2};
-        h0.fldnam{thisvar} = hnew.fldnam{nvar+no};
-        hnew.fldunt(nvar+no) = h.fldunt(thisvar);
-        dnew.(oxyvars{no,2}) = mcoxyhyst(d.(var0), d.time, d.press, castopts.oxyhyst.H1{no}, castopts.oxyhyst.H2{no}, castopts.oxyhyst.H3{no});
+if co.dooxyhyst
+    for no = 1:length(ovars)
+        on = ['oxyhyst' osns{no}];
+        if ~isfield(co,on)
+            on = 'oxyhyst';
+        end
+        vin = [ovars{no} revstring];
+        vot = ovars{no};
+        if size(co.(on).H3,2)==2
+            co.(on).H3 = interp1(co.(on).H3(:,1),co.(on).H3(:,2),d.press);
+        end
+        dnew.(vot) = mcoxyhyst(d.(vin), d.time, d.press, co.(on).H1, co.(on).H2, co.(on).H3);
+        hnew.fldnam = [hnew.fldnam vot];
+        hnew.fldunt = [hnew.fldunt ounts{no}];
+        hnew.fldserial = [hnew.fldserial osns{no}];
         %record whether a non-default calibration is set, for mstar comment
-        if length(castopts.oxyhyst.H1{no})>1 || length(castopts.oxyhyst.H2{no})>1 || length(castopts.oxyhyst.H3{no})>1
+        if length(co.(on).H1)>1 || length(co.(on).H2)>1 || length(co.(on).H3)>1
             ohtyp(no) = 2;
-        elseif max(abs(castopts.H_0-[castopts.oxyhyst.H1{no} castopts.oxyhyst.H2{no} castopts.oxyhyst.H3{no}]))>0
+        elseif max(abs(co.H_0-[co.(on).H1 co.(on).H2 co.(on).H3]))>0
             ohtyp(no) = 1;
         else
             ohtyp(no) = 0;
@@ -66,14 +58,9 @@ if castopts.dooxyhyst
     ohtyp = max(ohtyp);
     if ohtyp>0
         %and add comments to file
-        hnew.comment = [hnew.comment 'oxygen hysteresis correction different from SBE default applied'];
+        hnew.comment = [hnew.comment '\n oxygen hysteresis correction different from SBE default applied'];
         if ohtyp == 2
             hnew.comment = [hnew.comment ' (depth-varying)'];
         end
     end
-    
 end
-
-%transfer extra attributes like s/n
-h.fldnam = h0.fldnam;
-hnew = keep_hvatts(hnew, h);

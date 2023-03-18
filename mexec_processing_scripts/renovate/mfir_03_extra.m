@@ -24,7 +24,7 @@ if ~exist(m_add_nc(infilef),'file')
         return
     end
 end
-[df,hf] = mloadq(infilef,'upress','scan',' ');
+[df,hf] = mloadq(infilef,'upress','scan','utime',' ');
 
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal.nc']);
 infiled = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2db.nc']); 
@@ -71,35 +71,36 @@ hnew.fldnam = [hnew.fldnam 'std1_temp' 'std1_cond' 'std1_oxygen'];
 hnew.fldunt = [hnew.fldunt 'degC' 'psu' 'umol/kg'];
 hnew.comment = [hnew.comment '\n stdev at bottle stops from psal (1hz) file'];
 
-if 0
 var_copycell = mcvars_list(2);
 if exist(infiled,'file')
     [dn,hd] = mloadq(infiled,'/');
     [var_copycell, var_copystr] = mvars_in_file(var_copycell, infiled);
-end
-    %get down and up T and S on common pressure grid
-iigd = find(~isnan(dn.temp+dn.psal));
-iigu = find(~isnan(up.temp+up.psal));
-[pg,id,iu] = intersect(dn.press(iigd),up.press(iigu));
-dn_psal = dn.psal(iigd(id));
-dn_temp = dn.temp(iigd(id));
-up_psal = up.psal(iigu(iu));
-up_temp = up.temp(iigu(iu));
 
-%call heaveND to find pressure offsets to make filtered dn T,S match up T,S
-dpn = heaveND(dn_psal,dn_temp,up_psal,up_temp,pg,hd.longitude,hd.latitude);
-%and corresponding pressures
-pup = pg + dpn;
+    %get down and up T and S on common pressure grid (from 2 dbar data)
+    iigd = find(~isnan(dn.temp+dn.psal));
+    iigu = find(~isnan(up.temp+up.psal));
+    [pg,id,iu] = intersect(dn.press(iigd),up.press(iigu));
+    if length(pg)<10
+        return
+    end
+    dn_psal = dn.psal(iigd(id));
+    dn_temp = dn.temp(iigd(id));
+    up_psal = up.psal(iigu(iu));
+    up_temp = up.temp(iigu(iu));
 
-%interpolate downcast data from pup to upress
-for vno = 1:length(var_copycell)
-    vmsk = strcmp(var_copycell{vno},hd.fldnam);
-    dnew.(['d' var_copycell{vno}]) = interp1(pup, dn.(var_copycell{vno})(iigd(id)), df.upress);
-    hnew.fldnam = [hnew.fldnam ['d' var_copycell{vno}]];
-    hnew.fldunt = [hnew.fldunt hd.fldunt(vmsk)];
-end
-hnew.comment = [hnew.comment '\n downcast data matched on neutral density (smoothed using heaveND.m)'];
-end
+    %call heaveND to find pressure offsets to make filtered up gamma match dn gamma
+    dpn = heaveND(dn_psal,dn_temp,up_psal,up_temp,pg,hd.longitude,hd.latitude);
 
-%save
-mfsave(otfilef, dnew, hnew, '-addvars');
+    %interpolate downcast data from pg-dpn back to upress
+    for vno = 1:length(var_copycell)
+        vmsk = strcmp(var_copycell{vno},hd.fldnam);
+        dnew.(['d' var_copycell{vno}]) = interp1(pg-dpn, dn.(var_copycell{vno})(iigd(id)), df.upress);
+        hnew.fldnam = [hnew.fldnam ['d' var_copycell{vno}]];
+        hnew.fldunt = [hnew.fldunt hd.fldunt(vmsk)];
+    end
+    dnew.dtime = df.utime; %keep as bottle firing time
+    hnew.comment = [hnew.comment '\n downcast data matched on neutral density (smoothed using heaveND.m)'];
+
+    %save
+    mfsave(otfilef, dnew, hnew, '-addvars');
+end

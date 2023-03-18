@@ -44,7 +44,7 @@ if maxgap>0
             %add to list of good indices, indices at start of (in) too-long
             %gaps; this will put NaNs in interpolation for these gaps
             d = diff(x(iig));
-            iig = sort([iig; iig(d>maxgap)+1]); 
+            iig = unique([iig; iig(d>maxgap)+1]); 
             %now interpolate
             yf(iib,no) = interp1(iig, yf(iig,no), iib);
         end

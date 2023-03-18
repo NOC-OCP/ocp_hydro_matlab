@@ -80,8 +80,8 @@ ds.botoxy_flag = d.botoxya_flag(iio);
 if use_oxy_repl>0
     nav = ones(size(ds.sampnum));
 
-    %for sam file, average 'a' and 'b' samples if they have the same flag
-    av = find(ds.botoxy_flag==d.botoxyb_flag(iio) & ~isnan(botoxyb));
+    %for sam file, average 'a' and 'b' samples if they have the same good flag
+    av = find(ds.botoxy_flag==2 & d.botoxyb_flag(iio)==2 & ~isnan(botoxyb));
     ds.botoxy(av) = ds.botoxy(av) + botoxyb(av);
     nav(av) = nav(av)+1;
     ds.botoxy_flag(av) = 6; %mean of replicates
@@ -92,7 +92,7 @@ if use_oxy_repl>0
     
     if use_oxy_repl>1
         %add 'c'
-        av = find(ds.botoxy_flag==d.botoxyc_flag(iio) & ~isnan(botoxyc));
+        av = find(ds.botoxy_flag==2 & d.botoxyc_flag(iio)==2 & ~isnan(botoxyc));
         ds.botoxy(av) = ds.botoxy(av) + botoxyc(av);
         nav(av) = nav(av)+1;
         ds.botoxy_flag(av) = 6; %mean of replicates

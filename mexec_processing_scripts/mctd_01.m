@@ -24,7 +24,7 @@ opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
-redoctm = 0; opt1 = mfilename; opt2 = 'redoctm'; get_cropt
+redoctm = 0; opt1 = 'ctd_proc'; opt2 = 'redoctm'; get_cropt
 
 root_ctd = mgetdir('M_CTD');
 dataname = ['ctd_' mcruise '_' stn_string];
@@ -41,7 +41,7 @@ else
     cnvfile = sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal);
 end
 cnvfile = fullfile(mgetdir('M_CTD_CNV'),cnvfile);
-opt1 = mfilename; opt2 = 'cnvfilename'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
 if ~exist(cnvfile,'file')
     warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
     pause
@@ -114,7 +114,7 @@ ctdvarmap = {'prDM','press','dbar'
     'par','par','umol photons/m^2/sec'
     'par_slash_sat_slash_log','par','umol photons/m^2/sec'
     'par1','par_downlook','umol photons/m^2/sec'};
-opt1 = mfilename; opt2 = 'ctdvars'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctdvars'; get_cropt
 names_new = h.fldnam; 
 for no = 1:length(h.fldnam)
     iis = find(strcmp(h.fldnam{no},ctdvarmap(:,1)));
@@ -154,7 +154,7 @@ for no = 1:length(h.fldnam)
 end
 
 % create NaN variables that are in mcvars_list but not present for this station
-absentvars = {}; opt1 = mfilename; opt2 = 'absentvars'; get_cropt
+absentvars = {}; opt1 = 'ctd_proc'; opt2 = 'absentvars'; get_cropt
 if ~isempty(absentvars)
     MEXEC_A.MARGS_IN = {otfile; 'y'};
     for kabs = 1:length(absentvars)
@@ -171,7 +171,7 @@ end
 % in special cases, read extra/new variables from a different set of files
 % (e.g. if a variable was mistakenly not exported in initial conversion to
 % .cnv, and has been exported on its own later); merge on scan
-extracnv = {}; extravars = {}; opt1 = mfilename; opt2 = 'extracnv'; get_cropt
+extracnv = {}; extravars = {}; opt1 = 'ctd_proc'; opt2 = 'extracnv'; get_cropt
 if ~isempty(extracnv) && ~isempty(extravars)
     mctd_extra_cnv
 end
@@ -180,7 +180,7 @@ end
 % files
 otfile0 = otfile;
 otfiles = {otfile};
-opt1 = mfilename; opt2 = 'cast_split'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'cast_split'; get_cropt
 if length(otfiles)>1
     [d,h] = mload(otfile0,'/');
     t = struct2table(d);

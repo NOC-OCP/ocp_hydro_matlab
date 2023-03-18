@@ -3,7 +3,7 @@ testcasts = [3 4 7 11:12]; %***dips too short to process?
 ticasts = [3 4 7 11:24 31:32 36 40 45:47 50 54 57 59 61 63 68 76 161:174]; %Ti frame
 racasts = [37 38 39 41 setdiff(48:65,ticasts)]; %for Radium
 shortcasts = [3 4 7 11 12 13 37 38 39 41 48 51:53 67 175 178 180]; %no altimeter bottom depth / no LADCP BT
-shallowcasts = [3 4 7 11:12 171]; %too shallow to process ladcp
+shallowcasts = [3 4 7 10 11:13 77 171]; %too shallow to process ladcp, or (cast 10) missing too much CTD
 
 switch opt1
 
@@ -31,16 +31,16 @@ switch opt1
             case 'oxy_align'
                 oxy_end = 1;
             case 'nnisk'
-                if ismember(stnlocal,[12 45 64 67 70 72:74 77 79 80 82 83 85:156 157:160 162:166 169:170])
+                if ismember(stnlocal,[12 45 64 67 70 72:74 77 79 80 82 83 85:160 162:166 169:174])
                     nnisk = 0;
-                elseif ismember(stnlocal,[13:21 23 42:44 46 169])
+                elseif ismember(stnlocal,[13:21 23 42:44 46])
                     nnisk = 12;
                 end
             case 'o_choice'
                 stns_alternate_o = [1 2 5 6 8 9];
         end
 
-    case 'mctd_01'
+    case 'ctd_proc'
         switch opt2
             case 'redoctm'
                 redoctm = 1;
@@ -57,10 +57,6 @@ switch opt1
                     otfiles = {otfile; fullfile(mgetdir('ctd'),sprintf('ctd_%s_%03d_raw_noctm.nc',mcruise,4))};
                     cast_scan_ranges = [1 20276; 20277 47077];
                 end
-        end
-
-    case 'mctd_02'
-        switch opt2
             case 'rawedit_auto'
                 if ismember(stnlocal,[10 31 42 43 44 48 49 51:53 55:56 58 64])
                     %large spikes: SS cable problem (10) and cable and/or SBE9 problem(s)
@@ -71,15 +67,15 @@ switch opt1
                     co.badtemp2.temp2 = b; co.badtemp2.cond2 = b; co.badtemp2.oxygen_sbe2 = b;
                 elseif ismember(stnlocal,ticasts) && stnlocal>23
                     %sensor 2 is bad
-                    co.badtemp2.temp2 = [-inf -2; 40 inf; NaN NaN]; 
+                    co.badtemp2.temp2 = [-inf -2; 40 inf; NaN NaN];
                     co.badtemp2.cond2 = co.badtemp2.temp2;
                     co.badtemp2.oxygen_sbe2 = co.badtemp2.temp2;
                 end
-                if ismember(stnlocal,[31 42 43 64]) 
+                if ismember(stnlocal,[31 42 43 64])
                     co.rangelim.cond1 = [27 34];
                     co.rangelim.cond2 = [27 34];
                 end
-                if ~ismember(stnlocal,ticasts) && stnlocal<=35 
+                if ~ismember(stnlocal,ticasts) && stnlocal<=35
                     %bad coefficients for transmittance/attenuation on SS rosette
                     co.rangelim.transmittance = [50 110];
                     co.rangelim.attenuation = [-0.5 5];
@@ -101,24 +97,64 @@ switch opt1
                     co.badscan.oxygen_sbe2 = [-inf inf];
                 end
             case 'raw_corrs'
-%                 if ismember(stnlocal,ticasts) && stnlocal>23
-%                     %recalculate oxygen2 using temp1 and cond1 
-%                     %*** for this to work, must smooth dV/dt***
-%                     co.dooxy2V = 1; 
-%                     %and coefficients corresponding to oxygen sensor 2 from
-%                     %xmlcon (should parse from header in future***)
-%                     co.oxy2Vcoefs.Soc = 5.7890e-1;
-%                     co.oxy2Vcoefs.Voff = -0.5201;
-%                     co.oxy2Vcoefs.A = -4.1247e-3;
-%                     co.oxy2Vcoefs.B = 1.5900e-4;
-%                     co.oxy2Vcoefs.C = -2.8246e-6;
-%                     co.oxy2Vcoefs.D0 = 2.5826e+0;
-%                     co.oxy2Vcoefs.D1 = 1.92634e-4;
-%                     co.oxy2Vcoefs.D2 = -4.64803e-2;
-%                     co.oxy2Vcoefs.E = 3.6000e-2;
-%                     co.oxy2Vcoefs.Tau20 = 1.3200;
-%                 end
-        end
+                co.oxyhyst0620.H1 = -.028; co.oxyhyst0620.H2 = 4000;
+                co.oxyhyst0620.H3 = [-10 800; 2000 800; 2001 2400; 6000 2400];
+                co.oxyhyst2291.H1 = -.037; co.oxyhyst2291.H2 = 5000;
+                co.oxyhyst2291.H3 = [-10 500; 1500 500; 1501 1200; 3000 1200; 3001 1500; 6000 1500];
+                co.oxyhyst4250.H1 = -.033; co.oxyhyst4250.H2 = 5000;
+                co.oxyhyst4250.H3 = [-10 600; 2500 600; 2501 1450; 6000 1450];
+                co.oxyhyst4252.H1 = -.025; co.oxyhyst4252.H2 = 4200;
+                co.oxyhyst4252.H3 = [-10 800; 3000 800; 3001 1450; 6000 1450];
+                %                 if ismember(stnlocal,ticasts) && stnlocal>23
+                %                     %recalculate oxygen2 using temp1 and cond1
+                %                     %*** for this to work, must smooth dV/dt***
+                %                     co.dooxy2V = 1;
+                %                     %and coefficients corresponding to oxygen sensor 2 from
+                %                     %xmlcon (should parse from header in future***)
+                %                     co.oxy2Vcoefs.Soc = 5.7890e-1;
+                %                     co.oxy2Vcoefs.Voff = -0.5201;
+                %                     co.oxy2Vcoefs.A = -4.1247e-3;
+                %                     co.oxy2Vcoefs.B = 1.5900e-4;
+                %                     co.oxy2Vcoefs.C = -2.8246e-6;
+                %                     co.oxy2Vcoefs.D0 = 2.5826e+0;
+                %                     co.oxy2Vcoefs.D1 = 1.92634e-4;
+                %                     co.oxy2Vcoefs.D2 = -4.64803e-2;
+                %                     co.oxy2Vcoefs.E = 3.6000e-2;
+                %                     co.oxy2Vcoefs.Tau20 = 1.3200;
+                %                 end
+            case 'ctd_cals'
+                co.docal.temp = 1;
+                co.docal.cond = 1;
+                co.docal.oxygen = 1;
+                %stainless
+                co.calstr.temp.sn2191.sd025 = 'dcal.temp = d0.temp + interp1([0 6000],[-1.1e-3 -2.3e-3],d0.press) - 3e-4;';
+                co.calstr.temp.sn2191.msg = 'temp s/n 2191 calibrated based on comparison with 489/960 SBE35 measurements';
+                co.calstr.temp.sn5649.sd025 = 'dcal.temp = d0.temp + interp1([0 6000],[0.2e-3 -0.9e-3],d0.press) - 2e-4;';
+                co.calstr.temp.sn5649.msg = 'temp s/n 5649 calibrated based on comparison with 489/960 SBE35 measurements';
+                co.calstr.cond.sn3248.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.5e-3 1e-3],d0.press)/35);';
+                co.calstr.cond.sn3248.msg = 'cond s/n 3248 calibrated based on comparison with 41/51 bottle samples';
+                co.calstr.cond.sn3488.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.2e-3 -4.4e-3],d0.press)/35);';
+                co.calstr.cond.sn3488.msg = 'cond s/n 3488 calibrated based on comparison with 122/189 bottle samples';
+                co.calstr.cond.sn3491.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 4000 6000],[-4e-3 -5e-3 -3e-3],d0.press)/35);';
+                co.calstr.cond.sn3491.msg = 'cond s/n 3491 calibrated based on comparison with 188/269 bottle samples';
+                %oxygen.sn242 only 4 comparison points
+                co.calstr.oxygen.sn0620.sd025 = 'dcal.oxygen = d0.oxygen.*(interp1([0 1000 6000],[0.875 0.887 0.90],d0.press) + interp1([30 70],[-8e-3 8e-3],d0.dday));';
+                co.calstr.oxygen.sn0620.msg = 'oxygen s/n 620 calibrated based on comparison between 97/140 bottle samples and gamma_n-matched downcast';
+                co.calstr.oxygen.sn2291.sd025 = 'dcal.oxygen = d0.oxygen.*(1.22 + interp1([0 500 4000 6000],[0e-2 0.5e-2 2e-2 1e-2],d0.press));';
+                co.calstr.oxygen.sn2291.msg = 'oxygen s/n 2291 calibrated based on comparison with 95/145 bottle samples and gamma_n-matched downcast';
+                %Ti: no SBE35 on Ti frame, so no cal for 6572 (temp1) or 6685, 6674 (temp2)
+                co.calstr.cond.sn4876.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 2500 6000],[2e-3 -3e-3 -3e-3],d0.press)/35 + interp1([-2 9],[1.5e-3 -3e-3],d0.temp)/35);';
+                co.calstr.cond.sn4876.msg = 'cond s/n 4876 calibrated based on comparison with 140/184 bottle samples';
+                co.calstr.cond.sn4918.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[3e-3 -4e-3],d0.press)/35);';
+                co.calstr.cond.sn4918.msg = 'cond s/n 3248 calibrated based on comparison with 70/90 bottle samples';
+                %oxygen.sn4244 no good cal data
+                co.calstr.oxygen.sn4250.sd025 = 'dcal.oxygen = d0.oxygen.*(interp1([0 6000],[1.03 1.07],d0.press));';
+                co.calstr.oxygen.sn4250.msg = 'oxygen s/n 4250 calibrated based on comparison with 39/61 bottle samples and gamma_n-matched downcast';
+                co.calstr.oxygen.sn4252.sd025 = 'dcal.oxygen = d0.oxygen.*(interp1([-2 3 20],[1.085 1.055 1.03],d0.temp)) ;' ;
+                %co.calstr.oxygen.sn4252.sd025 = 'dcal.oxygen = d0.oxygen.*(interp1([0 6000],[1.05 1.085],d0.press));';
+                co.calstr.oxygen.sn4252.msg = 'oxygen s/n 4252 calibrated based on comparison with 53/89 bottle samples and gamma_n-matched downcast';
+                %co.calstr.oxygen.sn4252.msg = 'oxygen s/n 4252 calibrated based on comparison between 24/77 bottle samples and gamma_n-matched downcast';
+end
 
     case 'mfir_01'
         switch opt2
@@ -255,7 +291,7 @@ switch opt1
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {'oxygen_calculation_newflasks_sd025.xlsx'};
+                ofiles = {'oxygen_calculation_newflasks_sd025_4.xlsx'};
                 hcpat = {'Niskin';'Bottle'};
                 chrows = 1:2;
                 chunits = 3;
@@ -343,7 +379,7 @@ switch opt1
                 ii = find(ds_sal.sampnum==999055):find(ds_sal.sampnum==999058);
                 ds_sal.flag(ii) = 3;
                 %outliers?
-                ds_sal.flag(ismember(ds_sal.sampnum,[1002 1902 1904 3515 3516 6618 6619 6622])) = 3;
+                ds_sal.flag(ismember(ds_sal.sampnum,[1002 1902 1904 2122 3515 3516 4713 6618 6619 6622])) = 3;
         end
 
     case 'botnut'
@@ -368,11 +404,11 @@ switch opt1
             case 'nut_param_flag'
                 %outliers in individual parameters
                 m = ismember(dnew.sampnum,[1504 1706 1816 1902 1904 2503 2603 2903 2917 2918 6216]);
-                dnew.silc_flag(m) = 3;
+                dnew.silca_flag(m) = 3;
                 m = ismember(dnew.sampnum,[2221 2421 2622 2819 2821 3221 4201 6619 6622 7523 8413 16123 16124 16716 16717]);
-                dnew.phos_flag(m) = 3;
+                dnew.phosa_flag(m) = 3; dnew.phosb_flag(2421) = 3;
                 m = ismember(dnew.sampnum,[2509 2518 3308 3312 3314 3315 3318 3319 3321 6201 5901 5902 5904 16103 16812 16823 16824]);
-                dnew.totnit_flag(m) = 3; dnew.nitrite_flag(m) = 3; %***
+                dnew.totnita_flag(m) = 3; dnew.nitritea_flag(m) = 3; %***
         end
 
     case 'best_station_depths'
@@ -420,9 +456,9 @@ switch opt1
 %                    cfg.p.timoff =  0.02083 ; %days
                 end
             case 'exch'
-                n0 = 95;
-                n12 = 14;
-                n24 = 167-1-n0-n12;
+                n0 = 14;
+                n12 = 100;
+                n24 = 181-1-n0-n12;
                 expocode = '74JC20230131';
                 sect_id = 'SR1b';
                 submitter = 'OCPNOCYLF'; %group institution person
@@ -437,21 +473,21 @@ switch opt1
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 12-place rosette; %d stations with 24-place rosette; %d stations without bottles',n12,n24,n0);...
-                        '#CTD: Who - Y. Firing; Status - uncalibrated.';...
-                        %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        '#CTD: Who - Y. Firing; Status - final.';...
+                        '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : COR';...
-                        %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounding'...
+                        '# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
                         }];
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 12-place rosette; %2d stations with 24-place rosette',n12,n24);...
-                        '#CTD: Who - Y. Firing (NOC); Status - uncalibrated';...
+                        '#CTD: Who - Y. Firing (NOC); Status - final';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
-                        %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
-                        %'# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom'...
-                        '#Salinity: Who - Y. Firing; Status - preliminary; SSW batch P165.';...
-                        '#Oxygen: Who - I Seguro (UEA); Status - preliminary.';...
+                        '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        '# DEPTH_TYPE   : rosette depth from CTDPRS + LADCP or CTD altimeter range to bottom';...
+                        '#Salinity: Who - Y. Firing; Status - final; SSW batch P165.';...
+                        '#Oxygen: Who - I Seguro (UEA); Status - final.';...
                         '#Nutrients: Who - M. Woodward (PML) and E. Mawji (NOC); Status - preliminary';...
                         '#Carbon: Who - D. Pickup and D. Bakker (UEA); Status - not yet analysed '; ...
                         '#Carbon isotopes: Who - X. Shi and Y. Wu (Ximeng University); Status - not yet analysed'; ...
@@ -491,46 +527,20 @@ switch opt1
             cfg.p.time_start_force = round(datevec(dd.dnum_start-2/60/24));
             cfg.p.time_end_force = round(datevec(dd.dnum_end+2/60/24));
         end
+        minps = [15 11; 17 19; 19 14; 23 12; 42 14; 45 18; 65 10];
+        if ismember(stnlocal,minps(:,1))
+            cfg.p.cut = minps(minps(:,1)==stnlocal,2)+1;
+        end
 
-    case 'uway_avedits'
+    case 'uway_proc'
         switch opt2
-            case 'tsg'
+            case 'tsg_avedits'
                 minflow = 400;
 %         check_tsg = 1;
-        end
-    
-    case 'calibration'
-        switch opt2
-            case 'ctd_cals'
-                co.docal.temp = 1;
-                co.docal.cond = 1;
-                co.docal.oxygen = 0;
-                %stainless
-                co.calstr.temp.sn2191.sd025 = 'dcal.temp = d0.temp + interp1([0 6000],[-1.1e-3 -2.3e-3],d0.press);';
-                co.calstr.temp.sn2191.msg = 'temp s/n 2191 calibrated based on comparison with 597/1023 SBE35 measurements';
-                co.calstr.temp.sn5649.sd025 = 'dcal.temp = d0.temp + interp1([0 6000],[0.2e-3 -0.9e-3],d0.press);';
-                co.calstr.temp.sn5649.msg = 'temp s/n 5649 calibrated based on comparison with 597/1023 SBE35 measurements';
-                co.calstr.cond.sn3248.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.5e-3 1e-3],d0.press)/35);'; %***
-                co.calstr.cond.sn3248.msg = 'cond s/n 3248 calibrated based on comparison with 32/51 bottle samples'; 
-                co.calstr.cond.sn3488.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.5e-3 -3.5e-3],d0.press)/35);';
-                co.calstr.cond.sn3488.msg = 'cond s/n 3488 calibrated based on comparison with 123/189 bottle samples'; 
-                co.calstr.cond.sn3491.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[-4e-3 -3.5e-3],d0.press)/35);';
-                co.calstr.cond.sn3491.msg = 'cond s/n 3491 calibrated based on comparison with 183/269 bottle samples'; 
-                co.calstr.oxygen.sn2291.sd025 = 'dcal.oxygen = d0.oxygen*1.2;';%(d0.oxygen - 6.1865) / 0.80215 ;' ;
-                co.calstr.oxygen.sn2291.msg = 'oxygen s/n 2291 calibrated based on comparison with 105/170 bottle samples'; 
-                co.calstr.oxygen.sn620.sd025 = 'dcal.oxygen = d0.oxygen*0.89;';%(d0.oxygen - (-3.9425)) / 1.1566 ;' ;
-                co.calstr.oxygen.sn620.msg = 'oxygen s/n 620 calibrated based on comparison with 97/166 bottle samples'; 
-                %co.calstr.oxygen.sn242 only 4 comparison points
-                %Ti: no SBE35 on Ti frame, so no cal for 6572 (temp1) or 6685, 6674 (temp2)
-                co.calstr.cond.sn4876.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 2000 6000],[2.5e-3 -2e-3 -4e-3],d0.press)/35);';
-                co.calstr.cond.sn4876.msg = 'cond s/n 4876 calibrated based on comparison with 127/186 bottle samples'; 
-                co.calstr.cond.sn4918.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 2500 6000],[4e-3 0 -1e-3],d0.press)/35);';
-                co.calstr.cond.sn4918.msg = 'cond s/n 3248 calibrated based on comparison with 50/91 bottle samples';
-                %co.calstr.oxygen.sn4244 no good cal data
-                co.calstr.oxygen.sn4250.sd025 = 'dcal.oxygen = d0.oxygen*0.9;';%(d0.oxygen - (-3.5495)) / 0.98412 ;' ;
-                co.calstr.oxygen.sn4250.msg = 'oxygen s/n 4250 calibrated based on comparison with 16/73 bottle samples'; 
-                co.calstr.oxygen.sn4252.sd025 = 'dcal.oxygen = d0.oxygen*1.04;';%(d0.oxygen - (-0.10704)) / 0.95246 ;' ;
-                co.calstr.oxygen.sn4252.msg = 'oxygen s/n 4252 calibrated based on comparison with 26/73 bottle samples'; %***why no more points than for 4250?
+            case 'tsg_cals'
+                clear uo
+                uo.docal.salinity = 1;
+                uo.calstr.salinity.pl.sd025 = 'dcal.salinity = d0.salinity - (-8.1657e-4*d0.time/86400 + 0.0178);';
             case 'sensor_unit_conversions'
                 if contains(abbrev,'sonic')
 %                     sensors_to_cal={'fluo';'trans';'parport';'tirport';'parstarboard';'tirstarboard'};
@@ -544,7 +554,6 @@ switch opt1
 %                     %                         % the surfmet instrument box is outputting in V*1e-5 for PAR/TIR already
 %                     sensorunits={'ug/l';'percent';'W/m2';'W/m2';'W/m2';'W/m2'};
                 end
-                %case 'tsg_cals'
         end
 
     case 'msam_ashore_flag'
