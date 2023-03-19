@@ -59,7 +59,7 @@ if ~isfield(mgrid,'zpressgrid') || isempty(mgrid.zpressgrid) %find defaults by s
         case {'osnapwupper' 'labupper' 'arcupper' 'osnapeupper' 'linebupper' 'linecupper' 'eelupper' 'cumb'}
             mgrid.zpressgrid = zpressgrid_shal(zpressgrid_shal<=500);
         otherwise
-            mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=4000);
+            mgrid.zpressgrid = zpressgrid_deep;
     end
 else
     if size(mgrid.zpressgrid,2)>size(mgrid.zpressgrid,1)
@@ -101,8 +101,8 @@ else
             cdata.lat(1,kstn) = m_nanmean(d.latitude);
             cdata.lon(1,kstn) = m_nanmean(d.longitude);
         else
-            cdata.lon(1,kstn) = h.latitude;
-            cdata.lat(1,kstn) = h.longitude;
+            cdata.lat(1,kstn) = h.latitude;
+            cdata.lon(1,kstn) = h.longitude;
         end
         [~,ii,iic] = intersect(d.press,cdata.press(:,1),'stable');
         for vno = 1:length(ctd_regridlist)

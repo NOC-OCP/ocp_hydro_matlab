@@ -61,7 +61,7 @@ vars = {
     };
 snames = {'nsal'};
 sgrps = {{'botpsal'}}; % salt
-opt1 = mfilename; opt2 = 'sum_varsams'; get_cropt %set vars, snames, sgrps
+opt1 = 'outputs'; opt2 = 'summary'; get_cropt %set vars, snames, sgrps
 for no = 1:length(snames)
     if contains(snames{no},'_shore')
         vars = [vars; {snames{no} 'number' 0 snames{no}(1:end-6) '  %2d'}];

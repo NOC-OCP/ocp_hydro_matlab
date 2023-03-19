@@ -90,6 +90,7 @@ varnames.svelvar = {'sndspeed' 'soundvelocity' 'soundvelocity_raw'};
 varnames.flowvar = {'flow' 'flow1' 'flowrate'};
 varnames.rwindsvar = {'windspeed_raw' 'relwind_spd_raw' 'windspeed'};
 varnames.rwinddvar = {'winddirection_raw' 'relwind_dirship_raw' 'winddirection'};
+varnames.rwindvvar = {'xcomponent' 'ycomponent' 'zcomponent'}; %***
 varnames.twindsvar = {'windspeed' 'wind_speed_ms' 'truwind_spd'};
 varnames.twinddvar = {'direct' 'wind_dir' 'truwind_dir' 'winddirection'};
 varnames.twindvvar = {'truwind_e' 'truwind_n' 'truwind_u' 'truwind_v'};

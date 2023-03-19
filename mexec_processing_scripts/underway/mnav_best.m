@@ -9,6 +9,12 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 root_pos = fullfile(MEXEC_G.mexec_data_root,'nav','pos');
 root_hed = fullfile(MEXEC_G.mexec_data_root,'nav','hed');
+if exist('default_attstream','var')
+    doatt = 1;
+    root_att = fullfile(MEXEC_G.mexec_data_root,'nav','att');
+else
+    doatt = 0;
+end
 infilen = fullfile(root_pos,[default_navstream '_' mcruise '_all_edt.nc']);
 if ~exist(infilen,'file')
     infilen = fullfile(root_pos,[default_navstream '_' mcruise '_all_raw.nc']);
@@ -16,6 +22,15 @@ end
 infileh = fullfile(root_hed,[default_hedstream '_' mcruise '_all_edt.nc']); %easting and northing only in edt file
 if ~exist(m_add_nc(infilen),'file') || ~exist(m_add_nc(infileh),'file')
     error('at least one of best nav and heading stream %s and %s files not found',default_navstream,default_hedstream)
+end
+if doatt
+    infilea = fullfile(root_att,[default_attstream '_' mcruise '_all_edt.nc']);
+    if ~exist(infilea,'file')
+        infilea = fullfile(root_att,[default_attstream '_' mcruise '_all_edt.nc']);
+    end
+end
+if ~exist(infilea,'file')
+    doatt = 0;
 end
 otfile = fullfile(MEXEC_G.mexec_data_root,'nav',['bestnav_' mcruise]);
 
@@ -62,7 +77,21 @@ opts.bin_partial = 0;
 dg = grid_profile(d, 'time', tg, 'medbin', opts);
 dg.time = .5*(tg(1:end-1)+tg(2:end))';
 h.comment = [h.comment '\n position median over bins of width ' num2str(tave_period)];
+h.fldinst = repmat({default_navstream},size(h.fldnam));
 
+%%%%% average attitude to same times (independently) and merge %%%%%
+if doatt
+    [da, ha] = mload(infilea,'/');
+    dga = grid_profile(da, 'time', tg, 'medbin', opts);
+    vars = setdiff(h.fldnam,'time');
+    for vno = 1:length(vars)
+        dg.(vars{vno}) = dga.(vars{vno});
+        h.fldnam = [h.fldnam vars{vno}];
+        h.fldunt = [h.fldunt ha.fldunt(strcmp(vars{vno},h.fldnam))];
+        h.fldinst = [h.fldinst repmat({default_attstream},1,length(vars))];
+    end
+    h.comment = [h.comment '\n attitude from ' default_attstream ' median over bins of width ' num2str(tave_period)];
+end
 
 %%%%% calculate speed, course, distrun from the 30-s averages %%%%%
 latvar = munderway_varname('latvar', h.fldnam, 1 ,'s');
@@ -78,6 +107,7 @@ dist(isnan(dist)) = 0;
 dg.distrun = [0; cumsum(dist)];
 h.fldnam = [h.fldnam 'smg' 'cmg' 'distrun'];
 h.fldunt = [h.fldunt 'm/s' 'degrees' 'km'];
+h.fldinst = [h.fldinst repmat({default_navstream},1,3)];
 h.comment = [h. comment '\n speed, course over ground, and distance run calculated'];
 
 
@@ -113,6 +143,7 @@ h.comment = [h.comment '\n heading from vector median over bins of width ' num2s
 dg.(headvar) = interp1(dgh.(timvar), dgh.(headvar), dg.time);
 h.fldnam = [h.fldnam headvar];
 h.fldunt = [h.fldunt 'degrees']; %***reference/coord sys?
+h.fldinst = [h.fldinst default_hedstream];
 h.comment = [h.comment '\n vector-averaged heading interpolated onto position times'];
 
 

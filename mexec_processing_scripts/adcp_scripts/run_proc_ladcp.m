@@ -23,8 +23,6 @@ else
     cfg.p.btrk_mode = 2;
     %cfg.p.btrk_ts = 30;
 end
-cfg.p.ambiguity = 3.3;
-cfg.p.vlim = 3.3; %change from LDEO_IX default of 2.5***
 cfg.p.magdec_source = 1;
 %cfg.p.edit_mask_dn_bins = 1;
 %cfg.p.edit_mask_up_bins = 1;

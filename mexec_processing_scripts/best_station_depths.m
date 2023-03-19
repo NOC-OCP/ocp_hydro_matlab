@@ -34,7 +34,7 @@ if nargin>1
 else
     depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
 end
-opt1 = mfilename; opt2 = 'depth_source'; get_cropt
+opt1 = 'castpars'; opt2 = 'bestdeps'; get_cropt
 
 if ~iscell(depth_source)
     depth_source = {depth_source};
@@ -60,7 +60,6 @@ end
 %finally look to cruise options for any changes
 replacedeps = []; stnmiss = []; 
 xducer_offset = 0; iscor = 0;
-opt1 = mfilename; opt2 = 'bestdeps'; get_cropt
 if ~isempty(stnmiss)
     bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
 end

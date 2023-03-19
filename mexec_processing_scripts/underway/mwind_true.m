@@ -33,7 +33,7 @@ for no = 1:length(wfiles)
     if ~exist(infilew,'file')
         infilew = infile;
     end
-    otfile = [wpre '_' mcruise '_true.nc'];
+    otfile = [wpre '_true.nc'];
 
     clear dnew hnew
 
@@ -44,7 +44,22 @@ for no = 1:length(wfiles)
     ws = munderway_varname('rwindsvar',hw.fldnam,1,'s');
     wd = munderway_varname('rwinddvar',hw.fldnam,1,'s');
     if isempty(ws) || isempty(wd)
-        continue
+        if sum(strcmp('xcomponent',hw.fldnam)) && sum(strcmp('ycomponent',hw.fldnam))
+            %calculate relative speed and direction (0 from fore, 90 from
+            %stbd) from relative u and v*** are xcomponent etc from or
+            %to?***
+            if strcmp('m/s',hw.fldunt(strcmp('xcomponent',hw.fldnam)))
+                sc = 1;
+            elseif strcmp('cm/s',hw.fldunt(strcmp('xcomponent',hw.fldnam)))
+                sc = 0.01;
+            end
+            uv = complex(dw.xcomponent*sc,dw.ycomponent*sc);
+            ws = 'windspeed'; wd = 'winddirection';
+            dw.(ws) = abs(uv); dw.(wd) = -90+(angle(uv)*180/pi);
+            hw.fldnam = [hw.fldnam ws wd]; hw.fldunt = [hw.fldunt 'm/s' 'degrees'];
+        else
+            continue
+        end
     end
 
     %nav times in time coordinate of (this) dw
