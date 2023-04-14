@@ -57,7 +57,13 @@ scan = scan(m);
 position = position(m); 
 niskin = niskin(m); 
 niskin_flag = niskin_flag(m);
+clear m ia ib
 opt1 = mfilename; opt2 = 'botflags'; get_cropt %change flags here
+%check that possible bad code in opt file hasn't added dimensions
+if size(niskin)==size(niskin_flag)
+else
+    error('niskin and niskin_flag sizes do not match; check opt_%s',mcruise)
+end
 
 %--------------------------------
 comment = ['input data from ' blinfile];

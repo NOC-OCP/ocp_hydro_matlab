@@ -181,7 +181,7 @@ if check_sal
     bads = gui_editpoints(d,'sampnum','edfilepat',edfile,'markers',markers,'lines',lines,'xgroups',iis_all);
     clear d
 end
-if ~isempty(bads) %new edits to apply
+if exist('bads','var') && ~isempty(bads) %new edits to apply
     [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
 end
 %recalculate mean

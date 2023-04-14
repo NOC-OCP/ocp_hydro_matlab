@@ -181,14 +181,14 @@ switch opt1
                     case 2 % CTD number
                         niskin_flag(ismember(position,[2 11 16])) = 4 ;
                     case 6
-                        niskin_flag(ismember(position, [2 8])) = 3;
+                        niskin_flag(ismember(position, 2)) = 3;
                         niskin_flag(position==21) = 4 ;
                     case 8
                         niskin_flag(ismember(position,[2 14])) = 3 ;
                         niskin_flag(position==21) = 4 ;
                     case 9
                         niskin_flag(ismember(position,[2])) = 3 ; %23: cable stuck in tap
-                        niskin_flag(position==[21 23]) = 4 ;
+                        niskin_flag(ismember(position,[21 23])) = 4 ;
                     case 10
                         niskin_flag(position==2) = 4 ; %from sample data, looks like it might have closed shallower
                     case 19
@@ -207,8 +207,6 @@ switch opt1
                         niskin_flag(~ismember(position,[13 23])) = 3 ; % top valve open/no valve
                     case 28
                         niskin_flag(position==2) = 3; %bad nuts, hard to see as misfire, probably leak
-                    case 32
-                        niskin_flag(position==2) = 3 ;
                     case 35
                         niskin_flag(ismember(position,[1 2])) = 3 ; % 'thin stream on opening', silc suspicious
                         niskin_flag(position==21) = 3 ; %'bottom seepage'
@@ -226,7 +224,7 @@ switch opt1
                     case 48
                         niskin_flag(ismember(position,[22])) = 4 ; % did not fire
                     case 51
-                        niskin_flag(ismember(position,[8 21])) = 3 ;
+                        niskin_flag(ismember(position,[8])) = 3 ;
                     case 53
                         niskin_flag(position==21) = 3 ;
                     case 54
@@ -234,18 +232,17 @@ switch opt1
                     case 57
                         niskin_flag(ismember(position,[13 22 23])) = 3 ; % open at the top
                     case 60
-                        niskin_flag(ismember(position,[6 12])) = 3 ;
+                        niskin_flag(ismember(position,[6])) = 3 ;
                     case 75 
                         niskin_flag(position==1) = 3;
                     case 78 
                         niskin_flag(position==21) = 3 ;
                     case 81
-                        niskin_flag(ismember(position,[21 23 24])) = 3 ;
+                        niskin_flag(ismember(position,[21])) = 3 ;
                     case 176
                         niskin_flag(ismember(position,[21])) = 3 ;
                     case 179
                         niskin_flag(position==8) = 3; %leak: water flowing
-                    case 181
                 end
         end
 
@@ -376,21 +373,19 @@ switch opt1
                     s = str2double(a(ii(1)+1:ii(2)-1))*100 + str2double(a(ii(2)+1:ii(3)-1));
                     ds_nut.sampnum(no) = s;
                 end
-                m = strncmpi('suspect',ds_nut.comment,7);
-                ds_nut.flag(m) = 3;
+                %don't use comment field as it may not refer to all
+                %m = strncmpi('suspect',ds_nut.comment,7);
+                %ds_nut.flag(m) = 3;
                 %outliers in 2 or 3 parameters
-                m = ismember(ds_nut.sampnum,[904 1520 2519 2915 2916 4018 4019 4020 4021]);
-                ds_nut.flag(m) = 3;
-                %niskins at same depths different
-                m = ismember(ds_nut.sampnum,[16701 16702 16704 16706 16708 16709]);
+                m = ismember(ds_nut.sampnum,[2509 4018 4019 6622 7523]);
                 ds_nut.flag(m) = 3;
             case 'nut_param_flag'
                 %outliers in individual parameters
-                m = ismember(dnew.sampnum,[1504 1706 1816 1902 1904 2503 2603 2903 2917 2918 6216]);
-                dnew.silca_flag(m) = 3;
-                m = ismember(dnew.sampnum,[2221 2421 2622 2819 2821 3221 4201 6619 6622 7523 8413 16123 16124 16716 16717]);
+                m = ismember(dnew.sampnum,[1902 1904]);
+                dnew.silca_flag(m) = 4; %major outliers from historical
+                m = ismember(dnew.sampnum,[2622]);
                 dnew.phosa_flag(m) = 3; dnew.phosb_flag(2421) = 3;
-                m = ismember(dnew.sampnum,[2509 2518 3308 3312 3314 3315 3318 3319 3321 6201 5901 5902 5904 16103 16812 16823 16824]);
+                m = ismember(dnew.sampnum,[5901 5902 5904 16812 16823 16824]);
                 dnew.totnita_flag(m) = 3; dnew.nitritea_flag(m) = 3; 
         end
 
@@ -424,7 +419,7 @@ switch opt1
                 n0 = 14;
                 n12 = 100;
                 n24 = 181-1-n0-n12;
-                expocode = '74JC20230131';
+                expocode = 'FKAD20230131';
                 sect_id = 'SR1b';
                 submitter = 'OCPNOCYLF'; %group institution person
                 common_headstr = {'#SHIP: RRS Sir David Attenborough';...

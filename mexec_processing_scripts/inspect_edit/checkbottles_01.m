@@ -424,9 +424,10 @@ for kl = 1:length(stats)
     
     if isempty(kgcol) % station not in gridded file
         fprintf(2,'%s %4d %s\n','Station',snum,'not found in gridded file; anomalies will be set to zero'); % so vanom is zero
-        vanom(ksam) = 0*v(ksam);
+        vanom(ksam) = 0;
     else
         gvar = dg.(varname); gvar = gvar(:,kgcol);
         vanom(ksam) = v(ksam) - interp1(dg.press(:,kgcol),gvar,dsam.upress(ksam));
+        if snum==9; keyboard; end
     end
 end
