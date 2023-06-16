@@ -138,7 +138,7 @@ switch opt1
                 co.calstr.cond.sn3488.msg = 'cond s/n 3488 calibrated based on comparison with 122/189 bottle samples';
                 co.calstr.cond.sn3491.sd025 = 'dcal.cond = d0.cond.*(1 + interp1([0 4000 6000],[-4e-3 -5e-3 -3e-3],d0.press)/35);';
                 co.calstr.cond.sn3491.msg = 'cond s/n 3491 calibrated based on comparison with 188/269 bottle samples';
-                %oxygen.sn242 only 4 comparison points
+                %oxygen.sn0242 only 4 comparison points
                 co.calstr.oxygen.sn0620.sd025 = 'dcal.oxygen = d0.oxygen.*(interp1([0 1000 6000],[0.875 0.887 0.90],d0.press) + interp1([30 70],[-8e-3 8e-3],d0.dday));';
                 co.calstr.oxygen.sn0620.msg = 'oxygen s/n 620 calibrated based on comparison between 97/140 bottle samples and gamma_n-matched downcast';
                 co.calstr.oxygen.sn2291.sd025 = 'dcal.oxygen = d0.oxygen.*(1.22 + interp1([0 500 4000 6000],[0e-2 0.5e-2 2e-2 1e-2],d0.press));';

@@ -32,7 +32,12 @@ else
     opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
     switch MEXEC_G.Mshipdatasystem
         case 'rvdas'
-            [dn, ~, ~] = mrload(default_navstream,dv1,dv2,'q');
+            try
+                [dn, ~, ~] = mrload(default_navstream,dv1,dv2,'q');
+            catch
+                warning('could not load data from %s; skipping',default_navstream)
+                return
+            end
             m = diff(dn.dnum)<=0;
             if sum(m)
                 warning('removing %d repeated or backwards times',sum(m))
