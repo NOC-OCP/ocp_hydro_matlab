@@ -40,10 +40,10 @@ if nargin>0
 end
 
 %what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='sd025'; 
+MEXEC_G.MSCRIPT_CRUISE_STRING='en705'; 
 %default data time origin is now set in opt_cruise
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
-MEXEC_G.other_programs_root = '~/programs/others/'; 
+MEXEC_G.other_programs_root = '/local/users/pstar/programs/others/'; 
 MEXEC_G.mexec_data_root = '/local/users/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
@@ -195,7 +195,7 @@ end
 switch MEXEC_G.Mship
     case 'sda'
         MEXEC_G.Mshipdatasystem = 'rvdas';
-    case {'jc','dy'}
+    case {'cook','discovery'}
         if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
             MEXEC_G.Mshipdatasystem = 'rvdas';
         else
@@ -203,7 +203,7 @@ switch MEXEC_G.Mship
         end
     case {'di'}
             MEXEC_G.Mshipdatasystem = 'techsas';
-    case {'jcr','kn','en'}
+    case {'jcr','knorr','endeavor'}
                     MEXEC_G.Mshipdatasystem = 'scs';
     otherwise
         warning('ship underway data system not set')
