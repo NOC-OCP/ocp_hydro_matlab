@@ -31,12 +31,13 @@ tunder(strfind(tunder,'.')) = '_';
 
 % set up file names
 ftpl = [tstream '.TPL'];
-fullftpl = fullfile(MEXEC_G.uway_sed,ftpl);
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+fullftpl = [uway_sed '/' ftpl];
 
 if exist(fullftpl,'file') ~= 2; return; end % skip if no TPL file
 
 root_template = mgetdir('M_TEMPLATES');
-fntemplate = fullfile(root_template, [MEXEC_G.Mshipdatasystem '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_renamelist_' tunder '.csv']);
+fntemplate = [root_template '/' MEXEC_G.Mshipdatasystem '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_renamelist_' tunder '.csv'];
 
 % load var list
 varcells = mtextdload(fullftpl);

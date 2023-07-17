@@ -16,14 +16,14 @@ function msvars(instream)
 % The var and units list is taken from the first matching file in a unix
 % ls command.
 %
-% The scs files are searched for in a directory uway_root defined in
-% cruise options. At sea, this will typically be a data area exported from a
+% The scs files are searched for in a directory MEXEC_G.uway_root defined in
+% the mexec setup. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 % call to msgetvars and display results;
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is uway_root, which for example can be
+% The searched directory is MEXEC_G.uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL
@@ -33,7 +33,7 @@ function msvars(instream)
 m_common
 tstream = msresolve_stream(instream);
 
-[v, u] = msgetvars(tstream);
+[v u] = msgetvars(tstream);
 nv = length(v);
 
 % find max length of any var name

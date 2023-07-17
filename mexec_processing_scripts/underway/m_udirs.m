@@ -1,6 +1,6 @@
 function [udirs, udcruise] = m_udirs()
 
-udcruise = 'en705';
+udcruise = 'en697';
 udirs = {
 'posfur'    'nav/furuno'    'furuno_gga'
 'singleb'   'bathy/singleb'  'singleb'

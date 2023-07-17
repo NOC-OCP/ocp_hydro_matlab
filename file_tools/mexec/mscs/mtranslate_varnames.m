@@ -34,7 +34,8 @@ tunder(strfind(tunder,'-')) = '_';
 tunder(strfind(tunder,'.')) = '_';
 
 root_template = mgetdir('M_TEMPLATES');
-fntemplatein = fullfile(root_template, [MEXEC_G.Mshipdatasystem '_renamelist_' tunder '.csv']);
+fntemplatein = [root_template '/' MEXEC_G.Mshipdatasystem '_renamelist_' tunder '.csv'];
+fntemplateot = [root_template '/' MEXEC_G.Mshipdatasystem '_renamelist_' tunder '_out.csv'];
 
 % clean up the translation table if needed. This code was lifted from
 % another script but should not be needed for this application.
@@ -59,6 +60,12 @@ if length(sunique) < length(snamesin)
     m = 'There is a duplicate name in the list of variables to rename';
     error(m)
 end
+% skip writing of duplicate output bak 2009-sep-17
+% % % fidot = fopen(fntemplateot,'w'); % save back to out file
+% % % for k = 1:numvar
+% % %     fprintf(fidot,'%s%s%s%s%s\n',snamesin{k},',',snamesot{k},',',sunits{k});
+% % % end
+% % % fclose(fidot);
 
 hin = m_read_header(infile); % get var names in file
 

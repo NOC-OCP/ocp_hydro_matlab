@@ -35,9 +35,9 @@ switch opt1
                         if ismac; uway_root = [uway_root '_mac']; end
                     case 'scs'
                         uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
-                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs_raw'); % scs raw data on logger machine
-                        uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs_sed'); % scs raw data on logger machine
-                        uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs_mat'); % local directory for scs converted to matlab
+                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_raw'); % scs raw data on logger machine
+                        uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_sed'); % scs raw data on logger machine
+                        uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_mat'); % local directory for scs converted to matlab
                     case 'rvdas'
                         uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
                 end

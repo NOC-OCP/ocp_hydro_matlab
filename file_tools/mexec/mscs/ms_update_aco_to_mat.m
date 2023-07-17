@@ -46,12 +46,18 @@ tstream = msresolve_stream(instream);
 tic; toco=toc; % start clock
 
 % set up file names
+
+% bak en697
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+cmd = ['cat /local/users/pstar/projects/rpdmoc/' mcruise '/mcruise/data/scs/scs_daily/' tstream '*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/' tstream '.ACO']; [status,result ] = system(cmd);
+
 faco = [tstream '.ACO'];
 ftpl = [tstream '.TPL'];
 fmat = [tstream '.mat'];
-fullfaco = fullfile(MEXEC_G.uway_sed,faco);
-fullftpl = fullfile(MEXEC_G.uway_sed,ftpl);
-fullfmat = fullfile(MEXEC_G.uway_mat,fmat);
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+fullfaco = [uway_sed '/' faco];
+fullftpl = [uway_sed '/' ftpl];
+fullfmat = [uway_mat '/' fmat];
 
 
 if exist(fullfmat,'file') == 2

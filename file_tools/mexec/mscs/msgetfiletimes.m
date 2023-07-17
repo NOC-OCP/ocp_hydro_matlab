@@ -9,12 +9,12 @@ function [firstm lastm numdc] = msgetfiletimes(fname,tonly)
 %
 % mstar scs (mt) routine; requires mexec to be set up
 %
-% The scs files are searched for in a directory uway_root defined in
-% cruise options. At sea, this will typically be a data area exported from a
+% The scs files are searched for in a directory MEXEC_G.uway_root defined in
+% the mexec setup. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 % 8 Sep 2009: SCS version of original scs script, for JR195
-% The searched directory is uway_root, which for example can be
+% The searched directory is MEXEC_G.uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL
@@ -26,7 +26,8 @@ function [firstm lastm numdc] = msgetfiletimes(fname,tonly)
 m_common
 if nargin == 1; tonly = ' '; end
 
-fullfn = [MEXEC_G.uway_sed '/' fname];
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+fullfn = [uway_sed '/' fname];
 
 if strncmp(tonly,'f',1) % faster option; don't count numdc in every file
     fid = fopen(fullfn,'r'); % open file read only
@@ -44,6 +45,13 @@ if strncmp(tonly,'f',1) % faster option; don't count numdc in every file
     numtest = numbytes_file;
     fclose(fid);
 else
+% % % % %     [numlines_MEXEC.status numlines] = unix(['wc -l ' fullfn]); % use unix wc to count number of lines
+% % % % % 
+% % % % %     numlines = m_remove_outside_spaces(numlines);
+% % % % %     spindex = strfind(numlines,' ');
+% % % % %     numlines = numlines(1:spindex-1);
+% % % % %     numdc = str2double(numlines);
+% % % % %     numtest = numdc;
     fid = fopen(fullfn,'r'); % open file read only
     fseek(fid,0,1); % move to end of file
     numbytes_file = ftell(fid); % check the number of bytes at this instant

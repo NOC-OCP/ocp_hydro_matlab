@@ -1,5 +1,5 @@
-function [pdata, punits] = mslast(instream)
-% function [data, units] = mslast(instream)
+function [pdata punits] = mslast(instream)
+% function [data units] = mslast(instream)
 %
 % first draft by BAK on JC032
 %
@@ -20,7 +20,7 @@ function [pdata, punits] = mslast(instream)
 % the data and units are returned as arguments.
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is uway_root, which for example can be
+% The searched directory is MEXEC_G.uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL
@@ -45,7 +45,7 @@ intdelim = int8(delim);
 % set up file names
 faco = matnames{1};
 ftpl = [faco(1:end-4) '.TPL'];
-scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 fullfaco = [uway_sed '/' faco];
 fullftpl = [uway_sed '/' ftpl];
 

@@ -38,7 +38,7 @@ function mslistit(instream,ints,dn1,dn2,varlist)
 % first draft by BAK on JC032
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is uway_root, which for example can be
+% The searched directory is MEXEC_G.uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL

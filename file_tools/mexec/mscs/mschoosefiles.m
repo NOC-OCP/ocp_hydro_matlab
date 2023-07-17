@@ -15,12 +15,12 @@ function fnames = mschoosefiles(instream,dn1,dn2)
 % 
 % mstar scs (mt) routine; requires mexec to be set up
 %
-% The scs files are searched for in a directory uway_root defined in
-% cruise options. At sea, this will typically be a data area exported from a
+% The scs files are searched for in a directory MEXEC_G.uway_root defined in
+% the mexec setup. At sea, this will typically be a data area exported from a
 % ship's computer and cross-mounted on the mexec processing machine
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
-% The searched directory is uway_root, which for example can be
+% The searched directory is MEXEC_G.uway_root, which for example can be
 % /data/cruise/jcr/20090310/scs_copy/Compress
 % The var names and units are taken from ascii file
 % seatex-gga.TPL
@@ -36,7 +36,7 @@ numf = length(matnames);
 keep = nan+ones(numf,1);
 for kn = 1:numf
     fn = matnames{kn};
-    [t1, t2, n] = msgetfiletimes(fn);
+    [t1 t2 n] = msgetfiletimes(fn);
     if n == 0; continue; end % no data
     if t1 > dn2; continue; end % t1 not in range
     if t2 < dn1; continue; end % t2 not in range

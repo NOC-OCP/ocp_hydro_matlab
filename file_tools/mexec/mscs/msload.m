@@ -75,10 +75,11 @@ end
 dc1 = nan+ones(nf,1); dc2 = dc1; totdc = 0;
 m = 'Counting data cycles';
 if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 
 for kf = 1:nf
     fn = fnames{kf};
-    fullfn = [MEXEC_G.uway_sed '/' fn];
+    fullfn = [uway_sed '/' fn];
     [dc1(kf) dc2(kf)] = msgetdcrange(fn,dn1,dn2);
     totdc = totdc + dc2(kf)-dc1(kf)+1;
 end
@@ -98,10 +99,10 @@ for kv = varnums
 
     for kf = 1:nf
         fn = fnames{kf};
-        fullfn = [MEXEC_G.uway_sed '/' fn];
+        fullfn = [uway_sed '/' fn];
         %     fullfn_mat = [fullfn(1:end-4) '.mat']; % replace .ACO with .mat
         %     bak for jr195: allow different read and write dirs for scs
-        fullfn_mat = [MEXEC_G.uway_mat '/' fn(1:end-4) '.mat']; % replace .ACO with .mat
+        fullfn_mat = [uway_mat '/' fn(1:end-4) '.mat']; % replace .ACO with .mat
         nk = dc2(kf)-dc1(kf)+1; % load this many data cycles on this operation
 %         vin = nc_varget(fullfn,vars{kv},dc1(kf)-1,nk);
         vin_cell = load(fullfn_mat);
