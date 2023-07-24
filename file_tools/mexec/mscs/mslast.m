@@ -50,7 +50,7 @@ fullfaco = [uway_sed '/' faco];
 fullftpl = [uway_sed '/' ftpl];
 
 % assume only one TPL file to describe vars and units
-varcells = mtextdload(fullftpl);
+varcells = mtextdload(fullftpl,',',0);
 numdatavars = length(varcells);
 
 vnames = cell(numdatavars,1); % empty cells

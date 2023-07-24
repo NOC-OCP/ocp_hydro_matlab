@@ -24,20 +24,22 @@ procall = {
 
 for kproc = [1 2 3 4 5 6 7]
 
-    str = procall{kproc,1}
-    kkk = procall{kproc,2}
+    str = procall{kproc,1};
+    kkk = procall{kproc,2};
+
+    fprintf(1,'\n\n%s %4d %s %s\n','Reading day',kkk,'stream',str)
 
 
     for kl = kkk
 
-        fprintf('%s %d\n','kl = ',kl)
+%         fprintf('%s %d\n','kl = ',kl)
 
         fnroot = [str '_2023' sprintf('%04d',kl) '-000000'];
-        fnraw = ['/mnt/en697data/scs/raw/' fnroot '.Raw'];
+        fnraw = ['/mnt/cruisedata/scs/raw/' fnroot '.Raw'];
 
-        fnsed = ['/local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/' fnroot '.ACO'];
-        fnmat = ['/local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/' fnroot '.mat'];
-        fndone = ['/local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/donelines.txt'];
+        fnsed = ['/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/' fnroot '.ACO'];
+        fnmat = ['/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/' fnroot '.mat'];
+        fndone = ['/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/donelines.txt'];
 
         fprintf(1,'%s\n','reading raw');
 
@@ -63,7 +65,7 @@ for kproc = [1 2 3 4 5 6 7]
         %         'degrees'
         %         'HHMMSS'
         %         };
-        % cmd = ['cat /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/TSG1-SBE21*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/TSG1-SBE21.ACO']; [status,result ] = system(cmd);
+        % cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/TSG1-SBE21*.ACO >! /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs_sed/TSG1-SBE21.ACO']; [status,result ] = system(cmd);
 
         %     nv = length(vnames);
         %
@@ -181,6 +183,9 @@ for kproc = [1 2 3 4 5 6 7]
                     ot.fluor2 = str2double(in.fluor2);
                     fprintf(fid,'%4d %12.8f %3d %10.8f %9.5f %9.5f %9.5f %9.5f %9.5f %9.5f\n',ot.yyyy, ot.ddd, ot.doy, ot.dfrac, ot.cond, ot.housetemp, ot.psal, ot.hulltemp, ot.fluor1, ot.fluor2);
                 case 'TSG2-SBE45'
+                    if length(c) < 6 % line is formatted badly
+                        continue
+                    end
                     in.cond = c{4};
                     in.housetemp = c{3};
                     in.psal = c{5};
@@ -215,7 +220,7 @@ for kproc = [1 2 3 4 5 6 7]
 
         end
 
-        fclose(fid)
+        fclose(fid);
         %
         % fprintf(1,'%s\n','Writing mat');
         %

@@ -56,7 +56,7 @@ matlist = {
 %             'seaspy'                  ' '                                 'seaspy'
 %           'usbl_gga'                  ' '                               'usbl-gga' % added bak 27 march 2013 on jr281 for completeness. unlikely to be used
 %              'winch'                  ' '                                  'winch'
-              'fake'                  ' '                                   'fake'    % for test purposes
+%               'fake'                  ' '                                   'fake'    % for test purposes
              };
 
 end

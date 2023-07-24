@@ -36,8 +36,7 @@ fullftpl = [uway_sed '/' ftpl];
 
 if exist(fullftpl,'file') ~= 2; return; end % skip if no TPL file
 
-root_template = mgetdir('M_TEMPLATES');
-fntemplate = [root_template '/' MEXEC_G.Mshipdatasystem '_' MEXEC_G.MSCRIPT_CRUISE_STRING '_renamelist_' tunder '.csv'];
+fntemplate = [MEXEC_G.mexec_source_root '/mexec_processing_scripts/varlists/' MEXEC_G.Mshipdatasystem '/' MEXEC_G.Mshipdatasystem '_renamelist_' tunder '.csv'];
 
 % load var list
 varcells = mtextdload(fullftpl);

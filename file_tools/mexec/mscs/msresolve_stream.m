@@ -16,11 +16,12 @@ tn = names(:,3);
 
 % hunt for mexec short name
 
-k = strmatch(instream,mn,'exact');
+k = strcmp(mn,instream);
 
-if isempty(k)
+if ~sum(k)
     % no match, so return the input name
     tstream = instream;
 else
-    tstream = tn{k(1)};
+    ii = find(k);
+    tstream = tn{ii(1)};
 end

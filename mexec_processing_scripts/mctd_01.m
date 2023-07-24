@@ -35,12 +35,18 @@ else %in some cases, operate on original file (to remove large spikes), then app
     disp('starting from noctm file')
 end
 
+cdir = mgetdir('M_CTD_CNV');
 if redoctm
-    cnvfile = sprintf('%s_%03d.cnv', upper(mcruise), stnlocal);
+    cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', upper(mcruise), stnlocal));
+    if ~exist(cnvfile,'file')
+        cnvfile = lower(cnvfile);
+    end
 else
-    cnvfile = sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal);
+    cnvfile = fullfile(cdir,sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal));
+    if ~exist(cnvfile,'file')
+        cnvfile = lower(cnvfile);
+    end
 end
-cnvfile = fullfile(mgetdir('M_CTD_CNV'),cnvfile);
 opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
 if ~exist(cnvfile,'file')
     warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])

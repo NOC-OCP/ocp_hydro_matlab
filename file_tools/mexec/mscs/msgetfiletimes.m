@@ -1,4 +1,4 @@
-function [firstm lastm numdc] = msgetfiletimes(fname,tonly)
+function [firstm, lastm, numdc] = msgetfiletimes(fname,tonly)
 % function [firstm lastm numdc] = msgetfiletimes(fname)
 %
 % get the time of the first and last data cycle in a scs file, and

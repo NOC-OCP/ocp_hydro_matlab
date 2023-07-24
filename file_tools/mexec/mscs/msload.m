@@ -1,5 +1,5 @@
-function [vdata vunits] = msload(instream,dn1,dn2,varlist)
-% function [vdata vunits] = msload(instream,dn1,dn2,varlist)
+function [vdata, vunits] = msload(instream,dn1,dn2,varlist)
+% function [vdata, vunits] = msload(instream,dn1,dn2,varlist)
 %
 % USE, eg
 %   msload('winch',[2009 4 4],[2009 5 4 12 0 0])
@@ -29,7 +29,7 @@ function [vdata vunits] = msload(instream,dn1,dn2,varlist)
 m_common
 tstream = msresolve_stream(instream);
 
-[mt1 mt2] = msgetdfinfo(tstream,'f'); % get time limits in case they are required for default
+[mt1, mt2] = msgetdfinfo(tstream,'f'); % get time limits in case they are required for default
 
 if ~exist('dn1','var'); dn1 = mt1; end
 if isempty(dn1); dn1 = mt1; end
@@ -49,7 +49,7 @@ fnames = mschoosefiles(tstream,dn1,dn2);
 nf = length(fnames);
 
 % get var list
-[vars units] = msgetvars(tstream);
+[vars, units] = msgetvars(tstream);
 vars{end+1} = 'time'; % time is always a variable in scs
 units{end+1} = 'matlab';
 nv = length(vars);
@@ -80,7 +80,7 @@ opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 for kf = 1:nf
     fn = fnames{kf};
     fullfn = [uway_sed '/' fn];
-    [dc1(kf) dc2(kf)] = msgetdcrange(fn,dn1,dn2);
+    [dc1(kf), dc2(kf)] = msgetdcrange(fn,dn1,dn2);
     totdc = totdc + dc2(kf)-dc1(kf)+1;
 end
        

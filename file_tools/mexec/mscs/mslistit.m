@@ -91,7 +91,9 @@ ms_update_aco_to_mat(tstream); % ensure mat file is up to date before loading
 
 [data units]= msload(tstream,dn1,dn2,loadvlist);
 
-t = data.time + MEXEC_G.uway_torg;
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+
+t = data.time + uway_torg;
 if length(t) == 0
     m = 'You appear to have selected no data cycles';
     fprintf(MEXEC_A.Mfider,'%s\n',m);

@@ -31,7 +31,7 @@ m_common
 tstream = msresolve_stream(instream);
 if nargin == 1; tonly = ' '; end
 
-matnames = msgetstreamfilenames(tstream);
+matnames = msgetstreamfilenames(tstream,'.ACO');
 
 % bak for jr195 17 Sep 2009
 % check if any files are found

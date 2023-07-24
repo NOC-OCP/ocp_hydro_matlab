@@ -1,0 +1,4 @@
+GNSS_ABXTWO_PASHR_heading,heading,degrees
+GNSS_ABXTWO_PASHR_pitch,pitch,dgrees
+GNSS_ABXTWO_PASHR_roll,roll,degrees
+GNSS_ABXTWO_PASHR_time,inst_time,HHMMSS

@@ -27,7 +27,7 @@ dns = sort([dn1 dn2]); % just in case user reverses order
 fullfn_mat = [uway_mat '/' techsasfn(1:end-4) '.mat']; % replace .ACO with .mat
 vin_cell = load(fullfn_mat,'time_all');
 timet = vin_cell.time_all; % techsas time
-timem = timet + MEXEC_G.uway_torg;
+timem = timet + uway_torg;
 dc1 = min(find(timem >= dns(1)));
 dc2 = max(find(timem <= dns(2)));
 

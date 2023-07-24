@@ -33,6 +33,10 @@ for kloop = klistl
     stn = kloop; mfir_03;
     stn = kloop; mfir_03_extra;
     stn = kloop; mfir_to_sam;
+
+    %calculate and apply depths
+    station_summary(stnlocal)
+    stn = stnlocal; mdep_01
     
 end
 

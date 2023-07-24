@@ -1,7 +1,6 @@
-function scs_to_mstar2
-% function scs_to_mstar2(tstream,dn1,dn2)
-% function ncfile = scs_to_mstar2(scs_in,ncfile,dataname)
-
+function status = scs_to_mstar2(stream,mstarname,dn1,dn2,varargin)
+% function status = scs_to_mstar2(stream,mstarname,dn1,dn2,otfile,dataname,varlist,qflag)
+%
 % load scs file into mstar file
 %
 % 8 Sep 2009: SCS version of original techsas script, for JR195
@@ -13,147 +12,97 @@ function scs_to_mstar2
 %
 
 m_common
-m_margslocal
-m_varargs
+status = 1;
 
-MEXEC_A.Mprog = 'scs_to_mstar2';
-m_proghd
-
-
-instream = m_getinput('Type scs stream name or mexec short name eg gyro_s or gyro : ','s');
-tstream = msresolve_stream(instream);
-ms_update_aco_to_mat(tstream); % ensure mat file is up to date before loading
-dv1 = m_getinput('Type start datevec eg [2009 4 3 0 0 0] : ','s');
-dv2 = m_getinput('Type end   datevec eg [2009 4 3 23 59 59] : ','s');
-
-cmd = ['dn1 = datenum(' dv1 ');']; eval(cmd);
-cmd = ['dn2 = datenum(' dv2 ');']; eval(cmd);
-
-varlist =  m_getinput('Type the list of vars to load ( return or ''/'' for all)  : ','s'); % no checking at present
-% get var list
-[vars units] = msgetvars(tstream);
-vars{end+1} = 'time'; % time is always a variable in scs
-units{end+1} = 'matlab';
-nv = length(vars);
-
-% sort out the var list
-if ~exist('varlist','var'); varlist = '/'; end
-if strcmp(varlist,'-'); varlist = '/'; end % for compatibility with old rvs defailt for "all"
-if strcmp(varlist,' '); varlist = '/'; end 
-
-th.fldnam = vars;
-th.noflds = nv; % create a structure equivalent to the mstar headers to parse for var names
-varnums = m_getvlist(varlist,th);
-% time always seems to be last in the techsas list; put it first if it is
-% in the load list.
-loadvarnames = vars(varnums);
-ktime = strmatch('time',loadvarnames);
-if ~isempty(ktime)
-    timevarnum = varnums(ktime);
-    varnums(ktime) = []; % remove time from list
-%     varnums = [timevarnum varnums];
-end
-
-% always need to load time for mtlistit
-loadvlist = ['time ' num2str(varnums)]; % add time first; the rest are resolved to numbers but must be added as a string
-
-
-% techsas_fn = m_gettechsasfilename;
-mstar_fn = m_getfilename;
-dataname = m_getinput('Type required dataname : ','s');
-% instrument = m_getinput('Type instrument indetifier : ','s');
-instrument = ' '; % null for the time being
-
-% bak for jr195 2009-sep-17
-% load data before creating mstar file in case no data cycles found
-[tdata tunits] = msload(tstream,dn1,dn2,loadvlist);
-if isempty(tdata.time) 
-%    if isfield(MEXEC_G, 'uway_writeempty') & MEXEC_G.uway_writeempty % no data cycles found
-%        warning(['no data for ' tstream ' between ' dn1 ' and ' dn2])
-%    else
-        return
-%    end
-end
-
-ncfile.name = mstar_fn;
-
-ncfile = m_openot(ncfile); %check it is not an open mstar file
-% techsas_in.name = techsas_fn;
-
-nc_attput(ncfile.name,nc_global,'dataname',dataname); %set the dataname
-nc_attput(ncfile.name,nc_global,'instrument_identifier',instrument);
-
-nc_attput(ncfile.name,nc_global,'platform_type',MEXEC_G.PLATFORM_TYPE); %eg 'ship'
-nc_attput(ncfile.name,nc_global,'platform_identifier',MEXEC_G.PLATFORM_IDENTIFIER); %eg 'James_Cook'
-nc_attput(ncfile.name,nc_global,'platform_number',MEXEC_G.PLATFORM_NUMBER); %eg 'Cruise 31'
-
-% [tdata tunits] = msload(tstream,dn1,dn2,loadvlist);
-
-%/local/users/pstar/jr18002/mcruise/data/nav/seatex/seatex_gll_jr18002_d322_raw.nc techsas_names = m_unpack_varnames(techsas_in);
-techsas_names =fieldnames(tdata);
-
-% techsas_time_dim = nc_getdiminfo(techsas_in.name,'time'); % bak jc032 need to know present number of records in growing techsas file
-% techsas_time_length = techsas_time_dim.Length;
-% 
-% m = ['About to read ' sprintf('%d',techsas_time_length)  ' records'];
-% fprintf(MEXEC_A.Mfidterm,'%s\n',m);
-
-for k = 1:length(techsas_names)
-    if ~MEXEC_G.quiet    
-    m = ['Writing variable ' techsas_names{k}];
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m)
+n = 4;
+if nargin>n
+    otfile = varargin{1};
+    if nargin>n+1
+        dataname = varargin{2};
+        if nargin>n+2
+            varlist = varargin{3};
+            if nargin>n+3
+                qflag = varargin{4};
+            end
+        end
     end
-    clear techsas_data techsas_units v
-%     techsas_data = nc_varget(techsas_in.name,techsas_names{k},0,techsas_time_length);
-%     techsas_units = nc_attget(techsas_in.name,techsas_names{k},'units');
-    techsas_data = getfield(tdata, techsas_names{k});
-    techsas_units = getfield(tunits, techsas_names{k});
-    
-    % adjust time to a more conventional mstar time
-    if strcmp(techsas_names{k},'time')
-        techsas_data = 86400*(techsas_data + MEXEC_G.uway_torg - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
-        techsas_units = 'seconds';
+end
+if ~exist('otfile','var'); otfile = stream; end
+if ~exist('dataname','var'); dataname = replace(otfile,'.nc',''); end
+if ~exist('varlist','var') || isempty(varlist); varlist = '/'; end
+if ~exist('qflag','var'); qflag = 1; end
+
+%use msload, then rearrange into data, (updated) names, and units
+[data, units] = msload(stream,dn1,dn2,varlist);
+if isempty(data.time); return; end
+names = fieldnames(data);
+[namesnew, vunits] = mtranslate_varnames(names, stream);
+for no = 1:length(names)
+    if isempty(namesnew{no})
+        vunits{no} = units.(names{no});
+        data.(names{no}) = data.(names{no})(:);
+    else
+        data.(namesnew{no}) = data.(names{no})(:);
+        data = rmfield(data,names{no});
+        names{no} = namesnew{no};
     end
-    v.name = techsas_names{k}; v.data = techsas_data; v.units = techsas_units;
-    %if length(v.data)==0
-    %    if strcmp(v.name, 'time'); v.data = [dn1 dn2];
-    %    else; v.data = [NaN NaN]; end
-    %    warning('filling with NaNs')
-    %end
-    m_write_variable(ncfile,v);
+    if strcmp(names{no},'time')
+        opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+        data.(names{no}) = 86400*(data.(names{no}) + uway_torg - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
+        vunits{no} = 'seconds';
+    end
+end
+units = vunits;
+data = orderfields(data,names);
+
+%subsample to 1 hz (if indicated) or remove repeated times
+opt1 = 'uway_proc'; opt2 = '1hz_max'; get_cropt
+if save_1hz_uway && isempty(tstep_force)
+    dt = diff(data.time); dt = dt(dt>0); 
+    dt = mode(dt);
+    tstep = max(round(1/dt),1);
+end
+if tstep>1
+    iits = 1:tstep:length(data.time);
+    [~,iit] = unique(data.time(iits),'stable');
+    iit = iits(iit);
+else
+    [~,iit] = unique(data.time,'stable');
 end
 
-yyyy = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
-mo = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(2);
-dd = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(3);
-hh = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(4);
-mm = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(5);
-ss = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(6);
+clear hnew
+hnew.fldnam = names(:)';
+hnew.fldunt = units(:)';
+% subsample time
+m = false(1,length(names));
+for kl = 1:length(names)
+    vname = names{kl};
+    if isnumeric(data.(vname))
+        m(kl) = true;
+        data.(vname) = data.(vname)(iit);
+    else
+        data = rmfield(data,vname);
+        warning('skipping non-numeric variable %s from table %s',vname,table)
+    end
+end
+hnew.fldnam = hnew.fldnam(m); hnew.fldunt = hnew.fldunt(m);
 
-m_set_data_time_origin(ncfile,yyyy,mo,dd,hh,mm,ss)
+opt1 = 'mstar'; get_cropt
+if docf
+    hnew.data_time_origin = [];
+else
+    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+end
 
-nowstring = datestr(now,31);
-m_add_comment(ncfile,'This mstar file created from scs stream');
-m_add_comment(ncfile,tstream);
-m_add_comment(ncfile,['at ' nowstring]);
-m_add_comment(ncfile,['Time converted from matlab day number to seconds after mstar time origin']);
-    
-m_finis(ncfile);
-
-h = m_read_header(ncfile);
-m_print_header(h);
-
-hist = h;
-hist.filename = ncfile.name;
-MEXEC_A.Mhistory_ot{1} = hist;
-% fake the input file details so that write_history works
-histin = h;
-% histin.filename = techsas_in.name;
-histin.filename = [];
-histin.dataname = [];
-histin.version = [];
-histin.mstar_site = [];
-MEXEC_A.Mhistory_in{1} = histin;
-m_write_history;
-
-return
+hnew.dataname = dataname; hnew.instrument_identifier = stream; %***
+hnew.comment = ['Variables written from scs to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER];
+%think these are included by default since they are from MEXEC_G?***
+%nc_attput(ncfile.name,nc_global,'platform_type',MEXEC_G.PLATFORM_TYPE); %eg 'ship'
+%nc_attput(ncfile.name,nc_global,'platform_identifier',MEXEC_G.PLATFORM_IDENTIFIER); %eg 'James_Cook'
+%nc_attput(ncfile.name,nc_global,'platform_number',MEXEC_G.PLATFORM_NUMBER); %eg 'Cruise 31'
+if exist(m_add_nc(otfile),'file')
+    mfsave(otfile, data, hnew, '-merge', 'time');
+else
+    mfsave(otfile, data, hnew);
+end
+status = 0;

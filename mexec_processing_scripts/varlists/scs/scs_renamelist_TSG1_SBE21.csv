@@ -1,0 +1,6 @@
+TSG1_SBE21_cond,cond,mS/cm
+TSG1_SBE21_housingtemp,housingtemp,degC
+TSG1_SBE21_psal,psal,PSU
+TSG1_SBE21_hulltemp,hulltemp,degC
+TSG1_SBE21_fluor1,fluor1,mg/ml
+TSG1_SBE21_fluor2,fluor2,mg/ml

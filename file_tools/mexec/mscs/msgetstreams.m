@@ -58,7 +58,7 @@ streams = cell(1,nfiles);
 for kf = 1:length(fnames) % sort out all the filenames
     fn = fnames{kf};
 %     streams{kf} = fn(17:end);
-    streams{kf} = fn(length(MEXEC_G.uway_sed)+2:end-4); %list seems to generate full path names
+    streams{kf} = fn(length(uway_sed)+2:end-4); %list seems to generate full path names
 end
 
 [ustreams ui uj] = unique(streams); % unique file/instrument streams

@@ -1,5 +1,5 @@
 % this script is called by get_cropt to set defaults for
-% parameters/variables used by multiple scripts (settings used in only one
+% parameters/variables used by multiple scripts (those used in only one
 % script are set in situ), before calling opt_cruise to set cruise-specific
 % parameters if applicable
 %
@@ -122,6 +122,10 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
+            case '1hz_max'
+                save_1hz_uway = 1; %subsample to (approximately) 1 hz before saving to raw file
+                tstep = 1;
+                tstep_force = [];
             case 'sensor_factory_cals'
                 sensorcals = struct(); %default: none
                 xducer_offset = []; %default: none

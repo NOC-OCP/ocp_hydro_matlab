@@ -22,8 +22,6 @@ if ~exist('days','var')
     days = floor(now-datenum(year,1,1)); %default: yesterday
 end
 
-root_u = MEXEC_G.mexec_data_root;
-
 %%%%% get list of underway streams to process %%%%%
 uway_set_streams
 
@@ -40,34 +38,23 @@ for daynumber = days
         if daynumber==days(1)
             udirs{sno} = fullfile(MEXEC_G.mexec_data_root,udirs{sno});
         end
-        if loadstatus(sno)==0
-            %load
-%             try
-                ls = mday_00_load(streamnames{sno}, shortnames{sno}, udirs{sno}, daynumber, year);
-%             catch
-%                 ls = 1; 
-%                 keyboard
-%             end
-            loadstatus(sno) = loadstatus(sno) + ls;
-        end
+        ls = mday_00_load(streamnames{sno}, shortnames{sno}, udirs{sno}, daynumber, year);
+        loadstatus(sno) = loadstatus(sno) + ls;
     end
+    disp(['loaded day ' num2str(daynumber)]); pause(0.1)
 end
-%***should 2 also be thrown out? what if loadstatus was 0 for some days but
-%1 for last?
-% shortnames(loadstatus>0) = [];
-% streamnames(loadstatus>0) = [];
-% udirs(loadstatus>0) = [];
 
 %apply additional processing and cleaning to data
 for sno = 1:length(shortnames)
     mday_01_edit(udirs{sno}, shortnames{sno}, days)
+    disp(['edited ' shortnames{sno}])
 end
 
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
-mnav_best(days)
-mwind_true(days)
-%mtsg_merge_av(days) %combines old mtsg_medav_clean_cal and mtsg_surfmet_merge
-% mbathy_edit_av
+mnav_best(days); disp('got best nav/heading data')
+%mwind_true(days); disp('converted to true wind')
+mtsg_merge_av(days); disp('tsg variables merged with met') %combines old mtsg_medav_clean_cal and mtsg_surfmet_merge
+mbathy_edit_av(days)
 
 % % make plots

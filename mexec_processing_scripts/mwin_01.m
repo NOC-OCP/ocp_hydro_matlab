@@ -158,4 +158,8 @@ copystring
 };
 mdatpik;
 
+if strncmp(MEXEC_G.Mshipdatasystem,'scs',3)
+    mtranslate_varnames(otfile2,instream);
+end
+
 delete(m_add_nc(wkfile3));

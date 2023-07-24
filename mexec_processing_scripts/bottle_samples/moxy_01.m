@@ -64,8 +64,12 @@ if ~isempty(oxyvarmap)
     ds_oxy.Properties.VariableNames = ds_oxy_fn;
 end
 ds_oxy(isnan(ds_oxy.position),:) = [];
-if ~exist('fillstat','var') && sum(isnan(ds_oxy.statnum))>0
-    fillstat = 1; %fill in station numbers on some rows
+if ~exist('fillstat','var')
+    if sum(isnan(ds_oxy.statnum))>0
+        fillstat = 1; %fill in station numbers on some rows
+    else
+        fillstat = 0;
+    end
 end
 
 %check units
@@ -144,7 +148,7 @@ if sum(strcmp('conc_o2',ds_oxy_fn))==0
     % volume of sample, accounting for pickling reagent volumes.
     sample_vols = ds_oxy.bot_vol_tfix - vol_reag_tot; %mL
     % concentration of O2 in sample, accounting for concentration in pickling reagents
-    a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
+    %a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
     ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
 end
 ds_oxy.conc_o2(isnan(ds_oxy.sample_titre+ds_oxy.bot_vol_tfix)) = NaN;
@@ -197,15 +201,24 @@ opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
 opt1 = 'check_sams'; get_cropt
 if check_oxy
     m0 = abs(d.botoxya_per_l-d.botoxyb_per_l)>0.75;
+    if isfield(d,'botoxyc_per_l')
+        m0 = m0 | abs(d.botoxyc_per_l-d.botoxya_per_l)>0.75 | abs(d.botoxyc_per_l-d.botoxyb_per_l)>0.75;
+    end
     if sum(m0)
         stns = unique(d.statnum(m0));
         ds = mloadq(fullfile(mgetdir('ctd'),sprintf('sam_%s_all.nc',mcruise)),'sampnum statnum uoxygen position ');
         for sno = 1:length(stns)
             ii = find(d.statnum==stns(sno));
             [~,~,iis] = intersect(d.sampnum(ii),ds.sampnum,'stable');
-            disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), Niskin'])
-            [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii)]
-            pause
+            disp('some replicates differ')
+            if isfield(d,'botoxyc_per_l')
+                disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), botoxyc (umol/L), Niskin, flags'])
+                [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.botoxyc_per_l(ii), d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii), d.botoxyc_flag(ii)]
+            else
+                disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), Niskin, flags'])
+                [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii)]
+            end
+            disp('enter to continue'); pause
         end
         opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
     end

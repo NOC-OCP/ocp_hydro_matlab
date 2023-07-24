@@ -97,8 +97,10 @@ for kf = 1:nf
     kount = kount+nk;
 end
 
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+
 ttime = vuse;
-mtime = MEXEC_G.uway_torg + ttime;
+mtime = uway_torg + ttime;
 mtime = [dn1 mtime(:)' dn2];
 dtime = diff(mtime)*86400; % time difference in seconds
 kgaps = find(dtime > g | dtime <= 0);

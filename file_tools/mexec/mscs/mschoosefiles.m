@@ -29,7 +29,7 @@ function fnames = mschoosefiles(instream,dn1,dn2)
 m_common
 tstream = msresolve_stream(instream);
 
-matnames = msgetstreamfilenames(tstream);
+matnames = msgetstreamfilenames(tstream,'.ACO');
 
 numf = length(matnames);
 

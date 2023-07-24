@@ -32,7 +32,11 @@ end
 if nargin>1
     depth_source = varargin{1};
 else
-    depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
+    if MEXEC_G.ix_ladcp
+        depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
+    else
+        depth_source = {'ctd'};
+    end
 end
 opt1 = 'castpars'; opt2 = 'bestdeps'; get_cropt
 
@@ -41,7 +45,7 @@ if ~iscell(depth_source)
 end
 
 %set up
-bestdeps = [stns NaN+zeros(length(stns),2)];
+bestdeps = [stns NaN+zeros(length(stns),3)];
 
 %apply in order
 ii0 = 1:length(stns); %first try filling all rows using depth_source{1}
@@ -54,12 +58,14 @@ for sno = 1:length(depth_source)
     bestdeps(ii0,:) = get_deps(bestdeps(ii0,:), depth_source{sno}, fnin);
     ii00 = ii0;
     ii0 = find(isnan(bestdeps(:,2))); %these didn't get a value, so try next depth_source
-    ii = setdiff(ii00, ii0); bestdeps(ii,3) = sno; %mark the ones that did work
+    ii = setdiff(ii00, ii0); bestdeps(ii,4) = sno; %mark the ones that did work
 end
 
 %finally look to cruise options for any changes
-replacedeps = []; stnmiss = []; 
+replacedeps = []; stnmiss = [];  replacealt = [];
 xducer_offset = 0; iscor = 0;
+opt1 = 'castpars'; opt2 = 'bestdeps'; get_cropt  % inserted by bak en705 24 jul 2023; If you don't get_cropt here, replacedeps is empty
+
 if ~isempty(stnmiss)
     bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
 end
@@ -79,6 +85,10 @@ if ~isempty(replacedeps)
     end
     bestdeps(ib,2) = y.cordep;
 end
+if ~isempty(replacealt)
+    [~,ia,ib] = intersect(replacealt(:,1), bestdeps(:,1));
+    bestdeps(ib,3) = replacealt(:,2);
+end
 
 
 function bestdeps = get_deps(bestdeps, depth_source, fnin)
@@ -86,7 +96,7 @@ function bestdeps = get_deps(bestdeps, depth_source, fnin)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-iif = find(isnan(bestdeps(:,2)));
+iif = find(isnan(bestdeps(:,2)+bestdeps(:,3)));
 
 switch depth_source
         
@@ -105,12 +115,15 @@ switch depth_source
         end
         [~,ii1,ii2] = intersect(deps(:,1), bestdeps(iif,1));
         bestdeps(iif(ii2),2) = deps(ii1,2);
+        if size(deps,2)>2
+            bestdepts(iif(ii2),3) = deps(ii1,3);
+        end
         
     case 'ctd' % calculate from CTD depth and altimeter
         
         for no = 1:length(iif) % try to fill these in from 1hz files
             fn = fullfile(mgetdir('M_CTD'), sprintf('ctd_%s_%03d_psal.nc', mcruise, bestdeps(iif(no),1)));
-            if exist(fn)
+            if exist(fn,'file')
                 [d, h] = mloadq(fn, '/');
                 if ~isfield(d,'altimeter'); warning(['no altimeter record in ' fn]); continue; end
                 dd = mloadq(fullfile(mgetdir('ctd'),sprintf('dcs_%s_%03d.nc',mcruise,bestdeps(iif(no),1))),'/');
@@ -123,8 +136,9 @@ switch depth_source
                 if min(ii)>0 && max(ii)<=length(d.depSM)
                     ctd_bot = m_nanmean(d.depSM(bot_ind-15:bot_ind+15));
                     % Eliminate altim readings >20m (unlikely when CTD at bottom)
-                    altim_select = d.altimeter(bot_ind-15:bot_ind+15); altim_select(altim_select>20) = NaN; alt_bot = m_nanmean(altim_select);
-                    bestdeps(iif(no),2) = alt_bot + ctd_bot;
+                    altim_select = d.altimeter(bot_ind-15:bot_ind+15); altim_select(altim_select>30) = NaN; 
+                    bestdeps(iif(no),3) = m_nanmean(altim_select);
+                    bestdeps(iif(no),2) = bestdeps(iif(no),3) + ctd_bot;
                 end
             end
         end

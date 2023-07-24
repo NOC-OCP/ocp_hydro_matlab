@@ -9,7 +9,7 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
-root_pos = fullfile(MEXEC_G.mexec_data_root,'nav');
+root_pos = mgetdir(default_navstream);
 root_wnd = fullfile(MEXEC_G.mexec_data_root,'met','wnd');
 infilen = fullfile(root_pos, ['bestnav_' mcruise '.nc']);
 wfiles = dir(fullfile(root_wnd,'*_all_raw.nc'));

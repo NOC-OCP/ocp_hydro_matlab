@@ -143,7 +143,7 @@ MEXEC_G.MDIRLIST = {
     'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
     'M_CTD_BOT' fullfile('ctd','ASCII_FILES')
     'M_CTD_WIN' fullfile('ctd','WINCH')
-    'M_CTD_DEP' 'station_depths'
+    'M_CTD_DEP' 'station_information'
     'M_BOT_SAL' fullfile('ctd','BOTTLE_SAL')
     'M_BOT_OXY' fullfile('ctd','BOTTLE_OXY')
     'M_BOT_NUT' fullfile('ctd','BOTTLE_NUT')

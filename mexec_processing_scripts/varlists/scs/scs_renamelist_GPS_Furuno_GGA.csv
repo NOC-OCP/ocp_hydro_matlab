@@ -1,0 +1,3 @@
+GPS_Furuno_GGA_lat,lat,degrees
+GPS_Furuno_GGA_lon,lon,degrees
+GPS_Furuno_GGA_time,inst_time,HHMMSS

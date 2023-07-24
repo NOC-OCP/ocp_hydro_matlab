@@ -11,7 +11,7 @@ function [time1_new, varargout] = m_commontime(varargin)
 % uo1 and uo2 are input in order and can both/either have information in a
 %   combination of forms:  
 % a) string of cf-format units (e.g. 'seconds since 2023-01-31 10:00:05')
-% b) the string 'datenum' (equivalent to 'seconds since 0000-00-00
+% b) the string 'datenum' (equivalent to 'days since 0000-00-00
 %    00:00:00')
 % c) a 3- to 6-element numeric vector [yyyy mm dd HH MM SS] giving the time
 %    origin; units assumed to be in seconds

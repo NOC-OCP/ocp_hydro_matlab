@@ -253,8 +253,8 @@ end
 
 %carter correction
 if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb'}))
-    navname = MEXEC_G.default_navstream; navdir = mgetdir(navname);
-    navfile = fullfile(navdir, [navname '_' mcruise '_raw.nc']);
+    opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+    navfile = fullfile(mgetdir(default_navstream), [default_navstream '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
     if exist(navfile,'file')
 
         [dn,hn] = mload(navfile,'/');
@@ -276,8 +276,18 @@ if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb'}))
         end
     end
 
+    if ~isfield(d,'waterdepth')
+        d.waterdepth = d.uncdepth; 
+        h.fldnam = [h.fldnam 'waterdepth'];
+        h.fldunt = [h.fldunt 'meters'];
+    end
     y = mcarter(lat, lon, d.waterdepth);
     d.waterdepth = y.cordep;
+    if isfield(d,'uncdepth')
+        d = rmfield(d,'uncdepth');
+        h.fldunt(strcmp(h.fldnam,'uncdepth')) = [];
+        h.fldnam(strcmp(h.fldnam,'uncdepth')) = [];
+    end
     comment = [comment '\n carter table correction applied to waterdepth'];
 end
 

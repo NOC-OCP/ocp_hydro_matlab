@@ -168,7 +168,7 @@ elseif ~isempty(bads) && exist('edfilepat','var') && ~strcmp(cont,'q')
     fprintf(fid,'gui_editpoints with indepvar %s\n',xvar);
     for no = 1:length(fnb)
         fprintf(fid,'%s\n',fnb{no});
-        fprintf(fid,'%d\n',bads.(fnb{no})(:));
+        fprintf(fid,'%f\n',bads.(fnb{no})(:));
     end
     fclose(fid);
 end

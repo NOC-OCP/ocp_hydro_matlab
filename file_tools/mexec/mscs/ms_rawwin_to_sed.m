@@ -28,24 +28,26 @@ procall = {
 
 for kproc = 1
 
-    str = procall{kproc,1}
-    kkk = procall{kproc,2}
 
+    str = procall{kproc,1};
+    kkk = procall{kproc,2};
+
+    fprintf(1,'\n\n%s %4d %s %s\n','Reading day',kkk,'stream',str)
 
     for kl = kkk
 
-        fprintf('%s %d\n','kl = ',kl)
+%         fprintf('%s %d\n','kl = ',kl)
         mo = floor(kl/100);
         dd = kl-100*mo;
 
         fnrootin = [str '_2023' sprintf('%s%02d%s%02d','-',mo,'-',dd)];
         fnrootot = [str '_2023' sprintf('%04d',kl) '-000000'];
         
-        fnraw = ['/mnt/en697data/winch/proc/' fnrootin '.tab'];
+        fnraw = ['/mnt/cruisedata/winch/proc/' fnrootin '.tab'];
 
-        fnsed = ['/local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/' fnrootot '.ACO'];
-        fnmat = ['/local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/' fnrootot '.mat'];
-        fndone = ['/local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/donelines.txt'];
+        fnsed = ['/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/' fnrootot '.ACO'];
+        fnmat = ['/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/' fnrootot '.mat'];
+        fndone = ['/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/donelines.txt'];
 
         fprintf(1,'%s\n','reading raw');
 
@@ -131,7 +133,7 @@ for kproc = 1
 
         end
 
-        fclose(fid)
+        fclose(fid);
         %
         % fprintf(1,'%s\n','Writing mat');
         %

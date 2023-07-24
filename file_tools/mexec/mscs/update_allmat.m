@@ -30,19 +30,32 @@
 % update all scs matlab files
 %[MEXEC.status currentdir] = unix('pwd');
 %mcd ('M_SCSMAT'); % change working directory
-cmd = ['cat /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/GPS-Furuno-GGA*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/GPS-Furuno-GGA.ACO']; [status,result ] = system(cmd);
+fullfn = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/GPS-Furuno-GGA.ACO'; if exist(fullfn,'file')==2; cmd = ['/bin/rm ' fullfn];  [status,result ] = system(cmd); end
+cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/GPS-Furuno-GGA*.ACO > /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/GPS-Furuno-GGA.ACO']; [status,result ] = system(cmd);
 ms_update_aco_to_mat('GPS-Furuno-GGA')
-cmd = ['cat /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/SingleBeam-Knudsen-PKEL99*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/SingleBeam-Knudsen-PKEL99.ACO']; [status,result ] = system(cmd);
+
+fullfn = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/SingleBeam-Knudsen-PKEL99.ACO'; if exist(fullfn,'file')==2; cmd = ['/bin/rm ' fullfn];  [status,result ] = system(cmd); end
+cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/SingleBeam-Knudsen-PKEL99*.ACO > /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/SingleBeam-Knudsen-PKEL99.ACO']; [status,result ] = system(cmd);
 ms_update_aco_to_mat('SingleBeam-Knudsen-PKEL99')
-cmd = ['cat /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/Gyro1-HDT*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/Gyro1-HDT.ACO']; [status,result ] = system(cmd);
+
+fullfn = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/Gyro1-HDT.ACO'; if exist(fullfn,'file')==2; cmd = ['/bin/rm ' fullfn];  [status,result ] = system(cmd); end
+cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/Gyro1-HDT*.ACO > /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/Gyro1-HDT.ACO']; [status,result ] = system(cmd);
 ms_update_aco_to_mat('Gyro1-HDT')
-cmd = ['cat /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/TSG1-SBE21*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/TSG1-SBE21.ACO']; [status,result ] = system(cmd);
+
+fullfn = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/TSG1-SBE21.ACO'; if exist(fullfn,'file')==2; cmd = ['/bin/rm ' fullfn];  [status,result ] = system(cmd); end
+cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/TSG1-SBE21*.ACO > /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/TSG1-SBE21.ACO']; [status,result ] = system(cmd);
 ms_update_aco_to_mat('TSG1-SBE21')
-cmd = ['cat /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/TSG2-SBE45*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/TSG2-SBE45.ACO']; [status,result ] = system(cmd);
+
+fullfn = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/TSG2-SBE45.ACO'; if exist(fullfn,'file')==2; cmd = ['/bin/rm ' fullfn];  [status,result ] = system(cmd); end
+cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/TSG2-SBE45*.ACO > /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/TSG2-SBE45.ACO']; [status,result ] = system(cmd);
 ms_update_aco_to_mat('TSG2-SBE45')
-cmd = ['cat /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/SpeedLog-Furuno-VBW*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/SpeedLog-Furuno-VBW.ACO']; [status,result ] = system(cmd);
+
+fullfn = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/SpeedLog-Furuno-VBW.ACO'; if exist(fullfn,'file')==2; cmd = ['/bin/rm ' fullfn];  [status,result ] = system(cmd); end
+cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/SpeedLog-Furuno-VBW*.ACO > /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/SpeedLog-Furuno-VBW.ACO']; [status,result ] = system(cmd);
 ms_update_aco_to_mat('SpeedLog-Furuno-VBW')
-cmd = ['cat /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs/scs_daily/Win1*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/Win1.ACO']; [status,result ] = system(cmd);
+
+fullfn = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/Win1.ACO'; if exist(fullfn,'file')==2; cmd = ['/bin/rm ' fullfn];  [status,result ] = system(cmd); end
+cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/Win1*.ACO > /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_sed/Win1.ACO']; [status,result ] = system(cmd);
 ms_update_aco_to_mat('Win1')
 % ms_update_aco_to_mat('anemometer')
 % ms_update_aco_to_mat('ashtech')

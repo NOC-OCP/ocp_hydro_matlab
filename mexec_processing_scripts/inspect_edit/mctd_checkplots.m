@@ -65,10 +65,11 @@ nump = input(msg1);
 
 if numel(nump)>1
     slist = nump; 
-    slist = slist(slist<stnlocal);
+%     slist = slist(slist<stnlocal); % bak en705 19 july 2023; no reason why
+%     we should only display earlier stations
 elseif numel(nump)==1
     slist = stnlocal-nump:stnlocal-1;
-    slist(slist<1) = [];
+    slist(slist<0) = []; % bak en705 19 july 2023 : allow station number zero
 else
     disp('you should reply with a single number or a vector')
     return
@@ -293,13 +294,13 @@ for plotlist = cklist
                 subplot(221)
                 plot(dpsal{ks}.press(kokd),dpsal{ks}.temp1(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(koku),dpsal{ks}.temp1(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),dpsal{ks}.temp1(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
                 subplot(222)
                 sd = dpsal{ks}.([saltype '1']);
                 plot(dpsal{ks}.press(kokd),sd(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
                 subplot(223)
                 if oxy_end
@@ -312,13 +313,13 @@ for plotlist = cklist
                 od = dpsal{ks}.(oxyvars{1,2});
                 plot(dpsal{ks}.press(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
                 subplot(224)
                 sd = dpsal{ks}.([saltype '1']);
                 plot(sd(kokd),dpsal{ks}.potemp1(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(sd(koku),dpsal{ks}.potemp1(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(sd(koku),dpsal{ks}.potemp1(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
             end
             subplot(221); grid on; title ('temp: dash for upcast')
@@ -351,13 +352,13 @@ for plotlist = cklist
                 subplot(221)
                 plot(dpsal{ks}.press(kokd),dpsal{ks}.temp2(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(koku),dpsal{ks}.temp2(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),dpsal{ks}.temp2(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
                 subplot(222)
                 sd = dpsal{ks}.([saltype '2']);
                 plot(dpsal{ks}.press(kokd),sd(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
                 subplot(223)
                 if oxy_end
@@ -371,14 +372,14 @@ for plotlist = cklist
                     od = dpsal{ks}.(oxyvars{2,2});
                     plot(dpsal{ks}.press(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
                     hold on
-                    plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid);
+                    plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 end
                 
                 subplot(224)
                 sd = dpsal{ks}.([saltype '2']);
                 plot(sd(kokd),dpsal{ks}.potemp2(kokd),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(sd(koku),dpsal{ks}.potemp2(koku),'color',lcolors(iic,:),'linewidth',lwid);
+                plot(sd(koku),dpsal{ks}.potemp2(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
             end
             subplot(221); grid on; title ('temp: dash for upcast')

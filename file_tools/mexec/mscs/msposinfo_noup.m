@@ -28,7 +28,9 @@ function [lat lon] = msposinfo_noup(dn1,navstream)
 
 m_common
 
-if ~exist('navstream','var'); navstream = MEXEC_G.uway_default_navstream; end  % use default nav stream name
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+
+if ~exist('navstream','var'); navstream = default_navstream; end  % use default nav stream name
 
 instream = navstream; % mexec stream short name
 tstream = msresolve_stream(instream);
@@ -41,12 +43,12 @@ if ~exist('dn1','var')
     [pdata u] = mslast(tstream);
     cmd = ['lat = pdata.' navunder '_lat;']; eval(cmd);
     cmd = ['lon = pdata.' navunder '_lon;']; eval(cmd);
-    dn = pdata.time+MEXEC_G.uway_torg;
+    dn = pdata.time+uway_torg;
 elseif isempty(dn1); 
     [pdata u] = mslast(tstream);
     cmd = ['lat = pdata.' navunder '_lat;']; eval(cmd);
     cmd = ['lon = pdata.' navunder '_lon;']; eval(cmd);
-    dn = pdata.time+MEXEC_G.uway_torg;
+    dn = pdata.time+uway_torg;
 else
     if ischar(dn1);
         cmd =['dn1 = [' dn1 '];'];  % if the arg has come in as a string, convert from char to number
@@ -58,7 +60,7 @@ else
 %     ms_update_aco_to_mat(tstream); % ensure mat file is up to date before loading
     pdata = msload(tstream,dn-5/1440,dn+5/1440,['time ' navminus '-lat ' navminus '-lon']);
 
-    tin = pdata.time+MEXEC_G.uway_torg;
+    tin = pdata.time+uway_torg;
     cmd = ['latin = pdata.' navunder '_lat;']; eval(cmd)
     cmd = ['lonin = pdata.' navunder '_lon;']; eval(cmd)
     [tunique kun] = unique(tin); % bak on jr281 27 march 2013, repeated time in seatex-gll caused failure in ctd2a

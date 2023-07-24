@@ -23,6 +23,8 @@ function msal_01
 %     were run
 %     (998NNN, 990NNN, etc. may be used for sub-standards)
 % 
+% lines where the sampnum column is empty will be filled in from the last
+% non-empty sampnum above 
 
 m_common
 if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
@@ -54,11 +56,40 @@ end
 if isempty(ds_sal)
     error('no data loaded')
 end
+if sum(isnan(ds_sal.sampnum))
+    %if repeat readings are on different lines and sampnum has only been
+    %filled in for the first (average) line, for example
+    ds_sal = fill_samdata_statnum(ds_sal, 'sampnum');
+end
 
 %parse, for instance getting information from header
-                datform = 'dd/mm/yyyy';
-                timform = 'HH:MM:SS';
-opt1 = 'botpsal'; opt2 = 'sal_parse'; get_cropt 
+datform = 'dd/mm/yyyy';
+timform = 'HH:MM:SS';
+% for no = 1:length(salhead)
+%     sh = salhead{no};
+%     md = strncmp(sh,'Date',4);
+%     mt = strncmp(sh,'Time',4);
+%     mr = strncmp(sh,'Reference',9);
+%     if sum(md)==1 && sum(mt)==1 && sum(mr)==1
+%         l = sh{mr};
+%         ii = strfind(l,'ture:,')+7;
+%         l = str2num(l(ii:ii+1));
+%     end
+% end
+opt1 = 'botpsal'; opt2 = 'sal_parse'; get_cropt
+%add option to fill in information about cellt or Bath Temp and k15 from header***
+fn = ds_sal.Properties.VariableNames;
+if ~sum(strcmp('cellt',fn)) || sum(isfinite(ds_sal.cellt))==0
+    ds_sal.cellt = repmat(cellT,size(ds_sal,1),1);
+end
+fn = ds_sal.Properties.VariableNames;
+if sum(strcmp('k15',fn)) && sum(~isnan(ds_sal.k15))==0
+    ds_sal.k15 = [];
+end
+fn = ds_sal.Properties.VariableNames;
+if ~sum(strcmp('k15',fn)) && exist('ssw_k15','var')
+    ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1); 
+end    
 
 %rename
 clear samevars
@@ -89,7 +120,6 @@ for vno = 1:length(vars)
 end
 fn = ds_sal.Properties.VariableNames;
 
-
 %deal with time variable(s)
 md = strcmp('date',fn); mt = strcmp('time',fn);
 if sum(md) && sum(mt)
@@ -111,8 +141,6 @@ if sum(strcmp('runtime',fn))
     [~,ii] = sort(ds_sal.runtime);
     ds_sal = ds_sal(ii,:);
 end
-
-%fill in information about cellt or Bath Temp and k15 from header***
 
 if ~sum(strcmp('flag',fn))
     ds_sal.flag = 2+zeros(size(ds_sal,1),1);
@@ -205,18 +233,6 @@ sal_off = []; sal_off_base = 'sampnum_run'; sal_adj_comment = '';
 opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
 
 fn = ds_sal.Properties.VariableNames;
-if ~sum(strcmp('cellt',fn)) || sum(isfinite(ds_sal.cellt))==0
-    ds_sal.cellt = repmat(cellT,size(ds_sal,1),1);
-end
-fn = ds_sal.Properties.VariableNames;
-if sum(strcmp('k15',fn)) && sum(~isnan(ds_sal.k15))==0
-    ds_sal.k15 = [];
-end
-fn = ds_sal.Properties.VariableNames;
-if ~sum(strcmp('k15',fn)) && exist('ssw_k15','var')
-    ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1); 
-end    
-fn = ds_sal.Properties.VariableNames;
 [~,ii] = unique(ds_sal.sampnum,'stable');
 if length(ii)<length(ds_sal.sampnum)
     warning('duplicate sample numbers will be discarded: ')
@@ -259,7 +275,7 @@ if sum(strcmp('k15',fn))
     end
     ylim([-1 1]*4e-5); ylabel('autosal value - 2K15')
     grid on
-    disp('(k,r,m): reading1, 2, 3 of standards; blue squares: average of standards');
+    disp('(k,r,m): reading1, 2, 3 of standards; blue squares: average of standards. (fixed scale.)');
     cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
     if strcmp(cont,'k'); keyboard; end
 else

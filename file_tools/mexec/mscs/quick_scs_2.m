@@ -12,15 +12,17 @@ if nday_lines < nget_lines
 	disp(' is not capable of getting data from yesterday')
 	disp(' hope that is ok?')
 end
-
-fnin = ['/mnt/en697data/scs/proc/Daily/Data1Sec_Daily_' date_string '-000000.csv'];
-% fnin = '/mnt/en697data/scs/proc/Daily/Data1Sec_Daily_20230227-000000.csv';
-ftem = ['/local/users/pstar/projects/rpdmoc/en697/mcruise/data/quick_scs/en697_d' day_num '_temp.csv'];
-%ftem = '/local/users/pstar/projects/rpdmoc/en697/mcruise/data/quick_scs/en697_d058_temp.csv';
+% date_string = '20230719'
+% day_num = '200'
+% nget_lines = 5000
+fnin = ['/mnt/cruisedata/scs/proc/Daily/Data1Sec_Daily_' date_string '-000000.csv'];
+% fnin = '/mnt/en705data/scs/proc/Daily/Data1Sec_Daily_20230227-000000.csv';
+ftem = ['/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/quick_scs/en705_d' day_num '_temp.csv'];
+%ftem = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/quick_scs/en705_d058_temp.csv';
 cmd_str = ['\rm ' ftem];  % in cse previous crash left an old file
 [status,cmdout] = system(cmd_str);
-fnot = ['/local/users/pstar/projects/rpdmoc/en697/mcruise/data/quick_scs/en697_d' day_num '.mat'];
-%fnot = '/local/users/pstar/projects/rpdmoc/en697/mcruise/data/quick_scs/en697_d058.mat';
+fnot = ['/local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/quick_scs/en705_d' day_num '.mat'];
+%fnot = '/local/users/pstar/projects/rpdmoc/en705/mcruise/data/quick_scs/en705_d058.mat';
 
 cmd_str = ['head -133 ' fnin ' > ' ftem];
 [status,cmdout] = system(cmd_str);
@@ -48,7 +50,7 @@ n1 = str2double(s1); % first line of data
 
 clear s d
 
-d.dnum = nan(nlines-n1+1,1);
+d.dnum = nan(nlines-n1,1); % on en705 there are 132 lines of comment, line 133 is header, line 134 has data; n1 = 133
 d.watdep = d.dnum;
 d.lat = d.dnum;
 d.lon = d.dnum;

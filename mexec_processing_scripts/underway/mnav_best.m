@@ -7,8 +7,8 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-root_pos = fullfile(MEXEC_G.mexec_data_root,'nav','pos');
-root_hed = fullfile(MEXEC_G.mexec_data_root,'nav','hed');
+root_pos = mgetdir(default_navstream);
+root_hed = mgetdir(default_hedstream);
 if exist('default_attstream','var')
     doatt = 1;
     root_att = fullfile(MEXEC_G.mexec_data_root,'nav','att');

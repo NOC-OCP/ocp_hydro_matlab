@@ -45,6 +45,13 @@ end
 %formerly scanedit (for additional bad scan ranges)
 %now can also/alternately be applied using time or any other variable (e.g.
 %press) as the indicative variable
+% example (to edit times out of three tsg variables where tsg time is in
+% datenum form):                 
+% badtimes = [datenum(2022,7,1) datenum(2022,7,12,14,6,0); ...
+%             datenum(2022,7,28,12,28,0) datenum(2022,7,28,17,20,0)];
+% castopts.badtime.conductivity_raw = badtimes;
+% castopts.badtime.salinity_raw = badtimes;
+% castopts.badtime.temph_raw = badtimes;
 cfn = fieldnames(castopts);
 iibp = find(strncmp('bad',cfn,3));
 for bpno = 1:length(iibp)

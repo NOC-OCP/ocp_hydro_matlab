@@ -8,14 +8,21 @@ function [d, comment] = apply_guiedits(d, xvar, edfilepat, varargin)
 % useful if you've clobbered the _raw_cleaned.nc files after running
 % mctd_rawedit (for instance, if you've gone back to _noctm versions)
 %
-% optional 4th argument accounts for the fact that if oxygen alignment is
-% done in mctd_02, mctd_rawedit will have inspected aligned data but this
-% step is applied before alignment, so bad scans for oxygen variables need
-% to be offset
+% optional 4th argument can be set 1 to account for the fact that if oxygen
+% alignment is done in mctd_02, mctd_rawedit will have inspected aligned
+% data but this step is applied before alignment, so bad scans for oxygen
+% variables need to be offset
+%
+% optional fifth argument gives a tolerance for finding matching points
+% (useful if the indepvar was not integers)
 
 redoctm = 0;
+tol = 0;
 if nargin>3
     redoctm = varargin{1};
+    if nargin>4
+        tol = varargin{2};
+    end
 end
 if redoctm
     opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
@@ -31,26 +38,29 @@ eddir = fileparts(edfilepat);
 %get list of variables and scans to NaN
 clear donan
 for fno = 1:length(edfiles)
-    clear var
+    clear varn
     efname = edfiles(fno).name;
     fid = fopen(fullfile(eddir,efname),'r');
     a = textscan(fid,'%s'); a = a{1};
     fclose(fid);
     ii = find(strcmp(a,'ot_version')) + 3;
-    if isempty(ii); ii = 1; end
+    if isempty(ii)
+        ii = find(strncmp(a,'indepvar',14))+2;
+        if isempty(ii); ii = 1; end
+    end
     if length(a)>ii
         for lno = ii:length(a)
             s = str2double(a{lno});
             if isempty(s) || isnan(s)
-                var = a{lno}; %variable name
-                if ~exist('donan','var') || ~isfield(donan,var)
-                    donan.(var) = []; %initialise, if we didn't have it in an earlier file
+                varn = a{lno}; %variable name
+                if ~exist('donan','var') || ~isfield(donan,varn)
+                    donan.(varn) = []; %initialise, if we didn't have it in an earlier file
                 end
             else
-                if redoctm && contains(var,'oxygen')
+                if redoctm && contains(varn,'oxygen')
                     s = s+oxy_align*24; 
                 end
-                donan.(var) = [donan.(var) s]; %scan
+                donan.(varn) = [donan.(varn) s]; %scan
             end
         end
     else
@@ -66,7 +76,8 @@ end
 vars = fieldnames(donan);
 comment = '';
 for vno = 1:length(vars)
-    m = ismember(d.(xvar),donan.(vars{vno}));
+    md = min(abs(d.(xvar)(:)'-donan.(vars{vno})(:)));
+    m = md<=tol;
     if sum(m)
         d.(vars{vno})(m) = NaN;
         comment = '\n saved GUI edits reapplied';

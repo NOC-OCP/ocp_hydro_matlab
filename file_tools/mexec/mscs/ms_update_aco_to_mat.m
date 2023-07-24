@@ -49,7 +49,10 @@ tic; toco=toc; % start clock
 
 % bak en697
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-cmd = ['cat /local/users/pstar/projects/rpdmoc/' mcruise '/mcruise/data/scs/scs_daily/' tstream '*.ACO >! /local/users/pstar/projects/rpdmoc/en697/mcruise/data/scs_sed/' tstream '.ACO']; [status,result ] = system(cmd);
+
+fullfn = ['/local/users/pstar/projects/rpdmoc/' mcruise '/mcruise/data/scs/scs_sed/' tstream '.ACO']; if exist(fullfn,'file')==2; cmd = ['/bin/rm ' fullfn];  [status,result ] = system(cmd); end
+
+cmd = ['cat /local/users/pstar/projects/rpdmoc/' mcruise '/mcruise/data/scs/scs_daily/' tstream '*.ACO > /local/users/pstar/projects/rpdmoc/' mcruise '/mcruise/data/scs/scs_sed/' tstream '.ACO']; [status,result ] = system(cmd);
 
 faco = [tstream '.ACO'];
 ftpl = [tstream '.TPL'];
@@ -66,7 +69,7 @@ if exist(fullfmat,'file') == 2
     numdatavars = length(vnames);
 else
     % load var list
-    varcells = mtextdload(fullftpl);
+    varcells = mtextdload(fullftpl,',',0);
     numdatavars = length(varcells);
 
     vnames = cell(numdatavars,1); % empty cells

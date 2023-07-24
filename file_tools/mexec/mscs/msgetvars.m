@@ -1,5 +1,5 @@
-function [vars units] = msgetvars(instream)
-% function [vars units] = msgetvars(instream)
+function [vars, units] = msgetvars(instream)
+% function [vars, units] = msgetvars(instream)
 %
 % first draft BAK JC032
 % 
@@ -26,23 +26,10 @@ function [vars units] = msgetvars(instream)
 
 m_common
 tstream = msresolve_stream(instream);
-
-% some users like to alias ls to have options that return extra chars at the
-% end of file names
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-[MEXEC.status result] = unix(['/bin/ls -1 ' uway_sed '/' tstream '.TPL' ' | head -1']);
-
-if MEXEC.status == 1
-    m = 'There appears to be a problem in mtvars';
-    m2 = result;
-    fprintf(MEXEC_A.Mfider,'%s\n',' ',m,m2,' ')
-    return
-end
-
-% remove any c/r or nl characters from the result
-snl = sprintf('\n'); knl = strfind(result,snl); result(knl) = [];
-scr = sprintf('\r'); kcr = strfind(result,scr); result(kcr) = [];
-
+[~,result] = msgetstreamfilenames(tstream,'.TPL');
+kd = strfind(result,newline);
+result = result(1:kd(1)-1);
+result = replace(result,newline,'');
 
 scs_name = result;
 % allcell = mtextdload(scs_name); % load the comma-delimited var names and units into a cell array

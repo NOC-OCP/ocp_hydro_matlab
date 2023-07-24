@@ -200,13 +200,16 @@ for kloop = klist
             d.datetime = datestr(m_commontime(d,timvar,h,'datenum'), out.datetimeform);
         end
     end
-    if isfield(out,'varsh') && ~isempty(out.varsh) && sum(strcmp('date',out.varsh(:,3)))
-        if ~isfield(h,'date') && (~isfield(in,'extrah') || ~isfield(in.extrah,'date'))
+    if isfield(out,'varsh') && ~isempty(out.varsh)
+        if sum(strcmp('date',out.varsh(:,3))) && (~isfield(h,'date') && (~isfield(in,'extrah') || ~isfield(in.extrah,'date')))
             dn = m_commontime(d.time(d.press==max(d.press)),'time',h,'datenum');
             if ~isfield(out,'dateform'); out.dateform = 'yyyymmdd'; end
             if ~isfield(out,'timeform'); out.timeform = 'HHMM'; end
             h.date = datestr(dn,out.dateform);
             h.time = datestr(dn,out.timeform);
+        end
+        if sum(strcmp('statnum',out.varsh(:,3))) && ~issam
+            h.statnum = kloop;
         end
     end
     if isfield(out,'time_units')

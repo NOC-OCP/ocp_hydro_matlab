@@ -111,7 +111,7 @@ if ~isempty(stnall)
     for k = 1:length(statnum)
         stnstr = sprintf('%03d',statnum(k));
 
-        %lat, lon, ctd depths and altimeter
+        %lat, lon, ctd depths
         fnsal = fullfile(root_ctd, ['ctd_' mcruise '_' stnstr '_psal']);
         if exist(m_add_nc(fnsal),'file')
             [dpsal, hpsal] = mloadq(fnsal,'/');
@@ -119,11 +119,6 @@ if ~isempty(stnall)
             lon(k) = hpsal.longitude;
             maxp(k) = max(dpsal.press);
             maxd(k) = sw_dpth(maxp(k),lat(k));
-            if isfield(dpsal, 'altimeter')
-                minalt(k) = min(dpsal.altimeter(find(dpsal.press>(maxp(k)-30))));
-            else
-                minalt(k) = NaN;
-            end
         end
 
         %winch
@@ -188,7 +183,8 @@ if ~isempty(stnall)
     bestdeps = best_station_depths(stnall);
     [~,ia,ib] = intersect(statnum,bestdeps(:,1));
     cordep(ia) = bestdeps(ib,2);
-    minalt((cordep-maxd)>99) = -9;
+    minalt(ia) = bestdeps(ib,3);
+    minalt((cordep-maxd)>99 | isnan(minalt)) = -9;
     resid = maxd+minalt-cordep;
     resid(cordep==-999 | maxd==-999 | minalt==-9) = -999;
 
