@@ -1,7 +1,7 @@
-switch scriptname
+switch opt1
 
     case 'castpars'
-        switch oopt
+        switch opt2
             case 'nnisk'
                 nnisk = 12;
             case 'oxy_align'
@@ -12,8 +12,8 @@ switch scriptname
                 shortcasts = 42;
         end
 
-    case 'm_setup'
-        switch oopt
+    case 'setup'
+        switch opt2
             case 'setup_datatypes'
                 use_ix_ladcp = 'query';
             case 'time_origin'
@@ -21,7 +21,7 @@ switch scriptname
         end
         
     case 'ship'
-        switch oopt
+        switch opt2
             case 'datasys_best'
                         default_navstream = 'pospmv';
                         default_hedstream = 'attpmv';
@@ -30,7 +30,7 @@ switch scriptname
         end
 
     case 'batchactions'
-        switch oopt
+        switch opt2
             case 'output_for_others'
                 syncfrom = '/local/users/pstar/jc238/mcruise/data/collected_files/';
                 syncto = '/local/users/pstar/mounts/public/JC238/ctd_sam_uway_collected_files/';
@@ -38,7 +38,7 @@ switch scriptname
         end
 
     case 'mctd_01'
-        switch oopt
+        switch opt2
             case 'cnvfilename'
                 if redoctm
                     cnvfile = sprintf('%s_CTD_%03d.cnv', upper(mcruise), stnlocal);
@@ -54,7 +54,7 @@ switch scriptname
         end
 
     case 'mctd_02'
-        switch oopt
+        switch opt2
             case 'rawedit_auto'
                 if stnlocal==3
                    castopts.badscan.transmittance = [0 inf]; %instrument went bad pretty much the whole cast
@@ -99,7 +99,7 @@ switch scriptname
         end
 
     case 'mctd_03'
-        switch oopt
+        switch opt2
             case 's_choice'
                 s_choice = 2;
             case 'o_choice'
@@ -107,7 +107,7 @@ switch scriptname
         end
 
     case 'mfir_01'
-        switch oopt
+        switch opt2
             case 'blinfile'
                 blinfile = fullfile(root_botraw,sprintf('%s_CTD_%03d.bl', upper(mcruise), stnlocal));
             case 'nispos'
@@ -142,7 +142,7 @@ switch scriptname
         end
 
     case 'best_station_depths'
-        switch oopt
+        switch opt2
             case 'bestdeps'
                 % only for stations where we can't use ctd+altimeter
                 % replacedeps = [cast_number depth]
@@ -152,7 +152,7 @@ switch scriptname
         end
 
     case 'station_summary'
-        switch oopt
+        switch opt2
             case 'sum_varsams'
                 snames = {'nsal' 'noxy' 'nnut_shore' 'nco2_shore'};
                 sgrps = {{'botpsal'}
@@ -162,7 +162,7 @@ switch scriptname
         end
 
     case 'mout_exch'
-        switch oopt
+        switch opt2
             case 'woce_expo'
                 expocode = '740H20220712';
                 sect_id = 'Ellet Line -- OSNAP-East';
@@ -229,7 +229,7 @@ switch scriptname
         
                 %%%%%%%%%% mday_01_fcal %%%%%%%%%%
     case 'mday_01_fcal'
-        switch oopt
+        switch opt2
             case 'uway_factory_cal'
                 switch abbrev
                     case 'surfmet'
@@ -248,7 +248,7 @@ switch scriptname
         %%%%%%%%%% end mday_01_fcal %%%%%%%%%%
 
     case 'mtsg_medav_clean_cal'
-        switch oopt
+        switch opt2
             case 'tsg_edits'
                 badtimes = [datenum(2022,7,1) datenum(2022,7,12,14,6,0)
                     datenum(2022,7,28,12,28,0) datenum(2022,7,28,17,20,0)];
@@ -274,7 +274,7 @@ switch scriptname
         end
 
     case 'msal_01'
-        switch oopt
+        switch opt2
             case 'sal_files'
                 salfiles = dir(fullfile(root_sal, ['JC238*.csv']));
                 salfiles = {salfiles.name};
@@ -327,7 +327,7 @@ switch scriptname
         end
 
     case 'moxy_01'
-        switch oopt
+        switch opt2
             case 'oxy_files'
                 ofiles = {'Winkler_Calculation_Spreadsheet_JC238_2022.xlsx'};
                 hcpat = {'CTD cast no.'};
@@ -362,7 +362,7 @@ switch scriptname
 
         %%%%%%%%%% mfir_03 %%%%%%%%%%
     case 'mfir_03'
-        switch oopt
+        switch opt2
             case 'fir_fill'
                 firmethod = 'medint';
                 firopts.int = [-1 120]; %average over 5 s to match .ros file used in BASproc
@@ -373,7 +373,7 @@ switch scriptname
                 
         %%%%%%%%%% mctd_checkplots %%%%%%%%%%
     case 'mctd_checkplots'
-        switch oopt
+        switch opt2
             case 'plot_saltype'
                 saltype = 'asal';
         end
@@ -382,7 +382,7 @@ switch scriptname
                 
         %%%%%%%%%% msec_grid %%%%%%%%%%
     case 'msec_grid'
-        switch oopt
+        switch opt2
             case 'sections_to_grid'
 	    sections = {'osnape' 'ungridded'};
             case 'sec_stns_grids'
@@ -398,7 +398,7 @@ switch scriptname
         end
 
     case 'msam_ashore_flag'
-        switch oopt
+        switch opt2
             case 'shore_sam_types'
                 samtypes = {'nut', 'co2'};
             case 'sam_ashore_nut'
@@ -421,14 +421,14 @@ switch scriptname
         end
         
     case 'sam_all_make'
-        switch oopt
+        switch opt2
             case 'sam_all_restart_flag'
                 sam_all_restart = {'sam','sbe35','sal','oxy','shore'};
                 klist = [1:41 43:44];
         end
         
     case 'ix_cast_params'
-        switch oopt
+        switch opt2
             case 'ladcpopts'
                 if isfield(cfg,'pdir_root') && ~strcmp(cfg.pdir_root,'processed')
                     %SPIKES
@@ -448,7 +448,7 @@ switch scriptname
         end
         
             case 'codas_to_mstar'
-        switch oopt
+        switch opt2
             case 'codas_file'
                 fnin = fullfile(root_vmadcp, 'spprocessing', 'JC238_merged', 'proc', [inst '.uvship'], 'contour', [inst '_merged_uvship.nc']);
         end

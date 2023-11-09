@@ -40,7 +40,7 @@ if nargin>0
 end
 
 %what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='en705'; 
+MEXEC_G.MSCRIPT_CRUISE_STRING='jc238'; 
 %default data time origin is now set in opt_cruise
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.other_programs_root = '/local/users/pstar/programs/others/'; 
