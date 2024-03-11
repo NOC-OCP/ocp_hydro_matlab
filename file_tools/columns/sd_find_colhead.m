@@ -63,8 +63,8 @@ else
     %icolunits
     iih = repmat(iih,1,nhl)+repmat([0:nhl-1],length(iih),1);
     varargout{1} = iih;
-    nb = size(iih,1);
 end
+nb = size(iih,1);
 
 %convert the relevant rows from iih to matlab variable name forms
 if nargout>1 && ~isempty(iih)

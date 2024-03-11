@@ -2,20 +2,24 @@ function varargout = m_setup(varargin)
 %  m_setup: to be run before attempting any mexec processing of
 %  cruise data; sets up environment (global variables and paths)
 %
-%  at sea, you can configure once at start of cruise, most likely editing
-%  just first block of code, or at most down to line containing "End of
+%  for a given cruise, you can configure the first block of code below
+%  initially, as well as setting up the cruise options file
+%  (opt_{cruise}.m, e.g. opt_jc238.m)
+%  
+%  for later processing you may then just first block of code, or at most down to line containing "End of
 %  items to be edited on each site/cruise" 
+%  
 %
-%  you can also pass selected fields (those in the first block of code
-%    below) to MEXEC_G by setting them in optional input, structure
-%    MEXEC_G_override. this may be useful if you want to reprocess an old
-%    cruise's data with a newer branch's software. 
-%    fields to override: 
+%  you can also pass selected fields (below) to MEXEC_G by passing a
+%  structure as input: 
+%    >> m_setup(MEXEC_G_user)
+%    these may be useful if you want to reprocess an old cruise's data with
+%    a newer branch's software.  
 %      MSCRIPT_CRUISE_STRING (e.g. 'jc238')
 %      MDEFAULT_DATA_TIME_ORIGIN (e.g. [2022 1 1 0 0 0] -- but note that
 %        changing this mid-processing, or between processing and reading
-%        data, causes problems, so it should only be used in conjunction 
-%        with overriding MSCRIPT_CRUISE_STRING)
+%        data, causes problems, so it should only be used to match the
+%        MSCRIPT_CRUISE_STRING you are supplying)
 %      SITE_suf (e.g. 'atsea' or 'atnoc' to make SITE 'jc238_atsea' etc.)
 %      mexec_source_root (e.g. '~/programs/ocp/ocp_hydro_matlab/')
 %      other_programs_root (e.g. '~/programs/others/')
@@ -23,6 +27,11 @@ function varargout = m_setup(varargin)
 %      quiet (0 to make all programs verbose, 1 to make only
 %        mexec_processing_scripts verbose but file_tools/mexec quiet, 2 to
 %        make all quiet)
+%      ix_ladcp (1 to add LDEO IX LADCP processing scripts to path; 0 to
+%      not add them -- you can set this per cruise but if you want to
+%      process mooring data using rodb tools [as for RAPID and OSNAP] this
+%      should be set to 0 for the Matlab session, as some scripts in the
+%      two toolboxes have the same names)
 %
 %  optional output path_choose specifies whether LADCP programs have been
 %    added to the path or not
@@ -35,33 +44,29 @@ function varargout = m_setup(varargin)
 clear MEXEC_G
 global MEXEC_G
 
-if nargin>0
-    MEXEC_G_overrride = varargin{1};
-end
-
-%what are we processing and where? 
+%defaults: what are we processing and where? 
 MEXEC_G.MSCRIPT_CRUISE_STRING='jc238'; 
-%default data time origin is now set in opt_cruise
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.other_programs_root = '/local/users/pstar/programs/others/'; 
 MEXEC_G.mexec_data_root = '/local/users/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 
-%replace with any parameters passed as inputs
-if exist('MEXEC_G_force','var') && isstruct(MEXEC_G_force)
-    fn = fieldnames(MEXEC_G_force);
+%replace with user-supplied parameters for this session/run
+if nargin>0 && isstruct(varargin{1})
+    MEXEC_G_user = varargin{1};
+    fn = fieldnames(MEXEC_G_user);
     fn0 = fieldnames(MEXEC_G);
     for fno = 1:length(fn)
         if ~ismember(fn{fno},fn0)
             warning('setting unset %s in MEXEC_G; may be overwritten below',fn{fno})
         end
-        MEXEC_G.(fn{fno}) = MEXEC_G_force.(fn{fno});
+        MEXEC_G.(fn{fno}) = MEXEC_G_user.(fn{fno});
     end
 else
-    disp('MEXEC_G_force not set; using defaults')
+    disp('MEXEC_G_user not supplied; using defaults')
 end
-clear MEXEC_G_force
+clear MEXEC_G_user
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 %%%%% (or it can be edited in opt_{cruise}.m instead) %%%%%

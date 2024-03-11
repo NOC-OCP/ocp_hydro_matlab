@@ -1,43 +1,83 @@
-switch scriptname
+switch opt1
     
-    
-    %%%%%%%%%% castpars (not a script) %%%%%%%%%%
+    case 'setup'
+        switch opt2
+            case 'time_origin'
+                MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2014 1 1 0 0 0];
+        end
+
     case 'castpars'
-        switch oopt
+        switch opt2
             case 'nnisk'
                 nnisk = 24;
+            case 'oxyvars'
+                oxyvars = {'oxygen_sbe1', 'oxygen'};
+            case 's_choice'
+                stns_alternate_s = 143;
+            %case 'o_choice'
+            %    stns_alternate_o = 143;
+            case 'bestdeps'
+                iscor = 1;
+                replacedeps = [1 3024-2; % from CTD deck unit log. Not full depth cast
+                34 3650-14; % from CTD deck unit log. Not full depth cast
+                63 128; % shallow cast no ladcp
+                64 145; % shallow cast no ladcp
+                70 2442-25; % from CTD deck unit log. Not full depth cast
+                109 145; % shallow cast no ladcp
+                161 109; % from CTD deck unit log; no ladcp
+                162 146; % shallow cast no ladcp
+                163 227; % shallow cast no ladcp
+                199 109; % from CTD deck unit log; no ladcp
+		216 312;
+		217 136;
+		218 127;
+		219 125;
+		220 128;
+		221 126;
+		222 121;
+		223 54;
+		224 60;
+		225 212;
+		226 155;
+		227 170;
+		228 134;
+		229 45;
+		230 78;
+		231 87;
+		232 72;
+		233 36;
+		234 171]; % from CTD deck unit log; no ladcp
+                iis1 = [20 25 29 35 39 44 58 179 193];
+		bestdeps(iis1,2) = bestdeps(iis1+1,2); %shallow cast before deep cast
         end
-        %%%%%%%%%% end castpars (not a script) %%%%%%%%%%
         
-        %%%%%%%%%% mctd_02b %%%%%%%%%%
-    case 'mctd_02b'
-        switch oopt
-            case 'oxyhyst'
-                if ismember(stnlocal, 1:77)
-                    H1 = -0.026; H2 = 5000; H3 = 1000;
-                elseif ismember(stnlocal, 78:300) %second grouping, hyst has changed
-                    H1 = -0.022; H2 = 5000; H3 = 1000;
+    case 'ctd_proc'
+        switch opt2
+            case 'raw_corrs'
+                oxyhyst.H2 = 5000;
+                oxyhyst.H3 = 1000;
+                if stnlocal<=77
+                    oxyhyst.H1 = -0.026;
+                elseif stnlocal>=78 && stnlocal<=300
+                    oxyhyst.H1 = -0.022;
                 end
-        end
-        %%%%%%%%%% end mctd_02b %%%%%%%%%%
-        
-        %%%%%%%%%% mctd_03 %%%%%%%%%%
-    case 'mctd_03'
-        switch oopt
-            case '24hz_edit'
+            case 'rawedit'
                 if stnlocal == 143
-                    % remove some fouling on oxy, cond1 and temp1 on upcast and replace
+                    % original comment: remove some fouling on oxy, cond1 and temp1 on upcast and replace
                     % with cond2 and temp2
-                    scanlo = 166024; scanhi = 177940;
-                    badscans24 = {'oxygen' scanlo scanhi};
-                    switchscans24 = {'cond' scanlo scanhi; 'temp' scanlo scanhi};
+                    % YLF 2023-12-11 mixing sensor records on one case is
+                    % no longer supported, instead make sensor 2 primary
+                    % for this cast (under castpars above)
+                    co.badscan.temp1 = [166024 177940];
+                    co.badscan.cond1 = co.badscan.temp1;
+                    co.badscan.oxygen = co.badscan.temp1;
                 end
         end
         %%%%%%%%%% end mctd_03 %%%%%%%%%%
         
         %%%%%%%%%% mfir_03 %%%%%%%%%%
     case 'mfir_03'
-        switch oopt
+        switch opt2
             case 'fir_fill'
                 if stnlocal == 143
                     fillstr = 'k';
@@ -47,7 +87,7 @@ switch scriptname
         
         %%%%%%%%%% mwin_01 %%%%%%%%%%
     case 'mwin_01'
-        switch oopt
+        switch opt2
             case 'winchtime'
                 time_window = [-600 600]; % bak jr302 avoid catching unwanted data beyond gap on station 065 after power failure
                 if(stnlocal == 65); time_window = [-600 300]; end
@@ -56,7 +96,7 @@ switch scriptname
         
         %%%%%%%%%% mwin_to_fir %%%%%%%%%%
     case 'mwin_to_fir'
-        switch oopt
+        switch opt2
             case 'winch_fix'
                 if stnlocal == 65
                     d.wireout(14:24) = [40 30 30 25 20 15 15 7 7 3 3];
@@ -67,7 +107,7 @@ switch scriptname
         
         %%%%%%%%%% msal_standardise_avg %%%%%%%%%%
     case 'msal_standardise_avg'
-        switch oopt
+        switch opt2
             case 'flags'
                 if stnlocal == 7; otdata([1 2 3 4 5],10) = 3; end % set some flags. measured on wrong scale ?
                 if stnlocal == 8; otdata([1 2 3 4 5],10) = 3; end % set some flags
@@ -133,7 +173,7 @@ switch scriptname
         
         %%%%%%%%%% mnut_01 %%%%%%%%%%
     case 'mnut_01'
-        switch oopt
+        switch opt2
             case 'vars'
                 varnames = {'position','statnum','sampnum','sio4','sio4_flag','po4','po4_flag','TP','TP_flag','TN','TN_flag','no3no2','no3no2_flag','no2','no2_flag','nh4','nh4_flag'};
                 varunits = {'number','number','number','umol/l','woceflag','umol/l','woceflag','umol/l','woceflag','umol/l','woceflag','umol/l','woceflag','umol/l','woceflag','umol/l','woceflag'};
@@ -151,7 +191,7 @@ switch scriptname
         
         %%%%%%%%%% mcfc_01 %%%%%%%%%%
     case 'mcfc_01'
-        switch oopt
+        switch opt2
             case 'inputs'
                 %list of variables and units in input, in output, and units
                 %scale factor
@@ -174,7 +214,7 @@ switch scriptname
         
         %%%%%%%%%% mcfc_02 %%%%%%%%%%
     case 'mcfc_02'
-        switch oopt
+        switch opt2
             case 'infile1'
                 infile1 = fullfile(root_cfc, [prefix1 '01']);
             case 'cfclist'
@@ -186,7 +226,7 @@ switch scriptname
         
         %%%%%%%%%% ctd_evaluate_sensors %%%%%%%%%%
     case 'ctd_evaluate_sensors'
-        switch oopt
+        switch opt2
             case 'csensind'
                 if sensnum==1
                     sensind = {find(d.statnum >= 1 & d.statnum <= 999 & d.upress > 1000)};   % first psal1
@@ -293,7 +333,7 @@ switch scriptname
         
         %%%%%%%%%% mtsg_01 %%%%%%%%%%
     case 'mtsg_01'
-        switch oopt
+        switch opt2
             case 'salcsv'
                 sal_csv_file = ['tsg_dy040_' stn_string '.csv_linux'];
             case 'cellT'
@@ -317,7 +357,7 @@ switch scriptname
         
         %%%%%%%%%% mtsg_cleanup %%%%%%%%%%
     case 'mtsg_cleanup'
-        switch oopt
+        switch opt2
             case 'kbadlims'
                 kbadlims = [
                     %datenum([2013 01 01 00 00 00]) datenum([2013 03 18 14 51 00]) % start of cruise
@@ -332,7 +372,7 @@ switch scriptname
         
         %%%%%%%%%% mtsg_bottle_compare %%%%%%%%%%
     case 'mtsg_bottle_compare'
-        switch oopt
+        switch opt2
             case 'sdiff'
                 clear sdiffsm
                 sc1 = 0.5; sc2 = 0.02;
@@ -341,11 +381,11 @@ switch scriptname
         
         %%%%%%%%%% tsgsal_apply_cal %%%%%%%%%%
     case 'tsgsal_apply_cal'
-        switch oopt
+        switch opt2
             case 'saladj'
                 botfile = ['ocl_' MEXEC_G.MSCRIPT_CRUISE_STRING '_01_medav_clean_botcompare'];
                 MARGS_STORE = MEXEC_A.MARGS_IN_LOCAL;
-                [db hb] = mload(botfile,'/');
+                [db, hb] = mload(botfile,'/');
                 MEXEC_A.MARGS_IN_LOCAL = MARGS_STORE; % put things back how they were !
                 % same code as used to generate smoothed adjustment in
                 % mtsg_bottle_compare
@@ -375,48 +415,10 @@ switch scriptname
         %%%%%%%%%% end tsgsal_apply_cal %%%%%%%%%%
         
         
-        %%%%%%%%%% populate_station_depths %%%%%%%%%%
-    case 'populate_station_depths'
-        switch oopt
-            case 'bestdeps'
-                replacedeps = [1 3024-2; % from CTD deck unit log. Not full depth cast
-                34 3650-14; % from CTD deck unit log. Not full depth cast
-                63 128; % shallow cast no ladcp
-                64 145; % shallow cast no ladcp
-                70 2442-25; % from CTD deck unit log. Not full depth cast
-                109 145; % shallow cast no ladcp
-                161 109; % from CTD deck unit log; no ladcp
-                162 146; % shallow cast no ladcp
-                163 227; % shallow cast no ladcp
-                199 109; % from CTD deck unit log; no ladcp
-		216 312;
-		217 136;
-		218 127;
-		219 125;
-		220 128;
-		221 126;
-		222 121;
-		223 54;
-		224 60;
-		225 212;
-		226 155;
-		227 170;
-		228 134;
-		229 45;
-		230 78;
-		231 87;
-		232 72;
-		233 36;
-		234 171]; % from CTD deck unit log; no ladcp
-                iis1 = [20 25 29 35 39 44 58 179 193];
-		bestdeps(iis1,2) = bestdeps(iis1+1,2); %shallow cast before deep cast
-        end
-        %%%%%%%%%% end populate_station_depths %%%%%%%%%%
-        
         
         %%%%%%%%%% list_bot %%%%%%%%%%
     case 'list_bot'
-        switch oopt
+        switch opt2
             case 'samadj'
                 %dsam.uoxygen = 1.12*dsam.uoxygen + dsam.upress*7/3000; % nominal cal stns 1 and 2
                 dsam.cruise = 302 + zeros(size(dsam.sampnum));
@@ -429,10 +431,9 @@ switch scriptname
         end
         %%%%%%%%%% end list_bot %%%%%%%%%%
         
-        %%%%%%%%%% station_summary %%%%%%%%%%
-    case 'station_summary'
-        switch oopt
-            case 'sum_sams'
+    case 'outputs'
+        switch opt2
+            case 'summary'
                 snames = {'noxy'; 'nnuts'; 'nco2'; 'ncfc'; 'nother'};
                 sgrps = { {'oxy'} %list of oxy variables
                     {'silc' 'phos' 'totnit'} %list of nuts variables
@@ -446,15 +447,15 @@ switch scriptname
                 ki = 3:16; comments(ki) = repmat({'OSNAP-W; shelf'}, length(ki), 1);
                 ki = 54:62; comments(ki) = repmat({'A-B arc'}, length(ki), 1);
                 ki = [62 71:76]; comments(ki) = repmat({'B-C arc'}, length(ki), 1);
-                ki = [94:101]; comments(ki) = repmat({'C-D arc'}, length(ki), 1);
-                ki = [41:53]; comments(ki) = repmat({'OSNAP-W; Line A'}, length(ki), 1);
-                ki = [63:70]; comments(ki) = repmat({'Line B'}, length(ki), 1);
-                ki = [101:109]; comments(ki) = repmat({'Line C'}, length(ki), 1);
-                ki = [77:94]; comments(ki) = repmat({'OSNAP-E; Line D'}, length(ki), 1);
-                ki = [110:160]; comments(ki) = repmat({'OSNAP-E'}, length(ki), 1);
-                ki = [161:161]; comments(ki) = repmat({'OSNAP-E/EEL'}, length(ki), 1);
-                ki = [162:198]; comments(ki) = repmat({'EEL'}, length(ki), 1);
-                ki = [199:999]; comments(ki) = repmat({'OSNAP-E/EEL'}, length(ki), 1);
+                ki = 94:101; comments(ki) = repmat({'C-D arc'}, length(ki), 1);
+                ki = 41:53; comments(ki) = repmat({'OSNAP-W; Line A'}, length(ki), 1);
+                ki = 63:70; comments(ki) = repmat({'Line B'}, length(ki), 1);
+                ki = 101:109; comments(ki) = repmat({'Line C'}, length(ki), 1);
+                ki = 77:94; comments(ki) = repmat({'OSNAP-E; Line D'}, length(ki), 1);
+                ki = 110:160; comments(ki) = repmat({'OSNAP-E'}, length(ki), 1);
+                ki = 161:161; comments(ki) = repmat({'OSNAP-E/EEL'}, length(ki), 1);
+                ki = 162:198; comments(ki) = repmat({'EEL'}, length(ki), 1);
+                ki = 199:999; comments(ki) = repmat({'OSNAP-E/EEL'}, length(ki), 1);
                 comments{1} = 'Test station 1';
                 comments{2} = 'Test station 2';
                 comments{20} = 'Shallow; CH4/N2O only';
@@ -488,25 +489,25 @@ switch scriptname
                 comments{234} = 'OSNAP-E/EEL final station';
             case 'parlist'
                 parlist = [' sal'; ' oxy'; ' nut'; ' car'; ' co2'; ' cfc'; ' ch4'];
-        end
-        %%%%%%%%%% end station_summary %%%%%%%%%%
-        
-        %%%%%%%%%% mout_cchdo_ctd %%%%%%%%%%
-    case 'mout_cchdo_ctd'
-        switch oopt
-            case 'expo'
+            case 'exch'
                 expocode = '74JC20140606';
                 sect_id = 'AR07W/OSNAP_W/AR07E/OSNAP_E/AR28';
+                submitter = 'OCPNOCBAK';
+                common_headstr = {'#SHIP: RRS James Clark Ross';...
+                    '#Cruise JR302; Ragnarocc***';
+                    ['#EXPOCODE: ' expocode];...
+                    '#DATES: ';...
+                    '#Chief Scientist: ';...
+                    '#Supported by grants from the UK Natural Environment Research Council.'};
             case 'outfile'
                 outfile = 'ar07_74JC20140606';
             case 'headstr'
-                headstring = ['# The CTD PRS;  TMP;  SAL;  OXY; data are all calibrated and good . '];
-        end
-        %%%%%%%%%% end mout_cchdo_ctd %%%%%%%%%%
+        '# The CTD PRS;  TMP;  SAL;  OXY; data are all calibrated and good . ';
+                end
         
         %%%%%%%%%% mout_cchdo_sam %%%%%%%%%%
     case 'mout_cchdo_sam'
-        switch oopt
+        switch opt2
             case 'expo'
                 expocode = '74JC20140606';
                 sect_id = 'AR07W/OSNAP_W/AR07E/OSNAP_E/AR28';
@@ -517,7 +518,7 @@ switch scriptname
         
         %%%%%%%%%% msec_run_mgridp %%%%%%%%%%
     case 'msec_run_mgridp'
-        switch oopt
+        switch opt2
             case 'sections'
                 sections = {'osnapwupper' 'osnapwall' 'osnapeupper' 'osnapeall' 'eelupper' 'eelall' 'linebupper' 'lineball' 'linecupper' 'linecall' 'arcupper' 'arcall'};
             case 'gpars'
@@ -543,7 +544,7 @@ switch scriptname
         
         %%%%%%%%%% m_maptracer %%%%%%%%%%
     case 'm_maptracer'
-        switch oopt
+        switch opt2
             case 'kstatgroups'
                 kstatgroups = {[1:19 21:99]};
         end
