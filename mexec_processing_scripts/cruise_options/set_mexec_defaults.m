@@ -97,8 +97,14 @@ switch opt1
         switch opt2
             case 'redoctm'
             case 'cnvfilename'
+            case 'blfilename'
             case 'cast_split'
             case 'rawedit_auto'
+            case 'rawshow'
+                %by default, do not plot press_temp, turb, xmiss, fluor,
+                %lat, lon in mctd_rawshow
+                rawplotvars = {'temp1','temp2','cond1','cond2','press','oxygen_sbe1','oxygen_sbe2'};
+                show1 = 1; %do plot 1 hz also
             case 'raw_corrs'
                 oxyrev.H1 = -0.033;
                 oxyrev.H2 = 5000;

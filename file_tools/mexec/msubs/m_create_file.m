@@ -7,6 +7,11 @@ function m_create_file(ncfile)
 m_common
 
 
+d = fileparts(ncfile.name);
+if ~exist(d,'dir')
+    warning('creating directory %s',d)
+    mkdir(d)
+end
 nc_create_empty(ncfile.name,'nc_clobber');
 
 hdef = m_default_attributes;

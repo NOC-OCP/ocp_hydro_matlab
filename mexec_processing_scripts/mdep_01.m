@@ -18,10 +18,10 @@ root_sum = mgetdir('sum');
 
 deps_fn = fullfile(root_sum, ['station_summary_' mcruise '_all.nc']);
 [d,h] = mloadq(deps_fn,'/');
-iis = find(d.statnum==stnlocal);
+iis = find(d.statnum==stnlocal & ~isnan(d.cordep));
 
-if isempty(iis) || isnan(d.cordep(iis(1)))
-    warning([deps_fn ' does not contain depth for station ' stn_string '; not adding depth to any .nc files'])
+if isempty(iis)
+    warning([deps_fn ' does not contain depth value for station ' stn_string '; not adding depth to any .nc files'])
 else
     if length(iis)>1 && length(unique(bestdeps(iis,2)))>1
        warning([deps_fn ' contains more than one depth for station ' stn_string '; using first one'])

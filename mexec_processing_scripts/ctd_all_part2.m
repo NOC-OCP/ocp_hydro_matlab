@@ -8,8 +8,10 @@ catch me
     warning(me.message)
 end
 
-%bottle firing data
-stn = stnlocal; mfir_01;
+%bottle firing data into .fir file
+if ~exist(m_add_nc(blotfile),'file')
+    stn = stnlocal; mfir_01; %should be done in ctd_all_part1
+end
 if exist(m_add_nc(blotfile),'file')
     stn = stnlocal; mfir_03;
 

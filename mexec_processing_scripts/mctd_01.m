@@ -30,7 +30,7 @@ root_ctd = mgetdir('M_CTD');
 dataname = ['ctd_' mcruise '_' stn_string];
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
     otfile = fullfile(root_ctd, [dataname '_raw.nc']);
-else %in some cases, operate on original file (to remove large spikes), then apply align and CTM
+else %in some cases, operate on original file (e.g. to remove large spikes), then apply align and CTM
     otfile = fullfile(root_ctd, [dataname '_raw_noctm.nc']);
     disp('starting from noctm file')
 end
@@ -39,7 +39,7 @@ cdir = mgetdir('M_CTD_CNV');
 if redoctm
     cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', upper(mcruise), stnlocal));
     if ~exist(cnvfile,'file')
-        cnvfile = lower(cnvfile);
+        cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', mcruise, stnlocal));
     end
 else
     cnvfile = fullfile(cdir,sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal));
@@ -47,6 +47,7 @@ else
         cnvfile = lower(cnvfile);
     end
 end
+%now overwrite defaults if relevant
 opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
 if ~exist(cnvfile,'file')
     warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
@@ -117,6 +118,7 @@ ctdvarmap = {'prDM','press','dbar'
     'transmittance','transmittance','percent'
     'CStarAt0','attenuation','1/m'
     'turbWETbb0','turbidity','m^-1/sr'
+    'turbWETntu0','turbidity','NTU'
     'par','par','umol photons/m^2/sec'
     'par_slash_sat_slash_log','par','umol photons/m^2/sec'
     'par1','par_downlook','umol photons/m^2/sec'};

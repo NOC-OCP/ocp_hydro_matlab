@@ -10,11 +10,11 @@ root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
 blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stnlocal));
 if ~exist(blinfile,'file')
-    blinfile = lower(blinfile);
+    blinfile = fullfile(root_botraw, sprintf('%s_%03d.bl', mcruise, stnlocal));
 end
-opt1 = mfilename; opt2 = 'blinfile'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'blfilename'; get_cropt
 if ~exist(blinfile,'file')
-    fprintf(2,'.bl file not found; try sync again and enter to continue\n');
+    fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stnlocal);
     pause
     if ~exist(blinfile,'file')
         warning('no .bl file %s; skipping',blinfile)

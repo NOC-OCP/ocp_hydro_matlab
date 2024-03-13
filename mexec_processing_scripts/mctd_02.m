@@ -64,14 +64,14 @@ opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt
 
 [d, h] = mloadq(infile,'/');
 if min(d.press)<=-10 && (~isfield(co,'badpress') || ((isfield(co,'badtemp1') || isfield(co,'badtemp2')) && ~co.redoctm))
-    m = {['negative pressures <-10 in ' infile]};
+    m = {['negative pressures <-10 in ' infile ' may be a problem for GSW functions.']};
     if ~co.redoctm
         m = [m;
             'check d.press; if there are large spikes also affecting temperature, Ctrl-C'
-            'here, edit mctd_01 case in opt_' mcruise ', and reprocess this station from _noctm; otherwise,'];
+            'here, edit ctd_proc, redoctm case in opt_' mcruise ', and reprocess this station from _noctm; otherwise,'];
     end
     m = [m;
-        'you may want to edit mctd_02 case (rawedit_auto) to remove large'
+        'you may want to edit ctd_proc, rawedit_auto case of opt_' mcruise ' to remove large'
         'outlier values in pressure (and other variables) before the mctd_rawedit gui stage.'
         'Enter to continue.'];
     fprintf(1,'%s\n',m{:})
@@ -92,7 +92,7 @@ end
 
 %reapply hand edits
 edfilepat = fullfile(root_ctd,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stnlocal));
-[d, comment] = apply_guiedits(d, 'scan', edfilepat, co.redoctm);
+[d, comment] = apply_guiedits(d, 'scan', edfilepat, [co.redoctm stnlocal]);
 if ~isempty(comment)
     h.comment = [h.comment comment];
     didedits = 1;
@@ -105,7 +105,7 @@ if co.redoctm
     h.comment = [h.comment '\n cond corrected for cell thermal mass by ctd_apply_celltm'];
     opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
     opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
-    for no = 1:length(oxyvars)
+    for no = 1:size(oxyvars,1)
         d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+oxy_align);
     end
     h.comment = [h.comment '\n oxygen shifted by ' oxy_align ' s'];

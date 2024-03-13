@@ -67,6 +67,12 @@ for stn = klist
 
     end
 end
+fn = fieldnames(sg);
+for fno = 1:length(fn)
+    if isempty(sg.(fn{fno}))
+        sg = rmfield(sg,fn{fno});
+    end
+end
 sng = orderfields(sng);
 
 readme = {'sg has lists of stations and serial numbers for each sensor/position (e.g. temp1, cond1);'

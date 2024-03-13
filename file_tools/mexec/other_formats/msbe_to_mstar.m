@@ -93,7 +93,7 @@ head(index) = [];
 h.platform_type = 'ship'; % maybe a safe assumption ?'
 
 index = strncmp('** Ship',head,7);
-if ~isempty(index)
+if sum(index)
     st = head{index};
     isp = strfind(st,':');
     string = st(1+isp(1):end);
@@ -104,7 +104,7 @@ else
 end
 
 index = strncmp('** Cruise',head,9);
-if ~isempty(index)
+if sum(index)
     st = head{index};
     isp = strfind(st,':');
     string = st(1+isp(1):end);

@@ -1,4 +1,5 @@
 mctd_01; %read in sbe .cnv data to mstar
+stn = stnlocal; mfir_01 %sbe .bl file to mstar
 
 %apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise
 stn = stnlocal; mctd_02; 

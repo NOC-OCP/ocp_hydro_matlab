@@ -8,18 +8,19 @@ function [d, comment] = apply_guiedits(d, xvar, edfilepat, varargin)
 % useful if you've clobbered the _raw_cleaned.nc files after running
 % mctd_rawedit (for instance, if you've gone back to _noctm versions)
 %
-% optional 4th argument can be set 1 to account for the fact that if oxygen
+% optional 4th argument can be set [1 stnlocal] to account for the fact that if oxygen
 % alignment is done in mctd_02, mctd_rawedit will have inspected aligned
 % data but this step is applied before alignment, so bad scans for oxygen
 % variables need to be offset
 %
-% optional fifth argument gives a tolerance for finding matching points
+% optional 5th argument gives a tolerance for finding matching points
 % (useful if the indepvar was not integers)
 
 redoctm = 0;
 tol = 0;
 if nargin>3
     redoctm = varargin{1};
+    stnlocal = redoctm(2); redoctm = redoctm(1);
     if nargin>4
         tol = varargin{2};
     end

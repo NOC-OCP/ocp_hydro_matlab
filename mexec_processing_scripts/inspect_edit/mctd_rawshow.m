@@ -34,13 +34,16 @@ end
 close all
 
 opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt; nox = size(oxyvars,1);
+% limit variables to plot
+opt1 = 'ctd_proc'; opt2 = 'rawshow'; get_cropt
 
 % 1 hz file, so we can see if any small spikes survive into final data for
 % key variables
+if show1
 clear pshow5
 pshow5.ncfile.name = infile3;
 pshow5.xlist = 'time';
-pshow5.ylist = ['temp1 temp2 cond1 cond2 press'];
+pshow5.ylist = 'temp1 temp2 cond1 cond2 press';
 for no = 1:nox
     pshow5.ylist = [pshow5.ylist ' ' oxyvars{no,2}];
     if oxy_end
@@ -50,15 +53,20 @@ end
 pshow5.startdc = startdc;
 pshow5.stopdc = stopdc;
 mplotxy(pshow5);
+end
 
 % raw data main variables
 clear pshow1
 pshow1.ncfile.name = infile1;
 pshow1.xlist = 'time';
-pshow1.ylist = 'temp1 temp2 cond1 cond2 press';
-pshow1.startdc = startdc;
-pshow1.stopdc = stopdc;
-mplotxy(pshow1);
+ylist = {'temp1', 'temp2', 'cond1', 'cond2', 'press'};
+ylist = intersect(ylist, rawplotvars, 'stable');
+[ylist, pshow1.ylist] = mvars_in_file(ylist, infile1);
+if length(ylist)>1
+    pshow1.startdc = startdc;
+    pshow1.stopdc = stopdc;
+    mplotxy(pshow1);
+end
 
 % raw data oxygen
 clear pshow2
@@ -77,29 +85,36 @@ else
         pshow2.stopdcv.sbeoxyV1 = stopdco;
     end
 end
-[~, pshow2.ylist] = mvars_in_file(ylist, infile1);
-pshow2.startdc = startdc;
-pshow2.stopdc = stopdc;
-pshow2.cols = 'kgrbmcy'; % so raw oxygen in this plot matches 1 hz trace in figure 1.
-mplotxy(pshow2);
+ylist = intersect(ylist, rawplotvars, 'stable');
+[ylist, pshow2.ylist] = mvars_in_file(ylist, infile1);
+if length(ylist)>1
+    pshow2.startdc = startdc;
+    pshow2.stopdc = stopdc;
+    pshow2.cols = 'kgrbmcy'; % so raw oxygen in this plot matches 1 hz trace in figure 1.
+    mplotxy(pshow2);
+end
 
 %raw data fluor trans
 clear pshow3
 pshow3.ncfile.name = infile1;
 pshow3.xlist = 'time';
 ylist = {'press' 'turbidity' 'fluor' 'transmittance' 'par'};
-[~, pshow3.ylist] = mvars_in_file(ylist, infile1);
-pshow3.startdc = startdc;
-pshow3.stopdc = stopdc;
-mplotxy(pshow3);
+ylist = intersect(ylist, rawplotvars, 'stable');
+[ylist, pshow3.ylist] = mvars_in_file(ylist, infile1);
+if length(ylist)>1
+    pshow3.startdc = startdc;
+    pshow3.stopdc = stopdc;
+    mplotxy(pshow3);
+end
 
 %raw data lat and lon, carried after jc069 for ladcp processing
 %empty for dy040
 pshow4.ncfile.name = infile1;
 pshow4.xlist = 'time';
 ylist = {'latitude' 'longitude'};
+ylist = intersect(ylist, rawplotvars, 'stable');
 [ylist, pshow4.ylist] = mvars_in_file(ylist, infile1);
-if ~isempty(ylist)
+if length(ylist)>1
     pshow4.startdc = startdc;
     pshow4.stopdc = stopdc;
     mplotxy(pshow4);

@@ -100,7 +100,7 @@ while 1
             if ~isnan(k_end)
                 plot(d.scan(k_end),-d.press(k_end),'c^','markersize',10,'markerfacecolor','c');
             end
-            if isfield(d, 'pumps'); ylabel('press (red if pumps off)'); else; ylabel('-press'); end
+            if isfield(d, 'pumps'); ylabel('-press (red if pumps off)'); else; ylabel('-press'); end
             %             set(gca,'ylim',plims);
             ht = get(ha(1),'title');
             set(ht,'string',infile1,'interpreter','none');
@@ -170,9 +170,9 @@ while 1
             % select upcast end scan
             disp('select end scan on any panel');
             if oxy_end
-                fprintf(1,'oxygen will be truncated %d s before T and C\n',oxy_align)
+                fprintf(1,'later, oxygen will be truncated %d s before T and C\n',oxy_align)
             else
-                fprintf(1,'oxygen will be truncated at the same point as T and C,\n unless you change settings under oxy_align in opt_%s',mcruise)
+                fprintf(1,'later, oxygen will be truncated at the same point as T and C,\n unless you change settings under oxy_align in opt_%s',mcruise)
             end
             [x, y] = ginput(1);
             [~,k_end] = min(abs(d.scan-x));
