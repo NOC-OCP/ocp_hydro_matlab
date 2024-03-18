@@ -46,8 +46,10 @@ if ~isempty(iis1)
     if strcmp(parameter,'cond')
         %cond of psal2 at temp1
         dc.ctdother = gsw_C_from_SP(d.([udstr 'psal2'])(iis1),d.([udstr 'temp1'])(iis1),d.([udstr 'press'])(iis1));
-    else
+    elseif isfield(d,[udstr parameter '2'])
         dc.ctdother = d.([udstr parameter '2'])(iis1);
+    else
+        dc.ctdother = NaN+dc.ctddata;
     end
 end
 if ~isempty(iis2)

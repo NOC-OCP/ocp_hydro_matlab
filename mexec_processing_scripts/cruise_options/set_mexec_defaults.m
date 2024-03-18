@@ -150,6 +150,18 @@ switch opt1
         check_oxy = 0; %do not step through mismatched oxygen replicates
         check_sbe35 = 0; %do not display bad sbe35 lines (may error later if they are present and not flagged)
 
+    case 'botsal'
+        switch opt2
+            case 'sal_parse'
+                calcsal = 1; %calculate from conductivity ratio and temperature
+        end
+
+    case 'botoxy'
+        switch opt2
+            case 'oxy_parse'
+                calcoxy = 1;
+        end
+
     case 'outputs'
         switch opt2
             case 'grid'

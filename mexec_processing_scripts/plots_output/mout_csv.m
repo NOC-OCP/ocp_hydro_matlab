@@ -122,7 +122,8 @@ for kloop = klist
     else
         fname = sprintf('%s_%s_all.nc',in.type,mcruise);
     end
-    infile = fullfile(mgetdir(in.type),fname);
+    if ~isfield(in,'ddir'); in.ddir = mgetdir(in.type); end
+    infile = fullfile(in.ddir,fname);
     if ~exist(infile,'file')
         infile = fname;
         if ~exist(infile,'file')

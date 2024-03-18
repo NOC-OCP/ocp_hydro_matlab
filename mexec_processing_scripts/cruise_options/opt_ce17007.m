@@ -47,67 +47,81 @@ switch opt1
                     co.badtemp1.temp1 = [-inf -2; 13 inf; NaN NaN];
                     co.badtemp1.cond1 = co.badtemp1.temp1; co.badtemp1.oxygen_sbe1 = co.badtemp1.temp1;
                 end
+            case 'ctd_cals'
+                co.docal.temp = 1;
+                co.docal.cond = 1;
+                co.docal.oxygen = 1;
+                co.calstr.temp.sn4023.ce17007 = 'dcal.temp = d0.temp + d0.press*1.2e-7;';
+                co.calstr.temp.sn4023.msg = 'cal for temp1, sensor 4023 based on comparison with 934 SBE35 samples';
+                co.calstr.temp.sn4927.ce17007 = 'dcal.temp = d0.temp + 1e-4; dcal.temp(d0.press>2000) = d0.temp(d0.press>2000)-(d0.press(d0.press>2000)-2000)*1.5e-7;';
+                co.calstr.temp.sn4927.msg = 'cal for temp2, sensor 4927 based on comparison with 934 SBE35 samples';
+                co.calstr.cond.sn2764.ce17007 = 'dcal.cond = d0.cond.*(1 - (1e-4*(d0.dday-125) + 3e-7*(d0.press-2000))/35);';
+                co.calstr.cond.sn2764.msg = 'cal for cond2, sensor 2764 based on comparison with 1135 salinity samples (753 deep/low gradient)';
+                co.calstr.cond.sn3480.ce17007 = 'dcal.cond = d0.cond.*(1 - (2e-7*(d0.press-1000) + 2e-4*(d0.dday-132))/35);';
+                co.calstr.cond.sn3480.msg = 'cal for cond1, sensor 3480 based on comparison with 1135 salinity samples (753 deep/low gradient)';
+                co.calstr.oxygen.sn1416.ce17007 = 'dcal.oxygen = d0.oxygen.*(1.066-exp(-d0.press/1600)*.03);';
+                co.calstr.oxygen.sn1416.msg = 'cal for oxygen1, sensor 1416 based on comparison with 1110 oxygen samples (776 deep/low gradient)';
+                co.calstr.oxygen.sn3339.ce17007 = 'dcal.oxygen = d0.oxygen;';
+                co.calstr.oxygen.sn3339.msg = 'no calibration data for stations 1-3 oxygen1, sensor 3339';
+            case 'interp2db'
+                pg = [.5:1:6e3]'; %1 dbar for this cruise rather than 2
+                g2opts.int = [-.5 .5];
+        end
+
+    case 'sbe35'
+        switch opt2
+            case 'sbe35file'
+                sbe35file = sprintf('%s_*.txt', upper(mcruise));
+            case 'sbe35_flags'
+                %get rid of some extra (bad) lines (based on inspection of
+                %the file and comparison to .bl files)
+                ii = find(t.sampnum==2301); t(ii(1:2),:) = [];
         end
 
     case 'check_sams'
-        check_oxy = 1;
-        check_sal = 1;
+        check_oxy = 0;
+        check_sal = 0;
+        calcoxy = 0; %already calculated, titre parameters not supplied
+        calcsal = 0; %already calculated, conductivity ratio and temperature not supplied
 
     case 'botpsal'
         switch opt2
             case 'sal_files'
-                %in this case we have autosal and portasal files but will
-                %load only autosal as "primary"
-                salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
+                root_sal = fullfile(mgetdir('M_CTD'),'BOTTLE_DATA');
+                salfiles = dir(fullfile(root_sal,'CE17007_Bottle_Data_with_Metadata.xlsx'));
                 salfiles = {salfiles.name};
+                hcpat = {'Cast'};
             case 'sal_parse'
-                cellT = 27;                
-                ssw_k15 = 0.99986;
-            case 'sal_calc'
-                sal_off = [
-                    001 -5; 
-                    002 -5;
-                    006 -5;
-                    007 -5;
-                    008 -5;
-                    ];
-                sal_off(:,1) = sal_off(:,1)+999e3;
-                sal_off(:,2) = sal_off(:,2)*1e-5;
+                ds_sal.statnum = str2num(cell2mat(cellfun(@(x) x(9:11), ds_sal.cast, 'UniformOutput', false)));
+                ds_sal.sampnum = ds_sal.statnum*100+ds_sal.niskin;
+                ds_sal.salinity = ds_sal.bench_salinity;
+                ds_sal.salinity(ds_sal.salinity<-900) = NaN;
+                ds_sal.flag = 2+zeros(size(ds_sal.salinity));
+                ds_sal.flag(isnan(ds_sal.salinity)) = 9;
+                ds_sal.flag(ismember(ds_sal.sampnum,[201 401 404 724 917 1210 1218 1219 1309 1310 1311 1312 1313 1319 1320 1321 1401])) = 4;
+                ds_sal.flag(ismember(ds_sal.sampnum,[1314 1315])) = 3;
+                sal_adj_comment = 'salinity from spreadsheet, no information on standardisation';
         end
+
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {'oxygen_calculation_newflasks2_en705.xlsx'};
-                hcpat = {'Niskin';'Bottle'};
-                chrows = 1:2;
-                chunits = 3;
-                sheets = 1:100;
+                root_oxy = fullfile(mgetdir('M_CTD'),'BOTTLE_DATA');
+                ofiles = dir(fullfile(root_oxy,'CE17007_Bottle_Data_with_Metadata.xlsx'));
+                ofiles = {ofiles.name};
+                hcpat = {'Cast'};
+                chrows = 1;
+                chunits = [];
+                sheets = 1;
             case 'oxy_parse'
-                ii = find(strcmp('conc_o2',oxyvarmap(:,1)));
-                oxyvarmap(ii,:) = []; %don't rename; force script to recalculate
-            case 'oxy_calc'
-                blanks = [.00325 .0025 .002 .003 .00325 .00325 .00225 .0035 .00275];
-                %stds = [.4605; .458375; .4595];
-                %stds_stns = {[2 4]; [0 1]; [5 7]};
-                stds = [.4595]; stds_stns = {[0 1 2 4 5 7]};
-                ds_oxy.vol_std = repmat(5,size(ds_oxy.sampnum));
-                ds_oxy.vol_blank = repmat(mean(blanks),size(ds_oxy.sampnum));
-                ds_oxy.vol_titre_std = ds_oxy.vol_std+NaN;
-                for sno1 = 1:size(stds_stns,1)
-                    m = ismember(ds_oxy.statnum,stds_stns{sno1});
-                    if sum(m)
-                        ds_oxy.vol_titre_std(m) = repmat(stds(sno1),sum(m),1);
-                    end
-                end
-                vol_reag_tot = repmat(2.031,size(ds_oxy.sampnum));
-            case 'oxy_flags'
-                d.botoxya_flag(d.sampnum==009) = 4; %very high compared to CTD; bad sample?
-                d.botoxya_flag(d.sampnum==115) = 4; %very high compared to replicate and CTD
-                d.botoxyc_flag(d.sampnum==407) = 3; %a bit high compared to a and b; don't use for average
-                d.botoxyb_flag(d.sampnum==509) = 3; %probably b is bad
-                m = d.statnum==5; %mostly analysed with bubbles in thio tube; noisy
-                d.botoxya_flag(m) = 3; d.botoxyb_flag(m) = max(d.botoxyb_flag(m),3);
-                d.botoxyb_flag(d.sampnum==523) = 2; %analysed later after thio tube changed
+                ds_oxy.statnum = str2num(cell2mat(cellfun(@(x) x(9:11), ds_oxy.cast, 'UniformOutput', false)));
+                ds_oxy.sampnum = ds_oxy.statnum*100+ds_oxy.niskin;
+                ds_oxy.botoxy_umol_per_kg = ds_oxy.winkler_do_umol_per_kg;
+                ds_oxy.flag = 2+zeros(size(ds_oxy.botoxy_umol_per_kg));
+                ds_oxy.flag(isnan(ds_oxy.botoxy_umol_per_kg)) = 9;
+                ds_oxy.flag(ismember(ds_oxy.sampnum,[2025])) = 4;
+                ds_oxy.flag(ismember(ds_oxy.sampnum,[2207 4108 4614 3049 2615 2841 5410 5509 5807 5820 6012])) = 3;
+                ds_oxy.flag(ismember(ds_oxy.statnum,[27])) = 4;
         end
 
     case 'outputs'
@@ -116,7 +130,7 @@ switch opt1
                 snames = {'nsal' 'noxy'};
                 sgrps = {{'botpsal'} {'botoxy'}};
             case 'exch'
-                n24 = 66;
+                n24 = 54;
                 expocode = '45CE20170000';
                 sect_id = 'CE17007';
                 submitter = 'DEMO'; %group institution person
@@ -130,19 +144,16 @@ switch opt1
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 24-place rosette',n24);...
-                        '#CTD: Who - ???? (MI) and Y. Firing (NOC); Status - final.';...
-                        '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
-                        '# DEPTH_TYPE   : COR';...
-                        '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
-                        }];
+                        '#CTD: Who - ???? (MI) and Participant-22; Status - final.';...
+                        '#The CTD PRS; TMP; SAL data are all calibrated and good';...
+                        'CTD OXY data STNNBRs 1-3 are uncalibrated; CTD OXY data STNNBRs 4-66 are calibrated and good.'}];
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 24-place rosette',n24);...
-                        '#CTD: Who - ???? (MI) and Y. Firing (NOC); Status - final';...
+                        '#CTD: Who - ???? (MI) and Participant-22 (NOC); Status - final';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
-                        '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
-                        '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom';...
+                        '#The CTD PRS; TMP; SAL; data are all calibrated and good; CTD OXY data from STNNBRs 4-66 are calibrated and good.';...
                         '#Salinity: Who - ???? (MI); Status - final; SSW batch ????.';...
                         '#Oxygen: Who - ???? (MI); Status - final.';...
                         }];

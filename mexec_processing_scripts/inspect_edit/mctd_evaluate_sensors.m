@@ -96,6 +96,13 @@ end
 %load data
 rootdir = mgetdir('ctd');
 [d, h] = mloadq(fullfile(rootdir, ['sam_' mcruise '_all']), '/');
+snfs = h.fldnam(strncmp(h.fldnam,'sn',2));
+for no = 1:length(snfs)
+    if sum(isnan(d.(snfs{no})))
+        d.(snfs{no})(isnan(d.(snfs{no}))) = max(d.(snfs{no}));
+        warning('filling NaNs in %s S/N',snfs{no})
+    end
+end
 ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00'];
 d.([udstr 'dday']) = m_commontime(d, [udstr 'time'], h, ddu);
 h.fldnam = [h.fldnam [udstr 'dday']]; h.fldunt = [h.fldunt ddu];
@@ -179,13 +186,16 @@ plot_residuals(dc, p, parameter);
 if ~isempty(printform)
     print(printform, fullfile(printdir, ['ctd_eval_' parameter '_' num2str(sn(ks)) '_hist' dirstr]))
 end
-keyboard %pause
+cont = input('k for keyboard prompt, enter to continue to next\n','s');
+if strcmp(cont,'k')
+    keyboard
+end
 
 ii = find( (abs(dc.res(p.iigc))>p.rlim(2) & dc.press(p.iigc)<pdeep) | (abs(dc.res(p.iigc))>p.rlim(2)/2 & dc.press(p.iigc)>=pdeep) & dc.statnum(p.iigc)>=plotprof);
 if ~isempty(ii)
     disp('examine larger differences profile-by-profile to help pick bad or')
     disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01?')
-    next = input('y/n/keyboard?\n','s');
+    next = input('y/k for keyboard/enter to skip and continue?\n','s');
     if strcmp(next,'y')
         plot_comparison_quality(dc,parameter,dc.statnum(p.iigc(ii)),testcal,calstr0,okf,[p.rlim(2) p.rlim(2)/2])
     elseif strcmp(next,'k')
@@ -295,7 +305,7 @@ for no = 1:length(stns_examine)
     grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',stnlocal));
     disp('sampnum residual sample_flag niskin_flag pressure')
     for qno = 1:length(iiq)
-        sprintf('%d %5.3f %d %d %d', stnlocal*100+dc.nisk(iiq(qno)), dc.res(iiq(qno)), dc.calflag(iiq(qno)), dc.niskf(iiq(qno)), round(dc.press(iiq(qno))))
+        fprintf(1,'%d %5.3f %d %d %d\n', stnlocal*100+dc.nisk(iiq(qno)), dc.res(iiq(qno)), dc.calflag(iiq(qno)), dc.niskf(iiq(qno)), round(dc.press(iiq(qno))))
     end
     cont = input('k for keyboard prompt, enter to continue to next\n','s');
     if strcmp(cont,'k')

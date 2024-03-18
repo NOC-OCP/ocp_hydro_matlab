@@ -40,121 +40,127 @@ if isempty(ds_oxy)
     error('no data loaded')
 end
 
-%parse, for instance combining duplicates, or getting information from header
-cellT = 25; %default
-oxyvarmap = {
-    'statnum',       'cast_number'
-    'position',      'niskin_bottle'
-    'vol_blank',     'blank_titre'
-    'vol_std',       'std_vol'
-    'vol_titre_std', 'standard_titre'
-    'fix_temp',      'fixing_temp'
-    'sample_titre',  'sample_titre'
-    'flag',          'flag'
-    'oxy_bottle'     'bottle_no'
-    'date_titre',    'dnum'
-    'bot_vol_tfix'   'botvol_at_tfix'
-    'conc_o2'        'c_o2_'};
-opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt
-%rename according to lookup table, if supplied
-if ~isempty(oxyvarmap)
-    ds_oxy_fn = ds_oxy.Properties.VariableNames;
-    [~,ia,ib] = intersect(oxyvarmap(:,2)',ds_oxy_fn);
-    ds_oxy_fn(ib) = oxyvarmap(ia,1)';
-    ds_oxy.Properties.VariableNames = ds_oxy_fn;
-end
-ds_oxy(isnan(ds_oxy.position),:) = [];
-if ~exist('fillstat','var')
-    if sum(isnan(ds_oxy.statnum))>0
-        fillstat = 1; %fill in station numbers on some rows
+opt1 = 'check_sams'; get_cropt
+if calcoxy
+    %parse, for instance combining duplicates, or getting information from header
+    cellT = 25; %default
+    oxyvarmap = {
+        'statnum',       'cast_number'
+        'position',      'niskin_bottle'
+        'vol_blank',     'blank_titre'
+        'vol_std',       'std_vol'
+        'vol_titre_std', 'standard_titre'
+        'fix_temp',      'fixing_temp'
+        'sample_titre',  'sample_titre'
+        'flag',          'flag'
+        'oxy_bottle'     'bottle_no'
+        'date_titre',    'dnum'
+        'bot_vol_tfix'   'botvol_at_tfix'
+        'conc_o2'        'c_o2_'};
+    opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt
+    %rename according to lookup table, if supplied
+    if ~isempty(oxyvarmap)
+        ds_oxy_fn = ds_oxy.Properties.VariableNames;
+        [~,ia,ib] = intersect(oxyvarmap(:,2)',ds_oxy_fn);
+        ds_oxy_fn(ib) = oxyvarmap(ia,1)';
+        ds_oxy.Properties.VariableNames = ds_oxy_fn;
+    end
+    ds_oxy(isnan(ds_oxy.position),:) = [];
+    if ~exist('fillstat','var')
+        if sum(isnan(ds_oxy.statnum))>0
+            fillstat = 1; %fill in station numbers on some rows
+        else
+            fillstat = 0;
+        end
+    end
+
+    %check units
+    clear oxyunits
+    oxyunits.vol_blank = {'ml' 'mls'};
+    oxyunits.vol_std = {'ml' 'mls'};
+    oxyunits.vol_titre_std = {'ml' 'mls'};
+    oxyunits.bot_vol_tfix = {'ml' 'mls'};
+    oxyunits.sample_titre = {'ml' 'mls'};
+    oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
+    oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
+    if ~isempty(chunits) && ~isempty(ds_oxy.Properties.VariableUnits)
+        [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
+    end
+
+    %compute or fill some fields
+    if fillstat
+        ds_oxy = fill_samdata_statnum(ds_oxy,'statnum');
+    end
+    if sum(strcmp('sampnum',ds_oxy_fn))==0
+        ds_oxy.sampnum = 100*ds_oxy.statnum + ds_oxy.position;
     else
-        fillstat = 0;
+        if sum(strcmp('statnum',ds_oxy_fn))==0
+            ds_oxy.statnum = floor(ds_oxy.sampnum/100);
+        end
+        if sum(strcmp('position',ds_oxy_fn))==0
+            ds_oxy.position = ds_oxy.sampnum - ds_oxy.statnum*100;
+        end
     end
-end
 
-%check units
-clear oxyunits
-oxyunits.vol_blank = {'ml' 'mls'};
-oxyunits.vol_std = {'ml' 'mls'};
-oxyunits.vol_titre_std = {'ml' 'mls'};
-oxyunits.bot_vol_tfix = {'ml' 'mls'};
-oxyunits.sample_titre = {'ml' 'mls'};
-oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
-oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
-if ~isempty(chunits) && ~isempty(ds_oxy.Properties.VariableUnits)
-    [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
-end
+    %create flags if necessary, then make sure they match available data
+    if sum(strcmp('sample_titre',ds_oxy_fn))
+        dname = 'sample_titre';
+    else
+        dname = 'conc_o2';
+    end
+    if sum(strcmp('flag',ds_oxy_fn))==0
+        ds_oxy.flag = NaN+zeros(size(ds_oxy.sampnum));
+    end
+    ds_oxy.flag(ds_oxy.flag<=0) = NaN;
+    bd = isnan(ds_oxy.(dname));
+    bt = isnan(ds_oxy.fix_temp);
+    %both oxy and temp, no flag: 2
+    ds_oxy.flag(~bd & ~bt & isnan(ds_oxy.flag)) = 2;
+    %both oxy and temp, flag 5 or 9: NaN oxy
+    ds_oxy.(dname)(~bd & ~bt & ismember(ds_oxy.flag, [5 9])) = NaN;
+    %temp but no oxy: 5 or 9
+    ds_oxy.flag(bd & ~bt & ds_oxy.flag<9) = 5;
+    %oxy but no temp: 5 and NaN oxy (no good without temp)
+    if sum(~bd & bt)>0; warning('oxy values without fix_temp will be discarded'); end
+    ds_oxy.flag(~bd & bt) = 5;
+    ds_oxy.flag(~bd & bt) = NaN;
+    %neither oxy nor temp: 9
+    ds_oxy.flag(bd & bt) = 9;
 
-%compute or fill some fields
-if fillstat
-    ds_oxy = fill_samdata_statnum(ds_oxy,'statnum');
-end
-if sum(strcmp('sampnum',ds_oxy_fn))==0
-    ds_oxy.sampnum = 100*ds_oxy.statnum + ds_oxy.position;
+    %compute bottle volumes at fixing temperature if not present
+    if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))
+        if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
+            ds_oxy.bot_cal_temp = cellT+zeros(size(ds_oxy.sampnum));
+        end
+        ds_oxy.bot_vol_tfix = ds_oxy.bot_vol.*(1+9.75e-5*(ds_oxy.fix_temp-ds_oxy.bot_cal_temp));
+    end
+
+    %compute concentration if not present
+    if sum(strcmp('conc_o2',ds_oxy_fn))==0
+        mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
+        std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
+        sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
+        mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
+        opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
+        n_o2_reag = mol_o2_reag*vol_reag_tot;
+        % molarity (mol/mL) of titrant
+        mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);
+        % moles of O2 in sample
+        ds_oxy.n_o2 = (ds_oxy.sample_titre - ds_oxy.vol_blank).*mol_titrant*sample_react_ratio;
+        % volume of sample, accounting for pickling reagent volumes.
+        sample_vols = ds_oxy.bot_vol_tfix - vol_reag_tot; %mL
+        % concentration of O2 in sample, accounting for concentration in pickling reagents
+        %a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
+        ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
+    end
+    ds_oxy.conc_o2(isnan(ds_oxy.sample_titre+ds_oxy.bot_vol_tfix)) = NaN;
+    ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)) = max(ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)), 5);
+    ds_oxy.flag(isnan(ds_oxy.conc_o2)) = max(ds_oxy.flag(isnan(ds_oxy.conc_o2)),4);
+    ds_oxy.flag((isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2)) & ~isnan(ds_oxy.fix_temp)) = 5; %drawn but not analysed
+
 else
-    if sum(strcmp('statnum',ds_oxy_fn))==0
-        ds_oxy.statnum = floor(ds_oxy.sampnum/100);
-    end
-    if sum(strcmp('position',ds_oxy_fn))==0
-        ds_oxy.position = ds_oxy.sampnum - ds_oxy.statnum*100;
-    end
+    opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt
 end
-
-%create flags if necessary, then make sure they match available data
-if sum(strcmp('sample_titre',ds_oxy_fn))
-    dname = 'sample_titre';
-else
-    dname = 'conc_o2';
-end
-if sum(strcmp('flag',ds_oxy_fn))==0
-    ds_oxy.flag = NaN+zeros(size(ds_oxy.sampnum));
-end
-ds_oxy.flag(ds_oxy.flag<=0) = NaN;
-bd = isnan(ds_oxy.(dname));
-bt = isnan(ds_oxy.fix_temp);
-%both oxy and temp, no flag: 2
-ds_oxy.flag(~bd & ~bt & isnan(ds_oxy.flag)) = 2;
-%both oxy and temp, flag 5 or 9: NaN oxy
-ds_oxy.(dname)(~bd & ~bt & ismember(ds_oxy.flag, [5 9])) = NaN;
-%temp but no oxy: 5 or 9
-ds_oxy.flag(bd & ~bt & ds_oxy.flag<9) = 5;
-%oxy but no temp: 5 and NaN oxy (no good without temp)
-if sum(~bd & bt)>0; warning('oxy values without fix_temp will be discarded'); end
-ds_oxy.flag(~bd & bt) = 5; 
-ds_oxy.flag(~bd & bt) = NaN;
-%neither oxy nor temp: 9
-ds_oxy.flag(bd & bt) = 9;
-
-%compute bottle volumes at fixing temperature if not present
-if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))
-    if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
-        ds_oxy.bot_cal_temp = cellT+zeros(size(ds_oxy.sampnum));
-    end
-    ds_oxy.bot_vol_tfix = ds_oxy.bot_vol.*(1+9.75e-5*(ds_oxy.fix_temp-ds_oxy.bot_cal_temp));
-end
-
-%compute concentration if not present
-if sum(strcmp('conc_o2',ds_oxy_fn))==0
-    mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
-    std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
-    sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
-    mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
-    opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
-    n_o2_reag = mol_o2_reag*vol_reag_tot;
-    % molarity (mol/mL) of titrant
-    mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);
-    % moles of O2 in sample
-    ds_oxy.n_o2 = (ds_oxy.sample_titre - ds_oxy.vol_blank).*mol_titrant*sample_react_ratio;
-    % volume of sample, accounting for pickling reagent volumes.
-    sample_vols = ds_oxy.bot_vol_tfix - vol_reag_tot; %mL
-    % concentration of O2 in sample, accounting for concentration in pickling reagents
-    %a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
-    ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
-end
-ds_oxy.conc_o2(isnan(ds_oxy.sample_titre+ds_oxy.bot_vol_tfix)) = NaN;
-ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)) = max(ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)), 5);
-ds_oxy.flag(isnan(ds_oxy.conc_o2)) = max(ds_oxy.flag(isnan(ds_oxy.conc_o2)),4);
-ds_oxy.flag((isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2)) & ~isnan(ds_oxy.fix_temp)) = 5; %drawn but not analysed
 
 %now put into structure and output
 clear d hnew
@@ -164,11 +170,21 @@ hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
 [d.sampnum, iia, ~] = unique(ds_oxy.sampnum, 'stable');
 d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
-d.botoxya_per_l = ds_oxy.conc_o2(iia);
-d.botoxya_temp = ds_oxy.fix_temp(iia);
+if isfield(ds_oxy,'conc_o2')
+    d.botoxya_per_l = ds_oxy.conc_o2(iia);
+    hnew.fldnam = [hnew.fldnam 'botoxya_per_l' 'botoxya_flag'];
+    hnew.fldunt = [hnew.fldunt 'umol/L' 'woce_9.4'];
+else
+    d.botoxya = ds_oxy.botoxy_umol_per_kg;
+    hnew.fldnam = [hnew.fldnam 'botoxya' 'botoxya_flag'];
+    hnew.fldunt = [hnew.fldunt 'umol/kg' 'woce_9.4'];
+end
 d.botoxya_flag = ds_oxy.flag(iia);
-hnew.fldnam = [hnew.fldnam 'botoxya_per_l' 'botoxya_temp' 'botoxya_flag'];
-hnew.fldunt = [hnew.fldunt 'umol/L' 'degC' 'woce_9.4'];
+if isfield(ds_oxy,'fix_temp')
+    d.botoxya_temp = ds_oxy.fix_temp(iia);
+    hnew.fldnam = [hnew.fldnam 'botoxya_temp'];
+    hnew.fldunt = [hnew.fldunt 'degC'];
+end
 
 iib = setdiff(1:length(ds_oxy.sampnum),iia);
 %***add code to handle duplicates in different columns on same line? 

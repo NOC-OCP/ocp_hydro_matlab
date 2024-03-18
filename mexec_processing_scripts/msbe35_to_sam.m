@@ -17,9 +17,9 @@ ds = rmfield(ds,hnew.fldnam(ii)); hnew.fldnam(ii) = []; hnew.fldunt(ii) = [];
 [dsam,hsam] = mloadq(otfile2,'sampnum');
 m = ismember(ds.sampnum,dsam.sampnum);
 if sum(m)<length(ds.sampnum)
-    warning('excluding sbe35 data; see mfir_01 cruise options for list of niskins on carousel')
-    for fno = 1:length(hs.fldnam)
-        ds.(hs.fldnam{fno}) = ds.(hs.fldnam{fno})(m);
+    warning('excluding %d sbe35 samples; see mfir_01 cruise options for list of niskins on carousel',length(setdiff(ds.sampnum,dsam.sampnum)))
+    for fno = 1:length(hnew.fldnam)
+        ds.(hnew.fldnam{fno}) = ds.(hnew.fldnam{fno})(m);
     end
 end
 

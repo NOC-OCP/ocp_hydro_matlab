@@ -117,8 +117,13 @@ for pno = 1:length(params)
                 calf = replace(calf, hasnums{nno}, [hasnums{nno} sensnum]);
             end
         end
+        if contains(calf,'dday') && ~isfield(d0,'dday')
+            ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00'];
+            d0.dday = m_commontime(d0, 'time', h0, ddu);
+        end
 
-        %evaluate cstr, the string giving the calibration expression
+
+        %evaluate calf, the string giving the calibration expression
         eval(calf);
         if ~qflag
             fprintf(1, '\n%s\n\n', calf)

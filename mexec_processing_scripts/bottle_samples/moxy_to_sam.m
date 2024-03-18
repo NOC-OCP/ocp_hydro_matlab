@@ -8,6 +8,7 @@ if MEXEC_G.quiet<=1; fprintf(1, 'converting bottle oxy from oxy_%s_01.nc to /kg 
 
 % load from oxy file(s), load sam sal for converting to /kg
 root_oxy = mgetdir('M_BOT_OXY');
+opt1 = 'botoxy'; opt2 = 'oxy_files'; get_cropt
 oxyfile = fullfile(root_oxy, ['oxy_' mcruise '_01.nc']);
 if ~exist(oxyfile,'file')
     %backwards compatibility: first make an appended oxy file
@@ -64,19 +65,31 @@ if use_oxy_repl>0 && ~isfield(d, 'botoxyb_per_l')
     use_oxy_repl = 0;
 end
 
-%convert to umol/kg
-dens = gsw_rho(ds.uasal,gsw_CT_from_t(ds.uasal,d.botoxya_temp(iio),0),0);
-ds.botoxy = d.botoxya_per_l(iio)./(dens/1000);
-if use_oxy_repl>0
-    dens = gsw_rho(ds.uasal,gsw_CT_from_t(ds.uasal,d.botoxyb_temp(iio),0),0);
-    botoxyb = d.botoxyb_per_l(iio)./(dens/1000);
-    if use_oxy_repl>1
-        dens = gsw_rho(ds.uasal,gsw_CT_from_t(ds.uasal,d.botoxyc_temp(iio),0),0);
-        botoxyc = d.botoxyc_per_l(iio)./(dens/1000);
+opt1 = 'check_sams'; get_cropt
+if calcoxy
+    %convert to umol/kg
+    dens = gsw_rho(ds.uasal,gsw_CT_from_t(ds.uasal,d.botoxya_temp(iio),0),0);
+    ds.botoxy = d.botoxya_per_l(iio)./(dens/1000);
+    if use_oxy_repl>0
+        dens = gsw_rho(ds.uasal,gsw_CT_from_t(ds.uasal,d.botoxyb_temp(iio),0),0);
+        botoxyb = d.botoxyb_per_l(iio)./(dens/1000);
+        if use_oxy_repl>1
+            dens = gsw_rho(ds.uasal,gsw_CT_from_t(ds.uasal,d.botoxyc_temp(iio),0),0);
+            botoxyc = d.botoxyc_per_l(iio)./(dens/1000);
+        end
     end
+else
+    ds.botoxy = d.botoxya(iio);
 end
 
 ds.botoxy_flag = d.botoxya_flag(iio);
+if isfield(d,'botoxya_temp')
+    hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxya_temp' 'botoxy_flag'];
+    hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
+else
+    hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxy_flag'];
+    hnew.fldunt = [hnew.fldunt 'umol/kg' 'woce_9.4'];
+end
 if use_oxy_repl>0
     nav = ones(size(ds.sampnum));
 
@@ -89,7 +102,7 @@ if use_oxy_repl>0
     replace = find(d.botoxyb_flag(iio)<ds.botoxy_flag & ds.botoxy_flag~=6);
     ds.botoxy(replace) = botoxyb(replace);
     ds.botoxy_flag(replace) = d.botoxyb_flag(replace);
-    
+
     if use_oxy_repl>1
         %add 'c'
         av = find(ds.botoxy_flag==2 & d.botoxyc_flag(iio)==2 & ~isnan(botoxyc));
@@ -101,17 +114,19 @@ if use_oxy_repl>0
         ds.botoxy(replace) = botoxyc(replace);
         ds.botoxy_flag(replace) = d.botoxyc_flag(iio(replace));
     end
-    
+
     %average replicates
     ds.botoxy = ds.botoxy./nav;
+
+    %for temperature it's not meaningful to average, so in sam_all file just
+    %report botoxya temp as diagnostic of good bottle closing
+    ds.botoxya_temp = NaN+ds.sampnum;
+    ds.botoxya_temp = d.botoxya_temp(iio);
+    if calcoxy
+        hnew.comment = [h.comment ' converted to umol/kg using CTD salinity (uasal) and fixing temperature \n '];
+    end
+
 end
-%for temperature it's not meaningful to average, so in sam_all file just
-%report botoxya temp as diagnostic of good bottle closing
-ds.botoxya_temp = NaN+ds.sampnum;
-ds.botoxya_temp = d.botoxya_temp(iio);
-hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxya_temp' 'botoxy_flag'];
-hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
-hnew.comment = [h.comment ' converted to umol/kg using CTD salinity (uasal) and fixing temperature \n '];
 
 %apply niskin flags (and also confirm consistency between sample and flag)
 ds = hdata_flagnan(ds, 'keepempty', 1);

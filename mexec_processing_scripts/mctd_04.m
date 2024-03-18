@@ -95,7 +95,7 @@ if isdown
     doloopedit = 0;
     ptol = 0.08; %default is not to apply, but this would be the default value if you did
     spdtol = 0.24; %default value from SBE program
-    opt1 = mfilename; opt2 = 'doloopedit'; get_cropt
+    opt1 = 'ctd_proc'; opt2 = 'doloopedit'; get_cropt
     if doloopedit
         vars_other = setdiff(var_copycell, {'press'});
         disp(['applying loopediting for ' otfile1d])
@@ -109,15 +109,15 @@ if isdown
     end
 end
 
-%%%%% grid to 2 dbar %%%%%
-pg = [0:2:1e4]';
+%%%%% grid to 2 (or other) dbar %%%%%
 clear g2opts
 g2opts.postfill = 0; %fill after gridding?
 g2opts.ignore_nan = 1;
-opt1 = mfilename; opt2 = 'interp2db'; get_cropt
+pg = [0:2:1e4]';
 g2opts.int = [-1 1]; %interval for bins
 g2opts.grid_extrap = [0 0]; %discard empty bins
 g2opts.bin_partial = 0; %only use bins with data in both halves
+opt1 = 'ctd_proc'; opt2 = 'interp2db'; get_cropt
 if isdown
     dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
     if sum(~isnan(dn2.press))<minbins

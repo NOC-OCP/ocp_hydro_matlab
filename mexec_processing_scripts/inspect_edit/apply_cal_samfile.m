@@ -47,7 +47,9 @@ for sno = stns(:)'
     clear d0
     iig = find(d.statnum==stnlocal);
     for vno = 1:length(udvars)
-        d0.(udvars{vno}) = d.([udstr udvars{vno}])(iig);
+        if isfield(d,[udstr udvars{vno}])
+            d0.(udvars{vno}) = d.([udstr udvars{vno}])(iig);
+        end
     end
     d0.statnum = d.statnum(iig);
     h0.fldnam = fieldnames(d0)';
@@ -55,6 +57,7 @@ for sno = stns(:)'
     %paste in serial numbers
     if isfield(d,'sn_cond1') %assume if we have one we have all
         snfs = {'cond1' 'cond2' 'temp1' 'temp2' 'oxygen1' 'oxygen2'};
+        if ~isfield(d,'sn_oxygen2'); snfs = snfs(1:end-1); end
         h0.fldserial = repmat({' '},size(h0.fldnam));
         for fno = 1:length(snfs)
             h0.fldserial{strcmp(snfs{fno},h0.fldnam)} = sprintf('%04d',d.(['sn_' snfs{fno}])(iig(1)));

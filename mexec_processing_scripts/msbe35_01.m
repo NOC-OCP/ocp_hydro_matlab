@@ -7,6 +7,7 @@
 % or for multiple stations use klist
 %      klist = 1:5; msbe35_01;
 
+m_common
 if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
 
 % load sbe35 data
@@ -20,6 +21,10 @@ end
 
 d = dir(fullfile(root_sbe35, sbe35file));
 file_list = {d.name};
+if isempty(file_list)
+    warning('no sbe35 files found; skipping')
+    return
+end
 
 flag = 9+zeros(8000,1);
 t = table(flag);
@@ -31,7 +36,7 @@ clear flag
 kount = 1;
 for kf = 1:length(file_list)
     fn = fullfile(root_sbe35, file_list{kf});
-    if stnind(1)<0; iis = length(file_list{kf})-stnind; else; iis = stnind; end
+    if stnind(1)<0; iis = length(file_list{kf})+stnind; else; iis = stnind; end
     fid2 = fopen(fn,'r');
     while 1
         str = fgetl(fid2);

@@ -6,6 +6,7 @@ if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from sal_%s_01.nc, wri
 
 % input files
 root_sal = mgetdir('M_BOT_SAL');
+opt1 = 'botpsal'; opt2 = 'sal_files'; get_cropt
 dataname = ['sal_' mcruise '_01'];
 salfile = fullfile(root_sal, [dataname '.nc']);
 samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
