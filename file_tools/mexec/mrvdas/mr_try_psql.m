@@ -47,11 +47,11 @@ end
         
 %now construct the string and try first without then with changes to
 %LD_LIBRARY_PATH
-                if ismac
-                    RVDAS.psql_path = '/usr/local/bin/';
-                else
-                    RVDAS.psql_path = ''; %'/usr/bin/' but on linux matlab finds it on path on its own
-                end
+if ismac
+    RVDAS.psql_path = '/usr/local/bin/';
+else
+    RVDAS.psql_path = ''; %'/usr/bin/' but on linux matlab finds it on path on its own
+end
 sqlroot = [RVDAS.psql_path 'psql -h ' RVDAS.machine ' -U ' RVDAS.user ' -d ' RVDAS.database];
 csvname = fullfile(RVDAS.csvroot, ['table_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 psql_string = [sqlroot ' -c ' sqltext csvname];

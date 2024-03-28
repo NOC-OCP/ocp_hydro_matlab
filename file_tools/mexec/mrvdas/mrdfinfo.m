@@ -65,7 +65,20 @@ sqlname = vdef{1,1};
 if ~strcmp('f',fastflag)
     sqltext = ['"\copy (select count(*) from ' sqlname ' ) to '''];
     [csvname, ~, ~] = mr_try_psql(sqltext);
-    ncyc = load(csvname); % Should just load a number
+    % bak on dy174 27 March 2024
+    % It seems that the csv file now consists of 2 lines, the first line
+    % contains the string 'count' and the second lien contains the number
+    % we want. So load it all as a txt file and parse the last line
+    fidcount = fopen(csvname,'r');
+    while 1
+        tline = fgetl(fidcount);
+        if ~ischar(tline), break, end
+        txtend = tline;
+    end
+    fclose(fidcount);
+    ncyc = str2double(txtend);
+
+%     ncyc = load(csvname); % Should just load a number
 else
     ncyc = -1;
 end
@@ -85,15 +98,22 @@ if isempty(ncyc) || ncyc == 0
     return
     
 end
+delete(csvname);
 
 
 
 % Earliest time
 
-sqltext = ['"\copy (select time from ' sqlname ' order by time asc limit 1) to ''' csvname ''' csv "'];
-mr_try_psql(sqltext);
+% sqltext = ['"\copy (select time from ' sqlname ' order by time asc limit 1) to ''' csvname ''' csv "'];
+sqltext = ['"\copy (select time from ' sqlname ' order by time asc limit 1) to '''];
+[csvname, ~, ~] = mr_try_psql(sqltext);
 fid = fopen(csvname,'r');
-t = fgetl(fid);  % t is now a RVDAS time string
+% t = fgetl(fid);  % t is now a RVDAS time string
+while 1
+    tline = fgetl(fid);
+    if ~ischar(tline), break, end
+    t = tline;
+end
 fclose(fid);
 
 if ~ischar(t)
@@ -111,14 +131,21 @@ if ~ischar(t)
 end
 
 dn1 = mrconverttime({t});
+delete(csvname);
 
 
 % Latest time
 
-sqltext = ['"\copy (select time from ' sqlname ' order by time desc limit 1) to ''' csvname ''' csv "'];
-mr_try_psql(sqltext);
+% sqltext = ['"\copy (select time from ' sqlname ' order by time desc limit 1) to ''' csvname ''' csv "'];
+sqltext = ['"\copy (select time from ' sqlname ' order by time desc limit 1) to '''];
+[csvname, ~, ~] = mr_try_psql(sqltext);
 fid = fopen(csvname,'r');
-t = fgetl(fid);
+% t = fgetl(fid);  % t is now a RVDAS time string
+while 1
+    tline = fgetl(fid);
+    if ~ischar(tline), break, end
+    t = tline;
+end
 fclose(fid);
 
 dn2 = mrconverttime({t});

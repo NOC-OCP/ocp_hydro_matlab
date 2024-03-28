@@ -87,6 +87,9 @@ end
 d.tablemap = mrnames_new(d.mrtables_list,'q');
 % limit to the names actually in mrtables_from_json
 [~,ia,ib] = intersect(d.tablemap(:,2),d.mrtables_list,'stable');
+%excl = setdiff(d.tablemap(:,2),d.mrtables_list,'stable');
+%fprintf(1,'excluding streams: \n')
+%disp(excl)
 d.tablemap = d.tablemap(ia,:);
 if length(ib)<length(d.mrtables_list)
     ii = setdiff(1:length(d.mrtables_list),ib);

@@ -18,6 +18,8 @@
 %
 % Contents.m                  this file
 %
+% (at the start of a cruise, sync the .json files, and run mrjson_get_list.m)
+%
 % % These files generally do useful things
 %
 % mrgaps.m                    Load data from rvdas and search for gaps
@@ -52,6 +54,7 @@
 % mrtables_from_json.m        The list of rvdas tables that mexec may want to copy. This should be (re)generated at the start of a cruise by running mrjson_get_list, and can then be edited by hand to comment out additional variables to be skipped (or these can be added to the cruise options file). 
 %
 % % These files are used for converting .json files to .mat files and reading information from them; mrjson_get_list should be run at the start of a cruise (and again if tables are added or variables modified)
+% 
 % mrjson_get_list.m           Sync json files from rvdas machine, allow for editing list, then call mrjson_load_all to write to mrtables_from_json.m
 % mrjson_load_all.m           Load json files, run jsondecode, then call internal function mrjson_show to parse sentences and output varible names and units to .m file
 %

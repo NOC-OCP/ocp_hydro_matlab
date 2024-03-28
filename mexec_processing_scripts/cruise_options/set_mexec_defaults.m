@@ -63,6 +63,7 @@ switch opt1
                         npre = 1; %table names start with an extra prefix before the instrument make/model e.g. anemometer_ft_technologies_etc
                     otherwise
                         npre = 0; %table names start with instrument name
+                        use_cruise_views = 0;
                 end
         end
         

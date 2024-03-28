@@ -45,13 +45,10 @@ clear MEXEC_G
 global MEXEC_G
 
 %defaults: what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='ce17007';
+MEXEC_G.MSCRIPT_CRUISE_STRING='dy174';
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.other_programs_root = '/data/pstar/programs/others/'; 
 MEXEC_G.mexec_data_root = '/data/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.SITE_suf = 'atnoc';
-MEXEC_G.other_programs_root = '/Users/yfiring/programs/others/matlab/';
-MEXEC_G.mexec_data_root = '/Users/yfiring/community/ctdo2/ices_wgoh/ce17007/mcruise/data/';
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 

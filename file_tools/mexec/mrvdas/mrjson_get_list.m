@@ -14,7 +14,11 @@ switch MEXEC_G.Mship
     case 'sda'
         system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);
     otherwise
-        system(['rsync -au --delete ' RVDAS.user '@' RVDAS.machine ':' RVDAS.jsondir '/ ' jsondir '/']);
+        if contains(RVDAS.jsondir,'pstar')
+            system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);
+        else
+            system(['rsync -au --delete ' RVDAS.user '@' RVDAS.machine ':' RVDAS.jsondir '/ ' jsondir '/']);
+        end
 end
 
 %list them to file

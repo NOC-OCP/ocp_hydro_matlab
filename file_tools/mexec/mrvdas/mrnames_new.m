@@ -76,6 +76,8 @@ n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'mbm'; mt(n).msg = {'kidpt','kodpt'};
 
 n = n+1; mt(n).dir = 'winch'; mt(n).pre = 'winch'; mt(n).msg = {'winch','sdawinch'}; 
 
+n = n+1; mt(n).dir = 'lab'; mt(n).pre = 'autosal'; mt(n).msg = {'autosal'};
+
 mt = struct2table(mt);
 dnames = mt.dir;
 
@@ -97,6 +99,9 @@ for tno = 1:length(tablist)
     ii = strfind(tabl,'_');
     %if we have an extra prefix like anemometer_ on this ship/database
     if npre>0; ii = ii(npre:end); end
+    if length(ii)==1
+        ii(2) = ii(1); %tablemap{:,4} will be empty
+    end
     msg = tabl(ii(end)+1:end);
     inst1 = tabl(1:ii(2)-1);
     inst2 = tabl(ii(2)+1:ii(end)-1);
@@ -129,7 +134,7 @@ for no = 1:length(tablemap)
     if ismember(no,ii0)
         ii = find(strcmp(tablemap{no,1},tablemap(ii0,1)) & strcmp(tablemap{no,3},tablemap(ii0,3)));
         if length(ii)>1
-            tablemap(ii0(ii),1) = cellfun(@(x,y) [x '_' y],tablemap(ii0(ii),1),tablemap(ii0(ii),4),'UniformOutput',false);
+%             tablemap(ii0(ii),1) = cellfun(@(x,y) [x '_' y],tablemap(ii0(ii),1),tablemap(ii0(ii),4),'UniformOutput',false);
         end
     ii0(ii) = [];
     end
