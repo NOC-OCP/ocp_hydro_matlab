@@ -12,9 +12,11 @@ function mpath = mgetdir(M_ABBREV)
 m_common
 
 ii = find(strcmp(M_ABBREV, MEXEC_G.MDIRLIST(:,1)) | strcmp(['M_' upper(M_ABBREV)], MEXEC_G.MDIRLIST(:,1)));
-if length(ii)==1
-   mpath = fullfile(MEXEC_G.mexec_data_root, MEXEC_G.MDIRLIST{ii,2});
-else
-   warning([M_ABBREV ' set ' num2str(length(ii)) ' times in m_setup'])
-   mpath = '';
+if length(ii)>1
+    warning([M_ABBREV ' set ' num2str(length(ii)) ' times in m_setup'])
+elseif isempty(ii)
+    mpath = MEXEC_G.mexec_data_root;
+    return
 end
+
+mpath = fullfile(MEXEC_G.mexec_data_root, MEXEC_G.MDIRLIST{ii(1),2});

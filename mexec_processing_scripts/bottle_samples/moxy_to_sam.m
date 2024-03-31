@@ -66,7 +66,7 @@ if use_oxy_repl>0 && ~isfield(d, 'botoxyb_per_l')
 end
 
 opt1 = 'check_sams'; get_cropt
-if calcoxy
+if isfield(d, 'botoxya_per_l')
     %convert to umol/kg
     dens = gsw_rho(ds.uasal,gsw_CT_from_t(ds.uasal,d.botoxya_temp(iio),0),0);
     ds.botoxy = d.botoxya_per_l(iio)./(dens/1000);
@@ -78,8 +78,6 @@ if calcoxy
             botoxyc = d.botoxyc_per_l(iio)./(dens/1000);
         end
     end
-else
-    ds.botoxy = d.botoxya(iio);
 end
 
 ds.botoxy_flag = d.botoxya_flag(iio);

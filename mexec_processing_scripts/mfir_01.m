@@ -44,21 +44,20 @@ end
 pos = pos(:);
 scn = scn(:);
 
-opt1 = 'castpars'; opt2 = 'nnisk'; get_cropt
-niskc = [1:nnisk]'; niskn = [1:nnisk]';
-opt1 = mfilename; opt2 = 'nispos'; get_cropt
-niskc = niskc(:);
-niskin = niskn(:);
-[~,ia,ib] = intersect(pos,niskc);
-position = niskc;
-scan = NaN+niskc;
+niskin_number = [1:24]'; niskin_pos = [1:24]';
+opt1 = mfilename; opt2 = 'niskins'; get_cropt
+niskin_number = niskin_number(:);
+niskin_pos = niskin_pos(:);
+[~,ia,ib] = intersect(pos,niskin_pos);
+position = niskin_pos;
+scan = NaN+position;
 scan(ib) = scn(ia);
-niskin_flag = 9+zeros(nnisk,1); %default flag 9 means not closed
+niskin_flag = 9+zeros(size(scan)); %default flag 9 means not closed
 niskin_flag(ib) = 2; %if bottle closed, defaults to 2
 m = isfinite(scan);
 scan = scan(m); 
 position = position(m); 
-niskin = niskin(m); 
+niskin = niskin_number(m); 
 niskin_flag = niskin_flag(m);
 clear m ia ib
 opt1 = mfilename; opt2 = 'botflags'; get_cropt %change flags here

@@ -149,7 +149,7 @@ if writenew
     h0 = keep_hvatts(h0, h);
 else
     h0 = m_read_header(filename);
-    if ~mergemode && length(d.(h.fldnam{1}))~=max(h0.rowlength,h0.collength)
+    if ~mergemode && length(d.(h.fldnam{1}))~=max(max(h0.rowlength(:),h0.collength(:)))
         error(['fields in d must have same length as those in file ' filename ', else use ''-merge''']);
     end
     if ~isfield(h,'fldunt') && ~isempty(setdiff(h.fldnam,h0.fldnam))
@@ -229,14 +229,16 @@ else %overwrite (some) existing variables, store list of rest
             if isfield(h, 'fldunt') && ~strcmp(h.fldunt{vno}, h0.fldunt{ii})
                 if mergemode
                     warning(['unit ' h.fldunt{vno} ' in new header does not match ' h0.fldunt{ii} ' for variable ' h.fldnam{vno} ' in existing ' filename]);
-                    cont = input('overwrite (1) or keep old (0)? (or control-C to quit)\n');
+                    cont = input('overwrite (1), keep old (0), or keyboard (2)?\n'); %***add code? check it's doable first? make automatic for quantities with this units and just warn?***
                     if cont==1
                         h0.fldunt(ii) = h.fldunt(vno);
                         unitsnew = 1;
                     elseif cont==0
                         h.fldunt(vno) = h0.fldunt(ii);
+                    elseif cont==2
+                        keyboard
                     else
-                        error('must answer 1 or 0')
+                        error('must answer 1, 0, or 2')
                     end
                 else
                     warning(['unit ' h.fldunt{vno} ' in new header overwriting ' h0.fldunt{ii} ' in existing ' filename]);

@@ -20,7 +20,7 @@ redoctm = 0;
 tol = 0;
 if nargin>3
     redoctm = varargin{1};
-    stnlocal = redoctm(2); redoctm = redoctm(1);
+    if length(redoctm)>1; stnlocal = redoctm(2); redoctm = redoctm(1); end
     if nargin>4
         tol = varargin{2};
     end

@@ -36,7 +36,7 @@ function mctd_evaluate_sensors(parameter, varargin)
 %     inf or nan for none 
 %   stns_examine (no default) list of station numbers for which to plot
 %     individual profiles (supersedes plotprof)
-%   choose_sns serial number(s) to plot (default: all)
+%   choose_sns vector of serial number(s) to plot (default: all)
 %
 % e.g.
 %   testcal.temp = 1;
@@ -104,7 +104,11 @@ for no = 1:length(snfs)
     end
 end
 ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00'];
-d.([udstr 'dday']) = m_commontime(d, [udstr 'time'], h, ddu);
+if strcmp(h.fldunt(strcmp([udstr 'time'],h.fldnam)),ddu)
+    d.([udstr 'dday']) = d.([udstr 'time']);
+else
+    d.([udstr 'dday']) = m_commontime(d, [udstr 'time'], h, ddu);
+end
 h.fldnam = [h.fldnam [udstr 'dday']]; h.fldunt = [h.fldunt ddu];
 %optionally, apply calibrations (on all sensors)
 ds = d;
@@ -158,7 +162,7 @@ for ks = 1:length(sn)
         p.xrange = p.statrange;
     else
         p.xrange = [min(dc.(p.xvar)) max(dc.(p.xvar))];
-        p.xrange = p.xrange + [-1 1]*mean(p.xrange)*0.02;
+        p.xrange = p.xrange + [-1 1]*abs(mean(p.xrange))*0.02;
     end
 
     %stats

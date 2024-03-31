@@ -9,12 +9,9 @@ catch me
 end
 
 %bottle firing data into .fir file
-if ~exist(m_add_nc(blotfile),'file')
-    stn = stnlocal; mfir_01; %should be done in ctd_all_part1
-end
-if exist(m_add_nc(blotfile),'file')
-    stn = stnlocal; mfir_03;
-
+stn = stnlocal; mfir_03;
+if exist(m_add_nc(otfilef),'file')
+    stn = stnlocal; mfir_03_extra;
     %add winch data
     try
         stn = stnlocal; mwin_to_fir;
@@ -26,6 +23,7 @@ if exist(m_add_nc(blotfile),'file')
     %add to sam file
     stn = stnlocal; mfir_to_sam;
 end
+return
 
 %calculate and apply depths
 station_summary(stnlocal)
@@ -33,7 +31,8 @@ stn = stnlocal; mdep_01
 get_sensor_groups(stnlocal)
 
 %output to csv files
-mout_cchdo_exchangeform(stnlocal)
+%mout_cchdo_exchangeform(stnlocal) %currently having trouble with
+%rows/columns, yvonne to investigate***
 
 %and sync
 opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt

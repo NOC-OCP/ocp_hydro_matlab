@@ -75,13 +75,13 @@ while 1 > 0
     for k = 1:length(vlist)
         vnum = vlist(k);
         lenfn = 10;
-        if (abs(h.alrlim(vnum)) < 0.1) & (abs(h.uprlim(vnum)) < 0.1)
+        if (abs(h.alrlim(vnum)) < 0.1) && (abs(h.uprlim(vnum)) < 0.1)
             lenfn = 12;
         end
-        if (abs(h.alrlim(vnum)) > 99999.99) | (abs(h.uprlim(vnum)) > 99999.99)
+        if (abs(h.alrlim(vnum)) > 99999.99) || (abs(h.uprlim(vnum)) > 99999.99)
             lenfn = 12;
         end
-        if ktime(k) == 1 & ktconvert == 1 % then this var must be converted using its units
+        if ktime(k) == 1 && ktconvert == 1 % then this var must be converted using its units
             lenfn = 17;
         end
 
@@ -91,7 +91,7 @@ while 1 > 0
         end
         
         fu = h.fldunt{vnum};
-        if ktime(k) == 1 & ktconvert == 1 % then this unit must be converted using its units
+        if ktime(k) == 1 && ktconvert == 1 % then this unit must be converted using its units
             fu = 'yymodd doy hhmmss';
         end
         if length(fu) > lenfn
@@ -111,13 +111,13 @@ while 1 > 0
         vnum = vlist(k);
         vnam = h.fldnam{vnum};
         vform = ' %10.3f';
-        if (abs(h.alrlim(vnum)) < 0.1) & (abs(h.uprlim(vnum)) < 0.1)
+        if (abs(h.alrlim(vnum)) < 0.1) && (abs(h.uprlim(vnum)) < 0.1)
             vform = ' %12.5e';
         end
-        if (abs(h.alrlim(vnum)) > 99999.99) | (abs(h.uprlim(vnum)) > 99999.99)
+        if (abs(h.alrlim(vnum)) > 99999.99) || (abs(h.uprlim(vnum)) > 99999.99)
             vform = ' %12.5e';
         end
-        if ktime(k) == 1 & ktconvert == 1 % then this var must be converted using its units
+        if ktime(k) == 1 && ktconvert == 1 % then this var must be converted using its units
             vform = ' %02d%02d%02d %3d %02d%02d%02d';
         end
 
@@ -191,11 +191,11 @@ while 1 > 0
         for k = 1:length(vlist)
             vnum = vlist(k);
             vnam = h.fldnam{vnum};
-            [row col] = m_index_to_rowcol(index(ki),h,vnum);
+            [row, col] = m_index_to_rowcol(index(ki),h,vnum);
             vdata = nc_varget(ncfile.name,vnam,[row-1 col-1],[1 1]);
             vdata = reshape(vdata,numel(vdata),1);
-            if ktime(k) == 1 & ktconvert == 1 % then this var must be converted using its units
-                [yy mo dd hh mm ss dayofyear] = m_time_to_ymdhms(vnam,vdata,h);
+            if ktime(k) == 1 && ktconvert == 1 % then this var must be converted using its units
+                [yy, mo, dd, hh, mm, ss, dayofyear] = m_time_to_ymdhms(vnam,vdata,h);
                 vdata = [yy-2000 mo dd dayofyear hh mm round(ss)]; % ss is rounded in m_time_to_ymdhms, but need to force it to integer
                 if vdata(1) < 0; vdata(1) = vdata(1)+100; end % this will only produce a 2-digit year if 1900 <= yy <= 2099
             end

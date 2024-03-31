@@ -204,7 +204,7 @@ if ~isempty(stnall)
     opt1 = 'mstar'; get_cropt
     if docf
         m = strncmp('time_',hnew.fldnam,5);
-        hnew.fldunt(m) = timestring;
+        hnew.fldunt(m) = repmat({timestring},sum(m),1);
         hnew.data_time_origin = [];
     else
         hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;

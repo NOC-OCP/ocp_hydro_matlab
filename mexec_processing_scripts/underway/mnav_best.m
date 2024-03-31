@@ -9,28 +9,33 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 root_pos = mgetdir(default_navstream);
 root_hed = mgetdir(default_hedstream);
-if exist('default_attstream','var')
-    doatt = 1;
-    root_att = fullfile(MEXEC_G.mexec_data_root,'nav','att');
+root_att = mgetdir(default_attstream);
+if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
+    def = mrdefine;
+    navstream = def.tablemap{strcmp(default_navstream,def.tablemap(:,2)),1};
+    hedstream = def.tablemap{strcmp(default_hedstream,def.tablemap(:,2)),1};
+    attstream = def.tablemap{strcmp(default_attstream,def.tablemap(:,2)),1};
 else
-    doatt = 0;
+    navstream = default_navstream;
+    hedstream = default_hedstream;
+    attstream = default_attstream;
 end
-infilen = fullfile(root_pos,[default_navstream '_' mcruise '_all_edt.nc']);
+infilen = fullfile(root_pos,[navstream '_' mcruise '_all_edt.nc']);
 if ~exist(infilen,'file')
-    infilen = fullfile(root_pos,[default_navstream '_' mcruise '_all_raw.nc']);
+    infilen = fullfile(root_pos,[navstream '_' mcruise '_all_raw.nc']);
 end
-infileh = fullfile(root_hed,[default_hedstream '_' mcruise '_all_edt.nc']); %easting and northing only in edt file
+infileh = fullfile(root_hed,[hedstream '_' mcruise '_all_edt.nc']); %easting and northing only in edt file
 if ~exist(m_add_nc(infilen),'file') || ~exist(m_add_nc(infileh),'file')
     error('at least one of best nav and heading stream %s and %s files not found',default_navstream,default_hedstream)
 end
-if doatt
-    infilea = fullfile(root_att,[default_attstream '_' mcruise '_all_edt.nc']);
-    if ~exist(infilea,'file')
-        infilea = fullfile(root_att,[default_attstream '_' mcruise '_all_edt.nc']);
-    end
+infilea = fullfile(root_att,[attstream '_' mcruise '_all_edt.nc']);
+if ~exist(infilea,'file')
+    infilea = fullfile(root_att,[attstream '_' mcruise '_all_edt.nc']);
 end
 if ~exist(infilea,'file')
     doatt = 0;
+else
+    doatt = 1;
 end
 otfile = fullfile(MEXEC_G.mexec_data_root,'nav',['bestnav_' mcruise]);
 
@@ -83,12 +88,14 @@ h.fldinst = repmat({default_navstream},size(h.fldnam));
 if doatt
     [da, ha] = mload(infilea,'/');
     dga = grid_profile(da, 'time', tg, 'medbin', opts);
-    vars = setdiff(h.fldnam,'time');
+    vars = setdiff(ha.fldnam,'time');
     for vno = 1:length(vars)
         dg.(vars{vno}) = dga.(vars{vno});
-        h.fldnam = [h.fldnam vars{vno}];
-        h.fldunt = [h.fldunt ha.fldunt(strcmp(vars{vno},h.fldnam))];
-        h.fldinst = [h.fldinst repmat({default_attstream},1,length(vars))];
+        if ~sum(strcmp(vars{vno},h.fldnam))
+            h.fldnam = [h.fldnam vars{vno}];
+            h.fldunt = [h.fldunt ha.fldunt(strcmp(vars{vno},ha.fldnam))];
+            h.fldinst = [h.fldinst repmat({default_attstream},1,length(vars))];
+        end
     end
     h.comment = [h.comment '\n attitude from ' default_attstream ' median over bins of width ' num2str(tave_period)];
 end
@@ -141,9 +148,12 @@ h.comment = [h.comment '\n heading from vector median over bins of width ' num2s
 
 %%%%% merge vector-averaged heading onto average speed, course %%%%%
 dg.(headvar) = interp1(dgh.(timvar), dgh.(headvar), dg.time);
-h.fldnam = [h.fldnam headvar];
-h.fldunt = [h.fldunt 'degrees']; %***reference/coord sys?
-h.fldinst = [h.fldinst default_hedstream];
+if ~sum(strcmp(vars{vno},h.fldnam))
+    h.fldnam = [h.fldnam headvar];
+    h.fldunt = [h.fldunt 'degrees']; %***reference/coord sys?
+end
+m = strcmp(vars{vno},h.fldnam);
+h.fldinst(m) = {default_hedstream};
 h.comment = [h.comment '\n vector-averaged heading interpolated onto position times'];
 
 

@@ -47,9 +47,10 @@ for no = 1:length(names)
         names{no} = namesnew{no};
     end
     if strcmp(names{no},'time')
-        opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-        data.(names{no}) = 86400*(data.(names{no}) + uway_torg - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
-        vunits{no} = 'seconds';
+        %opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+        %data.(names{no}) = 86400*(data.(names{no}) + uway_torg - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
+        %vunits{no} = 'seconds';
+        [data.(names{no}),vunits{no}] = m_commontime(data.(names{no}),'datenum',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
     end
 end
 units = vunits;

@@ -64,7 +64,7 @@ if nargin>0 && isstruct(varargin{1})
         MEXEC_G.(fn{fno}) = MEXEC_G_user.(fn{fno});
     end
 else
-    disp('MEXEC_G_user not supplied; using defaults')
+    disp('no input arguments to m_setup; using defaults')
 end
 clear MEXEC_G_user
 
@@ -98,7 +98,8 @@ end
 
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
-MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not normally be changed
+MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
+% normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 % including some specific to the cruise
 opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
@@ -219,7 +220,10 @@ switch MEXEC_G.Mship
 end
 
 
-if ~strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
+if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
+    def = mrdefine('this_cruise');
+    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; def.tablemap(:,[2 3])];
+else
     %create file connecting underway data directories and stream names
     %and create underway data directories (for processed data)
     try

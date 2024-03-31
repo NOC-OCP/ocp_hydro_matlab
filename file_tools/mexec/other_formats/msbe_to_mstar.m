@@ -318,9 +318,11 @@ for sno = 1:length(st)
     ii = find(strncmp(st{sno},head,length(st{sno})));
     if ~isempty(ii)
         sn = cellfun(@(x) x(findstr('<SerialNumber>',x)+14:findstr('</Serial',x)-1),head(ii+1),'UniformOutput',false);
-        sns = [sns; [sa(sno,1) sn(1)]];
+        %sn = regexprep(sn,'[^a-zA-Z0-9]','_');
+        %***later will need to store numeric values so remove characters
+        sns = [sns; [sa(sno,1) regexprep(sn(1), '[^0-9]', '')]];
         if length(sn)>1
-            sns = [sns; [sa(sno,2) sn(2)]];
+            sns = [sns; [sa(sno,2) regexprep(sn(2), '[^0-9]', '')]];
         end
     end
 end

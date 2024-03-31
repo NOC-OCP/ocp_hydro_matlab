@@ -78,17 +78,19 @@ if ~isfield(ds,'dc_end') || auto_end
         end
         %or when min p is reached for yo-yo cast with separate files
         kmin = find(d1.press(kbot:end)==min(d1.press(kbot:end))) + kbot -1;
+        kmin = kmin(1);
         kend = min(kend, kmin);
         hnew.comment = [hnew.comment ' auto detected end time'];
     else
         hnew.comment = [hnew.comment ' end time set in opt_cruise'];
     end
+    if kend==0; kend = length(d1.pumps); end
     ds.dc_end = kend;
     ds.scan_end = d1.scan(ds.dc_end);
     ds.press_end = d1.press(ds.dc_end);
     ds.time_end = d1.time(ds.dc_end);
-        m = ['End of cast is at dc ' sprintf('%d',ds.dc_end) ' pressure ' sprintf('%8.1f',ds.press_end)];
-        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
+    m = ['End of cast is at dc ' sprintf('%d',ds.dc_end) ' pressure ' sprintf('%8.1f',ds.press_end)];
+    fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
 end
 
 %corresponding indices in 24hz file

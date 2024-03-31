@@ -5,7 +5,7 @@ function [rtable, mtable] = mrresolve_table(tablein)
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
 % First drafts of scripts for start jc211 28 jan 2021, alongside in Stanley
-% 
+%
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
@@ -29,7 +29,7 @@ function [rtable, mtable] = mrresolve_table(tablein)
 %
 % rtable: An rvdas table name. Either the same rvdas table name that was
 %   input, or the  rvdas full name of the mexec shorthand.
-% mtable: The mexec shorthand name corresponding to rtable. 
+% mtable: The mexec shorthand name corresponding to rtable.
 
 % If the argument is given on the command line, then it will come in to
 % tablein as a char string.
@@ -45,29 +45,39 @@ def = mrdefine('this_cruise');
 tmap_mexec = def.tablemap(:,1);
 tmap_rvdas = def.tablemap(:,2);
 
-krvdas = find(strcmp(tablein,tmap_rvdas), 1);
-kmexec = find(strcmp(tablein,tmap_mexec));
+rtable = []; mtable = [];
+n = 0; nmax = 3;
+while isempty(rtable) && isempty(mtable) && n<nmax
 
-if ~isempty(krvdas)
-    % rvdas table name found
-    rtable = tablein;
-    if nargout>1
-        mtable = tmap_mexec{krvdas};
+    krvdas = find(strcmp(tablein,tmap_rvdas), 1);
+    kmexec = find(strcmp(tablein,tmap_mexec));
+
+    if ~isempty(krvdas)
+        % rvdas table name found
+        rtable = tablein;
+        if nargout>1
+            mtable = tmap_mexec{krvdas};
+        end
+    elseif ~isempty(kmexec)
+        % mexec shorthand table name found
+        if length(kmexec) > 1 % the table is defective and an mexec short name appears more than once
+            fprintf(MEXEC_A.Mfider,'%s\n%s\n','Input name is found more than once in the list of mexec shorthand names,','try one of the matching rvdas table names (see mrtables_from_json for more info):');
+            fprintf(MEXEC_A.Mfider,'%s\n',tmap_rvdas{kmexec})
+            tablein = input('input new table name or ''q'' to quit ','s');
+            if isempty(tablein) || strcmp(tablein,'q')
+                n = nmax+1;
+            end
+        else
+            rtable = tmap_rvdas{kmexec};
+            if nargout>1
+                mtable = tablein;
+            end
+        end
     end
-elseif ~isempty(kmexec)
-    % mexec shorthand table name found
-    if length(kmexec) > 1 % the table is defective and an mexec short name appears more than once
-        fprintf(MEXEC_A.Mfider,'\n%s%s%s\n\n','Error trying to match name ''',tablein,'''');
-        error('error in mrresolve_table. Input name is found more than once in the list of mexec shorthand names');
-    end
-    rtable = tmap_rvdas{kmexec};
-    if nargout>1
-        mtable = tablein;
-    end
-else % neither found
-    fprintf(MEXEC_A.Mfider,'\n%s%s%s\n\n','Error trying to match name ''',tablein,'''');
-    error('error in mrresolve_table. Input name is not found in the list of RVDAS names or mexec shorthand names');
+        n = n+1;
 end
 
-
-
+if isempty(rtable) && isempty(mtable) % neither found
+    fprintf(MEXEC_A.Mfider,'\n%s%s%s\n\n','Error trying to match name ''',tablein,'''');
+    error('error in mrresolve_table. Input name is not found uniquely in the list of RVDAS names or mexec shorthand names');
+end

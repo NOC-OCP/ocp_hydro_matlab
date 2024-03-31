@@ -50,7 +50,8 @@ for sno = 1:length(shortnames)
     disp(['edited ' shortnames{sno}])
 end
 
-%combine streams, do hand edits (for some streams), and average to produce
+%combine streams, do hand edits (for some streams), and average to producei
+%
 %output/best files
 mnav_best(days); disp('got best nav/heading data')
 %mwind_true(days); disp('converted to true wind')

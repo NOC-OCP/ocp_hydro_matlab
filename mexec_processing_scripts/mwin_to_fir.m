@@ -28,8 +28,13 @@ clear d h
 if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     
     [dwin, hwin] = mloadq(winfile,'/');
-    dwin.time = m_commontime(dwin.time,hwin.data_time_origin,hf.data_time_origin);
-    
+    opt1 = 'mstar'; get_cropt
+    if docf
+        dwin.time = m_commontime(dwin,'time',hwin,hf.fldunt{strcmp(hf.fldnam,'utime')});
+    else
+        dwin.time = m_commontime(dwin.time,hwin.data_time_origin,hf.data_time_origin);
+    end
+
     % scan input file to extract winch cable out variable name
     cabvar = intersect({'cableout' 'cab' 'cable' 'wireout' 'out' 'mfctdcablelengthout' 'ctdcablelengthout'}, hwin.fldnam);
     if isempty(cabvar)

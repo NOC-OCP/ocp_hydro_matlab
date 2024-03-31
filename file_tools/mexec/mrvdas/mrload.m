@@ -154,7 +154,7 @@ end
 
 
 names = [names; {'dnum'}];
-units = [units; {'seconds since 0000-00-00 00:00:00'}];
+units = [units; {'days since 0000-00-00 00:00:00'}];
 
 
 

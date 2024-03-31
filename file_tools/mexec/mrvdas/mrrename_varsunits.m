@@ -86,7 +86,7 @@ for no = 1:length(fn)
     end
     m = strcmpi('degressCelsius',a(:,2)) | strcmpi('degreesCelsius',a(:,2)) | strcmpi('degC',a(:,2));
     a(m,n+2) = {'degreesC'};
-    m = strcmpi('courseOverGround',a(:,1)) | strcmpi('courseTrue',a(1,:));
+    m = strcmpi('courseOverGround',a(:,1)) | strcmpi('courseTrue',a(:,1));
     a(m,n+1) = {'course'};
     m = strcmpi('headingTrue',a(:,2));
     a(m,n+1) = {'heading'};
@@ -94,7 +94,7 @@ for no = 1:length(fn)
     a(m,n+1) = {'temp_remote'};
     m = strcmpi('housingWaterTemperature',a(:,1));
     a(m,n+1) = {'temp_housing'};
-    m = strcmpi('longitudalWaterSpeed',a(:,1)) | strcmpi('speedfa',a(:,1));
+    m = strcmpi('longitudinalWaterSpeed',a(:,1)) | strcmpi('longitudalWaterSpeed',a(:,1)) | strcmpi('speedfa',a(:,1));
     a(m,n+1) = {'speed_forward'};
     m = strcmpi('transverseWaterSpeed',a(:,1)) | strcmpi('speedps',a(:,1));
     a(m,n+1) = {'speed_stbd'};

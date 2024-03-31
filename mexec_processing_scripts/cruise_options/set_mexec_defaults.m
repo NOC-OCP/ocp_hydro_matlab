@@ -16,8 +16,11 @@ switch opt1
 
     case 'mstar'
         %things about mstar file format
-%         docf = 1; %use cf-compliant time units
-        docf = 0; %use seconds since h.data_time_origin
+        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024
+            docf = 1; %cf-compliant time units
+        else
+            docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
+        end
 
     case 'setup'
         switch opt2

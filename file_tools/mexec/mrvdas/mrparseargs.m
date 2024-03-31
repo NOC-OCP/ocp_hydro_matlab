@@ -150,12 +150,11 @@ for ka = 1:nargs
     arg = allargs{ka};
     ftab = 0;
     if ~ischar(arg); continue; end % not a char argument
-    if sum(strcmp(arg,tmap_mexec)) == 1; ftab = 1; end
-    if sum(strcmp(arg,tmap_rvdas)) == 1; ftab = 1; end
-    if ftab == 1
+    if sum(strcmp(arg,tmap_mexec))>=1 || sum(strcmp(arg,tmap_rvdas))>=1
+        ftab = 1;
         table = arg;
         allargs(ka) = [];
-        break
+        break %only find up to one table name
     end
 end
 

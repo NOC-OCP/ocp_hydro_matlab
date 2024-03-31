@@ -35,16 +35,6 @@ end
 otfile = fullfile(rootdir, sprintf('%s_%s_all_edt.nc',abbrev,mcruise));
 didedits = 0;
 
-if strcmp(abbrev,'cnav')
-    %this re-parses degrees/minutes, hasn't been necessary since ??? /
-    %should now be done earlier***
-    [d, h, comment] = mday_01_cnavfix(d, h);
-    if ~isempty(comment)
-        h.comment = [h.comment comment];
-        didedits = 1;
-    end
-end
-
 %apply automatic edits (e.g. bad time ranges), as set in opt_cruise
 uopts = mday_01_default_autoedits(h);
 opt1 = 'uway_proc'; opt2 = abbrev; get_cropt
@@ -84,7 +74,7 @@ if ~isempty(comment)
 end
 
 % adjust: cruise-specific calibrations
-if ismember(abbrev,{'tsg' 'ocl' 'surfmet' 'thermosalinograph' 'thermosalinograph_seabird'})
+if 0%ismember(abbrev,{'tsg' 'ocl' 'surfmet' 'thermosalinograph' 'thermosalinograph_seabird'})
     opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
     cpstr = '';
     if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
@@ -245,14 +235,15 @@ comment = '';
 %convert from depth relative to transducer (if necessary)
 ii = find(strcmpi('transduceroffset',h.fldnam) | strcmpi('xduceroffset',h.fldnam) | strcmpi('xducer_offset',h.fldnam) | strcmpi('transducer_offset',h.fldnam));
 if ~isempty(ii) && ~sum(strcmpi('waterdepth',h.fldnam))
-    d.waterdepth = d.depth_below_xducer + d.(h.fldnam{ii});
+    d.waterdepth = d.waterdepthmetre + d.transduceroffset; %***
+    %d.waterdepth = d.depth_below_xducer + d.(h.fldnam{ii});
     h.fldnam = [h.fldnam 'waterdepth'];
     h.fldunt = [h.fldunt 'metres'];
     comment = '\n transducer offset applied';
 end
 
 %carter correction
-if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb'}))
+if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb' 'ea640'}))
     opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
     navfile = fullfile(mgetdir(default_navstream), [default_navstream '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
     if exist(navfile,'file')

@@ -54,7 +54,7 @@ n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'att'; mt(n).msg = {'pashr','pixseatitud
 % n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'hss'; mt(n).msg = {'pixseaheave0'};  
 %n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'att'; mt(n).msg = {'inrot','herot'}; 
 n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gpgga','gpggk','gpgll','pixsegpsin0','gngga','ingga','gngll'}; 
-% n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gpvtg','gnvtg','invtg'}; 
+n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gpvtg','gnvtg','invtg'}; 
 % n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gngsa','ingsa'}; 
 
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wnd'; mt(n).msg = {'iimwv','wimwv','pmwind','gpxsm'}; %gpxsm is surfmet
@@ -72,7 +72,8 @@ n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'mbm'; mt(n).msg = {'kidpt','kodpt'};
 % n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'env'; mt(n).msg = {'wimta','wimhu','ps8953','pytemp'}; %not sure about some of these n = n+1;
 % n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'grv'; mt(n).msg = {'uw','pdgrav','tnn','dtvnn','uwraw'}; 
 % n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'mag'; mt(n).msg = {'inmag','3rr0r'}; 
-% n = n+1; mt(n).dir = 'uother'; mt(n).pre = 'log'; mt(n).msg = {'vmvbw','vdvbw','vmvhw','vmvlw','vmmtw','vdvhw','vdvlw'}; 
+n = n+1; mt(n).dir = 'speed'; mt(n).pre = 'adcp'; mt(n).msg = {'vdvbw'}; 
+%n = n+1; mt(n).dir = 'speed'; mt(n).pre = 'log'; mt(n).msg = {'vmvbw','vdvbw','vmvhw','vmvlw','vmmtw','vdvhw','vdvlw'}; 
 
 n = n+1; mt(n).dir = 'winch'; mt(n).pre = 'winch'; mt(n).msg = {'winch','sdawinch'}; 
 

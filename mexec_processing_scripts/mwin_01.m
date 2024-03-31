@@ -32,11 +32,10 @@ dataname = ['win_' mcruise '_' stn_string];
 
 %--------------------------------
 % create rvs starts and end times
-
-                time_window = [-600 800];
-                winch_time_start = nan;
-                winch_time_end = nan;
-opt1 = mfilename; opt2 = 'winchtime'; get_cropt; 
+time_window = [-600 800];
+winch_time_start = nan;
+winch_time_end = nan;
+opt1 = mfilename; opt2 = 'winchtime'; get_cropt;
 
 % bak on jc159 15 april 2018: need to be able to read in some winch data 
 % on swivel test stations where there are no ctd files; new cruise opt to set
@@ -49,8 +48,13 @@ if exist('winch_time_start','var') && ~isnan(winch_time_start) && ~isnan(winch_t
 else
     h_in=m_read_header(infile1);
     k_time=find(strcmp('time',h_in.fldnam));
-    t_start=datenum(h_in.data_time_origin)  + (h_in.alrlim(k_time)+time_window(1))/86400;
-    t_end=datenum(h_in.data_time_origin)+(h_in.uprlim(k_time)+time_window(2))/86400;
+    if isempty(h_in.data_time_origin)
+        t_start=m_commontime(h_in.alrlim(k_time),h_in.fldunt{k_time},'datenum')+time_window(1)/86400;
+        t_end=m_commontime(h_in.uprlim(k_time),h_in.fldunt{k_time},'datenum')+time_window(2)/86400;
+    else
+        t_start=datenum(h_in.data_time_origin)  + (h_in.alrlim(k_time)+time_window(1))/86400;
+        t_end=datenum(h_in.data_time_origin)+(h_in.uprlim(k_time)+time_window(2))/86400;
+    end
 end
 
 t_start_vec=datevec(t_start);
@@ -130,6 +134,7 @@ MEXEC_G.PLATFORM_NUMBER
 '/'
 '-1'
 };
+MEXEC_A.MARGS_IN0 = MEXEC_A.MARGS_IN;
 mheadr;
 
 hdr = m_read_header(otfile2);

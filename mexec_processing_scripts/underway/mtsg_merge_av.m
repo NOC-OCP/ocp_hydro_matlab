@@ -10,7 +10,7 @@ opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 
 %get list of files
 root_dir1 = fullfile(MEXEC_G.mexec_data_root, 'met', 'ocn');
-root_dir2 = fullfile(MEXEC_G.mexec_data_root, 'wnd', 'met');
+root_dir2 = fullfile(MEXEC_G.mexec_data_root, 'met', 'wnd');
 f1 = dir(fullfile(root_dir1, '*_all_raw.nc')); %will change to _edt later if available
 f2 = dir(fullfile(root_dir2, 'surfmet*_all_raw.nc')); %will change to _edt later if available
 streams = {'surfmet' 'tsg' 'ocl' 'flowmeter' 'fluorometer' 'platform' 'thermometer' 'thermosalinograph' 'transmissometer' 'sst' 'radiometer'};
@@ -172,17 +172,19 @@ pdel = round(pdel);
 if ~isempty(minflow)
     [d, h] = mload(otfile, '/');
     fvar = munderway_varname('flowvar',h.fldnam,1,'s');
-    vars = setdiff(h.fldnam,{fvar 'time' 'ucsw_hoist'});
-    m = d.(fvar)<minflow;
-    if sum(m)
-        iip = find(m); 
-        iip = repmat([0:pdel],length(iip),1) + repmat(iip(:),1,pdel+1);
-        iip = unique(iip(iip<length(d.(fvar))));
-        for vno = 1:length(vars)
-            d.(vars{vno})(iip) = NaN;
+    if ~isempty(fvar)
+        vars = setdiff(h.fldnam,{fvar 'time' 'ucsw_hoist'});
+        m = d.(fvar)<minflow;
+        if sum(m)
+            iip = find(m);
+            iip = repmat([0:pdel],length(iip),1) + repmat(iip(:),1,pdel+1);
+            iip = unique(iip(iip<length(d.(fvar))));
+            for vno = 1:length(vars)
+                d.(vars{vno})(iip) = NaN;
+            end
         end
+        mfsave(otfile, d, h)
     end
-    mfsave(otfile, d, h)
 end
 if check_tsg
     [d, h] = mload(otfile, '/');
@@ -201,12 +203,15 @@ if check_tsg
     end
     d0 = d; d0 = rmfield(d0,'time');
     m = strncmp('count',h.fldunt,5);
-    vr = intersect(h.fldnam, {'soundvelocity' 'flowrate' 'calculatedbeam' 'salinity' 'psal'});
+    vars_exclude = {'soundvelocity' 'flowrate' 'calculatedbeam' 'salinity' 'psal'};
+    vars_exclude = [vars_exclude 'soundvelocity_raw' 'flowrate_raw' 'calculatedbeam_raw' 'salinity_raw' 'psal_raw'];
+    vr = intersect(h.fldnam, vars_exclude); 
     d0 = rmfield(d0,[h.fldnam(m) vr]);
     fn = fieldnames(d0);
     edfile = fullfile(root_dir1,'editlogs','ucsw_');
     bads = gui_editpoints(d0,'dday','edfilepat',edfile,'xgroups',iis_all);
     if ~isempty(bads) %new edits to apply
+        d = rmfield(d,'dday');
         [d, ~] = apply_guiedits(d, 'time', [edfile '*']);
         mfsave(otfile, d, h)
     end

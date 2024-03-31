@@ -121,14 +121,14 @@ if ~isempty(varstring)
     latdir_in_vdef = sum(strcmpi('latdir',vdef(:,1)));
     if latitude_in_varstring && latdir_not_in_varstring && latdir_in_vdef
         % add latdir to varstring
-        varstring = [varstring ',latdir'];
+        varstring = [varstring ' latdir'];
     end
     longitude_in_varstring = contains(lower(varstring),'longitude');
     londir_not_in_varstring = ~contains(lower(varstring),'londir');
     londir_in_vdef = sum(strcmpi('londir',vdef(:,1)));
     if longitude_in_varstring && londir_not_in_varstring && londir_in_vdef
         % add londir to varstring
-        varstring = [varstring ',londir'];
+        varstring = [varstring ' londir'];
     end
 end
 
@@ -140,6 +140,7 @@ if ~isempty(ii)
         vars{no+1,1} = lower(varstring(ii(no)+1:ii(no+1)-1));
     end
     if ii(end)<length(varstring)
+        no = size(vars,1);
         vars{no+1,1} = lower(varstring(ii(end)+1:end));
     end
     for no = 1:size(vdef,1)
@@ -149,7 +150,7 @@ if ~isempty(ii)
 end
 if isempty(varnums); varnums = 2:size(vdef,1); end
 
-for kl = varnums
+for kl = varnums(:)'
     thisvar = vdef{kl,1};
     thisunit = vdef{kl,2};
     sqlvars = [sqlvars ',' thisvar];

@@ -16,7 +16,7 @@ switch MEXEC_G.Mshipdatasystem
         uway_excludes = {'gravity';'mag'};
 end
 
-opt1 = 'uway_daily_proc'; opt2 = 'excludestreams'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'excludestreams'; get_cropt
 
 % udirs = udirs([7:15 21:24 26:31],:);
 

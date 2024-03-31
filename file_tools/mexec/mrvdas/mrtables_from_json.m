@@ -78,7 +78,7 @@ rtables.cnav_gnvtg = {  % from cnav-dy.json
 %                 'trueCourse'                             ''                                                                     'trueCourse'
 %              'magneticTrack'                             ''                                                                  'magneticTrack'
 %                      'mFlag'                             ''                                                                          'mFlag'
-%                 'speedKnots'                             ''                                                                     'speedKnots'
+                  'speedKnots'                             ''                                                                     'speedKnots'
 %                      'nFlag'                             ''                                                                          'nFlag'
                    'speedKmph'                             ''                                                                      'speedKmph'
 %                      'kFlag'                             ''                                                                          'kFlag'
@@ -165,7 +165,7 @@ rtables.fugro_gpvtg = {  % from fugro-dy.json
 %                 'trueCourse'                             ''                                                                     'trueCourse'
 %              'magneticTrack'                             ''                                                                  'magneticTrack'
 %                      'mFlag'                             ''                                                                          'mFlag'
-%                 'speedKnots'                             ''                                                                     'speedKnots'
+                  'speedKnots'                             ''                                                                     'speedKnots'
 %                      'nFlag'                             ''                                                                          'nFlag'
                    'speedKmph'                             ''                                                                      'speedKmph'
 %                      'kFlag'                             ''                                                                          'kFlag'
@@ -327,19 +327,6 @@ rtables.posmv_pashr = {  % from posmv-dy.json
 %                    'imuFlag'                             ''                                                                        'imuFlag'
 };
 
-%"GPGLL"
-rtables.posmv_gpgll = {  % from posmv-dy.json
-'posmv_gpgll'  8 []  % fields
-                    'latitude'                             ''                                                                       'latitude'
-                      'latDir'                             ''                                                                         'latDir'
-                   'longitude'                             ''                                                                      'longitude'
-                      'lonDir'                             ''                                                                         'lonDir'
-                     'utcTime'                             ''                                                                        'utcTime'
-%                    'gllQual'                             ''                                                                        'gllQual'
-%            'positioningMode'                             ''                                                                'positioningMode'
-%                   'checksum'                             ''                                                                       'checksum'
-};
-
 %"GPGGA"
 rtables.posmv_gpgga = {  % from posmv-dy.json
 'posmv_gpgga' 14 []  % fields
@@ -366,7 +353,7 @@ rtables.posmv_gpvtg = {  % from posmv-dy.json
 %                 'trueCourse'                             ''                                                                     'trueCourse'
 %              'magneticTrack'                             ''                                                                  'magneticTrack'
 %                      'mFlag'                             ''                                                                          'mFlag'
-%                 'speedKnots'                             ''                                                                     'speedKnots'
+                  'speedKnots'                             ''                                                                     'speedKnots'
 %                      'nFlag'                             ''                                                                          'nFlag'
                    'speedKmph'                             ''                                                                      'speedKmph'
 %                      'kFlag'                             ''                                                                          'kFlag'
@@ -524,7 +511,7 @@ rtables.seapathpos_invtg = {  % from seapathpos-dy.json
 %                   'TrueFlag'                             ''                                                                       'TrueFlag'
 %             'magneticCourse'                             ''                                                                 'magneticCourse'
 %                      'mFlag'                             ''                                                                          'mFlag'
-%                 'speedKnots'                             ''                                                                     'speedKnots'
+                  'speedKnots'                             ''                                                                     'speedKnots'
 %                      'nFlag'                             ''                                                                          'nFlag'
                    'speedKmph'                             ''                                                                      'speedKmph'
 %                      'kFlag'                             ''                                                                          'kFlag'
@@ -540,7 +527,7 @@ rtables.seapathpos_inrmc = {  % from seapathpos-dy.json
                       'latDir'                             ''                                                                         'latDir'
                    'longitude'                             ''                                                                      'longitude'
                       'lonDir'                             ''                                                                         'lonDir'
-%                 'speedKnots'                             ''                                                                     'speedKnots'
+                  'speedKnots'                             ''                                                                     'speedKnots'
                      'heading'                             ''                                                                        'heading'
                      'navDate'                             ''                                                                        'navDate'
 %                     'magvar'                             ''                                                                         'magvar'
@@ -603,7 +590,7 @@ rtables.shipsgyro_gpvtg = {  % from shipsgyro-dy.json
 %                 'trueCourse'                             ''                                                                     'trueCourse'
 %             'magneticCourse'                             ''                                                                 'magneticCourse'
 %                      'mFlag'                             ''                                                                          'mFlag'
-%                 'speedKnots'                             ''                                                                     'speedKnots'
+                  'speedKnots'                             ''                                                                     'speedKnots'
 %                      'nFlag'                             ''                                                                          'nFlag'
 };
 
@@ -632,7 +619,7 @@ rtables.skipperlog_vdvhw = {  % from skipperlog-dy.json
 %            'headingTrueFlag'                             ''                                                                'headingTrueFlag'
 %            'headingMagnetic'                             ''                                                                'headingMagnetic'
 %        'headingMagneticFlag'                             ''                                                            'headingMagneticFlag'
-%                 'speedKnots'                             ''                                                                     'speedKnots'
+                  'speedKnots'                             ''                                                                     'speedKnots'
 %                      'nFlag'                             ''                                                                          'nFlag'
                    'speedKmph'                             ''                                                                      'speedKmph'
 %                      'kFlag'                             ''                                                                          'kFlag'
@@ -653,7 +640,7 @@ rtables.skipperlog_vdvtg = {  % from skipperlog-dy.json
 %                 'trueCourse'                             ''                                                                     'trueCourse'
 %              'magneticTrack'                             ''                                                                  'magneticTrack'
 %                      'mFlag'                             ''                                                                          'mFlag'
-%                 'speedKnots'                             ''                                                                     'speedKnots'
+                  'speedKnots'                             ''                                                                     'speedKnots'
 %                      'nFlag'                             ''                                                                          'nFlag'
                    'speedKmph'                             ''                                                                      'speedKmph'
 %                      'kFlag'                             ''                                                                          'kFlag'

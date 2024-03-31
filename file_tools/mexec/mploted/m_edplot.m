@@ -192,24 +192,20 @@ else
     end
 end
 
-% if we have found a time variable; read in the time data
+% if we have found a time variable; read in the time data and convert to
+% days without changing the reference time
 if tvarnum > 0
-    % get time units
     timename = h.fldnam{tvarnum};
     pdfot.time_var = timename;
-    unit = h.fldunt{tvarnum};
-    isdays = m_isunitdays(unit);
-    issecs = m_isunitsecs(unit);
-    %     if unit not recognised, assume it is seconds
-    if isdays + issecs == 0
-        m = ['time unit ' unit ' not recognised as days or seconds, assumed to be seconds'];
-        fprintf(MEXEC_A.Mfider,'\n\n%s\n\n',m)
-        issecs = 1;
-    end
     time = nc_varget(ncfile.name,timename);
-    if issecs == 1
-        time = time/86400; % convert seconds to days after data_time_origin
+    unit = h.fldunt{tvarnum};
+    if isempty(h.data_time_origin)
+        ii = strfind(unit,'since');
+        unit0 = ['days ' unit(ii:end)];
+    else
+        unit0 = ['days since ' datestr(h.data_time_origin,'yyyy-mm-dd HH:MM:SS')];
     end
+    time = m_commontime(time,unit,unit0);
 else
     dctime = 0;
 end
@@ -226,11 +222,11 @@ end
 if ~exist('startdcv','var')
     startdcv = [];
 end
-[x1, x1v, time_start_do, time_start] = parse_dc_time(startdc, startdcv, 1, tvarnum, time, h.data_time_origin);
+[x1, x1v, time_start_do, time_start] = parse_dc_time(startdc, startdcv, 1, tvarnum, time, unit0);
 if ~exist('stopdcv','var')
     stopdcv = [];
 end
-[x2, x2v, time_stop_do, time_stop] = parse_dc_time(stopdc, stopdcv, h.dimrows(xnum)*h.dimcols(xnum), tvarnum, time, h.data_time_origin);
+[x2, x2v, time_stop_do, time_stop] = parse_dc_time(stopdc, stopdcv, h.dimrows(xnum)*h.dimcols(xnum), tvarnum, time, unit0);
 
 
 
@@ -273,18 +269,17 @@ else
     if tvarnum ~= xnum % time may have been used to select data but is not used in plotting
         time_scale = 0;
     else
-        unit = h.fldunt{xnum};
-        isdays = m_isunitdays(unit);
-        issecs = m_isunitsecs(unit);
-        %     if unit not recognised, assume it is seconds
-        if isdays + issecs == 0
-            m = ['time unit ' unit ' not recognised as days or seconds, assumed to be seconds'];
-            fprintf(MEXEC_A.Mfider,'\n\n%s\n\n',m)
-            issecs = 1;
+        unit = h.fldunt{xnum};    
+        if isempty(h.data_time_origin)
+            ii = strfind(unit,'since');
+            unit0 = ['days ' unit(ii:end)];
+        else
+            unit0 = 'days';
         end
         xraw = x;
-        if issecs == 1; x = x/86400; xscale = 1/86400; end % convert to days relative to data_time_origin
-        
+        x = m_commontime(x,unit,unit0);
+        if contains(unit,'seconds'); xscale = 1/86400; end
+        %xscale = min(x./xraw);        
         if isnan(time_scale)
             time_scale = 2; % default: minutes after start time
             pdfot.time_scale = time_scale;
@@ -731,7 +726,7 @@ set(gcf,'position',pfigsize);
 
 
 
-    function [x, xv, time_do, time_out] = parse_dc_time(dc, dcv, dtdefaultval, tvarnum, time, data_time_origin);
+function [x, xv, time_do, time_out] = parse_dc_time(dc, dcv, dtdefaultval, tvarnum, time, time_units)
         
         if isstruct(dcv)
             fn = fieldnames(dcv);
@@ -751,11 +746,10 @@ set(gcf,'position',pfigsize);
                 xv = dcv;
             end
             if tvarnum > 0
-                %                 time_do = time(dc); % datenum relative to data_time_origin
-                % bak on jc211 The line above doesn't work, if dc is nan. I'm not sure how
-                % long it has been like this without being discovered.
-                time_do = time(x); % datenum relative to data_time_origin  
-                time_out = time_do + datenum(data_time_origin); % matlab datenum of startdc
+                % fixed bak jc211 in case dc is NaN; fixed ylf dy174 for CF
+                % time units
+                time_do = time(x); % days 
+                time_out = m_commontime(time_do,time_units,'datenum');
             end
             
         else
@@ -765,23 +759,23 @@ set(gcf,'position',pfigsize);
                 % the mapping from day number to time depends on leap years or not
                 % assume the year is the year of the first data cycle in the time
                 % variable
-                t0 = datevec(datenum(data_time_origin) + time(1));
-                y0 = t0(1);
-                time_out = (dc(1)-1) + datenum([y0 1 1 dc(2:4)]);
-                time_do = time_out - datenum(data_time_origin); % datenum relative to data_time_origin
+                t0 = m_commontime(time(1),time_units,'datenum');
+                t0 = datevec(t0);
+                time_out = datenum([t0(1) 1 dc]);
+                time_do = m_commontime(time_out,'datenum',time_units);
                 if dtdefaultval==1
-                    x = min(find(time >= time_do));
+                    x = find(time >= time_do, 1 );
                 else
-                    x = max(find(time <= time_do));
+                    x = find(time <= time_do, 1, 'last' );
                 end
                 if isstruct(dcv)
                     for no = 1:length(fn)
-                        to = (dcv.(fn{no})(1)-1) + datenum([y0 1 1 dcv.(fn{no})]);
-                        td = to - datenum(data_time_origin);
+                        to = datenum([t0(1) 1 dcv.(fn{no})]);
+                        td = m_commontime(to,'datenum',time_units);
                         if dtdefaultval==1
-                            xv.(fn{no}) = min(find(time >= td));
+                            xv.(fn{no}) = find(time >= td, 1 );
                         else
-                            xv.(fn{no}) = max(find(time <= td));
+                            xv.(fn{no}) = find(time <= td, 1, 'last' );
                         end
                     end
                 end
@@ -789,21 +783,21 @@ set(gcf,'position',pfigsize);
             elseif length(dc) == 6
                 % [yyyy mm dd HH MM SS]
                 time_out = datenum(dc);
-                time_do = time_out - datenum(data_time_origin); % datenum relative to data_time_origin
+                time_do = m_commontime(time_out,'datenum',time_units);
                 if dtdefaultval==1
-                    x = min(find(time >= time_do));
+                    x = find(time >= time_do, 1 );
                 else
-                    x = max(find(time <= time_do));
+                    x = find(time <= time_do, 1, 'last' );
                 end
                 if isstruct(dcv)
                     fn = fieldnames(dcv);
                     for no = 1:length(fn)
                         to = datenum(dcv.(fn{no}));
-                        td = to - datenum(data_time_origin);
+                        td = m_commontime(to,'datenum',time_units);
                         if dtdefaultval==1
-                            xv.(fn{no}) = min(find(time >= td));
+                            xv.(fn{no}) = find(time >= td, 1 );
                         else
-                            xv.(fn{no}) = max(find(time <= td));
+                            xv.(fn{no}) = find(time <= td, 1, 'last' );
                         end
                     end
                 end

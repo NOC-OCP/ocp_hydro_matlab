@@ -11,18 +11,19 @@ sa = {'temp','cond','oxygen'};
 
 opt1 = 'castpars'; opt2 = 'ctdsens_groups'; get_cropt
 if exist(sgfile,'file')
-    load(sgfile,'sg','sng')
+    load(sgfile,'sg','sng','sn_list')
 else
-    for sno = 1:length(st)
-        sg.([sa{sno} '1']) = [];
-        sg.([sa{sno} '2']) = [];
-        sng = struct();
+    for sno = 1:length(sa)
+        sg.([sa{sno} '1']) = {};
+        sg.([sa{sno} '2']) = {};
+        sn_list.(sa{sno}) = {};
     end
+    sng = struct();
 end
 
 root_ctd = mgetdir('ctd');
 for stn = klist
-    if ~isempty(sg.temp1) && sum(sg.temp1(:,1)==stn)>0
+    if ~isempty(sg.temp1) && sum(cell2mat(sg.temp1(:,1))==stn)>0
         continue %don't redo
     end
 
@@ -42,25 +43,33 @@ for stn = klist
 
         if ~isempty(ii)
             ii1 = min(iisns(iisns>ii(1)))+14:min(iisne(iisne>ii(1)))-1;
-            sn1 = str2double(h.comment(ii1));
+            sn1 = h.comment(ii1);
+            sn1 = regexprep(sn1, '[^a-zA-Z0-9]','_');
             n1 = [sa{sno} '1'];
-            sg.(n1) = [sg.(n1); [stn sn1]];
+            sg.(n1) = [sg.(n1); {stn sn1}];
             sn = [sa{sno} '_' num2str(sn1)];
             if isfield(sng,sn)
                 sng.(sn) = [sng.(sn); [stn 1]];
             else
                 sng.(sn) = [stn 1];
             end
+            if ~ismember(sn1,sn_list.(sa{sno}))
+                sn_list.(sa{sno}) = [sn_list.(sa{sno}) sn1];
+            end
             if length(ii)>1
                 ii2 = min(iisns(iisns>ii(2)))+14:min(iisne(iisne>ii(2)))-1;
-                sn2 = str2double(h.comment(ii2));
+                sn2 = h.comment(ii2);
+                sn2 = regexprep(sn2, '[^a-zA-Z0-9]','_');
                 n2 = [sa{sno} '2'];
-                sg.(n2) = [sg.(n2); [stn sn2]];
+                sg.(n2) = [sg.(n2); {stn sn2}];
                 sn = [sa{sno} '_' num2str(sn2)];
                 if isfield(sng,sn)
                     sng.(sn) = [sng.(sn); [stn 2]];
                 else
                     sng.(sn) = [stn 2];
+                end
+                if ~ismember(sn2,sn_list.(sa{sno}))
+                    sn_list.(sa{sno}) = [sn_list.(sa{sno}) sn2];
                 end
             end
         end
@@ -75,9 +84,10 @@ for fno = 1:length(fn)
 end
 sng = orderfields(sng);
 
-readme = {'sg has lists of stations and serial numbers for each sensor/position (e.g. temp1, cond1);'
-    'sng has lists of stations and sensor-positions for each serial number'};
-save(sgfile,'sg','sng','readme')
+readme = {'sg has lists of stations and serial numbers for each sensor-position (e.g. temp1, cond1, temp2);'
+    'sng has lists of stations and sensor-positions for each serial number';
+    'sn_list has lists of serial numbers for each sensor (e.g. temp)'};
+save(sgfile,'sg','sng','sn_list','readme')
 
 %now save to sam file
 samfile = fullfile(mgetdir('sam'),['sam_' mcruise '_all']);
@@ -98,8 +108,11 @@ if sum(ismember(ds.statnum,klist)&~isnan(ds.upress))
         msam = ds.statnum==stn;
         if sum(msam)
             for fno = 1:length(fn)
-                ii = find(sg.(fn{fno})(:,1)==stn); ii = ii(end);
-                ds.(['sn_' fn{fno}])(msam) = sg.(fn{fno})(ii,2);
+                ii = find(cell2mat(sg.(fn{fno})(:,1))==stn); ii = ii(end);
+                %***can only store numbers in mstar data, so for now, just
+                %discard anything else
+                a = regexprep(sg.(fn{fno})(ii,2), '[^0-9]',''); 
+                ds.(['sn_' fn{fno}])(msam) = str2double(a);
             end
         end
     end

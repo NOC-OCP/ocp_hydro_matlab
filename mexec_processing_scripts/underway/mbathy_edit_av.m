@@ -8,8 +8,6 @@ avfile = fullfile(MEXEC_G.mexec_data_root,'bathy',sprintf('bathy_%s_av',mcruise)
 uway_set_streams
 mint = inf; maxt = -inf;
 timun = ['days since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
-sbvar = 'waterdepth';
-mbvar = 'swath_depth'; %***
 tave_period = 5/24/60;
 btol = tave_period/10; %10% of spacing of gridded data
 
@@ -26,6 +24,9 @@ if regrid
     [~,iis,~] = intersect(shortnames,{'sim' 'ea600' 'ea640' 'singleb' 'sbm' 'singlebeam_kongsberg'});
     if ~isempty(iis)
         filesbin = fullfile(mgetdir(shortnames{iis}), [shortnames{iis} '_' mcruise '_all_edt.nc']);
+        if ~exist(filesbin,'file')
+            filesbin = fullfile(MEXEC_G.mexec_data_root,'bathy','sbm',[shortnames{iis} '_' mcruise '_all_edt.nc']);
+        end
         if exist(filesbin,'file')
             [ds,hs] = mload(filesbin,'/');
             ds.time = m_commontime(ds, 'time', hs, timun);
@@ -34,6 +35,7 @@ if regrid
             mint = min(mint,ds.time(1));
             maxt = max(maxt,ds.time(end));
             iss = 1;
+            sbvar = munderway_varname('depvar',hs.fldnam,1,'s');
         end
     end
 
@@ -42,6 +44,9 @@ if regrid
     [~,iim,~] = intersect(shortnames,{'em120' 'em122' 'multib' 'mbm' 'multibeam_kongsberg_em122'});
     if ~isempty(iim)
         filembin = fullfile(mgetdir(shortnames{iim}), [shortnames{iim} '_' mcruise '_all_edt.nc']);
+        if ~exist(filembin,'file')
+            filembin = fullfile(MEXEC_G.mexec_data_root,'bathy','mbm',[shortnames{iim} '_' mcruise '_all_edt.nc']);
+        end
         if exist(filembin,'file')
             [dm,hm] = mload(filembin,'/');
             dm.time = m_commontime(dm, 'time', hm, timun);
@@ -50,6 +55,7 @@ if regrid
             mint = min(mint,dm.time(1));
             maxt = max(maxt,dm.time(end));
             ism = 1;
+            mbvar = munderway_varname('depvar',hm.fldnam,1,'s');
         end
     end
 
@@ -82,7 +88,7 @@ if regrid
 end
 
 [dg, hg] = mloadq(avfile, '/');
-opt1 = mfilename; opt2 = 'bathy_grid'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'bathy_grid'; get_cropt
 if ~exist('zbathy','var')
     disp('find gridded bathymetry file and set in opt_cruise? (enter to continue)')
     pause

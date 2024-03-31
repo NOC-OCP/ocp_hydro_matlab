@@ -24,37 +24,40 @@ var_copycell = mcvars_list(2); %which variables to copy from 24hz CTD file
 [var_copycell, var_copystr] = mvars_in_file(var_copycell, infile1);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
+%load and average data
 firmethod = 'medint';
 clear firopts;
 firopts.int = [-1 120]; %average over 5 s, like in .ros file
 firopts.prefill = 24*5; %fill gaps up to 5 s first
 opt1 = mfilename; opt2 = 'fir_fill'; get_cropt
-
 [dfir, hfir] = mload(infilef,'scan',' ');
 [dc, hc] = mload(infile1, var_copystr);
 dc = grid_profile(dc, 'scan', dfir.scan, firmethod, firopts);
-clear dnew hnew
-hnew.fldnam = {}; hnew.fldunt = {};
-for no = 1:length(var_copycell)
-    ii = find(strcmp(var_copycell{no}, hc.fldnam));
-    hnew.fldnam = [hnew.fldnam ['u' var_copycell{no}]];
-    hnew.fldunt = [hnew.fldunt hc.fldunt{ii}];
-    dnew.(['u' var_copycell{no}]) = dc.(var_copycell{no});
-end
 
-% bak: need to fix time offset
+%this will go into sam_all file, so use cruise time origin, not cast time origin
 to = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
 opt1 = 'mstar'; get_cropt
+[dc.time,tun] = m_commontime(dc,'time',hc,to); 
+if docf
+    hc.fldunt{strncmp(hc.fldnam,'time',4)} = tun;
+end
+
+%copy and rename (for upcast) selected variables
+clear dnew hnew
 if docf
     hnew.data_time_origin = [];
 else
     hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 end
-dnew.time = dnew.utime;
-dnew.utime = m_commontime(dnew,'time',hc,to);
-dnew = rmfield(dnew,'time');
-
 hnew.latitude = hc.latitude; hnew.longitude = hc.longitude; hnew.water_depth_metres = hc.water_depth_metres;
+hnew.fldnam = {}; hnew.fldunt = {};
+for no = 1:length(var_copycell)
+    ii = find(strcmp(var_copycell{no}, hc.fldnam));
+    uname = ['u' var_copycell{no}];
+    hnew.fldnam = [hnew.fldnam uname];
+    hnew.fldunt = [hnew.fldunt hc.fldunt{ii}];
+    dnew.(uname) = dc.(var_copycell{no});
+end
 hnew.comment = hc.comment;
 
 MEXEC_A.Mprog = mfilename;
