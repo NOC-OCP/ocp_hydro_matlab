@@ -1,3 +1,4 @@
+function mctd_01(stn)
 % mctd_01:
 %
 % read in ctd data from SBE .cnv file (either _align_ctm version, or _noctm);
@@ -37,12 +38,12 @@ end
 
 cdir = mgetdir('M_CTD_CNV');
 if redoctm
-    cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', upper(mcruise), stnlocal));
+    cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', upper(mcruise), stn));
     if ~exist(cnvfile,'file')
-        cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', mcruise, stnlocal));
+        cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', mcruise, stn));
     end
 else
-    cnvfile = fullfile(cdir,sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stnlocal));
+    cnvfile = fullfile(cdir,sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stn));
     if ~exist(cnvfile,'file')
         cnvfile = lower(cnvfile);
     end

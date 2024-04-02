@@ -90,7 +90,7 @@ MEXEC_G.mexec_version = mexecs_version;
 cd(cdir)
 clear mexecs_version s c cdir pdir
 if isempty(which('get_cropt')) || isempty(which('m_common'))
-    disp(['adding ocp_hydro_matlab source' MEXEC_G.mexec_version ' to path'])
+    disp(['adding MEXEC_G.mexec_source_root to path, currently: ' MEXEC_G.mexec_version])
     % add paths at and below source
     addpath(genpath(MEXEC_G.mexec_source_root))
     rmpath(genpath(fullfile(MEXEC_G.mexec_source_root,'.git')))
@@ -171,7 +171,7 @@ if MEXEC_G.ix_ladcp
 end
 
 % set things about the ship
-MEXEC_G.PLATFORM_NUMBER = ['Cruise ' MEXEC_G.MSCRIPT_CRUISE_STRING];
+MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];
 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     case {'di' 'dy'}
         MEXEC_G.Mship = 'discovery';

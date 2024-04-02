@@ -1,3 +1,4 @@
+function mfir_to_sam(stn)
 % mfir_to_sam: paste ctd fir data into sam file
 %
 % Use: mfir_to_sam        and then respond with station number, or for station 16
@@ -5,6 +6,7 @@
 %
 % formerly mfir_04
 
+m_common
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 
 root_ctd = mgetdir('M_CTD'); % change working directory
@@ -33,8 +35,8 @@ end
 
 if exist(m_add_nc(infile),'file') == 2
     [d,h] = mloadq(infile,'/');
-    d.statnum = repmat(stnlocal,size(d.position));
-    d.sampnum = stnlocal*100+d.position;
+    d.statnum = repmat(stn,size(d.position));
+    d.sampnum = stn*100+d.position;
     h.fldnam = [h.fldnam 'statnum' 'sampnum']; h.fldunt = [h.fldunt 'number' 'number'];
     if sum(~isnan(d.sampnum))>0
         ns = size(d.sampnum);
@@ -48,7 +50,7 @@ if exist(m_add_nc(infile),'file') == 2
         d.stndepth = repmat(h.water_depth_metres,ns);
         h.fldnam = [h.fldnam 'stndepth']; h.fldunt = [h.fldunt 'metres'];
         h.latitude = -999; h.longitude = -999; h.water_depth_metres = -999; % sam file has multiple stations
-        h.comment = sprintf('CTD data from station %03d added',stnlocal); 
+        h.comment = sprintf('CTD data from station %03d added',stn); 
         h.dataname = ['sam_' mcruise '_all'];
         MEXEC_A.Mprog = mfilename;
         mfsave(otfile, d, h, '-merge', 'sampnum');

@@ -77,7 +77,13 @@ end
 vars = fieldnames(donan);
 comment = '';
 for vno = 1:length(vars)
-    md = min(abs(d.(xvar)(:)'-donan.(vars{vno})(:)));
+    bp = donan.(vars{vno});
+    x = d.(xvar)(:)';
+    if length(bp)==1
+        md = abs(x-bp);
+    elseif length(bp)>1
+        md = min(abs(x-bp(:)));
+    end
     m = md<=tol;
     if sum(m)
         d.(vars{vno})(m) = NaN;

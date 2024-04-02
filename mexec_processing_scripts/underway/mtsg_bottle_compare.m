@@ -15,15 +15,9 @@ if comp2ctd==true
     ctd_sal_var = 'psal';
     ctd_temp_var = 'temp';
 
-
 end 
 
-
-% get_cropt basically checks that file exists and sets defaults set
-% elsewhere
-% opt2 are different case options to run through for setting various defaults
-
-                if ~exist('usecal','var'); usecal = 0; end
+if ~exist('usecal','var'); usecal = 0; end
 opt1 = mfilename; opt2 = 'tsg_usecal'; get_cropt; % mfilename = name of current file
 usecallocal = usecal; clear usecal 
 

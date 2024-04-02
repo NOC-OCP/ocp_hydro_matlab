@@ -1,3 +1,4 @@
+function mdep_01(stn)
 % mdep_01: read water depth for ctd cast from station_summary_cruise_all.nc
 %     produced by best_station_depths based on (as specified by
 %     opt_cruise) some or all of ldeo ladcp, combined ctd altimeter and
@@ -7,6 +8,7 @@
 % Use: mdep_01        and then respond with station number, or for station 16
 %      stn = 16; mdep_01;
 
+m_common
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adding water depth from station_summary_%s_all.nc to all the files for station %s\n',mcruise,stn_string); end
 
@@ -18,7 +20,7 @@ root_sum = mgetdir('sum');
 
 deps_fn = fullfile(root_sum, ['station_summary_' mcruise '_all.nc']);
 [d,h] = mloadq(deps_fn,'/');
-iis = find(d.statnum==stnlocal & ~isnan(d.cordep));
+iis = find(d.statnum==stn & ~isnan(d.cordep));
 
 if isempty(iis)
     warning([deps_fn ' does not contain depth value for station ' stn_string '; not adding depth to any .nc files'])

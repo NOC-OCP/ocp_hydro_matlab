@@ -36,9 +36,10 @@ for kloop = klistl
 
     %calculate and apply depths
     station_summary(stnlocal)
-    stn = stnlocal; mdep_01
+%     stn = stnlocal; mdep_01
     
 end
+return
 
 %output to csv files
 mout_cchdo_exchangeform(klistl)

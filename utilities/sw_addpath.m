@@ -48,8 +48,7 @@ for lno = 1:size(ld,1)
     mpath = fullfile(ld.predir{lno}, [ld.lib{lno} ld.verstr{lno}]);
     if isempty(ld.exmfile{lno}) || isempty(which(ld.exmfile{lno}))
         if exist(mpath,'dir')==7 %presume subdirectories will also be present     
-            disp('adding to path: ')
-            disp(mpath)
+            fprintf(1,'adding to path: %s\n',mpath)
             addpath(genpath(mpath), '-end')
             MEXEC_G.exsw_paths = [MEXEC_G.exsw_paths; mpath];
         else

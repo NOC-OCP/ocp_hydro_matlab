@@ -1,20 +1,22 @@
+function mfir_01(stn)
 % mfir_01: read in .bl file and create fir file
 %
 % Use: mfir_01        and then respond with station number, or for station 16
 %      stn = 16; mfir_01;
 
+m_common
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 
 % input file names
 root_botraw = mgetdir('M_CTD_BOT');
 root_ctd = mgetdir('M_CTD');
-blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stnlocal));
+blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stn));
 if ~exist(blinfile,'file')
-    blinfile = fullfile(root_botraw, sprintf('%s_%03d.bl', mcruise, stnlocal));
+    blinfile = fullfile(root_botraw, sprintf('%s_%03d.bl', mcruise, stn));
 end
 opt1 = 'ctd_proc'; opt2 = 'blfilename'; get_cropt
 if ~exist(blinfile,'file')
-    fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stnlocal);
+    fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stn);
     pause
     if ~exist(blinfile,'file')
         warning('no .bl file %s; skipping',blinfile)

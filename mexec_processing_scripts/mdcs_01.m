@@ -1,3 +1,4 @@
+function mdcs_01(stn)
 % mdcs_01: find bottom of cast
 %
 % Use: mdcs_01        and then respond with station number, or for station 16
@@ -6,7 +7,7 @@
 % dy146 ylf added start of cast estimate; sd025 ylf added end of cast
 % estimate
 
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+m_common; opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'finding scan numbers corresponding to cast segments for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types
@@ -23,7 +24,7 @@ if exist(m_add_nc(otfile),'file')
     [ds, hnew] = mloadq(otfile,'/');
 else
     clear ds hnew
-    ds.statnum = stnlocal;
+    ds.statnum = stn;edit 
     hnew.data_time_origin = h1.data_time_origin;
     hnew.comment = '';
 end
@@ -105,7 +106,7 @@ varunits = repmat({'number'},size(varnames));
 istime = strncmp('time', varnames, 4);
 opt1 = 'mstar'; get_cropt
 if docf
-    varunits(istime) = {['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')]};
+    varunits(istime) = h1.fldunt(strcmp('time',h1.fldnam));
     hnew.data_time_origin = [];
 else
     varunits(istime) = {'seconds'};

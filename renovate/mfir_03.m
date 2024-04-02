@@ -1,8 +1,10 @@
+function mfir_03(stn)
 % mfir_03: merge ctd upcast data including time onto fir file
 %
 % Use: mfir_03        and then respond with station number, or for station 16
 %      stn = 16; mfir_03;
 
+m_common
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 
 root_ctd = mgetdir('M_CTD');

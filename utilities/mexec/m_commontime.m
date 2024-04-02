@@ -90,6 +90,13 @@ end
 
 
 function [uni,ori] = parse_time_units(in,timevar)
+if iscell(in)
+    if length(in)==1
+        in = in{1};
+    else
+        error('non-scalar cell array input not accepted')
+    end
+end
 if ischar(in)
     if strcmp(in,'datenum')
         uni = 'days';

@@ -1,3 +1,4 @@
+function mctd_02(stn)
 % mctd_02:
 %
 % apply automatic edits to raw or _raw_noctm file; if working from
@@ -91,8 +92,8 @@ if ~isempty(comment)
 end
 
 %reapply hand edits
-edfilepat = fullfile(root_ctd,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stnlocal));
-[d, comment] = apply_guiedits(d, 'scan', edfilepat, [co.redoctm stnlocal]);
+edfilepat = fullfile(root_ctd,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stn));
+[d, comment] = apply_guiedits(d, 'scan', edfilepat, [co.redoctm stn]);
 if ~isempty(comment)
     h.comment = [h.comment comment];
     didedits = 1;
@@ -223,7 +224,7 @@ if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
     %load data and initialise
     [d0,h0] = mloadq(otfile24, '/');
     if ~isfield(d0, 'statnum')
-        d0.statnum = repmat(stnlocal, size(d0.scan));
+        d0.statnum = repmat(stn, size(d0.scan));
     end
 
     %apply calibrations

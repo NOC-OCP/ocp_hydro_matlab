@@ -168,6 +168,7 @@ if ismember(ds_oxy_fn,'sample_titre')
         ds_oxy.flag((isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2)) & ~isnan(ds_oxy.fix_temp)) = 5; %drawn but not analysed
     end
 end
+ds_oxy_fn = ds_oxy.Properties.VariableNames;
 
 %now put into structure and output
 clear d hnew
@@ -177,7 +178,7 @@ hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
 [d.sampnum, iia, ~] = unique(ds_oxy.sampnum, 'stable');
 d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
-if isfield(ds_oxy,'conc_o2')
+if sum(strcmp('conc_o2',ds_oxy_fn))
     d.botoxya_per_l = ds_oxy.conc_o2(iia);
     hnew.fldnam = [hnew.fldnam 'botoxya_per_l' 'botoxya_flag'];
     hnew.fldunt = [hnew.fldunt 'umol/L' 'woce_9.4'];
@@ -187,7 +188,7 @@ else
     hnew.fldunt = [hnew.fldunt 'umol/kg' 'woce_9.4'];
 end
 d.botoxya_flag = ds_oxy.flag(iia);
-if isfield(ds_oxy,'fix_temp')
+if sum(strcmp('fix_temp',ds_oxy_fn))
     d.botoxya_temp = ds_oxy.fix_temp(iia);
     hnew.fldnam = [hnew.fldnam 'botoxya_temp'];
     hnew.fldunt = [hnew.fldunt 'degC'];

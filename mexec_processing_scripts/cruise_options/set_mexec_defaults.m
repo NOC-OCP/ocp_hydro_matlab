@@ -75,8 +75,8 @@ switch opt1
         switch opt2
             case 'minit'
                 if ~exist('stn', 'var'); stn = input('type stn number '); end
-                stnlocal = stn; clear stn
-                stn_string = sprintf('%03d',stnlocal); %used for file names
+                stn_string = sprintf('%03d',stn); %used for file names
+                stnlocal = stn;
             case 'nnisk'
                 nnisk = 24; %number of Niskins on rosette; may be station-dependent
             case 'oxyvars'
@@ -145,14 +145,14 @@ switch opt1
                 tsgopts.docal.fluor = 0; %etc
                 if isfield(tsgopts,'calstr')
                     tsgopts = rmfield(tsgopts,'calstr'); %no default, must be set by opt_{cruise}
-                    %see *** for examples
+                    %see opt_sd025 for examples
                 end
         end
 
     case 'check_sams'
-        check_sal = 0; %do not plot individual salinity readings
-        check_oxy = 0; %do not step through mismatched oxygen replicates
-        check_sbe35 = 0; %do not display bad sbe35 lines (may error later if they are present and not flagged)
+        check_sal = 1; %plot individual salinity readings
+        check_oxy = 1; %step through mismatched oxygen replicates
+        check_sbe35 = 1; %display bad sbe35 lines (may error later if they are present and not flagged)
 
     case 'botsal'
         switch opt2

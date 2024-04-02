@@ -1,3 +1,4 @@
+function mctd_03(stn)
 % mctd_03:
 %
 % input: _24hz
@@ -33,11 +34,11 @@ otfile1 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
 
 %identify preferred sensors for (T,C) and O on this station
 opt1 = 'castpars'; opt2 = 's_choice'; get_cropt 
-if ismember(stnlocal, stns_alternate_s)
+if ismember(stn, stns_alternate_s)
     s_choice = setdiff([1 2], s_choice);
 end
 opt1 = 'castpars'; opt2 = 'o_choice'; get_cropt 
-if ismember(stnlocal, stns_alternate_o)
+if ismember(stn, stns_alternate_o)
    o_choice = setdiff([1 2],o_choice);
 end
 h = m_read_header(infile1);

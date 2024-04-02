@@ -1,13 +1,13 @@
-mctd_01; %read in sbe .cnv data to mstar
-stn = stnlocal; mfir_01 %sbe .bl file to mstar
+mctd_01(stn); %read in sbe .cnv data to mstar
+mfir_01(stn) %sbe .bl file to mstar
 
 %apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise
-stn = stnlocal; mctd_02; 
+mctd_02(stn); 
 
-stn = stnlocal; mctd_03; %average to 1 hz, compute salinity
+mctd_03(stn); %average to 1 hz, compute salinity
 
 if MEXEC_G.ix_ladcp
-    mout_1hzasc(stnlocal) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
+    mout_1hzasc(stn) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
 end
 
-stn = stnlocal; mdcs_01; % now does mdcs_01 and mdcs_02 in one step
+mdcs_01(stn); % now does mdcs_01 and mdcs_02 in one step

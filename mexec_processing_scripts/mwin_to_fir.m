@@ -1,3 +1,4 @@
+function mwin_to_fir(stn)
 % mwin_to_fir: merge winch wireout onto fir file
 %
 % Use: mwin_to_fir        and then respond with station number, or for station 16
@@ -5,6 +6,7 @@
 %
 % formerly mwin_03
 
+m_common
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 
 % resolve root directories for various file types
@@ -38,10 +40,10 @@ if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     % scan input file to extract winch cable out variable name
     cabvar = intersect({'cableout' 'cab' 'cable' 'wireout' 'out' 'mfctdcablelengthout' 'ctdcablelengthout'}, hwin.fldnam);
     if isempty(cabvar)
-        error(['Winch cable/wireout variable not found in input file'])
+        error('Winch cable/wireout variable not found in input file')
     else
         if length(cabvar)>1
-            warning(['Winch cable/wireout variable: more than one option found'])
+            warning('Winch cable/wireout variable: more than one option found')
         end
         cabvar = cabvar{1};
     end
@@ -53,7 +55,7 @@ if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     d.wireout = interp1(dwin.time(iig), dwin.(cabvar)(iig), df.utime);
     opt1 = mfilename; opt2 = 'winch_fix'; get_cropt
     if sum(~isnan(d.wireout))>0
-        h.fldnam = {'utime' 'wireout'}; h.fldunt = {'seconds' 'metres'};
+        h.fldnam = {'utime' 'wireout'}; h.fldunt = {hf.fldunt{strcmp('utime',hf.fldnam)} 'metres'};
         h.dataname = hwin.dataname; h.mstar_string = hwin.mstar_string;
         MEXEC_A.Mprog = mfilename;
         mfsave(firfile, d, h, '-merge', 'utime')

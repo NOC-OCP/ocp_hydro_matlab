@@ -124,9 +124,13 @@ for pno = 1:length(params)
 
 
         %evaluate calf, the string giving the calibration expression
-        eval(calf);
-        if ~qflag
-            fprintf(1, '\n%s\n\n', calf)
+        try
+            eval(calf);
+            if ~qflag
+                fprintf(1, '\n%s\n\n', calf)
+            end
+        catch
+            error('problem with evaluating your calibration function set in opt_{cruise};\n%s\n check expression in quotes is complete and correct',calf)
         end
         %and add info to hcal
         hcal.fldnam = [hcal.fldnam h0.fldnam{ii}];

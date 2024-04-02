@@ -1,3 +1,5 @@
+function mwin_01(stn)
+
 % mwin_01: read in winch data corresponding to a CTD station
 %
 % Use: mwin_01        and then respond with station number, or for station 16
@@ -18,6 +20,7 @@
 % no ctd data, or to override times derived from ctd files. If no cruise and station-specific
 % case is provided, times are taken from ctd file as usual.
 
+m_common
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adding winch data to win_%s_%s.nc\n',mcruise,stn_string); end
 
@@ -94,7 +97,7 @@ switch MEXEC_G.Mshipdatasystem
     case 'rvdas'
         if strcmp(MEXEC_G.Mship,'sda')
             %limit variables
-            if exist('ticasts','var') && ismember(stnlocal,ticasts)
+            if exist('ticasts','var') && ismember(stn,ticasts)
                 varlist = 'MFCTDOutboardTension MFCTDCableLengthOut MFCTDDeployedDepth MFCTDLineSpeed MFCTDOverboardPointSelected ';
             else
                 varlist = 'CTDOutboardTension CTDCableLengthOut CTDDeployedDepth CTDLineSpeed CTDOverboardPointSelected ';

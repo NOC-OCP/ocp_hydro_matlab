@@ -78,8 +78,10 @@ if nargin>0 && ismember('this_cruise',varargin)
     if ~isempty(ia)
         d.mrtables = rmfield(d.mrtables,d.mrtables_list(ia));
         d.mrtables_list(ia) = [];
-        warning('rvdas:mrdefine:mjsonextra','%d tables in .json files but not present for this cruise',length(ia))
+        warning('backtrace','off')
+        warning('rvdas:mrdefine:mjsonextra','%d RVDAS tables in .json files but not present for this cruise',length(ia));
         warning('off','rvdas:mrdefine:mjsonextra')
+        warning('backtrace','on')
     end
 end
 
@@ -93,16 +95,20 @@ d.tablemap = mrnames_new(d.mrtables_list,'q');
 d.tablemap = d.tablemap(ia,:);
 if length(ib)<length(d.mrtables_list)
     ii = setdiff(1:length(d.mrtables_list),ib);
+    warning('backtrace','off')
     warning('rvdas:mstar:no_match','discarding %d tables with no mstar lookup in mrnames_new',length(ii));
     warning('off','rvdas:mstar:no_match');
+    warning('backtrace','on')
     d.mrtables = rmfield(d.mrtables,d.mrtables_list(ii));
     d.mrtables_list(ii) = [];
 end
-[~,ia] = unique(d.tablemap(:,1),'first');
-if length(ia)<size(d.tablemap,1)
-    warning('rvdas:mrdefine:mnamedup','duplicate mexec short names (with matching tables) detected; keeping first')
-    warning('off','rvdas:mrdefine:mnamedup'); %only warn once per session
-end
+% [~,ia] = unique(d.tablemap(:,1),'first');
+% if length(ia)<size(d.tablemap,1)
+%     warning('backtrace','off')
+%     warning('rvdas:mrdefine:mnamedup','duplicate mexec short names (with matching tables) detected; keeping first');
+%     warning('off','rvdas:mrdefine:mnamedup'); %only warn once per session
+%     warning('backtrace','on')
+% end
 %d.tablemap = d.tablemap(ia,:);
 
 % get a list of variables for which we want to change names when loaded

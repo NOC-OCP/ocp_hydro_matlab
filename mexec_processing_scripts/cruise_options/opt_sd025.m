@@ -497,8 +497,8 @@ switch opt1
     case 'uway_proc'
         switch opt2
             case 'tsg_avedits'
-                minflow = 400;
-%         check_tsg = 1;
+             minflow = 400;
+             check_tsg = 1;
             case 'tsg_cals'
                 clear uo
                 uo.docal.salinity = 1;

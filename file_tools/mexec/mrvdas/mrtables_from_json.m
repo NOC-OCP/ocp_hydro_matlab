@@ -346,19 +346,19 @@ rtables.posmv_gpgga = {  % from posmv-dy.json
 %                 'dgnssRefId'                             ''                                                                     'dgnssRefId'
 };
 
-%"GPVTG"
-rtables.posmv_gpvtg = {  % from posmv-dy.json
-'posmv_gpvtg'  9 []  % fields
-                  'courseTrue'                             ''                                                                     'courseTrue'
-%                 'trueCourse'                             ''                                                                     'trueCourse'
-%              'magneticTrack'                             ''                                                                  'magneticTrack'
-%                      'mFlag'                             ''                                                                          'mFlag'
-                  'speedKnots'                             ''                                                                     'speedKnots'
-%                      'nFlag'                             ''                                                                          'nFlag'
-                   'speedKmph'                             ''                                                                      'speedKmph'
-%                      'kFlag'                             ''                                                                          'kFlag'
-%            'positioningMode'                             ''                                                                'positioningMode'
-};
+% %"GPVTG"
+% rtables.posmv_gpvtg = {  % from posmv-dy.json
+% 'posmv_gpvtg'  9 []  % fields
+%                   'courseTrue'                             ''                                                                     'courseTrue'
+% %                 'trueCourse'                             ''                                                                     'trueCourse'
+% %              'magneticTrack'                             ''                                                                  'magneticTrack'
+% %                      'mFlag'                             ''                                                                          'mFlag'
+%                   'speedKnots'                             ''                                                                     'speedKnots'
+% %                      'nFlag'                             ''                                                                          'nFlag'
+%                    'speedKmph'                             ''                                                                      'speedKmph'
+% %                      'kFlag'                             ''                                                                          'kFlag'
+% %            'positioningMode'                             ''                                                                'positioningMode'
+% };
 
 
 %ranger2usbl2-dy  1  sentences

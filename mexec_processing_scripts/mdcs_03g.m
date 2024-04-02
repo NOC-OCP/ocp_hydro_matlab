@@ -1,3 +1,4 @@
+function mdcs_03g(stn)
 % mdcs_03g: graphical user interface to check scan numbers corresponding to
 % start, bottom, and end of cast (estimated in mdcs_01, or selected in a
 % previous call to mdcs_03g) and modify if necessary
@@ -11,6 +12,7 @@
 % dy146 ylf treat start of cast the same
 % sd025 ylf also end
 
+m_common
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 fprintf(1,'interactively select (or confirm) start, bottom, and end of cast,\n written to dcs_%s_%s.nc.',mcruise,stn_string)
 opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt

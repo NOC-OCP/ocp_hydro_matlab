@@ -1,10 +1,13 @@
 switch opt1
     case 'botpsal'
         switch opt2
+            case 'sal_files'
+                salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); salfiles = {salfiles.name};
             case 'sal_parse'
                 cellT = 21;
                 ssw_k15 = 0.99986;
                 calcsal = 1;
+                ssw_batch = 'P165';
             case 'sal_calc'
                 sal_off = [
                     000 0
@@ -13,10 +16,13 @@ switch opt1
                     003 0
                     004 2
                     005 2
+                    006 3
+                    007 3
+                    008 2
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
-                sal_off_base = 'sampnum_list';
+                sal_off_base = 'sampnum_list'; 
         end
 
 
@@ -28,6 +34,18 @@ switch opt1
             case 'o_choice'
                 o_choice = 2; %use sensor 2
                 stns_alternate_o = []; % none yet
+            case 'bestdeps'
+                iscor = 1;
+                xducer_offset = 0; %to be added
+                replacedeps = [
+                    1 3598    % em122
+                    6 1419    % em122
+                    ];
+                replacealt = [
+                    %                     0 90 % noted on ctd deck unit log; didn't approach closer than 90, so bad values occur close to bottom of cast
+                    %                     1 51 % noted on ctd deck unit log; altimeter was noisy, so bad values less than 50 could be selected as 'good'
+                    ];
+
         end
     case 'ctd_proc'
         switch opt2
@@ -60,17 +78,14 @@ switch opt1
                 co.calstr.temp.sn034383.msg = 'temp s/n 4383 adjusted by -1.8 mdeg to agree with SBE35 on stations 1 to 7';
                 co.calstr.temp.sn035780.dy174 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[12 12]/1e4,d0.press);';
                 co.calstr.temp.sn035780.msg = 'temp s/n 5780 adjusted by +1.2 mdeg to agree with SBE35 on stations 1 to 7';
-                shape = [0 0 0 0 0 0 0 0];
-                co.calstr.cond.sn043874.dy174 = 'dcal.cond = d0.cond.*(1 + interp1([-10 0 500 1500 6000 7000 8000 9000],([-30 -30 -30 0 0 0 0 0]+shape)/1e4,d0.press)/35;';
+                co.calstr.cond.sn043874.dy174 = 'shape = [0 0 0 0 0 0 0 0]; dcal.cond = d0.cond.*(1 + interp1([-10 0 500 1500 6000 7000 8000 9000],([-30 -30 -30 0 0 0 0 0]+shape)/1e4,d0.press)/35);';
                 co.calstr.cond.sn043874.msg = 'cond s/n 3874 adjusted to agree with bottle salinity up to station 4';
-                co.calstr.cond.sn044143.dy174 = 'dcal.cond = d0.cond.*(1 + interp1([-10 0 1500 2000 5000 6000 7000 8000],([0 0 40 50 40 40  40 40]+shape)/1e4,d0.press))/35);';
+                co.calstr.cond.sn044143.dy174 = 'shape = [0 0 0 0 0 0 0 0]; dcal.cond = d0.cond.*(1 + interp1([-10 0 1500 2000 5000 6000 7000 8000],([0 0 40 50 40 40  40 40]+shape)/1e4,d0.press)/35);';
                 co.calstr.cond.sn044143.msg = 'cond s/n 4143 adjusted to agree with bottle salinity up to station 4';
-%                 co.calstr.oxygen.sn433847.dy174 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0   600  1300   2000  3000  5000   6000],[1.000 1.000 1.012  1.016 1.027 1.042 1.050 1.050 ],d0.press);';
-%                 co.calstr.oxygen.sn433847.msg = 'upcast oxygen s/n 3847 adjusted to agree with XX samples, after applying hysteresis correction; up/down difference after hysteresis correction is of order (1 umol/kg)';
-%                 co.calstr.oxygen.sn432831.dy174 = 'dcal.oxygen = d0.oxygen.*interp1([-10     0   400  1000  1500 2000  5000  6000],[1.030 1.030 1.035 1.022 1.034 1.042 1.070 1.070],d0.press);';
-%                 co.calstr.oxygen.sn432831.msg = 'upcast oxygen s/n 2831 adjusted to agree with XX samples, after applying hysteresis correction; up/down difference after hysteresis correction is of order (1 umol/kg)';
-% pp =          [-10      0   800    2000   3500  4000  ];
-% ff =    0.0+1*[1.055 1.055 1.035  1.042  1.052 1.052 ];
+                co.calstr.oxygen.sn433847.dy174 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0   800    2000   3500  4000 ],[1.055 1.055 1.035  1.042  1.052 1.052],d0.press).*interp1([0  3 4 100],[1.003 1.003  1.0 1.0],d0.statnum);';
+                co.calstr.oxygen.sn433847.msg = 'upcast oxygen s/n 3847 adjusted to agree with 60 samples, after applying hysteresis correction; up/down difference after hysteresis correction is of order (1 umol/kg)';
+                co.calstr.oxygen.sn432831.dy174 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0   800    1500   3000  4000 ],[1.007 1.007 1.004  1.015  1.030 1.035],d0.press);';
+                co.calstr.oxygen.sn432831.msg = 'upcast oxygen s/n 2831 adjusted to agree with 60 samples, after applying hysteresis correction; up/down difference after hysteresis correction is of order (1 umol/kg)';
         end
 
 
@@ -84,65 +99,36 @@ switch opt1
                 sheets = 1:100;
                 calcoxy = 0;
             case 'oxy_parse'
-
-                ds_xls = ds_oxy;
-                clear ds_oxy
-
-                ds_oxy.sampnum = ds_xls.niskin_bottle + ds_xls.cast_number*100;
-                ds_oxy.fix_temp = ds_xls.fixing_temp;
-                ds_oxy.conc_o2 = ds_xls.c_o2_umol_per_l;
+                ds_oxy.sampnum = ds_oxy.niskin_bottle + ds_oxy.cast_number*100;
+                ds_oxy.fix_temp = ds_oxy.fixing_temp;
+                ds_oxy.conc_o2 = ds_oxy.c_o2_umol_per_l;
                 ds_oxy.flag = 2+0*ds_oxy.sampnum;
                 kbad = find(isnan(ds_oxy.sampnum));
-%                 kbad = [kbad(:)' [1:15]];
-                kbad = unique(kbad);
-                ds_oxy.sampnum(kbad) = [];
-                ds_oxy.fix_temp(kbad) = [];
-                ds_oxy.flag(kbad) =[];
-                ds_oxy.conc_o2(kbad) = [];
-%             case 'oxy_calc'
-%                 ds_oxy.vol_std = repmat(5,size(ds_oxy.sampnum));
-%                 ds_oxy.vol_blank = repmat(-0.00808333,size(ds_oxy.sampnum));
-%                 ds_oxy.vol_titre_std = repmat(0.4540,size(ds_oxy.sampnum));
-%                 ds_oxy.vol_blank(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = -0.00854167;
-%                 ds_oxy.vol_titre_std(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = 0.4241;
-%                 ds_oxy.vol_blank(ds_oxy.statnum>=177) = -0.00691667;
-%                 ds_oxy.vol_titre_std(ds_oxy.statnum>=177) = 0.4264;
-%                 vol_reag_tot = 0.997*2;
-%             case 'oxy_flags'
-%                 %dispensers fixed around 9
-%                 ii = find(d.statnum<9);
-%                 d.botoxya_flag(ii) = max(d.botoxya_flag(ii),4);
-%                 d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),4);
-%                 %tubing size fixed around 14 or 15 (14 and 15 profiles look
-%                 %okay)
-%                 ii = find(d.statnum<14);
-%                 d.botoxya_flag(ii) = max(d.botoxya_flag(ii),3);
-%                 d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),3);
-%                 %tm-clean samples taken with too-stiff tube
-%                 ii = find(ismember(d.statnum,[32 40 47 54 61]));
-%                 d.botoxya_flag(ii) = max(d.botoxya_flag(ii),4);
-%                 d.botoxyb_flag(ii) = max(d.botoxyb_flag(ii),4);
-%                 %duplicates where based on comparison with ctd profile we
-%                 %think one is bad or questionable
-%                 d.botoxya_flag(ismember(d.sampnum,[1504 6811])) = 4;
-%                 d.botoxya_flag(ismember(d.sampnum,[1624 2913])) = 3;
-%                 d.botoxya_per_l(d.botoxya_flag==4) = NaN;
-%                 d.botoxyb_flag(ismember(d.sampnum,[1512 17915])) = 3;
-%                 d.botoxyb_per_l(d.botoxyb_flag==4) = NaN;
-%                 %duplicates that differ but not clear which is better
-%                 ii = find(abs(d.botoxya_per_l-d.botoxyb_per_l)>=1 & d.botoxya_flag==2 & d.botoxyb_flag==2);
-%                 d.botoxya_flag(ii) = 3; d.botoxyb_flag(ii) = 3;
-%                 %marked as bad but looks okay
-%                 d.botoxya_flag(d.sampnum==2320) = 2;
-%                 %outliers
-%                 d.botoxya_flag(ismember(d.sampnum,[2122])) = 3;
+                %                 kbad = [kbad(:)' [1:15]];
+                ds_oxy(kbad,:) = [];
+                %             case 'oxy_calc'
+                %                 ds_oxy.vol_std = repmat(5,size(ds_oxy.sampnum));
+                %                 ds_oxy.vol_blank = repmat(-0.00808333,size(ds_oxy.sampnum));
+                %                 ds_oxy.vol_titre_std = repmat(0.4540,size(ds_oxy.sampnum));
+                %                 ds_oxy.vol_blank(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = -0.00854167;
+                %                 ds_oxy.vol_titre_std(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = 0.4241;
+                %                 ds_oxy.vol_blank(ds_oxy.statnum>=177) = -0.00691667;
+                %                 ds_oxy.vol_titre_std(ds_oxy.statnum>=177) = 0.4264;
+                %                 vol_reag_tot = 0.997*2;
+            case 'oxy_flags'
+                d.botoxya_flag(d.sampnum==105) = 4;
+                d.botoxya_flag(d.sampnum==111) = 4;
+                d.botoxya_flag(d.sampnum==515) = 4;
+%                 d.botoxya_flag(d.sampnum==219) = 3; % questionable. OK on
+%                 further inspection, strong gradients and wake effects
+%                 d.botoxya_flag(d.sampnum==419) = 3;
         end
 
     case 'sbe35'
         switch opt2
             case 'sbe35file'
                 sbe35file = sprintf('%s_*.asc', upper(mcruise));
-                stnind = [7:9];
+                stnind = [7:9]; % index in file name of where the station number can be found. File name eg = DY174_001.asc, so index is 7:9
         end
 
 
@@ -166,16 +152,26 @@ switch opt1
                 RVDAS.user = 'sciguest';
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
         end
-    
+
     case 'uway_proc'
         switch opt2
             case 'excludestreams'
                 uway_excludes = [uway_excludes;'autosal';'ranger2usbl2'];
             case 'tsg_avedits'
                 check_tsg = 1;
+            case 'tsg_cals'
+                clear uo
+                %uo.docal.salinity = 1;
+                %uo.calstr.salinity.pl.sd025 = 'dcal.salinity = d0.salinity - (-8.1657e-4*d0.time/86400 + 0.0178);';
             case 'bathy_grid'
-                %load bathymetry data into xbathy, ybathy, zbathy
+                %load gridded bathymetry data into xbathy, ybathy, zbathy
+                %to use as background for editing plot
         end
+
+    %case 'check_sams'
+    %    check_sal = 1; %plot individual salinity readings
+    %    check_oxy = 1; %step through mismatched oxygen replicates
+    %    check_sbe35 = 1; %display bad sbe35 lines (may error later if they are present and not flagged)
 
     case 'mfir_01'
         switch opt2
@@ -243,7 +239,7 @@ switch opt1
                 snames = {'nsal' 'noxy' 'nnut' 'nco2'};
                 sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'nitr'} {'dic' 'talk'}};
             case 'exch'
-                n12 = 13; %***
+                n12 = 11; %***
                 expocode = '740H20240328';
                 sect_id = 'RAPID-East';
                 submitter = 'OCPNOCBAK'; %group institution person
@@ -257,7 +253,7 @@ switch opt1
                 if strcmp(in.type,'ctd')
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {sprintf('#%d stations with 12-place rosette',n12);...
+                        {sprintf('#%d stations with 24-place rosette with 12 bottles',n12);...
                         '#CTD: Who - B. King (NOC); Status - preliminary.';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : COR';...
@@ -266,7 +262,7 @@ switch opt1
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {sprintf('#%d stations with 12-place rosette',n12);...
+                        {sprintf('#%d stations with 24-place rosette with 12 bottles',n12);...
                         '#CTD: Who - B. King (NOC); Status - preliminary';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...

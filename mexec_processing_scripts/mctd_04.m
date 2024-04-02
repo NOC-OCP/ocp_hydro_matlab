@@ -1,3 +1,4 @@
+function mctd_04(stn)
 % mctd_04:
 %
 % extract downcast and upcast data from 24hz file with derived vars
@@ -19,7 +20,7 @@
 % and via get_cropt:
 %     setdef_cropt_cast (castpars and mctd_04 cases)
 
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+m_common; opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from 24 hz to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
 root_ctd = mgetdir('M_CTD');
@@ -39,7 +40,7 @@ if isempty(strfind(hd.comment,'manual')) && isempty(strfind(hd.comment,'inspecte
 end
 %***code to calculate dc24 from dc and scan if there is no dc24?***
 % allow for the possibility that the dcs file contains many stations
-kf = find(dd.statnum == stnlocal);
+kf = find(dd.statnum == stn);
 dcstart = dd.dc24_start(kf);
 dcbot = dd.dc24_bot(kf);
 dcend = dd.dc24_end(kf);
