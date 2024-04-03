@@ -40,12 +40,13 @@ ncfile.name = otfile; %for adding attributes and renaming variables
 
 avocn = 60; %average tsg etc. data over 60 s
 opt1 = 'uway_proc'; opt2 = 'avtime'; get_cropt
-tave_period = round(avocn); % seconds
+tave_period = round(avocn)/86400; % seconds --> days
 tav2 = round(tave_period/2);
 
 %first figure out time grid, and whether there is an _edt file
 tmin = inf; tmax = -inf;
-to = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+%decimal days
+to = ['days since ' datestr([MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 1 0 0 0],'yyyy-mm-dd HH:MM:SS')];
 for fno = 1:length(files)
     ename = [files{fno}(1:end-6) 'edt.nc'];
     if exist(ename,'file')
@@ -58,7 +59,7 @@ for fno = 1:length(files)
 end
 tg = floor(tmin)-tav2:tave_period:ceil(tmax)+tav2;
 if ~isempty(days)
-    yd = floor(tg/86400)+1;
+    yd = floor(tg)+1;
     tg = tg(ismember(yd,days));
 end
 opt1 = 'mstar'; get_cropt
@@ -188,30 +189,28 @@ if ~isempty(minflow)
 end
 if check_tsg
     [d, h] = mload(otfile, '/');
-    d.dday = m_commontime(d,'time',h,['days since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')]);
     if isempty(days)
-        ds = unique(floor(d.dday));
+        ds = unique(floor(d.time));
     else
         ds = days;
     end
     iis_all = {}; n = 1;
     for dno = 1:length(ds)
-        iis = find(floor(d.dday)==ds(dno));
+        iis = find(floor(d.time)==ds(dno));
         if ~isempty(iis)
             iis_all{n} = iis; n = n+1;
         end
     end
-    d0 = d; d0 = rmfield(d0,'time');
+    d0 = d;
     m = strncmp('count',h.fldunt,5);
     vars_exclude = {'soundvelocity' 'flowrate' 'calculatedbeam' 'salinity' 'psal'};
     vars_exclude = [vars_exclude 'soundvelocity_raw' 'flowrate_raw' 'calculatedbeam_raw' 'salinity_raw' 'psal_raw'];
     vr = intersect(h.fldnam, vars_exclude); 
     d0 = rmfield(d0,[h.fldnam(m) vr]);
     fn = fieldnames(d0);
-    edfile = fullfile(root_dir1,'editlogs','ucsw_');
-    bads = gui_editpoints(d0,'dday','edfilepat',edfile,'xgroups',iis_all);
+    edfile = fullfile(root_dir1,'editlogs',tsgpre);
+    bads = gui_editpoints(d0,'time','edfilepat',edfile,'xgroups',iis_all);
     if ~isempty(bads) %new edits to apply
-        d = rmfield(d,'dday');
         [d, ~] = apply_guiedits(d, 'time', [edfile '*']);
         mfsave(otfile, d, h)
     end

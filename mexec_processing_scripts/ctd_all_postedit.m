@@ -16,10 +16,10 @@ klistl = klist(:)'; clear klist
 
 for kloop = klistl
 
-    stn = kloop; mctd_02
+    stn = kloop; mctd_02(stn)
 
-    stn = kloop; mctd_03;
-    stn = kloop; mctd_04;
+    stn = kloop; mctd_03(stn);
+    stn = kloop; mctd_04(stn);
     
     if MEXEC_G.ix_ladcp
         mout_1hzasc(stnlocal);
@@ -30,16 +30,15 @@ for kloop = klistl
         warning('File %s not found, skipping',m_add_nc(infile2))
         continue
     end
-    stn = kloop; mfir_03;
+    stn = kloop; mfir_03(stn);
     %stn = kloop; mfir_03_extra;
-    stn = kloop; mfir_to_sam;
+    stn = kloop; mfir_to_sam(stn);
 
     %calculate and apply depths
     station_summary(stnlocal)
 %     stn = stnlocal; mdep_01
     
 end
-return
 
 %output to csv files
 mout_cchdo_exchangeform(klistl)

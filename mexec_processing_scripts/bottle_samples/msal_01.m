@@ -12,15 +12,15 @@ function msal_01
 %     where statnum is the station and position the niskin position 
 %     ([1 24] or [1 36])
 %     for ctd samples,
-% and
+% and for tsg samples, 
 % sampnum = yyyymmddhhmm
-% or
-% sampnum = -dddhhmm (where ddd is year-day)
-%     for tsg samples,
-% and
+% or 
+% sampnum = -dddhhmm (where ddd is year-day, and the negative sign is
+%   important) 
+%
+% and for standards, 
 % sampnum = 999NNN
-%     for standards, where NNN increments sequentially as the standards
-%     were run
+%     where NNN increments sequentially as the standards were run
 %     (998NNN, 990NNN, etc. may be used for sub-standards)
 % 
 % lines where the sampnum column is empty will be filled in from the last
@@ -38,6 +38,8 @@ root_sal = mgetdir('M_BOT_SAL');
 salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); salfiles = {salfiles.name};
 hcpat = {'sampnum'}; chrows = 1; chunits = [];
 sheets = 1; iopts = struct([]);
+datform = 'dd/mm/yyyy';
+timform = 'HH:MM:SS';
 opt1 = 'botpsal'; opt2 = 'sal_files'; get_cropt %list of files to load
 if isempty(salfiles)
     warning(['no salinity data files found in ' root_sal '; skipping']);
@@ -52,7 +54,9 @@ end
 %%%%%% load and parse %%%%%%
 
 %load
-[ds_sal, salhead] = load_samdata(salfiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts);
+%***datetime format is already read in wrong by default? causes wrong
+%ordering of samples***
+[ds_sal, salhead] = load_samdata(salfiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts); 
 if isempty(ds_sal)
     error('no data loaded')
 end
@@ -63,8 +67,6 @@ if isfield(ds_sal,'sampnum') && sum(isnan(ds_sal.sampnum))
 end
 
 %parse, for instance getting information from header
-datform = 'dd/mm/yyyy';
-timform = 'HH:MM:SS';
 % for no = 1:length(salhead)
 %     sh = salhead{no};
 %     md = strncmp(sh,'Date',4);
@@ -432,7 +434,13 @@ if ~isempty(iiu)
     opt1 = 'botpsal'; opt2 = 'tsg_sampnum'; get_cropt
     [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
     dsu.time = NaN+dsu.sampnum;
-    dsu.time(ia) = 86400*(tsg.dnum(ib)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
+    opt1 = 'mstar'; get_cropt
+    if docf
+        un = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+    else
+        un = ['seconds since ' datestr(hc.data_time_origin,'yyyy-mm-dd HH:MM:SS')];
+    end
+    dsu.time(ia) = m_commontime(tsg.dnum(ib),'datenum',un);
     if sum(isnan(dsu.time))>0
         warning('missing times for tsg samples:')
         disp(dsu.sampnum(isnan(dsu.time)))
@@ -440,7 +448,7 @@ if ~isempty(iiu)
     end
     hu = hc;
     hu.fldnam = [hu.fldnam 'time'];
-    hu.fldunt = [hu.fldunt 'seconds'];
+    hu.fldunt = [hu.fldunt un];
     hu.comment = hc.comment;
     hu.dataname = ['tsgsal_' mcruise '_all'];
     mfsave(tsgfile, dsu, hu);

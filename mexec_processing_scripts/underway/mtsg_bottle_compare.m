@@ -4,7 +4,6 @@
 
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; % cruise name (from MEXEC_G global)
 
-
 comp2ctd = true ; % false %true % set to false if you don't want to compare to CTD data
 
 if comp2ctd==true
@@ -23,14 +22,12 @@ usecallocal = usecal; clear usecal
 
 opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 prefix = tsgpre; % prefix for tsg data
-root_tsg = mgetdir(tsgpre); %gets directory from MEXEC_g
 
-tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01_medav_clean']); % median averaged file
+if ~exist('tsgfn','var')
+    tsgfn = fullfile(mgetdir(tsgpre),[tsgpre '_' mcruise '_01']);
+end
 if usecallocal
     tsgfn = [tsgfn '_cal'];
-end
-if ~exist(m_add_nc(tsgfn),'file') % ensures nc file has .nc suffix
-    tsgfn = fullfile(root_tsg, [prefix '_' mcruise '_01']); %combines parts of filenames
 end
 
 [dt, ht] = mload(tsgfn, '/'); % load tsg netcdf file
@@ -64,23 +61,24 @@ end
 
 %***add code for temperature, other variables (fluo?)
 
-botfn = fullfile(root_tsg, ['tsgsal_' mcruise '_all']); % generate filename for bottle salinities
+botfn = fullfile(MEXEC_G.mexec_data_root,'ctd','BOTTLE_SAL',['tsgsal_' mcruise '_all']); % generate filename for bottle salinities
 [db, hb] = mload(botfn, '/'); % load bottle salinities
-db.time = m_commontime(db.time, hb, ht); %match up times
-%sort all variables
+%sort all variables in case bottle salinities not in order
 [a, iibot] = sort(db.time);
 fn = fieldnames(db);
 for fno = 1:length(fn)
     db.(fn{fno}) = db.(fn{fno})(iibot);
 end
 
-%year-day
-dt.time = dt.time/3600/24+1; 
+%put both times in year-day
+tun = ['days since ' datestr([MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 0 0 0 0],'yyyy-mm-dd HH:MM:SS')];
+dt.time = m_commontime(dt.time,ht,tun);
+db.time = m_commontime(db.time,hb,tun);
 switch MEXEC_G.Mship
-    case {'cook' 'discovery'}
-db.time = db.time/3600/24+1-1/1440; % delay bottles by one minute to allow for time between bottle sample being drawn and water passing through TSG
+    case {'cook' 'discovery'} %***always? still?
+        db.time = db.time-1/1440; % delay bottles by one minute to allow for time between bottle sample being drawn and water passing through TSG
     case 'jcr'
-db.time = db.time/3600/24+1-1/1440; % delay bottles by one minute to allow for time between bottle sample being drawn and water passing through TSG
+        db.time = db.time-1/1440; % delay bottles by one minute to allow for time between bottle sample being drawn and water passing through TSG
 end
 
 tsal = dt.(salvar);
@@ -113,8 +111,10 @@ sdiff(idx) = NaN; % set values where value>3*SD as NaN
 % allow for cleaning 
 tbreak = []; 
 opt1 = mfilename; opt2 = 'tsg_timebreaks'; get_cropt;
-
-tbreak = [datenum([1900 1 1]); tbreak; datenum([2200 1 1])];
+if ~isempty(tbreak)
+    tbreak = m_commontime(tbreak,'datenum',tun);
+end
+tbreak = [-inf; tbreak; inf];
 nseg = length(tbreak)-1;
 
 sdiffsm_all = [];
@@ -124,8 +124,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
     tstart = tbreak(kseg)+1/86400;
     tend = tbreak(kseg+1)-1/86400;
     
-    % why -1 ??
-    kbottle = find(db.time-1 > tstart & db.time-1 < tend);
+    kbottle = find(db.time > tstart & db.time < tend);
     sdiff = sdiffsave(kbottle);
     
     % add start and end times as pseudo times of bottles, so there will
@@ -146,8 +145,8 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
     
     %smoothed difference--default is a two-pass filter on the whole time series
     clear sdiffsm
-                    sc1 = 0.5; sc2 = 0.02;
-opt1 = mfilename; opt2 = 'tsg_sdiff'; get_cropt
+    sc1 = 0.5; sc2 = 0.02;
+    opt1 = mfilename; opt2 = 'tsg_sdiff'; get_cropt
     if exist('sc1') & exist('sc2') & ~exist('sdiffsm')
         sdiffsm = filter_bak(ones(1,21),sdiff); % first filter
         sdiff(abs(sdiff-sdiffsm) > sc1) = NaN;
@@ -207,6 +206,7 @@ if ~usecallocal
 end
 
 
+comp2ctd = 0;
 if comp2ctd
     load_postedit_ctd_for_tsg_comp
     % Check if variable set for the CTD salinity variable exists within the

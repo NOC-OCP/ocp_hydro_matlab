@@ -46,7 +46,7 @@ end
 
 %apply additional processing and cleaning to data
 for sno = 1:length(shortnames)
-    mday_01_edit(udirs{sno}, shortnames{sno}, days)
+    mday_01_edit(fullfile(MEXEC_G.mexec_data_root, udirs{sno}), shortnames{sno}, days)
     disp(['edited ' shortnames{sno}])
 end
 

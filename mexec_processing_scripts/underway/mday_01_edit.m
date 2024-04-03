@@ -45,12 +45,21 @@ if ~isempty(comment)
 end
 
 %reapply hand edits
-fp = fileparts(rootdir); %all but the last level
-edfilepat = fullfile(fp,'editlogs',sprintf('%s_edits_*_%s',abbrev,mcruise));
+fp = rootdir;%fileparts(rootdir); %all but the last level
+edfilepat = fullfile(fp,'editlogs',sprintf('%s_*',abbrev));
 [d, comment] = apply_guiedits(d, 'time', edfilepat);
 if ~isempty(comment)
     h.comment = [h.comment comment];
     didedits = 1;
+else
+    time0 = d.time;
+    d.time = m_commontime(d.time,h,['days since ' datestr([MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 1 0 0 0],'yyyy-mm-dd HH:MM:SS')]);
+    [d, comment] = apply_guiedits(d, 'time', edfilepat, 0, 1/86400);
+    d.time = time0;
+    if ~isempty(comment)
+        h.comment = [h.comment comment];
+        didedit = 1;
+    end
 end
 
 % adjust: factory calibration coefficients and other units conversions,
@@ -74,7 +83,7 @@ if ~isempty(comment)
 end
 
 % adjust: cruise-specific calibrations
-if 0%ismember(abbrev,{'tsg' 'ocl' 'surfmet' 'thermosalinograph' 'thermosalinograph_seabird'})
+if ismember(abbrev,{'tsg' 'ocl' 'surfmet' 'thermosalinograph' 'thermosalinograph_seabird'})
     opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
     cpstr = '';
     if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))

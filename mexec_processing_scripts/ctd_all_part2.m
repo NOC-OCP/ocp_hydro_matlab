@@ -10,19 +10,17 @@ end
 
 %bottle firing data into .fir file
 mfir_03(stn)
-if exist(m_add_nc(otfilef),'file')
-    mfir_03_extra(stn)
-    %add winch data
-    try
-        mwin_to_fir(stn)
-    catch me
-        warning('no winch data added to fir file')
-        warning(me.message)
-    end
-
-    %add to sam file
-    mfir_to_sam(stn)
+mfir_03_extra(stn)
+%add winch data
+try
+    mwin_to_fir(stn)
+catch me
+    warning('no winch data added to fir file')
+    warning(me.message)
 end
+
+%add to sam file
+mfir_to_sam(stn)
 
 %calculate and apply depths
 station_summary(stn)
