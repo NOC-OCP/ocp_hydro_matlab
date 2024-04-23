@@ -221,8 +221,18 @@ end
 
 
 if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
-    def = mrdefine('this_cruise');
-    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; def.tablemap(:,[2 3])];
+    try
+        def = mrdefine('this_cruise');
+        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; def.tablemap(:,[2 3])];
+    catch
+        try
+            def = mrdefine;
+            MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; def.tablemap(:,[2 3])];
+            warning('no access to RVDAS database, listing all tables in cached mr_tables_from_json.m')
+        catch
+            warning('skipping underway data setup')
+        end
+    end
 else
     %create file connecting underway data directories and stream names
     %and create underway data directories (for processed data)
