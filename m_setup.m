@@ -45,7 +45,7 @@ clear MEXEC_G
 global MEXEC_G
 
 %defaults: what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='dy174';
+MEXEC_G.MSCRIPT_CRUISE_STRING='dy180';
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.other_programs_root = '/data/pstar/programs/others/'; 
 MEXEC_G.mexec_data_root = '/data/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
@@ -131,6 +131,7 @@ if ~isempty(MEXEC_G.other_programs_root)
     MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
 else
     MEXEC_G.ix_ladcp = 0;
+    path_choose = [];
 end
 if nargout>0; varargout{1} = path_choose; end
 
