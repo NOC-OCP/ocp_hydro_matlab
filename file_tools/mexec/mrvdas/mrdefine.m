@@ -79,7 +79,7 @@ if nargin>0 && ismember('this_cruise',varargin)
         d.mrtables = rmfield(d.mrtables,d.mrtables_list(ia));
         d.mrtables_list(ia) = [];
         warning('backtrace','off')
-        warning('rvdas:mrdefine:mjsonextra','%d RVDAS tables in .json files but not present for this cruise',length(ia));
+        warning('rvdas:mrdefine:mjsonextra','%d RVDAS tables in mrtables_from_json but not present for this cruise',length(ia));
         warning('off','rvdas:mrdefine:mjsonextra')
         warning('backtrace','on')
     end
