@@ -28,25 +28,15 @@ if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n',mcruise,s
 redoctm = 0; opt1 = 'ctd_proc'; opt2 = 'redoctm'; get_cropt
 
 root_ctd = mgetdir('M_CTD');
+cdir = mgetdir('M_CTD_CNV');
 dataname = ['ctd_' mcruise '_' stn_string];
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
     otfile = fullfile(root_ctd, [dataname '_raw.nc']);
+    cnvfile = fullfile(cdir, sprintf('%s_%03d_align_ctm.cnv',upper(mcruise),stn));
 else %in some cases, operate on original file (e.g. to remove large spikes), then apply align and CTM
     otfile = fullfile(root_ctd, [dataname '_raw_noctm.nc']);
+    cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv',upper(mcruise),stn));
     disp('starting from noctm file')
-end
-
-cdir = mgetdir('M_CTD_CNV');
-if redoctm
-    cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', upper(mcruise), stn));
-    if ~exist(cnvfile,'file')
-        cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv', mcruise, stn));
-    end
-else
-    cnvfile = fullfile(cdir,sprintf('%s_%03d_align_CTM.cnv', upper(mcruise), stn));
-    if ~exist(cnvfile,'file')
-        cnvfile = lower(cnvfile);
-    end
 end
 %now overwrite defaults if relevant
 opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
