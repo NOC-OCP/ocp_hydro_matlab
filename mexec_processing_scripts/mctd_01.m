@@ -26,7 +26,6 @@ if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n',mcruise,s
 
 % resolve root directories for various file types
 redoctm = 0; opt1 = 'ctd_proc'; opt2 = 'redoctm'; get_cropt
-
 root_ctd = mgetdir('M_CTD');
 cdir = mgetdir('M_CTD_CNV');
 dataname = ['ctd_' mcruise '_' stn_string];

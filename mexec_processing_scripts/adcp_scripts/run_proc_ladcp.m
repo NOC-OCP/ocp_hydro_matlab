@@ -27,24 +27,26 @@ cfg.p.magdec_source = 1;
 %cfg.p.edit_mask_dn_bins = 1;
 %cfg.p.edit_mask_up_bins = 1;
 cfg.p.orig = 0; % save original data or not
-isul = 1; %is there an uplooker? process it first
+isul = 1; %is there an uplooker? process it first on its own
+cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata',cfg.stnstr);
 cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
+cfg.p.ambiguity = 4.0; %this one is not used?
+cfg.p.vlim = 4.0; %this one is***check it matches
 opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
-opt1 = 'ladcp_proc'; get_cropt
-cfg.rawdir = fullfile(cfg.pdir_root,'raw',cfg.stnstr);
+opt1 = 'ladcp_proc'; get_cropt %required to set pattern for down- and up-looker files
+infiled = fullfile(cfg.rawdir,cfg.dnpat);
+infileu = fullfile(cfg.rawdir,cfg.uppat);
 dopause = 0;
 stn = stnlocal;
 
 %find out which raw files we have
 if isul
-    infileu = fullfile(mgetdir('M_IX'), 'raw', cfg.stnstr, sprintf('%sUL000.000',cfg.stnstr));
-    if ~exist(infileu,'file')
+    if isempty(dir(infileu))
         warning('opt_%s says there should be an uplooker but file\n %s\n not found; maybe not yet synced?',mcruise,infileu)
         isul = 0;
     end
 end
-infiled = fullfile(mgetdir('M_IX'), 'raw', cfg.stnstr, sprintf('%sDL000.000',cfg.stnstr));
-if ~exist(infiled,'file')
+if isempty(dir(infiled))
     warning('no downlooker file %s\n maybe not yet synced?',infiled)
     isdl = 0;
 else

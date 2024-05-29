@@ -73,7 +73,7 @@ end
 %this code allows for the possiblity of multiple files
 f.ladcpdo = {}; f.ladcpup = {};
 if isdo
-   d = dir(fullfile(cfg.rawdir, [cfg.stnstr 'DL*.000']));
+   d = dir(fullfile(cfg.rawdir, [cfg.dnpat '*.000']));
    n = 1;
    while ~isempty(d)
       if d(1).bytes>1024
@@ -84,7 +84,7 @@ if isdo
    end
 end
 if isup
-   d = dir(fullfile(cfg.rawdir, [cfg.stnstr 'UL*.000']));
+   d = dir(fullfile(cfg.rawdir, [cfg.uppat '*.000']));
    n = 1;
    while ~isempty(d)
       if d(1).bytes>1024
