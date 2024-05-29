@@ -140,11 +140,11 @@ switch opt1
                 sensorcals = struct(); %default: none
                 xducer_offset = []; %default: none
             case 'tsg_cals'
-                tsgopts.docal.temp = 0; %do not apply any calibration to tsg temp
-                tsgopts.docal.cond = 0; %etc
-                tsgopts.docal.fluor = 0; %etc
-                if isfield(tsgopts,'calstr')
-                    tsgopts = rmfield(tsgopts,'calstr'); %no default, must be set by opt_{cruise}
+                uo.docal.temp = 0; %do not apply any calibration to tsg temp
+                uo.docal.cond = 0; %etc
+                uo.docal.fluor = 0; %etc
+                if isfield(uo,'calstr')
+                    uo = rmfield(uo,'calstr'); %no default, must be set by opt_{cruise}
                     %see opt_sd025 for examples
                 end
         end

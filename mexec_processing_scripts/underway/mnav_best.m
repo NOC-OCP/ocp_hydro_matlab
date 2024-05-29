@@ -26,7 +26,7 @@ if ~exist(infilen,'file')
 end
 infileh = fullfile(root_hed,[hedstream '_' mcruise '_all_edt.nc']); %easting and northing only in edt file
 if ~exist(m_add_nc(infilen),'file') || ~exist(m_add_nc(infileh),'file')
-    error('at least one of best nav and heading stream %s and %s files not found',default_navstream,default_hedstream)
+    error('at least one of best nav and heading stream %s and %s files, %s and %s, not found',default_navstream,default_hedstream,infilen,infileh)
 end
 infilea = fullfile(root_att,[attstream '_' mcruise '_all_edt.nc']);
 if ~exist(infilea,'file')

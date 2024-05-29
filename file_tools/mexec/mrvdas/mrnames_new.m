@@ -59,11 +59,11 @@ n = n+1; mt(n).dir = 'nav'; mt(n).pre = 'pos'; mt(n).msg = {'gpvtg','gnvtg','inv
 
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wnd'; mt(n).msg = {'iimwv','wimwv','pmwind','gpxsm'}; %gpxsm is surfmet
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'ocn'; mt(n).msg = {'sbe38','psbsst1','phsst'}; %things that are on the keel or remote 
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'ocn'; mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1'}; %things that are on the ucsw pipe (in the lab) n = n+1;
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'ocn'; mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1','sfuwy'}; %things that are on the ucsw pipe (in the lab) n = n+1;
 % n = n+1; mt(n).dir = 'met'; mt(n).pre = 'wav'; mt(n).msg = {'pwam1','pramr','pwam'}; 
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'atm'; mt(n).msg = {'pcfrs','pvtnh2','pvbar','pmdew'}; %pressure, humidity, precip n = n+1;
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'atm'; mt(n).msg = {'pcfrs','pvtnh2','pvbar','pmdew','sfmet'}; %pressure, humidity, precip n = n+1;
 % n = n+1; mt(n).dir = 'met'; mt(n).pre = 'sky'; mt(n).msg = {'pvceil1','peceil','pbpws','ptdisd'}; %some of these are really too complex to read in our normal way, like the thies clima has hundreds of different variables starting with numberParticlesDiameter  
-n = n+1; mt(n).dir = 'met'; mt(n).pre = 'rad'; mt(n).msg = {'pkpyrge','pkpyran','pspar'}; %radiometers
+n = n+1; mt(n).dir = 'met'; mt(n).pre = 'rad'; mt(n).msg = {'pkpyrge','pkpyran','pspar','sflgt'}; %radiometers
 n = n+1; mt(n).dir = 'met'; mt(n).pre = 'ocn'; mt(n).msg = {'pc4rhoist1'}; %sda ucsw intake pole position
 
 n = n+1; mt(n).dir = 'bathy'; mt(n).pre = 'sbm'; mt(n).msg = {'sddpt','sddbs','sdalr','sddbk','sddbs','sddpt','dbdbt','sddbt'}; %'pskpdpt',

@@ -1,5 +1,5 @@
-function rtables = mrtables_from_json
-% function rtables = mrtables_from_json
+function rtables = mrtables_edited
+% function rtables = mrtables_edited
 % Make the list of rvdas tables that mexec may want to copy.
 % The rtables created in this script, along with mrnames_new, will
 % define which variables are loaded when a table is loaded from rvdas.
@@ -91,7 +91,7 @@ rtables.cnav_gnvtg = {  % from cnav-dy.json
 %"SDDPT"
 rtables.ea640_sddpt = {  % from ea640-dy.json
 'ea640_sddpt'  2 []  % fields
-   'waterDepthMeterTransducer'                             ''                                                      'waterDepthMeterTransducer'
+   'waterDepthMetreTransducer'                             ''                                                      'waterDepthMetreTransducer'
             'transduceroffset'                             ''                                                               'transduceroffset'
 };
 
@@ -100,7 +100,7 @@ rtables.ea640_sddbs = {  % from ea640-dy.json
 'ea640_sddbs'  6 []  % fields
 %  'waterDepthFeetFromSurface'                             ''                                                      'waterDepthFeetFromSurface'
 %                   'feetFlag'                             ''                                                                       'feetFlag'
-  'waterDepthMetreFromSurface'                             ''   %***                                                  'waterDepthMeterFromSurface'
+  'waterDepthMetreFromSurface'                             ''                                                     'waterDepthMeterFromSurface' %***
 %                  'metreFlag'                             ''                                                                      'metreFlag'
 % 'waterDepthFathomFromSurface'                             ''                                                    'waterDepthFathomFromSurface'
 %                 'fathomFlag'                             ''                                                                     'fathomFlag'
@@ -571,48 +571,36 @@ rtables.shipsgyro_tirot = {  % from shipsgyro-dy.json
 %                  'rotStatus'                             ''                                                                      'rotStatus'
 };
 
-% %"PPLAN"
-% rtables.shipsgyro_pplan = {  % from shipsgyro-dy.json
-% 'shipsgyro_pplan'  8 []  % fields
-%                       'pplan1'                             ''                                                                         'pplan1'
-%                       'pplan2'                             ''                                                                         'pplan2'
-%                       'pplan3'                             ''                                                                         'pplan3'
-%                       'pplan4'                             ''                                                                         'pplan4'
-%                       'pplan5'                             ''                                                                         'pplan5'
-%                       'pplan6'                             ''                                                                         'pplan6'
-%                       'pplan7'                             ''                                                                         'pplan7'
-%                       'pplan8'                             ''                                                                         'pplan8'
+
+% %"GPGGA"
+% rtables.shipsgyro_gpgga = {  % from shipsgyro-dy.json
+% 'shipsgyro_gpgga' 13 []  % fields
+%                      'utcTime'                             ''                                                                        'utcTime'
+%                     'latitude'                             ''                                                                       'latitude'
+%                       'latDir'                             ''                                                                         'latDir'
+%                    'longitude'                             ''                                                                      'longitude'
+%                       'lonDir'                             ''                                                                         'lonDir'
+% %                    'ggaQual'                             ''                                                                        'ggaQual'
+% %                     'numSat'                             ''                                                                         'numSat'
+%                     'altitude'                             ''                                                                       'altitude'
+% %      'unitsOfMeasureAntenna'                             ''                                                          'unitsOfMeasureAntenna'
+% %              'geoidAltitude'                             ''                                                                  'geoidAltitude'
+% %         'unitsOfMeaureGeoid'                             ''                                                             'unitsOfMeaureGeoid'
+% %                   'diffcAge'                             ''                                                                       'diffcAge'
+% %                 'dgnssRefId'                             ''                                                                     'dgnssRefId'
 % };
 
-%"GPGGA"
-rtables.shipsgyro_gpgga = {  % from shipsgyro-dy.json
-'shipsgyro_gpgga' 13 []  % fields
-                     'utcTime'                             ''                                                                        'utcTime'
-                    'latitude'                             ''                                                                       'latitude'
-                      'latDir'                             ''                                                                         'latDir'
-                   'longitude'                             ''                                                                      'longitude'
-                      'lonDir'                             ''                                                                         'lonDir'
-%                    'ggaQual'                             ''                                                                        'ggaQual'
-%                     'numSat'                             ''                                                                         'numSat'
-                    'altitude'                             ''                                                                       'altitude'
-%      'unitsOfMeasureAntenna'                             ''                                                          'unitsOfMeasureAntenna'
-%              'geoidAltitude'                             ''                                                                  'geoidAltitude'
-%         'unitsOfMeaureGeoid'                             ''                                                             'unitsOfMeaureGeoid'
-%                   'diffcAge'                             ''                                                                       'diffcAge'
-%                 'dgnssRefId'                             ''                                                                     'dgnssRefId'
-};
-
-%"GPVTG"
-rtables.shipsgyro_gpvtg = {  % from shipsgyro-dy.json
-'shipsgyro_gpvtg'  6 []  % fields
-                  'courseTrue'                             ''                                                                     'courseTrue'
-%                 'trueCourse'                             ''                                                                     'trueCourse'
-%             'magneticCourse'                             ''                                                                 'magneticCourse'
-%                      'mFlag'                             ''                                                                          'mFlag'
-                  'speedKnots'                             ''                                                                     'speedKnots'
-%                      'nFlag'                             ''                                                                          'nFlag'
-};
-
+% %"GPVTG"
+% rtables.shipsgyro_gpvtg = {  % from shipsgyro-dy.json
+% 'shipsgyro_gpvtg'  6 []  % fields
+%                   'courseTrue'                             ''                                                                     'courseTrue'
+% %                 'trueCourse'                             ''                                                                     'trueCourse'
+% %             'magneticCourse'                             ''                                                                 'magneticCourse'
+% %                      'mFlag'                             ''                                                                          'mFlag'
+%                   'speedKnots'                             ''                                                                     'speedKnots'
+% %                      'nFlag'                             ''                                                                          'nFlag'
+% };
+% 
 
 %skipperlog-dy  6  sentences
 
@@ -706,21 +694,21 @@ rtables.skipperlog_vdvlw = {  % from skipperlog-dy.json
 
 %"SFUWY"
 rtables.surfmet_sfuwy = {  % from surfmet-dy.json
-'surfmet_sfuwy' 14 []  % fields
+'surfmet_sfuwy' 3 []  % fields
                         'fluo'                             ''                                                                           'fluo'
                        'trans'                             ''                                                                          'trans'
                        'flow'                             ''                                                                          'flow1'
                        };
 
 rtables.surfmet_sfmet = {  % from surfmet-dy.json
-'surfmet_sfmet' 14 []  % fields
+'surfmet_sfmet' 3 []  % fields
               'airTemperature'              'degrees celsius'                                                                 'airTemperature'
                     'humidity'                      'percent'                                                                       'Humidity'
                  'airPressure'                          'hPa'                                                                    'airPressure'
 };
 
 rtables.surfmet_sflgt = {  % from surfmet-dy.json
-'surfmet_sflgt' 14 []  % fields
+'surfmet_sflgt' 4 []  % fields
 
                      'parPort'                         'Wm-2'                                                                        'parPort'
                 'parStarboard'                         'Wm-2'                                                                   'parStarboard'

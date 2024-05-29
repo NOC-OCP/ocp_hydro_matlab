@@ -69,10 +69,16 @@ for fno = 1:length(files)
 
     %load
     [d,h] = mload(files{fno},'/');
+    if ~isfield(d,'time')
+        continue
+    end
     d.time = m_commontime(d,'time',h,to);
     %choose only selected variables from surfmet
     if sum(strfind(files{fno},'surfmet'))
         ovars = munderway_varname({'salvar' 'tempvar' 'condvar' 'sstvar' 'svelvar'}, h.fldnam, 's');
+        if isempty(ovars)
+            continue
+        end
         [othervars,ii] = setdiff(h.fldnam,ovars);
         h.fldnam(ii) = []; h.fldunt(ii) = [];
         d = rmfield(d,othervars);
@@ -170,7 +176,7 @@ minflow = 0.4; pdel = 4; %pump rate, and how long after pumps back on to nan
 check_tsg = 0;
 opt1 = 'uway_proc'; opt2 = 'tsg_avedits'; get_cropt
 pdel = round(pdel);
-if ~isempty(minflow)
+if ~isempty(minflow) && exist(m_add_nc(otfile),'file')
     [d, h] = mload(otfile, '/');
     fvar = munderway_varname('flowvar',h.fldnam,1,'s');
     if ~isempty(fvar)

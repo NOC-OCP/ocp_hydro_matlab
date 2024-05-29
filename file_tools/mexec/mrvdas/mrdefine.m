@@ -69,7 +69,8 @@ function d = mrdefine(varargin)
 
 
 % Identify rvdas tables of interest from json files
-d.mrtables = mrtables_from_json; % d.mrtables_list is a list of RVDAS tables we want to be able to use
+%d.mrtables = mrtables_from_json; % d.mrtables_list is a list of RVDAS tables we want to be able to use
+d.mrtables = mrtables_edited; %modified from dy174 to dy180
 d.mrtables_list = fieldnames(d.mrtables);
 if nargin>0 && ismember('this_cruise',varargin)
     %compare to list of tables found by querying the database
