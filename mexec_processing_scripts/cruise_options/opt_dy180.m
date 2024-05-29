@@ -45,6 +45,11 @@ switch opt1
                 if ~exist(cnvfile,'file')
                     cnvfile = fullfile(cdir,sprintf('%s_CTD%03dT.cnv',upper(mcruise),stn)); %try Ti
                 end
+            case 'blfilename'
+                blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dS.bl', upper(mcruise), stn));
+                if ~exist(blinfile,'file')
+                    blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dT.bl', upper(mcruise),stn));
+                end
         end
 
     case 'ladcp_proc'
