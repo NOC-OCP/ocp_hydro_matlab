@@ -100,35 +100,33 @@ switch opt1
         switch opt2
             case 'oxy_files'
                 ofiles = {'DY174_Oxygen_Calculation.xlsx'};
-                hcpat = {'Niskin';'Bottle'};
-                chrows = 1:2;
-                chunits = 3;
-                sheets = 1:100;
+                %hcpat = {'Niskin';'Bottle'};
+                %chrows = 1:2;
+                %chunits = 3;
+                hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
+                chrows = 1;
+                chunits = 2;
                 calcoxy = 0;
             case 'oxy_parse'
-                ds_oxy.sampnum = ds_oxy.niskin_bottle + ds_oxy.cast_number*100;
-                ds_oxy.fix_temp = ds_oxy.fixing_temp;
-                ds_oxy.conc_o2 = ds_oxy.c_o2_umol_per_l;
-                ds_oxy.flag = 2+0*ds_oxy.sampnum;
-                kbad = find(isnan(ds_oxy.sampnum));
-                %                 kbad = [kbad(:)' [1:15]];
-                ds_oxy(kbad,:) = [];
+                varmap.niskin = {'bottle'};
+                varmap.statnum = {'number'};
+                varmap.fix_temp = {'temp'};
+                varmap.conc_o2 = {'umol_per_l'};
                 %             case 'oxy_calc'
-                %                 ds_oxy.vol_std = repmat(5,size(ds_oxy.sampnum));
-                %                 ds_oxy.vol_blank = repmat(-0.00808333,size(ds_oxy.sampnum));
-                %                 ds_oxy.vol_titre_std = repmat(0.4540,size(ds_oxy.sampnum));
-                %                 ds_oxy.vol_blank(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = -0.00854167;
-                %                 ds_oxy.vol_titre_std(ds_oxy.statnum>=28 | ds_oxy.statnum==26) = 0.4241;
-                %                 ds_oxy.vol_blank(ds_oxy.statnum>=177) = -0.00691667;
-                %                 ds_oxy.vol_titre_std(ds_oxy.statnum>=177) = 0.4264;
-                %                 vol_reag_tot = 0.997*2;
+                %                 ds_oxy.vol_std = ds_oxy.vol;
+                %                 ds_oxy.vol_blank = repmat(mean([-0.0015 -0.0015 0.000833333 0 -0.0015 -0.000666667]),size(ds_oxy.sampnum));
+                %                 ds_oxy.vol_titre_std = repmat(mean([0.4580 0.4581 0.4599 0.4589 0.4588 0.4588]),size(ds_oxy.sampnum));
+                %                 vol_reag_tot = 2;
             case 'oxy_flags'
-                d.botoxya_flag(d.sampnum==105) = 4;
-                d.botoxya_flag(d.sampnum==111) = 4;
-                d.botoxya_flag(d.sampnum==515) = 4;
-%                 d.botoxya_flag(d.sampnum==219) = 3; % questionable. OK on
-%                 further inspection, strong gradients and wake effects
-%                 d.botoxya_flag(d.sampnum==419) = 3;
+                %d.botoxya_flag(d.sampnum==105) = 4;
+                %d.botoxya_flag(d.sampnum==111) = 2; %initially bad because of incorrect bottle vol, now fixed
+                %d.botoxya_flag(ismember(d.sampnum,[919 1001])) = 3; %sample b looks more consistent with average offset from CTD
+                %d.botoxya_flag(d.sampnum==515) = 4;
+%               %  d.botoxya_flag(d.sampnum==219) = 3; % questionable. OK on
+%               %  further inspection, strong gradients and wake effects
+%               %  d.botoxya_flag(d.sampnum==419) = 3;
+                %d.botoxya_flag(ismember(d.sampnum,[407 807])) = 3; %replicates differ by >1umol/kg, not clear which is better
+                %d.botoxyb_flag(ismember(d.sampnum,[407 807])) = 3; %replicates differ by >1umol/kg, not clear which is better
         end
 
     case 'sbe35'

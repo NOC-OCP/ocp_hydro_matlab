@@ -21,9 +21,10 @@ function varargout = m_setup(varargin)
 %        data, causes problems, so it should only be used to match the
 %        MSCRIPT_CRUISE_STRING you are supplying)
 %      SITE_suf (e.g. 'atsea' or 'atnoc' to make SITE 'jc238_atsea' etc.)
-%      mexec_source_root (e.g. '~/programs/ocp/ocp_hydro_matlab/')
 %      other_programs_root (e.g. '~/programs/others/')
 %      mexec_data_root (e.g. '~/cruises/jc238/mcruise/data/')
+%      read_underway (1) to set up underway data directories and test
+%        database access -- set to 0 if not on ship
 %      quiet (0 to make all programs verbose, 1 to make only
 %        mexec_processing_scripts verbose but file_tools/mexec quiet, 2 to
 %        make all quiet)
@@ -51,6 +52,7 @@ MEXEC_G.other_programs_root = '/data/pstar/programs/others/';
 MEXEC_G.mexec_data_root = '/data/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
+MEXEC_G.read_underway = 1; %if 0, skip the rvdas setup
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
@@ -221,6 +223,7 @@ switch MEXEC_G.Mship
 end
 
 
+if MEXEC_G.read_underway %***still need to configure where directories are for some applications***
 if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
     try
         def = mrdefine('this_cruise');
@@ -247,6 +250,7 @@ else
     catch me
         warning('%s\n','underway data directories could not be configured',me.message)
     end
+end
 end
 
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'

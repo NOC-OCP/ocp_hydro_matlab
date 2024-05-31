@@ -39,32 +39,31 @@ end
 if isempty(ds_oxy)
     error('no data loaded')
 end
-
 opt1 = 'check_sams'; get_cropt
+
+%rename variables if necessar
+varmap.statnum = {'cast_number'};
+varmap.position = {'niskin_bottle'};
+varmap.conc_o2 = {'c_o2_','c_o2'};
+if calcoxy
+    varmap.vol_blank = {'blank_titre'};
+    varmap.vol_std = {'std_vol'};
+    varmap.vol_titre_std = {'standard_titre'};
+    varmap.fix_temp = {'fixing_temp'};
+    varmap.oxy_bottle = {'bottle no'};
+    varmap.date_titre = {'dnum'};
+    varmap.bot_vol_tfix = {'botvol_at_tfix'};
+end
+opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt %edit map for renaming variables
+[ds_oxy, ~] = var_renamer(data, varmap);
+%statnum, sampnum, and remove extra lines
+ds_oxy = fill_samdata_statnum(ds_oxy,'statnum');
+ds_oxy.sampnum = ds_oxy.statnum*100 + ds_oxy.position;
+m = isnan(ds_oxy.sampnum); ds_oxy(m,:) = [];
+
 if calcoxy
     %parse, for instance combining duplicates, or getting information from header
     cellT = 25; %default
-    oxyvarmap = {
-        'statnum',       'cast_number'
-        'position',      'niskin_bottle'
-        'vol_blank',     'blank_titre'
-        'vol_std',       'std_vol'
-        'vol_titre_std', 'standard_titre'
-        'fix_temp',      'fixing_temp'
-        'sample_titre',  'sample_titre'
-        'flag',          'flag'
-        'oxy_bottle'     'bottle_no'
-        'date_titre',    'dnum'
-        'bot_vol_tfix'   'botvol_at_tfix'
-        'conc_o2'        'c_o2_'};
-    opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt
-    %rename according to lookup table, if supplied
-    if ~isempty(oxyvarmap)
-        ds_oxy_fn = ds_oxy.Properties.VariableNames;
-        [~,ia,ib] = intersect(oxyvarmap(:,2)',ds_oxy_fn);
-        ds_oxy_fn(ib) = oxyvarmap(ia,1)';
-        ds_oxy.Properties.VariableNames = ds_oxy_fn;
-    end
     ds_oxy(isnan(ds_oxy.position),:) = [];
     if ~exist('fillstat','var')
         if sum(isnan(ds_oxy.statnum))>0
@@ -153,10 +152,8 @@ if calcoxy
         %a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
         ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
     end
-
-else
-    opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt
 end
+
 ds_oxy.flag(isnan(ds_oxy.conc_o2)) = max(ds_oxy.flag(isnan(ds_oxy.conc_o2)),4);
 ds_oxy_fn = ds_oxy.Properties.VariableNames;
 if ismember(ds_oxy_fn,'sample_titre')
