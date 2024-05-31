@@ -15,7 +15,12 @@ root_ctd = mgetdir('M_CTD');
 
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
 infile0 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
-[d1, h1] = mloadq(infile1,'time','scan','press','pumps',' ');
+h1 = m_read_header(infile1);
+if ~isempty(intersect(h.fldnam,'pumps'))
+    [d1, ~] = mloadq(infile1,'time','scan','press','pumps',' ');
+else
+    [d1, ~] = mloadq(infile1,'time','scan','press',' ');
+end
 
 dataname = ['dcs_' mcruise '_' stn_string];
 otfile = fullfile(root_ctd, dataname);
@@ -71,8 +76,12 @@ end
 if ~isfield(ds,'dc_end') || auto_end
     if isempty(kend)
         % guess end index: when pumps go off finally with p<2, or just before p<0, whichever is first
-        kend = find(d1.pumps(kbot+1:end)<1 & d1.pumps(kbot:end-1)==1 & d1.press(kbot+1:end)<2, 1, 'last') + kbot - 2;
-        if isempty(kend); kend = length(d1.pumps); end
+        if isfield(d1,'pumps')
+            kend = find(d1.pumps(kbot+1:end)<1 & d1.pumps(kbot:end-1)==1 & d1.press(kbot+1:end)<2, 1, 'last') + kbot - 2;
+        else
+            kend = [];
+        end
+        if isempty(kend); kend = length(d1.scan); end
         ksurf2 = find(d1.press(kbot:end)<0, 1, 'first') + kbot - 2;
         if ~isempty(ksurf2)
             kend = min(kend, ksurf2);
@@ -85,7 +94,7 @@ if ~isfield(ds,'dc_end') || auto_end
     else
         hnew.comment = [hnew.comment ' end time set in opt_cruise'];
     end
-    if kend==0; kend = length(d1.pumps); end
+    if kend==0; kend = length(d1.scan); end
     ds.dc_end = kend;
     ds.scan_end = d1.scan(ds.dc_end);
     ds.press_end = d1.press(ds.dc_end);

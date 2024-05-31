@@ -9,7 +9,7 @@ comment = [];
 fnd = fieldnames(d);
 
 %edit out scans when pumps are off, plus expected recovery times
-if isfield(castopts,'pumpsNaN')
+if isfield(castopts,'pumpsNaN') && isfield(d,'pumps')
     iip = find(d.pumps<1); n = length(d.pumps);
     fn = intersect(fieldnames(castopts.pumpsNaN),fnd);
     for no = 1:length(fn)

@@ -75,13 +75,13 @@ for k = 1:numv
     i = findstr(vstr,'~'); %First look for range match
     if isempty(i)  % No tilde
     elseif length(i) > 1 % More than one tilde
-    elseif i == 1 | i == length(vstr) %tilde out of place
+    elseif i == 1 || i == length(vstr) %tilde out of place
     else %we have precisely one tilde, in a sensible place. Now look for valid variable numbers either side of it
         vstr1 = vstr(1:i-1);
         vstr2 = vstr(i+1:end);
         t1 = testnum(vstr1,h.noflds);
         t2 = testnum(vstr2,h.noflds);
-        if t1 == 1 & t2 == 1
+        if t1 == 1 && t2 == 1
             vnum1 = str2num(vstr1);
             vnum2 = str2num(vstr2);
             vlist = [vlist vnum1:vnum2];
@@ -142,7 +142,7 @@ if round(num) ~= num
     return
 end
 
-if num < 1 | num > noflds
+if num < 1 || num > noflds
     t = 0;
     return
 end
