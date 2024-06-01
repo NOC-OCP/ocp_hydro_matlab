@@ -16,7 +16,7 @@ root_ctd = mgetdir('M_CTD');
 infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
 infile0 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
 h1 = m_read_header(infile1);
-if ~isempty(intersect(h.fldnam,'pumps'))
+if ~isempty(intersect(h1.fldnam,'pumps'))
     [d1, ~] = mloadq(infile1,'time','scan','press','pumps',' ');
 else
     [d1, ~] = mloadq(infile1,'time','scan','press',' ');
