@@ -38,22 +38,19 @@ else %in some cases, operate on original file (e.g. to remove large spikes), the
     disp('starting from noctm file')
 end
 %now overwrite defaults if relevant
-opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
-if ~exist(cnvfile,'file')
-    warn = 1;
-    if isfield(MEXEC_G,'mexec_shell_scripts')
-        css = fullfile(MEXEC_G.mexec_shell_scripts,'ctd_syncscript');
-        if exist(css,'file')
-            system(css);
-            if exist(cnvfile,'file')
-                warn = 0;
-            end
+if isfield(MEXEC_G,'mexec_shell_scripts')
+    css = fullfile(MEXEC_G.mexec_shell_scripts,'ctd_syncscript');
+    if exist(css,'file')
+        system(css);
+        if exist(cnvfile,'file')
+            warn = 0;
         end
     end
-    if warn
-        warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
-        pause
-    end
+end
+opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
+if ~exist(cnvfile,'file')
+    warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
+    pause
 end
 
 

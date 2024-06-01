@@ -29,7 +29,7 @@ if exist(m_add_nc(otfile),'file')
     [ds, hnew] = mloadq(otfile,'/');
 else
     clear ds hnew
-    ds.statnum = stn;edit 
+    ds.statnum = stn;
     hnew.data_time_origin = h1.data_time_origin;
     hnew.comment = '';
 end
