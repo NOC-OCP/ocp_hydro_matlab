@@ -78,6 +78,7 @@ if isfield(d, 'botoxya_per_l')
             botoxyc = d.botoxyc_per_l(iio)./(dens/1000);
         end
     end
+    hnew.comment = [h.comment ' converted to umol/kg using CTD salinity (uasal) and fixing temperature \n '];
 end
 
 ds.botoxy_flag = d.botoxya_flag(iio);
@@ -120,9 +121,6 @@ if use_oxy_repl>0
     %report botoxya temp as diagnostic of good bottle closing
     ds.botoxya_temp = NaN+ds.sampnum;
     ds.botoxya_temp = d.botoxya_temp(iio);
-    if calcoxy
-        hnew.comment = [h.comment ' converted to umol/kg using CTD salinity (uasal) and fixing temperature \n '];
-    end
 
 end
 

@@ -106,27 +106,28 @@ switch opt1
                 hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
                 chrows = 1;
                 chunits = 2;
-                calcoxy = 0;
             case 'oxy_parse'
-                varmap.niskin = {'bottle'};
+                calcoxy = 1;
+                varmap.position = {'bottle'};
                 varmap.statnum = {'number'};
                 varmap.fix_temp = {'temp'};
                 varmap.conc_o2 = {'umol_per_l'};
-                %             case 'oxy_calc'
-                %                 ds_oxy.vol_std = ds_oxy.vol;
-                %                 ds_oxy.vol_blank = repmat(mean([-0.0015 -0.0015 0.000833333 0 -0.0015 -0.000666667]),size(ds_oxy.sampnum));
-                %                 ds_oxy.vol_titre_std = repmat(mean([0.4580 0.4581 0.4599 0.4589 0.4588 0.4588]),size(ds_oxy.sampnum));
-                %                 vol_reag_tot = 2;
+            case 'oxy_calc'
+                ds_oxy.vol_std = ds_oxy.vol;
+                ds_oxy.vol_blank = repmat(mean([-0.0015 -0.0015 0.000833333 0 -0.0015 -0.000666667]),size(ds_oxy.sampnum));
+                ds_oxy.vol_titre_std = repmat(mean([0.4580 0.4581 0.4599 0.4589 0.4588 0.4588]),size(ds_oxy.sampnum));
+                vol_reag_tot = 2;
             case 'oxy_flags'
+                d.botoxya_flag(ismember(d.sampnum,[919 1001])) = 3; %sample b looks more consistent with average offset from CTD
+                d.botoxya_flag(ismember(d.sampnum,[407 807])) = 3; %replicates differ by >1umol/kg, not clear which is better
+                d.botoxyb_flag(ismember(d.sampnum,[407 807])) = 3; %replicates differ by >1umol/kg, not clear which is better
                 %d.botoxya_flag(d.sampnum==105) = 4;
                 %d.botoxya_flag(d.sampnum==111) = 2; %initially bad because of incorrect bottle vol, now fixed
-                %d.botoxya_flag(ismember(d.sampnum,[919 1001])) = 3; %sample b looks more consistent with average offset from CTD
                 %d.botoxya_flag(d.sampnum==515) = 4;
 %               %  d.botoxya_flag(d.sampnum==219) = 3; % questionable. OK on
 %               %  further inspection, strong gradients and wake effects
-%               %  d.botoxya_flag(d.sampnum==419) = 3;
-                %d.botoxya_flag(ismember(d.sampnum,[407 807])) = 3; %replicates differ by >1umol/kg, not clear which is better
-                %d.botoxyb_flag(ismember(d.sampnum,[407 807])) = 3; %replicates differ by >1umol/kg, not clear which is better
+                d.botoxya_flag(d.sampnum==419) = 3;
+                d.botoxya_flag(d.sampnum==717) = 3; 
         end
 
     case 'sbe35'
@@ -177,10 +178,8 @@ switch opt1
                 %to use as background for editing plot
         end
 
-    %case 'check_sams'
-    %    check_sal = 1; %plot individual salinity readings
-    %    check_oxy = 1; %step through mismatched oxygen replicates
-    %    check_sbe35 = 1; %display bad sbe35 lines (may error later if they are present and not flagged)
+    case 'check_sams'
+        check_oxy = 0; %step through mismatched oxygen replicates
 
     case 'mfir_01'
         switch opt2

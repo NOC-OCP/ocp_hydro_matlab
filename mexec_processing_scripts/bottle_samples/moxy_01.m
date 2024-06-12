@@ -35,43 +35,39 @@ else
 end
 
 %load data
-[ds_oxy, oxyhead] = load_samdata(ofiles, 'hcpat', hcpat, 'icolhead', chrows, 'icolunits', chunits, 'sheets', sheets);
+[ds_oxy, ~] = load_samdata(ofiles, 'hcpat', hcpat, 'icolhead', chrows, 'icolunits', chunits, 'sheets', sheets);
 if isempty(ds_oxy)
     error('no data loaded')
 end
 opt1 = 'check_sams'; get_cropt
 
-%rename variables if necessar
+%rename variables (if necessary)
 varmap.statnum = {'cast_number'};
 varmap.position = {'niskin_bottle'};
 varmap.conc_o2 = {'c_o2_','c_o2'};
-if calcoxy
-    varmap.vol_blank = {'blank_titre'};
-    varmap.vol_std = {'std_vol'};
-    varmap.vol_titre_std = {'standard_titre'};
-    varmap.fix_temp = {'fixing_temp'};
-    varmap.oxy_bottle = {'bottle no'};
-    varmap.date_titre = {'dnum'};
-    varmap.bot_vol_tfix = {'botvol_at_tfix'};
-end
-opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt %edit map for renaming variables
-[ds_oxy, ~] = var_renamer(data, varmap);
+varmap.vol_blank = {'blank_titre'};
+varmap.vol_std = {'std_vol'};
+varmap.vol_titre_std = {'standard_titre'};
+varmap.fix_temp = {'fixing_temp'};
+varmap.oxy_bottle = {'bottle no'};
+varmap.date_titre = {'dnum'};
+varmap.bot_vol_tfix = {'botvol_at_tfix'};
+opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt %edit map for renaming variables, and flag whether to calculate conc_o2
+[ds_oxy, ~] = var_renamer(ds_oxy, varmap);
 %statnum, sampnum, and remove extra lines
 ds_oxy = fill_samdata_statnum(ds_oxy,'statnum');
 ds_oxy.sampnum = ds_oxy.statnum*100 + ds_oxy.position;
 m = isnan(ds_oxy.sampnum); ds_oxy(m,:) = [];
+%create flags if necessary, then make sure they match available data
+ds_oxy_fn = ds_oxy.Properties.VariableNames;
+if sum(strcmp('flag',ds_oxy_fn))==0
+    ds_oxy.flag = NaN+zeros(size(ds_oxy.sampnum));
+end
 
 if calcoxy
     %parse, for instance combining duplicates, or getting information from header
     cellT = 25; %default
     ds_oxy(isnan(ds_oxy.position),:) = [];
-    if ~exist('fillstat','var')
-        if sum(isnan(ds_oxy.statnum))>0
-            fillstat = 1; %fill in station numbers on some rows
-        else
-            fillstat = 0;
-        end
-    end
 
     %check units
     clear oxyunits
@@ -86,29 +82,12 @@ if calcoxy
         [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
     end
 
-    %compute or fill some fields
-    if fillstat
-        ds_oxy = fill_samdata_statnum(ds_oxy,'statnum');
-    end
-    if sum(strcmp('sampnum',ds_oxy_fn))==0
-        ds_oxy.sampnum = 100*ds_oxy.statnum + ds_oxy.position;
-    else
-        if sum(strcmp('statnum',ds_oxy_fn))==0
-            ds_oxy.statnum = floor(ds_oxy.sampnum/100);
-        end
-        if sum(strcmp('position',ds_oxy_fn))==0
-            ds_oxy.position = ds_oxy.sampnum - ds_oxy.statnum*100;
-        end
-    end
-
-    %create flags if necessary, then make sure they match available data
+    %fill in flags to be consistent 
+    ds_oxy_fn = ds_oxy.Properties.VariableNames;
     if sum(strcmp('sample_titre',ds_oxy_fn))
         dname = 'sample_titre';
     else
         dname = 'conc_o2';
-    end
-    if sum(strcmp('flag',ds_oxy_fn))==0
-        ds_oxy.flag = NaN+zeros(size(ds_oxy.sampnum));
     end
     ds_oxy.flag(ds_oxy.flag<=0) = NaN;
     bd = isnan(ds_oxy.(dname));
@@ -233,10 +212,10 @@ if check_oxy
             [~,~,iis] = intersect(d.sampnum(ii),ds.sampnum,'stable');
             disp('some replicates differ')
             if isfield(d,'botoxyc_per_l')
-                disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), botoxyc (umol/L), Niskin, flags'])
+                disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), botoxyc (umol/L), Niskin, flag a, flag b, flag c'])
                 [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.botoxyc_per_l(ii), d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii), d.botoxyc_flag(ii)]
             else
-                disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), Niskin, flags'])
+                disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), Niskin, flag a, flag b'])
                 [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii)]
             end
             disp('enter to continue'); pause
