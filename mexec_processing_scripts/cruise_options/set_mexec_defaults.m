@@ -147,6 +147,9 @@ switch opt1
                     uo = rmfield(uo,'calstr'); %no default, must be set by opt_{cruise}
                     %see opt_sd025 for examples
                 end
+            case 'uway_av'
+                avocn.len = 60; %average ocean variables over 60 s
+                avocn.method = 'medbin'; %take median in bins of this length
         end
 
     case 'check_sams'

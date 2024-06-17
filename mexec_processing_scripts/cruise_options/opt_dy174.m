@@ -176,6 +176,8 @@ switch opt1
             case 'bathy_grid'
                 %load gridded bathymetry data into xbathy, ybathy, zbathy
                 %to use as background for editing plot
+            case 'tsg_bot_comp'
+                usecal = 1;
         end
 
     case 'check_sams'

@@ -68,11 +68,13 @@ for no = 1:2:length(varargin)
 end
 if ~exist('colors','var')
     colors = [1 0 0; 1 .5 0; 0 .5 0; 0 1 1; 0 0 1; .5 0 .5];
+    colornames = {'red';'orange';'green';'teal';'blue';'purple'};
 end
 nc = size(colors,1); if nc==1; nc = length(colors); end
 if ~exist('markers','var')
     markers = [repmat({'o'},nc,1); repmat({'<'},nc,1); repmat({'.'},nc,1)];
     colors = [colors; colors; colors];
+    colornames = [colornames; colornames; colornames];
 end
 if ~exist('lines','var')
     lines = repmat({'-'},nc*3,1);
@@ -106,7 +108,7 @@ for gno = 1:length(xgroups)
 
         disp('use figure buttons to zoom and pan, then select variable to edit from:')
         for no = 1:nl
-            disp([num2str(no) ': ' fn{no} ' (' markers{no} ')'])
+            disp([num2str(no) ': ' fn{no} ' (' markers{no} ', ' colornames{no} ')'])
         end
         edno = input('or enter to quit/step through to next indices without (more) edits\n','s');
         if isempty(edno)
@@ -114,7 +116,7 @@ for gno = 1:length(xgroups)
             done = 1; continue %go on to next loop
         else
             edno = str2double(edno);
-            if isempty(edno) %it was some other string
+            if isempty(edno) || isnan(edno) %it was some other string
                 cont = 'e';
                 continue %try again, same loop because done hasn't been reset
             end
@@ -129,7 +131,7 @@ for gno = 1:length(xgroups)
         bad = d0(edno).(xvar)>=x(1) & d0(edno).(xvar)<=x(2) & d0(edno).(fn{edno})>=y(1) & d0(edno).(fn{edno})<=y(2);
         if sum(bad)
             hle = plot(d0(edno).(xvar)(bad),d0(edno).(fn{edno})(bad),'p','color',[.5 .5 .5]);
-            confirm = input('delete selected points (y/n)?\n','s');
+            confirm = input(['delete ' num2str(sum(bad)) ' selected points (y/n)?\n'],'s');
             if ~strcmp(confirm,'y')
                 bad = 0;
             end

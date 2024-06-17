@@ -70,7 +70,7 @@ for fno = 1:length(edfiles)
 end
 
 if ~exist('donan','var')
-    error('mplxyed files found but no recognised edits')
+    error('mplxyed files matching %s found, but no recognised edits',edfilepat)
 end
 
 %apply edits

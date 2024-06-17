@@ -38,12 +38,12 @@ end
 otfile = fullfile(root_dir1,['surf_combined_' mcruise '.nc']);
 ncfile.name = otfile; %for adding attributes and renaming variables
 
-avocn = 60; %average tsg etc. data over 60 s
-opt1 = 'uway_proc'; opt2 = 'avtime'; get_cropt
-tave_period = round(avocn)/86400; % seconds --> days
-tav2 = round(tave_period/2);
+opt1 = 'uway_proc'; opt2 = 'uway_av'; get_cropt
+tave_period = round(avocn.len)/86400; % seconds --> days
+tav2 = round(avocn.len/2)/86400;
 
-%first figure out time grid, and whether there is an _edt file
+%first figure out time grid, and whether there is an _edt file to start
+%from
 tmin = inf; tmax = -inf;
 %decimal days
 to = ['days since ' datestr([MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 1 0 0 0],'yyyy-mm-dd HH:MM:SS')];
@@ -94,7 +94,7 @@ for fno = 1:length(files)
     opts.grid_extrap = [1 1];
     opts.postfill = 30;
     opts.bin_partial = 0;
-    dg = grid_profile(d, 'time', tg, 'medbin', opts);
+    dg = grid_profile(d, 'time', tg, avocn.method, opts);
     dg.time = .5*(tg(1:end-1)+tg(2:end))'; %need regular time for merging, grid_profile outputs median
 
     %metadata, rename, and save
@@ -215,9 +215,10 @@ if check_tsg
     d0 = rmfield(d0,[h.fldnam(m) vr]);
     fn = fieldnames(d0);
     edfile = fullfile(root_dir1,'editlogs',tsgpre);
+    [d0, ~] = apply_guiedits(d0, 'time', [edfile '*'], 0, tav2);
     bads = gui_editpoints(d0,'time','edfilepat',edfile,'xgroups',iis_all);
     if ~isempty(bads) %new edits to apply
-        [d, ~] = apply_guiedits(d, 'time', [edfile '*']);
+        [d, ~] = apply_guiedits(d, 'time', [edfile '*'], 0, tav2);
         mfsave(otfile, d, h)
     end
 end

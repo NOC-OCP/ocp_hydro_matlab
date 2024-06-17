@@ -2,6 +2,7 @@
 % 
 % choose calibrated or uncalibrated data for comparison
 
+m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; % cruise name (from MEXEC_G global)
 
 comp2ctd = true ; % false %true % set to false if you don't want to compare to CTD data
@@ -17,7 +18,7 @@ if comp2ctd==true
 end 
 
 if ~exist('usecal','var'); usecal = 0; end
-opt1 = mfilename; opt2 = 'tsg_usecal'; get_cropt; % mfilename = name of current file
+opt1 = 'uway_proc'; opt2 = 'tsg_bot_comp'; get_cropt; % mfilename = name of current file
 usecallocal = usecal; clear usecal 
 
 opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
@@ -26,7 +27,7 @@ prefix = tsgpre; % prefix for tsg data
 if ~exist('tsgfn','var')
     tsgfn = fullfile(mgetdir(tsgpre),[tsgpre '_' mcruise '_01']);
 end
-if usecallocal
+if usecallocal && exist([tsgfn '_cal.nc'],'file')
     tsgfn = [tsgfn '_cal'];
 end
 
@@ -147,7 +148,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
     clear sdiffsm
     sc1 = 0.5; sc2 = 0.02;
     opt1 = mfilename; opt2 = 'tsg_sdiff'; get_cropt
-    if exist('sc1') & exist('sc2') & ~exist('sdiffsm')
+    if ~isempty(sc1) && ~isempty(sc2) && ~exist('sdiffsm','var')
         sdiffsm = filter_bak(ones(1,21),sdiff); % first filter
         sdiff(abs(sdiff-sdiffsm) > sc1) = NaN;
         sdiffsm = filter_bak(ones(1,21),sdiff); % harsh filter to determine smooth adjustment
@@ -168,16 +169,25 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
 end
 
 % plot TSG and bottle data
+ut = ht.fldunt(strcmp(ht.fldnam,'time'));
+ub = hb.fldunt(strcmp(hb.fldnam,'time'));
+if ~isempty(ht.data_time_origin)
+    ut = [ut ' since ' datestr(ht.data_time_origin,'yyyy-mm-dd HH:MM:SS')];
+    ub = [ub ' since ' datestr(hb.data_time_origin,'yyyy-mm-dd HH:MM:SS')];
+end
+uo = ['days since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)];
+dt.time = m_commontime(dt,'time',ut,uo);
+db.time = m_commontime(db,'time',ub,uo);
 figure(1); clf
 subplot(nsp,1,1)
 hl = plot(dt.time, tsal, db.time, db.salinity, '.y', db.time, db.salinity_adj, 'o', db.time, tsals, '<'); grid
 legend(hl([1 3 4]), 'TSG','bottle','TSG')
-ylabel('Salinity (psu)'); xlabel('yearday, noon on 1 Jan = 1.5')
+ylabel('Salinity (psu)'); xlabel(uo)
 title([calstr ' TSG'])
 xlim(dt.time([1 end]))
 subplot(nsp,1,2)
 plot(db.time, sdiffall, 'r+-',t_all+1, sdiffsm,' kx-'); grid ; hold on ; 
-ylabel([calstr ' bottle - TSG (psu)']); xlabel('yearday, noon on 1 Jan = 1.5')
+ylabel([calstr ' bottle - TSG (psu)']); xlabel(uo)
 xlim(dt.time([1 end]))
 ylim([-.02 .06])
 if nsp==4
