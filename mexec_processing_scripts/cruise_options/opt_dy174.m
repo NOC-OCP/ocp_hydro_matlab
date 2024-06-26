@@ -78,9 +78,9 @@ switch opt1
                     9000 3000
                     ];
             case 'ctd_cals'
-                co.docal.temp = 1;
-                co.docal.cond = 1;
-                co.docal.oxygen = 1;
+                co.docal.temp = 0;
+                co.docal.cond = 0;
+                co.docal.oxygen = 0;
                 co.calstr.temp.sn034383.dy174 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[-15 -15]/1e4,d0.press);';
                 co.calstr.temp.sn034383.msg = 'temp s/n 4383 adjusted by -1.5 mdeg to agree with SBE35; median of depths > 2500 dbar on stations 1 to 10';
                 co.calstr.temp.sn035780.dy174 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[15 15]/1e4,d0.press);';
