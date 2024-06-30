@@ -167,7 +167,7 @@ switch opt1
         switch opt2
             case 'excludestreams'
                 uway_excludes = [uway_excludes;'autosal';'ranger2usbl2'];
-            case 'tsg_avedits'
+            case 'tsg_avedits' 
                 check_tsg = 1;
             case 'tsg_cals'
                 clear uo

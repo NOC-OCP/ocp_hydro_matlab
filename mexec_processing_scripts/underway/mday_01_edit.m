@@ -29,6 +29,7 @@ if ~isempty(days)
     d = table2struct(d(m,:),'ToScalar',true);
 end
 if isempty(d.time)
+    disp('none of specified days in file %s; skipping',infile)
     return
 end
 
@@ -83,7 +84,13 @@ if ~isempty(comment)
 end
 
 % adjust: cruise-specific calibrations
-if ismember(abbrev,{'tsg' 'ocl' 'surfmet' 'thermosalinograph' 'thermosalinograph_seabird'})
+if ismember(abbrev,{'sbe45' 'tsg' 'ocl' 'surfmet' 'thermosalinograph' 'thermosalinograph_seabird'}) %***replace this with call to shortname-data type lookup
+    if isfield(d,'cond_raw') && isfield(d,'salinity_raw')
+        d.salinity_raw(isnan(d.cond_raw)) = NaN;
+    end
+    if isfield(d,'temp_housing_raw') && isfield(d,'salinity_raw') %***same comment as above
+        d.salinity_raw(isnan(d.temp_housing_raw)) = NaN;
+    end
     opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
     cpstr = '';
     if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))

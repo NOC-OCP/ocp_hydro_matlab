@@ -31,14 +31,11 @@ uway_set_streams
 combvars = {}; %***
 opt1 = 'uway_proc'; opt2 = 'comb_uvars'; get_cropt 
 
-for sno = 1:length(shortnames)
-    udirs{sno} = fullfile(MEXEC_G.mexec_data_root,udirs{sno});
-end
-
+%load raw data from RVDAS/SCS/TECHSAS
 loadstatus = zeros(1,length(shortnames));
 for daynumber = days
     for sno = 1:length(shortnames)
-        ls = mday_00_load(streamnames{sno}, shortnames{sno}, udirs{sno}, daynumber, year);
+        ls = mday_00_load(streamnames{sno}, shortnames{sno}, fullfile(MEXEC_G.mexec_data_root,udirs{sno}), daynumber, year);
         loadstatus(sno) = loadstatus(sno) + ls;
     end
     disp(['loaded day ' num2str(daynumber)]); pause(0.1)
@@ -46,7 +43,7 @@ end
 
 %apply additional processing and cleaning to data
 for sno = 1:length(shortnames)
-    mday_01_edit(udirs{sno}, shortnames{sno}, days)
+    mday_01_edit(fullfile(MEXEC_G.mexec_data_root,udirs{sno}), shortnames{sno}, days)
     disp(['edited ' shortnames{sno}])
 end
 

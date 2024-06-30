@@ -16,30 +16,35 @@ function varargout = m_setup(varargin)
 %    these may be useful if you want to reprocess an old cruise's data with
 %    a newer branch's software.  
 %      MSCRIPT_CRUISE_STRING (e.g. 'jc238')
-%      MDEFAULT_DATA_TIME_ORIGIN (e.g. [2022 1 1 0 0 0] -- but note that
-%        changing this mid-processing, or between processing and reading
-%        data, causes problems, so it should only be used to match the
-%        MSCRIPT_CRUISE_STRING you are supplying)
+%      MDEFAULT_DATA_TIME_ORIGIN (e.g. [2022 1 1 0 0 0]) -- but note this
+%        is only necessary if reprocessing a cruise from before 2022
 %      SITE_suf (e.g. 'atsea' or 'atnoc' to make SITE 'jc238_atsea' etc.)
 %      other_programs_root (e.g. '~/programs/others/')
 %      mexec_data_root (e.g. '~/cruises/jc238/mcruise/data/')
-%      read_underway (1) to set up underway data directories and test
-%        database access -- set to 0 if not on ship
-%      quiet (0 to make all programs verbose, 1 to make only
-%        mexec_processing_scripts verbose but file_tools/mexec quiet, 2 to
-%        make all quiet)
-%      ix_ladcp (1 to add LDEO IX LADCP processing scripts to path; 0 to
-%      not add them -- you can set this per cruise but if you want to
-%      process mooring data using rodb tools [as for RAPID and OSNAP] this
-%      should be set to 0 for the Matlab session, as some scripts in the
-%      two toolboxes have the same names)
+%      raw_underway (1) to set up underway data directories and test
+%        database access -- set to 0 if not on ship unless a backup is
+%        available*** -- not necessary if only reading in mexec-processed
+%        underway data (e.g. plotting TSG data that has already been saved
+%        in mstar files)
+%      quiet (2) 0 to make both mexec_processing_scripts and
+%        file_tools/mexec programs verbose, 1 to make only
+%        mexec_processing_scripts verbose, 2 to minimise intermediate
+%        output to screen 
+%      ix_ladcp (no default) 1 to add LDEO IX LADCP processing scripts to
+%        path; 0 to not add them -- this is to avoid interference between
+%        scripts with the same names (e.g. 'julian.m') in different
+%        toolboxes -- for example, ix_ladcp should be set to 0 for any 
+%        Matlab session where you want to process moored data using rodb
+%        tools (as for RAPID and OSNAP/m_moorproc_toolbox)
 %
 %  optional output path_choose specifies whether LADCP programs have been
 %    added to the path or not
 %
-%  note: if you only want to use mexec tools to read/parse mexec-format
-%    files (e.g. use mload or mloadq, m_commontime or timeunits_mstar_cf),
-%    it is not necessary to run m_setup
+%  note: m_setup is not necessary if you only want to use mexec tools to
+%    read/parse mexec-format files (e.g. use mload or mloadq, m_commontime
+%    or timeunits_mstar_cf); if not reading in raw data/writing
+%    mexec-processed files, simply add ocp_hydro_matlab and its
+%    subdirectories to your path 
 %
 
 clear MEXEC_G
@@ -53,7 +58,7 @@ force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for
 MEXEC_G.other_programs_root = '/data/pstar/programs/others/'; 
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-MEXEC_G.read_underway = 1; %if 0, skip the rvdas setup
+MEXEC_G.raw_underway = 1; %if 0, skip the rvdas setup
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
@@ -224,7 +229,7 @@ switch MEXEC_G.Mship
 end
 
 
-if MEXEC_G.read_underway %***still need to configure where directories are for some applications***
+if MEXEC_G.raw_underway %***still need to configure where directories are for some applications***
 if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
     try
         def = mrdefine('this_cruise');
