@@ -50,6 +50,10 @@ switch opt1
                 if ~exist(blinfile,'file')
                     blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dT.bl', upper(mcruise),stn));
                 end
+            case 'rawedit_auto'
+                if stnlocal==35
+                    co.rangelim.press = [-1 8000];
+                end
         end
 
     case 'ladcp_proc'
