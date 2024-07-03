@@ -211,8 +211,8 @@ rms_res = sqrt(sum(sdiff(~isnan(sdiff)).^2)/sum(~isnan(sdiff)))
 
 if ~usecallocal
     disp(['choose a constant or simple time-dependent correction for TSG, add to '])
-    disp(['mstg_medav_clean_cal:tsgcals case in opt_cruise'])
-    disp(['(you can set it so it uses the smooth function shown here)'])
+    disp(['uway_proc, tsg_cals case in opt_cruise (to be applied to _raw variable(s))'])
+    disp(['(or set it so it uses the smooth function shown here)'])
 end
 
 

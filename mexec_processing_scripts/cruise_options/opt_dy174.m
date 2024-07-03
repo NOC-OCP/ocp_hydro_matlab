@@ -172,7 +172,7 @@ switch opt1
             case 'tsg_cals'
                 clear uo
                 uo.docal.salinity = 1;
-                uo.calstr.salinity.pl.dy174 = 'dcal.salinity = d0.salinity - 0.028;'; % single offset from 20 bottle samples over 5 days for the whole of the short cruise
+                uo.calstr.salinity.pl.dy174 = 'dcal.salinity_raw = d0.salinity_raw - 0.028;'; % single offset from 20 bottle samples over 5 days for the whole of the short cruise
             case 'bathy_grid'
                 %load gridded bathymetry data into xbathy, ybathy, zbathy
                 %to use as background for editing plot

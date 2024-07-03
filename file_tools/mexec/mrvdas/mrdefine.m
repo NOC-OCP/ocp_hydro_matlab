@@ -30,7 +30,6 @@ function d = mrdefine(varargin)
 %              tablemap: {26x2 cell}
 %          renametables: [1x1 struct]
 %     renametables_list: {16x1 cell}
-%               rawlist: {6x1 cell}
 %
 % d.mrtables: a structure with one field for each table in rvdas that we 
 %    are interested in, defined in mrtables_from_json. This is a subset of
@@ -56,10 +55,6 @@ function d = mrdefine(varargin)
 %    }
 % d.renametables_list: A list of any tables in rvdas that will have some
 %    variables renamed. Equivalent to (fieldnames(d.renametables))
-% d.rawlist: A list of tables, in a cell array ,that will have names changed to _raw when
-%    rvdas data are read in. Defined in mrmakeraw.m. This is because we
-%    expect some variables in these files to be modified in postprocessing
-%    and we want to be able to identify raw data.
 %
 % calls mrtables_from_json, mrnames, mrrename_varunits
 %
@@ -115,7 +110,7 @@ end
 % get a list of variables for which we want to change names when loaded
 % into mexec, and a list of tables whose variables should have _raw
 % appended
-[d.renametables, d.rawlist] = mrrename_varsunits(d.mrtables, 'q'); % any argument suppresses listing to screen
+d.renametables = mrrename_varsunits(d.mrtables, 'q'); % any argument suppresses listing to screen
 d.renametables_list = fieldnames(d.renametables);
 
 

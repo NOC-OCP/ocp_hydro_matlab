@@ -1,5 +1,5 @@
-function [rtables,rawlist] = mrrename_varsunits(tables,varargin)
-% function [renametables,rawlist] = mrrename_varsunits(tables)
+function rtables = mrrename_varsunits(tables,varargin)
+% function renametables = mrrename_varsunits(tables)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -13,15 +13,15 @@ function [rtables,rawlist] = mrrename_varsunits(tables,varargin)
 % (not read in). 
 %
 % The list in this script could be moved elsewhere, but is unlikely to
-%   change much from crusie to cruise. It may be added to from time to
-%   time.
+%   change much from cruise to cruise. It may be added to from time to
+%   time. ***or put in cropt?***
 %
 % At the end of the function, ensures that all new variable names are
 %   lowercase, regardless of what has been entered row by row.
 %
 % Examples
 %
-%   [renametables,renametables_list] = mrrename_varsunits;
+%   renametables = mrrename_varsunits;
 %
 % Input:
 %   tables, the output of mrtables_from_json
@@ -30,9 +30,6 @@ function [rtables,rawlist] = mrrename_varsunits(tables,varargin)
 %
 % renametables. A structure which is a set of rvdas table names and variables that will be
 % renamed in mrload after reading into matlab and before writing to mexec.
-%
-% renamtables_list. A cell array of rvdas tables that will have some renaming done.
-%   rename_tables_list = fieldnames(renametables);
 %
 % Examples of fields for renaming
 %    renametables.ships_gyro_hehdt = {'headingTrue'  'degrees'  'heading' 'degrees'}
@@ -121,48 +118,4 @@ for no = 1:length(fn)
 
 end
 %***lower case units?
-
-rawlist = {
-    %     'ships_gyro_hehdt'
-    %     'nmf_winch_winch'
-    %     'posmv_gyro_gphdt'
-    %     'posmv_att_pashr'
-    %     'posmv_pos_gpgga'
-    %     'posmv_pos_gpvtg'
-    'surfmet_gpxsm'
-    %'nmf_surfmet_gpxsm'
-    %'windsonic_nmea_iimwv'
-    %     'cnav_gps_gngga'
-    %     'cnav_gps_gnvtg'
-    %     'cnav_gps_gngsa'
-    %     'dps116_gps_gpgga'
-    %     'em120_depth_kidpt'
-    %'em640_sddbs'
-    %'em122_kidpt'
-    %'em600_depth_sddbs'
-    %     'env_temp_wimta'
-    %     'env_temp_wimhu'
-    %     'ranger2_usbl_gpgga'
-    'sbe45_nanan'
-    %'sbe45_tsg_nanan'
-    %     'seapath_pos_ingga'
-    %     'seapath_pos_ingsa'
-    %     'seapath_pos_invtg'
-    %     'seapath_att_psxn23'
-    %'ships_chernikeef_vmvbw'
-    %'ships_skipperlog_vdvbw'
-    'slog_chernikeef_vmvbw'
-    %     'u12_at1m_uw'
-    %     'seaspy_mag_inmag'
-    };
-
-%         if strcmp(MEXEC_G.MSCRIPT_CRUISE_STRING,{'jc211' 'dy146'})
-%             nn.em120.new = {'swath_depth'}; nn.em120.old = {'waterdepth'};
-%             nn.ea600.new = {'depth_uncor'}; nn.ea600.old = {'waterdepth'};
-%             nn.multib.new = {'swath_depth'}; nn.multib.old = {'waterdepth'};
-%             nn.singleb.new = {'depth_uncor'}; nn.singleb.old = {'waterdepth'};
-%         end %after this, apply transducer offset and correction at once in mday_01_cordep
-% 
-%         nn.surfmet.old = {'windspeed_raw';'winddirection_raw'}; nn.surfmet.new = {'relwind_spd_raw';'relwind_dirship_raw'};
-%         nu.surfmet.name = {'relwind_dirship'}; nu.surfmet.unit = {'degrees relative to ship 0 = from bow'};
 

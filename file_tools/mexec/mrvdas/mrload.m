@@ -1,5 +1,5 @@
 function [dd,varnames,varunits] = mrload(varargin)
-% function [dd,varnames,varunits] = mrload(table,dv1,dv2,qflag,varlist)
+% function [dd,varnames,varunits] = mrload(rtable,dv1,dv2,qflag,varlist)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -52,10 +52,10 @@ function [dd,varnames,varunits] = mrload(varargin)
 m_common
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-table = argot.table;
+rtable = argot.table;
 qflag = argot.qflag;
 def = mrdefine('this_cruise');
-if isempty(table)
+if isempty(rtable)
     disp(def.tablemap)
     error('none of the input arguments matches an rvdas table name or its mexec short equivalent; try again with a table from either column of the list above')
 end
@@ -82,130 +82,56 @@ dv1 = datevec(datenum(dv1)); % this will convert a datenum to a datevec if it is
 dv2 = datevec(datenum(dv2));
 
 % sort out the table name
-table = mrresolve_table(table); % table is now an RVDAS table name for sure.
+rtable = mrresolve_table(rtable); % table is now an RVDAS table name for sure.
 tablemap = def.tablemap;
-ktable = strcmp(table,tablemap(:,2));
+ktable = strcmp(rtable,tablemap(:,2));
 mtable = tablemap{ktable,1}; % mtable is the mexec tablename
 
 %get command
-[sqlcom, units] = mr_make_psql(table,dv1,dv2,varstring); % it should be fine if varstring is empty
+[sqlcom, units] = mr_make_psql(rtable,dv1,dv2,varstring); % it should be fine if varstring is empty
 
 %now run
 [fnin, ~, ~] = mr_try_psql(sqlcom);
 
 clear ds dd 
-ds = dataset('file',fnin,'delimiter',',');
+ds = readtable(fnin,'Delimiter',',');
 
-names = ds.Properties.VarNames(:); 
-
-% now fix variable names in the dataset, so variables have the correct names
-% when moved to a structure.
-
-if ~isempty(find(strcmp(table,def.renametables_list), 1)) % some vars to be renamed for this table
-    rlist = def.renametables.(table); % rlist now has the list of renaming to be done
-    for kl = 1:size(rlist,1)
-        nold = rlist{kl,1};
-        uold = rlist{kl,2};
-        nnew = rlist{kl,3};
-        unew = rlist{kl,4};
-        kvar = find(strcmpi(nold,names));
-        if ~isempty(kvar) % This renaming variable hasn't been read in
-            ds.Properties.VarNames{kvar} = nnew;
-            names{kvar} = nnew;
-            if isempty(unew); unew = ' '; end
-            units{kvar} = unew;
-        end
-    end
+% now fix variable names in the table, as well as the units array
+names = ds.Properties.VariableNames;
+if ~isempty(find(strcmp(rtable,def.renametables_list), 1)) % some vars to be renamed for this table
+    rlist = def.renametables.(rtable)(:)'; % rlist now has the list of renaming to be done
+    [~,ia,ib] = intersect(names,rlist(1,:),'stable');
+    %***check for units matching rlist(2,:)?
+    names(ia) = rlist(2,ib);
+    units(ia) = rlist(4,ib);
 end
-
-
-% now fix variable names for variables that will be named raw
-
-if ~isempty(find(strcmp(table,def.rawlist), 1)) % this table has all variabls renamed raw
-    nvars = size(ds,2);
-    for kv = 2:nvars % no need to rename time, which is always first
-        dsname = [ds.Properties.VarNames{kv} '_raw'];
-        ds.Properties.VarNames{kv} = dsname;
-    end
-    names = ds.Properties.VarNames; 
-    names = names(:);
-end
-
-names(1) = []; % variable 1 is always time
-units(1) = [];
-
 % make all variable names lowercase in mexec
-ds.Properties.VarNames = lower(ds.Properties.VarNames);
 names = lower(names);
+% make all empty units ' '
+m = cellfun('isempty', units);
+units{m} = ' ';
 
-
-for kl = 1:length(names)
-    dd.(names{kl}) = ds.(names{kl}); % convert to structure; time is always present; extract it separately.
-end
-
-
-ts = ds.time;% This is massively faster if we extract ts, and don't access ds.time inside the loop
-
-if numel(ts) == 0
-    dd.dnum = nan(size(ts));
+%switch time to datenum
+if numel(ds.time) == 0
+    ds.dnum = nan(size(ds.time));
 else
-    dd.dnum = mrconverttime(ts);
+    ds.dnum = mrconverttime(ds.time);
 end
+names{1} = 'dnum';
+units{1} = 'days since 0000-00-00 00:00:00';
 
-
-names = [names; {'dnum'}];
-units = [units; {'days since 0000-00-00 00:00:00'}];
-
-
+%reassign names to ds
+ds.Properties.VariableNames = names;
 
 % now check for lat and lon that need to be converted from ddmm.mmm to
 % decimal degrees
 % Any variables requiring this conversion should have been renamed to
 % variable name latdegm, londegm. 
-% strncmp compares first 7 characters in case raw has been added.
+[ds, names, units] = lldegm_fix(ds, names, units, 'lat');
+[ds, names, units] = lldegm_fix(ds, names, units, 'lon');
 
-klat1 = find(strncmp('latdegm',names,7));
-klat2 = find(strncmp('latdir',names,6));
-if ~isempty(klat1) && ~isempty(klat2) % latitude variables found
-    lat1 = dd.(names{klat1});
-    lath = dd.(names{klat2});
-    deg = floor(lat1/100);
-    min = lat1-100*deg;
-
-    klats = strcmpi('s',lath);
-
-    dd.latitude = deg+min/60;
-    dd.latitude(klats) = -dd.latitude(klats);
-    names = [names;{'latitude'}];
-    units = [units;{'decimaldegrees'}];
-    dd = rmfield(dd,names{klat1});
-    dd = rmfield(dd,names{klat2});
-    names([klat1 klat2]) = [];
-    units([klat1 klat2]) = [];
-
-end
-
-klon1 = find(strncmp('londegm',names,7));
-klon2 = find(strncmp('londir',names,6));
-if ~isempty(klon1) && ~isempty(klon2) % longitude variables found
-    lon1 = dd.(names{klon1}); % use dynamic field names
-    lonh = dd.(names{klon2});
-    deg = floor(lon1/100);
-    min = lon1-100*deg;
-
-    klons = strcmpi('w',lonh);
-
-    dd.longitude = deg+min/60;
-    dd.longitude(klons) = -dd.longitude(klons);
-    names = [names;{'longitude'}];
-    units = [units;{'decimaldegrees'}];
-    dd = rmfield(dd,names{klon1});
-    dd = rmfield(dd,names{klon2});
-    names([klon1 klon2]) = [];
-    units([klon1 klon2]) = [];
-
-end
-
+%convert to structure
+dd = table2struct(ds);
 
 if isempty(qflag)
     fprintf(MEXEC_A.Mfidterm,'%d %s%s%s\n',length(fieldnames(dd)),' vars loaded from ''',mtable,''' including time');
@@ -217,9 +143,9 @@ if isempty(qflag)
     end
 end
 
+%delete temporary .csv file
 delete(fnin);
 
-clear ds
 
 switch nargout
     case 3
@@ -231,7 +157,35 @@ switch nargout
 end
 
 
-return
+function [data, names, units] = lldegm_fix(data, names, units, pre)
+%fix lat or lon that were read in as deg.minutes
+
+v1 = [pre 'degm'];
+v2 = [pre 'dir'];
+k1 = find(strncmp(v1,names,length(v1)));
+k2 = find(strncmp(v2,names,length(v2)));
+if ~isempty(k1) && ~isempty(k2) %found londegm and londir, or latdegm and latdir
+    l1 = data(:,k1);
+    lh = data(:,k2);
+    deg = floor(data(:,k1)/100);
+    mins = data(:,k1) - deg*100;
+    data = [data deg + mins/60];
+    mn = strcmpi('s',lh) | strcmpi('w',lh);
+    data(mn,end) = -data(mn,end);
+end
+if strncmp(pre,'lat',3)
+    names = [names 'latitude'];
+else
+    names = [names 'longitude'];
+end
+units = [units 'decimaldegrees'];
+data.Properties.VariableNames = names;
+ii = [k1 k2];
+data(:,ii) = [];
+names(ii) = [];
+units(ii) = [];
+
+
 
 
 

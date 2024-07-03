@@ -34,6 +34,7 @@ if isempty(d.time)
 end
 
 otfile = fullfile(rootdir, sprintf('%s_%s_all_edt.nc',abbrev,mcruise));
+[~,streamtype] = fileparts(fileparts(rootdir)); %2nd to last subdirectory indicates data type
 didedits = 0;
 
 %apply automatic edits (e.g. bad time ranges), as set in opt_cruise
@@ -46,8 +47,7 @@ if ~isempty(comment)
 end
 
 %reapply hand edits
-fp = rootdir;%fileparts(rootdir); %all but the last level
-edfilepat = fullfile(fp,'editlogs',sprintf('%s_*',abbrev));
+edfilepat = fullfile(rootdir,'editlogs',sprintf('%s_*',abbrev));
 [d, comment] = apply_guiedits(d, 'time', edfilepat);
 if ~isempty(comment)
     h.comment = [h.comment comment];
@@ -75,7 +75,7 @@ if ~isempty(comment)
     h.comment = [h.comment comment];
     didedits = 1;
 end
-if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb' 'em122' 'multib'}))
+if strcmp(streamtype,'bathy')
     [d, h, comment] = mday_01_cordep(d, h, abbrev); %apply transducer offset and carter table soundspeed correction, go from depth_uncor to depth
 end
 if ~isempty(comment)
@@ -84,7 +84,7 @@ if ~isempty(comment)
 end
 
 % adjust: cruise-specific calibrations
-if ismember(abbrev,{'sbe45' 'tsg' 'ocl' 'surfmet' 'thermosalinograph' 'thermosalinograph_seabird'}) %***replace this with call to shortname-data type lookup
+if strcmp(streamtype, 'met')
     if isfield(d,'cond_raw') && isfield(d,'salinity_raw')
         d.salinity_raw(isnan(d.cond_raw)) = NaN;
     end
