@@ -29,7 +29,7 @@ if ~isfield(MEXEC_G,'RVDAS_checked') || ~MEXEC_G.RVDAS_checked
         error('your ~/.pgpass file is not found or has group or world access;\n %s','try (in shell): chmod 0600 ~/.pgpass');
     end
     
-    fid = fopen('~/.pgpass','r');
+    fid = fopen('~/.pgpass','rw');
     MEXEC_G.RVDAS_checked = 0;
     while fid>0
         tline = fgetl(fid);
@@ -38,6 +38,10 @@ if ~isfield(MEXEC_G,'RVDAS_checked') || ~MEXEC_G.RVDAS_checked
         elseif contains(tline,RVDAS.machine) && contains(tline,RVDAS.database(2:end-1)) && contains(tline,RVDAS.user)
             MEXEC_G.RVDAS_checked = 1;
             fclose(fid); fid = -2;
+%         else
+%             opt1 = ''
+%             fidp = fopen(fullfile(MEXEC_G.))
+%             opt1 = 
         end
     end
     if ~MEXEC_G.RVDAS_checked
