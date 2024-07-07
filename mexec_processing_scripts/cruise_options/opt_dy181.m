@@ -4,6 +4,9 @@ switch opt1
         switch opt2
             case 'time_origin'
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2024 1 1 0 0 0];
+            case 'setup_datatypes'
+                use_ix_ladcp = 'query';
+
         end
 
     case 'ship'
@@ -13,11 +16,9 @@ switch opt1
                 default_hedstream = 'posmv_pashr';
                 default_attstream = 'posmv_pashr';
             case 'rvdas_database'
-                RVDAS.machine = '10';%192.168.65.51';
                 %RVDAS.jsondir = '/data/pstar/mounts/mnt_cruise_data/Ship_Systems/Data/RVDAS/Sensorfiles/'; %original
-                RVDAS.user = 'rvdas';
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-                RVDAS.pgpasswhere = '/data/pstar/';
+                RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr';
         end
 
     case 'uway_proc'
@@ -28,9 +29,9 @@ switch opt1
     case 'castpars'
         switch opt2
             case 's_choice'
-                s_choice = 2; %fin sensor
+                s_choice = 1; %fin sensor
             case 'o_choice'
-                o_choice = 2; %fin sensor
+                o_choice = 1; %fin sensor
 
         end
 
@@ -41,7 +42,7 @@ switch opt1
             case 'cnvfilename'
                 cnvfile = fullfile(cdir,sprintf('%s_CTD%03d.cnv',upper(mcruise),stn)); %try stainless first
             case 'blfilename'
-                blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dS.bl', upper(mcruise), stn));
+                blinfile = fullfile(root_botraw,sprintf('%s_CTD%03d.bl', upper(mcruise), stn));
             case 'rawedit_auto'
         end
 

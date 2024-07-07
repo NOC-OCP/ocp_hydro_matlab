@@ -13,6 +13,7 @@ if ~exist(d,'dir')
     mkdir(d)
 end
 nc_create_empty(ncfile.name,'nc_clobber');
+system(['chmod 664 ' ncfile.name])    
 
 hdef = m_default_attributes;
 

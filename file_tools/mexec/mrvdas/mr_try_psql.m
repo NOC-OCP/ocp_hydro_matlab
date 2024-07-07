@@ -11,42 +11,64 @@ function [csvname, result, psql_string] = mr_try_psql(sqltext)
 m_common
 opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
 
-%if we haven't checked before in this session, first see if we're connected to
-%the database, and if we have a .pgpass file with the correct permissions
-%and entries 
-if ~isfield(MEXEC_G,'RVDAS_checked') || ~MEXEC_G.RVDAS_checked
+%if we haven't checked before in this session, first see if we have the
+%credentials, either in ~/.pgpass (with correct, user-only permissions) or
+%in another (shared) file specified in opt_cruise 
+if ~isfield(MEXEC_G,'RVDAS_checked') || isempty(MEXEC_G.RVDAS_checked)
 
-    [stat, ~] = system(['ping ' RVDAS.machine ' -c 1']);
-    if stat~=0
-        [stat, ~] = system(['ping ' RVDAS.machine ' -c 10']);
+    hasc = 0;
+    
+    %file with postgresql:// address(es)
+    if isfield(RVDAS,'loginfile') && exist(RVDAS.loginfile,'file')
+        fid = fopen(RVDAS.loginfile,'r');
+        c = textscan(fid,'%s\n'); c = c{1};
+        fclose(fid);
+        while hasc==0 && ~isempty(c)
+            if contains(c{1},RVDAS.database(2:end-1)) && contains(c{1},'postgresql')
+                hasc = 1; MEXEC_G.RVDAS_checked = c{1};
+                ii1 = findstr(c{1},'@');
+                ii2 = [findstr(c{1},':') findstr(c{1},'/')];
+                ii2 = ii2(ii2>ii1); ii2 = min(ii2);
+                RVDAS.machine = c{1}(ii1+1:ii2-1);
+            else
+                c(1) = [];
+            end
+        end
+    end
+
+    %user's .pgpass
+    if ~hasc
+        if isfield(RVDAS,'machine') && isfield(RVDAS,'user')
+            [stat, result] = system('ls -l ~/.pgpass');
+            if stat==0 && strcmp(result(5:10),'------')
+                fid = fopen('~/.pgpass','r');
+                while fid>0
+                    tline = fgetl(fid);
+                    if isempty(tline)
+                        fclose(fid); fid = -2;
+                    elseif contains(tline,RVDAS.machine) && contains(tline,RVDAS.database(2:end-1)) && contains(tline,RVDAS.user)
+                        MEXEC_G.RVDAS_checked = 1;
+                        fclose(fid); fid = -2;
+                    end
+                end
+            end
+        end
+    end
+
+    if ~isfield(MEXEC_G,'RVDAS_checked') || isempty(MEXEC_G.RVDAS_checked)
+        error('found no credentials for RVDAS server for this cruise')
+    else
+        %try connecting
+        [stat, ~] = system(['ping ' RVDAS.machine ' -c 1']);
         if stat~=0
-            error('%s not responding, cannot access RVDAS database', RVDAS.machine);
+            [stat, ~] = system(['ping ' RVDAS.machine ' -c 10']);
+            if stat~=0
+                MEXEC_G.RVDAS_checked = 0;
+                error('%s not responding, cannot access RVDAS database', RVDAS.machine);
+            end
         end
     end
-    
-    [stat, result] = system('ls -l ~/.pgpass');
-    if stat~=0 || ~strcmp(result(5:10),'------')
-        error('your ~/.pgpass file is not found or has group or world access;\n %s','try (in shell): chmod 0600 ~/.pgpass');
-    end
-    
-    fid = fopen('~/.pgpass','rw');
-    MEXEC_G.RVDAS_checked = 0;
-    while fid>0
-        tline = fgetl(fid);
-        if isempty(tline)
-            fclose(fid); fid = -2;
-        elseif contains(tline,RVDAS.machine) && contains(tline,RVDAS.database(2:end-1)) && contains(tline,RVDAS.user)
-            MEXEC_G.RVDAS_checked = 1;
-            fclose(fid); fid = -2;
-%         else
-%             opt1 = ''
-%             fidp = fopen(fullfile(MEXEC_G.))
-%             opt1 = 
-        end
-    end
-    if ~MEXEC_G.RVDAS_checked
-        error('your ~/.pgpass file does not appear to contain an entry with the correct\n%s\n%s','machine, database, and/or user','(format should be: machine:port:database:user:password)');
-    end
+
 end
         
 %now construct the string and try first without then with changes to
@@ -56,7 +78,11 @@ if ismac
 else
     RVDAS.psql_path = ''; %'/usr/bin/' but on linux matlab finds it on path on its own
 end
-sqlroot = [RVDAS.psql_path 'psql -h ' RVDAS.machine ' -U ' RVDAS.user ' -d ' RVDAS.database];
+if isnumeric(MEXEC_G.RVDAS_checked)
+    sqlroot = [RVDAS.psql_path 'psql -h ' RVDAS.machine ' -U ' RVDAS.user ' -d ' RVDAS.database];
+else
+    sqlroot = [RVDAS.psql_path 'psql ' MEXEC_G.RVDAS_checked];
+end
 csvname = fullfile(RVDAS.csvroot, ['table_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 psql_string = [sqlroot ' -c ' sqltext csvname];
 if ~contains(psql_string,'\dt') && ~contains(psql_string,'\dv')
@@ -75,3 +101,5 @@ end
 if stat~=0
     error('failed at executing\n %s\n does your ~/.pgpass contain the correct machine:port:database:user:password?', psql_string);
 end
+
+function check_rvdas

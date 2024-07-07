@@ -3,20 +3,24 @@ mctd_04(stn);
 
 try
     mwin_01(stn);
+    win = 1;
 catch me
     warning('could not extract winch data')
     warning(me.message)
+    win = 0;
 end
 
 %bottle firing data into .fir file
 mfir_03(stn)
 mfir_03_extra(stn)
 %add winch data
-try
-    mwin_to_fir(stn)
-catch me
-    warning('no winch data added to fir file')
-    warning(me.message)
+if win
+    try
+        mwin_to_fir(stn)
+    catch me
+        warning('no winch data added to fir file')
+        warning(me.message)
+    end
 end
 
 %add to sam file

@@ -250,7 +250,9 @@ comment = '';
 
 %convert from depth relative to transducer (if necessary)
 ii = find(strcmpi('transduceroffset',h.fldnam) | strcmpi('xduceroffset',h.fldnam) | strcmpi('xducer_offset',h.fldnam) | strcmpi('transducer_offset',h.fldnam));
-if ~isempty(ii) && ~sum(strcmpi('waterdepth',h.fldnam))
+if find(strcmpi('waterdepthmetrefromsurface',h.fldnam))
+    d.waterdepth = d.waterdepthmetrefromsurface;
+elseif ~isempty(ii) && ~sum(strcmpi('waterdepth',h.fldnam))
     d.waterdepth = d.waterdepthmetre + d.transduceroffset; %***
     %d.waterdepth = d.depth_below_xducer + d.(h.fldnam{ii});
     h.fldnam = [h.fldnam 'waterdepth'];
@@ -275,8 +277,10 @@ if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb' 'ea640'}))
         lat = interp1(dn.time, lat, d.time);
 
     else
-        warning(['no pos file for day ' day_string ' found, using current position to select carter area for echosounder correction'])
-        if strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
+       warning('no pos file for day with %d found, using current position to select carter area for echosounder correction',floor(d.time(1)))
+    if strcmp(MEXEC_G.Mshipdatasystem, 'rvdas')
+        pos = mrlast(navname); lon = pos.longitude; lat = pos.latitude; clear pos
+    elseif strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
             pos = mtlast(navname); lon = pos.long; lat = pos.lat; clear pos
         elseif strcmp(MEXEC_G.Mshipdatasystem, 'scs')
             pos = mslast(navname); lon = pos.long; lat = pos.lat; clear pos

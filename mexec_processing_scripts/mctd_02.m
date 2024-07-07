@@ -109,7 +109,7 @@ if co.redoctm
     for no = 1:size(oxyvars,1)
         d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+oxy_align);
     end
-    h.comment = [h.comment '\n oxygen shifted by ' oxy_align ' s'];
+    h.comment = [h.comment '\n oxygen shifted by ' num2str(oxy_align) ' s'];
     didedits = 1;
 end
 

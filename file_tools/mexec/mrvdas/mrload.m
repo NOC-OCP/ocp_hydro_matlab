@@ -56,8 +56,14 @@ rtable = argot.table;
 qflag = argot.qflag;
 def = mrdefine('this_cruise');
 if isempty(rtable)
-    disp(def.tablemap)
-    error('none of the input arguments matches an rvdas table name or its mexec short equivalent; try again with a table from either column of the list above')
+    disp(def.tablemap(:,2))
+    varargin = [varargin input('which rvdas data stream (from list above)?  ','s')];
+    %now check it
+    argot = mrparseargs(varargin);
+    rtable = argot.table;
+    if isempty(rtable)
+        error('still no match to rvdas data stream')
+    end
 end
 
 if length(argot.otherstrings) < 1
@@ -98,18 +104,21 @@ ds = readtable(fnin,'Delimiter',',');
 
 % now fix variable names in the table, as well as the units array
 names = ds.Properties.VariableNames;
+units = repmat({' '},size(names));
 if ~isempty(find(strcmp(rtable,def.renametables_list), 1)) % some vars to be renamed for this table
-    rlist = def.renametables.(rtable)(:)'; % rlist now has the list of renaming to be done
+    rlist = def.renametables.(rtable)'; % rlist now has the list of renaming to be done
     [~,ia,ib] = intersect(names,rlist(1,:),'stable');
     %***check for units matching rlist(2,:)?
-    names(ia) = rlist(2,ib);
+    names(ia) = rlist(3,ib);
     units(ia) = rlist(4,ib);
 end
 % make all variable names lowercase in mexec
 names = lower(names);
 % make all empty units ' '
 m = cellfun('isempty', units);
-units{m} = ' ';
+if sum(m)
+    units{m} = ' ';
+end
 
 %switch time to datenum
 if numel(ds.time) == 0
@@ -117,8 +126,9 @@ if numel(ds.time) == 0
 else
     ds.dnum = mrconverttime(ds.time);
 end
-names{1} = 'dnum';
-units{1} = 'days since 0000-00-00 00:00:00';
+l = length(names);
+names(l+1) = {'dnum'};
+units(l+1) = {'days since 0000-00-00 00:00:00'};
 
 %reassign names to ds
 ds.Properties.VariableNames = names;
@@ -131,16 +141,23 @@ ds.Properties.VariableNames = names;
 [ds, names, units] = lldegm_fix(ds, names, units, 'lon');
 
 %convert to structure
-dd = table2struct(ds);
+dd = table2struct(ds,'ToScalar',true);
+dd = rmfield(dd,'time');
+[names,ii] = setdiff(names,'time');
+units = units(ii);
+
 
 if isempty(qflag)
     fprintf(MEXEC_A.Mfidterm,'%d %s%s%s\n',length(fieldnames(dd)),' vars loaded from ''',mtable,''' including time');
     numdc = size(ds,1);
     if numdc > 0
-        fprintf(MEXEC_A.Mfidterm,'%d %s %s %s %s\n',size(ds,1),' data cycles loaded from ',datestr(dd.dnum(1),'yyyy-mm-dd HH:MM:SS'), ' to ',datestr(dd.dnum(end),'yyyy-mm-dd HH:MM:SS'));
+        d1 = dd.dnum(1); d2 = dd.dnum(end);
     else
-        fprintf(MEXEC_A.Mfidterm,'%d %s %s %s %s\n',size(ds,1),' data cycles loaded from ',datestr(dv1,'yyyy-mm-dd HH:MM:SS'), ' to ',datestr(dv2,'yyyy-mm-dd HH:MM:SS'));
+        d1 = dv1; d2 = dv2;
     end
+    d1 = datestr(d1,'yyyy-mm-dd HH:MM:SS');
+    d2 = datestr(d2,'yyyy-mm-dd HH:MM:SS');
+    fprintf(MEXEC_A.Mfidterm,'%d data cycles loaded from %s to %s\n',size(ds,1),d1,d2);
 end
 
 %delete temporary .csv file
@@ -149,11 +166,11 @@ delete(fnin);
 
 switch nargout
     case 3
-        varnames = names;
-        varunits = units;
+        varnames = names';
+        varunits = units';
     otherwise % unless exactly 3 output arguments are specified, add the names and units to the structure
-        dd.varnames = names;
-        dd.varunits = units;
+        dd.varnames = names';
+        dd.varunits = units';
 end
 
 
@@ -172,18 +189,18 @@ if ~isempty(k1) && ~isempty(k2) %found londegm and londir, or latdegm and latdir
     data = [data deg + mins/60];
     mn = strcmpi('s',lh) | strcmpi('w',lh);
     data(mn,end) = -data(mn,end);
+    if strncmp(pre,'lat',3)
+        names = [names 'latitude'];
+    else
+        names = [names 'longitude'];
+    end
+    units = [units 'decimaldegrees'];
+    data.Properties.VariableNames = names;
+    ii = [k1 k2];
+    data(:,ii) = [];
+    names(ii) = [];
+    units(ii) = [];
 end
-if strncmp(pre,'lat',3)
-    names = [names 'latitude'];
-else
-    names = [names 'longitude'];
-end
-units = [units 'decimaldegrees'];
-data.Properties.VariableNames = names;
-ii = [k1 k2];
-data(:,ii) = [];
-names(ii) = [];
-units(ii) = [];
 
 
 

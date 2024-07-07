@@ -15,14 +15,10 @@ end
 % ncfile.name = m_add_nc(ncfile.name);
 ncfile = m_resolve_filename(ncfile);
 
-e = exist(ncfile.name);
-
-if (e == 7)
+if exist(ncfile.name,'dir')
     errstr0 = sprintf('\n%s',['You appear to be trying to create a file with name ' ncfile.name ' but a directory of that name already exists']);
     error(errstr0);
-end
-
-if (e == 2)
+elseif exist(ncfile.name,'file')
     ncfile = m_ismstar(ncfile); % exit if not mstar file
     ncfile = m_exitifopen(ncfile); % exit if write flag set
 end
