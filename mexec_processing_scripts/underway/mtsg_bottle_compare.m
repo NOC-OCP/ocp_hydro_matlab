@@ -160,7 +160,7 @@ for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then t
         t = t_all; 
         if ~usecallocal
 %             t = db.time-1; 
-            save(fullfile(root_tsg, 'sdiffsm'), 't', 'sdiffsm'); 
+            save(fullfile(root_tsg,'sdiffsm'), 't', 'sdiffsm'); mfixperms(fullfile(root_tsg,'sdiffsm'));
         end
     else
         warning(['sdiffsm not set; check opt_' mcruise])

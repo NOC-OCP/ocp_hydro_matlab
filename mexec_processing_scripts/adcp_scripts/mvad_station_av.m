@@ -113,7 +113,7 @@ else
     ha.comment = [h.comment sprintf('\n averaged over %s to %s from %s',sstart,send,listfile)];
 end
 %check dims
-mfsave(avfile,da,ha);
+mfsave(avfile,da,ha); 
 
 opt1 = 'mstar'; get_cropt
 if docf
@@ -136,5 +136,6 @@ if ~isempty(root_ladcp) && sum(mt)>1
         v_sadcp = d.vabs(:,mt)/100;
     end
     z_sadcp   = d.depth(:,1);
-    save(fullfile(root_ladcp, 'SADCP', [inst '_' mcruise '_' stn_string '_forladcp']), 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp');
+    fname = fullfile(root_ladcp, 'SADCP', [inst '_' mcruise '_' stn_string '_forladcp']);
+    save(fname, 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp'); mfixperms(fname);
 end

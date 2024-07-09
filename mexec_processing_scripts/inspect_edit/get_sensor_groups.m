@@ -87,7 +87,7 @@ sng = orderfields(sng);
 readme = {'sg has lists of stations and serial numbers for each sensor-position (e.g. temp1, cond1, temp2);'
     'sng has lists of stations and sensor-positions for each serial number';
     'sn_list has lists of serial numbers for each sensor (e.g. temp)'};
-save(sgfile,'sg','sng','sn_list','readme')
+save(sgfile,'sg','sng','sn_list','readme'); mfixperms(sgfile);
 
 %now save to sam file
 samfile = fullfile(mgetdir('sam'),['sam_' mcruise '_all']);

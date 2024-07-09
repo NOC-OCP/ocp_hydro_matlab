@@ -137,7 +137,7 @@ if ~exist('reloadc','var'); reloadc = 1; end
 if reloadc
     if isempty(file_listc); error('no ctd files'); end
     load_cdata
-    save(otfile, 'cdata');
+    save(otfile, 'cdata'); mfixperms(otfile);
     reloads = 1; %if ctd data reloaded, also reload sample data, because ctd data used to mask
 else
     load(otfile, 'cdata');
@@ -165,4 +165,4 @@ mgrid.cruise = cruise;
 mgrid.section = info.section;
 mgrid = maphsec(cdata, sdata, mgrid);
 readme = [readme; readme_g{:}];
-save(otfileg, 'cdata', 'sdata', 'mgrid', 'info', 'readme');
+save(otfileg, 'cdata', 'sdata', 'mgrid', 'info', 'readme'); mfixperms(otfileg);

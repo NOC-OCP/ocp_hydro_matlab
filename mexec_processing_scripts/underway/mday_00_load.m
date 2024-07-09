@@ -28,7 +28,7 @@ if contains(mstarprefix,'not_rvdas')
 end
 % make output directory if it doesn't exist
 if exist(root_out,'dir') ~= 7
-    mkdir(root_out)
+    mkdir(root_out); mfixperms(root_out, 'dir');
 end
 
 dataname = [mstarprefix '_' mcruise '_all'];

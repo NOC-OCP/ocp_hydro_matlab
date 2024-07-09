@@ -53,29 +53,11 @@ for kproc = [1 2 3 4 5 6 7]
 
 
 
-        fid = fopen(fnsed,'a');
-
-        %     vnames = {
-        %         'GPS-Furuno-GGA-lat'
-        %         'GPS-Furuno-GGA-lon'
-        %         'GPS-Furuno-GGA-time'
-        %         };
-        %     vunits = {
-        %         'degrees'
-        %         'degrees'
-        %         'HHMMSS'
-        %         };
-        % cmd = ['cat /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs/scs_daily/TSG1-SBE21*.ACO >! /local/users/pstar/projects/rpdmoc/en705/mcruise/data/scs_sed/TSG1-SBE21.ACO']; [status,result ] = system(cmd);
-
-        %     nv = length(vnames);
-        %
-        %     time_all = nan(1,nlines);
-        %     data_all = nan(nv,nlines);
-
+        fid = fopen(fnsed,'a'); mfixperms(fnsed);
         if ~exist(fndone,'file')
-            fid_done = fopen(fndone,'w');
+            fid_done = fopen(fndone,'w'); mfixperms(fndone);
             fprintf(fid_done,'%s\n','zblank,0');
-            fclose(fid_done);
+            fclose(fid_done); mfixperms(fndone);
         end
         fid_done = fopen(fndone,'r');
         % read in the done files so far
@@ -220,7 +202,7 @@ for kproc = [1 2 3 4 5 6 7]
 
         end
 
-        fclose(fid);
+        fclose(fid); mfixperms(fnsed);
         %
         % fprintf(1,'%s\n','Writing mat');
         %
@@ -234,13 +216,13 @@ for kproc = [1 2 3 4 5 6 7]
             done(kfile,:) = nowdone;
         end
 
-        fid_done = fopen(fndone,'w');
+        fid_done = fopen(fndone,'w'); mfixperms(fndone);
         [~,ksort] = sort(done(:,1));
         done = done(ksort,:);
         for knum = 1:size(done,1)
             fprintf(fid_done,'%s%s%s\n',done{knum,1},',',done{knum,2});
         end
-        fclose(fid_done);
+        fclose(fid_done); mfixperms(fndone);
 
     end
 

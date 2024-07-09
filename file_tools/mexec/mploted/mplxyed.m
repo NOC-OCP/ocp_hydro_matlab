@@ -106,15 +106,15 @@ while ok == 0
     m = 'which action ? ';
     m1 = 's : select data cycles';
     m2 = 'w : plot with selected data cycles removed';
-    m3 = 'o : plot with original data';
+    m3 = 'o : plot with original data (undoes w)';
     m4 = 'a : zoom but make ''auto'' tick values ';
-    m5 = 'z : zoom to exact area chosen with cursor';
+    m5 = 'z : zoom to exact area to be chosen with cursor';
     m6 = 'l : list selected data';
-    m7 = 'e : edit selected data to NaN';
+    m7 = 'e : edit selected data to NaN (in data file)';
     m8 = 'q : quit';
     m9 = 'r : refresh';
-    m10 = 'f : replot with first pdf'; % bak on jc032 insert new option
-    m11 = 'b : go back to previous pdf'; % bak on jc032 new option
+    m10 = 'f : replot with original view'; % bak on jc032 insert new option
+    m11 = 'b : go back to previous view'; % bak on jc032 new option
     fprintf(MEXEC_A.Mfidterm,'%s\n',m,m1,m6,m2,m3,m4,m5,m10,m11,m7,m9,m8); % bak on jc032 inster new option
     var = m_getinput(' ','s');
 
@@ -237,10 +237,10 @@ if kedit > 0
     mess_5 = ['ot_dataname : ' hist.dataname];
     mess_6 = ['ot_version  : ' sprintf('%d',hist.version)];
 
-    fid = fopen(editfn,'w');
+    fid = fopen(editfn,'w'); mfixperms(editfn);
     fprintf(fid,'%s\n',editfn,mess_1,mess_2,mess_3,mess_4,mess_5,mess_6,vnam);
     fprintf(fid,'%d\n',kedits);
-    fclose(fid);
+    fclose(fid); mfixperms(editfn);
     MEXEC_A.MARGS_OT = {'edit variable' vnam [sprintf('%d',length(kedits)) ' data cycles'] 'recorded in file' editfn};
     m_write_history;
     MEXEC_A.MARGS_OT = motsave;

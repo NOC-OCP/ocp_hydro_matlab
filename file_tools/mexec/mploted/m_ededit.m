@@ -7,7 +7,7 @@ if ~exist('kfind','var')
     return
 else
     subindex = kfind{vared}(:)';
-    if length(subindex) == 0
+    if isempty(subindex)
         m = 'No data cycles selected to edit';
         m1 = 'Select some data first with option s';
         fprintf(MEXEC_A.Mfider,'%s\n',m,m1)
@@ -15,7 +15,7 @@ else
     end
 end
 
-if kedit == 0;
+if kedit == 0
     % first time in edit case
     kedit = 1; % set a flag to show that some editing has been done
     ncf = m_openio(pdfot.ncfile); % set write flag

@@ -39,7 +39,15 @@ infileu = fullfile(cfg.rawdir,cfg.uppat);
 dopause = 0;
 stn = stnlocal;
 
-%find out which raw files we have
+% first sync (if lad_syncscript found)
+if isfield(MEXEC_G,'mexec_shell_scripts')
+    css = fullfile(MEXEC_G.mexec_shell_scripts,'lad_syncscript');
+    if exist(css,'file')
+        system(css);
+    end
+end
+
+% find out which raw files we have
 if isul
     if isempty(dir(infileu))
         warning('opt_%s says there should be an uplooker but file\n %s\n not found; maybe not yet synced?',mcruise,infileu)

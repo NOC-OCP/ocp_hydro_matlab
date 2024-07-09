@@ -146,12 +146,12 @@ sdata.vars = sam_gridlist(mv);
 sdata.unts = h.fldunt(ia);
 
 if strcmp(section,'ungridded') %this is just a way to compile some or all of the stations into a .mat file
-    save(otfile,'cdata','sdata')
+    save(otfile,'cdata','sdata'); mfixperms(otfile);
 else
     %run the gridding
     mgrid = maphsec(cdata, sdata, mgrid);
 
     %save
     readme = 'gridded using maphsec calling map_as_mstar';
-    save(otfile, 'cdata', 'sdata', 'mgrid', 'readme');
+    save(otfile, 'cdata', 'sdata', 'mgrid', 'readme'); mfixperms(otfile);
 end

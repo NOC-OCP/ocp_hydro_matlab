@@ -75,7 +75,7 @@ if ~isempty(klist)
 
     %write
     basedir = fullfile(mgetdir('sum'),[expocode '_ct1']);
-    if ~exist(basedir,'dir'); mkdir(basedir); end
+    if ~exist(basedir,'dir'); mkdir(basedir); mfixperms(basedir, 'dir'); end
     out.csvpre = fullfile(basedir, sprintf('%s_00',expocode));
     mout_csv(in, out);
 end

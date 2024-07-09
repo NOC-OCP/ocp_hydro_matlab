@@ -13,8 +13,9 @@ m_common
 
 ii = find(strcmp(M_ABBREV, MEXEC_G.MDIRLIST(:,1)) | strcmp(['M_' upper(M_ABBREV)], MEXEC_G.MDIRLIST(:,1)));
 if length(ii)>1
-    warning([M_ABBREV ' set ' num2str(length(ii)) ' times in m_setup'])
+    warning('%s set %d times in m_setup', M_ABBREV, length(ii))
 elseif isempty(ii)
+    warning('%s not set in m_setup, using default mexec_data_root', M_ABBREV)
     mpath = MEXEC_G.mexec_data_root;
     return
 end

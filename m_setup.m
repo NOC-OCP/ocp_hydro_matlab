@@ -53,6 +53,7 @@ global MEXEC_G
 %defaults: what are we processing and where? 
 MEXEC_G.MSCRIPT_CRUISE_STRING='dy181';
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
+MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.mexec_data_root = '/data/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.other_programs_root = '/data/pstar/programs/others/'; 
@@ -288,7 +289,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
     housekeeping_version = fullfile(housekeeping_root, 'version');
     if ~exist(housekeeping_version,'dir')
         disp('making directory for tracking Mstar .nc data file versions')
-        mkdir(housekeeping_version);
+        mkdir(housekeeping_version); mfixperms(housekeeping_version, 'dir');
     end
     version_file_name = ['mstar_versionfile_' MEXEC_G.SITE '.mat'];  % This setting should not normally be changed
     MEXEC_G.VERSION_FILE = fullfile(housekeeping_version, version_file_name);
@@ -298,8 +299,8 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
         disp('Version file does not seem to exist; will create version file and version lock file')
         datanames = {};
         versions = [];
-        save(MEXEC_G.VERSION_FILE,'datanames','versions');
-        [us,~] = system(['touch ' MEXEC.simplelockfile]);
+        save(MEXEC_G.VERSION_FILE,'datanames','versions'); mfixperms(MEXEC_G.VERSION_FILE);
+        [us,~] = system(['touch ' MEXEC.simplelockfile]); mfixperms(MEXEC.simplelockfile);
         if us == 0 && exist(MEXEC.simplelockfile,'file') == 2 % seems to be a successful create of lock file
             m = 'Version lock file touched successfully';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m)
@@ -357,6 +358,6 @@ end
 MEXEC_G.HISTORY_DIRECTORY = fullfile(housekeeping_root, 'history');
 if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     disp('history directory does not seem to exist; will create it');
-    mkdir(MEXEC_G.HISTORY_DIRECTORY);
+    mkdir(MEXEC_G.HISTORY_DIRECTORY); mfixperms(MEXEC_G.HISTORY_DIRECTORY,'dir');
 end
 

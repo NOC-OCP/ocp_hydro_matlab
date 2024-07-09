@@ -237,7 +237,7 @@ ds.time_end = m_commontime(ds.time_end,timestring,'datenum');
 stnall = unique(ds.statnum);
 
 stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.csv']);
-fid = fopen(stnlistname,'w');
+fid = fopen(stnlistname,'w'); mfixperms(stnlistname);
 
 % list headings
 for cno = 1:length(vars)
@@ -291,7 +291,7 @@ for k = 1:length(stnall)
 
 end
 
-fclose(fid);
+fclose(fid); mfixperms(stnlistname);
 
 function svar = special_print(ds,vars,cno,k)
 switch vars{cno,1}

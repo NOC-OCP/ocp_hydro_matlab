@@ -69,13 +69,12 @@ kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
 cfg.stnstr = stn_string;
 opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
-fid = fopen(cfg.f.ctd,'w');
+fid = fopen(cfg.f.ctd,'w'); mfixperms(cfg.f.ctd);
 %fprintf(fid,'%s\n',ctdh);
 for kl = 1:length(kok)
    fprintf(fid,'%12.7f %8.2f %8.4f %8.4f %11.6f %10.6f\n', dd.yearday(kok(kl)), dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)));
 end
-fclose(fid);
-
+fclose(fid); mfixperms(cfg.f.ctd);
 
 if 0 %***should this be a cruise-specific option whether uh processing is used?
     %%%%%%%%% write nav data only %%%%%%%%%
@@ -130,6 +129,7 @@ sm = [t1 lon1 lat1];
 
 pre = mgetdir('ladcp');
 d = dir(fullfile(pre, 'uh', 'raw'));
-save(fullfile(pre, 'uh', 'raw', [d(end).name '/gps/sm']), 'sm')
+fname = fullfile(pre, 'uh', 'raw', d(end).name, 'gps', 'sm', 'sm');
+save(fname); mfixperms(fname);
 
 end

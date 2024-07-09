@@ -303,7 +303,7 @@ for kloop = klist
     else
         outfile = sprintf('%s.csv',out.csvpre);
     end
-    fid = fopen(outfile,'w');
+    fid = fopen(outfile,'w'); mfixperms(outfile);
     
     %write header
     if isfield(out,'header')
@@ -349,7 +349,7 @@ for kloop = klist
     if isw
         fprintf(fid, '%s', 'END_DATA');
     end
-    fclose(fid);
+    fclose(fid); mfixperms(outfile);
     
     status = 1;
     

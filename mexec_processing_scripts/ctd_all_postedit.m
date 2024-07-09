@@ -22,10 +22,10 @@ for kloop = klistl
     stn = kloop; mctd_04(stn);
     
     if MEXEC_G.ix_ladcp
-        mout_1hzasc(stnlocal);
+        mout_1hzasc(stn);
     end
     
-    infile2 = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
+    infile2 = fullfile(root_ctd, sprintf('fir_%s_%03d',mcruise,stn));
     if exist(m_add_nc(infile2),'file') ~= 2
         warning('File %s not found, skipping',m_add_nc(infile2))
         continue
@@ -35,7 +35,7 @@ for kloop = klistl
     stn = kloop; mfir_to_sam(stn);
 
     %calculate and apply depths
-    station_summary(stnlocal)
+    station_summary(stn)
 %     stn = stnlocal; mdep_01
     
 end

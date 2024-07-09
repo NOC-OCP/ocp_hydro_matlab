@@ -25,7 +25,7 @@ else
 end
 
 
-fid = fopen(outfile,'w');
+fid = fopen(outfile,'w'); mfixperms(outfile);
 
 if fid==-1
   error(['the file cannot be opened: ' outfile])
@@ -61,7 +61,7 @@ for i = 1:size(data,1)
 end
 
 
-out = fclose(fid);
+out = fclose(fid); mfixperms(outfile);
 if out==-1
   error(['could not properly close the file: ' outfile])
 end

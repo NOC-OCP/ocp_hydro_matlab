@@ -48,7 +48,7 @@ vunits = vnames;
 m = ['Generating var name translation table for stream ' tstream];
 fprintf(MEXEC_A.Mfidterm,'%s\n',m);
 
-fid = fopen(fntemplate,'w');
+fid = fopen(fntemplate,'w'); mfixperms(fntemplate);
 
 for kloop = 1:numdatavars % parse the names and units
     vcell = varcells{kloop};
@@ -70,4 +70,4 @@ for kloop = 1:numdatavars % parse the names and units
     fprintf(fid,'%s,%s,%s\n',oldname,newname,newunits);
 end
 
-fclose(fid);
+fclose(fid); mfixperms(fntemplate);

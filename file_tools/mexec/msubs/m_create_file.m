@@ -12,8 +12,7 @@ if ~exist(d,'dir')
     warning('creating directory %s',d)
     mkdir(d)
 end
-nc_create_empty(ncfile.name,'nc_clobber');
-system(['chmod 664 ' ncfile.name])    
+nc_create_empty(ncfile.name,'nc_clobber'); mfixperms(ncfile.name);
 
 hdef = m_default_attributes;
 

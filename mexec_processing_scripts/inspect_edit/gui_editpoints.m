@@ -166,12 +166,12 @@ elseif ~isempty(bads) && exist('edfilepat','var') && ~strcmp(cont,'q')
     fname = [edfilepat '_' datestr(now,'yyyymmdd_HHMMSS')];
     fp = fileparts(fname); if ~exist(fp,'dir'); mkdir(fp); end
     fnb = fieldnames(bads);
-    fid = fopen(fname,'w');
+    fid = fopen(fname,'w'); mfixperms(fname);
     fprintf(fid,'gui_editpoints with indepvar %s\n',xvar);
     for no = 1:length(fnb)
         fprintf(fid,'%s\n',fnb{no});
         fprintf(fid,'%f\n',bads.(fnb{no})(:));
     end
-    fclose(fid);
+    fclose(fid); mfixperms(fname);
 end
 

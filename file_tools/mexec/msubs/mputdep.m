@@ -27,18 +27,18 @@ globatt = metadata.Attribute;
 
 
 
-for k = 1:length(globatt);
+for k = 1:length(globatt)
     gattname = globatt(k).Name;
     if strcmp(gattname,'water_depth_metres'); olddep = globatt(k).Value; end
 end
 
 
-cmd = ['!ls -ld ' filename]; perm = evalc(cmd);
-readonly = 0;
-if ~strcmp(perm(3),'w')
-    readonly = 1;
-    cmd = ['!chmod 644 ' filename]; eval(cmd);
-end
+%cmd = ['!ls -ld ' filename]; perm = evalc(cmd);
+%readonly = 0;
+%if ~strcmp(perm(3),'w')
+%    readonly = 1;
+%    cmd = ['!chmod 644 ' filename]; eval(cmd);
+%end
 
 
 depstr = sprintf('%10.3f',depth);
@@ -69,6 +69,6 @@ MEXEC_A.MARGS_IN = {
 mheadr
 %--------------------------------
 
-if readonly == 1
-    cmd = ['!chmod 444 ' filename]; eval(cmd);
-end
+%if readonly == 1
+%    cmd = ['!chmod 444 ' filename]; eval(cmd);
+%end

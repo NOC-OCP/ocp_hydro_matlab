@@ -180,7 +180,7 @@ while 1 > 0
     end
     index = lwr:step:upr;
 
-    fidlist = fopen('mlist_out','w');
+    fidlist = fopen('mlist_out','w'); mfixperms('mlist_out');
 
     fprintf(fidlist,'%s\n',h1)
     fprintf(fidlist,'%s\n',hnames)

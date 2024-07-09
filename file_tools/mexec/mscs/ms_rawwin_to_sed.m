@@ -58,7 +58,7 @@ for kproc = 1
 
 
 
-        fid = fopen(fnsed,'a');
+        fid = fopen(fnsed,'a'); mfixperms(fnsed);
 
         %     vnames = {
         %         'GPS-Furuno-GGA-lat'
@@ -78,7 +78,7 @@ for kproc = 1
         %     data_all = nan(nv,nlines);
 
         if ~exist(fndone,'file')
-            fid_done = fopen(fndone,'w');
+            fid_done = fopen(fndone,'w'); mfixperms(fndone);
             fprintf(fid_done,'%s\n','zblank,0');
             fclose(fid_done);
         end
@@ -147,7 +147,7 @@ for kproc = 1
             done(kfile,:) = nowdone;
         end
 
-        fid_done = fopen(fndone,'w');
+        fid_done = fopen(fndone,'w'); mfixperms(fndone);
         [~,ksort] = sort(done(:,1));
         done = done(ksort,:);
         for knum = 1:size(done,1)

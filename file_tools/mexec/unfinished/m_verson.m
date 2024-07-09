@@ -66,7 +66,7 @@ if ~isnan(Mversionlock) % use lock file
     userlockfile = [MEXEC.simplelockfile '_' nowstr '_' userstr '_' randstr]; % this should be a unique string, including a time and a random number.
 
     while 1
-        [us, ur] = movefile(MEXEC.simplelockfile, userlockfile);
+        [us, ur] = movefile(MEXEC.simplelockfile, userlockfile); mfixperms(userlockfile);
         if us == 1 & exist(userlockfile,'file') == 2 % successful rename of lock file
             m = 'Version lock file moved to user lock file so version file is locked: OK';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m)
@@ -107,12 +107,12 @@ else
     new_version = increment+versions(index);
 end
 versions(index) = new_version;
-save(MEXEC.versfile,'datanames','versions');
+save(MEXEC.versfile,'datanames','versions'); mfixperms(MEXEC.versfile);
 if ~isnan(Mversionlock) % reset lock file
-    [us ur] = movefile(userlockfile, MEXEC.simplelockfile);
+    [us, ur] = movefile(userlockfile, MEXEC.simplelockfile); mfixperms(MEXEC.simplelockfile);
 
     while 1
-        if us == 1 & exist(MEXEC.simplelockfile,'file') == 2 & exist(userlockfile,'file') ~=2 % seems to be a successful rename of lock file
+        if us == 1 && exist(MEXEC.simplelockfile,'file') == 2 && exist(userlockfile,'file') ~=2 % seems to be a successful rename of lock file
             m = 'Version lock file restored to default so version file is unlocked: OK';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m);
             break

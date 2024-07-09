@@ -1,4 +1,4 @@
-function matlab_to_mstar
+function m_matlab_to_mstar
 
 % create mstar file containing vars that are the arguments of the function
 % first argument is filename, then list of vars

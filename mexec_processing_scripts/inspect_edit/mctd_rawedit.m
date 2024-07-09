@@ -25,14 +25,12 @@ infile = fullfile(root_ctd, [prefix1 '_raw.nc']);
 infiled = fullfile(root_ctd, [prefix2 '.nc']); % dcs file
 
 if ~exist(m_add_nc(otfile), 'file')
-    copyfile(m_add_nc(infile), m_add_nc(otfile));
+    copyfile(m_add_nc(infile), m_add_nc(otfile)); mfixperms(m_add_nc(otfile));
 end
-system(['chmod 644 ' m_add_nc(otfile)]);
 
 
 %only plot the good part of the cast, chosen in mdcs_03g (not the on-deck or soak periods)
 if ~exist(m_add_nc(infiled), 'file')
-    system(['chmod 444 ' m_add_nc(otfile)]);
     warning('dcs file required for GUI editing; quitting'); return
 else
     
@@ -43,7 +41,8 @@ else
     pshow0.startdc = datevec(dn_start);
     pshow0.stopdc = datevec(dn_end);
     pshow0.ncfile.name = otfile;
-    pshow0.xlist = 'time';
+    pshow0.xlist = 'time'; 
+    %***option to only plot some of these variables?***
     pshow0.ylist = ['temp1 temp2 cond1 cond2 press'];
     opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
     opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
@@ -73,7 +72,5 @@ else
         end
         
     end
-    
-    system(['chmod 444 ' m_add_nc(otfile)]);
     
 end

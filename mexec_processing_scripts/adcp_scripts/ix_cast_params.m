@@ -52,7 +52,7 @@ if ps.sadcpfac && isfield(cfg, 'SADCP_inst')
    subdir = [subdir '_' cfg.SADCP_inst];
 end
 if ~exist(subdir, 'dir')
-   mkdir(subdir);
+   mkdir(subdir); mfixperms(subdir, 'dir');
 end
 
 %transfer from cfg (but some fields of f and p may already have been set by

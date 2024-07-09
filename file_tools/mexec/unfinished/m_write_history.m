@@ -30,7 +30,7 @@ dnames_u = unique(dnames);
 for k = 1:length(dnames_u)
     % list all input and output filenames
     MEXEC_A.Mhistory_filename = fullfile(history_directory, dnames_u{k});
-    fid = fopen(MEXEC_A.Mhistory_filename,'a');
+    fid = fopen(MEXEC_A.Mhistory_filename,'a'); mfixperms(MEXEC_A.Mhistory_filename);
     nlines = 0;
     % BAK 13 Nov 2009: Write the calling tree for the program, so we can
     % see what script a program was called from as well as the program name
@@ -91,7 +91,7 @@ for k = 1:length(dnames_u)
     fprintf(fid,'%s\n',m); nlines = nlines+1;
 
 
-    fclose(fid);
+    fclose(fid); mfixperms(MEXEC_A.Mhistory_filename);
     
     % bak after jc032
     % when there are many different possible users of a file (instead of a

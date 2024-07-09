@@ -323,15 +323,15 @@ while 1
             plot(vanom(kg),potemp(kg),'g^','markersize',15);
             if strcmp(a, 'w') % also write to file
                 if exist(bdffile,'file')==2
-                    fid = fopen(bdffile, 'a');
+                    fid = fopen(bdffile, 'a'); mfixperms(bdffile);
                 else
-                    fid = fopen(bdffile, 'w');
+                    fid = fopen(bdffile, 'w'); mfixperms(bdffile);
                     fprintf(fid, '%s %s %s %s\n', 'flagname, sampnum, flag, nisk_flag');
                 end
                 for kl = 1:length(kg)
                     fprintf(fid, '%s, %d, %d, %d\n', varflagname, vsampnum(kg(kl)), vflag(kg(kl)), nflag(kg(kl)));
                 end
-                fclose(fid);
+                fclose(fid); mfixperms(bdffile);
                 disp(['now run checkbottles_02 to check against property gradients'])
                 disp(['and determine what the new flags should be; edit flags in opt_' mcruise])
             end

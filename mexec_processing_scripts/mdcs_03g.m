@@ -46,19 +46,29 @@ pw = .8;
 ph = .13;
 
 %initial estimates
-dd = mloadq(otfile, '/');
+[dd,hd] = mloadq(otfile, '/');
+opt1 = 'mstar'; get_cropt
 if isfield(dd, 'dc_start')
     k_start = dd.dc_start;
+    if docf
+        tun = hd.fldunt(strcmp('time_start',hd.fldnam));
+    end
 else
     k_start = NaN;
 end
 if isfield(dd, 'dc_bot')
     k_bot = dd.dc_bot;
+    if docf
+        tun = hd.fldunt(strcmp('time_bot',hd.fldnam));
+    end
 else
     k_bot = NaN;
 end
 if isfield(dd, 'dc_end')
     k_end = dd.dc_end;
+    if docf
+        tun = hd.fldunt(strcmp('time_end',hd.fldnam));
+    end
 else
     k_end = NaN;
 end
@@ -277,7 +287,11 @@ if exist('ds','var')
     hnew.fldunt(strncmp('dc',hnew.fldnam,2)) = {'number'};
     hnew.fldunt(strncmp('scan',hnew.fldnam,2)) = {'number'};
     hnew.fldunt(strncmp('press',hnew.fldnam,5)) = {'dbar'};
-    hnew.fldunt(strncmp('time',hnew.fldnam,4)) = {'seconds'};
+    if docf
+        hnew.fldunt(strncmp('time',hnew.fldnam,4)) = tun;
+    else
+        hnew.fldunt(strncmp('time',hnew.fldnam,4)) = {'seconds'};
+    end
     hnew.comment = 'automatically detected ';
     if isfield(ds,'dc_start'); hnew.comment = [hnew.comment 'start ']; end
     if isfield(ds,'dc_bot'); hnew.comment = [hnew.comment 'bottom ']; end

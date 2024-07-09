@@ -169,7 +169,7 @@ disp(p.software);			% show version
 if length(f.checkpoints) <= 1		% setup checkpointing
     error('Need to set f.checkpoints to write checkpoint files');
 end
-eval(sprintf('save %s_0.mat stn',f.checkpoints)); % sentinel
+save([f.checkpoints '_0.mat'],'stn'); mfixperms([f.checkpoints '_0.mat']); % sentinel
 
 last_checkpoint = pcs.begin_step - 1;	% find last valid checkpoint
 while ~exist(sprintf('%s_%d.mat',f.checkpoints,last_checkpoint),'file')
