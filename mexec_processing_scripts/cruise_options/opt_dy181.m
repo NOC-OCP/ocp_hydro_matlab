@@ -77,6 +77,9 @@ switch opt1
         else
             cfg.uppat = sprintf('%s_CTD%03dS*.000',upper(mcruise),stn);
             cfg.dnpat = sprintf('%s_CTD%03dM*.000',upper(mcruise),stn);
+            if stn==45
+                cfg.dnpat = 'DY181_CTD45M.000';
+            end
         end
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
         %code for yo-yo cast

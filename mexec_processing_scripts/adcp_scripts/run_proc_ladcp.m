@@ -76,7 +76,7 @@ if nargin>1 && strcmp(varargin{1},'sadcp-only')
     constraints_try = {'GPS_BT_SADCP'};
 end
 
-if ismember(constraints_try,'GPS')
+if sum(ismember(constraints_try,'GPS'))
     %first, only cast nav and pressure time series as constraints (from mout_1hzasc)
 cfg.constraints = {'GPS'};
 if isul

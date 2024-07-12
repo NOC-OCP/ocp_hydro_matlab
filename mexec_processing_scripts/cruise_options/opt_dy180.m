@@ -58,8 +58,10 @@ switch opt1
         end
 
     case 'ladcp_proc'
-        cfg.uppat = sprintf('%s_LADCP_CTD%03dS*.000',mcruise,stnlocal);
-        cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000',mcruise,stnlocal);
+        cfg.uppat = sprintf('%s_LADCP_CTD%03dS*.000',upper(mcruise),stnlocal);
+        cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000',upper(mcruise),stnlocal);
+        cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
+        cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
 
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
