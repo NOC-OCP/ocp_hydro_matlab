@@ -13,8 +13,8 @@ global MEXEC_G
 
 if isfield(MEXEC_G,'perms')
     if nargin>1 && strcmp(varargin{1},'dir')
-        system(sprintf('chmod %d %s', MEXEC_G.perms(2)), fname)
+        [s,r] = system(sprintf('chmod %d %s', MEXEC_G.perms(2), fname));
     else
-        system(sprintf('chmod %d %s', MEXEC_G.perms(1)), fname)
+        [s,r] = system(sprintf('chmod %d %s', MEXEC_G.perms(1), fname));
     end
 end

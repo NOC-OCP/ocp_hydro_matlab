@@ -42,16 +42,21 @@ if isfield(castopts,'rangelim')
     end
 end
 
-%formerly scanedit (for additional bad scan ranges)
-%now can also/alternately be applied using time or any other variable (e.g.
-%press) as the indicative variable
-% example (to edit times out of three tsg variables where tsg time is in
-% datenum form):                 
-% badtimes = [datenum(2022,7,1) datenum(2022,7,12,14,6,0); ...
-%             datenum(2022,7,28,12,28,0) datenum(2022,7,28,17,20,0)];
-% castopts.badtime.conductivity_raw = badtimes;
-% castopts.badtime.salinity_raw = badtimes;
-% castopts.badtime.temph_raw = badtimes;
+% formerly scanedit (for additional bad scan ranges)
+% now can also/alternately be applied using time or any other variable
+% (e.g. press) as the indicative variable
+%   example (to edit two time ranges out of three tsg variables, where tsg
+%   time is in datenum form):                 
+%   badtimes = [datenum(2022,7,1) datenum(2022,7,12,14,6,0); ...
+%               datenum(2022,7,28,12,28,0) datenum(2022,7,28,17,20,0)];
+%   castopts.badtime.conductivity_raw = badtimes;
+%   castopts.badtime.salinity_raw = badtimes;
+%   castopts.badtime.temph_raw = badtimes;
+% can also be used to NaN one variable where another is NaN, e.g. to apply
+% any edits (automatic or manual) already made to temp1 to the other CTD1
+% variables:  
+%    castopts.badtemp1.cond1 = [NaN NaN];
+%    castopts.badtemp1.oxygen_sbe1 = [NaN NaN];
 cfn = fieldnames(castopts);
 iibp = find(strncmp('bad',cfn,3));
 for bpno = 1:length(iibp)

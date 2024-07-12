@@ -26,6 +26,8 @@ if regrid
         filesbin = fullfile(mgetdir(shortnames{iis}), [shortnames{iis} '_' mcruise '_all_edt.nc']);
         if ~exist(filesbin,'file')
             filesbin = fullfile(MEXEC_G.mexec_data_root,'bathy','sbm',[shortnames{iis} '_' mcruise '_all_edt.nc']);
+            %there should always be an _edt file because of sound speed
+            %correction
         end
         if exist(filesbin,'file')
             [ds,hs] = mload(filesbin,'/');
@@ -36,6 +38,10 @@ if regrid
             maxt = max(maxt,ds.time(end));
             iss = 1;
             sbvar = munderway_varname('depvar',hs.fldnam,1,'s');
+            hs.fldnam{strcmp(sbvar,hs.fldnam)} = [sbvar '_sb'];
+            ds.([sbvar '_sb']) = ds.(sbvar); ds = rmfield(ds,sbvar); 
+            ds = orderfields(ds,hs.fldnam);
+            sbvar = [sbvar '_sb'];
         end
     end
 
@@ -46,6 +52,9 @@ if regrid
         filembin = fullfile(mgetdir(shortnames{iim}), [shortnames{iim} '_' mcruise '_all_edt.nc']);
         if ~exist(filembin,'file')
             filembin = fullfile(MEXEC_G.mexec_data_root,'bathy','mbm',[shortnames{iim} '_' mcruise '_all_edt.nc']);
+            if ~exist(filembin,'file')
+                filembin = fullfile(MEXEC_G.mexec_data_root,'bathy','mbm',[shortnames{iim} '_' mcruise '_all_raw.nc']);
+            end
         end
         if exist(filembin,'file')
             [dm,hm] = mload(filembin,'/');
@@ -56,6 +65,10 @@ if regrid
             maxt = max(maxt,dm.time(end));
             ism = 1;
             mbvar = munderway_varname('depvar',hm.fldnam,1,'s');
+            hm.fldnam{strcmp(mbvar,hm.fldnam)} = [mbvar '_mb'];
+            dm.([mbvar '_mb']) = dm.(mbvar); dm = rmfield(dm,mbvar); 
+            dm = orderfields(dm,hm.fldnam);
+            mbvar = [mbvar '_mb'];
         end
     end
 
@@ -74,6 +87,7 @@ if regrid
         delete(m_add_nc(avfile))
     end
     if iss
+        fn = setdiff(fieldnames(ds),'time');
         dg = grid_profile(ds, 'time', tg, 'medbin', opts);
         mfsave(avfile, dg, hs, '-merge', 'time')
         m = m | sum(~isnan(dg.(sbvar)));
@@ -90,10 +104,8 @@ end
 [dg, hg] = mloadq(avfile, '/');
 opt1 = 'uway_proc'; opt2 = 'bathy_grid'; get_cropt
 if ~exist('zbathy','var')
-    disp('find gridded bathymetry file and set in opt_cruise? (enter to continue)')
-    pause
-end
-if exist('zbathy','var') && ~isempty(zbathy)
+    disp('no gridded bathymetry set in opt_cruise')
+elseif ~isempty(zbathy)
     opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
     [dn, hn] =  mloadq(fullfile(mgetdir(default_navstream),sprintf('bst_%s_01_av',mcruise)),'/');
     dn.time = m_commontime(dn, 'time', hn, timun);
@@ -120,10 +132,10 @@ if ~isempty(comment)
 end
 iis_all = {};
 m = true(size(dg.time));
-if isfield(dg,sbvar)
+if iss && isfield(dg,sbvar)
     m = m | sum(~isnan(dg.(sbvar)));
 end
-if isfield(dg,mbvar)
+if ism && isfield(dg,mbvar)
     m = m | sum(~isnan(dg.(mbvar)));
 end
 for no = 1:length(days)

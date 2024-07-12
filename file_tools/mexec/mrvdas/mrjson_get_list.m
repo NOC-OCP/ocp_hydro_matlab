@@ -4,9 +4,10 @@
 
 jsondir = fullfile(MEXEC_G.mexec_data_root,'rvdas','json_files');
 if ~exist(jsondir,'dir')
-    mkdir(jsondir);
+    mkdir(jsondir); mfixperms(jsondir, 'dir');
 end
 listfile = fullfile(jsondir,'..','list_json.txt');
+RVDAS.jsondir = jsondir;
 
 %sync json files
 opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt

@@ -18,9 +18,9 @@ root_oxy = mgetdir('M_BOT_OXY');
 ofpat = ['oxy_' mcruise '_*.csv'];
 ofiles = dir(fullfile(root_oxy, ofpat));
 ofiles = struct2cell(ofiles); ofiles = ofiles(1,:)';
-hcpat = {'Niskin' 'Bottle' 'Number'};
-chrows = 1:2;
-chunits = 3;
+hcpat = {'Niskin' 'Bottle' 'Number'}; 
+chrows = 1:2; chunits = 3;
+clear iopts numhead
 opt1 = 'botoxy'; opt2 = 'oxy_files'; get_cropt
 if ~exist('sheets','var')
     sheets = 1:99;
@@ -28,14 +28,16 @@ end
 if isempty(ofiles)
     warning(['no oxygen data files found in ' root_oxy '; skipping'])
     return
-else
-    for flno = 1:length(ofiles)
-        ofiles{flno} = fullfile(root_oxy,ofiles{flno});
-    end
 end
 
 %load data
-[ds_oxy, ~] = load_samdata(ofiles, 'hcpat', hcpat, 'icolhead', chrows, 'icolunits', chunits, 'sheets', sheets);
+if exist('iopts','var') && isstruct(iopts)
+    [ds_oxy, ~] = load_samdata(ofiles, iopts);
+elseif exist('numhead','var') && ~isempty(numhead)
+    %[ds_oxy, ~] = load_samdata(ofiles, 'numhead', numhead);
+else
+    [ds_oxy, ~] = load_samdata(ofiles, 'hcpat', hcpat, 'icolhead', chrows, 'icolunits', chunits, 'sheets', sheets);
+end
 if isempty(ds_oxy)
     error('no data loaded')
 end
@@ -133,6 +135,7 @@ if calcoxy
     end
 end
 
+ds_oxy.flag(isnan(ds_oxy.flag) & ~isnan(ds_oxy.conc_o2)) = 2; %default
 ds_oxy.flag(isnan(ds_oxy.conc_o2)) = max(ds_oxy.flag(isnan(ds_oxy.conc_o2)),4);
 ds_oxy_fn = ds_oxy.Properties.VariableNames;
 if ismember(ds_oxy_fn,'sample_titre')

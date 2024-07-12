@@ -1,3 +1,11 @@
+function run_proc_ladcp(stn,varargin)
+%
+% to run all processing versions (with available constraints):
+% run_proc_ladcp(stn)
+%
+% to run only dlul_gps_bt_sadcp: 
+% run_proc_ladcp(stn,'sadcp')
+%
 %wrapper script for LADCP IX processing with different constraints
 %always process up and downlooker separately to check beam
 %quality***(though does this work for really shallow cast?)
@@ -16,10 +24,12 @@ opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 cfg.stnstr = stn_string;
 cfg.p.cruise_id = mcruise;
 cfg.p.ladcp_station = stnlocal;
-if ismember(stnlocal,shortcasts)
+if exist('shortcasts','var') && ismember(stnlocal,shortcasts)
     cfg.p.btrk_mode = 0;
     cfg.p.getdepth = 1;
+    couldbt = 0;
 else
+    couldbt = 1;
     cfg.p.btrk_mode = 2;
     %cfg.p.btrk_ts = 30;
 end
@@ -31,7 +41,7 @@ isul = 1; %is there an uplooker? process it first on its own
 cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata',cfg.stnstr);
 cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
 cfg.p.ambiguity = 4.0; %this one is not used?
-cfg.p.vlim = 4.0; %this one is***check it matches
+%cfg.p.vlim = 4.0; %this one is***require setting in opt_cruise
 opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
 opt1 = 'ladcp_proc'; get_cropt %required to set pattern for down- and up-looker files
 infiled = fullfile(cfg.rawdir,cfg.dnpat);
@@ -61,7 +71,13 @@ else
     isdl = 1;
 end
 
-%first, only cast nav and pressure time series as constraints (from mout_1hzasc)
+constraints_try = {'GPS' 'GPS_BT' 'GPS_BT_SADCP'};
+if nargin>1 && strcmp(varargin{1},'sadcp-only')
+    constraints_try = {'GPS_BT_SADCP'};
+end
+
+if ismember(constraints_try,'GPS')
+    %first, only cast nav and pressure time series as constraints (from mout_1hzasc)
 cfg.constraints = {'GPS'};
 if isul
     cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg);
@@ -84,7 +100,6 @@ if isdl
 %     end
 end
 
-
 %DLUL
 if isul && isdl
     cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
@@ -95,7 +110,7 @@ if isul && isdl
 end
 
 %also bottom tracking, if cast was full-depth (and had down-looker)
-if ~ismember(stn, shortcasts)
+if couldbt
     cfg.constraints = [cfg.constraints 'BT'];
     if isul && isdl
         cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg);
@@ -111,10 +126,16 @@ if ~ismember(stn, shortcasts)
         end
     end
 end
+else
+    cfg.orient = 'DLUL'; cfg.constraints = {'GPS' 'BT'};
+end
 
 %SADCP, if it's been processed and output to file for ladcp
-sfile = fullfile(mgetdir('M_LADCP'), 'SADCP', sprintf('os75nb_%s_%03d_forladcp.mat',mcruise,stn));
+spath = fullfile(mgetdir('M_LADCP'), 'ix', 'SADCP');
+sfile = fullfile(spath, sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn)); 
+%***set type, as well as inst, in opt_cruise?
 if exist(sfile,'file')
+    cfg.f.sadcp = sfile;
     cfg.constraints = [cfg.constraints 'SADCP'];
     cfg.SADCP_inst = 'os75nb';
     process_cast_cfgstr(stn, cfg);

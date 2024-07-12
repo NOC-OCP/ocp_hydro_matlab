@@ -56,11 +56,14 @@ end
 
 if ~isfield(ds,'dc_start') || auto_start
     if isempty(kstart)
-        % guess start index: point farthest above (lower pressure than) previous max pressure
-        pressd = d1.press(1:min(kbot,3600)); %for deep casts, square matrix for whole downcast would be too big, so limit search to first hour
+        % guess start index: point within the top 100 m / first 40 min which is farthest above (lower pressure than)
+        % previous max pressure
+        tm = min(kbot,2400);
+        pressd = d1.press(1:tm); %for deep casts, square matrix for whole downcast would be too big, so limit search
         pressd = pressd(:);
-        p_minus_maxprev = pressd' - max(triu(repmat(pressd,1,min(kbot,3600))));
-        [mnd, kstart] = min(p_minus_maxprev);
+        pressd(pressd>100) = NaN;
+        p_minus_maxprev = pressd' - max(triu(repmat(pressd,1,tm)));
+        [~, kstart] = min(p_minus_maxprev);
         hnew.comment = [hnew.comment ' auto detected start time'];
     else
         hnew.comment = [hnew.comment ' start time set in opt_cruise'];

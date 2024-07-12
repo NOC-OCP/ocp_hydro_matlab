@@ -47,20 +47,14 @@ else
     co.redoctm = 0;
 end
 
-%get edits to do
-if exist('co','var')
-    fn = fieldnames(co);
-    m = strncmp('bad',fn,3);
-    co = rmfield(co,fn(m));
-    fn = intersect(fn,{'pumpsNaN';'rangelim';'despike'});
-    co = rmfield(co,fn);
-end
-co.pumpsNaN.temp1 = 12;
-co.pumpsNaN.temp2 = 12;
-co.pumpsNaN.cond1 = 12;
-co.pumpsNaN.cond2 = 12;
-co.pumpsNaN.oxygen_sbe1 = 8*24;
-co.pumpsNaN.oxygen_sbe2 = 8*24;
+% %get edits to do
+% if exist('co','var')
+%     fn = fieldnames(co);
+%     m = strncmp('bad',fn,3);
+%     co = rmfield(co,fn(m));
+%     fn = intersect(fn,{'pumpsNaN';'rangelim';'despike'});
+%     co = rmfield(co,fn);
+% end
 opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt
 
 [d, h] = mloadq(infile,'/');

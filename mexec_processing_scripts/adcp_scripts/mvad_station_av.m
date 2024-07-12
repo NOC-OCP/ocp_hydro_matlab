@@ -15,18 +15,18 @@ function mvad_station_av(stn, inst, cast_select, varargin)
 %                  (where start and end times can be date vectors [yyyy mm
 %                  dd HH MM SS] or Matlab datenum scalars). 
 %
-% mvad_station(os75nb, 1, 'ctd')
+% mvad_station_av(1,'os75nb', 'ctd')
 % outputs OS75 velocities averaged over the cast time to files 
 %    data/vmadcp/mproc/os75nb_$cruise_ctd_001_ave.nc and
-%    data/ladcp/SADCP/os75nb_$cruise_ctd_001_forladcp.mat
+%    data/vmadcp/mproc/os75nb_$cruise_ctd_001_forladcp.mat and
 %
-% mvad_station(os150nb, 5, 'wait', '~/cruise/data/vmadcp/mproc/list_stn_wait.txt')
+% mvad_station_av(5,'os150nb', 'wait', '~/cruise/data/vmadcp/mproc/list_stn_wait.txt')
 % outputs OS150 velocities averaged over the time intervals in the
 %    specified file (for instance, if station 5 was a shallow, quick cast,
 %    you may want to average VMADCP over 2 hours instead for a better
 %    reference) and outputs to 
 %    data/vmadcp/mproc/os150nb_$cruise_wait_005_ave.nc,
-%    data/ladcp/SADCP/os150nb_$cruise_wait_005_forladcp.mat,
+%    data/vmadcp/mproc/os150nb_$cruise_wait_005_forladcp.mat,
 %
 %
 % YLF jc238, based on mvad_03 and mvad_for_ladcp (BAK jc069, jc159, jc211)
@@ -37,12 +37,11 @@ opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 %paths and filenames
 root_ctd = mgetdir('M_CTD');
 root_vmadcp = mgetdir('M_VMADCP');
-root_ladcp = mgetdir('M_LADCP');
 
 dataname = [inst '_' mcruise '_' cast_select '_' stn_string];
 avfile = fullfile(root_vmadcp, 'mproc', [dataname '_ave.nc']);
-if ~isempty(root_ladcp)
-    ladfile = fullfile(root_ladcp, 'SADCP', [dataname '_forladcp.mat']);
+if MEXEC_G.ix_ladcp
+    ladfile = fullfile(root_vmadcp, 'mproc', [dataname '_forladcp.mat']);
 end
 if nargin>3
     listfile = varargin{1};
@@ -117,12 +116,12 @@ mfsave(avfile,da,ha);
 
 opt1 = 'mstar'; get_cropt
 if docf
-    [~,to] = timeunits_mstar_cf(h.fldunt(strcmp('decday',h.fldnam)));
+    [~,to] = timeunits_mstar_cf(h.fldunt{strcmp('decday',h.fldnam)});
 else
     to = h.data_time_origin;
 end
 %file for ladcp
-if ~isempty(root_ladcp) && sum(mt)>1
+if MEXEC_G.ix_ladcp && sum(mt)>1
     % CV 2018/11/17: edit to get the right variable names and time for LDEO_IX_12
     tim_sadcp = d.decday(1,mt) + julian(to(1),to(2),to(3));
     lat_sadcp = d.lat(1,mt);
@@ -136,6 +135,5 @@ if ~isempty(root_ladcp) && sum(mt)>1
         v_sadcp = d.vabs(:,mt)/100;
     end
     z_sadcp   = d.depth(:,1);
-    fname = fullfile(root_ladcp, 'SADCP', [inst '_' mcruise '_' stn_string '_forladcp']);
-    save(fname, 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp'); mfixperms(fname);
+    save(ladfile, 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp'); mfixperms(ladfile);
 end

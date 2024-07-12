@@ -32,8 +32,7 @@ mdep_01(stn)
 get_sensor_groups(stn)
 
 %output to csv files
-mout_cchdo_exchangeform(stn) %currently having trouble with
-%rows/columns, yvonne to investigate***
+mout_cchdo_exchangeform(stn)
 
 %and sync
 opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt

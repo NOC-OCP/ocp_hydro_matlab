@@ -1,3 +1,5 @@
+%shortcasts = 2; %no altimeter bottom depth/no LADCP BT
+
 switch opt1
 
     case 'setup'
@@ -16,7 +18,7 @@ switch opt1
                 default_hedstream = 'posmv_pashr';
                 default_attstream = 'posmv_pashr';
             case 'rvdas_database'
-                %RVDAS.jsondir = '/data/pstar/mounts/mnt_cruise_data/Ship_Systems/Data/RVDAS/Sensorfiles/'; %original
+                RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/'; %original
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
                 RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr';
         end
@@ -24,6 +26,8 @@ switch opt1
     case 'uway_proc'
         switch opt2
             case 'excludestreams'
+            case 'bathy_grid'
+                %for background, load gridded bathymetry into xbathy, ybathy, zbathy
         end
 
     case 'castpars'
@@ -43,8 +47,14 @@ switch opt1
                 redoctm = 1;
             case 'cnvfilename'
                 cnvfile = fullfile(cdir,sprintf('%s_CTD%03d.cnv',upper(mcruise),stn)); %try stainless first
+                if stn==10
+                    cnvfile = fullfile(cdir,sprintf('%s_CTD%04d.cnv',upper(mcruise),stn)); %try stainless first
+                end
             case 'blfilename'
                 blinfile = fullfile(root_botraw,sprintf('%s_CTD%03d.bl', upper(mcruise), stn));
+                if stn==10
+                    blinfile = fullfile(root_botraw,sprintf('%s_CTD%04d.bl', upper(mcruise), stn));
+                end
             case 'rawedit_auto'
         end
 
@@ -53,29 +63,90 @@ switch opt1
             case 'botflags'
                 if stn==6
                     niskin_flag(ismember(position,[11 21])) = 9;
+                elseif stn==36
+                    niskin_flag(position==11) = 3; %***leaked
                 end
         end
 
     case 'ladcp_proc'
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
-        cfg.uppat = sprintf('%s_CTD%03dS*.000',mcruise,stnlocal);
-        cfg.dnpat = sprintf('%s_CTD%03dM*.000',mcruise,stnlocal);
+        yos = [10 33];
+        if stn>=yos(1) && stn<=yos(2)
+            cfg.uppat = sprintf('%s_CTD%03d-%03dS*.000',upper(mcruise),yos(1),yos(2));
+            cfg.dnpat = sprintf('%s_CTD%03d-%03dM*.000',upper(mcruise),yos(1),yos(2));
+        else
+            cfg.uppat = sprintf('%s_CTD%03dS*.000',upper(mcruise),stn);
+            cfg.dnpat = sprintf('%s_CTD%03dM*.000',upper(mcruise),stn);
+        end
+        cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
+        %code for yo-yo cast
+        if stn>=yos(1) && stn<=yos(2)
+            [dd,hd] = mloadq(fullfile(mgetdir('ctd'),sprintf('dcs_%s_%03d',mcruise,stnlocal)),'time_start time_end ');
+            dd.dnum_start = m_commontime(dd,'time_start',hd,'datenum');
+            dd.dnum_end = m_commontime(dd,'time_end',hd,'datenum');
+            cfg.p.time_start_force = round(datevec(dd.dnum_start-2/60/24));
+            cfg.p.time_end_force = round(datevec(dd.dnum_end+2/60/24));
+        end
 
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
-        check_sal = 0;
-        check_oxy = 0;
-        check_sbe35 = 0;
+        check_sal = 1;
+        check_oxy = 1;
+        check_sbe35 = 1;
 
-                    case 'outputs'
+    case 'botpsal'
+        switch opt2
+            case 'sal_files'                
+                salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
+                salfiles = {salfiles.name};
+            case 'sal_parse'
+                cellT = 21;
+                ssw_k15 = 0.99993;
+                calcsal = 1;
+                ssw_batch = 'P168';
+            case 'sal_calc'
+                sal_off = [
+                    000 0
+                    001 -1
+                    002 -1
+                    003 -2
+                    ];
+                sal_off(:,1) = sal_off(:,1)+999e3;
+                sal_off(:,2) = sal_off(:,2)*1e-5;
+                sal_off_base = 'sampnum_list'; 
+        end
+
+    case 'botoxy'
+        switch opt2
+            case 'oxy_files'
+                ofiles = {fullfile(root_oxy,'Winkler Calculation Spreadsheet.xlsx')};
+                iih = 8;
+                hcpat = {'Latitude'};
+                chrows = 1; chunits = [];
+                            case 'oxy_parse'
+                calcoxy = 0;
+                varmap.statnum = {'ctd_cast_no'};
+                varmap.position = {'niskin_bot_no'};
+                varmap.fix_temp = {'fixing_temp_c'};
+                varmap.conc_o2 = {'c_o2_umol_per_l'};
+            case 'oxy_flags'
+                %botoxya 103, 113, 509
+                %botoxyb 509, 4021?
+                %botoxyc 4013, 
+                %both/all 3: 513, 4017
+
+
+        end
+
+    case 'outputs'
         switch opt2
             case 'summary'
                 snames = {'nsal' 'noxy' 'nnut' 'nco2'};
                 sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'nitr'} {'dic' 'talk'}};
             case 'exch'
-                ns = 9; 
+                ns = 9;
                 expocode = '74EQ20240703';
-                sect_id = 'OSNAP/EEL';
+                sect_id = 'OSNAP-EEL';
                 submitter = 'OCPNOCYLF'; %group institution person
                 common_headstr = {'#SHIP: RRS Discovery';...
                     '#Cruise DY181; UK-OSNAP/Extended Ellet Line 2024';...
@@ -108,6 +179,24 @@ switch opt1
                         '#***';...
                         }];
                 end
+        end
+
+    case 'batchactions'
+        switch opt2
+            case 'output_for_others'
+                pdir = '/data/pstar/mounts/public/DY181/Science/CTD_bottle_data';
+                clear s
+                syncs = {sprintf('%s/collected_files/station_summary* %s/',MEXEC_G.mexec_data_root,pdir);...
+                    sprintf('%s/collected_files/74EQ* %s/',MEXEC_G.mexec_data_root,pdir);...
+                    sprintf('%s/ctd/ctd*2db.nc %s/ctd_2db/',MEXEC_G.mexec_data_root,pdir)};
+                for no = 1:length(syncs)
+                    try
+                        [s(no),~] = system(['rsync -rlu ' syncs{no}]);
+                    catch
+                        [s(no),~] = system(['cp -R ' syncs{no}]);
+                    end
+                end
+                if sum(s)>0; warning('some or all syncing failed'); end
         end
 
 end

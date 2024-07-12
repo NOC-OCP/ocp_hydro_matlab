@@ -1,3 +1,4 @@
+function mctd_rawedit(stn, varargin)
 % mctd_rawedit:
 %
 % input: _raw.nc or (if it exists) _raw_cleaned.nc; dcs_
@@ -7,12 +8,14 @@
 %
 % output: _raw_cleaned.nc
 %
-% Use: mctd_rawedit        and then respond with station number, or for station 16
-%      stn = 16; mctd_rawedit;
+% Use: mctd_rawedit(stn) %to edit T or C
+%      mctd_rawedit(stn,'oxy') %to edit oxygen
 
 m_common; MEXEC_A.mprog = mfilename;
 opt1 = 'castpars'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'calling mplxyed for GUI editing of raw data, saving to ctd_%s_%s_raw_cleaned.nc\n',mcruise,stn_string); end
+dooxy = 0;
+if nargin>1; dooxy = strcmp(varargin{1},'oxy'); end
 
 % resolve root directories for various file types
 root_ctd = mgetdir('M_CTD');
@@ -44,9 +47,13 @@ else
     pshow0.xlist = 'time'; 
     %***option to only plot some of these variables?***
     pshow0.ylist = ['temp1 temp2 cond1 cond2 press'];
-    opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
-    opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
-    nox = size(oxyvars,1); % bak add
+    if dooxy
+        opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
+        opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
+        nox = size(oxyvars,1); % bak add
+    else
+        nox = 0;
+    end
     for no = 1:nox
         pshow0.ylist = [pshow0.ylist ' ' oxyvars{no,1}];
         if oxy_end %truncate extra oxy_align seconds from end of oxygen variables shown

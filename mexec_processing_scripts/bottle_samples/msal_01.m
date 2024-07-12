@@ -114,14 +114,6 @@ if calcsal
             fn = [fn vars{vno}];
             ii0 = strcmp(vars{vno},fn);
         end
-        if sum(ii0)
-            m = isnan(ds_sal.(vars{vno})); %only overwrite NaNs
-            for dno = 1:length(iid)
-                dvar = intersect(fn,samevars.(vars{vno}));
-                ds_sal.(vars{vno})(m) = ds_sal.(dvar{1})(m);
-                ds_sal.(dvar{1}) = [];
-            end
-        end
     end
     fn = ds_sal.Properties.VariableNames;
 

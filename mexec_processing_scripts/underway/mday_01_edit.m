@@ -249,15 +249,20 @@ m_common
 comment = '';
 
 %convert from depth relative to transducer (if necessary)
-ii = find(strcmpi('transduceroffset',h.fldnam) | strcmpi('xduceroffset',h.fldnam) | strcmpi('xducer_offset',h.fldnam) | strcmpi('transducer_offset',h.fldnam));
-if find(strcmpi('waterdepthmetrefromsurface',h.fldnam))
-    d.waterdepth = d.waterdepthmetrefromsurface;
-elseif ~isempty(ii) && ~sum(strcmpi('waterdepth',h.fldnam))
-    d.waterdepth = d.waterdepthmetre + d.transduceroffset; %***
-    %d.waterdepth = d.depth_below_xducer + d.(h.fldnam{ii});
+depbtvar = munderway_varname('deptrefvar', h.fldnam, 1, 's');
+depsfvar = munderway_varname('depsrefvar', h.fldnam, 1, 's');
+depvar = munderway_varname('depvar', h.fldnam, 1, 's');
+xducervar = munderway_varname('xducerdepvar', h.fldnam, 1, 's');
+if ~isempty(depbtvar) && ~isempty(xducervar) && isempty(depvar)
+    d.waterdepth = d.(depvar) + d.(xducervar);
     h.fldnam = [h.fldnam 'waterdepth'];
     h.fldunt = [h.fldunt 'metres'];
     comment = '\n transducer offset applied';
+elseif ~isempty(depsfvar)
+    d.waterdepth = d.(depsfvar);
+    h.fldnam = [h.fldnam 'waterdepth'];
+    h.fldunt = [h.fldunt 'metres'];
+    comment = ['\n waterdepth rennamed from ' depsfvar];
 end
 
 %carter correction
@@ -279,6 +284,7 @@ if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb' 'ea640'}))
     else
        warning('no pos file for day with %d found, using current position to select carter area for echosounder correction',floor(d.time(1)))
     if strcmp(MEXEC_G.Mshipdatasystem, 'rvdas')
+        navname = default_navstream;
         pos = mrlast(navname); lon = pos.longitude; lat = pos.latitude; clear pos
     elseif strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
             pos = mtlast(navname); lon = pos.long; lat = pos.lat; clear pos

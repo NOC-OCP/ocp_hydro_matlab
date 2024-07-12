@@ -28,7 +28,8 @@ switch opt1
         switch opt2
             case 'minit' 
                %Ti vs SS for stn_string? or don't need this because it's
-               %sequential numbering and handled with cnvfilename
+               %sequential numbering and handled with cnvfilename? do need
+               %it for e.g. vmadcp station av***
             case 's_choice'
                 s_choice = 2; %fin sensor
             case 'o_choice'

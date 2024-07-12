@@ -86,6 +86,10 @@ if ~exist('xgroups','var')
 end
 
 for gno = 1:length(xgroups)
+    if isempty(xgroups{gno})
+        warning('nothing to plot; skipping')
+        continue
+    end
 
     done = 0;
     figure(10); clf; clear hl

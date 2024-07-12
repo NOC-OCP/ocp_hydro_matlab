@@ -95,7 +95,7 @@ end
 if ~isempty(hcpat) && ~exist('icolhead','var')
     icolhead = 1:length(hcpat);
 end
-if isempty(hcpat) && (~exist('iopts','var') || ~isfield(iopts,'VariableNames'))
+if isempty(hcpat) && ~exist('numhead','var') && (~exist('iopts','var') || ~isfield(iopts,'VariableNames'))
     icolhead = 1; %default is to get names from first row (error if these don't start with chars?)***
 end
 if ~iscell(infile)

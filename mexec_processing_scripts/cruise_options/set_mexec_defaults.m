@@ -104,6 +104,13 @@ switch opt1
             case 'blfilename'
             case 'cast_split'
             case 'rawedit_auto'
+                %when pumps are off
+                co.pumpsNaN.temp1 = 12; %T takes 1/2 s to recover
+                co.pumpsNaN.temp2 = 12;
+                co.pumpsNaN.cond1 = 12;
+                co.pumpsNaN.cond2 = 12;
+                co.pumpsNaN.oxygen_sbe1 = 8*24; %O takes 8 s to recover
+                co.pumpsNaN.oxygen_sbe2 = 8*24;
             case 'rawshow'
                 %by default, do not plot press_temp, turb, xmiss, fluor,
                 %lat, lon in mctd_rawshow

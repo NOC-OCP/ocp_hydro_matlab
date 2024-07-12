@@ -74,6 +74,7 @@ else
     disp('you should reply with a single number or a vector')
     return
 end
+clear nump msg1
 
 % stnlocal is now the local station number
 % slist is the list of previous stations
@@ -707,20 +708,21 @@ for plotlist = cklist
             end
             subplot(321); grid on; title ('temp diff'); xlabel('minutes away from bottom');
             subplot(322); grid on; title ('temp diff'); xlabel('minutes away from bottom');
-            axoff = m_nanmedian(dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok)); % bak on jr302 17 jun 2014; centre axes on data if out of range
-            if abs(axoff)>0.004 || isnan(axoff); axoff = 0; end
-            ax = axis; ax(3:4) = [-0.005 0.005]+axoff; axis(ax);
+            % bak on jr302 17 jun 2014; centre axes on data if out of range
+            axoff = m_nanmedian(dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok)); 
+            if abs(axoff)<0.004 || isnan(axoff); axoff = 0; end
+            ylim([-0.005 0.005]+axoff);
             subplot(323); grid on; title ([saltype ' diff']); xlabel('minutes away from bottom');
             subplot(324); grid on; title ([saltype ' diff']); xlabel('minutes away from bottom');
-            axoff = m_nanmedian(sd1(kok)-sd2(kok)); % bak on jr302 17 jun 2014; centre axes on data if out of range
-            if abs(axoff)<0.004 || isnan(axoff); axoff = 0; end
-            ax = axis; ax(3:4) = [-0.005 0.005]+axoff; axis(ax);
+            axoff = m_nanmedian(sd1(kok)-sd2(kok));
+            if abs(axoff)<0.015 || isnan(axoff); axoff = 0; end
+            ylim(axoff+[-0.02 0.02]);
             if nox>1
                 subplot(325); grid on; title ('oxy diff'); xlabel('minutes away from bottom');
                 subplot(326); grid on; title ('oxy diff'); xlabel('minutes away from bottom');
                 axoff = m_nanmedian(od1(kok)-od2(kok));
                 if abs(axoff)<15 || isnan(axoff); axoff = 0; end
-                ax = axis; ax(3:4) = [-20 20]+axoff; axis(ax);
+                ylim([-20 20]+axoff)
             end
             
     end

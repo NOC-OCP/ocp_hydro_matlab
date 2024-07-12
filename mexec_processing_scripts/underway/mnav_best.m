@@ -124,15 +124,21 @@ end
 
 %%%%% create 30-second heading from 1-Hz data %%%%%
 [dh, hh] = mload(infileh, '/');
+dh.(timvar) = m_commontime(dh, timvar, hh, timestring);
+if max(dh.(timvar))<min(tg) 
+    %try _raw file (no edits to apply?)
+    infileh = [infileh(1:end-6) 'raw.nc'];
+    [dh, hh] = mload(infileh, '/');
+    dh.(timvar) = m_commontime(dh, timvar, hh, timestring);
+end
+hh.data_time_origin = h.data_time_origin;
+if docf
+    hh.fldunt{strcmp(timvar,hh.fldnam)} = timestring;
+end
 excvars = {'utctime'};
 [hh.fldnam,ii] = setdiff(hh.fldnam,excvars,'stable');
 if length(ii)<length(hh.fldunt)
     hh.fldunt = hh.fldunt(ii); dh = rmfield(dh,excvars);
-end
-dh.(timvar) = m_commontime(dh, timvar, hh, timestring);
-hh.data_time_origin = h.data_time_origin;
-if docf
-    hh.fldunt{strcmp(timvar,hh.fldnam)} = timestring;
 end
 %grid the dummy easting and northing
 clear opts
