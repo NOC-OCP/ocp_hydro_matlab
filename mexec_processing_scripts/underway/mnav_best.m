@@ -79,15 +79,15 @@ opts.ignore_nan = 1;
 opts.grid_extrap = [1 1];
 opts.postfill = 30;
 opts.bin_partial = 0;
-dg = grid_profile(d, 'time', tg, 'medbin', opts);
+dg = grid_profile(d, 'time', tg, 'meanbin', opts);
 dg.time = .5*(tg(1:end-1)+tg(2:end))';
-h.comment = [h.comment '\n position median over bins of width ' num2str(tave_period)];
+h.comment = [h.comment '\n position mean over bins of width ' num2str(tave_period)];
 h.fldinst = repmat({default_navstream},size(h.fldnam));
 
 %%%%% average attitude to same times (independently) and merge %%%%%
 if doatt
     [da, ha] = mload(infilea,'/');
-    dga = grid_profile(da, 'time', tg, 'medbin', opts);
+    dga = grid_profile(da, 'time', tg, 'meanbin', opts);
     vars = setdiff(ha.fldnam,'time');
     for vno = 1:length(vars)
         dg.(vars{vno}) = dga.(vars{vno});
@@ -97,7 +97,7 @@ if doatt
             h.fldinst = [h.fldinst repmat({default_attstream},1,length(vars))];
         end
     end
-    h.comment = [h.comment '\n attitude from ' default_attstream ' median over bins of width ' num2str(tave_period)];
+    h.comment = [h.comment '\n attitude from ' default_attstream ' mean over bins of width ' num2str(tave_period)];
 end
 
 %%%%% calculate speed, course, distrun from the 30-s averages %%%%%
@@ -144,12 +144,12 @@ end
 clear opts
 opts.ignore_nan = 1;
 opts.grid_extrap = [0 0];
-dgh = grid_profile(dh, 'time', tg, 'medbin', opts);
+dgh = grid_profile(dh, 'time', tg, 'meanbin', opts);
 dgh.time = .5*(tg(1:end-1)+tg(2:end))';
 %convert back to heading
 headvar = munderway_varname('headvar', hh.fldnam, 1, 's');
 [~, dgh.(headvar)] = uvsd(dgh.dum_e, dgh.dum_n, 'uvsd');
-h.comment = [h.comment '\n heading from vector median over bins of width ' num2str(tave_period)];
+h.comment = [h.comment '\n heading from vector mean over bins of width ' num2str(tave_period)];
 
 
 %%%%% merge vector-averaged heading onto average speed, course %%%%%

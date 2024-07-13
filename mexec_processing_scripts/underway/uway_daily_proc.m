@@ -50,8 +50,11 @@ end
 %combine streams, do hand edits (for some streams), and average to producei
 %
 %output/best files
-mnav_best(days); disp('got best nav/heading data')
-%mwind_true(days); disp('converted to true wind')
+for dno = 1:length(days)
+    mnav_best(days(dno));
+end
+disp('got best nav/heading data')
+mwind_true(days); disp('converted to true wind')
 mtsg_merge_av(days); disp('tsg variables merged with met') %combines old mtsg_medav_clean_cal and mtsg_surfmet_merge
 mbathy_edit_av(days)
 

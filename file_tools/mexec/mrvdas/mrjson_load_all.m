@@ -237,8 +237,6 @@ n_sentences = length(js.sentences);
 id = js.id; id = lower(id);
 fprintf(fid,'\n\n%s%s %2d%s\n','%',js.filename,n_sentences,'  sentences');
 
-specchar = {' ', ',', '''', ';'};
-
 opt1 = 'ship'; opt2 = 'rvdas_form'; get_cropt
 if use_cruise_views
     sqlpre = [view_name '_'];
@@ -273,7 +271,6 @@ for ks = 1:n_sentences
             f = s.field(kf);
         end
         fname = f.fieldNumber;
-        longname = replace(fname, specchar, '_');
         if isfield(f,'units'); funit = f.units; else; funit = f.unit; end
         
         skipit = false;
@@ -295,12 +292,10 @@ for ks = 1:n_sentences
             fprintf(fid,'%30s %30s %80s\n',['''' fname ''''],['''' funit ''''],['''' longname '''']);
             try
                 names_units.(sqlname).(fname).units = funit; % will fail if sqlname or fname are invalid. Some gravity meter json files define names that are invalid matab names, eg with spaces and starting with a number
-                names_units.(sqlname).(fname).long_name = longname;
             catch
                 sqlname = matlab.lang.makeValidName(sqlname);
                 fname = matlab.lang.makeValidName(fname);
                 names_units.(sqlname).(fname).unit = funit;
-                names_units.(sqlname).(fname).long_name = longname;
             end
         end
     end

@@ -21,6 +21,8 @@ switch opt1
                 RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/'; %original
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
                 RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr';
+            case 'rvdas_streams'
+                tablesource = 'mrtables_edited';
         end
 
     case 'uway_proc'
@@ -65,6 +67,8 @@ switch opt1
                     niskin_flag(ismember(position,[11 21])) = 9;
                 elseif stn==36
                     niskin_flag(position==11) = 3; %***leaked
+                elseif stn==51
+                    niskin_flag(position==11) = 3; %maybe leaking (on recovery, not obviously after), still sampled
                 end
         end
 
