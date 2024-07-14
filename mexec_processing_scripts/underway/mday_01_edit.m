@@ -257,12 +257,15 @@ if ~isempty(depbtvar) && ~isempty(xducervar) && isempty(depvar)
     d.waterdepth = d.(depvar) + d.(xducervar);
     h.fldnam = [h.fldnam 'waterdepth'];
     h.fldunt = [h.fldunt 'metres'];
-    comment = '\n transducer offset applied';
+    comment = '\n waterdepth has transducer offset applied';
 elseif ~isempty(depsfvar)
     d.waterdepth = d.(depsfvar);
     h.fldnam = [h.fldnam 'waterdepth'];
     h.fldunt = [h.fldunt 'metres'];
     comment = ['\n waterdepth rennamed from ' depsfvar];
+    d = rmfield(d,depsfvar);
+    h.fldunt(strcmp(depsfvar,h.fldnam)) = [];
+    h.fldnam(strcmp(depsfvar,h.fldnam)) = [];
 end
 
 %carter correction
@@ -305,7 +308,7 @@ if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb' 'ea640'}))
         h.fldunt(strcmp(h.fldnam,'uncdepth')) = [];
         h.fldnam(strcmp(h.fldnam,'uncdepth')) = [];
     end
-    comment = [comment '\n carter table correction applied to waterdepth'];
+    comment = [comment '\n carter table correction applied to waterdepth\n'];
 end
 
 

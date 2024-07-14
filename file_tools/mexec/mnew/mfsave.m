@@ -306,9 +306,7 @@ if isfield(h,'comment') && ~isempty(h.comment)
     while strncmp(h.comment,delim,ndelim)
         h.comment(1:ndelim) = [];
     end
-    if ~isempty(h.comment)
-        filecomin = h.comment;
-    end
+    filecomin = h.comment;
 else
     filecomin = [];
 end

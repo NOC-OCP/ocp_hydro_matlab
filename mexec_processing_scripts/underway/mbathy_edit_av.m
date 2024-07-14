@@ -83,16 +83,21 @@ if regrid
     opts.ignore_nan = 1;
     opts.grid_extrap = [0 0];
     opts.postfill = 30;
-    if exist(m_add_nc(avfile),'file')
-        delete(m_add_nc(avfile))
-    end
+    %if exist(m_add_nc(avfile),'file')
+    %    delete(m_add_nc(avfile))
+    %end
     if iss
-        fn = setdiff(fieldnames(ds),'time');
+        [~,ii] = setdiff(hs.fldnam,{'time' sbvar});
+        ds = rmfield(ds,hs.fldnam(ii));
+        hs.fldnam(ii) = []; hs.fldunt(ii) = [];
         dg = grid_profile(ds, 'time', tg, 'medbin', opts);
         mfsave(avfile, dg, hs, '-merge', 'time')
         m = m | sum(~isnan(dg.(sbvar)));
     end
     if ism
+        [~,ii] = setdiff(hm.fldnam,{'time' mbvar});
+        dm = rmfield(dm,hm.fldnam(ii));
+        hm.fldnam(ii) = []; hm.fldunt(ii) = [];
         dg = grid_profile(dm, 'time', tg, 'medbin', opts);
         mfsave(avfile, dg, hm, '-merge', 'time')
         m = m | sum(~isnan(dg.(mbvar)));
