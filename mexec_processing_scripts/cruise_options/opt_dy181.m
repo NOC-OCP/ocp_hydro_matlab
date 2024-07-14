@@ -97,7 +97,7 @@ switch opt1
 
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
-        check_sal = 1;
+        check_sal = 0;
         check_oxy = 1;
         check_sbe35 = 1;
 
@@ -113,10 +113,26 @@ switch opt1
                 ssw_batch = 'P168';
             case 'sal_calc'
                 sal_off = [
-                    000 0
+                    000 -.5
                     001 -1
                     002 -1
                     003 -2
+                    004 0
+                    005 1.5
+                    006 2
+                    007 7 %***check T
+                    009 -3 % No standard labelled 008
+                    010 -1.5
+                    011 -1.5
+                    012 -2.5
+                    013 -6
+                    014 -2
+                    015 -5
+                    016 2
+                    017 2
+                    018 1
+                    019 1
+                    020 -2
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;

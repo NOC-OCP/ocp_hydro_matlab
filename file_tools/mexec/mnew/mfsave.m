@@ -186,7 +186,8 @@ if mergemode
         end
         d0 = mloadq(filename, '/');
         [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort);
-        h = keep_hvatts(h, hnew);
+        %h = keep_hvatts(h, hnew);
+        h = keep_hvatts(hnew, h);
 
         %determine whether dimension has increased and we actually need a new file
         if length(d.(indepvar))~=max(h0.rowlength,h0.collength)
@@ -209,9 +210,9 @@ end
 ncfile.name = filename;
 if writenew %initialise new file and set to write all variables
     
-%     if exist(m_add_nc(ncfile.name),'file')
-%         delete(m_add_nc(ncfile.name))
-%     end
+    if exist(m_add_nc(ncfile.name),'file')
+        delete(m_add_nc(ncfile.name))
+    end
     ncfile = m_openot(ncfile);
     isnew = 1:length(h.fldnam);
     
@@ -263,20 +264,21 @@ end
 % write all the new variables (attributes other than units later)
 if ~isempty(isnew)
     h0 = keep_hvatts(h0, h);
+    h.fldnam(isnew)
     for vno = isnew
-    clear v
-    v.data = d.(h.fldnam{vno});
-    if ~isa(v.data, 'double')
-        error(['writing from matlab to mstar not valid for variable of class ' class(v.data) '; must be double']);
+        clear v
+        v.data = d.(h.fldnam{vno});
+        if ~isa(v.data, 'double')
+            error(['writing from matlab to mstar not valid for variable of class ' class(v.data) '; must be double']);
+        end
+        if ~isempty(v.data)
+            v.name = h.fldnam{vno};
+            v.units = h.fldunt{vno};
+            m_write_variable(ncfile,v);
+        else
+            warning([h.fldnam{vno} ' empty, not writing']);
+        end
     end
-    if ~isempty(v.data)
-        v.name = h.fldnam{vno};
-        v.units = h.fldunt{vno};
-        m_write_variable(ncfile,v);
-    else
-        warning([h.fldnam{vno} ' empty, not writing']);
-    end
-end
 end
 
 %%%%% edit header, attributes, comments, history %%%%%

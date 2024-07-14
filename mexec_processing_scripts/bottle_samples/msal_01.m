@@ -130,7 +130,7 @@ if calcsal
         else
             dat = datevec(ds_sal{:,md});
         end
-        ds_sal.runtime = datenum(dat + tim);
+        ds_sal.runtime = datenum(dat + tim); %***
         ds_sal.time = []; ds_sal.date = [];
         fn = ds_sal.Properties.VariableNames;
     end
