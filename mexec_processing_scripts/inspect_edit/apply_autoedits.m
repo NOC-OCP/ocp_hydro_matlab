@@ -1,8 +1,49 @@
 function [d, comment] = apply_autoedits(d, castopts)
 % function [d, comment] = apply_autoedits(d, castopts)
+%
 % apply edits specified in castops structure to data in structure d
 % 
-% see mctd_02 and mday_01_clean_av cases for information on castopts
+%
+%   pumpsNaN -- for each parameter which is a field of castopts.pumpsNaN,
+%     data are masked up to castopts.pumpsNaN.(parameter) time points after
+%     pumps come (back) on -- this is mostly specific to the CTD, though
+%     could be used for another series if a variable pumps were present
+%     e.g. for 24 Hz CTD data,
+%       castopts.pumpsNaN.temp1 = 12; % 0.5 s
+%       castopts.pumpsNaN.oxygen_sbe1 = 8*24; % 8 s
+%       etc.
+%   
+%   rangelim -- for each parameter which is a field of castopts.rangelim,
+%     data are masked outside of the range given by
+%     castopts.rangelim.(parameter)
+%     e.g. 
+%     castopts.rangelim.temp1 = [-2 40];
+%
+%   bad(var) -- for each parameter which is a field of castopts.bad(var),
+%     data are masked where (var) is within the range(s) given by the rows
+%     of castopts.bad(var).(parameter); in addition, if one of the rows is
+%     [NaN NaN], parameter data are masked where (var) is NaN
+%     e.g. to mask selected ranges of scans where CTD1 was blocked, and to
+%     also mask C and O wherever else T has been edited out (e.g. by hand,
+%     or by rangelim): 
+%     castopts.badscan.temp1 = [7380 7890; 11500 13020];
+%     castopts.badscan.cond1 = castopts.badscan.temp1;
+%     castopts.badscan.oxygen_sbe1 = castopts.badscan.temp1; 
+%     castopts.badtemp1.cond1 = [NaN NaN];
+%     castopts.badtemp1.oxygen_sbe1 = [NaN NaN];
+%    
+%   despike -- for each parameter which is a field of castopts.despike,
+%     data are masked using a 5-point median despiker with the threshold
+%     (or succession of thresholds) given by castopts.despike.(parameter);
+%     if length(castopts.despike.(parameter))>1 the thresholds are applied
+%     iteratively; note thresholds are absolute, not relative
+%     e.g.
+%     castopts.despike.cond1 = [0.01 0.01];
+%     to iterate twice with the same threshold of 0.01 mS/cm deviation from
+%     the 5-point median
+%
+% also see ctd_proc, rawedit_auto and uway_proc, mday_01_clean_av cases for
+%   information on castopts 
 % 
 
 comment = [];
@@ -85,8 +126,8 @@ end
 if isfield(castopts,'despike')
     fn = intersect(fieldnames(castopts.despike),fnd);
     for no = 1:length(fn)
-        if strncmp(fn{no},'temp',4)
-            warning('editing temperature in mctd_02 is risky; are you sure spikes are not large enough to need to restart mctd_01 with redoctm?')
+        if strncmp(fn{no},'temp',4) && isfield(castopts,'redoctm') && ~castopts.redoctm
+            warning('editing temperature in mctd_02 is risky; are you sure spikes are not large enough to need to redo CTM?')
         end
         t = castopts.despike.(fn{no});
         comment = [comment '\n despiked ' fn{no} ' using median_despike with successive thresholds '];

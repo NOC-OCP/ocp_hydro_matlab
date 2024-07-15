@@ -264,7 +264,6 @@ end
 % write all the new variables (attributes other than units later)
 if ~isempty(isnew)
     h0 = keep_hvatts(h0, h);
-    h.fldnam(isnew)
     for vno = isnew
         clear v
         v.data = d.(h.fldnam{vno});

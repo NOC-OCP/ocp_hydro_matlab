@@ -1,5 +1,5 @@
 function status = mrrvdas2mstar(varargin)
-% function status = mrrvdas2mstar(table, dn1, dn2, otfile, dataname, varlist, qflag);
+% function sttaus = mrrvdas2mstar(table, dn1, dn2, otfile, dataname, varlist, qflag);
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition

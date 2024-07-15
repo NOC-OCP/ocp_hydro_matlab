@@ -120,7 +120,7 @@ switch MEXEC_G.Mship
         %skips.table = [skips.table '10_at1m_uw' 'at1m_u12_uw' ...
         %    'air2sea_gravity' 'air2sea_s84' ...
         %    'posmv_att' 'posmv_gyro' 'seaspy'];
-        skips.sentence = [skips.sentence 'phins_pixseutmwgs' 'phins_att_pixsepositi', 'phins_att_pixsespeed', 'phins_att_pixseutmwgs',...
+        skips.sentence = [skips.sentence 'phins_att_pixsepositi', 'phins_att_pixsespeed', 'phins_att_pixseutmwgs',...
             'phins_att_pixsetime', 'phins_att_pixsestdhrp', 'phins_att_pixsestdpos',...
             'phins_att_pixsestdspd', 'phins_att_pixseutcin', 'phins_att_pixsegp2in', ...
             'phins_att_pixsealgsts', 'phins_att_pixsestatus', 'phins_att_pixseht0sts', 'posmv_gpgll'];
@@ -237,6 +237,8 @@ n_sentences = length(js.sentences);
 id = js.id; id = lower(id);
 fprintf(fid,'\n\n%s%s %2d%s\n','%',js.filename,n_sentences,'  sentences');
 
+specchar = {' ', ',', '''', ';'};
+
 opt1 = 'ship'; opt2 = 'rvdas_form'; get_cropt
 if use_cruise_views
     sqlpre = [view_name '_'];
@@ -271,6 +273,7 @@ for ks = 1:n_sentences
             f = s.field(kf);
         end
         fname = f.fieldNumber;
+        longname = replace(fname, specchar, '_');
         if isfield(f,'units'); funit = f.units; else; funit = f.unit; end
         
         skipit = false;
@@ -287,15 +290,17 @@ for ks = 1:n_sentences
             skipit = skipit || sum(contains(fname,skips.pat,'IgnoreCase',true));
         end
         if skipit
-            fprintf(fid,'%s %28s %30s\n','%',['''' fname ''''],['''' funit '''']);
+            fprintf(fid,'%s %28s %30s %80s\n','%',['''' fname ''''],['''' funit ''''],['''' longname '''']);
         else
-            fprintf(fid,'%30s %30s\n',['''' fname ''''],['''' funit '''']);
+            fprintf(fid,'%30s %30s %80s\n',['''' fname ''''],['''' funit ''''],['''' longname '''']);
             try
                 names_units.(sqlname).(fname).units = funit; % will fail if sqlname or fname are invalid. Some gravity meter json files define names that are invalid matab names, eg with spaces and starting with a number
+                names_units.(sqlname).(fname).long_name = longname;
             catch
                 sqlname = matlab.lang.makeValidName(sqlname);
                 fname = matlab.lang.makeValidName(fname);
                 names_units.(sqlname).(fname).unit = funit;
+                names_units.(sqlname).(fname).long_name = longname;
             end
         end
     end

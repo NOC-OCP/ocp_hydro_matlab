@@ -47,14 +47,7 @@ else
     co.redoctm = 0;
 end
 
-% %get edits to do
-% if exist('co','var')
-%     fn = fieldnames(co);
-%     m = strncmp('bad',fn,3);
-%     co = rmfield(co,fn(m));
-%     fn = intersect(fn,{'pumpsNaN';'rangelim';'despike'});
-%     co = rmfield(co,fn);
-% end
+%get default and cruise-(/station-)specific edits to do
 opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt
 
 [d, h] = mloadq(infile,'/');

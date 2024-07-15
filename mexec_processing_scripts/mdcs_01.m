@@ -50,8 +50,7 @@ if ~isfield(ds,'dc_bot') || auto_bot
     ds.scan_bot = d1.scan(ds.dc_bot);
     ds.press_bot = d1.press(ds.dc_bot);
     ds.time_bot = d1.time(ds.dc_bot);
-    m = ['Bottom of cast is at dc ' sprintf('%d',ds.dc_bot) ' pressure ' sprintf('%8.1f',ds.press_bot)];
-    fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
+    fprintf(MEXEC_A.Mfidterm,'Bottom of cast is at dc %d, pressure %6.1f\n',ds.dc_bot,ds.press_bot);
 end
 
 if ~isfield(ds,'dc_start') || auto_start
@@ -72,8 +71,7 @@ if ~isfield(ds,'dc_start') || auto_start
     ds.scan_start = d1.scan(ds.dc_start);
     ds.press_start = d1.press(ds.dc_start);
     ds.time_start = d1.time(ds.dc_start);
-        m = ['Start of cast is at dc ' sprintf('%d',ds.dc_start) ' pressure ' sprintf('%8.1f',ds.press_start)];
-        fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
+    fprintf(MEXEC_A.Mfidterm,'Start of cast is at dc %d, pressure %6.1f\n',ds.dc_start,ds.press_start);
 end
 
 if ~isfield(ds,'dc_end') || auto_end
@@ -102,8 +100,7 @@ if ~isfield(ds,'dc_end') || auto_end
     ds.scan_end = d1.scan(ds.dc_end);
     ds.press_end = d1.press(ds.dc_end);
     ds.time_end = d1.time(ds.dc_end);
-    m = ['End of cast is at dc ' sprintf('%d',ds.dc_end) ' pressure ' sprintf('%8.1f',ds.press_end)];
-    fprintf(MEXEC_A.Mfidterm,'%s\n','',m)
+    fprintf(MEXEC_A.Mfidterm,'End of cast is at dc %d, pressure %6.1f\n',ds.dc_end,ds.press_end);
 end
 
 %corresponding indices in 24hz file
@@ -113,7 +110,7 @@ d24 = mloadq(infile0,'scan',' ');
 [~,ds.dc24_end] = min(abs(d24.scan-ds.scan_end));
 
 % write
-varnames = fieldnames(ds);
+varnames = fieldnames(ds)';
 varunits = repmat({'number'},size(varnames));
 istime = strncmp('time', varnames, 4);
 opt1 = 'mstar'; get_cropt

@@ -85,12 +85,10 @@ end
 
 % adjust: cruise-specific calibrations
 if strcmp(streamtype, 'met')
-    if isfield(d,'cond_raw') && isfield(d,'salinity_raw')
-        d.salinity_raw(isnan(d.cond_raw)) = NaN;
-    end
-    if isfield(d,'temp_housing_raw') && isfield(d,'salinity_raw') %***same comment as above
-        d.salinity_raw(isnan(d.temp_housing_raw)) = NaN;
-    end
+    condvar = munderway_varname('condvar', h.fldnam, 1, 's');
+    salvar = munderway_varname('salvar', h.fldnam, 1, 's');
+    temphvar = munderway_varname('temphvar', h.fldnam, 1, 's');
+    d.(salvar)(isnan(d.(condvar)+d.temphvar)) = NaN;
     opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
     cpstr = '';
     if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
@@ -122,7 +120,7 @@ headvar = munderway_varname('headvar', h.fldnam, 1, 's');
 if ~isempty(headvar)
     [d.dum_e, d.dum_n] = uvsd(ones(size(d.(headvar))), d.(headvar), 'sduv');
     h.fldnam = [h.fldnam 'dum_e' 'dum_n']; h.fldunt = [h.fldunt 'dummy easting' 'dummy northing'];
-    h.comment = ['easting and northing calculated from heading at 1 hz'];
+    h.comment = '\n easting and northing calculated from heading at 1 hz';
     didedits = 1;
 end
 
@@ -183,6 +181,7 @@ if ~isempty(iib)
     end
 end
 
+%***old scs/techsas code, update?
 if ismember(abbrev,{'gys', 'gyr', 'gyro_s', 'gyropmv', 'posmvpos'})
     %work on the latest file, which already be an edited version; always output to otfile
     tflag = m_flag_monotonic(d.time); 

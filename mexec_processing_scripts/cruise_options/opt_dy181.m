@@ -21,8 +21,6 @@ switch opt1
                 RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/'; %original
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
                 RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr';
-            case 'rvdas_streams'
-                tablesource = 'mrtables_edited';
         end
 
     case 'uway_proc'
@@ -58,6 +56,10 @@ switch opt1
                     blinfile = fullfile(root_botraw,sprintf('%s_CTD%04d.bl', upper(mcruise), stn));
                 end
             case 'rawedit_auto'
+                if stn==61
+                    co.despike.cond1 = [0.02 0.02];
+                    co.despike.cond2 = [0.02 0.02];
+                end
         end
 
     case 'mfir_01'
