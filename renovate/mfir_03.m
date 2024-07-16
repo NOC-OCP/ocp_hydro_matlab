@@ -31,7 +31,7 @@ firmethod = 'medint';
 clear firopts;
 firopts.int = [-1 120]; %average over 5 s, like in .ros file
 firopts.prefill = 24*5; %fill gaps up to 5 s first
-opt1 = mfilename; opt2 = 'fir_fill'; get_cropt
+opt1 = 'nisk_proc'; opt2 = 'fir_fill'; get_cropt
 [dfir, hfir] = mload(infilef,'scan',' ');
 [dc, hc] = mload(infile1, var_copystr);
 dc = grid_profile(dc, 'scan', dfir.scan, firmethod, firopts);

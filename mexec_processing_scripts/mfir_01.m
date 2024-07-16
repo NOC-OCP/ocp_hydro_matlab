@@ -14,7 +14,7 @@ blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stn));
 if ~exist(blinfile,'file')
     blinfile = fullfile(root_botraw, sprintf('%s_%03d.bl', mcruise, stn));
 end
-opt1 = 'ctd_proc'; opt2 = 'blfilename'; get_cropt
+opt1 = 'nisk_proc'; opt2 = 'blfilename'; get_cropt
 if ~exist(blinfile,'file')
     fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stn);
     pause
@@ -62,15 +62,41 @@ position = position(m);
 niskin = niskin_number(m); 
 niskin_flag = niskin_flag(m);
 clear m ia ib
-opt1 = mfilename; opt2 = 'botflags'; get_cropt %change flags here
+opt1 = 'nisk_proc'; opt2 = 'botflags'; get_cropt %change flags here
 %check that possible bad code in opt file hasn't added dimensions
 if size(niskin)==size(niskin_flag)
 else
     error('niskin and niskin_flag sizes do not match; check opt_%s',mcruise)
 end
 
-%--------------------------------
+%in case cast was stitched together by offsetting scan
+opt1 = 'ctd_proc'; opt2 = 'cast_split_comb'; get_cropt
+blappend = 0;
+if exist('cast_scan_offset','var') && cast_scan_offset(1)==stnlocal
+    if isnan(cast_scan_offset(3))
+        warning('not applying NaN offset to .bl scan number for %s',stn_string)
+    else
+        scan = scan + cast_scan_offset(3);
+        opt1 = 'castpars'; opt2 = 'minit'; stn = floor(stn); get_cropt
+        blotfile_appendto = fullfile(root_ctd, sprintf('fir_%s_%s',mcruise,stn_string)); 
+        if exist(m_add_nc(blotfile_appendto),'file')
+            blappend = 1;
+        else
+            blotfile = blotfile_appendto;
+        end
+    end
+end
+
 comment = ['input data from ' blinfile];
+if blappend
+    h = m_read_header(blotfile_appendto);
+    h.comment = [h.comment '\n' comment];
+    d.scan = scan; d.position = position; 
+    d.niskin = niskin; d.niskin_flag = niskin_flag;
+    mfsave(blotfile_appendto, d, h, '-merge', 'scan')
+
+else
+
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
 MEXEC_A.MARGS_IN = {
     blotfile
@@ -114,3 +140,4 @@ MEXEC_A.MARGS_IN = {
     };
 msave
 %--------------------------------
+end

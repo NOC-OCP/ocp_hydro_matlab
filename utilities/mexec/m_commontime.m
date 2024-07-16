@@ -8,8 +8,8 @@ function [time1_new, varargout] = m_commontime(varargin)
 %
 % if timevar is not specified it defaults to 'time'
 %
-% uo1 and uo2 are input in order and can both/either have information in a
-%   combination of forms:  
+% uo1 and uo2 are input in order and can have information in one (the same)
+%   or two (different) forms from this list: 
 % a) string of cf-format units (e.g. 'seconds since 2023-01-31 10:00:05')
 % b) the string 'datenum' (equivalent to 'days since 0000-00-00
 %    00:00:00')
@@ -30,7 +30,8 @@ function [time1_new, varargout] = m_commontime(varargin)
 %
 % [d1,h1] = mload(file1,'/'); [d2,h2] = mload(file2,'/');
 % time1_new = m_commontime(d1.time,h1.data_time_origin,h2.data_time_origin);
-% % time1_new can now be compared with d2.time
+% % time1_new can now be compared with d2.time (assuming h1 and h2
+% % data_time_origin were not empty)
 %
 % [d1,h1] = mload('sam_dy146_all','/');
 % d1.utime = m_commontime(d1,'utime',h1,'days since 2022-01-01');

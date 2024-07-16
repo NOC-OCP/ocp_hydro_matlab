@@ -101,8 +101,7 @@ switch opt1
         switch opt2
             case 'redoctm'
             case 'cnvfilename'
-            case 'blfilename'
-            case 'cast_split'
+            case 'cast_split_comb'
             case 'rawedit_auto'
                 %when pumps are off
                 co.pumpsNaN.temp1 = 12; %T takes 1/2 s to recover
@@ -135,6 +134,13 @@ switch opt1
                 if isfield(co,'calstr')
                     co = rmfield(co,'calstr'); %no default, must be set by opt_{cruise}
                 end        
+        end
+
+    case 'nisk_proc'
+        switch opt2
+            case 'blfilename'
+            case 'botflags'
+            case 'fir_fill'
         end
 
     case 'uway_proc'

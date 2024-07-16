@@ -92,7 +92,10 @@ if exist(infiled,'file')
 
     %call heaveND to find pressure offsets to make filtered up gamma match dn gamma
     dpn = heaveND(dn_psal,dn_temp,up_psal,up_temp,pg,hd.longitude,hd.latitude);
-
+    if ~sum(~isnan(dpn))
+        return
+    end
+    
     %interpolate downcast data from pg-dpn back to upress
     for vno = 1:length(var_copycell)
         vmsk = strcmp(var_copycell{vno},hd.fldnam);

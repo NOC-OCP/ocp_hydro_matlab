@@ -35,9 +35,14 @@ up_nd = gamma_n(up_psal,up_temp,pdn,lon0,lat0);
 % Avoid extrapolation or NaNs 
 ilo = up_nd < min(dn_nd);  up_nd(ilo) = min(dn_nd);
 ihi = up_nd > max(dn_nd);  up_nd(ihi) = max(dn_nd);
-[~,isort] = sort(dn_nd);
-pup = interp1(dn_nd(isort),pdn(isort),up_nd);
-dp0 = pup-pdn(isort); 
+[~,isort] = sort(dn_nd); isort = isort(~isnan(dn_nd(isort)));
+if ~isempty(isort)
+    pup = interp1(dn_nd(isort),pdn(isort),up_nd);
+    dp0 = pup-pdn(isort); 
+else
+    dp = nan(size(pdn));
+    return
+end
 
 % If there is an upper mixed layer
 imix_dn = find(dn_nd < min(dn_nd) + dmix);
@@ -83,6 +88,7 @@ if idebug == 1
 	plot(pdn,dp2,'r')
 	plot(pdn,dp,'k','LineWidth',2)
 end
+
 function [jg_filt,m_filt] = das_filt(jg1,m1,tfilt)
 % Convolve with tukeywin 
 % [jg_filt,m_filt] = das_filt(jg1,m1,tfilt)

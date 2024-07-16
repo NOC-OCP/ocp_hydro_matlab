@@ -32,6 +32,10 @@ switch opt1
 
     case 'castpars'
         switch opt2
+            case 'minit'
+                if stn==65.1
+                  stn_string = sprintf('%03dA',floor(stn)); %only used in mctd_01
+                end
             case 'oxy_align'
                 oxy_end = 1; %truncate oxygen oxy_align s before T,C
             case 's_choice'
@@ -46,14 +50,14 @@ switch opt1
             case 'redoctm'
                 redoctm = 1;
             case 'cnvfilename'
-                cnvfile = fullfile(cdir,sprintf('%s_CTD%03d.cnv',upper(mcruise),stn)); %try stainless first
+                cnvfile = fullfile(cdir,sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
                 if stn==10
-                    cnvfile = fullfile(cdir,sprintf('%s_CTD%04d.cnv',upper(mcruise),stn)); %try stainless first
+                    cnvfile = fullfile(cdir,sprintf('%s_CTD%04d.cnv', upper(mcruise), stn));
                 end
-            case 'blfilename'
-                blinfile = fullfile(root_botraw,sprintf('%s_CTD%03d.bl', upper(mcruise), stn));
-                if stn==10
-                    blinfile = fullfile(root_botraw,sprintf('%s_CTD%04d.bl', upper(mcruise), stn));
+            case 'cast_split_comb'
+                if stn==65.1
+                    otfile_appendto = fullfile(root_ctd,sprintf('ctd_%s_%03d_raw_noctm.nc',mcruise,floor(stn)));
+                    cast_scan_offset = [65.1 65 81192]; %this cast, cast to append to, scan offset
                 end
             case 'rawedit_auto'
                 if stn==61
@@ -62,8 +66,13 @@ switch opt1
                 end
         end
 
-    case 'mfir_01'
+    case 'nisk_proc'
         switch opt2
+            case 'blfilename'
+                blinfile = fullfile(root_botraw,sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
+                if stn==10
+                    blinfile = fullfile(root_botraw,sprintf('%s_CTD%04d.bl', upper(mcruise), stn));
+                end
             case 'botflags'
                 if stn==6
                     niskin_flag(ismember(position,[11 21])) = 9;
@@ -71,6 +80,9 @@ switch opt1
                     niskin_flag(position==11) = 3; %***leaked
                 elseif stn==51
                     niskin_flag(position==11) = 3; %maybe leaking (on recovery, not obviously after), still sampled
+                elseif stn==64
+                    niskin_flag(position==7) = 9; %latch did not release
+
                 end
         end
 

@@ -185,11 +185,13 @@ if ~isempty(extracnv) && ~isempty(extravars)
 end
 
 % in special cases (i.e. yo-yo or tow-yo casts), split file into multiple
-% files
+% files, or append file to existing (if data acquisition was
+% stopped/restarted mid-cast)***
 otfile0 = otfile;
 otfiles = {otfile};
-opt1 = 'ctd_proc'; opt2 = 'cast_split'; get_cropt
-if length(otfiles)>1
+opt1 = 'ctd_proc'; opt2 = 'cast_split_comb'; get_cropt
+
+if length(otfiles)>1 && exist('cast_scan_ranges','var')
     [d,h] = mload(otfile0,'/');
     t = struct2table(d);
     for fno = 1:length(otfiles)
@@ -204,6 +206,23 @@ if length(otfiles)>1
         hnew.comment = [hnew.comment '\n split from original ' h.dataname ' using scan range in opt_' mcruise '.m'];
         mfsave(otfiles{fno},dnew,hnew);
     end
+
+elseif exist('otfile_appendto','var') && exist('cast_scan_offset','var') && cast_scan_offset(1)==stnlocal
+    [d,h] = mload(otfile,'/');
+    %put into time base of other file
+    h0 = m_read_header(otfile_appendto);
+    d.time = m_commontime(d,'time',h,h0);
+    h.fldunt(strcmp('time',h.fldnam)) = h0.fldunt(strcmp('time',h.fldnam));
+    if isnan(cast_scan_offset(3))
+        %calculate from times
+        d0 = mload(otfile_appendto,'scan','time','press',' ');
+        cast_scan_offset(3) = round((d.time(1)-d0.time(1))*24)+(d0.scan(1)-d.scan(1));
+    end
+    sprintf('offsetting cast %s by %d scans (update in opt_cruise for use by mfir_01)',stn_string,cast_scan_offset(3))
+    d.scan = d.scan+cast_scan_offset(3);
+    mfsave(otfile_appendto, d, h, '-merge', 'scan')
+    otfiles = {otfile_appendto}; %now add bottom lat, lon to appended file
+
 end
 
 % Get position at bottom of cast either from ctd-logged nmea lat, lon or

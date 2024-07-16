@@ -69,7 +69,7 @@ switch opt1
                     cnvfile = sprintf('%s_%03d_SS.cnv',upper(mcruise),stnlocal);
                 end
                 cnvfile = fullfile(mgetdir('M_CTD_CNV'),cnvfile);
-            case 'cast_split'
+            case 'cast_split_comb'
                 if stnlocal==3
                     %this file contains 3 and 4
                     otfiles = {otfile; fullfile(mgetdir('ctd'),sprintf('ctd_%s_%03d_raw_noctm.nc',mcruise,4))};
