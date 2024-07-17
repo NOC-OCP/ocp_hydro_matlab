@@ -36,7 +36,7 @@ if exist('iopts','var') && isstruct(iopts)
 elseif exist('numhead','var') && ~isempty(numhead)
     %[ds_oxy, ~] = load_samdata(ofiles, 'numhead', numhead);
 else
-    [ds_oxy, ~] = load_samdata(ofiles, 'hcpat', hcpat, 'icolhead', chrows, 'icolunits', chunits, 'sheets', sheets);
+    [ds_oxy, ~] = load_samdata(ofiles, 'hcpat', hcpat, 'icolunits', chunits, 'sheets', sheets);
 end
 if isempty(ds_oxy)
     error('no data loaded')
@@ -215,7 +215,7 @@ if check_oxy
             [~,~,iis] = intersect(d.sampnum(ii),ds.sampnum,'stable');
             disp('some replicates differ')
             if isfield(d,'botoxyc_per_l')
-                disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), botoxyc (umol/L), Niskin, flag a, flag b, flag c'])
+                disp(['CTD statnum ' num2str(stns(sno)) ': Niskin position, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), botoxyc (umol/L), Niskin, flag a, flag b, flag c'])
                 [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.botoxyc_per_l(ii), d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii), d.botoxyc_flag(ii)]
             else
                 disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), Niskin, flag a, flag b'])

@@ -25,6 +25,7 @@ end
 
 %add to sam file
 mfir_to_sam(stn)
+msbe35_01
 
 %calculate and apply depths
 station_summary(stn)

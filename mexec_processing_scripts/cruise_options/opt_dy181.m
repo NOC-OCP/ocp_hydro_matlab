@@ -64,6 +64,18 @@ switch opt1
                     co.despike.cond1 = [0.02 0.02];
                     co.despike.cond2 = [0.02 0.02];
                 end
+            case 'ctd_cals'
+                co.docal.temp = 0;
+                co.docal.cond = 0;
+                co.docal.oxygen = 0;
+                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1-2e-3/35)';
+                co.calstr.cond.sn42580.msg = 'prelim';
+                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1-8e-3/35)';
+                co.calstr.cond.sn43258.msg = 'prelim';
+                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*1.04;';
+                co.calstr.oxygen.sn432061.msg = 'upcast oxygen s/n 432061 adjusted to agree with 146 samples';
+                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*1.025;';
+                co.calstr.oxygen.sn432068.msg = 'upcast oxygen s/n 432068 adjusted to agree with 142 samples';
         end
 
     case 'nisk_proc'
@@ -156,23 +168,30 @@ switch opt1
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {fullfile(root_oxy,'Winkler Calculation Spreadsheet.xlsx')};
+                ofiles = {fullfile(root_oxy,'summary_150724.xlsx')};
                 iih = 8;
-                hcpat = {'Latitude'};
+                hcpat = {'Date'};
                 chrows = 1; chunits = [];
                             case 'oxy_parse'
                 calcoxy = 0;
-                varmap.statnum = {'ctd_cast_no'};
+                varmap.statnum = {'ctd_cast_no_1'};
                 varmap.position = {'niskin_bot_no'};
                 varmap.fix_temp = {'fixing_temp_c'};
                 varmap.conc_o2 = {'c_o2_umol_per_l'};
             case 'oxy_flags'
-                %botoxya 103, 113, 509
-                %botoxyb 509, 4021?
-                %botoxyc 4013, 
-                %both/all 3: 513, 4017
-
-
+                d.botoxya_flag(ismember(d.sampnum,[103 113 509 4123])) = 3;
+                d.botoxyb_flag(ismember(d.sampnum,[4021])) = 3;
+                d.botoxyc_flag(ismember(d.sampnum,[4013])) = 3;
+                d.botoxya_flag(d.sampnum==4123) = 4; %maybe typo? check
+                bads = ismember(d.sampnum,[3501 3507 3509 3515 3603 3607 3811 4207 5019]);
+                d.botoxya_flag(bads) = max(d.botoxya_flag(bads),4);
+                d.botoxyb_flag(bads) = max(d.botoxyb_flag(bads),4);
+                d.botoxyc_flag(bads) = max(d.botoxyc_flag(bads),4);
+                %check in more detail (botoxy vs ctd): 517
+                %not sure (vs ctd, check gradient again): 3517, 3617, 3817, 4915
+                %why is ctd profile in mctd_evaluate_sensors not having
+                %testcal applied? and why on 48 is it apparently applied to
+                %2up but not to 1hz?
         end
 
     case 'outputs'

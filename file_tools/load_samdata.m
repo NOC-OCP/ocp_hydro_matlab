@@ -120,7 +120,9 @@ for fno = 1:length(infile)
             opts = setvartype(opts,'char');
             if isss
                 opts.DataRange = 'A1';
+                try
                 hdr = readtable(infile{fno}, opts, 'sheet', sheets(sno));
+                catch; break; end
             else
                 opts.DataLines = [1 Inf];
                 hdr = readtable(infile{fno}, opts);
@@ -156,9 +158,10 @@ for fno = 1:length(infile)
         else
             if exist('numhead','var') && numhead>0
                 iih = 1:numhead;
-            else
-                iih = 0;
             end
+        end
+        if ~exist('iih','var')
+                iih = 0;
         end
         
         %get parameters for reading in data rows
