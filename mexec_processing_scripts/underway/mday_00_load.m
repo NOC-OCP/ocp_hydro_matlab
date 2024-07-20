@@ -1,5 +1,5 @@
-function status = mday_00_load(streamname,mstarprefix,root_out,day,year)
-% function status = mday_00_load(streamname,mstarprefix,root_out,day,year)
+function status = mday_00_load(streamname,mstarprefix,root_out,day,year,mrtv)
+% function status = mday_00_load(streamname,mstarprefix,root_out,day,year,mrtv)
 %
 % use mrrvdas2mstar or mdatapup to grab a day of data from a techsas NetCDF
 % file, an SCS file, or an RVDAS table, subsample to 1 Hz, and add to
@@ -43,7 +43,12 @@ switch MEXEC_G.Mshipdatasystem
     case 'rvdas'                
         %use streamname in case there is more than one streamname that maps
         %to one mstarname
-        status = mrrvdas2mstar(streamname,dn1,dn2,otfile2,dataname,'q');
+        argot.table = streamname; 
+        argot.dnums = [dn1 dn2]; 
+        argot.otfile = otfile2;
+        argot.dataname = dataname;
+        argot.mrtv = mrtv;
+        status = mrrvdas2mstar('noparse',argot);
     case 'scs'
         status = scs_to_mstar2(streamname,mstarprefix,dn1,dn2,otfile2,dataname);
     otherwise

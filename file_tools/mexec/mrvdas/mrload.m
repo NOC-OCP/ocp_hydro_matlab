@@ -20,20 +20,30 @@ function [dd,varnames,varunits] = mrload(varargin)
 %
 %   mrload 'salinity' tsg [28 0 0 0] [28 23 59 59]; dd = ans;
 %
+%   argot.table = 'pospmv'; argot.dnums = [now-1 now]; 
+%     argot.varlist = 'latitude,longitude'; dd = mrload('noparse',argot);
+%
 % Input:
 %
-% The input arguments are parsed through mrparseargs. See the extensive
-%   help in that function for descriptions of the arguments.
-%
-% The arguments can be provided in any order, except that dv1 must come
+% If the first input argument is 'noparse', the required inputs (rtable,
+%   dnums = [dv1 dv2], varlist, mrtv) must be supplied as parameter-value
+%   pairs (and optional inputs qflag may be supplied also as a
+%   parameter-value pair). In this case dnums must be datenums (not
+%   datevecs)
+%   Otherwise, the input arguments are parsed through mrparseargs. See the
+%   extensive help in that function for descriptions of the arguments.
+%   The arguments can be provided in any order, except that dv1 must come
 %   before dv2. The table, qflag and varlist will be found by
 %   mrparseargs.
 %
-% table: is the rvdas table name or the mexec shorthand
+% rtable: is the rvdas table name or the mexec shorthand
 % dv1 and dv2 are datevecs or datenums for the start and end of data.
 %   Default dv1 is far in the past; default dv2 is far in the future.
 % If qflag is 'q', fprintf will be suppressed. Default is ''
-% varlist is a list of rvdas variable names to be loaded. Default is all.
+% varlist is a list of rvdas variable names to be loaded. Default (if
+%   varlist = '') is all. 
+% mrtv is the output of mrdefine, a lookup table for rvdas tablenames and
+%   variables, and mstar files and variables
 %
 % Output:
 %
@@ -51,53 +61,28 @@ function [dd,varnames,varunits] = mrload(varargin)
 
 m_common
 
-argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-rtable = argot.table;
-qflag = argot.qflag;
-def = mrdefine('this_cruise');
-if isempty(rtable)
-    disp(def.tablemap(:,2))
-    varargin = [varargin input('which rvdas data stream (from list above)?  ','s')];
-    %now check it
-    argot = mrparseargs(varargin);
-    rtable = argot.table;
-    if isempty(rtable)
-        error('still no match to rvdas data stream')
-    end
-end
-
-if length(argot.otherstrings) < 1
-    varstring = '';
+if nargin>0 && strcmp(varargin{1},'noparse')
+    argot = varargin{2};
 else
-    varstring = argot.otherstrings{1};
+    argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
 end
-
-switch length(argot.dnums)
-    case 2
-        dv1 = argot.dnums(1);
-        dv2 = argot.dnums(2);
-    case 1
-        dv1 = argot.dnums(1);
-        dv2 = now+50*365; % far in future
-    case 0
-        dv1 = now-50*365; % far in past
-        dv2 = now+50*365; % far in future
+rtable = argot.table;
+mrtv = argot.mrtv;
+if isfield(argot,'qflag') && isempty(argot.qflag)
+    quiet = 0; 
+else
+    quiet = 1; 
 end
-
-dv1 = datevec(datenum(dv1)); % this will convert a datenum to a datevec if it isn't already
-dv2 = datevec(datenum(dv2));
 
 % sort out the table name
-rtable = mrresolve_table(rtable); % table is now an RVDAS table name for sure.
-tablemap = def.tablemap;
-ktable = strcmp(rtable,tablemap(:,2));
-mtable = tablemap{ktable,1}; % mtable is the mexec tablename
+rtable = mrresolve_table(rtable,mrtv); % table is now an RVDAS table name for sure.
+ktable = strcmp(rtable,mrtv.tablenames);
 
 %get command
-[sqlcom, units] = mr_make_psql(rtable,dv1,dv2,varstring); % it should be fine if varstring is empty
+sqlcom = mr_make_psql('noparse',argot);
 
 %now run
-[fnin, ~, ~] = mr_try_psql(sqlcom);
+[fnin, ~, ~] = mr_try_psql(sqlcom,quiet);
 
 clear ds dd 
 ds = readtable(fnin,'Delimiter',',');
@@ -105,20 +90,10 @@ ds = readtable(fnin,'Delimiter',',');
 % now fix variable names in the table, as well as the units array
 names = ds.Properties.VariableNames;
 units = repmat({' '},size(names));
-if ~isempty(find(strcmp(rtable,def.renametables_list), 1)) % some vars to be renamed for this table
-    rlist = def.renametables.(rtable)'; % rlist now has the list of renaming to be done
-    [~,ia,ib] = intersect(names,rlist(1,:),'stable');
-    %***check for units matching rlist(2,:)?
-    names(ia) = rlist(3,ib);
-    units(ia) = rlist(4,ib);
-end
-% make all variable names lowercase in mexec
-names = lower(names);
-% make all empty units ' '
-m = cellfun('isempty', units);
-if sum(m)
-    units{m} = ' ';
-end
+[~,ia,ib] = intersect(names,mrtv.tablevars{ktable});
+%change to mstarnames
+names(ia) = mrtv.mstarvars{ktable}(ib);
+units(ia) = mrtv.mstarunts{ktable}(ib);
 
 %switch time to datenum
 if numel(ds.time) == 0
@@ -147,8 +122,8 @@ dd = rmfield(dd,'time');
 units = units(ii);
 
 
-if isempty(qflag)
-    fprintf(MEXEC_A.Mfidterm,'%d %s%s%s\n',length(fieldnames(dd)),' vars loaded from ''',mtable,''' including time');
+if ~quiet
+    fprintf(MEXEC_A.Mfidterm,'%d %s%s%s\n',length(fieldnames(dd)),' vars loaded from ''',rtable,''' including time');
     numdc = size(ds,1);
     if numdc > 0
         d1 = dd.dnum(1); d2 = dd.dnum(end);
@@ -201,12 +176,3 @@ if ~isempty(k1) && ~isempty(k2) %found londegm and londir, or latdegm and latdir
     names(ii) = [];
     units(ii) = [];
 end
-
-
-
-
-
-
-
-
-

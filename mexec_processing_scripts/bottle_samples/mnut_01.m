@@ -47,10 +47,8 @@ opt1 = 'botnut'; opt2 = 'nut_parse'; get_cropt %edit map for renaming variables,
 ds_nut.sampnum = 100 * ds_nut.statnum + ds_nut.position;
 ds_nut = ds_nut(isfinite(ds_nut.sampnum),:);
 
-% check_nut = 0;
-% opt1 = 'check_sams'; get_cropt
-%***
-
+check_nut = 0;
+opt1 = 'check_sams'; get_cropt
 %***replicates
 
 clear dnew hnew

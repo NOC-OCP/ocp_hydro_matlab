@@ -47,9 +47,6 @@ function mrlistit(varargin)
 m_common
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-table = argot.table;
-qflag = argot.qflag;
-
 
 if length(argot.othernums) < 1
     tint = 0; % print all by default
@@ -58,26 +55,7 @@ else
 end
 tintd = tint/86400; % days
 
-
-if length(argot.otherstrings) < 1
-    varstring = '';
-else
-    varstring = argot.otherstrings{1};
-end
-
-switch length(argot.dnums)
-    case 2
-        dn1 = argot.dnums(1);
-        dn2 = argot.dnums(2);
-    case 1
-        dn1 = argot.dnums(1);
-        dn2 = floor(now+50*365); % far in future
-    case 0
-        dn1 = floor(now-50*365); % far in past
-        dn2 = ceil(now+50*365); % far in future
-end
-
-[d,n,u] = mrload(table,dn1,dn2,qflag,varstring);
+[d,n,u] = mrload('noparse',argot);
 
 % find the dnum
 kdnum = find(strcmp('dnum',n));

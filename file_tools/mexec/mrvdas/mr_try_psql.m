@@ -1,4 +1,4 @@
-function [csvname, result, psql_string] = mr_try_psql(sqltext)
+function [csvname, result, psql_string] = mr_try_psql(sqltext,varargin)
 % constructs psql string and tries with and without LD_LIBRARY PATH
 % psql string is constructed by combining: 
 % 1) the database/access information, set here (using ship,
@@ -10,12 +10,13 @@ function [csvname, result, psql_string] = mr_try_psql(sqltext)
 
 m_common
 opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
+quiet = 1; if nargin>1; quiet = varargin{1}; end
 
 %if we haven't checked before in this session, first see if we have the
 %credentials, either in ~/.pgpass (with correct, user-only permissions) or
 %in another (shared) file specified in opt_cruise 
 if ~isfield(MEXEC_G,'RVDAS_checked') || isempty(MEXEC_G.RVDAS_checked)
-    mrvdas_check(RVDAS);
+    mrvdas_check_dbaccess(RVDAS);
 end
 
 %now construct the string and try first without then with changes to
@@ -49,6 +50,6 @@ end
 
 if stat~=0
     error('failed at executing\n %s\n does your ~/.pgpass contain the correct machine:port:database:user:password?', psql_string);
-else
+elseif ~quiet
     disp(['ran: ' psql_string])
 end

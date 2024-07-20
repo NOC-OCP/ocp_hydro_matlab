@@ -1,5 +1,5 @@
 function [latout,lonout] = mrposinfo(varargin)
-% function mrposinfo(table,dnum,qflag)
+% function mrposinfo(rtable,dnum,qflag)
 % 
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -30,7 +30,7 @@ function [latout,lonout] = mrposinfo(varargin)
 % The input arguments are parsed through mrparseargs. See the extensive
 %   help in that function for descriptions of the arguments.
 %
-% table: is the rvdas table name or the mexec shorthand. The default
+% rtable: is the rvdas table name or the mexec shorthand. The default
 %   is taken from MEXEC_G.MEXEC_G.default_navstream. The table must be one
 %   that has an mexec shorthand.
 % If qflag is 'q', fprintf will be suppressed in calls to 
@@ -61,17 +61,17 @@ function [latout,lonout] = mrposinfo(varargin)
 %   lonmin, longitude minutes, always positive. londeg is negative in W hemisphere
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-table = argot.table;
+rtable = argot.table;
 qflag = argot.qflag;
 
 
 m_common
 
-if isempty(table)
+if isempty(rtable)
     opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-    table = default_navstream;
+    rtable = default_navstream;
 end
-[rtable, mtable] = mrresolve_table(table); %make it an rvdas table name
+[rtable, mtable] = mrresolve_table(rtable); %make it an rvdas table name
 
 if length(argot.dnums) < 1
     dn = now-10/86400;
@@ -79,11 +79,12 @@ else
     dn = argot.dnums(1);
 end
 
-d = mrload(rtable,dn-5*60/86400,dn+5*60/86400,qflag); % load 30 minutes either side
+argot.dnums = dn+[-5 5]*60/86400; %load 30 min either side
+d = mrload('noparse',argot); 
 
 if ~isfield(d,'latitude') || ~isfield(d,'longitude')
     if isempty(qflag)
-    fprintf(MEXEC_A.Mfider,'%s %s\n','latitude or longitude not found in table', table);
+    fprintf(MEXEC_A.Mfider,'%s %s\n','latitude or longitude not found in table', rtable);
     end
     % create d.lat and d.lon as empty, so rest of code works
     d.latitude = [];

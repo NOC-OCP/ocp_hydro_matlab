@@ -1,4 +1,4 @@
-function [rtable, mtable] = mrresolve_table(tablein)
+function [rtable, mtable] = mrresolve_table(tablein,varargin)
 % function rtable = mrresolve_table(tablein)
 % function [rtable, mtable] = mrresolve_table(tablein)
 %
@@ -39,11 +39,14 @@ m_common
 if isempty(tablein)
     error('Must specify non-empty tablein to lookup')
 end
+if nargin>1
+    mrtv = varargin{1};
+else
+    mrtv = mrdefine;
+end
 
-def = mrdefine('this_cruise');
-
-tmap_mexec = def.tablemap(:,1);
-tmap_rvdas = def.tablemap(:,2);
+tmap_mexec = mrtv.mstarpre;
+tmap_rvdas = mrtv.tablenames;
 
 rtable = []; mtable = [];
 n = 0; nmax = 3;
@@ -60,8 +63,8 @@ while isempty(rtable) && isempty(mtable) && n<nmax
         end
     elseif ~isempty(kmexec)
         % mexec shorthand table name found
-        if length(kmexec) > 1 % the table is defective and an mexec short name appears more than once
-            fprintf(MEXEC_A.Mfider,'%s\n%s\n','Input name is found more than once in the list of mexec shorthand names,','try one of the matching rvdas table names (see mrtables_from_json for more info):');
+        if length(kmexec) > 1 
+            fprintf(MEXEC_A.Mfider,'%s\n%s\n','Input name is found more than once in the list of mexec shorthand names,','try one of the matching rvdas table names:');
             fprintf(MEXEC_A.Mfider,'%s\n',tmap_rvdas{kmexec})
             tablein = input('input new table name or ''q'' to quit ','s');
             if isempty(tablein) || strcmp(tablein,'q')

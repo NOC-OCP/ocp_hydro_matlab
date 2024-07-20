@@ -42,8 +42,7 @@ function mrgaps(varargin)
 m_common
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-table = argot.table;
-qflag = argot.qflag;
+rtable = argot.table;
 
 if length(argot.othernums) < 1
     gap = 10; % seconds default
@@ -51,22 +50,10 @@ else
     gap = argot.othernums(1);
 end
 
-switch length(argot.dnums)
-    case 2
-        dn1 = argot.dnums(1);
-        dn2 = argot.dnums(2);
-    case 1
-        dn1 = argot.dnums(1);
-        dn2 = now+50*365; % far in future
-    case 0
-        dn1 = now-50*365; % far in past
-        dn2 = now+50*365; % far in future
-end
-
-[d,~,~] = mrload(table,dn1,dn2,qflag);
+[d,~,~] = mrload('noparse',argot);
 
 mtime = d.dnum;
-mtime = [dn1 ; mtime(:) ; dn2];
+mtime = [datenum(argot.dnums(1)) ; mtime(:) ; datenum(argot.dnums(2))];
 dtime = diff(mtime)*86400;
 
 kgaps = find(dtime > gap);
@@ -77,7 +64,7 @@ ng = length(kgaps);
 yyyy = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
 doffset = datenum([yyyy 1 1 0 0 0]);
 
-fprintf(MEXEC_A.Mfidterm,'\n%s %s %d %s %s %s\n\n',table,' has ',ng,' gaps greater than ',num2str(gap),' seconds');
+fprintf(MEXEC_A.Mfidterm,'\n%s %s %d %s %s %s\n\n',rtable,' has ',ng,' gaps greater than ',num2str(gap),' seconds');
 
 for k = 1:ng
     t1 = mtime(kgaps(k)); 

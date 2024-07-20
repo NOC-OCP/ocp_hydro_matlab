@@ -1,5 +1,6 @@
-function rvdas_tables = mrgettables
-% function rvdas_tables = mrgettables;
+function rvdas_tables = mrgettables(varargin)
+% rvdas_tables = mrgettables
+% rvdas_tables = mrgettables(quiet)
 % 
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -20,17 +21,16 @@ function rvdas_tables = mrgettables
 %
 % Output:
 %
-%   A structure in which the fieldnames are the names of the tables in
-%   rvdas. The list of tables is determined from the psql \dt command, or
-%   for the SDA, \dv (meaning that they will be prefixed with cruise_ e.g.
-%   sda025_anemometer_metek_ ... etc.)
+%   A table with one column, tablenames, whose values are the names of
+%   the tables in rvdas. The list of tables is determined from the psql \dt
+%   command, or for the SDA, \dv (meaning that they will be prefixed with
+%   cruise_ e.g. sda025_anemometer_metek_ ... etc.)
 %
-%   So fieldnames(rvdas_tables) is a cell array of the table names.
-%   Each field is []
+%   So rvdas_tables.tablenames is a cell array of the table names.
+
 
 m_common
-
-% place to temporarily put list of tables
+quiet = 1; if nargin>0; quiet = varargin{1}; end
 
 opt1 = 'ship'; opt2 = 'rvdas_form'; get_cropt
 if use_cruise_views
@@ -43,7 +43,7 @@ if ismac
 else
     sqltext = [sqltext ' '];
 end
-[csvname, ~, ~] = mr_try_psql(sqltext);
+[csvname, ~, ~] = mr_try_psql(sqltext, quiet);
 
 fid = fopen(csvname,'r');
 tl = cell(0);
@@ -56,6 +56,8 @@ fclose(fid);
 
 nlines = length(tl);
 
+tablenames = cell(nlines,1);
+n = 1;
 for kl = 1:nlines
     t = tl{kl};
     kbar = strfind(t,'|');
@@ -66,13 +68,12 @@ for kl = 1:nlines
         tabname = s2;
         while strcmp(tabname(1),' '); tabname(1) = []; end
         while strcmp(tabname(end),' '); tabname(end) = []; end
-        rvdas_tables.(tabname) = [];
+        tablenames{n} = tabname; n = n+1;
     end
-    
 end
+tablenames = tablenames(1:n-1);
 
+rvdas_tables = cell2table(tablenames);
 
 delete(csvname);
 
-
-return

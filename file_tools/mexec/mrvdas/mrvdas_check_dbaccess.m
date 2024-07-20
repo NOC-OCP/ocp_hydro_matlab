@@ -1,4 +1,4 @@
-function mrvdas_check(RVDAS)
+function mrvdas_check_dbaccess(RVDAS)
 
 global MEXEC_G
 

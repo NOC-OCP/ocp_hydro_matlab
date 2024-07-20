@@ -21,14 +21,9 @@ if regrid
 
     %load singlebeam if we have it
     iss = 0;
-    [~,iis,~] = intersect(shortnames,{'sim' 'ea600' 'ea640' 'singleb' 'sbm' 'singlebeam_kongsberg'});
+    [~,iis,~] = intersect(mrtv.mstarpre,{'sim' 'ea600' 'ea640' 'singleb' 'sbm' 'singlebeam_kongsberg'});
     if ~isempty(iis)
-        filesbin = fullfile(mgetdir(shortnames{iis}), [shortnames{iis} '_' mcruise '_all_edt.nc']);
-        if ~exist(filesbin,'file')
-            filesbin = fullfile(MEXEC_G.mexec_data_root,'bathy','sbm',[shortnames{iis} '_' mcruise '_all_edt.nc']);
-            %there should always be an _edt file because of sound speed
-            %correction
-        end
+        filesbin = fullfile(mrtv.mstardir{iis}, [mrtv.mstarpre{iis} '_' mcruise '_all_edt.nc']);
         if exist(filesbin,'file')
             [ds,hs] = mload(filesbin,'/');
             ds.time = m_commontime(ds, 'time', hs, timun);
@@ -47,14 +42,11 @@ if regrid
 
     %load multibeam if we have it
     ism = 0;
-    [~,iim,~] = intersect(shortnames,{'em120' 'em122' 'multib' 'mbm' 'multibeam_kongsberg_em122'});
+    [~,iim,~] = intersect(mrtv.mstarpre,{'em120' 'em122' 'multib' 'mbm' 'multibeam_kongsberg_em122'});
     if ~isempty(iim)
-        filembin = fullfile(mgetdir(shortnames{iim}), [shortnames{iim} '_' mcruise '_all_edt.nc']);
+        filembin = fullfile(mrtv.mstardir{iim}, [mrtv.mstarpre{iim} '_' mcruise '_all_edt.nc']);
         if ~exist(filembin,'file')
-            filembin = fullfile(MEXEC_G.mexec_data_root,'bathy','mbm',[shortnames{iim} '_' mcruise '_all_edt.nc']);
-            if ~exist(filembin,'file')
-                filembin = fullfile(MEXEC_G.mexec_data_root,'bathy','mbm',[shortnames{iim} '_' mcruise '_all_raw.nc']);
-            end
+            filembin = fullfile(mrtv.mstardir{iim},[mrtv.mstarpre{iim} '_' mcruise '_all_raw.nc']);
         end
         if exist(filembin,'file')
             [dm,hm] = mload(filembin,'/');

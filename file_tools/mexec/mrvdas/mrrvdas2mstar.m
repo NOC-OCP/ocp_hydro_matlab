@@ -1,5 +1,5 @@
 function status = mrrvdas2mstar(varargin)
-% function sttaus = mrrvdas2mstar(table, dn1, dn2, otfile, dataname, varlist, qflag);
+% function status = mrrvdas2mstar(table, dn1, dn2, otfile, dataname, varlist, qflag);
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -43,49 +43,28 @@ function status = mrrvdas2mstar(varargin)
 m_common
 status = 1;
 
-argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-table = argot.table; 
-if isempty(table)
-    disp(varargin)
-    error('no rvdas table or mstar shorthand found in inputs (above)');
+if nargin>0 && strcmp(varargin{1},'noparse')
+    argot = varargin{2};
+    otfile = argot.otfile;
+    dataname = argot.dataname;
+else
+    argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
+    if length(argot.otherstrings)<1
+        otfile = argot.table;
+    else
+        otfile = argot.otherstrings{1};
+    end
+    if length(argot.otherstrings)<2
+        dataname = otfile;
+    else
+        dataname = argot.otherstrings{2};
+    end
 end
-qflag = argot.qflag;
 clear varargin % because otherwise they confuse msave
-
-if length(argot.otherstrings) < 1
-    otfile = argot.table;
-else
-    otfile = argot.otherstrings{1};
-end
-
-if length(argot.otherstrings) < 2
-    dataname = otfile;
-else
-    dataname = argot.otherstrings{2};
-end
-
-if length(argot.otherstrings) < 3
-    varstring = '';
-else
-    varstring = argot.otherstrings{3};
-end
 
 otfile = m_add_nc(otfile);
 
-switch length(argot.dnums)
-    case 2
-        dn1 = argot.dnums(1);
-        dn2 = argot.dnums(2);
-    case 1
-        dn1 = argot.dnums(1);
-        dn2 = now+50*365; % far in future
-    case 0
-        dn1 = now-50*365; % far in past
-        dn2 = now+50*365; % far in future
-end
-
-
-[dd, names, units] = mrload(table,dn1,dn2,varstring,qflag);
+[dd, names, units] = mrload('noparse',argot);
 
 if numel(dd.dnum) == 0
     % no data found, quit without writing a file
@@ -136,7 +115,7 @@ for kl = 1:length(names)
         dd.(vname) = dd.(vname)(iit);
     else
         dd = rmfield(dd,vname);
-        warning('skipping non-numeric variable %s from table %s',vname,table)
+        warning('skipping non-numeric variable %s from table %s',vname,argot.table)
     end
 end
 hnew.fldnam = hnew.fldnam(m); hnew.fldunt = hnew.fldunt(m);

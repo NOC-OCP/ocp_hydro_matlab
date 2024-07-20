@@ -1,18 +1,18 @@
-function d = mrdefine(varargin)
-% function d = mrdefine
-% function d = mrdefine('this_cruise')
+function mrtv = mrdefine(varargin)
+% function mrtv = mrdefine
+% function mrtv = mrdefine('reload')
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
 % First drafts of scripts for start jc211 28 jan 2021, alongside in Stanley
-% 
+%
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
 % Create definitions for mexec processing of rvdas data
 %
 % Examples
-%   
+%
 %   def = mrdefine
 %
 % Input:
@@ -23,27 +23,27 @@ function d = mrdefine(varargin)
 %
 % structure d
 % eg
-%   d = 
-% 
+%   d =
+%
 %              mrtables: [1x1 struct]
 %         mrtables_list: {25x1 cell}
 %              tablemap: {26x2 cell}
 %          renametables: [1x1 struct]
 %     renametables_list: {16x1 cell}
 %
-% d.mrtables: a structure with one field for each table in rvdas that we 
+% d.mrtables: a structure with one field for each table in rvdas that we
 %    are interested in, defined in mrtables_from_json. This is a subset of
 %    about 25 of all the possible rvdas tables, which number about 70. eg
 %    d.mrtables.ships_gyro_hehdt. If an input argument is supplied and is
 %    'this_cruise', tables will be further limited to those in the current
 %    cruise's database using mrgettables. (Once there is a metadata
-%    database rather than using json files this step may be obsolete). 
+%    database rather than using json files this step may be obsolete).
 % d.mrtables_list: A list of the fields in d.mrtables in a cell array. This
 %    would be equivalent to fieldnames(d.mrtables)
 % d.tablemap: The list that pairs RVDAS table names and mexec short names;
 %    defined in mrnames.m. Each table has an rvdas name and a simpler mexec
 %    name.eg
-%    'pospmv'       'posmv_pos_gpgga' 
+%    'pospmv'       'posmv_pos_gpgga'
 % d.renametables: A list of old and new variable or unit names that will be
 %    changed when rvdas data are read in. Defined in mrrename_tables.m
 %    d.renametables is a structure. The fields are the names of the table
@@ -58,59 +58,47 @@ function d = mrdefine(varargin)
 %
 % calls mrtables_from_json, mrnames, mrrename_varunits
 %
-% With optional input argument: 
+% With optional input arguments (order unimportant):
 %   'this_cruise': also calls mrgettables and limits lists to tables
-%     actually in database for current cruise 
+%     actually in database for current cruise
+%   'check_missing': also prints list of tables defined in mrnames but not
+%     in mrtables (for this cruise)
 
+m_common
+%save to readable (and git-friendly) .csv
+tabledefcsv = fullfile(fileparts(mfilename('fullpath')),'rvtabledef.csv');
+%but it doesn't load back in the same way, so also save as .mat
+tabledefmat = fullfile(MEXEC_G.mexec_data_root,'rvdas','rvtabledef.mat');
 
-% Identify rvdas tables of interest from json files
-%d.mrtables = mrtables_from_json; % d.mrtables_list is a list of RVDAS tables we want to be able to use
-d.mrtables = mrtables_edited; %modified from dy174 to dy180
-d.mrtables_list = fieldnames(d.mrtables);
-if nargin>0 && ismember('this_cruise',varargin)
-    %compare to list of tables found by querying the database
-    rt = fieldnames(mrgettables);
-    [~, ia] = setdiff(d.mrtables_list,rt);
-    if ~isempty(ia)
-        d.mrtables = rmfield(d.mrtables,d.mrtables_list(ia));
-        d.mrtables_list(ia) = [];
-        warning('backtrace','off')
-        warning('rvdas:mrdefine:mjsonextra','%d RVDAS tables in mrtables_from_json but not present for this cruise',length(ia));
-        warning('off','rvdas:mrdefine:mjsonextra')
-        warning('backtrace','on')
-    end
+if nargin>0 && strcmp(varargin{1},'reload')
+
+    quiet = 1; if nargin>1; quiet = varargin{2}; end
+
+    % Identify rvdas tables present in database
+    mrtables = mrgetrvdascontents(quiet);
+
+    % Limit to the tables and variables we want to load, add mstar names
+    limit = [1 1];
+    mrtables_use = mrdef_mstarnames(mrtables, limit);
+        
+    % Check .json files for information on units
+    mrtables_use = mrdef_json(mrtables_use);
+
+    % get a list of variables for which we want to change names when loaded
+    % into mexec, and a list of tables whose variables should have _raw
+    % appended
+    mrtv = mrdef_rename_varsunits(mrtables_use);
+
+    writetable(mrtv, tabledefcsv, 'Delimiter', ',')
+    save(tabledefmat, 'mrtv')
+
+else
+
+    df = dir(tabledefmat);
+    fprintf(1,'loading %s\n saved on %s\n',tabledefmat,df.date)
+    load(tabledefmat,'mrtv')
+
 end
 
-% get table of mexec short names for RVDAS tables
-d.tablemap = mrnames_new(d.mrtables_list,'q');
-% limit to the names actually in mrtables_from_json
-[~,ia,ib] = intersect(d.tablemap(:,2),d.mrtables_list,'stable');
-%excl = setdiff(d.tablemap(:,2),d.mrtables_list,'stable');
-%fprintf(1,'excluding streams: \n')
-%disp(excl)
-d.tablemap = d.tablemap(ia,:);
-if length(ib)<length(d.mrtables_list)
-    ii = setdiff(1:length(d.mrtables_list),ib);
-    warning('backtrace','off')
-    warning('rvdas:mstar:no_match','discarding %d tables with no mstar lookup in mrnames_new',length(ii));
-    warning('off','rvdas:mstar:no_match');
-    warning('backtrace','on')
-    d.mrtables = rmfield(d.mrtables,d.mrtables_list(ii));
-    d.mrtables_list(ii) = [];
-end
-% [~,ia] = unique(d.tablemap(:,1),'first');
-% if length(ia)<size(d.tablemap,1)
-%     warning('backtrace','off')
-%     warning('rvdas:mrdefine:mnamedup','duplicate mexec short names (with matching tables) detected; keeping first');
-%     warning('off','rvdas:mrdefine:mnamedup'); %only warn once per session
-%     warning('backtrace','on')
-% end
-%d.tablemap = d.tablemap(ia,:);
-
-% get a list of variables for which we want to change names when loaded
-% into mexec, and a list of tables whose variables should have _raw
-% appended
-d.renametables = mrrename_varsunits(d.mrtables, 'q'); % any argument suppresses listing to screen
-d.renametables_list = fieldnames(d.renametables);
-
-
+%***write something to parse .csv file correctly later? .mat is kept with
+%the backup of the raw data though

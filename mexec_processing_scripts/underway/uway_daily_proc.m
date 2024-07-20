@@ -32,19 +32,19 @@ combvars = {}; %***
 opt1 = 'uway_proc'; opt2 = 'comb_uvars'; get_cropt 
 
 %load raw data from RVDAS/SCS/TECHSAS
-loadstatus = zeros(1,length(shortnames));
+loadstatus = zeros(1,length(mrtv.tablenames));
 for daynumber = days
-    for sno = 5:6%1:length(shortnames)
-        ls = mday_00_load(streamnames{sno}, shortnames{sno}, fullfile(MEXEC_G.mexec_data_root,udirs{sno}), daynumber, year);
+    for sno = 1:length(mrtv.tablenames)
+        ls = mday_00_load(mrtv.tablenames{sno}, mrtv.mstarpre{sno}, fullfile(MEXEC_G.mexec_data_root,mrtv.mstardir{sno}), daynumber, year, mrtv);
         loadstatus(sno) = loadstatus(sno) + ls;
     end
     disp(['loaded day ' num2str(daynumber)]); pause(0.1)
 end
 
 %apply additional processing and cleaning to data
-for sno = 1:length(shortnames)
-    mday_01_edit(fullfile(MEXEC_G.mexec_data_root,udirs{sno}), shortnames{sno}, days)
-    disp(['edited ' shortnames{sno}])
+for sno = 1:length(mrtv.tablenames)
+    mday_01_edit(fullfile(MEXEC_G.mexec_data_root,mrtv.mstardir{sno}), mrtv.mstarpre{sno}, days)
+    disp(['edited ' mrtv.mstarpre{sno}])
 end
 
 %combine streams, do hand edits (for some streams), and average to producei

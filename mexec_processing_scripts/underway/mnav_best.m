@@ -7,18 +7,24 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-root_pos = mgetdir(default_navstream);
-root_hed = mgetdir(default_hedstream);
-root_att = mgetdir(default_attstream);
 if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
-    def = mrdefine;
-    navstream = def.tablemap{strcmp(default_navstream,def.tablemap(:,2)),1};
-    hedstream = def.tablemap{strcmp(default_hedstream,def.tablemap(:,2)),1};
-    attstream = def.tablemap{strcmp(default_attstream,def.tablemap(:,2)),1};
+    mrtv = mrdefine;
+    m = strcmp(default_navstream,mrtv.tablenames);
+    navstream = mrtv.mstarpre{m}; 
+    root_pos = fullfile(MEXEC_G.mexec_data_root,mrtv.mstardir{m});
+    m = strcmp(default_hedstream,mrtv.tablenames);
+    hedstream = mrtv.mstarpre{m}; 
+    root_hed = fullfile(MEXEC_G.mexec_data_root,mrtv.mstardir{m});
+    m = strcmp(default_attstream,mrtv.tablenames);
+    attstream = mrtv.mstarpre{m}; 
+    root_att = fullfile(MEXEC_G.mexec_data_root,mrtv.mstardir{m});
 else
     navstream = default_navstream;
     hedstream = default_hedstream;
     attstream = default_attstream;
+    root_pos = mgetdir(default_navstream);
+    root_hed = mgetdir(default_hedstream);
+    root_att = mgetdir(default_attstream);
 end
 infilen = fullfile(root_pos,[navstream '_' mcruise '_all_edt.nc']);
 if ~exist(infilen,'file')

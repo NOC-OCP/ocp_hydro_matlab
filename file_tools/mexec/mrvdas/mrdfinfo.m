@@ -36,35 +36,38 @@ function d = mrdfinfo(varargin)
 
 m_common
 
-argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-if isempty(argot.table)
-    error('no valid rvdas table name was specified');
-end
-table = argot.table;
-qflag = argot.qflag;
-if length(argot.otherstrings) < 1
-    fastflag = ''; 
+if nargin>0 && strcmp(varargin{1},'noparse')
+    %parameter-value inputs, must include table and mrtv
+    for no = 2:2:length(varargin)
+        eval([varargin{no} '= varargin{no+1};']);
+    end
+    if ~exist('fastflag','var'); fastflag = ''; end
 else
-    fastflag = argot.otherstrings{1};
+    argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
+    rtable = argot.table;
+    qflag = argot.qflag;
+    mrtv = argot.mrtv;
+    if length(argot.otherstrings) < 1
+        fastflag = ''; 
+    else
+        fastflag = argot.otherstrings{1};
+    end
 end
-
-% 
-% if nargin < 1
-%     error('error, no arguments in mrdfinfo')
-% end
-
-def = mrdefine('this_cruise');
+if exist('qflag','var') && isempty(qflag)
+    quiet = 0;
+else
+    quiet = 1;
+end
 
 % sort out the table name
-table = mrresolve_table(table); % table is now an RVDAS table name for sure.
-vdef = def.mrtables.(table);
-
-sqlname = vdef{1,1};
+rtable = mrresolve_table(rtable); % table is now an RVDAS table name for sure.
+sqlname = rtable; 
+%sqlname = mrtv.tablenames(strcmp(table,mrtv.tablenames)); %***construct differently for sda?
 
 % Number of cycles. Skip if fastflag is set to 'f'
 if ~strcmp('f',fastflag)
     sqltext = ['"\copy (select count(*) from ' sqlname ' ) to '''];
-    [csvname, ~, ~] = mr_try_psql(sqltext);
+    [csvname, ~, ~] = mr_try_psql(sqltext,quiet);
     % bak on dy174 27 March 2024
     % It seems that the csv file now consists of 2 lines, the first line
     % contains the string 'count' and the second lien contains the number
@@ -91,6 +94,7 @@ if isempty(ncyc) || ncyc == 0
     d.dn1 = dn1;
     d.dn2 = dn2;
     d.ncyc = ncyc;
+    d.vdef_expl = ['rvdas variables, rvdas units, mstar variables, mstar units'];
     d.vdef = vdef;
     
     delete(csvname);
@@ -106,7 +110,7 @@ delete(csvname);
 
 % sqltext = ['"\copy (select time from ' sqlname ' order by time asc limit 1) to ''' csvname ''' csv "'];
 sqltext = ['"\copy (select time from ' sqlname ' order by time asc limit 1) to '''];
-[csvname, ~, ~] = mr_try_psql(sqltext);
+[csvname, ~, ~] = mr_try_psql(sqltext,quiet);
 fid = fopen(csvname,'r');
 % t = fgetl(fid);  % t is now a RVDAS time string
 while 1
@@ -138,7 +142,7 @@ delete(csvname);
 
 % sqltext = ['"\copy (select time from ' sqlname ' order by time desc limit 1) to ''' csvname ''' csv "'];
 sqltext = ['"\copy (select time from ' sqlname ' order by time desc limit 1) to '''];
-[csvname, ~, ~] = mr_try_psql(sqltext);
+[csvname, ~, ~] = mr_try_psql(sqltext,quiet);
 fid = fopen(csvname,'r');
 % t = fgetl(fid);  % t is now a RVDAS time string
 while 1
@@ -154,7 +158,7 @@ dn2 = mrconverttime({t});
 delete(csvname);
 
 if isempty(qflag)
-    fprintf(MEXEC_A.Mfidterm,'\n%s\n\n',table)
+    fprintf(MEXEC_A.Mfidterm,'\n%s\n\n',rtable)
     fprintf(MEXEC_A.Mfidterm,'%s %s\n','File start ',datestr(dn1,31));
     fprintf(MEXEC_A.Mfidterm,'%s %s\n','File end   ',datestr(dn2,31));
     fprintf(MEXEC_A.Mfidterm,'%s %d\n\n','num cycles ',ncyc);
@@ -163,8 +167,8 @@ end
 
 
 % now print names and units
-
-vuse = vdef;
+m = find(strcmp(rtable,mrtv.tablenames));
+vuse = [mrtv.tablevars{m}' mrtv.tableunts{m}' mrtv.mstarvars{m}' mrtv.mstarunts{m}'];
 vuse{1,1} = 'time';
 vuse{1,2} = 'string';
 

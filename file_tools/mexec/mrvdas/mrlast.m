@@ -52,16 +52,18 @@ function [dd,varnames,varunits] = mrlast(varargin)
 m_common
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-table = argot.table;
+rtable = argot.table;
 qflag = argot.qflag;
+mrtv = argot.mrtv;
 
-d = mrdfinfo(table,qflag);
+d = mrdfinfo('noparse','rtable',rtable,'qflag',qflag,'mrtv',mrtv);
 
 dstart = floor(86400*d.dn2)/86400;
 dend = ceil(86400*d.dn2)/86400;
+argot.dnums = [dstart dend];
 
 if isempty(qflag); fprintf(MEXEC_A.Mfidterm,'\n'); end
-[dd,nn,uu] = mrload(table,dstart,dend,qflag,'');
+[dd,nn,uu] = mrload('noparse',argot);
 if isempty(qflag); fprintf(MEXEC_A.Mfidterm,'\n'); end
 
 nvar = length(nn);

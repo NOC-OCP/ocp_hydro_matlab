@@ -1,5 +1,6 @@
-function rvdas_contents = mrgetrvdascontents
-% function rvdas_contents = mrgetrvdascontents
+function rvdas_tables = mrgetrvdascontents(varargin)
+% rvdas_tables = mrgetrvdascontents
+% rvdas_tables = mrgetrvdascontents(quiet)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -10,11 +11,9 @@ function rvdas_contents = mrgetrvdascontents
 %
 % Get a list of the entire contents of the rvdas database
 %
-%  Create a structure whose fieldnames are all the tables in rvdas. See
-%  Output below.
+%  Create a table with columns for tablenames and tablevars
 %
-%  Not presently used in any mrvdas command, but used for checking the
-%    content of rvdas compared with the .json files.
+%  Used by mrdefine
 %
 %  Calls mrgettables to get the list of all table names.
 %  Calls mrgettablevars to get the list of all the variables for a table.
@@ -29,39 +28,29 @@ function rvdas_contents = mrgetrvdascontents
 %
 % Output:
 %
-% The structure returned has fieldnames that are all the tables in rvdas
-% Each field is a structure whose fielnames are the variables for that
-%   table. Each variable consists of an empty array.
+% The table returned has two columns, tablenames and tabelvars. Each row in
+% tabelvars is a cell array list of the variables in that row's tablename.  
 %
 % So the table names are
-%  fieldnames(rvdas_contents)
+%  rvdas_tables.tablenames
 %
 % And the variables are, for example
-%  fieldnames(rvdas_contents.cnav_gps_gngga)
+%  rvdas_tables.tablevars{strcmp('cnav_gngga',rvdas_tables.tablenames)}
 
-rvdas_tables = mrgettables;
-rvdas_tables_list = fieldnames(rvdas_tables);
-ntables = length(rvdas_tables_list);
-
-clear rvdas_contents
+quiet = 1; if nargin>0; quiet = varargin{1}; end
+rvdas_tables = mrgettables(quiet);
+ntables = length(rvdas_tables.tablenames);
+rvdas_tables.tablevars = cell(ntables,1);
 
 for kl = 1:ntables
-    tabname = rvdas_tables_list{kl};
+    tabname = rvdas_tables.tablenames{kl};
     
     if strcmp(tabname,'logta')
         % this is not a proper variable
         continue
     end
     
-    tablevars = mrgettablevars(tabname);
-    tablevars_list = fieldnames(tablevars);
-    nvars = length(tablevars_list);
-    for kv = 1:nvars
-        rvdas_contents.(tabname).(tablevars_list{kv}) = []; % Use dynamic filednames. Neat syntax.
-    end
-    
-    
-    
+    tablevars = mrgettablevars(tabname,quiet);
+    rvdas_tables.tablevars{kl} = tablevars;
+        
 end
-
-return

@@ -303,7 +303,7 @@ switch opt1
                 mgrid.sdata_flag_accept = [2 3]; %***or just 2
                 switch section
                     case 'osnape'
-                        kstns = [35:39 42:45 47 46 48:65 69 68 71];
+                        kstns = [35:39 42:45 47 46 48:65 69 68 71 72 77 76 75 74 73];
                         mgrid.xlim = 2; mgrid.zlim = 4;
                     case 'scotshelf'
                         mgrid.zpressgrid = [0 5 25 50 75 100 125 150 175 200 250 300];
@@ -320,8 +320,8 @@ switch opt1
                 syncs = {'%s/collected_files/station_summary* %s/';...
                          '%s/collected_files/74EQ* %s/';...
                          '%s/ctd/ctd*2db.nc %s/ctd_2db/';...
-                         '%s/ctd/BOTTLE_SAL/autosal*.csv %s/';...
-                         '%s/ladcp/ix/DLUL_GPS_BT/processed/*.mat %s/'};
+                         '%s/ctd/BOTTLE_SAL/autosal*.csv %s/BOTTLE_SAL/';...
+                         '%s/ladcp/ix/DLUL_GPS_BT/processed/*.mat %s/ladcp/'};
                 s = nan(length(syncs),1);
                 for no = 1:length(syncs)
                     synclocs = sprintf(syncs{no},MEXEC_G.mexec_data_root,pdir);

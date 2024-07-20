@@ -88,29 +88,35 @@ if strcmp(streamtype, 'met')
     condvar = munderway_varname('condvar', h.fldnam, 1, 's');
     salvar = munderway_varname('salvar', h.fldnam, 1, 's');
     temphvar = munderway_varname('temphvar', h.fldnam, 1, 's');
-    d.(salvar)(isnan(d.(condvar)+d.temphvar)) = NaN;
-    opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
-    cpstr = '';
-    if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
-        [dcal, hcal] = apply_calibrations(d, h, uo.calstr, uo.docal, 'q');
-        for no = 1:length(hcal.fldnam)
-            d.([hcal.fldnam{no} '_uncal']) = d.([hcal.fldnam{no}]);
-            m = strcmp(hcal.fldnam{no},h.fldnam);
-            h.fldnam = [h.fldnam [hcal.fldnam{no} '_uncal']];
-            h.fldunt = [h.fldunt h.fldunt{m}];
-            if isfield(h,'fldinst')
-                h.fldinst = [h.fldinst h.fldinst{m}];
+
+    if ~isempty(salvar) && ~isempty(condvar) && ~isempty(tempvar)
+        d.(salvar)(isnan(d.(condvar)+d.temphvar)) = NaN;
+        opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
+        cpstr = '';
+
+        if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
+            [dcal, hcal] = apply_calibrations(d, h, uo.calstr, uo.docal, 'q');
+            for no = 1:length(hcal.fldnam)
+                d.([hcal.fldnam{no} '_uncal']) = d.([hcal.fldnam{no}]);
+                m = strcmp(hcal.fldnam{no},h.fldnam);
+                h.fldnam = [h.fldnam [hcal.fldnam{no} '_uncal']];
+                h.fldunt = [h.fldunt h.fldunt{m}];
+                if isfield(h,'fldinst')
+                    h.fldinst = [h.fldinst h.fldinst{m}];
+                end
+                d.(hcal.fldnam{no}) = dcal.(hcal.fldnam{no});
             end
-            d.(hcal.fldnam{no}) = dcal.(hcal.fldnam{no});
-        end
-        if ~isempty(hcal.fldnam)
-            didedits = 1;
-            h.comment = [h.comment hcal.comment];
-            if sum(strncmp('temp',hcal.fldnam,4)) || sum(strncmp('cond',hcal.fldnam,4))
-                cpstr = ', calibrated';
+            if ~isempty(hcal.fldnam)
+                didedits = 1;
+                h.comment = [h.comment hcal.comment];
+                if sum(strncmp('temp',hcal.fldnam,4)) || sum(strncmp('cond',hcal.fldnam,4))
+                    cpstr = ', calibrated';
+                end
             end
         end
+        
     end
+
 end
 
 % calculate new (or replacement) variables
