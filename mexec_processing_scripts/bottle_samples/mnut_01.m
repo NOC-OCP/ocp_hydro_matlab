@@ -28,21 +28,23 @@ if ~ismember(ds_nut.Properties.VariableNames,'flag')
     ds_nut.flag = 2+zeros(size(ds_nut,1),1);
 end
 
-%parse to get sampnum, set flags, and set lookup table for variable names
-%in regular forms (first column) from variable names in ds_nut (3rd column)
-varnamesunits = {'totnit_per_l', 'umol/l', 'nitrate_plus_nit';...
-    'nitrite_per_l', 'umol/l', 'nitrite'; ...
-    'silc_per_l', 'umol/l', 'silicate'; ...
-    'phos_per_l', 'umol/l', 'phosphate'; ...
-    'amon_per_l', 'umol/l', 'ammonium'; ...
-    'totnit_flag', 'woce_9.4', 'flag';...
-    'nitrite_flag', 'woce_9.4', 'flag';...
-    'silc_flag', 'woce_9.4', 'flag';...
-    'phos_flag', 'woce_9.4', 'flag';...
-    'amon_flag', 'woce_9.4', 'flag';...
-    };
-opt1 = 'botnut'; opt2 = 'nut_parse_flag'; get_cropt
-varnamesunits = varnamesunits(ismember(varnamesunits(:,3),ds_nut.Properties.VariableNames),:);
+%parse to get sampnum, set flags, and change variable names
+varmap.statnum = {'cast_number'};
+varmap.position = {'niskin_bottle'};
+varmap.totnit_per_l = {'nitrate_plus_nit','no3_plus_no2'};
+varmap.nitrite_per_l = {'nitrite','no2'};
+varmap.nitrate_per_l = {'nitrate','no3'};
+varmap.silc_per_l = {'silicate'};
+varmap.phos_per_l = {'phosphate'};
+varmap.amon_per_l = {'ammonium'};
+varmap.totnit_flag = {'flag'};
+varmap.nitrite_flag = {'flag'};
+varmap.silc_flag = {'flag'};
+varmap.phos_flag = {'flag'};
+varmap.amon_flag = {'flag'};
+opt1 = 'botnut'; opt2 = 'nut_parse'; get_cropt %edit map for renaming variables, and flag whether to calculate conc_o2
+[ds_nut, ~] = var_renamer(ds_nut, varmap);
+ds_nut.sampnum = 100 * ds_nut.statnum + ds_nut.position;
 ds_nut = ds_nut(isfinite(ds_nut.sampnum),:);
 
 % check_nut = 0;

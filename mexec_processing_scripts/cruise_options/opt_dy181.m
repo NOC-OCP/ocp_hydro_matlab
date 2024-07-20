@@ -1,3 +1,4 @@
+
 %shortcasts = 2; %no altimeter bottom depth/no LADCP BT
 
 switch opt1
@@ -59,6 +60,15 @@ switch opt1
                     otfile_appendto = fullfile(root_ctd,sprintf('ctd_%s_%03d_raw_noctm.nc',mcruise,floor(stn)));
                     cast_scan_offset = [65.1 65 81192]; %this cast, cast to append to, scan offset
                 end
+            case 'ctd_raw_extra'
+                if stn==65
+                    %ctd_all_part1 should run this after mctd_01(65) and
+                    %before rest of processing
+                    ctd_raw_extra = ['mctd_01(65.1); ...' ...
+                        'otfile = fullfile(mgetdir(''M_CTD''),''ctd_dy181_065_raw_noctm.nc''); ...' ...
+                        'getpos_for_ctd(otfile, 1, ''write''); ...' ...
+                        'mfir_01(65.1);'];
+                end
             case 'rawedit_auto'
                 if stn==61
                     co.despike.cond1 = [0.02 0.02];
@@ -68,6 +78,10 @@ switch opt1
                 co.docal.temp = 0;
                 co.docal.cond = 0;
                 co.docal.oxygen = 0;
+                %co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp';
+                %co.calstr.temp.sn34116.msg = '';
+                %co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp';
+                %co.calstr.temp.sn35838.msg = '';
                 co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1-2e-3/35)';
                 co.calstr.cond.sn42580.msg = 'prelim';
                 co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1-8e-3/35)';
@@ -84,23 +98,38 @@ switch opt1
                 blinfile = fullfile(root_botraw,sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
                 if stn==10
                     blinfile = fullfile(root_botraw,sprintf('%s_CTD%04d.bl', upper(mcruise), stn));
+                elseif stn==65.1
+                    blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dA.bl', upper(mcruise), floor(stn)));
+                    stn_string = '065'; %for dataname
                 end
             case 'botflags'
                 if stn==6
-                    niskin_flag(ismember(position,[11 21])) = 9;
+                    niskin_flag(ismember(position,[11 21])) = 4;
                 elseif stn==36
                     niskin_flag(position==11) = 3; %***leaked
                 elseif stn==51
                     niskin_flag(position==11) = 3; %maybe leaking (on recovery, not obviously after), still sampled
                 elseif stn==64
-                    niskin_flag(position==7) = 9; %latch did not release
-
+                    niskin_flag(position==7) = 4; %latch did not release
+                elseif stn==65.1
+                    %no record for niskin 1 in .bl file due to computer
+                    %problem; adding information from sbe35 file
+                    position = [1; position];
+                    niskin = [1; niskin];
+                    niskin_flag = [1; niskin_flag];
+                    scan = [-18932; scan]; %relative to start of 065A; will be adjusted
+                elseif stn==70
+                    niskin_flag(position==15) = 4; %latch did not release
                 end
         end
 
     case 'ladcp_proc'
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
         yos = [10 33];
+        min_nvmadcpprf = 4; %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
+        min_nvmadcpbin = 3; %masks depths with number of valid bins less than this
+        min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
+        
         if stn>=yos(1) && stn<=yos(2)
             cfg.uppat = sprintf('%s_CTD%03d-%03dS*.000',upper(mcruise),yos(1),yos(2));
             cfg.dnpat = sprintf('%s_CTD%03d-%03dM*.000',upper(mcruise),yos(1),yos(2));
@@ -126,6 +155,16 @@ switch opt1
         check_sal = 0;
         check_oxy = 1;
         check_sbe35 = 1;
+
+    case 'sbe35'
+        switch opt2
+            case 'sbe35_parse'
+                %deal with combined file(s)
+                if strcmp(file_list{kf},'DY181_SBE35_CTD070_071.asc')
+                    m = t.statnum==71 & t.datnum<datenum(2024,7,17,19,0,0);
+                    t.statnum(m) = 70;
+                end
+        end
 
     case 'botpsal'
         switch opt2
@@ -159,6 +198,15 @@ switch opt1
                     018 1
                     019 1
                     020 -2
+                    021 -7.5
+                    022 -2
+                    023 1.5
+                    %024 9.5 %suspicious maybe bad (old?)
+                    %025 9.5 %suspicious maybe bad (a few minutes later)
+                    026 1 %this one was 45 min after 025, back to "normal"
+                    027 2
+                    028 2
+                    029 1
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
@@ -194,6 +242,21 @@ switch opt1
                 %2up but not to 1hz?
         end
 
+    case 'botnut'
+        switch opt2
+            case 'nut_files'
+                hcpat = {'Depth'}; chrows = 1; chunits = 1;
+            case 'nut_parse'
+                ds_nut.position = nan+ds_nut.statnum;
+                for no = 1:length(ds_nut.statnum)
+                    ii = findstr('BTL',ds_nut.statname_niskin{no});
+                    if ~isempty(ii)
+                        ds_nut.position(no) = str2double(ds_nut.statname_niskin{no}(ii+[3:4]));
+                    end
+                end
+                ds_nut(isnan(ds_nut.position),:) = [];
+        end
+
     case 'outputs'
         switch opt2
             case 'summary'
@@ -202,7 +265,7 @@ switch opt1
             case 'exch'
                 ns = 9;
                 expocode = '74EQ20240703';
-                sect_id = 'OSNAP-EEL';
+                sect_id = 'OSNAP-EEL-AR28';
                 submitter = 'OCPNOCYLF'; %group institution person
                 common_headstr = {'#SHIP: RRS Discovery';...
                     '#Cruise DY181; UK-OSNAP/Extended Ellet Line 2024';...
@@ -228,12 +291,25 @@ switch opt1
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom';...
-                        '#Salinity: Who - Y. Firing (NOC); Status - preliminary; SSW batch P165***.';...
+                        '#Salinity: Who - Y. Firing (NOC); Status - preliminary; SSW batch P168.';...
                         '#Oxygen: Who - R. Abell (SAMS); Status - preliminary.';...
                         '#Nutrients: Who - R. Abell (SAMS); Status - preliminary.';...
-                        '#DIC and Talk: Who - C. Johnson (SAMS); Status - preliminary.';...
+                        '#DIC and Talk: Who - C. Johnson (SAMS); Status - not yet analysed.';...
                         '#***';...
                         }];
+                end
+            case 'grid'
+                sam_gridlist = {'botoxy' 'silc' 'phos' 'totnit'};
+                mgrid.sdata_flag_accept = [2 3]; %***or just 2
+                switch section
+                    case 'osnape'
+                        kstns = [35:39 42:45 47 46 48:65 69 68 71];
+                        mgrid.xlim = 2; mgrid.zlim = 4;
+                    case 'scotshelf'
+                        mgrid.zpressgrid = [0 5 25 50 75 100 125 150 175 200 250 300];
+                        kstns = [6:9 35:36];
+                    case 'profiles_only'
+                        kstns = [1:3 10:33]; %test, dm, yo-yo
                 end
         end
 
@@ -241,15 +317,18 @@ switch opt1
         switch opt2
             case 'output_for_others'
                 pdir = '/data/pstar/mounts/public/DY181/Science/CTD_bottle_data';
-                clear s
-                syncs = {sprintf('%s/collected_files/station_summary* %s/',MEXEC_G.mexec_data_root,pdir);...
-                    sprintf('%s/collected_files/74EQ* %s/',MEXEC_G.mexec_data_root,pdir);...
-                    sprintf('%s/ctd/ctd*2db.nc %s/ctd_2db/',MEXEC_G.mexec_data_root,pdir)};
+                syncs = {'%s/collected_files/station_summary* %s/';...
+                         '%s/collected_files/74EQ* %s/';...
+                         '%s/ctd/ctd*2db.nc %s/ctd_2db/';...
+                         '%s/ctd/BOTTLE_SAL/autosal*.csv %s/';...
+                         '%s/ladcp/ix/DLUL_GPS_BT/processed/*.mat %s/'};
+                s = nan(length(syncs),1);
                 for no = 1:length(syncs)
+                    synclocs = sprintf(syncs{no},MEXEC_G.mexec_data_root,pdir);
                     try
-                        [s(no),~] = system(['rsync -rlu ' syncs{no}]);
+                        [s(no),~] = system(['rsync -rlu ' synclocs]);
                     catch
-                        [s(no),~] = system(['cp -R ' syncs{no}]);
+                        [s(no),~] = system(['cp -R ' synclocs]);
                     end
                 end
                 if sum(s)>0; warning('some or all syncing failed'); end

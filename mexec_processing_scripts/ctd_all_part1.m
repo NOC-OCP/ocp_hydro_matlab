@@ -1,4 +1,8 @@
 mctd_01(stn); %read in sbe .cnv data to mstar
+opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; get_cropt
+if exist('ctd_raw_extra','var')
+    eval(ctd_raw_extra)
+end
 mfir_01(stn) %sbe .bl file to mstar
 
 %apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise

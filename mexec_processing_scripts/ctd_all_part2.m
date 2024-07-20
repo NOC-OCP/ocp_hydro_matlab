@@ -25,7 +25,7 @@ end
 
 %add to sam file
 mfir_to_sam(stn)
-msbe35_01
+msbe35_01(stn) %read sbe35 data, if not already done
 
 %calculate and apply depths
 station_summary(stn)

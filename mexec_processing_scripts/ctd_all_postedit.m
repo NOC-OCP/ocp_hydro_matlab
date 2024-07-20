@@ -39,6 +39,7 @@ for kloop = klistl
 %     stn = stnlocal; mdep_01
     
 end
+msbe35_01(max(klistl)) %read sbe35 data, if not already done up 
 
 %output to csv files
 mout_cchdo_exchangeform(klistl)

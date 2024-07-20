@@ -96,6 +96,43 @@ else
             return
         end
     end
+    % check that the number of vmadcp profiles in ctd cast is not too small
+    opt1 = 'ladcp_proc'; get_cropt
+
+    nvmadcpprf = sum(mt);
+    if nvmadcpprf < min_nvmadcpprf
+        mwarn = ['Warning [station ' stn_string ']: Number of vmADCP profiles (' num2str(nvmadcpprf) ') is less than minimum (' num2str(min_nvmadcpprf) ')'];
+        fprintf(MEXEC_A.Mfider, '%s\n', mwarn)
+    end
+
+    % check for vmADCP bins with too many gaps
+    uadcp_aux = d.(h.fldnam{5})(:,mt);
+    vadcp_aux = d.(h.fldnam{6})(:,mt);
+    fgu = ~isnan(uadcp_aux);
+    fgv = ~isnan(vadcp_aux);
+    fguv = fgu==fgv; % u and v should have the same gaps
+    if ~all(fguv(:))
+        fprintf(MEXEC_A.Mfider, '%s\n', ['Warning[station ' stn_string ']: vmADCP u and v have different gaps'])
+    end
+    np = sum(fgu,2);
+    fbprf = max(find(np>0));
+    if ~isempty(fbprf) && min(np(1:fbprf)) < min_nvmadcpbin %mask depths with good profiles less than a threshold
+        fmsk = np < min_nvmadcpbin;
+        d.(h.fldnam{5})(fmsk,mt) = NaN;
+        d.(h.fldnam{6})(fmsk,mt) = NaN;
+        uadcp_aux2 = d.(h.fldnam{5})(:,mt);
+        vadcp_aux2 = d.(h.fldnam{6})(:,mt);
+    end
+
+    %throw a warning if the watertrack reference layer (bins 2:10) is too
+    %gappy at some depth
+    ntref = 2;
+    nbref = 10;
+    uadcp_refl = d.(h.fldnam{5})(ntref:nbref,mt);
+    if any(sum(~isnan(uadcp_refl),2) < min_nvmadcpbin_refl)
+        mwarn = ['Warning [station ' stn_string ']: Bin with too few valid data points (less than ' num2str(min_nvmadcpbin_refl) ') in vmADCP reference layer (bins ' num2str(ntref) '-' num2str(nbref) ')'];
+        fprintf(MEXEC_A.Mfider, '%s\n', mwarn)
+    end
 end
 
 % average
@@ -111,6 +148,7 @@ if strcmp(cast_select,'ctd')
 else
     ha.comment = [h.comment sprintf('\n averaged over %s to %s from %s',sstart,send,listfile)];
 end
+
 %check dims
 mfsave(avfile,da,ha); 
 

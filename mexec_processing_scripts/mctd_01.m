@@ -229,38 +229,5 @@ end
 % from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
 for fno = 1:length(otfiles)
     otfile = otfiles{fno};
-    h = m_read_header(otfile);
-    if sum(strcmp('latitude',h.fldnam)) && sum(strcmp('longitude',h.fldnam))
-        d = mloadq(otfile,'press','latitude','longitude',' ');
-        kbot = find(d.press == max(d.press), 1 );
-        botlat = d.latitude(kbot); botlon = d.longitude(kbot);
-    else
-        [d, h] = mloadq(otfile,'time','press',' ');
-        kbot = find(d.press == max(d.press), 1 );
-        tbotmat = m_commontime(d.time(kbot),'time',h,'datenum');
-        switch MEXEC_G.Mshipdatasystem
-            case 'scs'
-                [botlat, botlon] = msposinfo(tbotmat);
-            case 'techsas'
-                [botlat, botlon] = mtposinfo(tbotmat);
-            case 'rvdas'
-                [botlat, botlon] = mrposinfo(tbotmat);
-            otherwise
-                botlat = []; botlon = [];
-        end
-    end
-    if ~isempty(botlat)
-        latstr = sprintf('%14.8f',botlat);
-        lonstr = sprintf('%14.8f',botlon);
-        MEXEC_A.MARGS_IN = {
-            otfile
-            'y'
-            '5'
-            latstr
-            lonstr
-            ' '
-            ' '
-            };
-        mheadr
-    end
+    [botlon, botlat] = getpos_for_ctd(otfile, 'write');
 end

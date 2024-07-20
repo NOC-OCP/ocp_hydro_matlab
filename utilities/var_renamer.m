@@ -17,6 +17,7 @@ function [data, unfound] = var_renamer(data, varmap)
 nvn = fieldnames(varmap);
 if istable(data)
     fn = data.Properties.VariableNames;
+    renamed = zeros(length(nvn),1);
 elseif isstruct(data)
     fn = fieldnames(data);
 end
@@ -27,13 +28,19 @@ for nvno = 1:length(nvn)
         [~, ia, ib] = intersect(varmap.(newname), fn, 'stable');
         if ~isempty(ia)
             if isstruct(data)
-                %rename here
+                %rename here (copy to new name)
                 data.(newname) = data.(fn{ib});
-                data = rmfield(data, fn{ib});
                 fn = fieldnames(data);
             else
                 %save to rename all later
-                fn{ib} = newname;
+                if ~renamed(ib)
+                    fn{ib} = newname;
+                    renamed(ib) = 1;
+                else
+                    %need to copy
+                    data.(newname) = data.(fn{ib});
+                    fn = [fn newname];
+                end
             end
         end
     end

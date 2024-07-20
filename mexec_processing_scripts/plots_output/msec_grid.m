@@ -52,7 +52,7 @@ if ~isfield(mgrid,'zpressgrid') || isempty(mgrid.zpressgrid) %find defaults by s
             mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=5000);
         case {'osnapwall' 'laball' 'arcall' 'osnapeall' 'lineball' 'linecall' 'eelall' 'nsr'}
             mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=4000);
-        case {'bc' 'ben' 'bc2' 'bc3'}
+        case {'bc' 'ben' 'bc2' 'bc3' 'osnape'}
             mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=3000);
         case {'fs27n' 'fs27n2'}
             mgrid.zpressgrid = zpressgrid_shal(zpressgrid_shal<=1000);
@@ -97,7 +97,7 @@ else
             end
             break
         end
-        if isfield(d,'latitude')
+        if isfield(d,'latitude') && ~isnan(m_nanmean(d.latitude))
             cdata.lat(1,kstn) = m_nanmean(d.latitude);
             cdata.lon(1,kstn) = m_nanmean(d.longitude);
         else
@@ -136,6 +136,10 @@ mv = false(1,length(sam_gridlist));
 for vno = 1:length(sam_gridlist)
     if isfield(d,sam_gridlist{vno})
         sdata.(sam_gridlist{vno}) = d.(sam_gridlist{vno})(mstn);
+        if isfield(mgrid,'sdata_flag_accept')
+            mbf = ~ismember(d.([sam_gridlist{vno} '_flag']),mgrid.sdata_flag_accept);
+            sdata.(sam_gridlist{vno})(mbf) = NaN;
+        end
         mv(vno) = true;
     else
         warning('sample variable %s not found; skipping',sam_gridlist{vno})

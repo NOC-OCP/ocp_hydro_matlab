@@ -34,7 +34,7 @@ if isempty(d.time)
 end
 
 otfile = fullfile(rootdir, sprintf('%s_%s_all_edt.nc',abbrev,mcruise));
-[~,streamtype] = fileparts(fileparts(rootdir)); %2nd to last subdirectory indicates data type
+[~,streamtype] = fileparts(rootdir); %***should really get this from mrdefine etc.
 didedits = 0;
 
 %apply automatic edits (e.g. bad time ranges), as set in opt_cruise

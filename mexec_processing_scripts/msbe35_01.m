@@ -1,13 +1,29 @@
+function msbe35_01(varargin)
+% msbe35_01
+% msbe35_01(max_expected_stn)
+%
 % msbe35_01: load sbe35 data from available stations and write to
 %     mstar file sbe35_cruise_01.nc, as well as pasting into
 %     sam_cruise_all.nc
 %
+% with optional input argument max_expected_stn, if sbe35_cruise_01.nc
+% already contains data up to that station number, function returns without
+% (re-)reading files
 
 m_common
 if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
 
-% load sbe35 data
 root_sbe35 = mgetdir('M_SBE35');
+dataname = ['sbe35_' mcruise '_01'];
+otfile1 = m_add_nc(fullfile(mgetdir('M_SBE35'), dataname));
+if nargin>0 && ~isempty(varargin{1}) && exist(otfile1,'file')
+    h = m_read_header(otfile1);
+    if h.uprlim(strcmp('statnum',h.fldnam))>=varargin{1}
+        %we've already read in as far as this station, no need to redo
+        return
+    end
+end
+% load sbe35 data
 sbe35file = sprintf('%s_SBE35_CTD*.asc', upper(mcruise));
 %stnind is indices in filename sbe35file containing the station number
 %use negative to indicate distance from end e.g. [-6:-4] for
@@ -64,6 +80,8 @@ for kf = 1:length(file_list)
         end
     end
     fclose(fid2);
+    %make any adjustments to statnum/bn for files with wrong name/combined casts, etc.
+    opt1 = 'sbe35'; opt2 = 'sbe35_parse'; get_cropt 
 end
 t.sampnum = t.statnum*100+t.bn;
 t(isnan(t.sampnum),:) = [];
@@ -114,7 +132,7 @@ if check_sbe35
                 disp(datestr(t.datnum(ii)))
                 disp(t.files(ii))
             end
-            pause
+            keyboard
             ii_did = [ii_did;ii];
         end
     end
@@ -135,7 +153,7 @@ if docf
 else
     hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 end
-hnew.dataname = ['sbe35_' mcruise '_01'];
+hnew.dataname = dataname;
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; 
 
 t.position = t.bn;
@@ -152,7 +170,6 @@ for no = 1:length(hnew.fldnam)
 end
 d = rmfield(d,'junk');
 
-otfile1 = fullfile(mgetdir('M_SBE35'), hnew.dataname);
 MEXEC_A.Mprog = mfilename;
 mfsave(otfile1, d, hnew);
 

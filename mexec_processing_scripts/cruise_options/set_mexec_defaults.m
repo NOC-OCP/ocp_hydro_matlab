@@ -97,11 +97,18 @@ switch opt1
             case 'bestdeps'
         end
 
+    case 'ladcp_proc'
+        min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
+        min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
+        min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
+
     case 'ctd_proc'
         switch opt2
             case 'redoctm'
             case 'cnvfilename'
             case 'cast_split_comb'
+            case 'ctd_raw_extra'
+                clear ctd_raw_extra
             case 'rawedit_auto'
                 %when pumps are off
                 co.pumpsNaN.temp1 = 12; %T takes 1/2 s to recover
@@ -140,6 +147,9 @@ switch opt1
         switch opt2
             case 'blfilename'
             case 'botflags'
+                %1 no info, 2 no problems noted, 3 leaking, 4 did not trip
+                %correctly, 5 not reported, 7 unknown problem, 9 samples
+                %not drawn
             case 'fir_fill'
         end
 
@@ -180,6 +190,10 @@ switch opt1
         switch opt2
             case 'oxy_parse'
                 calcoxy = 1;
+            case 'oxy_flags'
+                %1 sample drawn but analysis not received, 2 acceptable, 3
+                %questionable, 4 bad, 5 not reported, 6 mean of duplicates,
+                %9 sample not drawn
         end
 
     case 'outputs'

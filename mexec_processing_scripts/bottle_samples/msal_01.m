@@ -269,7 +269,7 @@ if calcsal
             s = ds_sal.sampnum(iistd)-std_samp_range(1);
             text(x(iistd),zeros(1,length(iistd)),num2str(s(:)));
         end
-        ylim([-1 1]*4e-5); ylabel('autosal value - 2K15')
+        ylim([-1 1]*1e-4); ylabel('autosal value - 2K15')
         grid on
         disp('(k,r,m): reading1, 2, 3 of standards; blue squares: average of standards. (fixed scale.)');
         cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
