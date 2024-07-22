@@ -67,72 +67,9 @@ if sum(strcmp('flag',ds_oxy_fn))==0
 end
 
 if calcoxy
-    %parse, for instance combining duplicates, or getting information from header
-    cellT = 25; %default
-    ds_oxy(isnan(ds_oxy.position),:) = [];
+    %calculate concentration from titre, standard and 
+    ds_oxy = oxy_calc(ds_oxy, labT);
 
-    %check units
-    clear oxyunits
-    oxyunits.vol_blank = {'ml' 'mls'};
-    oxyunits.vol_std = {'ml' 'mls'};
-    oxyunits.vol_titre_std = {'ml' 'mls'};
-    oxyunits.bot_vol_tfix = {'ml' 'mls'};
-    oxyunits.sample_titre = {'ml' 'mls'};
-    oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
-    oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
-    if ~isempty(chunits) && ~isempty(ds_oxy.Properties.VariableUnits)
-        [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
-    end
-
-    %fill in flags to be consistent 
-    ds_oxy_fn = ds_oxy.Properties.VariableNames;
-    if sum(strcmp('sample_titre',ds_oxy_fn))
-        dname = 'sample_titre';
-    else
-        dname = 'conc_o2';
-    end
-    ds_oxy.flag(ds_oxy.flag<=0) = NaN;
-    bd = isnan(ds_oxy.(dname));
-    bt = isnan(ds_oxy.fix_temp);
-    %both oxy and temp, no flag: 2
-    ds_oxy.flag(~bd & ~bt & isnan(ds_oxy.flag)) = 2;
-    %both oxy and temp, flag 5 or 9: NaN oxy
-    ds_oxy.(dname)(~bd & ~bt & ismember(ds_oxy.flag, [5 9])) = NaN;
-    %temp but no oxy: 5 or 9
-    ds_oxy.flag(bd & ~bt & ds_oxy.flag<9) = 5;
-    %oxy but no temp: 5 and NaN oxy (no good without temp)
-    if sum(~bd & bt)>0; warning('oxy values without fix_temp will be discarded'); end
-    ds_oxy.flag(~bd & bt) = 5;
-    ds_oxy.flag(~bd & bt) = NaN;
-    %neither oxy nor temp: 9
-    ds_oxy.flag(bd & bt) = 9;
-
-    %compute bottle volumes at fixing temperature if not present
-    if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))
-        if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
-            ds_oxy.bot_cal_temp = cellT+zeros(size(ds_oxy.sampnum));
-        end
-        ds_oxy.bot_vol_tfix = ds_oxy.bot_vol.*(1+9.75e-5*(ds_oxy.fix_temp-ds_oxy.bot_cal_temp));
-    end
-
-    %compute concentration if not present
-    if sum(strcmp('conc_o2',ds_oxy_fn))==0
-        mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
-        std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
-        sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
-        mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
-        opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
-        n_o2_reag = mol_o2_reag*vol_reag_tot;
-        % molarity (mol/mL) of titrant
-        mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);
-        % moles of O2 in sample
-        ds_oxy.n_o2 = (ds_oxy.sample_titre - ds_oxy.vol_blank).*mol_titrant*sample_react_ratio;
-        % volume of sample, accounting for pickling reagent volumes.
-        sample_vols = ds_oxy.bot_vol_tfix - vol_reag_tot; %mL
-        % concentration of O2 in sample, accounting for concentration in pickling reagents
-        %a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
-        ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
-    end
 end
 
 %make sure flags match where data are present/missing
@@ -206,7 +143,7 @@ end
 
 opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
 
-orth = 0.75; %threshold for replicate agreement to be examined
+orth = 1; %threshold for replicate agreement to be examined
 opt1 = 'check_sams'; get_cropt
 if check_oxy
     oxy_repl_check(d, mcruise, orth)
@@ -218,10 +155,82 @@ mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 
 moxy_to_sam
 
+%%%%%%%%%%%%%%%%%%%    subfunctions    %%%%%%%%%%%%%%%%%%%
+%----------------------------------------------------------
+
+%%% ds_oxy = oxy_calc(ds_oxy, labT)
+%
+function ds_oxy = oxy_calc(ds_oxy, labT)
+labT = 25; %default
+ds_oxy(isnan(ds_oxy.position),:) = [];
+
+%check units
+clear oxyunits
+oxyunits.vol_blank = {'ml' 'mls'};
+oxyunits.vol_std = {'ml' 'mls'};
+oxyunits.vol_titre_std = {'ml' 'mls'};
+oxyunits.bot_vol_tfix = {'ml' 'mls'};
+oxyunits.sample_titre = {'ml' 'mls'};
+oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
+oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
+if ~isempty(chunits) && ~isempty(ds_oxy.Properties.VariableUnits)
+    [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
+end
+
+%fill in flags to be consistent
+ds_oxy_fn = ds_oxy.Properties.VariableNames;
+if sum(strcmp('sample_titre',ds_oxy_fn))
+    dname = 'sample_titre';
+else
+    dname = 'conc_o2';
+end
+ds_oxy.flag(ds_oxy.flag<=0) = NaN;
+bd = isnan(ds_oxy.(dname));
+bt = isnan(ds_oxy.fix_temp);
+%both oxy and temp, no flag: 2
+ds_oxy.flag(~bd & ~bt & isnan(ds_oxy.flag)) = 2;
+%both oxy and temp, flag 5 or 9: NaN oxy
+ds_oxy.(dname)(~bd & ~bt & ismember(ds_oxy.flag, [5 9])) = NaN;
+%temp but no oxy: 5 or 9
+ds_oxy.flag(bd & ~bt & ds_oxy.flag<9) = 5;
+%oxy but no temp: 5 and NaN oxy (no good without temp)
+if sum(~bd & bt)>0; warning('oxy values without fix_temp will be discarded'); end
+ds_oxy.flag(~bd & bt) = 5;
+ds_oxy.(dname)(~bd & bt) = NaN;
+%neither oxy nor temp: 9
+ds_oxy.flag(bd & bt) = 9;
+
+%compute bottle volumes at fixing temperature if not present
+if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))
+    if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
+        ds_oxy.bot_cal_temp = labT+zeros(size(ds_oxy.sampnum));
+    end
+    ds_oxy.bot_vol_tfix = ds_oxy.bot_vol.*(1+9.75e-5*(ds_oxy.fix_temp-ds_oxy.bot_cal_temp));
+end
+
+%compute concentration if not present
+if sum(strcmp('conc_o2',ds_oxy_fn))==0
+    mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
+    std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
+    sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
+    mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
+    opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
+    n_o2_reag = mol_o2_reag*vol_reag_tot;
+    % molarity (mol/mL) of titrant
+    mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);
+    % moles of O2 in sample
+    ds_oxy.n_o2 = (ds_oxy.sample_titre - ds_oxy.vol_blank).*mol_titrant*sample_react_ratio;
+    % volume of sample, accounting for pickling reagent volumes.
+    sample_vols = ds_oxy.bot_vol_tfix - vol_reag_tot; %mL
+    % concentration of O2 in sample, accounting for concentration in pickling reagents
+    %a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
+    ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
+end
 
 function oxy_repl_check(d, mcruise, orth)
 % check where oxygen replicates in d differ by more than orth (umol/l)
 
+orthp = orth*5;
 m0 = abs(d.botoxya_per_l-d.botoxyb_per_l)>orth;
 q = [d.botoxya_per_l d.botoxyb_per_l];
 qf = [d.botoxya_flag d.botoxyb_flag];
@@ -232,7 +241,9 @@ end
 
 if sum(m0)
     qb = q; qb(qf~=4) = NaN;
+    qq = q; qq(qf~=3) = NaN;
     q = q(m0,:);
+    qq = qq(m0,:);
     qb = qb(m0,:);
     stn0 = d.statnum(m0);
     samp0 = d.sampnum(m0);
@@ -241,11 +252,16 @@ if sum(m0)
     [~,ia0,ib0] = intersect(samp0,ds.sampnum);
 
     r = d.botoxya_per_l(ia)./ds.uoxygen(ib);
-    rint = [d.botoxya_per_l(ia)-4 d.botoxya_per_l(ia)+10*orth]./repmat(ds.uoxygen(ib),1,2);
+    rint = [d.botoxya_per_l(ia)-orthp d.botoxya_per_l(ia)+orthp]./repmat(ds.uoxygen(ib),1,2);
     figure(1); clf
-    hl = plot([d.sampnum(ia) d.sampnum(ia)]',rint',ds.sampnum(ib0),qb./repmat(ds.uoxygen(ib0),1,size(q,2)),'x',d.sampnum(ia),r,'.b',ds.sampnum(ib0),q(ia0,:)./repmat(ds.uoxygen(ib0),1,size(q,2)),'o');
-    ylabel('bot/ctd'); xlabel('sampnum'); grid
-    legend(hl(end-3:end),'all (a)','a','b','c'); set(hl(1:end-4),'color',[.5 .5 .5])
+    y = repmat(ds.uoxygen(ib0),1,size(q,2)); nr = length(ia);
+    hl = plot([d.sampnum(ia) d.sampnum(ia)]',rint',...
+        ds.sampnum(ib0),qb./y,'x', ds.sampnum(ib0),qq./y,'+',...
+        d.sampnum(ia),r,'.b', ds.sampnum(ib0),q(ia0,:)./y,'o');
+    ylabel('oxygen bot/ctd'); xlabel('sampnum'); grid
+    legend(hl([1 end-3:end]),['+/-' num2str(orthp) 'umol/l adj to bottle'],'all (a)','a','b','c','location','southwest'); 
+    set(hl(1:nr),'color',[.5 .5 .5]); set(hl(nr+1:end-4),'color',[0 0 0])
+    title('flagged bad x, questionable +')
 
     %display values for each station
     stns = unique(stn0);

@@ -26,7 +26,10 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
-            case 'sensor_unit_conversions'
+            case ['sensor_unit_conversions' ...
+                    '' ...
+                    '' ...
+                    '']
                 if strcmp(abbrev,'ea640')
                     d.waterdepth = d.waterdepthtransducer + d.transduceroffset;
                     [~,ia,ib] = intersect(h.fldnam,{'waterdepthfromtransducer','transduceroffset'});
@@ -39,23 +42,12 @@ switch opt1
                 %for background, load gridded bathymetry into xbathy, ybathy, zbathy
         end
 
-    case 'castpars'
+    case 'ctd_proc'
         switch opt2
             case 'minit'
                 if stn==65.1
-                  stn_string = sprintf('%03dA',floor(stn)); %only used in mctd_01
+                    stn_string = sprintf('%03dA',floor(stn)); %only used in mctd_01
                 end
-            case 'oxy_align'
-                oxy_end = 1; %truncate oxygen oxy_align s before T,C
-            case 's_choice'
-                s_choice = 1; %fin sensor
-            case 'o_choice'
-                o_choice = 1; %fin sensor
-
-        end
-
-    case 'ctd_proc'
-        switch opt2
             case 'redoctm'
                 redoctm = 1;
             case 'cnvfilename'
@@ -84,6 +76,8 @@ switch opt1
                 if exist('otfile_appendto','var')
                     m_fix_hdr(otfile_appendto, hreplace);
                 end
+            case 'oxy_align'
+                oxy_end = 1; %truncate oxygen oxy_align s before T,C
             case 'rawedit_auto'
                 if stn==43
                     co.badscan.temp1 = [6.79e4 inf];
@@ -101,16 +95,23 @@ switch opt1
                 co.docal.oxygen = 0;
                 co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([184 203],[1e-3 -1e-3],d0.dday);';
                 co.calstr.temp.sn34116.msg = 'SBE35 comparison, 482 total points, 109 deep/low gradient points';
-                co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+1e-3';
+                co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+1e-3;';
                 co.calstr.temp.sn35838.msg = 'SBE35 comparison, 494 total points, 110 deep/low gradient points';
-                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1-1e-3/35)';
+                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1-1e-3/35);';
                 co.calstr.cond.sn42580.msg = '341 bottle salinities (106 deep/low gradient)';
-                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1-6e-3/35)';
+                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1-6e-3/35);';
                 co.calstr.cond.sn43258.msg = '353 bottle salinities (107 deep/low gradient)';
-                %co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*1.04;';
-                %co.calstr.oxygen.sn432061.msg = 'upcast oxygen s/n 432061 adjusted to agree with 146 samples';
-                %co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*1.025;';
-                %co.calstr.oxygen.sn432068.msg = 'upcast oxygen s/n 432068 adjusted to agree with 142 samples';
+                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 100],[1.038 1.058],d0.statnum);';
+                co.calstr.oxygen.sn432061.msg = 'upcast oxygen s/n 432061 adjusted to agree with 146 samples';
+                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*1.025;';%interp1([0 51 70 80 85],[1.025 1.02 1.05 1.04 1.04],d0.statnum);';
+                co.calstr.oxygen.sn432068.msg = 'upcast oxygen s/n 432068 adjusted to agree with 142 samples';
+            case 'sensor_choice'
+                s_choice = 2; %CTD2 is on the vane and is smoother (better) especially when AHC not on
+                if stn<=50 || stnlocal>79 %or 74?
+                    o_choice = 2;
+                else
+                    o_choice = 1; 
+                end
         end
 
     case 'nisk_proc'
@@ -152,21 +153,23 @@ switch opt1
         end
 
     case 'ladcp_proc'
-        cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
-        yos = [10 33];
         min_nvmadcpprf = 4; %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
         min_nvmadcpbin = 3; %masks depths with number of valid bins less than this
         min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
-        
+        cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
+        yos = [10 33];        
         if stn>=yos(1) && stn<=yos(2)
             cfg.uppat = sprintf('%s_CTD%03d-%03dS*.000',upper(mcruise),yos(1),yos(2));
             cfg.dnpat = sprintf('%s_CTD%03d-%03dM*.000',upper(mcruise),yos(1),yos(2));
+        elseif stn==45
+            cfg.uppat = 'DY181_CTD045S.000';
+            cfg.dnpat = 'DY181_CTD45M.000';
+        elseif stn==85
+            cfg.uppat = 'DY181_CTD084-85S.000';
+            cfg.dnpat = 'DY181_CTD084-85M.000';
         else
             cfg.uppat = sprintf('%s_CTD%03dS*.000',upper(mcruise),stn);
             cfg.dnpat = sprintf('%s_CTD%03dM*.000',upper(mcruise),stn);
-            if stn==45
-                cfg.dnpat = 'DY181_CTD45M.000';
-            end
         end
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
         %code for yo-yo cast
@@ -205,38 +208,16 @@ switch opt1
                 calcsal = 1;
                 ssw_batch = 'P168';
             case 'sal_calc'
-                sal_off = [
-                    000 -.5
-                    001 -1
-                    002 -1
-                    003 -2
-                    004 0
-                    005 1.5
-                    006 2
-                    007 7 %***check T
-                    009 -3 % No standard labelled 008
-                    010 -1.5
-                    011 -1.5
-                    012 -2.5
-                    013 -6
-                    014 -2
-                    015 -5
-                    016 2
-                    017 2
-                    018 1
-                    019 1
-                    020 -2
-                    021 -7.5
-                    022 -2
-                    023 1.5
-                    024 1.5
-                    025 1
-                    %024 9.5 %suspicious maybe bad (old?)
-                    %025 9.5 %suspicious maybe bad (a few minutes later)
-                    026 1 %this one was 45 min after 025, back to "normal"
-                    027 2
-                    028 2
-                    029 1
+                sal_off = [000 -.5; 001 -1; 002 -1; 003 -2; ... %10th am
+                    004 0; 005 1.5; 006 2; 007 7; ... %11th pm
+                    009 -3; 010 -1.5; 011 -1.5; 012 -2.5; ... %12th am
+                    013 -6; 014 -2; ... %12th pm
+                    015 -5; 016 2; 017 2; 018 1; 019 1; 020 -2; ... %14th am
+                    021 -7.5; 022 -2; ... %14th pm
+                    023 1.5; 026 1; 027 2; 028 2; 029 1; ... %17th am 024, 025 9.5 suspicious, maybe old
+                    % samples on 19th run without standards
+                    % samples on 20th run without standards
+                    031 -1; 036 -1; ... %21st am
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
@@ -250,7 +231,7 @@ switch opt1
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {fullfile(root_oxy,'240721Winkler Calculation Spreadsheet.xlsx')};
+                ofiles = {fullfile(root_oxy,'Winkler Calculation Spreadsheet_220724.xlsx')};
                 iih = 8;
                 hcpat = {'Longitude'};
                 chrows = 1; chunits = [];
@@ -286,22 +267,33 @@ switch opt1
                 d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
                 d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
                 d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
-                %checkbottles_01: 3603, 4207, 4403, 5603, 6407, 6605, 6607, 6609, 7009
+                % outliers relative to profile/CTD (not replicates)
+                flag3 = [3617 3811 ...
+                    811 923 5507 5509 5511 5609 5613]';
+                flag4 = [3501 3507 3509 3515 3603 3607 3715 ...
+                    4207 4403 5603 ...
+                    601 921 4401 4415 4915 5203 5601 7209 7717 7719]';
+                d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
+                d.botoxya_flag(ismember(d.sampnum,flag3)) = 3;
+                m = d.sampnum==8315;
+                d.botoxya_flag(m) = 3; d.botoxyb_flag(m) = 3;
         end
 
     case 'botnut'
         switch opt2
             case 'nut_files'
-                hcpat = {'Depth'}; chrows = 1; chunits = 1;
+                ncpat = '240721*.xlsx';
+                hcpat = {'LAT'}; chrows = 1; chunits = 1;
             case 'nut_parse'
-                ds_nut.position = nan+ds_nut.statnum;
-                for no = 1:length(ds_nut.statnum)
-                    ii = findstr('BTL',ds_nut.statname_niskin{no});
-                    if ~isempty(ii)
-                        ds_nut.position(no) = str2double(ds_nut.statname_niskin{no}(ii+[3:4]));
-                    end
-                end
-                ds_nut(isnan(ds_nut.position),:) = [];
+                varmap.position = {'niskin_btl_number'};
+                %ds_nut.position = nan+ds_nut.statnum;
+                %for no = 1:length(ds_nut.statnum)
+                %    ii = strfind(ds_nut.statname_niskin{no},'BTL');
+                %    if ~isempty(ii)
+                %        ds_nut.position(no) = str2double(ds_nut.statname_niskin{no}(ii+[3:4]));
+                %    end
+                %end
+                %ds_nut(isnan(ds_nut.position),:) = [];
         end
 
     case 'outputs'

@@ -1,5 +1,5 @@
-function status = mday_00_load(streamname,mtable,day)
-% function status = mday_00_load(streamname,mtable,day)
+function status = mday_00_load(streamname, day, mtable)
+% function status = mday_00_load(streamname, day, mtable)
 %
 % use mrrvdas2mstar or mdatapup to grab a day of data from a techsas NetCDF
 % file, an SCS file, or an RVDAS table, subsample to 1 Hz, and add to
@@ -20,15 +20,15 @@ m_margslocal
 m_varargs
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
+
+%lookup for this stream
+m = strcmp(streamname,mtable.tablenames);
+mstarprefix = mtable.mstarpre{m};
 status = 1;
 if contains(mstarprefix,'not_rvdas')
     status = 2;
     return
 end
-
-%lookup for this stream
-m = strcmp(streamname,mtable.tablenames);
-mstarprefix = mtable.mstarpre{m};
 root_out = fullfile(MEXEC_G.mexec_data_root,mtable.mstardir{m});
 
 % make output directory if it doesn't exist
@@ -41,8 +41,9 @@ fnmstar = [dataname '_raw'];
 otfile2 = fullfile(root_out, fnmstar);
 if MEXEC_G.quiet<=1; fprintf(1,'loading underway data stream %s to write to %s\n',streamname,mstarprefix,mcruise,fnmstar); end
 
-dn1 = datenum([year 1 1 00 00 00]) + day - 1;
-dn2 = datenum([year 1 1 23 59 59]) + day - 1;
+y = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
+dn1 = datenum([y 1 1 0 0 0]) + day - 1;
+dn2 = dn1 + 1 - 1/86400;
 
 switch MEXEC_G.Mshipdatasystem
     case 'rvdas'                

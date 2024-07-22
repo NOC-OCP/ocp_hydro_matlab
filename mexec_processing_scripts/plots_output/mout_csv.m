@@ -1,3 +1,4 @@
+
 function status = mout_csv(in, out)
 % status = mout_csv(in, out)
 %
@@ -117,7 +118,7 @@ for kloop = klist
     %load file
     if ~issam
         stn = kloop;
-        opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+        opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
         fname = sprintf('%s_%s_%s%s.nc',in.type,mcruise,stn_string,in.suf);
     else
         fname = sprintf('%s_%s_all.nc',in.type,mcruise);

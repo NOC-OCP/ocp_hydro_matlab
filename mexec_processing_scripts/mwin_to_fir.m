@@ -7,7 +7,7 @@ function mwin_to_fir(stn)
 % formerly mwin_03
 
 m_common
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');

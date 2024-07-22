@@ -1,4 +1,4 @@
-function mtsg_merge_av(days)
+function mtsg_merge_av(days,mtable)
 % mtsg_merge_av: combine tsg and other uncontaminated seawater supply and
 % surface ocean variables from multiple files, and average over 1 minute
 
@@ -9,10 +9,10 @@ opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 % bak jc211 ship_data_sys_names sets metpre and tsgpre
 
 %get list of files
-root_dir1 = fullfile(MEXEC_G.mexec_data_root, 'met', 'ocn');
-root_dir2 = fullfile(MEXEC_G.mexec_data_root, 'met', 'wnd');
-f1 = dir(fullfile(root_dir1, '*_all_raw.nc')); %will change to _edt later if available
-f2 = dir(fullfile(root_dir2, 'surfmet*_all_raw.nc')); %will change to _edt later if available
+root_dir1 = fullfile(MEXEC_G.mexec_data_root, 'met');
+f1 = dir(fullfile(root_dir, '*_all_raw.nc')); %will change to _edt later if available
+f2 = dir(fullfile(root_dir, 'surfmet*_all_raw.nc')); %will change to _edt later if available
+%merge into "surfocean" file? (tsg+, sst/dktemp, etc.)
 streams = {'surfmet' 'tsg' 'ocl' 'flowmeter' 'fluorometer' 'platform' 'thermometer' 'thermosalinograph' 'transmissometer' 'sst' 'radiometer'};
 fnames1 = {f1.name};
 fnames2 = {f2.name};

@@ -139,8 +139,8 @@ for ks = 1:length(sn)
 
     %get ctd and comparison fields for both sets of indices
     clear p
-    %p.xvar = 'statnum'; p.xvarlabel = p.xvar;
-    p.xvar = 'dday'; p.xvarlabel = 'days';
+    p.xvar = 'statnum'; p.xvarlabel = p.xvar;
+    %p.xvar = 'dday'; p.xvarlabel = 'days';
     if strcmp(parameter,'oxygen') && ~useoxyratio
         [dc, p, mod] = sensor_cal_comparisons(d, [parameter '_diff'], num2str(sn(ks)), udstr, iis1, iis2, okf, p);
     else
@@ -201,7 +201,12 @@ if ~isempty(ii)
     disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01?')
     next = input('y/k for keyboard/enter to skip and continue?\n','s');
     if strcmp(next,'y')
-        plot_comparison_quality(dc,parameter,dc.statnum(p.iigc(ii)),testcal,calstr0,okf,[p.rlim(2) p.rlim(2)/2])
+        if strcmp(parameter,'oxygen') && useoxyratio %what about cond, that's a ratio too***
+            llim = (p.rlim(2)-1)/2+1;
+        else
+            llim = p.rlim(2)/2;
+        end
+        plot_comparison_quality(dc,parameter,dc.statnum(p.iigc(ii)),testcal,calstr0,okf,llim)
     elseif strcmp(next,'k')
         keyboard
     end
@@ -236,7 +241,7 @@ axis image; xlabel(['cal ' parameter]); ylabel(['ctd ' parameter]);
 subplot(5,5,[13:14 18:19])
 scatter(dc.(p.xvar), -dc.press, 12, dc.res, 'filled'); grid
 xlabel(p.xvar); xlim(p.xrange); ylim(p.presrange); ylabel('-press')
-caxis(p.rlim); colorbar
+clim(p.rlim); colorbar
 
 subplot(5,5,[21:24])
 nh = histc(dc.res, p.edges); nhgc = histc(dc.res(p.iigc), p.edges);
@@ -271,9 +276,18 @@ for no = 1:length(stns_examine)
 
     %load 1 and 2 dbar upcast profiles
     [d1, h1] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
+    %remove the individual (parameter)1, (parameter)2 otherwise
+    %apply_calibrations might not get to (parameter) (only finds first
+    %instance of s/n)*** fix this!
+    m = strncmp(parameter,h1.fldnam,length(parameter)) & ~strcmp(parameter,h1.fldnam);
+    d1 = rmfield(d1,h1.fldnam(m));
+    h1.fldnam(m) = []; h1.fldunt(m) = []; h1.fldserial(m) = [];
     [dcs, ~] = mloadq(fullfile(rootdir, ['dcs_' mcruise '_' stn_string '.nc']), '/');
     ii1u = find(d1.scan>=dcs.scan_bot & d1.scan<=dcs.scan_end);
     [du, hu] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_2up.nc']), '/');
+    m = strncmp(parameter,hu.fldnam,length(parameter)) & ~strcmp(parameter,hu.fldnam);
+    du = rmfield(du,hu.fldnam(m));
+    hu.fldnam(m) = []; hu.fldunt(m) = []; hu.fldserial(m) = [];
     if co_cal
         opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
         if exist('co','var') && isfield(co,'calstr')
@@ -283,6 +297,8 @@ for no = 1:length(stns_examine)
         end
     end
     if ~isempty(calstr)
+        d1.statnum = repmat(stnlocal,size(d1.press));
+        du.statnum = repmat(stnlocal,size(du.press));
         [dcal1, hcal1] = apply_calibrations(d1, h1, calstr, testcal, 'q');
         [dcalu, hcalu] = apply_calibrations(du, hu, calstr, testcal, 'q');
         %put calibrated fields back into d1 and du
@@ -296,9 +312,11 @@ for no = 1:length(stns_examine)
 
     %bottle samples and niskin data for this station
     iis = find(dc.statnum==stnlocal);
-    iisbf = find(dc.statnum==stnlocal & ~ismember(dc.calflag, okf));
-    iiq = find(dc.statnum==stnlocal & abs(dc.res)>llim(2) & ismember(dc.calflag, okf));
-
+    iisbf = intersect(iis,find(~ismember(dc.calflag, okf)));
+    iiq = intersect(iis,find(abs(dc.res)>llim & ismember(dc.calflag, okf)));
+    if strcmp(parameter,'oxygen')
+        iiq = intersect(iis,find(abs(dc.res-1)>llim-1 & ismember(dc.calflag,okf)));
+    end
     plot(d1.(parameter)(ii1u), -d1.press(ii1u), 'c', ...
         du.(parameter), -du.press, 'k--', ...
         dc.caldata(iis), -dc.press(iis), 'r.', ...

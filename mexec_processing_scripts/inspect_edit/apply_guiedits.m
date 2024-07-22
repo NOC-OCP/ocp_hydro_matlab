@@ -26,7 +26,7 @@ if nargin>3
     end
 end
 if redoctm
-    opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
+    opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
 end
 
 edfiles = dir(edfilepat);

@@ -19,10 +19,10 @@ function mctd_03(stn)
 %     gsw functions
 %     mfsave
 % and via get_cropt:
-%      setdef_cropt_cast (castpars and mctd_03 cases)
+%      setdef_cropt_cast (ctd_proc and mctd_03 cases)
 
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt 
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt 
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
 
 root_ctd = mgetdir('M_CTD');
@@ -33,11 +33,10 @@ infile1 = fullfile(root_ctd, [prefix1 stn_string '_24hz']);
 otfile1 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
 
 %identify preferred sensors for (T,C) and O on this station
-opt1 = 'castpars'; opt2 = 's_choice'; get_cropt 
+opt1 = 'ctd_proc'; opt2 = 'sensor_choice'; get_cropt 
 if ismember(stn, stns_alternate_s)
     s_choice = setdiff([1 2], s_choice);
 end
-opt1 = 'castpars'; opt2 = 'o_choice'; get_cropt 
 if ismember(stn, stns_alternate_o)
    o_choice = setdiff([1 2],o_choice);
 end

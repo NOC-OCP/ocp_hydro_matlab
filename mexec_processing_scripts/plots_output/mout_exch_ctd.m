@@ -1,3 +1,4 @@
+
 % mout_exch_ctd: write data from ctd_cruise_nnn_2db.nc to CCHDO exchange file
 % Use: mout_exch_ctd        
 %
@@ -7,7 +8,7 @@
 % from all_ctd_renamelist and write to outfileall rather than outfile (both
 % are set in opt_cruise)***
 
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
 opt1 = 'mout_exch'; opt2 = 'woce_expo'; get_cropt
 if ~exist('expocode','var')

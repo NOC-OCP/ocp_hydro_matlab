@@ -1,3 +1,4 @@
+
 function ctd_sensor_check(varargin)
 % ctd_sensor_check(sensors_to_check)
 % ctd_sensor_check(sensors_to_check,'parameter','value')
@@ -54,7 +55,7 @@ else
     oxydiff = 0;
 end
 
-opt1 = 'castpars'; opt2 = 'ctdsens_groups'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctdsens_groups'; get_cropt
 if exist(sgfile,'file')
     load(sgfile)
 end

@@ -9,7 +9,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 st = {'Temperature','Conductivity','Oxygen'};
 sa = {'temp','cond','oxygen'};
 
-opt1 = 'castpars'; opt2 = 'ctdsens_groups'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctdsens_groups'; get_cropt
 if exist(sgfile,'file')
     load(sgfile,'sg','sng','sn_list')
 else

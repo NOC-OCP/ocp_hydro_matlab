@@ -18,9 +18,9 @@ function mctd_04(stn)
 %     grid_profile
 %     mfsave
 % and via get_cropt:
-%     setdef_cropt_cast (castpars and mctd_04 cases)
+%     setdef_cropt_cast (ctd_proc and mctd_04 cases)
 
-m_common; opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+m_common; opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from 24 hz to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
 root_ctd = mgetdir('M_CTD');
@@ -62,9 +62,8 @@ end
 [var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
 
 %use oxy_end to NaN that many seconds before dcs scan_start
-opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
 if oxy_end==1
-    opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
     oe = d.scan>=dd.scan_end-24*oxy_align;
     for no = 1:size(oxyvars,1)
         d.(oxyvars{no})(oe) = NaN;

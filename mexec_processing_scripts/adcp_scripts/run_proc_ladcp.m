@@ -20,7 +20,7 @@ cdir = pwd;
 m_common; mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 clear cfg
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 cfg.stnstr = stn_string;
 cfg.p.cruise_id = mcruise;
 cfg.p.ladcp_station = stnlocal;

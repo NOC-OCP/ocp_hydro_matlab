@@ -5,7 +5,7 @@ function mfir_03(stn)
 %      stn = 16; mfir_03;
 
 m_common
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
 root_ctd = mgetdir('M_CTD');
 infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);

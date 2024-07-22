@@ -1,5 +1,5 @@
-function mday_01_edit(abbrev, days, mtable)
-%function mday_01_edit(abbrev, days, mtable)
+function didedits = mday_01_edit(abbrev, days, mtable)
+%function didedits = mday_01_edit(abbrev, days, mtable)
 %
 % abbrev (char) is the mexec short name prefix for the data stream
 % days is a list of yeardays to operate on (merging into existing file if
@@ -15,6 +15,7 @@ function mday_01_edit(abbrev, days, mtable)
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+didedits = 0;
 
 %definitions
 ii = find(strcmp(abbrev,mtable.mstarpre)); 
@@ -22,6 +23,7 @@ rootdir = fullfile(MEXEC_G.mexec_data_root, mtable.mstardir{ii(1)});
 infile = fullfile(rootdir, sprintf('%s_%s_all_raw.nc', abbrev, mcruise));
 if ~exist(m_add_nc(infile),'file'); return; end
 otfile = [infile(1:end-6) 'edt.nc'];
+streamtype = mtable.paramtype{ii(1)};
 
 %load
 [d, h] = mload(infile,'/');
@@ -37,13 +39,12 @@ if isempty(d.time)
     return
 end
 
-didedits = 0;
+comment = [];
+
 
 %%%%%%%%% calibrate, rename, and combine (linearly) variables %%%%%%%%%
 
-% adjust: factory calibration coefficients and other units conversions,
-% depth correction and converting depth-from-transducer to
-% depth-from-surface
+% adjust: factory calibration coefficients and other units conversions
 sensorcals = []; sensors_to_cal = {}; xducer_offset = [];
 opt1 = 'uway_proc'; opt2 = 'sensor_unit_conversions'; get_cropt
 if ~isempty(sensorcals) || ~isempty(xducer_offset)
@@ -53,8 +54,10 @@ if ~isempty(comment)
     h.comment = [h.comment comment];
     didedits = 1;
 end
-if strcmp(streamtype,'bathy')
-    [d, h, comment] = mday_01_cordep(d, h, abbrev); %apply transducer offset and carter table soundspeed correction, go from depth_uncor to depth
+if strcmp(streamtype,'sbm')
+    % adjust: speed of sound correction and converting
+    % depth-from-transducer to depth-from-surface
+    [d, h, comment] = mday_01_cordep(d, h); 
 end
 if ~isempty(comment)
     h.comment = [h.comment comment];
@@ -123,7 +126,7 @@ else
     d.time = time0;
     if ~isempty(comment)
         h.comment = [h.comment comment];
-        didedit = 1;
+        didedits = 1;
     end
 end
 
@@ -176,11 +179,17 @@ if didedits
 end
 
 
+% ----------------------------------------------------
 %%%%%%%%%% subfunctions %%%%%%%%%%
+% ----------------------------------------------------
 
-function [d, comment] = mday_01_fixtimes(d,abbrev)
+%%%%% fixtimes %%%%%
+%
+% [d, comment] = mday_01_fixtimes(d, abbrev);
+%
 % flag repeated times and (for selected streams) backward time jumps
 % and non-finite times 
+function [d, comment] = mday_01_fixtimes(d,abbrev)
 
 %%%%% check for repeated times and backward time jumps %%%%%
 comment = '';
@@ -215,12 +224,15 @@ if ismember(abbrev,{'gys', 'gyr', 'gyro_s', 'gyropmv', 'posmvpos'})
     end
 end
 
-
+%%%%% default range limits and despiking settings %%%%%
+% uopts = mday_01_default_autoedits(h)
+% 
+% define by variable type and apply to variable names in each category
+% actually found in h
+% 
 function uopts = mday_01_default_autoedits(h)
-%default range limits and despiking settings, and apply to variable names
-%we have here
 
-uopts.despike.depth_below_xducer = [10 5 3];
+uopts.despike.dep = [10 5 3];
 
 uopts.rangelim.pitch = [-5 5];
 uopts.rangelim.roll = [-7 7];
@@ -255,9 +267,13 @@ for pno = 1:length(fn)
 end
 
 
-%%%%% apply transducer offset and (for singlebeam) carter table soundspeed correction %%%%%
-function [d, h, comment] = mday_01_cordep(d, h, abbrev)
-% function [d, h, comment] = mday_01_cordep(d, h, abbrev);
+%%%%% cordep %%%%%
+%
+% [d, h, comment] = mday_01_cordep(d, h);
+%
+% for singlebeam echosounder, apply transducer offset and carter table
+% soundspeed correction
+function [d, h, comment] = mday_01_cordep(d, h)
 
 m_common
 comment = '';
@@ -283,52 +299,55 @@ elseif ~isempty(depsfvar)
 end
 
 %carter correction
-if sum(strcmp(abbrev, {'sim' 'ea600m' 'ea600' 'singleb' 'ea640'}))
-    opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-    navfile = fullfile(mgetdir(default_navstream), [default_navstream '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
-    if exist(navfile,'file')
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+navfile = fullfile(mgetdir(default_navstream), [default_navstream '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
+if exist(navfile,'file')
 
-        [dn,hn] = mload(navfile,'/');
-        latstr = munderway_varname('latvar', hn.fldnam, 1, 's');
-        lonstr = munderway_varname('lonvar', hn.fldnam, 1, 's');
-        lon = dn.(lonstr);
-        lat = dn.(latstr);
+    [dn,hn] = mload(navfile,'/');
+    latstr = munderway_varname('latvar', hn.fldnam, 1, 's');
+    lonstr = munderway_varname('lonvar', hn.fldnam, 1, 's');
+    lon = dn.(lonstr);
+    lat = dn.(latstr);
 
-        dn.time = m_commontime(dn.time,hn,h);
-        lon = interp1(dn.time, lon, d.time);
-        lat = interp1(dn.time, lat, d.time);
+    dn.time = m_commontime(dn.time,hn,h);
+    lon = interp1(dn.time, lon, d.time);
+    lat = interp1(dn.time, lat, d.time);
 
-    else
-       warning('no pos file for day with %d found, using current position to select carter area for echosounder correction',floor(d.time(1)))
+else
+    warning('no pos file for day with %d found, using current position to select carter area for echosounder correction',floor(d.time(1)))
+    navname = default_navstream;
     if strcmp(MEXEC_G.Mshipdatasystem, 'rvdas')
-        navname = default_navstream;
         pos = mrlast(navname); lon = pos.longitude; lat = pos.latitude; clear pos
     elseif strcmp(MEXEC_G.Mshipdatasystem, 'techsas')
-            pos = mtlast(navname); lon = pos.long; lat = pos.lat; clear pos
-        elseif strcmp(MEXEC_G.Mshipdatasystem, 'scs')
-            pos = mslast(navname); lon = pos.long; lat = pos.lat; clear pos
-        end
+        pos = mtlast(navname); lon = pos.long; lat = pos.lat; clear pos
+    elseif strcmp(MEXEC_G.Mshipdatasystem, 'scs')
+        pos = mslast(navname); lon = pos.long; lat = pos.lat; clear pos
     end
-
-    if ~isfield(d,'waterdepth')
-        d.waterdepth = d.uncdepth; 
-        h.fldnam = [h.fldnam 'waterdepth'];
-        h.fldunt = [h.fldunt 'meters'];
-    end
-    y = mcarter(lat, lon, d.waterdepth);
-    d.waterdepth = y.cordep;
-    if isfield(d,'uncdepth')
-        d = rmfield(d,'uncdepth');
-        h.fldunt(strcmp(h.fldnam,'uncdepth')) = [];
-        h.fldnam(strcmp(h.fldnam,'uncdepth')) = [];
-    end
-    comment = [comment '\n carter table correction applied to waterdepth\n'];
 end
 
+if isfield(d,'waterdepth')
+    y = mcarter(lat, lon, d.waterdepth);
+elseif isfield(d,'uncdepth')
+    y = mcarter(lat, lon, d.uncdepth);
+    d = rmfield(d,'uncdepth');
+    h.fldunt(strcmp(h.fldnam,'uncdepth')) = [];
+    h.fldnam(strcmp(h.fldnam,'uncdepth')) = [];
+end
+d.waterdepth = y.cordep;
+h.fldnam = [h.fldnam 'waterdepth'];
+h.fldunt = [h.fldunt 'meters'];
+comment = [comment '\n carter table correction applied to waterdepth\n'];
 
-%%%%% apply factory calibrations to underway sensors reported in voltage units, or apply other conversions - from cruise option file %%%%%
+
+%%%%% fcal %%%%%
+%
+% [d, h, comment] = mday_01_fcal(d, h, abbrev, sensorcals, sensors_to_cal, xducer_offset);
+%
+% apply factory calibrations to underway sensors reported in voltage 
+% units, or apply other conversions such as adding a constant transducer
+% offset to depth relative to transducer
 function [d, h, comment] = mday_01_fcal(d, h, abbrev, sensorcals, sensors_to_cal, xducer_offset)
-% function [d, h, comment] = mday_01_fcal(d, h, abbrev);
+
 comment = '';
 
 if ~isempty(sensorcals)
@@ -370,5 +389,4 @@ if ~isempty(xducer_offset)
 end
 
 % windspeed_ms from speed 'y = x1*1852/3600' % 'y=x1*0.512' % bim used 0.512 on jc032, but the correct answer is (BAK thinks) 0.5144444
-
 

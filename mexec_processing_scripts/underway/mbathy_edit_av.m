@@ -1,17 +1,17 @@
-function mbathy_edit_av(days,varargin)
+function mbathy_edit_av(days,mtable,varargin)
 %edit bathymetry data (ideally by comparing two streams)
 %then average each for _01 file, with time in days
 
 global MEXEC_G
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 avfile = fullfile(MEXEC_G.mexec_data_root,'bathy',sprintf('bathy_%s_av',mcruise));
-uway_set_streams
+
 mint = inf; maxt = -inf;
 timun = ['days since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
 tave_period = 5/24/60;
 btol = tave_period/10; %10% of spacing of gridded data
 
-if nargin>1
+if nargin>2
     regrid = varargin{1};
 else
     regrid = 1;
@@ -21,9 +21,9 @@ if regrid
 
     %load singlebeam if we have it
     iss = 0;
-    [~,iis,~] = intersect(mrtv.mstarpre,{'sim' 'ea600' 'ea640' 'singleb' 'sbm' 'singlebeam_kongsberg'});
+    [~,iis,~] = intersect(mtable.mstarpre,{'sim' 'ea600' 'ea640' 'singleb' 'sbm' 'singlebeam_kongsberg'});
     if ~isempty(iis)
-        filesbin = fullfile(mrtv.mstardir{iis}, [mrtv.mstarpre{iis} '_' mcruise '_all_edt.nc']);
+        filesbin = fullfile(mgetdir(mtable.mstarpre{iis}), [mtable.mstarpre{iis} '_' mcruise '_all_edt.nc']);
         if exist(filesbin,'file')
             [ds,hs] = mload(filesbin,'/');
             ds.time = m_commontime(ds, 'time', hs, timun);
@@ -42,16 +42,16 @@ if regrid
 
     %load multibeam if we have it
     ism = 0;
-    [~,iim,~] = intersect(mrtv.mstarpre,{'em120' 'em122' 'multib' 'mbm' 'multibeam_kongsberg_em122'});
+    [~,iim,~] = intersect(mtable.mstarpre,{'em120' 'em122' 'multib' 'mbm' 'multibeam_kongsberg_em122'});
     if ~isempty(iim)
-        filembin = fullfile(mrtv.mstardir{iim}, [mrtv.mstarpre{iim} '_' mcruise '_all_edt.nc']);
+        filembin = fullfile(mgetdir(mtable.mstarpre{iim}), [mtable.mstarpre{iim} '_' mcruise '_all_edt.nc']);
         if ~exist(filembin,'file')
-            filembin = fullfile(mrtv.mstardir{iim},[mrtv.mstarpre{iim} '_' mcruise '_all_raw.nc']);
+            filembin = fullfile(mgetdir(mtable.mstarpre{iim}),[mtable.mstarpre{iim} '_' mcruise '_all_raw.nc']);
         end
         if exist(filembin,'file')
             [dm,hm] = mload(filembin,'/');
             dm.time = m_commontime(dm, 'time', hm, timun);
-            hm.fldunt{strcmp(hm.fldnam,'time')} = timun;
+            hm.fldunt{strcmp(hm.fldnam,'time')} = timun; 
             hm.data_time_origin = [];
             mint = min(mint,dm.time(1));
             maxt = max(maxt,dm.time(end));

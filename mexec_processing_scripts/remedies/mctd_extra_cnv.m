@@ -1,5 +1,5 @@
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adding selected variables from extra .cnv to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
 
 root_ctd = mgetdir('M_CTD');

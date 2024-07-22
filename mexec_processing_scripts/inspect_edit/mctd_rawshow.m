@@ -1,9 +1,10 @@
+
 % mctd_rawshow: display raw ctd data to check for spikes
 %
 % Use: mctd_rawshow        and then respond with station number, or for station 16
 %      stn = 16; mctd_rawshow;
 
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'plotting 24 hz and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
 
 % resolve root directories for various file types
@@ -25,7 +26,7 @@ dn_start = m_commontime(ddcs.time_start(1),'time_start',hdcs,'datenum');
 dn_end = m_commontime(ddcs.time_end(1),'time_end',hdcs,'datenum');
 startdc = datevec(dn_start);
 stopdc = datevec(dn_end);
-opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
 if oxy_end
     stopdco = stopdc; 
     stopdco = datevec(datenum(stopdc)-oxy_align/3600/24);
@@ -33,7 +34,7 @@ end
 
 close all
 
-opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt; nox = size(oxyvars,1);
+nox = size(oxyvars,1);
 % limit variables to plot
 opt1 = 'ctd_proc'; opt2 = 'rawshow'; get_cropt
 

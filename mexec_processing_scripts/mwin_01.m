@@ -4,7 +4,7 @@ function mwin_01(stn)
 %
 % Use: mwin_01        and then respond with station number, or for station 16
 %      stn = 16; mwin_01;
-% Original version for JC031/032 accesses data via rvs files/datapup/pstar
+% Original version for JC031/032 accesses data 
 % Revised version by BAK for di344 Oct 2009
 % Further revision by BAK 15 Nov 2009 intended to make it work equally well
 % on SCS (JCR) and Techsas (Discovery/Cook) files
@@ -21,7 +21,7 @@ function mwin_01(stn)
 % case is provided, times are taken from ctd file as usual.
 
 m_common
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adding winch data to win_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types

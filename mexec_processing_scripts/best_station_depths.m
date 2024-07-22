@@ -38,7 +38,7 @@ else
         depth_source = {'ctd'};
     end
 end
-opt1 = 'castpars'; opt2 = 'bestdeps'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'bestdeps'; get_cropt
 
 if ~iscell(depth_source)
     depth_source = {depth_source};
@@ -64,7 +64,7 @@ end
 %finally look to cruise options for any changes
 replacedeps = []; stnmiss = [];  replacealt = [];
 xducer_offset = 0; iscor = 0;
-opt1 = 'castpars'; opt2 = 'bestdeps'; get_cropt  % inserted by bak en705 24 jul 2023; If you don't get_cropt here, replacedeps is empty
+opt1 = 'ctd_proc'; opt2 = 'bestdeps'; get_cropt  % inserted by bak en705 24 jul 2023; If you don't get_cropt here, replacedeps is empty
 
 if ~isempty(stnmiss)
     bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];

@@ -8,7 +8,7 @@ function mout_1hzasc(stn)
 
 m_common
 
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s.02.asc\n',stn_string); end
 
 %%%%%%%%% write ctd data %%%%%%%%%

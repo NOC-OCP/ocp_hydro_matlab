@@ -1,3 +1,4 @@
+
 function mfir_03_extra(stn)
 % mfir_03_extra: 
 %     merge additional information onto fir file:
@@ -13,7 +14,7 @@ function mfir_03_extra(stn)
 %      stn = 16; mfir_03d;
 
 m_common
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adds bottle stop background gradient, standard deviation, and gamma_n-matched downcast data to fir_%s_%s.nc\n', mcruise, stn_string); end
 
 root_ctd = mgetdir('M_CTD');

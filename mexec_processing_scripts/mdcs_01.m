@@ -1,3 +1,4 @@
+
 function mdcs_01(stn)
 % mdcs_01: find bottom of cast
 %
@@ -7,7 +8,7 @@ function mdcs_01(stn)
 % dy146 ylf added start of cast estimate; sd025 ylf added end of cast
 % estimate
 
-m_common; opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+m_common; opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'finding scan numbers corresponding to cast segments for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
 % resolve root directories for various file types

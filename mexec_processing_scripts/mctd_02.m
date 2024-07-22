@@ -1,3 +1,4 @@
+
 function mctd_02(stn)
 % mctd_02:
 %
@@ -24,7 +25,7 @@ function mctd_02(stn)
 %%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hysteresis), as set in get_cropt and opt_%s\n',mcruise); end
 
 % resolve root directories for various file types
@@ -91,8 +92,7 @@ if co.redoctm
     d.cond1 = apply_ctd_celltm(d.time, d.temp1, d.cond1);
     d.cond2 = apply_ctd_celltm(d.time, d.temp2, d.cond2);
     h.comment = [h.comment '\n cond corrected for cell thermal mass by ctd_apply_celltm'];
-    opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
-    opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
+    opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
     for no = 1:size(oxyvars,1)
         d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+oxy_align);
     end
@@ -181,7 +181,6 @@ if co.dooxyrev || co.dooxyhyst
     end
 end
 %rename oxyvars(:,1) to oxyvars(:,2)
-opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
 nox = size(oxyvars,1);
 for no = 1:nox
     d.(oxyvars{no,2}) = d.(oxyvars{no,1});

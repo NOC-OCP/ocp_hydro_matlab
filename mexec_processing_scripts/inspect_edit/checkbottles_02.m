@@ -18,7 +18,7 @@ function nsubs = checkbottles_02(stn, varargin)
 % requires a gridded section file (mstar .mat)
 
 m_common
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
 %subplots will be psal (and botpsal), oxygen (and botoxygen), and potemp (and botoxytemp and sbe35temp [if avail]),
 %as well as the variable input names

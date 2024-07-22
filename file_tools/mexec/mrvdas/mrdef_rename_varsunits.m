@@ -50,8 +50,8 @@ for no = 1:length(mrtables.tablenames)
     munts(cellfun('isempty',munts)) = {' '};
 
     %extract units from names
-    untsgrp = {'m' 'meter' 'metre'};
-    [mvars, munts] = move_to_unts(mvars, munts, untsgrp);
+    untsgrp = {'meter' 'metre'};
+    [mvars, munts] = move_to_unts(mvars, munts, untsgrp, 'm');
     %***others?
 
     %replace units and in some cases modify names
@@ -59,18 +59,18 @@ for no = 1:length(mrtables.tablenames)
     %latdegm
     m = strcmpi('utctime', mvars);
     munts(m) = {'hhmmss_fff'};
-    untsgrp = {'dddmm' 'degrees and decimal minutes' 'degrees, minutes and decimal minutes'};
-    [munts, ~] = move_to_unts(munts, [], untsgrp); % just replace units, ignore 2nd arg
+    untsgrp = {'degrees and decimal minutes' 'degrees, minutes and decimal minutes'};
+    [munts, ~] = move_to_unts(munts, [], untsgrp, 'dddmm'); % just replace units, ignore 2nd arg
     mvars(strcmp('dddmm',munts) & strncmpi('lat',mvars,3)) = {'latdegm'};
     mvars(strcmp('dddmm',munts) & strncmpi('lon',mvars,3)) = {'londegm'};
 
     %typos as well as alternate forms
     untsgrp = {'degreesC' 'degC' 'degreesCelsius' 'degressCelsius' 'degrees celcius' 'degrees celsius'};
-    [munts, ~] = move_to_unts(munts, [], untsgrp); 
+    [munts, ~] = move_to_unts(munts, [], untsgrp, untsgrp{1}); 
     untsgrp = {'longitudinalwaterspeed', 'longitudalwaterspeed'};
-    [munts, ~] = move_to_unts(munts, [], untsgrp); 
+    [munts, ~] = move_to_unts(munts, [], untsgrp, untsgrp{1}); 
     untsgrp = {'ucsw_hoist','divalueallchannels'};
-    [munts, ~] = move_to_unts(munts, [], untsgrp);
+    [munts, ~] = move_to_unts(munts, [], untsgrp, untsgrp{1});
     %{'course' 'courseoverground' 'coursetrue'}
     %{'heading' 'headingtrue'}
     %{'temp_remote','remotewatertemperature','tempr'}
@@ -116,11 +116,11 @@ end
 % search for elements of uoptions in vars, remove from vars, and put first
 % element of uoptions into unts instead
 % e.g. 
-% [vars, unts] = move_to_unts(vars, unts, {'meter', 'metre'});
+% [vars, unts] = move_to_unts(vars, unts, {'meter', 'metre'}, 'm');
 % turns vars {'waterdepthmeter';'waterdepthmetrefromtransducer'} to 
 % {'waterdepth';'waterdepthfromtransducer'} and units to
-% {'meter';'meter'}
-function [vars, unts] = move_to_unts(vars, unts, uoptions)
+% {'m';'m'}
+function [vars, unts] = move_to_unts(vars, unts, uoptions, unew)
 
 if cellfun('isempty', vars)
     return
@@ -133,7 +133,7 @@ vars = replace(lower(vars), upat, '');
 if isempty(unts)
     unts = [];
 else
-    unts(m) = repmat(uoptions(1), sum(m), 1);
+    unts(m) = repmat({unew}, sum(m), 1);
 end
 
 

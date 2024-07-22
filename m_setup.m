@@ -127,7 +127,7 @@ if ~isempty(MEXEC_G.other_programs_root)
             path_choose = 1;
         case 'query'
             disp('LDEO_IX and m_moorproc_toolbox/rodbload contain functions with the same names')
-            path_choose = input('will you be processing CTD/LADCP data (1),\n mooring/caldip data (2),\n or CTD only (0)?\n');
+            path_choose = input('will you be processing a CTD cast with LADCP data (1),\n mooring/caldip data (2),\n or CTD only (no LADCP) (0)?\n');
             if path_choose==1
                 MEXEC_G.ix_ladcp = 1; %output 1-Hz CTD data for use by LDEO IX LADCP processing
             else

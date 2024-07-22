@@ -97,7 +97,7 @@ for pno = 1:length(params)
             if ~sum(m)
                 continue
             end
-            ii = find(m); ii = ii(1); 
+            ii = find(m); ii = ii(1); %***
             if length(param)<length(h0.fldnam{ii})
                 sensnum = h0.fldnam{ii}(end);
             else

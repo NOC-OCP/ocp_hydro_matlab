@@ -12,7 +12,7 @@ function mctd_rawedit(stn, varargin)
 %      mctd_rawedit(stn,'oxy') %to edit oxygen
 
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'calling mplxyed for GUI editing of raw data, saving to ctd_%s_%s_raw_cleaned.nc\n',mcruise,stn_string); end
 dooxy = 0;
 if nargin>1; dooxy = strcmp(varargin{1},'oxy'); end
@@ -48,8 +48,7 @@ else
     %***option to only plot some of these variables?***
     pshow0.ylist = ['temp1 temp2 cond1 cond2 press'];
     if dooxy
-        opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
-        opt1 = 'castpars'; opt2 = 'oxy_align'; get_cropt
+        opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
         nox = size(oxyvars,1); % bak add
     else
         nox = 0;

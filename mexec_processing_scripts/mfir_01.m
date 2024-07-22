@@ -5,7 +5,7 @@ function mfir_01(stn)
 %      stn = 16; mfir_01;
 
 m_common
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
 % input file names
 root_botraw = mgetdir('M_CTD_BOT');
@@ -77,7 +77,7 @@ if exist('cast_scan_offset','var') && cast_scan_offset(1)==stnlocal
         warning('not applying NaN offset to .bl scan number for %s',stn_string)
     else
         scan = scan + cast_scan_offset(3);
-        opt1 = 'castpars'; opt2 = 'minit'; stn = floor(stn); get_cropt
+        opt1 = 'ctd_proc'; opt2 = 'minit'; stn = floor(stn); get_cropt
         blotfile_appendto = fullfile(root_ctd, sprintf('fir_%s_%s',mcruise,stn_string)); 
         if exist(m_add_nc(blotfile_appendto),'file')
             blappend = 1;

@@ -7,7 +7,7 @@ function mfir_to_sam(stn)
 % formerly mfir_04
 
 m_common
-opt1 = 'castpars'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
 root_ctd = mgetdir('M_CTD'); % change working directory
 infile = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
