@@ -35,47 +35,9 @@ for stn = klist
         end
     end
     h = m_read_header(rfile);
-    iisns = strfind(h.comment,'<SerialNumber>');
-    iisne = strfind(h.comment,'</SerialNumber>');
-
-    for sno = 1:length(st)
-        ii = strfind(h.comment,['<' st{sno} 'Sensor']);
-
-        if ~isempty(ii)
-            ii1 = min(iisns(iisns>ii(1)))+14:min(iisne(iisne>ii(1)))-1;
-            sn1 = h.comment(ii1);
-            sn1 = regexprep(sn1, '[^a-zA-Z0-9]','_');
-            n1 = [sa{sno} '1'];
-            sg.(n1) = [sg.(n1); {stn sn1}];
-            sn = [sa{sno} '_' num2str(sn1)];
-            if isfield(sng,sn)
-                sng.(sn) = [sng.(sn); [stn 1]];
-            else
-                sng.(sn) = [stn 1];
-            end
-            if ~ismember(sn1,sn_list.(sa{sno}))
-                sn_list.(sa{sno}) = [sn_list.(sa{sno}) sn1];
-            end
-            if length(ii)>1
-                ii2 = min(iisns(iisns>ii(2)))+14:min(iisne(iisne>ii(2)))-1;
-                sn2 = h.comment(ii2);
-                sn2 = regexprep(sn2, '[^a-zA-Z0-9]','_');
-                n2 = [sa{sno} '2'];
-                sg.(n2) = [sg.(n2); {stn sn2}];
-                sn = [sa{sno} '_' num2str(sn2)];
-                if isfield(sng,sn)
-                    sng.(sn) = [sng.(sn); [stn 2]];
-                else
-                    sng.(sn) = [stn 2];
-                end
-                if ~ismember(sn2,sn_list.(sa{sno}))
-                    sn_list.(sa{sno}) = [sn_list.(sa{sno}) sn2];
-                end
-            end
-        end
-
-    end
+    [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn);
 end
+
 fn = fieldnames(sg);
 for fno = 1:length(fn)
     if isempty(sg.(fn{fno}))
@@ -118,3 +80,66 @@ if sum(ismember(ds.statnum,klist)&~isnan(ds.upress))
     end
 end
 mfsave(samfile, ds, hs)
+
+
+function [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn)
+% extract sensor s/ns either from fldserial (if already done by
+% msbe_to_mstar) or from header (comment)
+
+if ~isfield(h,'fldserial')
+    iisns = strfind(h.comment,'<SerialNumber>');
+    iisne = strfind(h.comment,'</SerialNumber>');
+end
+
+for sno = 1:length(st)
+    ii = strfind(h.comment,['<' st{sno} 'Sensor']);
+
+    if ~isempty(ii)
+        n1 = [sa{sno} '1'];
+        if isfield(h,'fldserial')
+            sn1 = h.fldserial{contains(h.fldnam,sa{sno}) & contains(h.fldnam,'1')};
+        else
+            ii1 = min(iisns(iisns>ii(1)))+14:min(iisne(iisne>ii(1)))-1;
+            sn1 = h.comment(ii1);
+            sn1 = regexprep(sn1, '[^a-zA-Z0-9]','_');
+        end
+        sg.(n1) = [sg.(n1); {stn sn1}];
+        if isnumeric(sn1)
+            sn = [sa{sno} '_' num2str(sn1)];
+        else
+            sn = [sa{sno} '_' sn1];
+        end
+        if isfield(sng,sn)
+            sng.(sn) = [sng.(sn); [stn 1]];
+        else
+            sng.(sn) = [stn 1];
+        end
+        if ~ismember(sn1,sn_list.(sa{sno}))
+            sn_list.(sa{sno}) = [sn_list.(sa{sno}) sn1];
+        end
+        if length(ii)>1
+            n2 = [sa{sno} '2'];
+            if isfield(h,'fldserial')
+                sn2 = h.fldserial{contains(h.fldnam,sa{sno}) & contains(h.fldnam,'2')};
+            else
+                ii2 = min(iisns(iisns>ii(2)))+14:min(iisne(iisne>ii(2)))-1;
+                sn2 = h.comment(ii2);
+                sn2 = regexprep(sn2, '[^a-zA-Z0-9]','_');
+            end
+            sg.(n2) = [sg.(n2); {stn sn2}];
+            if isnumeric(sn2)
+                sn = [sa{sno} '_' num2str(sn2)];
+            else
+                sn = [sa{sno} '_' sn2];
+            end
+            if isfield(sng,sn)
+                sng.(sn) = [sng.(sn); [stn 2]];
+            else
+                sng.(sn) = [stn 2];
+            end
+            if ~ismember(sn2,sn_list.(sa{sno}))
+                sn_list.(sa{sno}) = [sn_list.(sa{sno}) sn2];
+            end
+        end
+    end
+end

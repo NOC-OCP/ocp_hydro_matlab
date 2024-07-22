@@ -65,7 +65,7 @@ if use_oxy_repl>0 && ~isfield(d, 'botoxyb_per_l')
     use_oxy_repl = 0;
 end
 
-opt1 = 'check_sams'; get_cropt
+%opt1 = 'check_sams'; get_cropt
 if isfield(d, 'botoxya_per_l')
     %convert to umol/kg
     dens = gsw_rho(ds.uasal,gsw_CT_from_t(ds.uasal,d.botoxya_temp(iio),0),0);

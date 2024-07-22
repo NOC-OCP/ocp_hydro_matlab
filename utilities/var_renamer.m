@@ -33,9 +33,9 @@ for nvno = 1:length(nvn)
                 fn = fieldnames(data);
             else
                 %save to rename all later
-                if ~renamed(ib)
+                if ~renamed(ia)
                     fn{ib} = newname;
-                    renamed(ib) = 1;
+                    renamed(ia) = 1;
                 else
                     %need to copy
                     data.(newname) = data.(fn{ib});

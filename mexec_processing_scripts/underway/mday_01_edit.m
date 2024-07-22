@@ -1,5 +1,5 @@
-function mday_01_edit(rootdir, abbrev, days)
-%function mday_01_edit(rootdir, abbrev, days)
+function mday_01_edit(abbrev, days, mtable)
+%function mday_01_edit(abbrev, days, mtable)
 %
 % abbrev (char) is the mexec short name prefix for the data stream
 % days is a list of yeardays to operate on (merging into existing file if
@@ -16,10 +16,14 @@ function mday_01_edit(rootdir, abbrev, days)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-infile = fullfile(rootdir, sprintf('%s_%s_all_raw.nc',abbrev,mcruise));
-if ~exist(m_add_nc(infile),'file')
-    return
-end
+%definitions
+ii = find(strcmp(abbrev,mtable.mstarpre)); 
+rootdir = fullfile(MEXEC_G.mexec_data_root, mtable.mstardir{ii(1)});
+infile = fullfile(rootdir, sprintf('%s_%s_all_raw.nc', abbrev, mcruise));
+if ~exist(m_add_nc(infile),'file'); return; end
+otfile = [infile(1:end-6) 'edt.nc'];
+
+%load
 [d, h] = mload(infile,'/');
 %limit to specified days
 if ~isempty(days)
@@ -33,40 +37,14 @@ if isempty(d.time)
     return
 end
 
-otfile = fullfile(rootdir, sprintf('%s_%s_all_edt.nc',abbrev,mcruise));
-[~,streamtype] = fileparts(rootdir); %***should really get this from mrdefine etc.
 didedits = 0;
 
-%apply automatic edits (e.g. bad time ranges), as set in opt_cruise
-uopts = mday_01_default_autoedits(h);
-opt1 = 'uway_proc'; opt2 = abbrev; get_cropt
-[d, comment] = apply_autoedits(d, uopts);
-if ~isempty(comment)
-    h.comment = [h.comment comment];
-    didedits = 1;
-end
-
-%reapply hand edits
-edfilepat = fullfile(rootdir,'editlogs',sprintf('%s_*',abbrev));
-[d, comment] = apply_guiedits(d, 'time', edfilepat);
-if ~isempty(comment)
-    h.comment = [h.comment comment];
-    didedits = 1;
-else
-    time0 = d.time;
-    d.time = m_commontime(d.time,h,['days since ' datestr([MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 1 0 0 0],'yyyy-mm-dd HH:MM:SS')]);
-    [d, comment] = apply_guiedits(d, 'time', edfilepat, 0, 1/86400);
-    d.time = time0;
-    if ~isempty(comment)
-        h.comment = [h.comment comment];
-        didedit = 1;
-    end
-end
+%%%%%%%%% calibrate, rename, and combine (linearly) variables %%%%%%%%%
 
 % adjust: factory calibration coefficients and other units conversions,
-% depth correction 
-%***replace with call to apply_calibrations?***
-sensorcals = []; sensors_to_cal = {}; xducer_offset = []; %***
+% depth correction and converting depth-from-transducer to
+% depth-from-surface
+sensorcals = []; sensors_to_cal = {}; xducer_offset = [];
 opt1 = 'uway_proc'; opt2 = 'sensor_unit_conversions'; get_cropt
 if ~isempty(sensorcals) || ~isempty(xducer_offset)
     [d, h, comment] = mday_01_fcal(d, h, abbrev, sensorcals, sensors_to_cal, xducer_offset); %factory calibrations as specified in opt_cruise
@@ -118,6 +96,37 @@ if strcmp(streamtype, 'met')
     end
 
 end
+
+
+
+
+%%%%%%%%% edit out bad data %%%%%%%%%
+%apply automatic edits (e.g. bad time ranges), as set in opt_cruise
+uopts = mday_01_default_autoedits(h);
+opt1 = 'uway_proc'; opt2 = abbrev; get_cropt
+[d, comment] = apply_autoedits(d, uopts);
+if ~isempty(comment)
+    h.comment = [h.comment comment];
+    didedits = 1;
+end
+
+%reapply hand edits
+edfilepat = fullfile(rootdir,'editlogs',sprintf('%s_*',abbrev));
+[d, comment] = apply_guiedits(d, 'time', edfilepat);
+if ~isempty(comment)
+    h.comment = [h.comment comment];
+    didedits = 1;
+else
+    time0 = d.time;
+    d.time = m_commontime(d.time,h,['days since ' datestr([MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 1 0 0 0],'yyyy-mm-dd HH:MM:SS')]);
+    [d, comment] = apply_guiedits(d, 'time', edfilepat, 0, 1/86400);
+    d.time = time0;
+    if ~isempty(comment)
+        h.comment = [h.comment comment];
+        didedit = 1;
+    end
+end
+
 
 % calculate new (or replacement) variables
 

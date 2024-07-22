@@ -225,6 +225,9 @@ elseif exist('otfile_appendto','var') && exist('cast_scan_offset','var') && cast
 
 end
 
+%other special cases e.g. typos in S/Ns
+opt1 = 'ctd_proc'; opt2 = 'header_edits'; get_cropt
+
 % Get position at bottom of cast either from ctd-logged nmea lat, lon or
 % from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
 for fno = 1:length(otfiles)

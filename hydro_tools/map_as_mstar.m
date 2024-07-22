@@ -51,7 +51,7 @@ for vno = 1:length(mgrid.vars)
     for cno = 2:nx-1
         iigr = find(~isnan(dat(:,cno+1)));
         iib = setdiff([1:nz]',iig); 
-        if ~isempty(iib) && length(iig)>2
+        if ~isempty(iib) && length(iig)>2 && length(iigl)>2 && length(iigr)>2
             mx = min(min(max(iig),max(iigl)),max(iigr));
             iib = iib(iib<mx);
             if ~isempty(iib)

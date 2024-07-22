@@ -26,7 +26,15 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
-            case 'excludestreams'
+            case 'sensor_unit_conversions'
+                if strcmp(abbrev,'ea640')
+                    d.waterdepth = d.waterdepthtransducer + d.transduceroffset;
+                    [~,ia,ib] = intersect(h.fldnam,{'waterdepthfromtransducer','transduceroffset'});
+                    dats = {'fldnam','fldunt','alrlim','uprlim','absent','num_absent','dimsset','dimrows','dimcols'};
+                    for no = 1:length(dats)
+                        h.(dats{no})(ia) = [];
+                    end
+                end
             case 'bathy_grid'
                 %for background, load gridded bathymetry into xbathy, ybathy, zbathy
         end
@@ -64,13 +72,26 @@ switch opt1
                 if stn==65
                     %ctd_all_part1 should run this after mctd_01(65) and
                     %before rest of processing
-                    ctd_raw_extra = ['mctd_01(65.1); ...' ...
-                        'otfile = fullfile(mgetdir(''M_CTD''),''ctd_dy181_065_raw_noctm.nc''); ...' ...
-                        'getpos_for_ctd(otfile, 1, ''write''); ...' ...
+                    ctd_raw_extra = ['mctd_01(65.1); ' ...
+                        'otfile = fullfile(mgetdir(''M_CTD''),''ctd_dy181_065_raw_noctm.nc''); ' ...
+                        'getpos_for_ctd(otfile, 1, ''write''); ' ...
                         'mfir_01(65.1);'];
                 end
+            case 'header_edits'
+                %typo in xmlcon oxygen2 s/n on many stations
+                hreplace = {'serial';'oxygen';'422068';'432068'};
+                m_fix_hdr(otfile, hreplace);
+                if exist('otfile_appendto','var')
+                    m_fix_hdr(otfile_appendto, hreplace);
+                end
             case 'rawedit_auto'
-                if stn==61
+                if stn==43
+                    co.badscan.temp1 = [6.79e4 inf];
+                    co.badscan.cond1 = co.badscan.temp1;
+                    co.badscan.oxygen_sbe1 = co.badscan.temp1;
+                elseif ismember(stn,[44 45])
+                    co.badscan.oxygen_sbe2 = [-inf inf]; %steps, all questionable
+                elseif stn==61
                     co.despike.cond1 = [0.02 0.02];
                     co.despike.cond2 = [0.02 0.02];
                 end
@@ -78,18 +99,18 @@ switch opt1
                 co.docal.temp = 0;
                 co.docal.cond = 0;
                 co.docal.oxygen = 0;
-                %co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp';
-                %co.calstr.temp.sn34116.msg = '';
-                %co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp';
-                %co.calstr.temp.sn35838.msg = '';
-                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1-2e-3/35)';
-                co.calstr.cond.sn42580.msg = 'prelim';
-                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1-8e-3/35)';
-                co.calstr.cond.sn43258.msg = 'prelim';
-                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*1.04;';
-                co.calstr.oxygen.sn432061.msg = 'upcast oxygen s/n 432061 adjusted to agree with 146 samples';
-                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*1.025;';
-                co.calstr.oxygen.sn432068.msg = 'upcast oxygen s/n 432068 adjusted to agree with 142 samples';
+                co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([184 203],[1e-3 -1e-3],d0.dday);';
+                co.calstr.temp.sn34116.msg = 'SBE35 comparison, 482 total points, 109 deep/low gradient points';
+                co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+1e-3';
+                co.calstr.temp.sn35838.msg = 'SBE35 comparison, 494 total points, 110 deep/low gradient points';
+                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1-1e-3/35)';
+                co.calstr.cond.sn42580.msg = '341 bottle salinities (106 deep/low gradient)';
+                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1-6e-3/35)';
+                co.calstr.cond.sn43258.msg = '353 bottle salinities (107 deep/low gradient)';
+                %co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*1.04;';
+                %co.calstr.oxygen.sn432061.msg = 'upcast oxygen s/n 432061 adjusted to agree with 146 samples';
+                %co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*1.025;';
+                %co.calstr.oxygen.sn432068.msg = 'upcast oxygen s/n 432068 adjusted to agree with 142 samples';
         end
 
     case 'nisk_proc'
@@ -118,9 +139,16 @@ switch opt1
                     niskin = [1; niskin];
                     niskin_flag = [1; niskin_flag];
                     scan = [-18932; scan]; %relative to start of 065A; will be adjusted
-                elseif stn==70
-                    niskin_flag(position==15) = 4; %latch did not release
+                %elseif stn==70
+                    %niskin_flag(position==15) = 4; %latch did not release,
+                    %but based on .bl file this is because it was 14 that
+                    %was triggered instead (no bottle on 14)
                 end
+                %these not-present Niskins were triggered, so there is an
+                %SBE35 measurement, but the niskin_flag itself should be 9
+                %for no sample drawn
+                niskin_flag(floor(position/2)==position/2) = 9;
+                %810, 3410, 3718, 6802, 7014, 7018
         end
 
     case 'ladcp_proc'
@@ -152,7 +180,7 @@ switch opt1
 
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
-        check_sal = 0;
+        check_sal = 1;
         check_oxy = 1;
         check_sbe35 = 1;
 
@@ -201,6 +229,8 @@ switch opt1
                     021 -7.5
                     022 -2
                     023 1.5
+                    024 1.5
+                    025 1
                     %024 9.5 %suspicious maybe bad (old?)
                     %025 9.5 %suspicious maybe bad (a few minutes later)
                     026 1 %this one was 45 min after 025, back to "normal"
@@ -211,35 +241,52 @@ switch opt1
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
                 sal_off_base = 'sampnum_list'; 
+            case 'sal_flags'
+                %too low (33-ish), maybe samples contaminated
+                m = ismember(ds_sal.sampnum,[4807 4809 5713 5801 5803 5805]);
+                ds_sal.botpsal_flag(m) = 4;
         end
 
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {fullfile(root_oxy,'summary_150724.xlsx')};
+                ofiles = {fullfile(root_oxy,'240721Winkler Calculation Spreadsheet.xlsx')};
                 iih = 8;
-                hcpat = {'Date'};
+                hcpat = {'Longitude'};
                 chrows = 1; chunits = [];
-                            case 'oxy_parse'
+            case 'oxy_parse'
+                %niskin 7015 is listed but was not fired; exclude rows now
+                ii70 = find(ds_oxy.ctd_cast_no==70);
+                ii71 = find(ds_oxy.ctd_cast_no==71);
+                ii15 = find(ds_oxy.niskin_bot_no==15);
+                ds_oxy(ii15(ii15>ii70 & ii15<ii71),:) = [];
                 calcoxy = 0;
-                varmap.statnum = {'ctd_cast_no_1'};
+                varmap.statnum = {'ctd_cast_no'};
                 varmap.position = {'niskin_bot_no'};
                 varmap.fix_temp = {'fixing_temp_c'};
                 varmap.conc_o2 = {'c_o2_umol_per_l'};
             case 'oxy_flags'
-                d.botoxya_flag(ismember(d.sampnum,[103 113 509 4123])) = 3;
-                d.botoxyb_flag(ismember(d.sampnum,[4021])) = 3;
-                d.botoxyc_flag(ismember(d.sampnum,[4013])) = 3;
-                d.botoxya_flag(d.sampnum==4123) = 4; %maybe typo? check
-                bads = ismember(d.sampnum,[3501 3507 3509 3515 3603 3607 3811 4207 5019]);
-                d.botoxya_flag(bads) = max(d.botoxya_flag(bads),4);
-                d.botoxyb_flag(bads) = max(d.botoxyb_flag(bads),4);
-                d.botoxyc_flag(bads) = max(d.botoxyc_flag(bads),4);
-                %check in more detail (botoxy vs ctd): 517
-                %not sure (vs ctd, check gradient again): 3517, 3617, 3817, 4915
-                %why is ctd profile in mctd_evaluate_sensors not having
-                %testcal applied? and why on 48 is it apparently applied to
-                %2up but not to 1hz?
+                %sampnum, a flag, b flag, c flag
+                flr = [103 3 3 3; ... 
+                       113 4 2 2; ... %a is the outlier
+                       509 4 2 9; ... %duplicates only, a much higher than neighbours
+                      4123 4 2 2; ... %a much lower than all
+                      6621 4 2 2; ... %a is the outlier
+                      7207 2 4 9; ...
+                      7209 2 4 9; ...
+                      7211 2 4 9; ...
+                      7213 3 3 9; ...
+                      7215 2 3 9; ...
+                      7219 3 4 9; ...
+                      7221 3 3 9; ...
+                      7601 3 3 9; ...
+                      7623 2 4 9; ...
+                      ];
+                [~,ifl,id] = intersect(flr(:,1),d.sampnum);
+                d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
+                d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
+                d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
+                %checkbottles_01: 3603, 4207, 4403, 5603, 6407, 6605, 6607, 6609, 7009
         end
 
     case 'botnut'
@@ -304,12 +351,18 @@ switch opt1
                 switch section
                     case 'osnape'
                         kstns = [35:39 42:45 47 46 48:65 69 68 71 72 77 76 75 74 73];
+                        %should 67 be in here? 
                         mgrid.xlim = 2; mgrid.zlim = 4;
+                    case 'osnape_plus'
+                        kstns = [82 81 80 79 78];
+                        %station names in order: 20b, 21a, 21b, 22a, 22b 
+                        mgrid.xlim = 2; mgrid;zlim = 4;
                     case 'scotshelf'
                         mgrid.zpressgrid = [0 5 25 50 75 100 125 150 175 200 250 300];
                         kstns = [6:9 35:36];
                     case 'profiles_only'
                         kstns = [1:3 10:33]; %test, dm, yo-yo
+                        kstns = 1:999;
                 end
         end
 

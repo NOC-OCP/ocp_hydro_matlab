@@ -114,8 +114,8 @@ varnames.cogvar = {'course' 'courseoverground' 'coursetrue'};
 varnames.multibvar = {'em120' 'em122' 'multib' 'multib_t'};
 varnames.singlebvar = {'ea600' 'sim' 'singleb' 'singleb_t'};
 varnames.depvar = {'depth' 'waterdepth' 'water_depth_metres' 'waterdepth_meters' 'waterdepthmetre'};
-varnames.depsrefvar = {'waterdepthmetrefromsurface'};
-varnames.deptrefvar = {'waterdepth_below_transducer'};
+varnames.depsrefvar = {'waterdepthfromsurface','waterdepthsurface'};
+varnames.deptrefvar = {'waterdepth_below_transducer','waterdepthtransducer','waterdepthfromtransducer'};
 varnames.xducerdepvar = {'transduceroffset' 'xduceroffset' 'xducer_offset' 'transducer_offset'};
 
 varnames.fspdvar = {'speed_forward' 'longitudinalwaterspeed' 'longitudalwaterspeed' 'speedfa'};

@@ -50,7 +50,7 @@ for no = 1:length(mrtables.tablenames)
     munts(cellfun('isempty',munts)) = {' '};
 
     %extract units from names
-    untsgrp = {'meter' 'metre'};
+    untsgrp = {'m' 'meter' 'metre'};
     [mvars, munts] = move_to_unts(mvars, munts, untsgrp);
     %***others?
 
@@ -80,6 +80,26 @@ for no = 1:length(mrtables.tablenames)
     %{'sst','seasurfacetemperature'}
     %{'temp','temperature'}
     %{'cond','conductivity'}
+
+    %units where none supplied
+    m = strcmp(' ', munts) & (strncmp('lat', mvars,3) | strncmp('lon', mvars,3));
+    munts(m) = {'decimal_degrees'};
+    m = strcmp(' ', munts) & (contains(mvars, 'temp') | contains(mvars, 'sst'));
+    munts(m) = {'degreesC'};
+    m = strcmp(' ', munts) & contains(mvars, 'sal');
+    munts(m) = {'psu'};
+    m = strcmp(' ', munts) & contains(mvars, 'cond');
+    munts(m) = {'mS_per_cm'}; %***
+    m = strcmp(' ', munts) & (contains(mvars, 'speed') & ~contains(mvars, 'knot'));
+    munts(m) = {'m_per_second'};
+    %m = strcmp(' ', munts) & contains(mvars,'head');
+    %munts(m) = {'degrees_clockwise_from_N'};
+    %m = strcmp(' ', munts) & contains(mvars, 'dir');
+    %munts(m) = {'degrees'}; %***convention may be ship/inst specific
+    m = strcmp(' ', munts) & contains(mvars, 'cab');
+    munts(m) = {'m_per_second'};
+
+    opt1 = 'ship'; opt2 = 'rvdas_units'; get_cropt
 
     %reassign
     mrtables.mstarvars{no} = mvars;

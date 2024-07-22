@@ -117,9 +117,11 @@ ds.Properties.VariableNames = names;
 
 %convert to structure
 dd = table2struct(ds,'ToScalar',true);
-dd = rmfield(dd,'time');
-[names,ii] = setdiff(names,'time');
-units = units(ii);
+m = strcmp('time',names);
+if sum(m)
+    names(m) = []; units(m) = [];
+    dd = rmfield(dd,'time');
+end
 
 
 if ~quiet

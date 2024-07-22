@@ -40,7 +40,7 @@ root_ctd = mgetdir('M_CTD');
 fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal']);
 fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
 opt1 = 'msec_grid'; opt2 = 'sections_to_grid'; get_cropt
-if exist('sections')
+if exist('sections','var')
     section = sections{1}; 
 else
     section = 'profiles_only';

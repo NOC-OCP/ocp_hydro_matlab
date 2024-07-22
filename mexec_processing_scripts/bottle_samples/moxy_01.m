@@ -11,7 +11,7 @@ function moxy_01
 % parse in opt_cruise, uses parameters set under oxy_calc to compute them
 
 m_common
-if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc\n',mcruise,mcruise); end
+if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file(s) specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc\n',mcruise,mcruise); end
 
 % find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');
@@ -135,6 +135,7 @@ if calcoxy
     end
 end
 
+%make sure flags match where data are present/missing
 ds_oxy.flag(isnan(ds_oxy.flag) & ~isnan(ds_oxy.conc_o2)) = 2; %default
 ds_oxy.flag(isnan(ds_oxy.conc_o2)) = max(ds_oxy.flag(isnan(ds_oxy.conc_o2)),4);
 ds_oxy_fn = ds_oxy.Properties.VariableNames;
@@ -143,8 +144,12 @@ if ismember(ds_oxy_fn,'sample_titre')
         ds_oxy.conc_o2(isnan(ds_oxy.sample_titre+ds_oxy.bot_vol_tfix)) = NaN;
     end
     if ismember(ds_oxy_fn,'fix_temp')
-        ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)) = max(ds_oxy.flag(isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre)), 5);
-        ds_oxy.flag((isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2)) & ~isnan(ds_oxy.fix_temp)) = 5; %drawn but not analysed
+        %can't report without fix_temp, should be 5 if it's not 9?
+        m = isnan(ds_oxy.fix_temp) & ~isnan(ds_oxy.sample_titre);
+        ds_oxy.flag(m) = max(ds_oxy.flag(m), 5);
+        ds_oxy.conc_o2(m) = NaN; ds_oxy.sample_titre(m) = NaN;
+        m = isnan(ds_oxy.sample_titre) | isnan(ds_oxy.conc_o2);
+        ds_oxy.flag(m & ~isnan(ds_oxy.fix_temp)) = 5; %drawn but not analysed
     end
 end
 ds_oxy_fn = ds_oxy.Properties.VariableNames;
@@ -201,33 +206,62 @@ end
 
 opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
 
+orth = 0.75; %threshold for replicate agreement to be examined
 opt1 = 'check_sams'; get_cropt
 if check_oxy
-    m0 = abs(d.botoxya_per_l-d.botoxyb_per_l)>0.75;
-    if isfield(d,'botoxyc_per_l')
-        m0 = m0 | abs(d.botoxyc_per_l-d.botoxya_per_l)>0.75 | abs(d.botoxyc_per_l-d.botoxyb_per_l)>0.75;
-    end
-    if sum(m0)
-        stns = unique(d.statnum(m0));
-        ds = mloadq(fullfile(mgetdir('ctd'),sprintf('sam_%s_all.nc',mcruise)),'sampnum statnum uoxygen position ');
-        for sno = 1:length(stns)
-            ii = find(d.statnum==stns(sno));
-            [~,~,iis] = intersect(d.sampnum(ii),ds.sampnum,'stable');
-            disp('some replicates differ')
-            if isfield(d,'botoxyc_per_l')
-                disp(['CTD statnum ' num2str(stns(sno)) ': Niskin position, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), botoxyc (umol/L), Niskin, flag a, flag b, flag c'])
-                [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.botoxyc_per_l(ii), d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii), d.botoxyc_flag(ii)]
-            else
-                disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), Niskin, flag a, flag b'])
-                [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii)]
-            end
-            disp('enter to continue'); pause
-        end
-        opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
-    end
-    clear ds stns m0
+    oxy_repl_check(d, mcruise, orth)
+    %get flags again in case changed (does this update?)
+    opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
 end
 
 mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 
 moxy_to_sam
+
+
+function oxy_repl_check(d, mcruise, orth)
+% check where oxygen replicates in d differ by more than orth (umol/l)
+
+m0 = abs(d.botoxya_per_l-d.botoxyb_per_l)>orth;
+q = [d.botoxya_per_l d.botoxyb_per_l];
+qf = [d.botoxya_flag d.botoxyb_flag];
+if isfield(d,'botoxyc_per_l')
+    m0 = m0 | abs(d.botoxyc_per_l-d.botoxya_per_l)>orth | abs(d.botoxyc_per_l-d.botoxyb_per_l)>orth;
+    q = [q d.botoxyc_per_l]; qf = [qf d.botoxyc_flag];
+end
+
+if sum(m0)
+    qb = q; qb(qf~=4) = NaN;
+    q = q(m0,:);
+    qb = qb(m0,:);
+    stn0 = d.statnum(m0);
+    samp0 = d.sampnum(m0);
+    ds = mloadq(fullfile(mgetdir('ctd'),sprintf('sam_%s_all.nc',mcruise)),'sampnum statnum uoxygen position upress ');
+    [~,ia,ib] = intersect(d.sampnum,ds.sampnum);
+    [~,ia0,ib0] = intersect(samp0,ds.sampnum);
+
+    r = d.botoxya_per_l(ia)./ds.uoxygen(ib);
+    rint = [d.botoxya_per_l(ia)-4 d.botoxya_per_l(ia)+10*orth]./repmat(ds.uoxygen(ib),1,2);
+    figure(1); clf
+    hl = plot([d.sampnum(ia) d.sampnum(ia)]',rint',ds.sampnum(ib0),qb./repmat(ds.uoxygen(ib0),1,size(q,2)),'x',d.sampnum(ia),r,'.b',ds.sampnum(ib0),q(ia0,:)./repmat(ds.uoxygen(ib0),1,size(q,2)),'o');
+    ylabel('bot/ctd'); xlabel('sampnum'); grid
+    legend(hl(end-3:end),'all (a)','a','b','c'); set(hl(1:end-4),'color',[.5 .5 .5])
+
+    %display values for each station
+    stns = unique(stn0);
+    for sno = 1:length(stns)
+        ii = find(d.statnum==stns(sno));
+        [~,~,iis] = intersect(d.sampnum(ii),ds.sampnum,'stable');
+        disp('some replicates differ')
+        if isfield(d,'botoxyc_per_l')
+            disp(['CTD statnum ' num2str(stns(sno)) ': Niskin position, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), botoxyc (umol/L), Niskin, flag a, flag b, flag c'])
+            [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.botoxyc_per_l(ii), d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii), d.botoxyc_flag(ii)]
+        else
+            disp([num2str(stns(sno)) ': Niskin, CTD oxy (umol/kg), botoxya (umol/L), botoxyb (umol/L), Niskin, flag a, flag b'])
+            [ds.position(iis) ds.uoxygen(iis) d.botoxya_per_l(ii) d.botoxyb_per_l(ii) d.position(ii) d.botoxya_flag(ii) d.botoxyb_flag(ii)]
+        end
+        c = input('k for keyboard or enter to continue to next  ','s');
+        if strcmp(c,'k'); keyboard; end
+    end
+
+end

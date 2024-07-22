@@ -60,18 +60,19 @@ function [latout,lonout] = mrposinfo(varargin)
 %   londeg, longitude degrees, negative if western hemisphere
 %   lonmin, longitude minutes, always positive. londeg is negative in W hemisphere
 
-argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-rtable = argot.table;
-qflag = argot.qflag;
 
 
 m_common
 
-if isempty(rtable)
+if ~exist('rtable','var') || isempty(rtable)
     opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
     rtable = default_navstream;
 end
 [rtable, mtable] = mrresolve_table(rtable); %make it an rvdas table name
+varargin = [varargin rtable];
+argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
+rtable = argot.table;
+qflag = argot.qflag;
 
 if length(argot.dnums) < 1
     dn = now-10/86400;

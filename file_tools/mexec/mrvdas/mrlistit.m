@@ -53,9 +53,11 @@ if length(argot.othernums) < 1
 else
     tint = argot.othernums(1); % seconds
 end
+
 tintd = tint/86400; % days
 
 [d,n,u] = mrload('noparse',argot);
+varstring = argot.otherstrings;
 
 % find the dnum
 kdnum = find(strcmp('dnum',n));

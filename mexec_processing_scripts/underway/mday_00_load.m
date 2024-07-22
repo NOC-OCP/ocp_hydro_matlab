@@ -1,5 +1,5 @@
-function status = mday_00_load(streamname,mstarprefix,root_out,day,year,mrtv)
-% function status = mday_00_load(streamname,mstarprefix,root_out,day,year,mrtv)
+function status = mday_00_load(streamname,mtable,day)
+% function status = mday_00_load(streamname,mtable,day)
 %
 % use mrrvdas2mstar or mdatapup to grab a day of data from a techsas NetCDF
 % file, an SCS file, or an RVDAS table, subsample to 1 Hz, and add to
@@ -11,9 +11,8 @@ function status = mday_00_load(streamname,mstarprefix,root_out,day,year,mrtv)
 % numeric: day is the day number
 % numeric: year is the year in which day falls
 %
-% eg mday_00_load('gps_nmea','gps',33,2009)
+% eg mday_00_load('gps_nmea',mrtv,33)
 % or
-% eg mday_00_load('gps_nmea','gps','33','2009')
 %
 
 m_common
@@ -26,6 +25,12 @@ if contains(mstarprefix,'not_rvdas')
     status = 2;
     return
 end
+
+%lookup for this stream
+m = strcmp(streamname,mtable.tablenames);
+mstarprefix = mtable.mstarpre{m};
+root_out = fullfile(MEXEC_G.mexec_data_root,mtable.mstardir{m});
+
 % make output directory if it doesn't exist
 if exist(root_out,'dir') ~= 7
     mkdir(root_out); mfixperms(root_out, 'dir');
@@ -47,7 +52,7 @@ switch MEXEC_G.Mshipdatasystem
         argot.dnums = [dn1 dn2]; 
         argot.otfile = otfile2;
         argot.dataname = dataname;
-        argot.mrtv = mrtv;
+        argot.mrtv = mtable;
         status = mrrvdas2mstar('noparse',argot);
     case 'scs'
         status = scs_to_mstar2(streamname,mstarprefix,dn1,dn2,otfile2,dataname);

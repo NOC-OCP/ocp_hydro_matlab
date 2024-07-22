@@ -73,6 +73,7 @@ end
 nt = length(mrtables.tablenames);
 mstarpre = cell(nt,1);
 mstardir = cell(nt,1);
+paramtype = cell(nt,1);
 rvdasmsg = cell(nt,1);
 nomp = false(nt,1);
 
@@ -118,6 +119,7 @@ for tno = 1:nt
         end
         mstarpre{tno} = inst1;
         mstardir{tno} = mt.dir{iit};
+        paramtype{tno} = mt.typ{iit};
         rvdasmsg{tno} = msg;
         %mstarfull{tno} = inst2; %***
     end
@@ -126,6 +128,7 @@ end
 mrtables_out = mrtables;
 mrtables_out.mstarpre = mstarpre;
 mrtables_out.mstardir = mstardir;
+mrtables_out.paramtype = paramtype;
 mrtables_out.rvdasmsg = rvdasmsg;
 %remove rows with no mstar info
 mrtables_out(nomp,:) = [];

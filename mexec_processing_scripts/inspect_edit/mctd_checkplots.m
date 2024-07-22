@@ -665,27 +665,27 @@ for plotlist = cklist
                 subplot(321)
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok),[cols(ks) '-'],'linewidth',lwid);
+                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok),'linewidth',lwid,'color',lcolors(iic,:));
                 hold on
                 
                 subplot(322) %repeat with forced axes
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok),[cols(ks) '-'],'linewidth',lwid);
+                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 
                 subplot(323)
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                 sd1 = dpsal{ks}.([saltype '1']); sd2 = dpsal{ks}.([saltype '2']);
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),[cols(ks) '-'],'linewidth',lwid);
+                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 
                 subplot(324) %zoomed version of above
                 kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                 sd1 = dpsal{ks}.([saltype '1']); sd2 = dpsal{ks}.([saltype '2']);
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),[cols(ks) '-'],'linewidth',lwid);
+                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 
                 if oxy_end
@@ -695,13 +695,13 @@ for plotlist = cklist
                     subplot(325)
                     kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                     od1 = dpsal{ks}.(oxyvars{1,2}); od2 = dpsal{ks}.(oxyvars{2,2});
-                    plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),[cols(ks) '-'],'linewidth',lwid);
+                    plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),'color',lcolors(iic,:),'linewidth',lwid);
                     hold on
                     
                     subplot(326) %zoomed version of above
                     kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
                     od1 = dpsal{ks}.(oxyvars{1,2}); od2 = dpsal{ks}.(oxyvars{2,2});
-                    plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),[cols(ks) '-'],'linewidth',lwid);
+                    plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),'color',lcolors(iic,:),'linewidth',lwid);
                     hold on; grid on;
                 end
                 

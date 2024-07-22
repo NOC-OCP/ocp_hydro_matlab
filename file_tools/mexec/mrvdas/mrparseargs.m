@@ -163,6 +163,9 @@ end
 if isempty(rtable)
     mrtv.tablenames
     rtable = input('no valid rvdas table names found, which of the tables above do you want?   ','s');
+    if isempty(rtable)
+        error('no valid rvdas table name found')
+    end
 end
 
 % If any of the arguments are character strings that start with the text 'now'

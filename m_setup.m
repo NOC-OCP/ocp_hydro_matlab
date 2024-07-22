@@ -233,16 +233,22 @@ end
 if MEXEC_G.raw_underway %***still need to configure where directories are for some applications***
 if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
     try
-        def = mrdefine('this_cruise');
-        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; def.tablemap(:,[2 3])];
+        mrtv = mrdefine;
+        disp('using cached rvdas table list / mstar lookup')
     catch
         try
-            def = mrdefine;
-            MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; def.tablemap(:,[2 3])];
-            warning('no access to RVDAS database, listing all tables in cached mr_tables_from_json.m')
+            fprintf(1,'running mrdefine\n')
+            mrtv = mrdefine('reload');
         catch
             warning('skipping underway data setup')
         end
+    end
+    if exist('mrtv','var')
+        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; ...
+            [cellfun(@(x) ['M_' upper(x)], mrtv.mstarpre, 'UniformOutput', false), ...
+            mrtv.mstardir]];
+        [~,ii] = unique(MEXEC_G.MDIRLIST(:,1),'stable');
+        MEXEC_G.MDIRLIST = MEXEC_G.MDIRLIST(ii,:);
     end
 else
     %create file connecting underway data directories and stream names

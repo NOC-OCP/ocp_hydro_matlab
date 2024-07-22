@@ -16,14 +16,26 @@
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-year = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
 
 if ~exist('days','var')
-    days = floor(now-datenum(year,1,1)); %default: yesterday
+    days = floor(now-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,1,1)); %default: yesterday
 end
 
 %%%%% get list of underway streams to process %%%%%
-uway_set_streams
+switch MEXEC_G.Mshipdatasystem
+    case 'techsas'
+        uway_excludes = {'posmvtss'};
+end
+opt1 = 'uway_proc'; opt2 = 'excludestreams'; get_cropt
+if exist('uway_proc_list', 'var') %only from this list
+    [~,iik,~] = intersect(mrtv.mstardir,uway_proc_list,'stable');
+    mrtv = mrtv(iik,:);
+else
+    if exist('uway_excludes','var')
+        [~,iie,~] = intersect(mrtv.mstardir, uway_excludes);
+        mrtv(iie,:) = [];
+    end
+end
 
 %%%%% loop through processing steps for list of days %%%%%
 
@@ -35,15 +47,18 @@ opt1 = 'uway_proc'; opt2 = 'comb_uvars'; get_cropt
 loadstatus = zeros(1,length(mrtv.tablenames));
 for daynumber = days
     for sno = 1:length(mrtv.tablenames)
-        ls = mday_00_load(mrtv.tablenames{sno}, mrtv.mstarpre{sno}, fullfile(MEXEC_G.mexec_data_root,mrtv.mstardir{sno}), daynumber, year, mrtv);
+        ls = mday_00_load(mrtv.tablenames{sno}, mrtv, daynumber);
         loadstatus(sno) = loadstatus(sno) + ls;
     end
-    disp(['loaded day ' num2str(daynumber)]); pause(0.1)
+    disp(['loaded ' mrtv.tablenames{sno} ' for day ' num2str(daynumber)]); pause(0.1)
 end
 
-%apply additional processing and cleaning to data
-for sno = 1:length(mrtv.tablenames)
-    mday_01_edit(fullfile(MEXEC_G.mexec_data_root,mrtv.mstardir{sno}), mrtv.mstarpre{sno}, days)
+%apply additional processing and cleaning to data, this time loop through
+%mstarpre (multiple rvdas tables may be combined in one mstarpre_cruise_raw
+%file) 
+mfns = unique(mrtv.mstarpre);
+for fno = 1:length(mfns)
+    mday_01_edit(mfns{sno}, mrtv, days)
     disp(['edited ' mrtv.mstarpre{sno}])
 end
 
