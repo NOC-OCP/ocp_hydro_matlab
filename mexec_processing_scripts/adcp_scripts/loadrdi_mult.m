@@ -2,6 +2,8 @@ function [d,f,p] = loadrdi_mult(f,p)
 % function [d,f,p] = loadrdi_mult(f,p)
 %
 % load multiple files (calls loadrdi)
+% all must have their own header; if not you will have to concatenate
+% instead
 
 n = 1;
 if iscell(f.ladcpdo) && ~isempty(f.ladcpdo)

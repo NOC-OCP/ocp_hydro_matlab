@@ -12,6 +12,8 @@ tave_period = 5/24/60;
 btol = tave_period/10; %10% of spacing of gridded data
 
 if nargin>2
+
+    
     regrid = varargin{1};
 else
     regrid = 1;

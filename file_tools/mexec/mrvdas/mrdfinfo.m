@@ -1,5 +1,5 @@
 function d = mrdfinfo(varargin)
-% function d = mrdfinfo(table,qflag,fastflag)
+% function d = mrdfinfo(table,qflag,fastflag,mrtv)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -94,8 +94,9 @@ if isempty(ncyc) || ncyc == 0
     d.dn1 = dn1;
     d.dn2 = dn2;
     d.ncyc = ncyc;
-    d.vdef_expl = ['rvdas variables, rvdas units, mstar variables, mstar units'];
-    d.vdef = vdef;
+    d.vdef_expl = 'rvdas variables, mstar variables, mstar units';
+    m = strcmp(rtable,mrtv.tablenames);
+    d.vdef = [mrtv.tablevars{m}; mrtv.mstarvars{m}; mrtv.mstarunts{m}];
     
     delete(csvname);
 

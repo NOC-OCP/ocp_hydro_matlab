@@ -1,4 +1,3 @@
-
 function mctd_02(stn)
 % mctd_02:
 %
@@ -189,6 +188,15 @@ for no = 1:nox
     h.fldnam(m) = oxyvars(no,2);
 end
 d = orderfields(d, h.fldnam);
+%%rename oxygen_sbe* to oxygen*
+%ii = find(contains(h.fldnam,'oxygen_sbe'));
+%for no = 1:length(ii)
+%    on = h.fldnam{ii(no)}; nn = replace(on,'_sbe');
+%    d.(nn) = d.(on); d = rmfield(d,on);
+%    h.fldnam{strcmp(on,h.fldnam)} = nn;
+%end
+%add comment?***
+%d = orderfields(d, h.fldnam);
 
 %%%%% turbidity conversion from turbidity volts %%%%%
 if co.doturbV

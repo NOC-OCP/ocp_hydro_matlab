@@ -44,7 +44,7 @@ function dg = grid_profile(d, gridvar, gridvec, method, varargin)
 %   bin_partial (default 1) whether to include averages/fits for bins with
 %     data in only one half (applies to '*bin' and '*int' methods)
 %     1 to keep, 0 to NaN them
-%   grid_extrap (default [1 1]) how to treat any bins at [start end] of
+%   grid_ends (default [1 1]) how to treat any bins at [start end] of
 %     profile with no gridvar values:
 %     1 to keep (filled with NaNs), 0 to discard
 %   profile_extrap (default [0 0]) how to (subsequently) treat bins at
@@ -75,7 +75,7 @@ function dg = grid_profile(d, gridvar, gridvec, method, varargin)
 prefill = 0;
 ignore_nan = 0;
 bin_partial = 1;
-grid_extrap = [1 1];
+grid_ends = [1 1];
 profile_extrap = [0 0];
 postfill = 0;
 
@@ -141,42 +141,51 @@ switch method
     case {'meanbin' 'medbin' 'lfitbin'}
         %bin edges
         ge = [gridvec(1:end-1) gridvec(2:end)];
+        mk = true(size(ge(:,1)));
+        me1 = ge(:,2)<min(d.(gridvar));
+        me2 = ge(:,1)>max(d.(gridvar));
+        if grid_ends(1)==0
+            mk = mk & ~me1;
+        end
+        if grid_ends(2)==0
+            mk = mk & ~me2;
+        end
+        ge = ge(mk, :);
+        mg = mk(~me1 & ~me2);
         gridvec = mean(ge,2);
-        if grid_extrap(1)==0
-            iie = ge(:,2)<min(d.(gridvar));
-            gridvec(iie) = []; ge(iie,:) = [];
-        end
-        if grid_extrap(2)==0
-            iie = ge(:,1)>max(d.(gridvar));
-            gridvec(iie) = []; ge(iie,:) = [];
-        end
         if strcmp(method, 'lfitbin')
             dg.(gridvar) = gridvec;
         end
     case {'medint' 'meanint'}
         %bin edges
         ge = [gridvec+int(1) gridvec+int(2)];
-        if grid_extrap(1)==0
-            iie = ge(:,2)<min(d.(gridvar));
-            gridvec(iie) = []; ge(iie,:) = [];
+        mk = true(size(ge(:,1)));
+        me1 = ge(:,2)<min(d.(gridvar));
+        me2 = ge(:,1)>max(d.(gridvar));
+        if grid_ends(1)==0
+            mk = mk & ~me1;
         end
-        if grid_extrap(2)==0
-            iie = ge(:,1)>max(d.(gridvar));
-            gridvec(iie) = []; ge(iie,:) = [];
+        if grid_ends(2)==0
+            mk = mk & ~me2;
         end
+        ge = ge(mk, :); gridvec = gridvec(mk);
+        mg = mk(~me1 & ~me2);
         dg.(gridvar) = gridvec;
         if ~isrow; dg.(gridvar) = dg.(gridvar)'; end        
         %now that we've set up the bin edges can use binav below
         method = [method(1:end-3) 'bin'];
     case {'linterp' 'smhan'}
-        if grid_extrap(1)==0
-            iie = gridvec<min(d.(gridvar));
-            gridvec(iie) = [];
+        mk = true(size(gridvec));
+        me1 = gridvec<min(d.(gridvar));
+        me2 = gridvec>max(d.(gridvar));
+        if grid_ends(1)==0
+            mk = mk & ~me1;
         end
-        if grid_extrap(2)==0
-            iie = gridvec>max(d.(gridvar));
-            gridvec(iie) = [];
+        if grid_ends(2)==0
+            mk = mk & ~me2;
         end
+        gridvec = gridvec(mk);
+        mg = mk(~me1 & ~me2);
         dg.(gridvar) = gridvec;
     case 'meannum'
         dg.(gridvar) = mean(reshape(d.(gridvar)(1:num*nav),[num nav]));
@@ -227,7 +236,9 @@ end
 %grid
 switch method
     case {'meanbin' 'medbin' 'lfitbin'}
-        data = gp_binav(data, d.(gridvar), ge, method(1:end-3), 'ignore_nan', ignore_nan, 'bin_partial', bin_partial);
+        datag = nan(size(ge,1),size(data,2));
+        datag(mg,:) = gp_binav(data, d.(gridvar), ge(mg,:), method(1:end-3), 'ignore_nan', ignore_nan, 'bin_partial', bin_partial);
+        data = datag; clear datag
     case 'meannum'
         cdim = size(data,2);
         data = reshape(data(1:num*nav,:),[num nav cdim]);
@@ -242,10 +253,12 @@ switch method
             data = permute(mean(data), [2 3 1]);
         end
     case {'linterp' 'smhan'}
-        data = gp_smooth(data, d.(gridvar), gridvec, method, 'ignore_nan', ignore_nan);
+        datag = nan(length(gridvec),size(data,2));
+        datag(mg,:) = gp_smooth(data, d.(gridvar), gridvec(mg), method, 'ignore_nan', ignore_nan);
+        data = datag; clear datag
 end
 
-%fill gaps and ends if specified
+% fill ends if specified
 if profile_extrap(1)==1
     data = gp_fillgaps(data, 'first');
 end

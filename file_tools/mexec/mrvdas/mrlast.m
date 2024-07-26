@@ -60,6 +60,9 @@ d = mrdfinfo('noparse','rtable',rtable,'qflag',qflag,'mrtv',mrtv);
 
 dstart = floor(86400*d.dn2)/86400;
 dend = ceil(86400*d.dn2)/86400;
+if isnan(dstart+dend)
+    error('mrdfinfo found no times in %s',rtable)
+end
 argot.dnums = [dstart dend];
 
 if isempty(qflag); fprintf(MEXEC_A.Mfidterm,'\n'); end

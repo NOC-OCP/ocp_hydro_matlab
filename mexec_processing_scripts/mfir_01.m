@@ -46,8 +46,7 @@ end
 pos = pos(:);
 scn = scn(:);
 
-niskin_number = [1:24]'; niskin_pos = [1:24]';
-opt1 = mfilename; opt2 = 'niskins'; get_cropt
+opt1 = 'nisk_proc'; opt2 = 'niskins'; get_cropt
 niskin_number = niskin_number(:);
 niskin_pos = niskin_pos(:);
 [~,ia,ib] = intersect(pos,niskin_pos);
@@ -134,7 +133,7 @@ MEXEC_A.MARGS_IN = {
     'number'
     'niskin_flag'
     '/'
-    'woce table 4.8'
+    'woce_4.8'
     '-1'
     '-1'
     };

@@ -16,10 +16,13 @@
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+days=[185:206];%AS added this manually to define days to process
 
 if ~exist('days','var')
     days = floor(now-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,1,1)); %default: yesterday
 end
+
+%days=[185:206];%AS added this manually to define days to process
 
 %%%%% get list of underway streams to process %%%%%
 switch MEXEC_G.Mshipdatasystem

@@ -165,13 +165,13 @@ for kloop = klist
             case 'hz'
                 tg = [d.time(1):d.time(end)+out.bin_size*24];
                 if size(d.time,1)>1; tg = tg'; end
-                d = grid_profile(d, 'time', tg, 'meannum', 'num', out.bin_size*24, 'grid_extrap', [0 0]);
+                d = grid_profile(d, 'time', tg, 'meannum', 'num', out.bin_size*24, 'grid_ends', [0 0]);
             case 'dbar'
                 pg = [0:out.bin_size:1e4]';
-                d = grid_profile(d, 'press', pg, 'lfitbin', 'grid_extrap', [0 0]);
+                d = grid_profile(d, 'press', pg, 'lfitbin', 'grid_ends', [0 0]);
             case 'm'
                 zg = [0:out.bin_size:1e4]';
-                d = grid_profile(d, 'depth', zg, 'lfitbin', 'grid_extrap', [0 0]);
+                d = grid_profile(d, 'depth', zg, 'lfitbin', 'grid_ends', [0 0]);
         end
     end
     

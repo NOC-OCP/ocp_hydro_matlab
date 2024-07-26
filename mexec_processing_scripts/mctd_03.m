@@ -135,7 +135,7 @@ hnew = keep_hvatts(hnew, h);
 
 %average to 1hz, output to _psal file
 opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt
-tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_extrap to 0
+tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew.time,1)>1; tg = tg'; end
-dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_extrap', [0 0], 'postfill', maxfill1);
+dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_ends', [0 0], 'postfill', maxfill1);
 mfsave(otfile1, dnew, hnew);

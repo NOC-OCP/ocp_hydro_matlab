@@ -62,9 +62,9 @@ n = n+1; mt(n).dir = 'met'; mt(n).typ = 'rad';
 mt(n).inst = {'surfmet'};
 mt(n).msg = {'pkpyrge','pkpyran','pspar','sflgt'}; %radiometers
 % wind
-n = n+1; mt(n).dir = 'met'; mt(n).typ = 'wnd'; 
-mt(n).inst = {'surfmet','windsonic'};
-mt(n).msg = {'iimwv','wimwv','pmwind','gpxsm'};
+n = n+1; mt(n).dir = 'met'; mt(n).typ = 'wind'; 
+mt(n).inst = {'surfmet','windsonic','truewind'};
+mt(n).msg = {'iimwv','wimwv','pmwind','gpxsm','truewind'};
 % waves
 % n = n+1; mt(n).dir = 'met'; mt(n).typ = wav; 
 % mt(n).inst = {'wav'}; 
@@ -80,23 +80,23 @@ mt(n).inst = {'em122'};
 mt(n).msg = {'kidpt','kodpt'}; 
 
 %surface/near surface water speed
-n = n+1; mt(n).dir = 'speed'; mt(n).typ = 'log'; 
+n = n+1; mt(n).dir = 'other'; mt(n).typ = 'log'; 
 mt(n).inst = {'skipperlog','adcp'}; 
 mt(n).msg = {'vmvbw','vdvbw'};
 %winch
-n = n+1; mt(n).dir = 'subsurface'; mt(n).typ = 'win'; 
-mt(n).inst = {'winch'}; 
+n = n+1; mt(n).dir = 'other'; mt(n).typ = 'winch'; 
+mt(n).inst = {'winch'};
 mt(n).msg = {'winch','sdawinch'}; 
 %live ctd data***
-n = n+1; mt(n).dir = 'subsurface'; mt(n).typ = 'prof'; 
+n = n+1; mt(n).dir = 'other'; mt(n).typ = 'ctd'; 
 mt(n).inst = {'ctd'}; 
 mt(n).msg = {'smctd'}; 
 %lat, lon, depth
-n = n+1; mt(n).dir = 'subsurface'; mt(n).typ = 'loc'; 
+n = n+1; mt(n).dir = 'other'; mt(n).typ = 'usbl'; 
 mt(n).inst = {'ranger2usbl'};
 mt(n).msg = {'psonlld'};
 %lab conditions
-n = n+1; mt(n).dir = 'lab'; mt(n).typ = 'lab'; 
+n = n+1; mt(n).dir = 'other'; mt(n).typ = 'lab'; 
 mt(n).inst = {'autosal','salrmtemp'}; 
 mt(n).msg = {'autosal','salin'};
 
@@ -129,7 +129,7 @@ if nargout>1
         'flowratedecimals' 'flowratekfactordecimals'};
     switch MEXEC_G.Mship
         case {'discovery','cook'} %should now be the same at least by default!
-            skips.sentence = [skips.sentence 'surfmet_sfuwy']; %all variables already in surfmet_gpxsm anyway
+            skips.sentence = [skips.sentence, 'surfmet_gpxsm']; %exists with all the variables but no data?
         case 'sda'
             %         sentence_skip = [sentence_skip, 'singlebeam_skipper_gds_102_sddpt', 'singlebeam_skipper_gds102_sddbs',...
             %             'singlebeam_skipper_gds102_sddbk', 'singlebeam_skipper_gds102_pskpdpt', 'singlebeam_skipper_gds102_sdalr',...

@@ -25,12 +25,14 @@ function [d, comment] = apply_autoedits(d, castopts)
 %     [NaN NaN], parameter data are masked where (var) is NaN
 %     e.g. to mask selected ranges of scans where CTD1 was blocked, and to
 %     also mask C and O wherever else T has been edited out (e.g. by hand,
-%     or by rangelim): 
+%     or by rangelim) for either CTD: 
 %     castopts.badscan.temp1 = [7380 7890; 11500 13020];
 %     castopts.badscan.cond1 = castopts.badscan.temp1;
 %     castopts.badscan.oxygen_sbe1 = castopts.badscan.temp1; 
 %     castopts.badtemp1.cond1 = [NaN NaN];
 %     castopts.badtemp1.oxygen_sbe1 = [NaN NaN];
+%     castopts.badtemp2.cond2 = [NaN NaN];
+%     castopts.badtemp2.oxygen_sbe2 = [NaN NaN];
 %    
 %   despike -- for each parameter which is a field of castopts.despike,
 %     data are masked using a 5-point median despiker with the threshold

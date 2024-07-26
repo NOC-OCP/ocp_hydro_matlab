@@ -145,7 +145,7 @@ end
 %rename and save
 clear hnew
 hnew.fldnam = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag' 'statnum'};
-hnew.fldunt = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_table_4.9' 'number'};
+hnew.fldunt = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_4.9' 'number'};
 opt1 = 'mstar'; get_cropt
 if docf
     hnew.fldunt{1} = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];

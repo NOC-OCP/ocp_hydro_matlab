@@ -130,7 +130,7 @@ if ~quiet
     if numdc > 0
         d1 = dd.dnum(1); d2 = dd.dnum(end);
     else
-        d1 = dv1; d2 = dv2;
+        d1 = argot.dnums(1); d2 = argot.dnums(2);
     end
     d1 = datestr(d1,'yyyy-mm-dd HH:MM:SS');
     d2 = datestr(d2,'yyyy-mm-dd HH:MM:SS');

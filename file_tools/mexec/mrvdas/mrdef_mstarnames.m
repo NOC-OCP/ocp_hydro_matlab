@@ -141,9 +141,9 @@ function mrtables_out = limit_tables(mrtables_out, limit, skips)
 
 % discard tables/messages set in mrvdas_skip or in opt_cruise rvdas_skip
 if limit(1)
-    [~,iis] = intersect(lower(skips.msg), lower(mrtables_out.rvdasmsg));
+    [~,iis,~] = intersect(lower(mrtables_out.rvdasmsg), lower(skips.msg));
     mrtables_out(iis,:) = [];
-    [~,iis] = intersect(lower(skips.sentence), lower(mrtables_out.tablenames));
+    [~,iis,~] = intersect(lower(mrtables_out.tablenames), lower(skips.sentence));
     mrtables_out(iis,:) = [];
 end
 

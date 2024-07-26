@@ -143,10 +143,10 @@ end
 
 opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
 
-orth = 1; %threshold for replicate agreement to be examined
+orth = 0.01; %ratio threshold for replicate agreement to be examined
 opt1 = 'check_sams'; get_cropt
 if check_oxy
-    oxy_repl_check(d, mcruise, orth)
+    oxy_repl_check(d, mcruise, orth, check_oxy)
     %get flags again in case changed (does this update?)
     opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
 end
@@ -227,15 +227,15 @@ if sum(strcmp('conc_o2',ds_oxy_fn))==0
     ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
 end
 
-function oxy_repl_check(d, mcruise, orth)
-% check where oxygen replicates in d differ by more than orth (umol/l)
+function oxy_repl_check(d, mcruise, orth, stn_start)
+% check where oxygen replicates in d differ by more than 1+/-orth (ratio)
 
 orthp = orth*5;
-m0 = abs(d.botoxya_per_l-d.botoxyb_per_l)>orth;
+m0 = abs(d.botoxya_per_l./d.botoxyb_per_l-1)>orth;
 q = [d.botoxya_per_l d.botoxyb_per_l];
 qf = [d.botoxya_flag d.botoxyb_flag];
 if isfield(d,'botoxyc_per_l')
-    m0 = m0 | abs(d.botoxyc_per_l-d.botoxya_per_l)>orth | abs(d.botoxyc_per_l-d.botoxyb_per_l)>orth;
+    m0 = m0 | abs(d.botoxyc_per_l./d.botoxya_per_l-1)>orth | abs(d.botoxyc_per_l./d.botoxyb_per_l-1)>orth;
     q = [q d.botoxyc_per_l]; qf = [qf d.botoxyc_flag];
 end
 
@@ -252,19 +252,19 @@ if sum(m0)
     [~,ia0,ib0] = intersect(samp0,ds.sampnum);
 
     r = d.botoxya_per_l(ia)./ds.uoxygen(ib);
-    rint = [d.botoxya_per_l(ia)-orthp d.botoxya_per_l(ia)+orthp]./repmat(ds.uoxygen(ib),1,2);
+    rint = [d.botoxya_per_l(ia)*(1-orthp) d.botoxya_per_l(ia)*(1+orthp)]./repmat(ds.uoxygen(ib),1,2);
     figure(1); clf
     y = repmat(ds.uoxygen(ib0),1,size(q,2)); nr = length(ia);
     hl = plot([d.sampnum(ia) d.sampnum(ia)]',rint',...
         ds.sampnum(ib0),qb./y,'x', ds.sampnum(ib0),qq./y,'+',...
         d.sampnum(ia),r,'.b', ds.sampnum(ib0),q(ia0,:)./y,'o');
     ylabel('oxygen bot/ctd'); xlabel('sampnum'); grid
-    legend(hl([1 end-3:end]),['+/-' num2str(orthp) 'umol/l adj to bottle'],'all (a)','a','b','c','location','southwest'); 
+    legend(hl([1 end-3:end]),['+/-' num2str(orthp) ' factor on bottle value'],'all (a)','a','b','c','location','southwest'); 
     set(hl(1:nr),'color',[.5 .5 .5]); set(hl(nr+1:end-4),'color',[0 0 0])
     title('flagged bad x, questionable +')
 
     %display values for each station
-    stns = unique(stn0);
+    stns = unique(stn0); stns = stns(stns>=stn_start);
     for sno = 1:length(stns)
         ii = find(d.statnum==stns(sno));
         [~,~,iis] = intersect(d.sampnum(ii),ds.sampnum,'stable');

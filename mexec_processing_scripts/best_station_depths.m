@@ -33,7 +33,7 @@ if nargin>1
     depth_source = varargin{1};
 else
     if MEXEC_G.ix_ladcp
-        depth_source = {'ladcp', 'ctd'}; %ladcp if present, then fill with ctd press+altimeter
+        depth_source = {'ctd','ladcp'}; %first ctd, so we have an altimeter column as well, then fill with ladcp
     else
         depth_source = {'ctd'};
     end
@@ -61,15 +61,10 @@ for sno = 1:length(depth_source)
     ii = setdiff(ii00, ii0); bestdeps(ii,4) = sno; %mark the ones that did work
 end
 
-%finally look to cruise options for any changes
-replacedeps = []; stnmiss = [];  replacealt = [];
-xducer_offset = 0; iscor = 0;
-opt1 = 'ctd_proc'; opt2 = 'bestdeps'; get_cropt  % inserted by bak en705 24 jul 2023; If you don't get_cropt here, replacedeps is empty
-
-if ~isempty(stnmiss)
+if exist('stnmiss','var') && ~isempty(stnmiss)
     bestdeps(ismember(bestdeps(:,1),stnmiss),:) = [];
 end
-if ~isempty(replacedeps)
+if exist('replacedeps','var') && ~isempty(replacedeps)
     [~,ia,ib] = intersect(replacedeps(:,1), bestdeps(:,1));
     y.cordep = replacedeps(ia,2);
     if ~iscor
@@ -85,9 +80,9 @@ if ~isempty(replacedeps)
     end
     bestdeps(ib,2) = y.cordep;
 end
-if ~isempty(replacealt)
-    [~,ia,ib] = intersect(replacealt(:,1), bestdeps(:,1));
-    bestdeps(ib,3) = replacealt(:,2);
+if exist('overwritealt','var') && ~isempty(overwritealt)
+    [~,ia,ib] = intersect(overwritealt(:,1), bestdeps(:,1));
+    bestdeps(ib,3) = overwritealt(ia,2);
 end
 
 
@@ -116,7 +111,7 @@ switch depth_source
         [~,ii1,ii2] = intersect(deps(:,1), bestdeps(iif,1));
         bestdeps(iif(ii2),2) = deps(ii1,2);
         if size(deps,2)>2
-            bestdepts(iif(ii2),3) = deps(ii1,3);
+            bestdeps(iif(ii2),3) = deps(ii1,3);
         end
         
     case 'ctd' % calculate from CTD depth and altimeter

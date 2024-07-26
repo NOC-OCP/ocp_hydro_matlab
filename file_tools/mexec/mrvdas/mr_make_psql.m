@@ -96,7 +96,7 @@ try
     mrtv = mrtv(m,:);
     sqlname = mrtv.tablenames{1};
 catch
-    error('%s is not defined; if it is in the database, add to \nmstar_dirs_tables and mstar_by_table and rerun mrdefine(''reload'')',rtable);
+    error('%s is not defined; if it is in the database, add to \nmstar_dirs_tables and mstar_by_table and rerun mrdefine(''redo'')',rtable);
 end
 
 % select the variables we want (if varstring is empty or has no matches, select all)

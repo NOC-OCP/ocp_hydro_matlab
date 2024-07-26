@@ -19,7 +19,7 @@ ds = table2struct(ds(isam,:),'ToScalar',true);
 %find if adj data available
 clear hnew
 hnew.fldnam = {'sampnum' 'botpsal' 'botpsal_flag'};
-hnew.fldunt = {'number' 'psu' 'woce_9.4'}; %***
+hnew.fldunt = {'number' 'psu' 'woce_4.9'}; %***
 hnew.comment = ['salinity data from sal_' mcruise '_01.nc. ' hc.comment];
 ds.botpsal = NaN+ds.sampnum; ds.botpsal_flag = 9+zeros(size(ds.sampnum));
 if isfield(d, 'salinity_adj') && sum(~isnan(d.salinity_adj(isal)))

@@ -136,8 +136,9 @@ mv = false(1,length(sam_gridlist));
 for vno = 1:length(sam_gridlist)
     if isfield(d,sam_gridlist{vno})
         sdata.(sam_gridlist{vno}) = d.(sam_gridlist{vno})(mstn);
+        fl = d.([sam_gridlist{vno} '_flag'])(mstn);
         if isfield(mgrid,'sdata_flag_accept')
-            mbf = ~ismember(d.([sam_gridlist{vno} '_flag']),mgrid.sdata_flag_accept);
+            mbf = ~ismember(fl,mgrid.sdata_flag_accept);
             sdata.(sam_gridlist{vno})(mbf) = NaN;
         end
         mv(vno) = true;

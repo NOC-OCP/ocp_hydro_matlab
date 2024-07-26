@@ -1,6 +1,6 @@
 function mrtv = mrdefine(varargin)
 % function mrtv = mrdefine
-% function mrtv = mrdefine('reload')
+% function mrtv = mrdefine('redo')
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -14,6 +14,10 @@ function mrtv = mrdefine(varargin)
 % Examples
 %
 %   mrtv = mrdefine
+% loads existing (previously defined) table
+%
+%   mrtv = mrdefine('redo')
+% queries database and json files to redefine the table, and save
 %
 
 m_common
@@ -23,7 +27,7 @@ tabledefcsv = fullfile(fileparts(mfilename('fullpath')),['rvtabledef_' mcruise '
 %but it doesn't load back in the same way, so also save as .mat
 tabledefmat = fullfile(MEXEC_G.mexec_data_root,'rvdas',['rvtabledef_' mcruise '.mat']);
 
-if nargin>0 && strcmp(varargin{1},'reload')
+if nargin>0 && strcmp(varargin{1},'redo')
 
     quiet = 1; if nargin>1; quiet = varargin{2}; end
 

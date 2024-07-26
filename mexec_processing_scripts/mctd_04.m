@@ -115,7 +115,7 @@ g2opts.postfill = 0; %fill after gridding?
 g2opts.ignore_nan = 1;
 pg = [0:2:1e4]';
 g2opts.int = [-1 1]; %interval for bins
-g2opts.grid_extrap = [0 0]; %discard empty bins
+g2opts.grid_ends = [0 0]; %discard empty bins
 g2opts.bin_partial = 0; %only use bins with data in both halves
 opt1 = 'ctd_proc'; opt2 = 'interp2db'; get_cropt
 if isdown

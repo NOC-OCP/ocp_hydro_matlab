@@ -496,6 +496,8 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
+            case 'tstep_save'
+                tstep_force = 1;
             case 'tsg_avedits'
              minflow = 400;
              check_tsg = 1;

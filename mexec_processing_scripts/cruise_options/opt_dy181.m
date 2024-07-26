@@ -1,5 +1,4 @@
-
-%shortcasts = 2; %no altimeter bottom depth/no LADCP BT
+shortcasts = [84 99];
 
 switch opt1
 
@@ -22,22 +21,69 @@ switch opt1
                 RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/'; %original
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
                 RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr';
+            case 'rvdas_skip'
+                skips.sentence = [skips.sentence, 'surfmet_gpxsm', 'ranger2usbl_psonlld'];
         end
 
     case 'uway_proc'
         switch opt2
-            case ['sensor_unit_conversions' ...
-                    '' ...
-                    '' ...
-                    '']
-                if strcmp(abbrev,'ea640')
-                    d.waterdepth = d.waterdepthtransducer + d.transduceroffset;
-                    [~,ia,ib] = intersect(h.fldnam,{'waterdepthfromtransducer','transduceroffset'});
-                    dats = {'fldnam','fldunt','alrlim','uprlim','absent','num_absent','dimsset','dimrows','dimcols'};
-                    for no = 1:length(dats)
-                        h.(dats{no})(ia) = [];
-                    end
+            case 'sensor_unit_conversions'
+                switch abbrev
+                    case 'surfmet'
+                        so.docal.fluo = 1;
+                        so.docal.trans = 1;
+                        so.docal.parport = 1;
+                        so.docal.parstarboard = 1;
+                        so.docal.tirport = 1;
+                        so.docal.tirstarboard = 1;
+                        %specify with so.calstr.{variablename}.pl.{cruise}
+                        so.calstr.fluo.pl.dy181 = 'dcal.fluo = 10.3*(d0.fluo-0.078);'; %or sf is nonlinear?***
+                        so.instsn.fluo = 'WS3S134';
+                        so.calunits.fluo = 'ug_per_l';
+                        so.calstr.trans.pl.dy181 = 'dcal.trans = (d0.trans-0.017)/(4.699-0.017)*100;';
+                        so.instsn.trans = 'CST-112R';
+                        so.calunits.trans = 'percent';
+                        so.calstr.parport.pl.dy181 = 'dcal.parport = d0.parport*(10^6/8.944);';
+                        so.instsn.parport = 'SKE-510 28558';
+                        so.calunits.parport = 'W/m²';
+                        so.calstr.parstarboard.pl.dy181 = 'dcal.parstarboard = d0.parstarboard*(10^6/8.937);';
+                        so.instsn.parstarboard = 'SKE-510 28561';
+                        so.calunits.parstarboard = 'W/m²';
+                        so.calstr.tirport.pl.dy181 = 'dcal.tirport = d0.tirport*(10^6/9.69);';
+                        so.instsn.tirport = 'CMP-994133';
+                        so.calunits.tirport = 'W/m²';
+                        so.calstr.tirstarboard.pl.dy181 = 'dcal.tirstarboard = d0.tirstarboard*(10^6/11.31);';
+                        so.instsn.tirstarboard = '994132';
+                        so.calunits.tirstarbaord = 'W/m²';
                 end
+            case 'rawedit'
+                ts = (datenum(2024,7,3,15,40,0)-datenum(2024,1,1))*86400;
+                if strcmp(abbrev,'sbe45')
+                    uopts.badtime.temph = [-inf ts];
+                    uopts.badtime.tempr = [-inf ts];
+                    uopts.badtime.conductivity = [-inf ts];
+                    uopts.badtime.salinity = [-inf ts];
+                    uopts.badtime.soundvelocity = [-inf ts];
+                elseif strcmp(abbrev,'surfmet')
+                    uopts.badtime.fluo = [-inf ts];
+                    uopts.badtime.trans = [-inf ts];
+                end
+                if sum(strcmp(streamtype,{'sbm','mbm'}))
+                    handedit = 1; %edit raw bathy
+                    vars_to_ed = munderway_varname('depvar',h.fldnam,1,'s');
+                    vars_to_ed = union(vars_to_ed,munderway_varname('depsrefvar',h.fldnam,1,'s'));
+                    vars_to_ed = union(vars_to_ed,munderway_varname('deptrefvar',h.fldnam,1,'s'));
+                end
+                if strcmp(abbrev,'ea640')
+                    d = rmfield(d,'waterdepthfromsurface');
+                    h.fldunt(strcmp('waterdepthfromsurface',h.fldnam)) = [];
+                    h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
+                end
+            case 'tsg_cals'
+                uo.docal.temp = 0;
+                uo.docal.cond = 0;
+                uo.docal.psal = 0;
+            case 'avedit'
             case 'bathy_grid'
                 %for background, load gridded bathymetry into xbathy, ybathy, zbathy
         end
@@ -88,29 +134,36 @@ switch opt1
                 elseif stn==61
                     co.despike.cond1 = [0.02 0.02];
                     co.despike.cond2 = [0.02 0.02];
+                elseif stn==88
+                    co.badscan.cond1 = [9.198e4 inf]; %offset, probably resolves before surface but hard to say where
+                elseif stn==98                         %CTD clogged with jellyfish
+                    co.badscan.oxygen_sbe1 = [39200 inf];
+                    co.badscan.temp1 = [39200 inf];
+                    co.badscan.cond1 = [39200 inf];
+                    co.badscan.cond2 = [11004 39421];
                 end
             case 'ctd_cals'
                 co.docal.temp = 0;
                 co.docal.cond = 0;
                 co.docal.oxygen = 0;
-                co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([184 203],[1e-3 -1e-3],d0.dday);';
-                co.calstr.temp.sn34116.msg = 'SBE35 comparison, 482 total points, 109 deep/low gradient points';
-                co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+1e-3;';
-                co.calstr.temp.sn35838.msg = 'SBE35 comparison, 494 total points, 110 deep/low gradient points';
-                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1-1e-3/35);';
-                co.calstr.cond.sn42580.msg = '341 bottle salinities (106 deep/low gradient)';
-                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1-6e-3/35);';
-                co.calstr.cond.sn43258.msg = '353 bottle salinities (107 deep/low gradient)';
-                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 100],[1.038 1.058],d0.statnum);';
+                co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([1 100],[1e-3 0e-3],d0.statnum)+interp1([0 3100],[1e-3 -0.8e-3],d0.press);';
+                co.calstr.temp.sn34116.msg = 'SBE35 comparison, 180 low gradient points';
+                co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+interp1([0 3100],[1.8e-3 0.8e-3],d0.press);';
+                co.calstr.temp.sn35838.msg = 'SBE35 comparison, 181 low gradient points';
+                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1+interp1([0 3100],[0 -0.5e-3],d0.press)/35);';
+                co.calstr.cond.sn42580.msg = 'bottle salinity comparison, 156 low gradient points';
+                %co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1+interp1([0 3100],[-5e-3 -6e-3],d0.press)/35);';
+                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1+interp1([1 100],[-6e-3 -4e-3],d0.statnum)/35 + interp1([0 3100],[0 -1e-3],d0.press)/35);';
+                co.calstr.cond.sn43258.msg = 'bottle salinity comparison, 157 low gradient points';
+                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 100],[1.038 1.05],d0.statnum);';
                 co.calstr.oxygen.sn432061.msg = 'upcast oxygen s/n 432061 adjusted to agree with 146 samples';
-                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*1.025;';%interp1([0 51 70 80 85],[1.025 1.02 1.05 1.04 1.04],d0.statnum);';
+                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 52 53 74 80 100],[1.025 1.02 1.05 1.05 1.03 1.03],d0.statnum);';
                 co.calstr.oxygen.sn432068.msg = 'upcast oxygen s/n 432068 adjusted to agree with 142 samples';
             case 'sensor_choice'
-                s_choice = 2; %CTD2 is on the vane and is smoother (better) especially when AHC not on
-                if stn<=50 || stnlocal>79 %or 74?
-                    o_choice = 2;
-                else
-                    o_choice = 1; 
+                s_choice = 2; %CTD2 is on the vane and is less turbulent, especially when AHC not on
+                o_choice = 2;
+                if stn>50 && stn<80
+                    o_choice = 1; %sensor 2 sudden increased offset relative to bottle samples, appears to resolve after cleaning before stn 80
                 end
         end
 
@@ -129,6 +182,8 @@ switch opt1
                     niskin_flag(ismember(position,[11 21])) = 4;
                 elseif stn==36
                     niskin_flag(position==11) = 3; %***leaked
+                elseif stn==44
+                    niskin_flag(position==15) = 3; %bad oxy and nuts
                 elseif stn==51
                     niskin_flag(position==11) = 3; %maybe leaking (on recovery, not obviously after), still sampled
                 elseif stn==64
@@ -140,16 +195,21 @@ switch opt1
                     niskin = [1; niskin];
                     niskin_flag = [1; niskin_flag];
                     scan = [-18932; scan]; %relative to start of 065A; will be adjusted
-                %elseif stn==70
-                    %niskin_flag(position==15) = 4; %latch did not release,
-                    %but based on .bl file this is because it was 14 that
-                    %was triggered instead (no bottle on 14)
+                elseif ismember(stn,[88 89])
+                    niskin_flag(position==6) = 3; %leaking, although overridden by 9
+                elseif stn==100
+                    niskin_flag(ismember(position,[1 2 3])) = 3;
                 end
                 %these not-present Niskins were triggered, so there is an
                 %SBE35 measurement, but the niskin_flag itself should be 9
                 %for no sample drawn
                 niskin_flag(floor(position/2)==position/2) = 9;
                 %810, 3410, 3718, 6802, 7014, 7018
+            case 'niskins'
+                niskin_number = [3034:3046 7131 3048:3057]';
+                if stnlocal<88
+                    niskin_number(2:2:end) = NaN; %no even Niskins for these stations
+                end
         end
 
     case 'ladcp_proc'
@@ -167,6 +227,12 @@ switch opt1
         elseif stn==85
             cfg.uppat = 'DY181_CTD084-85S.000';
             cfg.dnpat = 'DY181_CTD084-85M.000';
+        elseif stn==90
+            %cfg.uppat = 'DY181_CTD090S.00*'; %001 files don't have header,
+            %so concatenated files to _all.000 instead
+            %cfg.dnpat = 'DY181_CTD090M.00*';
+            cfg.uppat = 'DY181_CTD090S_all.000';
+            cfg.dnpat = 'DY181_CTD090M_all.000';
         else
             cfg.uppat = sprintf('%s_CTD%03dS*.000',upper(mcruise),stn);
             cfg.dnpat = sprintf('%s_CTD%03dM*.000',upper(mcruise),stn);
@@ -183,8 +249,9 @@ switch opt1
 
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
-        check_sal = 1;
+        check_sal = 83;
         check_oxy = 1;
+        check_nut = 1;
         check_sbe35 = 1;
 
     case 'sbe35'
@@ -218,20 +285,24 @@ switch opt1
                     % samples on 19th run without standards
                     % samples on 20th run without standards
                     031 -1; 036 -1; ... %21st am
+                    037 -3.5; 038 -1; 039 -1; %21st PM. 
+                    % 040 offset -8 (seems very big)
+                    041 0.5; 042 -1.5; 043 -1.5; 044 -1.5; 045 1.5;
+                    046 -1; 047 2; %23rd 17:31-18;34
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
                 sal_off_base = 'sampnum_list'; 
             case 'sal_flags'
                 %too low (33-ish), maybe samples contaminated
-                m = ismember(ds_sal.sampnum,[4807 4809 5713 5801 5803 5805]);
-                ds_sal.botpsal_flag(m) = 4;
+                m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
+                ds_sal.flag(m) = 4;
         end
 
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {fullfile(root_oxy,'Winkler Calculation Spreadsheet_220724.xlsx')};
+                ofiles = {fullfile(root_oxy,'Winkler Calculation Spreadsheet_240724.xlsx')};
                 iih = 8;
                 hcpat = {'Longitude'};
                 chrows = 1; chunits = [];
@@ -268,11 +339,14 @@ switch opt1
                 d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
                 d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
                 % outliers relative to profile/CTD (not replicates)
-                flag3 = [3617 3811 ...
-                    811 923 5507 5509 5511 5609 5613]';
+                flag3 = [3617 3811 3817 4217 4219 ...
+                    811 923 5507 5509 5511 5603  5609 5613 ...
+                    8801]';
                 flag4 = [3501 3507 3509 3515 3603 3607 3715 ...
                     4207 4403 5603 ...
-                    601 921 4401 4415 4915 5203 5601 7209 7717 7719]';
+                    601 921 4401 4415 4915 5203 5601 7209 7403 7717 7719 ...
+                    8803 8815 8817 8911 8913 8915 9001 9013 9015 9021 ...
+                    9113 9117 9123]';
                 d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
                 d.botoxya_flag(ismember(d.sampnum,flag3)) = 3;
                 m = d.sampnum==8315;
@@ -282,7 +356,7 @@ switch opt1
     case 'botnut'
         switch opt2
             case 'nut_files'
-                ncpat = '240721*.xlsx';
+                ncpat = '240724*.xlsx';
                 hcpat = {'LAT'}; chrows = 1; chunits = 1;
             case 'nut_parse'
                 varmap.position = {'niskin_btl_number'};
@@ -294,13 +368,18 @@ switch opt1
                 %    end
                 %end
                 %ds_nut(isnan(ds_nut.position),:) = [];
+            case 'nut_param_flag'
+                %replicate differences
+                dnew.silcb_flag(dnew.sampnum==4415) = 3; %very high
+                %from profiles
+                dnew.silca_flag(dnew.sampnum==4709) = 4; %low
         end
 
     case 'outputs'
         switch opt2
             case 'summary'
-                snames = {'nsal' 'noxy' 'nnut' 'nco2'};
-                sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'nitr'} {'dic' 'talk'}};
+                snames = {'nsal' 'noxy' 'nnut' 'nco2_shore'};
+                sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'totnit'} {'dic' 'talk'}};
             case 'exch'
                 ns = 9;
                 expocode = '74EQ20240703';
@@ -337,24 +416,40 @@ switch opt1
                         '#***';...
                         }];
                 end
+            case 'section_for_station'
+                if stnlocal>4 && stnlocal<88
+                    sections = {'osnape_plus'};
+                elseif stnlocal>=88
+                    sections = {'eddy'};
+                end
             case 'grid'
                 sam_gridlist = {'botoxy' 'silc' 'phos' 'totnit'};
                 mgrid.sdata_flag_accept = [2 3]; %***or just 2
-                switch section
-                    case 'osnape'
-                        kstns = [35:39 42:45 47 46 48:65 69 68 71 72 77 76 75 74 73];
-                        %should 67 be in here? 
-                        mgrid.xlim = 2; mgrid.zlim = 4;
-                    case 'osnape_plus'
-                        kstns = [82 81 80 79 78];
-                        %station names in order: 20b, 21a, 21b, 22a, 22b 
-                        mgrid.xlim = 2; mgrid;zlim = 4;
-                    case 'scotshelf'
-                        mgrid.zpressgrid = [0 5 25 50 75 100 125 150 175 200 250 300];
-                        kstns = [6:9 35:36];
-                    case 'profiles_only'
-                        kstns = [1:3 10:33]; %test, dm, yo-yo
-                        kstns = 1:999;
+                if contains(section,'osnape')
+                    %this is everything that can be arranged by
+                    %longitude, no repeats***
+                    kstns = [35:39 42:45 47 46 48:63 87 86 64 85 65 83 82 69 80 81 68 79 78 67 71 72 77 76 75 74 73];
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                    if ~contains(section,'plus')
+                        %this is the main section, at original spacing
+                        kstns = kstns(kstns<78); %exclude the a/b stations
+                    end
+                elseif strcmp(section,'ibe')
+                    %this is just the higher-resolution section in the IB,
+                    %O18 to O23 and including the a/b stations between
+                    kstns = [63 87 86 64 85 65 83 82 69 81 80 68 79 78 67];
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                elseif strcmp(section,'eddy')
+                    %these are the eddy stations in order from W to E
+                    kstns = 88:99;
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                elseif strcmp(section,'scotshelf')
+                    mgrid.zpressgrid = [0 5 25 50 75 100 125 150 175 200 250 300];
+                    kstns = [6:9 35:36];
+                else
+                    section = 'profiles_only';
+                    %kstns = [1 2 10:33 3 4 5 40 41 66 70 100]; %test, dm, yo-yo, caldip, cal profile, argo 60N
+                    kstns = 1:999; %useful to do profiles_only for all stations anyway (smooth in vertical)
                 end
         end
 

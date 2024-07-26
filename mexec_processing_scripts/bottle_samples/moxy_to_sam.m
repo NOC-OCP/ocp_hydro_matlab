@@ -84,10 +84,10 @@ end
 ds.botoxy_flag = d.botoxya_flag(iio);
 if isfield(d,'botoxya_temp')
     hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxya_temp' 'botoxy_flag'];
-    hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_9.4'];
+    hnew.fldunt = [hnew.fldunt 'umol/kg' 'degC' 'woce_4.9'];
 else
     hnew.fldnam = [hnew.fldnam 'botoxy' 'botoxy_flag'];
-    hnew.fldunt = [hnew.fldunt 'umol/kg' 'woce_9.4'];
+    hnew.fldunt = [hnew.fldunt 'umol/kg' 'woce_4.9'];
 end
 if use_oxy_repl>0
     nav = ones(size(ds.sampnum));

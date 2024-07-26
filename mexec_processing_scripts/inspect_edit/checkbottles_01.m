@@ -428,6 +428,5 @@ for kl = 1:length(stats)
     else
         gvar = dg.(varname); gvar = gvar(:,kgcol);
         vanom(ksam) = v(ksam) - interp1(dg.press(:,kgcol),gvar,dsam.upress(ksam));
-        if snum==9; keyboard; end
     end
 end

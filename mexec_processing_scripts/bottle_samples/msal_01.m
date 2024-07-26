@@ -208,12 +208,12 @@ if calcsal
     if exist('bads','var') && ~isempty(bads) %new edits to apply
         [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
     end
+    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
     %recalculate mean
     a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
     ds_sal.runavg = m_nanmean(a,2);
     %flag based on stdev and number of remaining points
     s3 = 3e-5; s4 = 5e-5;
-    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
     an = sum(~isnan(a),2);
     ds_sal.flag(an==2) = max(ds_sal.flag(an==2),3);
     ds_sal.flag(an==1) = 4;
@@ -357,6 +357,7 @@ else
     salunits.flag = {'woce_9.4'};
     salunits.salinity = {'psu'};
 end
+opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
 
 %%%%%% save %%%%%%
 

@@ -76,11 +76,13 @@ while isempty(rtable) && isempty(mtable) && n<nmax
                 mtable = tablein;
             end
         end
-    end
+    else
+        tmap_rvdas
+        tablein = input('Input name is not found uniquely in the list of RVDAS names \nor mexec shorthand names, try again from list above  ','s');
         n = n+1;
+    end
 end
 
 if isempty(rtable) && isempty(mtable) % neither found
-    fprintf(MEXEC_A.Mfider,'\n%s%s%s\n\n','Error trying to match name ''',tablein,'''');
-    error('error in mrresolve_table. Input name is not found uniquely in the list of RVDAS names or mexec shorthand names');
+    erorr('Error trying to match name %s',tablein);
 end

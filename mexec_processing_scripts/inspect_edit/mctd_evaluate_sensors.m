@@ -186,7 +186,7 @@ for ks = 1:length(sn)
 
 %plot residual or ratio vs statnum, pressure, temperature, and histogram
 figure(2); clf
-plot_residuals(dc, p, parameter); 
+plot_residuals(dc, p, parameter);
 if ~isempty(printform)
     print(printform, fullfile(printdir, ['ctd_eval_' parameter '_' num2str(sn(ks)) '_hist' dirstr]))
 end
@@ -217,21 +217,27 @@ end %loop through serial numbers
 
 %%%%%%%%%% subfunctions %%%%%%%%%%
 
-function plot_residuals(dc, p, parameter)
+function plot_residuals(dc, p, parameter, varargin)
+if nargin>3
+    mgrid = varargin{1};
+end
 
 subplot(5,5,[1:5])
-hl = plot(dc.(p.xvar), dc.ctdres, 'c+', dc.(p.xvar), dc.res, '.g', dc.(p.xvar)(p.iigc), dc.res(p.iigc), 'b.', dc.(p.xvar)(p.deep), dc.res(p.deep), '.k'); grid
+hl = plot(dc.(p.xvar), dc.ctdres, 'y+', dc.(p.xvar)(p.iigc), dc.ctdres(p.iigc), 'c+', dc.(p.xvar), dc.res, '.g', dc.(p.xvar)(p.iigc), dc.res(p.iigc), 'b.', dc.(p.xvar)(p.deep), dc.res(p.deep), '.k'); grid
 xlabel(p.xvarlabel); xlim(p.xrange); ylim(p.rlim); 
-legend(hl([1 3 4 2]),p.colabel,p.cclabel,'deep','high var','location','southeastoutside');
+set(hl(1),'color',[.8 .8 .8]); set(hl(3),'color',[.5 .5 .5])
+legend(hl([2 4 5 3]),p.colabel,p.cclabel,'deep','high var','location','southeastoutside');
 set(gca,'xaxislocation','top')
 
 subplot(5,5,[10 15 20 25])
-plot(dc.ctdres, -dc.press, 'c+', dc.res, -dc.press, '.g', dc.res(p.iigc), -dc.press(p.iigc), 'b.'); grid
+hl = plot(dc.ctdres, -dc.press, 'y+', dc.ctdres(p.iigc), -dc.press(p.iigc), 'c+', dc.res, -dc.press, '.g', dc.res(p.iigc), -dc.press(p.iigc), 'b.'); grid
+set(hl(1),'color',[.8 .8 .8]); set(hl(3),'color',[.5 .5 .5])
 ylabel('-press'); ylim(p.presrange); xlim(p.rlim)
 set(gca,'yaxislocation','right')
 
 subplot(5,5,[6:9])
-plot(dc.ctemp, dc.ctdres, 'c+', dc.ctemp, dc.res, '.g', dc.ctemp(p.iigc), dc.res(p.iigc), '.b', dc.ctemp(p.deep), dc.res(p.deep), '.k'); grid
+hl = plot(dc.ctemp, dc.ctdres, 'y+', dc.ctemp(p.iigc), dc.ctdres(p.iigc), 'c+', dc.ctemp, dc.res, '.g', dc.ctemp(p.iigc), dc.res(p.iigc), '.b', dc.ctemp(p.deep), dc.res(p.deep), '.k'); grid
+set(hl(1),'color',[.8 .8 .8]); set(hl(3),'color',[.5 .5 .5])
 xlabel('T'); ylim(p.rlim);
 
 subplot(5,5,[11:12 16:17])
@@ -239,7 +245,14 @@ plot(dc.caldata, dc.ctddata, 'b.', dc.caldata(p.deep), dc.ctddata(p.deep), 'k.',
 axis image; xlabel(['cal ' parameter]); ylabel(['ctd ' parameter]);
 
 subplot(5,5,[13:14 18:19])
-scatter(dc.(p.xvar), -dc.press, 12, dc.res, 'filled'); grid
+if exist('mgrid','var')
+    contour(mgrid.(p.xvar), -mgrid.press, mgrid.ctdres, 20, 'edgecolor', 'none'); hold on
+end
+scatter(dc.(p.xvar), -dc.press, 6, dc.res); grid; hold on
+iib = setdiff(1:length(dc.press),p.iigc);
+%plot(dc.(p.xvar)(iib), -dc.press(iib), 'x', 'color', [.8 .8 .8])
+scatter(dc.(p.xvar)(p.iigc), -dc.press(p.iigc), 20, dc.res(p.iigc), 'filled');
+plot(dc.(p.xvar)(p.iigc), -dc.press(p.iigc), 'ok')
 xlabel(p.xvar); xlim(p.xrange); ylim(p.presrange); ylabel('-press')
 clim(p.rlim); colorbar
 

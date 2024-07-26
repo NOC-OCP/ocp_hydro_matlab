@@ -230,15 +230,29 @@ switch MEXEC_G.Mship
 end
 
 
-if MEXEC_G.raw_underway %***still need to configure where directories are for some applications***
-if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
+if MEXEC_G.raw_underway 
+    %***still need to configure where directories are for some applications***
     try
-        mrtv = mrdefine;
-        disp('using cached rvdas table list / mstar lookup')
+        switch MEXEC_G.Mshipdatasystem
+            case 'rvdas'
+                mrtv = mrdefine;
+            case 'scs'
+                mrtv = msdefine; %***
+            case 'techsas'
+                mrtv = mtdefine; %***
+        end
+        fprintf(1,'using cached %s table list / mstar lookup\n',MEXEC_G.Mshipdatasystem)
     catch
         try
-            fprintf(1,'running mrdefine\n')
-            mrtv = mrdefine('reload');
+            fprintf(1,'reloading table definitions\n')
+            switch MEXEC_G.Mshipdatasystem
+                case 'rvdas'
+                    mrtv = mrdefine('redo');
+                case 'scs'
+                    mrtv = msdefine('redo');
+                case 'techsas'
+                    mrtv = mtdefine('redo');
+            end
         catch
             warning('skipping underway data setup')
         end
@@ -250,20 +264,6 @@ if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
         [~,ii] = unique(MEXEC_G.MDIRLIST(:,1),'stable');
         MEXEC_G.MDIRLIST = MEXEC_G.MDIRLIST(ii,:);
     end
-else
-    %create file connecting underway data directories and stream names
-    %and create underway data directories (for processed data)
-    try
-        [udirs, udcruise] = m_udirs;
-        if ~strcmp(udcruise, MEXEC_G.MSCRIPT_CRUISE_STRING)
-            m_setudir
-            [udirs, udcruise] = m_udirs;
-        end
-        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; udirs(:,1:2)];
-    catch me
-        warning('%s\n','underway data directories could not be configured',me.message)
-    end
-end
 end
 
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'

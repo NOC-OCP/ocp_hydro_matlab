@@ -87,14 +87,17 @@ dd = rmfield(dd, 'dnum');
 units = units(ia);
 
 %add variable names and units to hnew, or remove from dd
-%also subsample to 1 hz (if indicated) or remove repeated times
-save_1hz_uway = 1; tstep_force = [];
-opt1 = 'uway_proc'; opt2 = '1hz_max'; get_cropt
+%also remove duplicate times, after (if set in opt_cruise) subsampling
+%and/or rounding times
+opt1 = 'uway_proc'; opt2 = 'tstep_save'; get_cropt
 tstep = 1;
-if save_1hz_uway && isempty(tstep_force)
+if ~isempty(tstep_force)
     dt = diff(dd.time); dt = dt(dt>0); 
     dt = mode(dt);
-    tstep = max(round(1/dt),1);
+    tstep = max(round(1/dt),1); 
+end
+if ~isempty(tstep_resol)
+    dd.time = round(dd.time/tstep_resol)*tstep_resol;
 end
 if tstep>1
     iits = 1:tstep:length(dd.time);
@@ -103,6 +106,7 @@ if tstep>1
 else
     [~,iit] = unique(dd.time,'stable');
 end
+iit = iit(~isnan(dd.time(iit)));
 
 clear hnew
 hnew.fldnam = names(:)';

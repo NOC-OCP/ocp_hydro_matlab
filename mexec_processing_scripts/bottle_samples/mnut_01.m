@@ -38,6 +38,7 @@ varmap.silc_per_l = {'silicate'};
 varmap.phos_per_l = {'phosphate'};
 varmap.amon_per_l = {'ammonium'};
 varmap.totnit_flag = {'flag'};
+varmap.nitrate_flag = {'flag'};
 varmap.nitrite_flag = {'flag'};
 varmap.silc_flag = {'flag'};
 varmap.phos_flag = {'flag'};
@@ -56,39 +57,44 @@ hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
 [dnew.sampnum, iia, ~] = unique(ds_nut.sampnum,'stable');
 dnew.statnum = floor(dnew.sampnum/100); dnew.position = dnew.sampnum-dnew.statnum*100;
+vars = setdiff(fieldnames(varmap),{'statnum','position'});
+vars = intersect(vars,ds_nut.Properties.VariableNames);
 rlet = 'a';
 %change names, separating out replicates if necessary
-for vno = 1:size(varnamesunits,1)
-    if contains(varnamesunits{vno,1},'_per_l') && ~contains(varnamesunits{vno,1},'_flag')
-        vname = varnamesunits{vno,1}(1:end-6); %without the _per_l
-        mf = strcmp([vname '_flag'],varnamesunits(:,1));
+for vno = 1:size(vars,1)
+    if contains(vars{vno},'_per_l') && ~contains(vars{vno},'_flag')
+        vname = vars{vno}(1:end-6); %without the _per_l
         nname = [vname rlet '_per_l'];
         fname = [vname rlet '_flag'];
-        dnew.(nname) = ds_nut.(varnamesunits{vno,3})(iia);
-        dnew.(fname) = ds_nut.(varnamesunits{mf,3})(iia);
+        dnew.(nname) = ds_nut.(vars{vno})(iia);
+        dnew.(fname) = ds_nut.([vname '_flag'])(iia);
         hnew.fldnam = [hnew.fldnam nname fname];
-        hnew.fldunt = [hnew.fldunt varnamesunits{vno,2} varnamesunits{mf,2}];
+        hnew.fldunt = [hnew.fldunt 'umol_per_l' 'woce_4.9'];
     end
 end
 
-iib = setdiff(1:length(ds_nut.sampnum),iia);
+iib = setdiff([1:length(ds_nut.sampnum)]',iia);
 if ~isempty(iib)
     rlet = 'b';
-    for vno = 1:size(varnamesunits,1)
-        if contains(varnamesunits{vno,1},'_per_l') && ~contains(varnamesunits{vno,1},'_flag')
-            vname = varnamesunits{vno,1}(1:end-6); %without the _per_l
-            mf = strcmp([vname '_flag'],varnamesunits(:,1));
+    for vno = 1:size(vars,1)
+        if contains(vars{vno},'_per_l') && ~contains(vars{vno},'_flag')
+            vname = vars{vno}(1:end-6); %without the _per_l
             nname = [vname rlet '_per_l'];
             fname = [vname rlet '_flag'];
             dnew.(nname) = nan(size(dnew.sampnum));
             dnew.(fname) = dnew.(nname);
             [~,ii,iid] = intersect(ds_nut.sampnum(iib),dnew.sampnum);
-            dnew.(nname)(iid) = ds_nut.(varnamesunits{vno,3})(iib(ii));
-            dnew.(fname)(iid) = ds_nut.(varnamesunits{mf,3})(iib(ii));
+            dnew.(nname)(iid) = ds_nut.(vars{vno})(iib(ii));
+            dnew.(fname)(iid) = ds_nut.([vname '_flag'])(iib(ii));
             hnew.fldnam = [hnew.fldnam nname fname];
-            hnew.fldunt = [hnew.fldunt varnamesunits{vno,2} varnamesunits{mf,2}];
+            hnew.fldunt = [hnew.fldunt 'umol_per_l' 'woce_4.9'];
         end
     end
+end
+
+iic = setdiff([1:length(ds_nut.sampnum)]',[iia; iib]);
+if ~isempty(iic)
+    warning('ignoring %d triplicate nuts samples',length(iic))
 end
 
 hnew.dataname = sprintf('nut_%s_01',mcruise);
@@ -96,6 +102,23 @@ hnew.comment = sprintf('variables loaded from files %s in %s',npat,root_nut);
 
 opt1 = 'botnut'; opt2 = 'nut_param_flag'; get_cropt
 
+orth = 0.01;
+opt1 = 'check_sams'; get_cropt
+if check_nut
+    dsam = mload(fullfile(mgetdir('M_CTD'),sprintf('sam_%s_all',mcruise)),'sampnum upress ');
+    dnew.press = nan+dnew.sampnum; [~,ia,ib] = intersect(dnew.sampnum,dsam.sampnum); dnew.press(ia) = dsam.upress(ib);
+    vars = fieldnames(dnew); 
+    vars = vars(contains(vars,'_flag'));
+    vars = cellfun(@(x) x(1:end-5),vars);
+    figure(1); clf
+    for vno = 1:length(vars)
+        sa = dnew.([vars{vno} 'a']);
+        sb = dnew.([vars{vno} 'b']);
+        iiq = find(abs(dnew.(sa)./dnew.(sb)-1)>orth);
+        subplot(1,length(vars),vno)
+        plot(sa,-dnew.press,'.',sa(~isnan(sb)),-dnew.press(~isnan(sb)),'o',sb,-dnew.press,'s',sa(iiq),-dnew.press(iiq),'x',sb(iiq),-dnew.press(iiq),'+')
+    end
+end
 root_nut = mgetdir('bot_nut');
 otfile = fullfile(root_nut,[hnew.dataname '.nc']);
 mfsave(otfile, dnew, hnew);
