@@ -1,4 +1,4 @@
-function mwind_true(days)
+function mwind_true(ydays)
 % add smoothed nav to met wind to make true wind
 % where directions are in the wind vector sense (direction to)
 %
@@ -98,9 +98,9 @@ for no = 1:length(wfiles)
     hw.fldnam(iie) = []; hw.fldunt(iie) = [];
     dw = rmfield(dw,excl);
     tg = (floor(min(dw.time)/86400)*86400 - tav2):tave_period:(ceil(max(dw.time)/86400)*86400+1);
-    if ~isempty(days)
+    if ~isempty(ydays)
         yd = floor(tg/86400)+1;
-        tg = tg(ismember(yd,days));
+        tg = tg(ismember(yd,ydays));
         m = dw.time>=tg(1)-tave_period & dw.time<=tg(end)+tave_period;
         dw = struct2table(dw);
         dw = table2struct(dw(m,:),'ToScalar',true);

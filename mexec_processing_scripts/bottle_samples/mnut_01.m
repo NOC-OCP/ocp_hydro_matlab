@@ -109,15 +109,17 @@ if check_nut
     dnew.press = nan+dnew.sampnum; [~,ia,ib] = intersect(dnew.sampnum,dsam.sampnum); dnew.press(ia) = dsam.upress(ib);
     vars = fieldnames(dnew); 
     vars = vars(contains(vars,'_flag'));
-    vars = cellfun(@(x) x(1:end-5),vars);
+    vars = cellfun(@(x) x(1:end-6),vars,'UniformOutput',false);
+    vars = unique(vars);
     figure(1); clf
     for vno = 1:length(vars)
-        sa = dnew.([vars{vno} 'a']);
-        sb = dnew.([vars{vno} 'b']);
+        sa = [vars{vno} 'a_per_l'];
+        sb = [vars{vno} 'b_per_l'];
         iiq = find(abs(dnew.(sa)./dnew.(sb)-1)>orth);
         subplot(1,length(vars),vno)
-        plot(sa,-dnew.press,'.',sa(~isnan(sb)),-dnew.press(~isnan(sb)),'o',sb,-dnew.press,'s',sa(iiq),-dnew.press(iiq),'x',sb(iiq),-dnew.press(iiq),'+')
+        plot(dnew.(sa),-dnew.press,'.',dnew.(sa)(~isnan(dnew.(sb))),-dnew.press(~isnan(dnew.(sb))),'o',dnew.(sb),-dnew.press,'s',dnew.(sa)(iiq),-dnew.press(iiq),'x',dnew.(sb)(iiq),-dnew.press(iiq),'+')
     end
+    dnew = rmfield(dnew,'press');
 end
 root_nut = mgetdir('bot_nut');
 otfile = fullfile(root_nut,[hnew.dataname '.nc']);

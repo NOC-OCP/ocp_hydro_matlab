@@ -123,12 +123,15 @@ if isdown
     if sum(~isnan(dn2.press))<minbins
         isdown = 0;
     end
+    [dn2, hn] = copy_sensor(dn2, hn, stn);
 end
 if isup
     up2 = grid_profile(up, 'press', pg, 'lfitbin', g2opts);
+    hnu = hn;
     if sum(~isnan(up2.press))<minbins
         isup = 0;
     end
+    [up2, ~] = copy_sensor(up2, hn, stn);
 end
 if ~isdown && ~isup
     warning('neither down nor up cast has enough good data; skipping')
@@ -157,12 +160,10 @@ end
 hn.fldnam = [hn.fldnam 'depth']; hn.fldunt = [hn.fldunt 'metres'];
 
 if isdown
-    dn2.potemp = NaN+dn2.press; dn2.potemp(iigd) = gsw_pt0_from_t(dn2.asal(iigd), dn2.temp(iigd), dn2.press(iigd));
     dn2.potemp1 = NaN+dn2.press; dn2.potemp1(iigd) = gsw_pt0_from_t(dn2.asal1(iigd), dn2.temp1(iigd), dn2.press(iigd));
     dn2.potemp2 = NaN+dn2.press; dn2.potemp2(iigd) = gsw_pt0_from_t(dn2.asal2(iigd), dn2.temp2(iigd), dn2.press(iigd));
 end
 if isup
-    up2.potemp = NaN+up2.press; up2.potemp(iigu) = gsw_pt0_from_t(up2.asal(iigu), up2.temp(iigu), up2.press(iigu));
     up2.potemp2 = NaN+up2.press; up2.potemp2(iigu) = gsw_pt0_from_t(up2.asal2(iigu), up2.temp2(iigu), up2.press(iigu));
     up2.potemp1 = NaN+up2.press; up2.potemp1(iigu) = gsw_pt0_from_t(up2.asal1(iigu), up2.temp1(iigu), up2.press(iigu));
 end

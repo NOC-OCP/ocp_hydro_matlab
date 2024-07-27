@@ -174,8 +174,11 @@ switch opt1
                 uopts = mday_01_default_autoedits(h, streamtype);
                 handedit = 0;
             case 'avedit'
-                upots = struct();
-                if sum(strcmp(datatype,{'bathy','tsg'}))
+                uopts = struct();
+                vars_to_ed = setdiff(fieldnames(dg)',{'dday','time','times'});
+                if strcmp(datatype,'bathy')
+                    handedit = 1;
+                elseif strcmp(datatype,'tsg')
                     handedit = 1;
                 else
                     handedit = 0;

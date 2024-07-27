@@ -339,7 +339,7 @@ for k = 1:noflds
     end
     m = strcmp(varname{k},sns(:,1));
     if sum(m)
-        v.serial = sns{m,2};
+        v.serial = num2str(str2double(sns{m,2}));
     end
     if savefile
         m = ['writing data for variable ' v.name];

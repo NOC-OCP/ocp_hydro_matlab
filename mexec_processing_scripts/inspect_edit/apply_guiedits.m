@@ -74,7 +74,7 @@ if ~exist('donan','var')
 end
 
 %apply edits
-vars = fieldnames(donan);
+vars = intersect(fieldnames(donan),fieldnames(d));
 comment = '';
 for vno = 1:length(vars)
     bp = donan.(vars{vno});

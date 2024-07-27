@@ -43,18 +43,18 @@ switch opt1
                         so.calstr.trans.pl.dy181 = 'dcal.trans = (d0.trans-0.017)/(4.699-0.017)*100;';
                         so.instsn.trans = 'CST-112R';
                         so.calunits.trans = 'percent';
-                        so.calstr.parport.pl.dy181 = 'dcal.parport = d0.parport*(10^6/8.944);';
+                        so.calstr.parport.pl.dy181 = 'dcal.parport = d0.parport*(1e6/8.944);';
                         so.instsn.parport = 'SKE-510 28558';
-                        so.calunits.parport = 'W/m²';
-                        so.calstr.parstarboard.pl.dy181 = 'dcal.parstarboard = d0.parstarboard*(10^6/8.937);';
+                        so.calunits.parport = 'W_per_m2';
+                        so.calstr.parstarboard.pl.dy181 = 'dcal.parstarboard = d0.parstarboard*(1e6/8.937);';
                         so.instsn.parstarboard = 'SKE-510 28561';
-                        so.calunits.parstarboard = 'W/m²';
-                        so.calstr.tirport.pl.dy181 = 'dcal.tirport = d0.tirport*(10^6/9.69);';
+                        so.calunits.parstarboard = 'W_per_m2';
+                        so.calstr.tirport.pl.dy181 = 'dcal.tirport = d0.tirport*(1e6/9.69);';
                         so.instsn.tirport = 'CMP-994133';
-                        so.calunits.tirport = 'W/m²';
-                        so.calstr.tirstarboard.pl.dy181 = 'dcal.tirstarboard = d0.tirstarboard*(10^6/11.31);';
+                        so.calunits.tirport = 'W_per_m2';
+                        so.calstr.tirstarboard.pl.dy181 = 'dcal.tirstarboard = d0.tirstarboard*(1e6/11.31);';
                         so.instsn.tirstarboard = '994132';
-                        so.calunits.tirstarbaord = 'W/m²';
+                        so.calunits.tirstarboard = 'W_per_m2';
                 end
             case 'rawedit'
                 ts = (datenum(2024,7,3,15,40,0)-datenum(2024,1,1))*86400;
@@ -84,6 +84,19 @@ switch opt1
                 uo.docal.cond = 0;
                 uo.docal.psal = 0;
             case 'avedit'
+                if strcmp(datatype,'tsg')
+                    uopts.rangelim.flow = [1.1 1.8]; %***
+                    uopts.badflow.temph = [-inf 1.1; 1.8 inf; NaN NaN];
+                    uopts.badflow.conductivity = uopts.badflow.temph;
+                    uopts.badtemph.conductivity = [NaN NaN];
+                    uopts.badtemph.salinity = [NaN NaN];
+                    %vars_to_ed = {'flow'};
+                    %vars_to_ed = {'temph'};
+                    %vars_to_ed = {'conductivity'};
+                    vars_to_ed = {'salinity'};
+                elseif strcmp(datatype,'bathy')
+                    vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
+                end
             case 'bathy_grid'
                 %for background, load gridded bathymetry into xbathy, ybathy, zbathy
         end
@@ -93,6 +106,9 @@ switch opt1
             case 'minit'
                 if stn==65.1
                     stn_string = sprintf('%03dA',floor(stn)); %only used in mctd_01
+                elseif stn==84
+                    warning('no data from cast 84, skipping')
+                    return
                 end
             case 'redoctm'
                 redoctm = 1;
@@ -143,12 +159,12 @@ switch opt1
                     co.badscan.cond2 = [11004 39421];
                 end
             case 'ctd_cals'
-                co.docal.temp = 0;
+                co.docal.temp = 1;
                 co.docal.cond = 0;
                 co.docal.oxygen = 0;
-                co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([1 100],[1e-3 0e-3],d0.statnum)+interp1([0 3100],[1e-3 -0.8e-3],d0.press);';
+                co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([1 100],[1e-3 0e-3],d0.statnum) - 5e-4 +interp1([0 3100],[1e-3 -0.8e-3],d0.press);';
                 co.calstr.temp.sn34116.msg = 'SBE35 comparison, 180 low gradient points';
-                co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+interp1([0 3100],[1.8e-3 0.8e-3],d0.press);';
+                co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+interp1([0 3100],[1.8e-3 0.8e-3],d0.press) - 5e-4;';
                 co.calstr.temp.sn35838.msg = 'SBE35 comparison, 181 low gradient points';
                 co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1+interp1([0 3100],[0 -0.5e-3],d0.press)/35);';
                 co.calstr.cond.sn42580.msg = 'bottle salinity comparison, 156 low gradient points';
@@ -200,11 +216,13 @@ switch opt1
                 elseif stn==100
                     niskin_flag(ismember(position,[1 2 3])) = 3;
                 end
-                %these not-present Niskins were triggered, so there is an
-                %SBE35 measurement, but the niskin_flag itself should be 9
-                %for no sample drawn
-                niskin_flag(floor(position/2)==position/2) = 9;
-                %810, 3410, 3718, 6802, 7014, 7018
+                if stn<88
+                    %these not-present Niskins were triggered, so there is an
+                    %SBE35 measurement, but the niskin_flag itself should be 9
+                    %for no sample drawn
+                    niskin_flag(floor(position/2)==position/2) = 9;
+                    %810, 3410, 3718, 6802, 7014, 7018
+                end
             case 'niskins'
                 niskin_number = [3034:3046 7131 3048:3057]';
                 if stnlocal<88
@@ -275,20 +293,24 @@ switch opt1
                 calcsal = 1;
                 ssw_batch = 'P168';
             case 'sal_calc'
-                sal_off = [000 -.5; 001 -1; 002 -1; 003 -2; ... %10th am
-                    004 0; 005 1.5; 006 2; 007 7; ... %11th pm
-                    009 -3; 010 -1.5; 011 -1.5; 012 -2.5; ... %12th am
+                sal_off = [000 -.5; 001 -1.5; 003 -2; ... %10th am
+                    004 0; 005 1.5; 007 7; ... %11th pm
+                    009 -3; 010 -1; 012 -2.5; ... %12th am
                     013 -6; 014 -2; ... %12th pm
-                    015 -5; 016 2; 017 2; 018 1; 019 1; 020 -2; ... %14th am
+                    015 -5; 016 2; 018 1; 020 -2; ... %14th am
                     021 -7.5; 022 -2; ... %14th pm
-                    023 1.5; 026 1; 027 2; 028 2; 029 1; ... %17th am 024, 025 9.5 suspicious, maybe old
+                    023 1.5; 026 1; 027 2.5; 029 1; ... %17th am 024, 025 9.5 suspicious, maybe old
                     % samples on 19th run without standards
                     % samples on 20th run without standards
                     031 -1; 036 -1; ... %21st am
-                    037 -3.5; 038 -1; 039 -1; %21st PM. 
+                    037 -3.5; 038 4; 039 -1; %21st PM.  %***!
                     % 040 offset -8 (seems very big)
-                    041 0.5; 042 -1.5; 043 -1.5; 044 -1.5; 045 1.5;
-                    046 -1; 047 2; %23rd 17:31-18;34
+                    041 0.5; 042 -1.5; 043 -1; 045 1.5;
+                    046 0.5; 047 2; %23rd 17:31-18;34
+                    048 -4.5; 049 -5; 051 -6;
+                    052 -5.5; 053 -4;
+                    054.5 -4 % Last good vaule. 054 flagged 998 as out and not new.
+                    056 -1; 057 1; 059 3;
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
@@ -297,12 +319,16 @@ switch opt1
                 %too low (33-ish), maybe samples contaminated
                 m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
                 ds_sal.flag(m) = 4;
+
+                %Missing salinometer analysis due to blockage
+                none = ismember(ds_sal.sampnum, [9104 9105]);
+                ds_sal.flag(none) = 5;
         end
 
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {fullfile(root_oxy,'Winkler Calculation Spreadsheet_240724.xlsx')};
+                ofiles = {fullfile(root_oxy,'Winkler Calculation Spreadsheet_270724.xlsx')};
                 iih = 8;
                 hcpat = {'Longitude'};
                 chrows = 1; chunits = [];
@@ -340,13 +366,14 @@ switch opt1
                 d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
                 % outliers relative to profile/CTD (not replicates)
                 flag3 = [3617 3811 3817 4217 4219 ...
-                    811 923 5507 5509 5511 5603  5609 5613 ...
+                    811 923 5507 5509 5511 5603 5609 5613 ...
                     8801]';
                 flag4 = [3501 3507 3509 3515 3603 3607 3715 ...
                     4207 4403 5603 ...
                     601 921 4401 4415 4915 5203 5601 7209 7403 7717 7719 ...
                     8803 8815 8817 8911 8913 8915 9001 9013 9015 9021 ...
-                    9113 9117 9123]';
+                    9113 9117 9123 ...
+                    9319]';
                 d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
                 d.botoxya_flag(ismember(d.sampnum,flag3)) = 3;
                 m = d.sampnum==8315;
@@ -380,6 +407,12 @@ switch opt1
             case 'summary'
                 snames = {'nsal' 'noxy' 'nnut' 'nco2_shore'};
                 sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'totnit'} {'dic' 'talk'}};
+            case 'sam_shore'
+               fnin = fullfile(mgetdir('M_CTD'),'BOTTLE_SHORE', 'DY181 Samples for Onshore Analysis - DIC.xlsx');
+               varmap.statnum = {'CTDNumber'};
+               varmap.position = {'Niskin'};
+               varmap.dic = {'N_DICSamples'};
+               varmap.talk = {'N_DICSamples'};
             case 'exch'
                 ns = 9;
                 expocode = '74EQ20240703';

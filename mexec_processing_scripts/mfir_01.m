@@ -88,10 +88,13 @@ end
 
 comment = ['input data from ' blinfile];
 if blappend
-    h = m_read_header(blotfile_appendto);
-    h.comment = [h.comment '\n' comment];
     d.scan = scan; d.position = position; 
     d.niskin = niskin; d.niskin_flag = niskin_flag;
+    h = m_read_header(blotfile_appendto);
+    [h.fldnam,~,ib] = intersect(fieldnames(d),h.fldnam,'stable');
+    h.fldunt = h.fldunt(ib); h.fldserial = h.fldserial(ib);
+    h = rmfield(h,{'alrlim','uprlim','absent','num_absent','dimrows','dimcols','dimsset'});
+    h.comment = [h.comment '\n' comment];
     mfsave(blotfile_appendto, d, h, '-merge', 'scan')
 
 else

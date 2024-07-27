@@ -1,9 +1,9 @@
-function [d, h] = edit_by_day(d, h, edfile, ddays, btol, vars_to_ed)
+function [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, vars_to_ed)
 % apply previously selected edits then loop through days to choose new
 % edits by hand
 
 %apply previous manually selected edits
-[d, ~] = apply_guiedits(d, 'time', [edfile '*'], 0, btol);
+[d, ~] = apply_guiedits(d, 'dday', [edfile '*'], 0, btol);
 
 %choose new ones
 edgrp_all = {};

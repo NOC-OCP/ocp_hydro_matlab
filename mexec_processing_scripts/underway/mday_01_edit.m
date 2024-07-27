@@ -35,8 +35,6 @@ streamtype = mtable.paramtype{ii(1)};
 %load
 [d, h] = mload(infile,'/');
 
-ydays=[185:206]
-
 %limit to specified ydays
 if ~isempty(ydays)
     ddays = ydays-1;
@@ -52,7 +50,6 @@ if isempty(d.time)
 end
 
 cpstr = '';
-
 
 %%%%%%%%% correct and calibrate raw data %%%%%%%%%
 
@@ -96,6 +93,9 @@ timestring = sprintf('days since %d-01-01 00:00:00',MEXEC_G.MDEFAULT_DATA_TIME_O
 d.dday = m_commontime(d, 'time', h, timestring);
 h.fldnam = [h.fldnam 'dday'];
 h.fldunt = [h.fldunt timestring];
+if isfield(h,'fldserial')
+    h.fldserial = [h.fldserial ' '];
+end
 if ~isempty(uopts)
     [d, comment] = apply_autoedits(d, uopts);
     if ~isempty(comment)
@@ -106,8 +106,9 @@ if ~isempty(uopts)
 end
 if handedit
     ddays = ydays-1;
+    btol = 0.5/86400; %1/2 s
     edfile = fullfile(fileparts(otfile),'editlogs',[abbrev '_' mcruise]);
-    [d, h] = edit_by_day(d, h, edfile, ddays, 1/2, vars_to_ed);
+    [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, vars_to_ed);
 end
 
 % speed of sound correction
@@ -191,7 +192,7 @@ depvars = union(union(depbtvar,depsfvar),depvar);
 %find positions to use for carter correction
 opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 m = strcmp(default_navstream,mtable.tablenames);
-navfile = fullfile(mgetdir(''), mtable.mstardir{m}, [default_navstream '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
+navfile = fullfile(mgetdir(''), mtable.mstardir{m}, [mtable.mstarpre{m} '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
 if exist(navfile,'file')
     [dn,hn] = mload(navfile,'/');
     latstr = munderway_varname('latvar', hn.fldnam, 1, 's');
@@ -215,8 +216,9 @@ else
     lonvar = munderway_varname('lonvar',fieldnames(pos),1,'s');
     latvar = munderway_varname('latvar',fieldnames(pos),1,'s');
     ptimvar = munderway_varname('timvar',fieldnames(pos),1,'s');
-    lon = interp1(pos.(ptimvar), pos.(lonvar), d.(timvar));
-    lat = interp1(pos.(ptimvar), pos.(latvar), d.(timvar));
+    t = m_commontime(pos.(ptimvar),pos.varunits{strcmp(ptimvar,pos.varnames)},h.fldunt{strcmp(timvar,h.fldnam)});
+    lon = interp1(t, pos.(lonvar), d.(timvar));
+    lat = interp1(t, pos.(latvar), d.(timvar));
 
 end
 
