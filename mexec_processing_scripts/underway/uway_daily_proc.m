@@ -16,7 +16,7 @@
 
 m_common
 
-ydays = 207:208;
+ydays = 208:210;
 
 if ~exist('ydays','var')
     ydays = floor(now-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,1,1)); %default: yesterday
@@ -74,15 +74,19 @@ for sno = 1:length(mufiles)
         fprintf(1,'edited %s\n', mufiles{sno})
     end
 end
-return
+%return
 
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
-ctypes = {'nav','bathy','tsg'}; %important to do nav first
+ctypes = {'nav','bathy','ocean','atmos'}; %important to do nav first
 reload_av = 1; %set to 0 to just go through edit stage
 for cno = 1:length(ctypes)
     mday_02_merge_av(ctypes{cno}, ydays, mtable, reload_av);
     fprintf(1,'merged %s files\n',ctypes{cno})
 end
-mwind_true(ydays)
+
+if ismember(ctypes,'ocean')
+    disp('you could now run mtsg_bottle_ctd_compare')
+end
+
 % % make plots

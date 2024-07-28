@@ -85,7 +85,7 @@ function output = munderway_varname(varargin)
 varnames.timvar = {'time' 'measureTS' 'utctime' 'dnum'};
 
 varnames.salvar = {'sal_cal' 'salinity_calibrated' 'salinity_cal' 'salinity' 'psal' 'salinity_raw'};
-varnames.tempvar = {'housingtemp' 'temp_h' 'tstemp' 'temp_raw' 'temph_raw' 'temp_m' 'temp_housing_cal' 'temp_housing' 'temp_housing_raw' 'temperature' 'temp'};
+varnames.tempvar = {'housingtemp' 'temp_h' 'tstemp' 'temp_raw' 'temph_raw' 'temp_m' 'temp_housing_cal' 'temp_housing' 'temp_housing_raw' 'temperature' 'temp' 'temph'};
 varnames.sstvar = {'remotetemp' 'temp_r' 'sstemp' 'temp_remote' 'temp_remote_raw' 'seasurfacetemperature' 'remotewatertemperature' 'tempr' 'sst'};
 varnames.condvar = {'conductivity_calibrated' 'conductivity' 'cond' 'conductivity_raw' 'cond_raw'};
 varnames.svelvar = {'sndspeed' 'soundvelocity' 'soundvelocity_raw'};

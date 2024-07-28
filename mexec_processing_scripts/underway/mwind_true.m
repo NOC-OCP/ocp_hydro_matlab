@@ -1,4 +1,4 @@
-function mwind_true(ydays)
+function mwind_true(ydays,mtable)
 % add smoothed nav to met wind to make true wind
 % where directions are in the wind vector sense (direction to)
 %
@@ -9,10 +9,9 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-root_wnd = fullfile(MEXEC_G.mexec_data_root,'met'); %***get from mrdefine
 infilen = fullfile(MEXEC_G.mexec_data_root, 'nav', ['bestnav_' mcruise '.nc']);
-wfiles = dir(fullfile(root_wnd,'*_all_raw.nc'));
-if isempty(wfiles)
+iiw = find(strcmp('wind',mtable.paramtype));
+if isempty(iiw)
     warning('no wind files found')
     return
 end
@@ -25,19 +24,19 @@ opt1 = 'uway_proc'; opt2 = 'avtime'; get_cropt
 tave_period = round(avmet); tav2 = round(tave_period/2);
 
 %loop through wind from different instruments
-for no = 1:length(wfiles)
-    infile = fullfile(root_wnd,wfiles(no).name);
-    wpre = infile(1:end-11);
-    infilew =[wpre '_all_raw.nc'];
-    if ~exist(infilew,'file')
-        infilew = infile;
+for no = 1:length(iiw)
+    infilew = fullfile(MEXEC_G.mexec_data_root, 'met', [mtable.mstarpre{iiw(no)} '_' mcruise '_all_edt']);
+    if ~exist(m_add_nc(infilew),'file')
+        infilew = [infilew(1:end-3) 'raw'];
     end
+    wpre = mtable.mstarpre{iiw(no)};
     otfile = [wpre '_true.nc'];
 
     clear dnew hnew
 
     %wind data
     [dw, hw] = mload(infilew, '/');
+    
     
     %variable names
     ws = munderway_varname('rwindsvar',hw.fldnam,1,'s');

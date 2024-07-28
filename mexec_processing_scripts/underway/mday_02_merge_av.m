@@ -39,17 +39,17 @@ if regrid
             otfile = ['bathy_' mcruise '.nc'];
             tavp_s = 5*60; % 5 min
             gmethod = 'medbin';
-        case 'tsg'
+        case 'ocean'
             source = {'surfmet';'sbe45';'sbe38'};
             streams = {'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'};
             required = [1 1 0]; %***make cruise-specific
             otfile = ['surface_ocean_' mcruise '.nc'];
             tavp_s = 60; % 1 min
             gmethod = 'meannum';
-        case 'wind'
+        case 'atmos'
             opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
             source = {'surfmet'; 'windsonic'; 'position'};
-            streams = {'surfmet_sfmet'; 'windsonic_windsonic'; default_navstream};
+            streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'; default_navstream};
             required = [0 1 1];
             otfile = ['truewind_' mcruise '.nc'];
             tavp_s = 30; % 30 s
@@ -67,7 +67,7 @@ if regrid
 
     %gridding parameters
     opt1 = 'uway_proc'; opt2 = 'uway_av'; get_cropt
-    tavp_s = round(tavp_s); tavp = tavp/86400; %now days
+    tavp_s = round(tavp_s); tavp = tavp_s/86400; %now days
     tg = [ddays(1)-tavp/2:tavp:ddays(end)+1+tavp/2]';
     opts.ignore_nan = 1;
     opts.grid_ends = [1 1];

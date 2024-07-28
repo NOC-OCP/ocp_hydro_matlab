@@ -84,16 +84,15 @@ switch opt1
                 uo.docal.cond = 0;
                 uo.docal.psal = 0;
             case 'avedit'
-                if strcmp(datatype,'tsg')
-                    uopts.rangelim.flow = [1.1 1.8]; %***
-                    uopts.badflow.temph = [-inf 1.1; 1.8 inf; NaN NaN];
-                    uopts.badflow.conductivity = uopts.badflow.temph;
+                if strcmp(datatype,'ocean')
+                    uopts.rangelim.flow = [1 2.5]; %***
+                    uopts.badflow.temph = [NaN NaN];
+                    uopts.badflow.conductivity = [NaN NaN];
                     uopts.badtemph.conductivity = [NaN NaN];
                     uopts.badtemph.salinity = [NaN NaN];
-                    %vars_to_ed = {'flow'};
-                    %vars_to_ed = {'temph'};
-                    %vars_to_ed = {'conductivity'};
-                    vars_to_ed = {'salinity'};
+                    vars_to_ed = {'flow'};
+                    %vars_to_ed = {'temph','conductivity'};
+                    %vars_to_ed = {'temph','salinity'};
                 elseif strcmp(datatype,'bathy')
                     vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
                 end
@@ -140,6 +139,38 @@ switch opt1
                 end
             case 'oxy_align'
                 oxy_end = 1; %truncate oxygen oxy_align s before T,C
+            case 'raw_corrs'
+                if 0
+                %1
+co.oxyhyst432061.H1 = -0.029;
+                co.oxyhyst432061.H2 = 7000; %5000
+                co.oxyhyst432061.H3 = 1600; %1450
+                end
+                if 1
+  %2
+  co.oxyhyst432061.H1 = -0.029;
+  co.oxyhyst432061.H2 = 7000;
+  co.oxyhyst432061.H3 = [-10 500; 1501 1450; 3100 1450];
+                end
+                if 0
+  %3
+co.oxyhyst432061.H1 = -0.029;
+  co.oxyhyst432061.H2 = 7000;
+  co.oxyhyst432061.H3 = 1450;
+                end
+if 0
+    %4
+co.oxyhyst432061.H1 = -0.03;
+  co.oxyhyst432061.H2 = 7000;
+  co.oxyhyst432061.H3 = 1450;
+                end
+                if 1
+  %5
+  co.oxyhyst432061.H1 = -0.029;
+  co.oxyhyst432061.H2 = 7000;
+  co.oxyhyst432061.H3 = [-10 1800; 1501 1450; 3100 1450];
+                end
+%5 better than 2, maybe better than 4
             case 'rawedit_auto'
                 if stn==43
                     co.badscan.temp1 = [6.79e4 inf];
@@ -160,26 +191,26 @@ switch opt1
                 end
             case 'ctd_cals'
                 co.docal.temp = 1;
-                co.docal.cond = 0;
+                co.docal.cond = 1;
                 co.docal.oxygen = 0;
-                co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([1 100],[1e-3 0e-3],d0.statnum) - 5e-4 +interp1([0 3100],[1e-3 -0.8e-3],d0.press);';
+                co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([1 101],[1e-3 0e-3],d0.statnum) - 5e-4 +interp1([0 3100],[1e-3 -0.8e-3],d0.press);';
                 co.calstr.temp.sn34116.msg = 'SBE35 comparison, 180 low gradient points';
                 co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+interp1([0 3100],[1.8e-3 0.8e-3],d0.press) - 5e-4;';
                 co.calstr.temp.sn35838.msg = 'SBE35 comparison, 181 low gradient points';
-                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1+interp1([0 3100],[0 -0.5e-3],d0.press)/35);';
-                co.calstr.cond.sn42580.msg = 'bottle salinity comparison, 156 low gradient points';
-                %co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1+interp1([0 3100],[-5e-3 -6e-3],d0.press)/35);';
-                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1+interp1([1 100],[-6e-3 -4e-3],d0.statnum)/35 + interp1([0 3100],[0 -1e-3],d0.press)/35);';
-                co.calstr.cond.sn43258.msg = 'bottle salinity comparison, 157 low gradient points';
-                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 100],[1.038 1.05],d0.statnum);';
+                co.calstr.cond.sn42580.dy181 = 'dcal.cond = d0.cond.*(1+interp1([0 3100],[-0.5e-3 -0.5e-3],d0.press)/35);';
+                co.calstr.cond.sn42580.msg = 'bottle salinity comparison, 232 low gradient points';
+                co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1+interp1([1 101],[-6e-3 -4e-3],d0.statnum)/35 + interp1([0 3100],[0 -1.5e-3],d0.press)/35);';
+                co.calstr.cond.sn43258.msg = 'bottle salinity comparison, 249 low gradient points';
+                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 101],[1.038 1.045],d0.statnum)+interp1([0 3100],[0 2.5],d0.press);';
                 co.calstr.oxygen.sn432061.msg = 'upcast oxygen s/n 432061 adjusted to agree with 146 samples';
-                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 52 53 74 80 100],[1.025 1.02 1.05 1.05 1.03 1.03],d0.statnum);';
+                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 101],[1.02 1.035],d0.statnum)+interp1([1 101],[2 0],d0.statnum)+interp1([0 3100],[-0.5 2],d0.press);';
                 co.calstr.oxygen.sn432068.msg = 'upcast oxygen s/n 432068 adjusted to agree with 142 samples';
             case 'sensor_choice'
-                s_choice = 2; %CTD2 is on the vane and is less turbulent, especially when AHC not on
-                o_choice = 2;
-                if stn>50 && stn<80
-                    o_choice = 1; %sensor 2 sudden increased offset relative to bottle samples, appears to resolve after cleaning before stn 80
+                s_choice = 1; 
+                o_choice = 1;
+                if ismember(stn, [43 88 98])
+                    s_choice = 2;
+                    o_choice = 2;
                 end
         end
 
@@ -267,7 +298,7 @@ switch opt1
 
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
-        check_sal = 83;
+        check_sal = 100;
         check_oxy = 1;
         check_nut = 1;
         check_sbe35 = 1;
@@ -303,14 +334,20 @@ switch opt1
                     % samples on 19th run without standards
                     % samples on 20th run without standards
                     031 -1; 036 -1; ... %21st am
-                    037 -3.5; 038 4; 039 -1; %21st PM.  %***!
+                    037 -3.5; 038 4; 039 -1; ... %21st PM.  %***!
                     % 040 offset -8 (seems very big)
-                    041 0.5; 042 -1.5; 043 -1; 045 1.5;
-                    046 0.5; 047 2; %23rd 17:31-18;34
-                    048 -4.5; 049 -5; 051 -6;
-                    052 -5.5; 053 -4;
-                    054.5 -4 % Last good vaule. 054 flagged 998 as out and not new.
-                    056 -1; 057 1; 059 3;
+                    041 0.5; 042 -1.5; 043 -1; 045 1.5; ...
+                    046 0.5; 047 2; ...%23rd 17:31-18;34
+                    048 -4.5; 049 -5; 051 -6; ...
+                    052 -5.5; 053 -4; ...
+                    054.5 -4; ... % Last good vaule. 054 flagged 998 as out and not new.
+                    055 3; ... % This was run on the secondary salinometer after a leak in the first.
+                    056 -1; 057 1; 059 3; ... % Back to primary salinometer.
+                    % analysed 26 PM and 27 AM
+                    060 1; 061 2.5; 063 2.5; ...
+                    % 064 -9; HUGE offset...
+                    065 2.5; %066 3; ... %not sure if 066 was a new bottle or not
+                    067 2.5; ... % using constant value %067 -8
                     ];
                 sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
@@ -319,7 +356,7 @@ switch opt1
                 %too low (33-ish), maybe samples contaminated
                 m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
                 ds_sal.flag(m) = 4;
-
+m = ismember(ds_sal.sampnum,[6715 8810]); ds_sal.flag(m) = 3;
                 %Missing salinometer analysis due to blockage
                 none = ismember(ds_sal.sampnum, [9104 9105]);
                 ds_sal.flag(none) = 5;
@@ -367,13 +404,15 @@ switch opt1
                 % outliers relative to profile/CTD (not replicates)
                 flag3 = [3617 3811 3817 4217 4219 ...
                     811 923 5507 5509 5511 5603 5609 5613 ...
-                    8801]';
+                    8801 9405]';
                 flag4 = [3501 3507 3509 3515 3603 3607 3715 ...
                     4207 4403 5603 ...
                     601 921 4401 4415 4915 5203 5601 7209 7403 7717 7719 ...
-                    8803 8815 8817 8911 8913 8915 9001 9013 9015 9021 ...
-                    9113 9117 9123 ...
-                    9319]';
+                    8803 8815 8817 8910 8911 8912 8913 8914 8915 8922 ...
+                    9001 9013 9015 9021 ...
+                    9113 9117 9121 9123 ...
+                    9223 9319 9706]';
+                %8802, 8804, 8810, 8812, 8816, 8822
                 d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
                 d.botoxya_flag(ismember(d.sampnum,flag3)) = 3;
                 m = d.sampnum==8315;
@@ -383,7 +422,7 @@ switch opt1
     case 'botnut'
         switch opt2
             case 'nut_files'
-                ncpat = '240724*.xlsx';
+                ncpat = '*240726.xlsx';
                 hcpat = {'LAT'}; chrows = 1; chunits = 1;
             case 'nut_parse'
                 varmap.position = {'niskin_btl_number'};

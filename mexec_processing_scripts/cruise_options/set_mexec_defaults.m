@@ -178,7 +178,7 @@ switch opt1
                 vars_to_ed = setdiff(fieldnames(dg)',{'dday','time','times'});
                 if strcmp(datatype,'bathy')
                     handedit = 1;
-                elseif strcmp(datatype,'tsg')
+                elseif strcmp(datatype,'ocean')
                     handedit = 1;
                 else
                     handedit = 0;

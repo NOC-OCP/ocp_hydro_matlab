@@ -22,7 +22,7 @@ for kloop = klistl
     stn = kloop; mctd_04(stn);
     
     if MEXEC_G.ix_ladcp
-        mout_1hzasc(stn);
+    %    mout_1hzasc(stn);
     end
     
     infile2 = fullfile(root_ctd, sprintf('fir_%s_%03d',mcruise,stn));
@@ -31,15 +31,17 @@ for kloop = klistl
         continue
     end
     stn = kloop; mfir_03(stn);
-    %stn = kloop; mfir_03_extra;
+    stn = kloop; mfir_03_extra(stn);
     stn = kloop; mfir_to_sam(stn);
 
     %calculate and apply depths
-    station_summary(stn)
+    %station_summary(stn)
 %     stn = stnlocal; mdep_01
     
 end
+return
 msbe35_01(max(klistl)) %read sbe35 data, if not already done up 
+get_sensor_groups(klistl)
 
 %output to csv files
 mout_cchdo_exchangeform(klistl)
