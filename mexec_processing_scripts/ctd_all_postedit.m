@@ -35,11 +35,10 @@ for kloop = klistl
     stn = kloop; mfir_to_sam(stn);
 
     %calculate and apply depths
-    %station_summary(stn)
-%     stn = stnlocal; mdep_01
+    station_summary(stn)
+    stn = stnlocal; mdep_01
     
 end
-return
 msbe35_01(max(klistl)) %read sbe35 data, if not already done up 
 get_sensor_groups(klistl)
 

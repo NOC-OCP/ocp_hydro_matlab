@@ -17,6 +17,8 @@ function [d, h, varargout] = mday_02_calculations(d, h, stage, datatype, varargi
 %     from water depth relative to transducer and transducer offset, compute
 %       water depth relative to surface
 
+m_common
+
 if strcmp(stage,'pre')
     gvars = varargin{1}; ngvars = varargin{2}; 
     source = varargin{3};
@@ -84,39 +86,50 @@ if strcmp(stage,'pre')
                 %gridding this too?
             end
 
+        case 'ocean'
+            %put the surfmet radiation variables in atmos instead
+            exc = {'parport' 'parstarboard' 'tirport' 'tirstarboard' 'humidity' 'airpressure' 'airtemperature'}; %***munderway_vars
+            exc(~ismember(exc,h.fldnam)) = [];
+            ngvars = [ngvars exc];
+
         case 'atmos'
 
-            if ~sum(strcmp('xcomponent',h.fldnam)) %***
-                %compute x and y component (platform-relative) from speed
-                %and (compass) direction
-                ws = munderway_varname('rwindsvar',h.fldnam,1,'s');
-                wd = munderway_varname('rwinddvar',h.fldnam,1,'s');
-                if ~isempty(ws)
+            ws = munderway_varname('rwindsvar',h.fldnam,1,'s');
+            wd = munderway_varname('rwinddvar',h.fldnam,1,'s');
+            if ~isempty(ws)
+                if ~sum(strcmp('xcomponent',h.fldnam)) %***
+                    %compute x and y component (platform-relative) from speed
+                    %and (compass) direction
                     [d.xcomponent, d.ycomponent] = uvsd(d.(ws), d.(wd), 'sduv');
                     h.fldnam = [h.fldnam 'xcomponent' 'ycomponent'];
                     h.fldunt = [h.fldunt 'm/s' 'm/s']; %***
                 end
+                %load smoothed bestnav, compute ship heading as a vector
+                [dn, hn] = mload(fullfile(MEXEC_G.mexec_data_root, 'nav', ['bestnav_' MEXEC_G.MSCRIPT_CRUISE_STRING]),'/');
+                headvar = munderway_varname('headvar', hn.fldnam, 1, 's');
+                [headav_e, headav_n] = uvsd(ones(size(dn.(headvar))), dn.(headvar), 'sduv');
+                %interpolate to wind file times
+                headav = interp1(dn.dday, complex(headav_e, headav_n), d.dday);
+                %back to ship heading
+                [~, merged_heading] = uvsd(real(headav), imag(headav), 'uvsd');
+                relwind_direarth = mcrange(180+d.(wd)+merged_heading, 0, 360);
+                [relwind_e, relwind_n] = uvsd(d.(ws), relwind_direarth, 'sduv');
+                %ship velocity
+                [shipv_e, shipv_n] = uvsd(dn.smg, dn.cmg, 'sduv');
+                shipv = interp1(dn.dday, complex(shipv_e,shipv_n), d.dday);
+                %vector wind over earth
+                d.truwind_e = relwind_e + real(shipv);
+                d.truwind_n = relwind_n + imag(shipv);
+                h.fldnam = [h.fldnam 'truwind_e' 'truwind_n'];
+                h.fldunt = [h.fldunt 'm/s eastward' 'm/s northward'];
+                h.comment = [h.comment '\n truwind calculated using average nav and heading data interpolated and added to 1Hz wind data'];
+                ngvars = [ngvars ws wd 'xcomponent' 'ycomponent'];
+            else
+                exc = {'fluo' 'trans' 'flow' 'tempr' 'temph' 'conductivity' 'salinity'}; %***munderway_varname
+                exc(~ismember(exc,h.fldnam)) = [];
+                ngvars = [ngvars exc];
             end
-            %load smoothed bestnav, compute ship heading as a vector
-            [dn, hn] = mload(fullfile(MEXEC_G.mexec_data_root, 'nav', ['bestnav_' MEXEC_G.MSCRIPT_CRUISE_STRING]),'/');
-            headvar = munderway_varname('headvar', hn.fldnam, 1, 's');
-            [headav_e, headav_n] = uvsd(ones(size(dn.(headvar))), dn.(headvar), 'sduv');
-            %interpolate to wind file times
-            headav = interp1(dn.dday, complex(headav_e, headav_n), dw.dday);
-            %back to ship heading
-            [~, merged_heading] = uvsd(real(headav), imag(headav), 'uvsd');
-            relwind_direarth = mcrange(180+d.(wd)+merged_heading, 0, 360);
-            [relwind_e, relwind_n] = uvsd(d.(ws), relwind_direarth, 'sduv');
-            %ship velocity
-            [shipv_e, shipv_n] = uvsd(dn.smg, dn.cmg, 'sduv');
-            shipv = interp1(dn.dday, complex(shipv_e,shipv_n), dw.dday);
-            %vector wind over earth
-            d.truwind_e = relwind_e + real(shipv);
-            d.truwind_n = relwind_n + imag(shipv);
-            h.fldnam = [h.fldnam 'truwind_e' 'truwind_n'];
-            h.fldunt = [h.fldunt 'm/s eastward' 'm/s northward'];
-            h.comment = [h.comment '\n truwind calculated using average nav and heading data interpolated and added to 1Hz wind data'];
-            ngvars = [ngvars ws wd];
+
 
     end
 
@@ -210,19 +223,7 @@ elseif strcmp(stage, 'post')
 
         case 'ocean'
 
-            %calibrate
-            opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
-            if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
-                [dcal, hcal] = apply_calibrations(d, h, uo.calstr, uo.docal, 'q');
-                for no = 1:length(hcal.fldnam)
-                    %apply to d, and don't save uncalibrated versions
-                    d.([hcal.fldnam{no}]) = dcal.(hcal.fldnam{no});
-                end
-                if no>0
-                    h.comment = [h.comment hcal.comment];
-                end
-            end
-            %(re)calculate salinity
+            %(re)calculate salinity (to not double-apply any calibration)
             cvar = munderway_varname('condvar', h.fldnam, 1, 's');
             tvar = munderway_varname('tempvar', h.fldnam, 1, 's');
             if ~isempty(cvar) && ~isempty(tvar)
@@ -251,12 +252,25 @@ elseif strcmp(stage, 'post')
             elseif isempty(tvar)
                 warning('cond found but no temp to calculate psal in %s combined file',datatype)
             end
+            %calibrate
+            opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
+            if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
+                [dcal, hcal] = apply_calibrations(d, h, uo.calstr, uo.docal, 'q');
+                for no = 1:length(hcal.fldnam)
+                    %apply to d, and don't save uncalibrated versions
+                    d.([hcal.fldnam{no}]) = dcal.(hcal.fldnam{no});
+                end
+                if no>0
+                    h.comment = [h.comment hcal.comment];
+                end
+            end
 
         case 'atmos'
             %recalculate wind speed and direction from averaged vectors
             [d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
             h.fldnam = [h.fldnam 'truwind_spd' 'truwind_dir'];
             h.fldunt = [h.fldunt 'm_per_s' 'degrees counterclockwise of eastward']; %***
+            h.fldserial = [h.fldserial repmat(h.fldserial(strcmp('truwind_e',h.fldnam)),1,2)];
             comment = '\ntruwind calculated from vector-averaged components';
 
     end

@@ -180,7 +180,8 @@ disp(['choose a constant or simple dday-dependent correction for TSG, add to '])
 disp(['uway_proc, tsg_cals case in opt_cruise (to be applied to _edt variable(s))'])
 disp(['(or set it so it uses the smooth function shown here)'])
 
-dintake = 5;
+dintake = 3;
+ddk = 5;
 if comp2ctd
     disp('loading CTD data')
     [dsum,hsum] = mload(fullfile(mgetdir('M_SUM'),['station_summary_' mcruise '_all']),'/');
@@ -213,10 +214,10 @@ if comp2ctd
     title([calstr ' TSG'])
     xlim(dt.dday([1 end]))
      subplot(2,1,2) %nsp
-    h2 = plot(dt.dday, dt.(tempvar), db.dday, db.tsst, 'o'); grid
+    h2 = plot(dt.dday, dt.temph, dt.dday, dt.tempr, dt.dday, dt.tempdk, db.dday, db.tsst, 'o'); grid
     hold on;
     h3 = plot(dt.dday, dt.ctdt, 'r.');
-    legend([h2; h3], 'TSG','DK', 'CTD')
+    legend([h2; h3], 'TSG housing','TSG inlet','DK', 'DK','CTD')
     hold on; 
     ylabel('T (degC)'); xlabel('decimal day')
     title([calstr ' TSG'])

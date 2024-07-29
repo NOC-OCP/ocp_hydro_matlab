@@ -16,54 +16,56 @@ dto = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 timestring = ['days since ' datestr(dto,'yyyy-mm-dd HH:MM:SS')];
 ddays = ydays-1;
 
-if regrid
-    ngvars = {'utctime'}; %never grid this
-    gvars = {}; %by default grid all other variables
+ngvars = {'utctime'}; %never grid this
+gvars = {}; %by default grid all other variables
 
-    %define input and output files
-    switch datatype
-        case 'nav'
-            opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-            source = {'position'; 'heading'; 'attitude'};
-            streams = {default_navstream; default_hedstream; default_attstream};
-            required = [1 1 0];
-            otfile = ['bestnav_' mcruise '.nc'];
-            tavp_s = 30; %30 s
-            gmethod = 'meannum';
-            ngvars = [ngvars 'altitude' 'headingtrue' 'coursetrue'];
-            ngvars = [ngvars 'speedknots' 'speedkmph' 'rollaccuracy' 'pitchaccuracy' 'headingaccuracy'];
-        case 'bathy'
-            source = {'sbm'; 'mbm'};
-            streams = {'ea640_sddpt'; 'em122_kidpt'};
-            required = [0 0];
-            otfile = ['bathy_' mcruise '.nc'];
-            tavp_s = 5*60; % 5 min
-            gmethod = 'medbin';
-        case 'ocean'
-            source = {'surfmet';'sbe45';'sbe38'};
-            streams = {'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'};
-            required = [1 1 0]; %***make cruise-specific
-            otfile = ['surface_ocean_' mcruise '.nc'];
-            tavp_s = 60; % 1 min
-            gmethod = 'meannum';
-        case 'atmos'
-            opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-            source = {'surfmet'; 'windsonic'; 'position'};
-            streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'; default_navstream};
-            required = [0 1 1];
-            otfile = ['truewind_' mcruise '.nc'];
-            tavp_s = 30; % 30 s
-            gmethod = 'meannum';
-    end
-    %***check for multiple streams from same inst? not important at this
-    %stage, all will be in corresponding mstar file
-    filepre = cell(size(streams));
-    for fno = 1:length(streams)
-        m = strcmp(streams{fno},mtable.tablenames);
-        filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
-    end
-    filepre = unique(filepre);
-    otfile = fullfile(fileparts(filepre{1}),otfile);
+%define input and output files
+switch datatype
+    case 'nav'
+        opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+        source = {'position'; 'heading'; 'attitude'};
+        streams = {default_navstream; default_hedstream; default_attstream};
+        required = [1 1 0];
+        otfile = ['bestnav_' mcruise '.nc'];
+        tavp_s = 30; %30 s
+        gmethod = 'meannum';
+        ngvars = [ngvars 'altitude' 'headingtrue' 'coursetrue'];
+        ngvars = [ngvars 'speedknots' 'speedkmph' 'rollaccuracy' 'pitchaccuracy' 'headingaccuracy'];
+    case 'bathy'
+        source = {'sbm'; 'mbm'};
+        streams = {'ea640_sddpt'; 'em122_kidpt'};
+        required = [0 0];
+        otfile = ['bathy_' mcruise '.nc'];
+        tavp_s = 5*60; % 5 min
+        gmethod = 'medbin';
+    case 'ocean'
+        source = {'surfmet';'sbe45';'sbe38'};
+        streams = {'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'};
+        required = [1 1 0]; %***make cruise-specific
+        otfile = ['surface_ocean_' mcruise '.nc'];
+        tavp_s = 60; % 1 min
+        gmethod = 'meannum';
+    case 'atmos'
+        opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+        source = {'surfmet'; 'windsonic'; 'position'};
+        streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'};
+        required = [0 1 1];
+        otfile = ['atmos_truewind_' mcruise '.nc'];
+        tavp_s = 30; % 30 s
+        gmethod = 'meannum';
+end
+
+%***check for multiple streams from same inst? not important at this
+%stage, all will be in corresponding mstar file
+filepre = cell(size(streams));
+for fno = 1:length(streams)
+    m = strcmp(streams{fno},mtable.tablenames);
+    filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
+end
+filepre = unique(filepre);
+otfile = fullfile(fileparts(filepre{1}),otfile);
+
+if regrid
 
     %gridding parameters
     opt1 = 'uway_proc'; opt2 = 'uway_av'; get_cropt
@@ -114,10 +116,12 @@ if regrid
         end
         %keep these for merging
         dg.times = round(dg.dday*86400);
-        h.fldnam = [h.fldnam 'times']; 
+        h.fldnam = [h.fldnam 'times'];
         h.fldunt = [h.fldunt replace(timestring,'days','seconds')];
         if isfield(h,'fldserial')
             h.fldserial = [h.fldserial ' '];
+        else
+            h.fldserial = repmat({' '},size(h.fldnam));
         end
 
         %save
@@ -132,7 +136,7 @@ if regrid
     end
     clear dg h d tg
 
-end 
+end
 
 % load and QC combined data (all?***)
 [dg, hg] = mload(otfile,'/');

@@ -16,8 +16,6 @@
 
 m_common
 
-ydays = 208:210;
-
 if ~exist('ydays','var')
     ydays = floor(now-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,1,1)); %default: yesterday
 end
@@ -68,6 +66,7 @@ mufiles = mufiles([iin;iio]);
 if exist('never_edit','var')
     mufiles = setdiff(mufiles,never_edit);
 end
+mufiles = {'surfmet'};
 for sno = 1:length(mufiles)
     de = mday_01_edit(mufiles{sno}, ydays, mtable);
     if de

@@ -80,19 +80,23 @@ switch opt1
                     h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
                 end
             case 'tsg_cals'
-                uo.docal.temp = 0;
-                uo.docal.cond = 0;
-                uo.docal.psal = 0;
+                uo.docal.salinity = 1;
+                uo.calstr.salinity.pl.dy181 = 'dcal.salinity = d0.salinity+interp1([184 209],[0.001 0.014],d0.dday);';
+                uo.calstr.salinity.pl.msg = 'salinity adjusted by removing trend based on differences from 135 bottle salinities';
             case 'avedit'
                 if strcmp(datatype,'ocean')
                     uopts.rangelim.flow = [1 2.5]; %***
                     uopts.badflow.temph = [NaN NaN];
+                    uopts.badflow.tempr = [NaN NaN];
                     uopts.badflow.conductivity = [NaN NaN];
                     uopts.badtemph.conductivity = [NaN NaN];
                     uopts.badtemph.salinity = [NaN NaN];
-                    vars_to_ed = {'flow'};
+                    uopts.badflow.fluo = [NaN NaN];
+                    uopts.badflow.trans = [NaN NaN];
+                    %vars_to_ed = {'flow'};
                     %vars_to_ed = {'temph','conductivity'};
-                    %vars_to_ed = {'temph','salinity'};
+                    vars_to_ed = {'salinity'};
+                    vars_to_ed = {'tempr','temph'};
                 elseif strcmp(datatype,'bathy')
                     vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
                 end
@@ -140,37 +144,12 @@ switch opt1
             case 'oxy_align'
                 oxy_end = 1; %truncate oxygen oxy_align s before T,C
             case 'raw_corrs'
-                if 0
-                %1
-co.oxyhyst432061.H1 = -0.029;
-                co.oxyhyst432061.H2 = 7000; %5000
-                co.oxyhyst432061.H3 = 1600; %1450
-                end
-                if 1
-  %2
-  co.oxyhyst432061.H1 = -0.029;
-  co.oxyhyst432061.H2 = 7000;
-  co.oxyhyst432061.H3 = [-10 500; 1501 1450; 3100 1450];
-                end
-                if 0
-  %3
-co.oxyhyst432061.H1 = -0.029;
-  co.oxyhyst432061.H2 = 7000;
-  co.oxyhyst432061.H3 = 1450;
-                end
-if 0
-    %4
-co.oxyhyst432061.H1 = -0.03;
-  co.oxyhyst432061.H2 = 7000;
-  co.oxyhyst432061.H3 = 1450;
-                end
-                if 1
-  %5
-  co.oxyhyst432061.H1 = -0.029;
-  co.oxyhyst432061.H2 = 7000;
-  co.oxyhyst432061.H3 = [-10 1800; 1501 1450; 3100 1450];
-                end
-%5 better than 2, maybe better than 4
+                co.oxyhyst432061.H1 = -0.03;
+                co.oxyhyst432061.H2 = 7000;
+                co.oxyhyst432061.H3 = 1450;
+                co.oxyhyst432068.H1 = -0.033;
+                co.oxyhyst432068.H2 = 6500;
+                co.oxyhyst432068.H3 = 1450;
             case 'rawedit_auto'
                 if stn==43
                     co.badscan.temp1 = [6.79e4 inf];
@@ -192,7 +171,7 @@ co.oxyhyst432061.H1 = -0.03;
             case 'ctd_cals'
                 co.docal.temp = 1;
                 co.docal.cond = 1;
-                co.docal.oxygen = 0;
+                co.docal.oxygen = 1;
                 co.calstr.temp.sn34116.dy181 = 'dcal.temp = d0.temp+interp1([1 101],[1e-3 0e-3],d0.statnum) - 5e-4 +interp1([0 3100],[1e-3 -0.8e-3],d0.press);';
                 co.calstr.temp.sn34116.msg = 'SBE35 comparison, 180 low gradient points';
                 co.calstr.temp.sn35838.dy181 = 'dcal.temp = d0.temp+interp1([0 3100],[1.8e-3 0.8e-3],d0.press) - 5e-4;';
@@ -201,10 +180,10 @@ co.oxyhyst432061.H1 = -0.03;
                 co.calstr.cond.sn42580.msg = 'bottle salinity comparison, 232 low gradient points';
                 co.calstr.cond.sn43258.dy181 = 'dcal.cond = d0.cond.*(1+interp1([1 101],[-6e-3 -4e-3],d0.statnum)/35 + interp1([0 3100],[0 -1.5e-3],d0.press)/35);';
                 co.calstr.cond.sn43258.msg = 'bottle salinity comparison, 249 low gradient points';
-                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 101],[1.038 1.045],d0.statnum)+interp1([0 3100],[0 2.5],d0.press);';
-                co.calstr.oxygen.sn432061.msg = 'upcast oxygen s/n 432061 adjusted to agree with 146 samples';
-                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 101],[1.02 1.035],d0.statnum)+interp1([1 101],[2 0],d0.statnum)+interp1([0 3100],[-0.5 2],d0.press);';
-                co.calstr.oxygen.sn432068.msg = 'upcast oxygen s/n 432068 adjusted to agree with 142 samples';
+                co.calstr.oxygen.sn432061.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 3100],[1.045 1.065],d0.press);';%interp1([0 101],[1.038 1.045],d0.statnum)+interp1([0 3100],[0 2.5],d0.press);';
+                co.calstr.oxygen.sn432061.msg = 'comparison of upcast and density-matched downcast oxygen with 361 low-background-gradient samples';
+                co.calstr.oxygen.sn432068.dy181 = 'dcal.oxygen = d0.oxygen.*interp1([0 3100],[1.035 1.045],d0.press).*interp1([1 52 53 79 80 101],[0.99 0.99 1.02 1.02 1 1],d0.statnum);';%interp1([0 101],[1.02 1.035],d0.statnum)+interp1([1 101],[2 0],d0.statnum)+interp1([0 3100],[-0.5 2],d0.press);';
+                co.calstr.oxygen.sn432068.msg = 'comparison of upcast and density-matched downcast oxygen with 361 low-background-gradient samples';
             case 'sensor_choice'
                 s_choice = 1; 
                 o_choice = 1;

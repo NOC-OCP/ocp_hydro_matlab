@@ -42,14 +42,35 @@ end
 try
     [stat, result] = system(psql_string);
     if stat~=0
-        error('LD_LIBRARY_PATH?')
+        warning('LD_LIBRARY_PATH?')
+        [stat, result] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
+        if stat~=0
+            fid = fopen('/data/pstar/psqls_f','w');
+            fprintf(fid,'%s\n',psql_string);
+            fclose(fid);
+            [s,r] = system('/usr/bin/chmod ug+x /data/pstar/psqls_f');
+            if s==0
+                [stat,result] = system('/data/pstar/psqls_f');
+                if stat~=0
+                    fprintf(1,'in terminal, execute /data/pstar/psqls_f \n then press enter to continue')
+                    pause
+                    if exist(csvname,'file')
+                        stat = 0;
+                    else
+                        warning('check /data/pstar/psqls_f')
+                    end
+                end
+            else
+                keyboard
+            end
+        end
     end
 catch
-    [stat, result] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
+    keyboard
 end
 
 if stat~=0
-    error('failed at executing\n %s\n does your ~/.pgpass contain the correct machine:port:database:user:password?', psql_string);
+    error('failed at executing\n %s\n does your ~/.pgpass or RVDAS login file contain the correct machine:port:database:user:password?', psql_string);
 elseif ~quiet
     disp(['ran: ' psql_string])
 end
