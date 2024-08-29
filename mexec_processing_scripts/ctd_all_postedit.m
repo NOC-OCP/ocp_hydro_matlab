@@ -12,7 +12,7 @@ else
 disp('Will process stations in klist: ')
 disp(klist)
 end
-klistl = klist(:)'; clear klist
+klistl = klist(:)'; %clear klist
 
 for kloop = klistl
 
@@ -22,7 +22,7 @@ for kloop = klistl
     stn = kloop; mctd_04(stn);
     
     if MEXEC_G.ix_ladcp
-    %    mout_1hzasc(stn);
+        mout_1hzasc(stn);
     end
     
     infile2 = fullfile(root_ctd, sprintf('fir_%s_%03d',mcruise,stn));
@@ -36,7 +36,7 @@ for kloop = klistl
 
     %calculate and apply depths
     station_summary(stn)
-    stn = stnlocal; mdep_01
+    mdep_01(stn)
     
 end
 msbe35_01(max(klistl)) %read sbe35 data, if not already done up 
