@@ -52,8 +52,12 @@ if nargin>0 && strcmp(varargin{1},'redo')
 else
 
     df = dir(tabledefmat);
-    fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
-    load(tabledefmat,'mrtv')
+    if isempty(df)
+        fprintf(2,'no %s found; skipping\n',tabledefmat)
+    else
+        fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
+        load(tabledefmat,'mrtv')
+    end
 
 end
 

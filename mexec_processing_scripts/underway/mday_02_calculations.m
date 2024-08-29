@@ -233,7 +233,7 @@ elseif strcmp(stage, 'post')
                 elseif strcmp('S/m',cu) || strcmp('S_per_m',cu)
                     fac = 10;
                 else
-                    warning('cond units %s not recognised, skipping calculating psal in %s',cu,abbrev)
+                    warning('cond units %s not recognised, skipping calculating psal in %s',cu,datatype)
                     fac = [];
                 end
                 if ~isempty(fac)

@@ -57,10 +57,14 @@ end
 
 %***check for multiple streams from same inst? not important at this
 %stage, all will be in corresponding mstar file
+if isstruct(mtable)
 filepre = cell(size(streams));
 for fno = 1:length(streams)
     m = strcmp(streams{fno},mtable.tablenames);
     filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
+end
+elseif iscell(mtable)
+    filepre = mtable;
 end
 filepre = unique(filepre);
 otfile = fullfile(fileparts(filepre{1}),otfile);

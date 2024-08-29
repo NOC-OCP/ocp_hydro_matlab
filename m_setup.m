@@ -244,7 +244,6 @@ if MEXEC_G.raw_underway
         fprintf(1,'using cached %s table list / mstar lookup\n',MEXEC_G.Mshipdatasystem)
     catch
         try
-            fprintf(1,'reloading table definitions\n')
             switch MEXEC_G.Mshipdatasystem
                 case 'rvdas'
                     mrtv = mrdefine('redo');
@@ -253,6 +252,7 @@ if MEXEC_G.raw_underway
                 case 'techsas'
                     mrtv = mtdefine('redo');
             end
+            fprintf(1,'reloaded table definitions\n')
         catch
             warning('skipping underway data setup')
         end
