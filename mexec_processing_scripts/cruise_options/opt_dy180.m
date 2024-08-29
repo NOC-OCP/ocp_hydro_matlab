@@ -2,6 +2,8 @@ switch opt1
 
     case 'setup'
         switch opt2
+            case 'setup_datatypes'
+                use_ix_ladcp = 1;
             case 'time_origin'
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2024 1 1 0 0 0];
         end
@@ -46,14 +48,18 @@ switch opt1
                 if ~exist(cnvfile,'file')
                     cnvfile = fullfile(cdir,sprintf('%s_CTD%03dT.cnv',upper(mcruise),stn)); %try Ti
                 end
+            case 'rawedit_auto'
+                if stnlocal==35
+                    co.rangelim.press = [-1 8000];
+                end
+        end
+
+    case 'nisk_proc'
+        switch opt2
             case 'blfilename'
                 blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dS.bl', upper(mcruise), stn));
                 if ~exist(blinfile,'file')
                     blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dT.bl', upper(mcruise),stn));
-                end
-            case 'rawedit_auto'
-                if stnlocal==35
-                    co.rangelim.press = [-1 8000];
                 end
         end
 
