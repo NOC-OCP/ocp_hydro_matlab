@@ -134,10 +134,6 @@ if calcsal
         ds_sal.time = []; ds_sal.date = [];
         fn = ds_sal.Properties.VariableNames;
     end
-    if sum(strcmp('runtime',fn))
-        [~,ii] = sort(ds_sal.runtime);
-        ds_sal = ds_sal(ii,:);
-    end
 
     if ~sum(strcmp('flag',fn))
         ds_sal.flag = 2+zeros(size(ds_sal,1),1);
@@ -227,6 +223,10 @@ if calcsal
 
     sal_off = []; sal_off_base = 'sampnum_run'; sal_adj_comment = '';
     opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
+    if ~strcmp(sal_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
+        [~,ii] = sort(ds_sal.runtime);
+        ds_sal = ds_sal(ii,:);
+    end
 
     fn = ds_sal.Properties.VariableNames;
     [~,ii] = unique(ds_sal.sampnum,'stable');
@@ -244,32 +244,42 @@ if calcsal
         figure(10); clf
         subplot(211)
         st = ds_sal.k15*2;
-        if sum(strcmp('runtime',fn))
+        if sum(strcmp(sal_off_base,'sampnum_run'))
             x = ds_sal.runtime - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
             plot(x,ds_sal.runavg-st,'oc'); hold on
             disp('cyan o: all sample averages recorded')
             ist = 1;
         else
-            x = ds_sal.sampnum-std_samp_range(1);
-            xsu = NaN+zeros(size(iisu));
+            x = [1:length(ds_sal.sampnum)]';
+            if ~isempty(iisu) %look for neighbouring substandards
+            xsu = nan(size(iisu));
             m = ismember(iisu+1,iistd);
             xsu(m) = x(iisu(m)+1);
             m = ismember(iisu-1,iistd);
             xsu(m) = x(iisu(m)-1);
             m = isnan(xsu);
             xsu(m) = interp1(find(~m),xsu(~m),find(m));
+            end
             ist = 0;
         end
-        plot(x(iistd),ds_sal.sample_1(iistd)-st(iistd),'kx', ...
-            x(iistd),ds_sal.sample_2(iistd)-st(iistd),'r+', ...
-            x(iistd),ds_sal.sample_3(iistd)-st(iistd),'m.', ...
-            x(iistd),ds_sal.sample_4(iistd)-st(iistd),'go', ...
-            x(iistd),ds_sal.runavg(iistd)-st(iistd),'sb');
+        plot(x(iistd),st(iistd)-ds_sal.sample_1(iistd),'kx', ...
+            x(iistd),st(iistd)-ds_sal.sample_2(iistd),'r+', ...
+            x(iistd),st(iistd)-ds_sal.sample_3(iistd),'m.', ...
+            x(iistd),st(iistd)-ds_sal.sample_4(iistd),'go', ...
+            x(iistd),st(iistd)-ds_sal.runavg(iistd),'sb');
         if ist
             s = ds_sal.sampnum(iistd)-std_samp_range(1);
             text(x(iistd),zeros(1,length(iistd)),num2str(s(:)));
+            disp('labels: sequential standard number'); xlabel('day')
+        else
+            xlabel('index')
+            if sum(strcmp('runtime',ds_sal.Properties.VariableNames))
+            text(x(iistd),zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'dd'));
+            text(x(iistd),-5e-6+zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'HH:MM'));
+            disp('labels: dd;HH:MM of standard');
+            end
         end
-        ylim([-1 1]*1e-4); ylabel('autosal value - 2K15')
+        ylim([-1 1]*1e-4); ylabel('nominal (2xK15) - recorded value')
         grid on
         disp('(k,r,m): reading1, 2, 3 of standards; blue squares: average of standards. (fixed scale.)');
         cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
@@ -310,18 +320,19 @@ if calcsal
                 else
                     ds_sal.sal_off(iis) = interp1(iistd,ds_sal.sal_off(iistd),iis); %***
                 end
-            case 'sampnum_list' %offsets given using sample sampnums
-                [~,ia,ib] = intersect(ds_sal.sampnum(iistd),sal_off(:,1));
-                if ~isempty(ib) && length(ia)<length(iistd)
-                    warning('no offsets for some standards: ')
-                    disp(ds_sal.sampnum(iistd(setdiff(1:length(iistd),ia)))-std_samp_range(1))
-                end
-                if length(ib)<size(sal_off(:,1))
-                    warning('offsets present for standards not in file: ')
-                    disp(sal_off(setdiff(1:length(sal_off),ib))-std_samp_range(1))
-                end
-                ds_sal.sal_off(iistd(ia)) = sal_off(ib,2);
-                ds_sal.sal_off(iis) = interp1(iistd,ds_sal.sal_off(iistd),iis);
+            case 'sampnum_list' %offsets given using indices in ds_sal -- use this if you are missing standards
+                ds_sal.sal_off = interp1(sal_off(:,1), sal_off(:,2), [1:length(ds_sal.sampnum)]');
+                % [~,ia,ib] = intersect(ds_sal.sampnum(iistd),sal_off(:,1));
+                % if ~isempty(ib) && length(ia)<length(iistd)
+                %     warning('no offsets for some standards: ')
+                %     disp(ds_sal.sampnum(iistd(setdiff(1:length(iistd),ia)))-std_samp_range(1))
+                % end
+                % if length(ib)<size(sal_off(:,1))
+                %     warning('offsets present for standards not in file: ')
+                %     disp(sal_off(setdiff(1:length(sal_off),ib))-std_samp_range(1))
+                % end
+                % ds_sal.sal_off(iistd(ia)) = sal_off(ib,2);
+                % ds_sal.sal_off(iis) = interp1(iistd,ds_sal.sal_off(iistd),iis);
         end
     end
 

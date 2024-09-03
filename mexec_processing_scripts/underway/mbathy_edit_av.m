@@ -71,7 +71,7 @@ if regrid
     end
 
     %average to common time vector
-    tg = mint-tave_period/4:tave_period:maxt+tave_period/4;
+    tg = [mint-tave_period/4:tave_period:maxt+tave_period/4]';
     m = true(size(tg));
     clear opts
     opts.ignore_nan = 1;
@@ -85,6 +85,7 @@ if regrid
         ds = rmfield(ds,hs.fldnam(ii));
         hs.fldnam(ii) = []; hs.fldunt(ii) = [];
         dg = grid_profile(ds, 'time', tg, 'medbin', opts);
+        dg.time = (tg(1:end-1)+tg(2:end))/2;
         mfsave(avfile, dg, hs, '-merge', 'time')
         m = m | sum(~isnan(dg.(sbvar)));
     end
@@ -93,6 +94,7 @@ if regrid
         dm = rmfield(dm,hm.fldnam(ii));
         hm.fldnam(ii) = []; hm.fldunt(ii) = [];
         dg = grid_profile(dm, 'time', tg, 'medbin', opts);
+        dg.time = (tg(1:end-1)+tg(2:end))/2;
         mfsave(avfile, dg, hm, '-merge', 'time')
         m = m | sum(~isnan(dg.(mbvar)));
     end
@@ -146,6 +148,9 @@ end
 %markers, lines
 %+ or -?
 bads = gui_editpoints(dg,'time','edfilepat',edfile,'xgroups',iis_all);
+if isfield(dg,'bathymap')
+    dg = rmfield(dg,'bathymap');
+end
 
 %apply them again
 comment0 = comment; dg0 = dg;

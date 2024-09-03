@@ -9,27 +9,19 @@ switch opt1
                 calcsal = 1;
                 ssw_batch = 'P165';
             case 'sal_calc'
+                dv = datevec(ds_sal.runtime);
+                dv(dv(:,3)<30,[2 3]) = dv(dv(:,3)<30,[3 2]);
+                ds_sal.runtime = datenum(dv);
+                sal_off_base = 'sampnum_list'; %using indices, not sampnum
                 sal_off = [
-                    000 0
-                    001 0
-                    002 0
-                    003 0
-                    004 2
-                    005 2
-                    006 3
-                    007 3
-                    008 2
-                    009 2
-                    010 4
-                    011 3
-                    012 4
-                    013 4
-                    014 5
-                    015 6
+                    1 0; 11 0; ... %salinometer 65764. time gap between 1 and 11, but using constant as -4 for 11 is an outlier
+                    12 1.5; 33 1.5; 58 1.5; ... %here on: salinometer 71185
+                    59 2.5; 84 2.5; 97 2.5; ...
+                    98 4; 123 4; 144 4; ... 
+                    145 4; 158 4; ...
+                    159 5; 184 5; ... 
                     ];
-                sal_off(:,1) = sal_off(:,1)+999e3;
                 sal_off(:,2) = sal_off(:,2)*1e-5;
-                sal_off_base = 'sampnum_list'; 
         end
 
 
@@ -182,6 +174,7 @@ switch opt1
 
     case 'check_sams'
         check_oxy = 0; %step through mismatched oxygen replicates
+        check_sal = 0; %step through each station's conductivity ratio readings
 
     case 'mfir_01'
         switch opt2
