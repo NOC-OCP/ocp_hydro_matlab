@@ -87,13 +87,13 @@ else
     dirstr = '';
     udstr = 'u';
 end
-if exist('rlim','var') %supplied as input
-    p.rlim = rlim;
+if exist('prlim','var') %supplied as input
+    p.rlim = prlim;
 else
     p = [];
 end
 
-%load data
+%load d
 rootdir = mgetdir('ctd');
 [d, h] = mloadq(fullfile(rootdir, ['sam_' mcruise '_all']), '/');
 snfs = h.fldnam(strncmp(h.fldnam,'sn',2));
@@ -254,7 +254,7 @@ iib = setdiff(1:length(dc.press),p.iigc);
 scatter(dc.(p.xvar)(p.iigc), -dc.press(p.iigc), 20, dc.res(p.iigc), 'filled');
 plot(dc.(p.xvar)(p.iigc), -dc.press(p.iigc), 'ok')
 xlabel(p.xvar); xlim(p.xrange); ylim(p.presrange); ylabel('-press')
-clim(p.rlim); colorbar
+caxis(p.rlim); colorbar
 
 subplot(5,5,[21:24])
 nh = histc(dc.res, p.edges); nhgc = histc(dc.res(p.iigc), p.edges);

@@ -86,12 +86,12 @@ if ~isempty(comment)
     didedits = 1;
 end
 
+opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt %also sets oxy variable renaming
 %if we were editing _noctm file, apply align and celltm corrections now
 if co.redoctm
     d.cond1 = apply_ctd_celltm(d.time, d.temp1, d.cond1);
     d.cond2 = apply_ctd_celltm(d.time, d.temp2, d.cond2);
     h.comment = [h.comment '\n cond corrected for cell thermal mass by ctd_apply_celltm'];
-    opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
     for no = 1:size(oxyvars,1)
         d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+oxy_align);
     end
