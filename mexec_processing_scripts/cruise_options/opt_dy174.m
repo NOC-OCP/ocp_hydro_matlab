@@ -14,7 +14,7 @@ switch opt1
                 ds_sal.runtime = datenum(dv);
                 sal_off_base = 'sampnum_list'; %using indices, not sampnum
                 sal_off = [
-                    1 0; 11 0; ... %salinometer 65764. time gap between 1 and 11, but using constant as -4 for 11 is an outlier
+                    1 0; 11 0; ... %salinometer 65764. time gap between 1 (and samples) and 11, so using constant
                     12 1.5; 33 1.5; 58 1.5; ... %here on: salinometer 71185
                     59 2.5; 84 2.5; 97 2.5; ...
                     98 4; 123 4; 144 4; ... 
@@ -71,16 +71,17 @@ switch opt1
                     ];
             case 'ctd_cals'
                 co.docal.temp = 1;
-                co.docal.cond = 0;
-                co.docal.oxygen = 0;
+                co.docal.cond = 1;
+                co.docal.oxygen = 1;
                 co.calstr.temp.sn034383.dy174 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[-15 -15]/1e4,d0.press);';
                 co.calstr.temp.sn034383.msg = 'temp s/n 4383 adjusted by -1.5 mdeg to agree with SBE35; median of depths > 2500 dbar on stations 1 to 10';
                 co.calstr.temp.sn035780.dy174 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[15 15]/1e4,d0.press);';
-                co.calstr.temp.sn035780.msg = 'temp s/n 5780 adjusted by +1.5 mdeg to agree with SBE35; median of depths > 2500 dbar on stations 1 to 10';
-                co.calstr.cond.sn043874.dy174 = 'statshape = interp1([1 12],[0 -20],[1:12]); dcal.cond = d0.cond.*(1 + (interp1([1 2 3 4 5 6 7 8 9 10 11 12],( [0 0 0 0 0 0 0 0 0 0 0 0] + statshape)/1e4,d0.statnum) + interp1([-10 0 500 1000 1500 3000 4000],[-24 -24 -11 2 12 4 4]/1e4,d0.press))/35);';
-                co.calstr.cond.sn043874.msg = 'cond s/n 3874 adjusted to agree with bottle salinity up to station 10';
-                co.calstr.cond.sn044143.dy174 = 'statshape = interp1([1 12],[0 -20],[1:12]); dcal.cond = d0.cond.*(1 + (interp1([1 2 3 4 5 6 7 8 9 10 11 12],( [30 45 45 40 32 30 35 35 38 38 38 38] + statshape)/1e4,d0.statnum) + interp1([-10 0 500 1000 1500 3000 4000],[-30 -30 -10 3 13 1 1]/1e4,d0.press))/35);';
-                co.calstr.cond.sn044143.msg = 'cond s/n 4143 adjusted to agree with bottle salinity up to station 10';
+                co.calstr.cond.sn043874.dy174 = 'dcal.cond = d0.cond.*(1+ (interp1([1 12],[0 -2e-3],d0.statnum) + interp1([-10 1500 4000],[-2e-3 1e-3 0],d0.press))/35);';
+                %dcal.cond = d0.cond.*(1 + (interp1([1 12],[0 -20]/1e4,d0.statnum) + interp1([-10 0 500 1000 1500 3000 4000],[-24 -24 -11 2 12 4 4]/1e4,d0.press))/35);';
+                co.calstr.cond.sn043874.msg = 'cond s/n 3874 adjusted to agree with bottle salinity up to station 12';
+                co.calstr.cond.sn044143.dy174 = 'dcal.cond = d0.cond.*(1+ (interp1([-10 2000 4000],[1e-3 4e-3 3e-3],d0.press) + interp1([1 12],[1e-3 -1e-3],d0.statnum))/35);';
+                %statshape = interp1([1 12],[0 -20],[1:12]); dcal.cond = d0.cond.*(1 + (interp1(1:12,( [30 45 45 40 32 30 35 35 38 38 38 38] + statshape)/1e4,d0.statnum) + interp1([-10 0 500 1000 1500 3000 4000],[-30 -30 -10 3 13 1 1]/1e4,d0.press))/35);';
+                co.calstr.cond.sn044143.msg = 'cond s/n 4143 adjusted to agree with bottle salinity up to station 12';
                 co.calstr.oxygen.sn433847.dy174 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0   800    2000   3500  4000 ],[1.055 1.055 1.035  1.042  1.052 1.052],d0.press).*interp1([0  3 4 100],[1.003 1.003  1.0 1.0],d0.statnum);';
                 co.calstr.oxygen.sn433847.msg = 'upcast oxygen s/n 3847 adjusted to agree with 60 samples, after applying hysteresis correction; up/down difference after hysteresis correction is of order (1 umol/kg)';
                 co.calstr.oxygen.sn432831.dy174 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0   800    1500   3000  4000 ],[1.007 1.007 1.004  1.015  1.030 1.035],d0.press);';
@@ -242,7 +243,7 @@ switch opt1
                 snames = {'nsal' 'noxy' 'nnut' 'nco2'};
                 sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'nitr'} {'dic' 'talk'}};
             case 'exch'
-                n12 = 11; %***
+                n12 = 12; 
                 expocode = '74EQ20240328';
                 sect_id = 'RAPID-East';
                 submitter = 'OCPNOCBAK'; %group institution person
@@ -252,13 +253,13 @@ switch opt1
                     ['#EXPOCODE: ' expocode];...
                     '#DATES: 20240328 - 20240403';...
                     '#Chief Scientist: B. Moat (NOC)';...
-                    '#Supported by grants from the UK Natural Environment Research Council.'};
+                    '#Supported by RAPID-Evolution (grant NE/Y003551/1) from the UK Natural Environment Research Council.'};
                 if strcmp(in.type,'ctd')
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 24-place rosette with 12 bottles',n12);...
                         '#CTD: Who - B. King (NOC); Status - final.';...
-                        %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : COR';...
                         '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
                         }];
@@ -268,7 +269,7 @@ switch opt1
                         {sprintf('#%d stations with 24-place rosette with 12 bottles',n12);...
                         '#CTD: Who - B. King (NOC); Status - final';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
-                        %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom';...
                         '#Salinity: Who - B. King (NOC); Status - preliminary; SSW batch P165.';...
                         '#Oxygen: Who - S. Trace-Kleeberg (NOC); Status - final.';...

@@ -75,7 +75,7 @@ switch parameter
         dc.caldata = d.sbe35temp(iig0);
         dc.calflag = d.sbe35temp_flag(iig0);
         if isempty(p.rlim)
-            p.rlim = [-1 1]*1e-2;
+            p.rlim = [-5 5]*1e-3;
         end
 
     case 'cond'
