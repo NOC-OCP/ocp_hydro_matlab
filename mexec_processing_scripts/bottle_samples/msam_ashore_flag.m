@@ -18,6 +18,7 @@ for stno = 1:length(samtypes)
     fillstat = 0;
     varmap.statnum = {'ctd_number'};
     varmap.position = {'niskin'};
+    fnin = {};
     opt1 = 'outputs'; opt2 = 'sam_shore'; get_cropt
 
     %load existing sam data, so we can apply Niskin flags and also check we're
@@ -35,7 +36,7 @@ for stno = 1:length(samtypes)
     for fno = 1:length(fnin)
 
         st = readtable(fnin{fno});
-        [st, ~] = var_renamer(st, varmap);
+        [st, ~] = var_renamer(st, varmap, 1);
         fn = st.Properties.VariableNames;
         if ~sum(strcmp('sampnum',fn))
             st.sampnum = st.statnum*100+st.position;
@@ -43,7 +44,7 @@ for stno = 1:length(samtypes)
         if fillstat
             st = fill_samdata_statnum(st, varsta);
         end
-        opt1 = mfilename; opt2 = 'shore_samlog_edit'; get_cropt %place to combine columns
+        opt1 = 'outputs'; opt2 = 'sam_shore_editlog'; get_cropt %place to combine columns
         %assume we don't need to know about replicates as there will always be
         %a first sample***
         [~,ii] = unique(st.sampnum,'stable');
@@ -56,7 +57,7 @@ for stno = 1:length(samtypes)
         hsn.comment = sprintf('flags for samples collected and stored for shore analysis from %s',[fn '.' ext]);
 
         vars = setdiff(fieldnames(varmap),{'sampnum';'statnum';'position'});
-        for vno = 1:size(varmap,1)
+        for vno = 1:length(vars)
 
             %the point of these files is samples are not analysed yet, so
             %values should either be 0 or 1, or 0:N number of samples, or

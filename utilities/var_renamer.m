@@ -1,8 +1,11 @@
-function [data, unfound] = var_renamer(data, varmap)
+function [data, unfound] = var_renamer(data, varmap, varargin)
 % [data, unfound] = var_renamer(data, varmap)
+% [data, unfound] = var_renamer(data, varmap, keepold)
 %
 % rename variables in table (or fields in structure) data
 % using the mapping in structure varmap
+%
+% the fieldnames of varmap are the new variable names
 %
 % each field in varmap contains a cell array list of "old" names
 %   corresponding to the "new" name given by the fieldname
@@ -13,6 +16,14 @@ function [data, unfound] = var_renamer(data, varmap)
 %
 % "new" names with no match in data are output in cell array unfound
 % 
+% if you want to copy an existing variable ("old" name) to multiple "new"
+%   names, set optional third input argument to 1, e.g.
+%   [data, unfound] = var_renamer(data, varmap, 1);
+
+keepold = 0; 
+if nargin>2
+    keepold = varargin{1};
+end
 
 nvn = fieldnames(varmap);
 if istable(data)
@@ -33,7 +44,7 @@ for nvno = 1:length(nvn)
                 fn = fieldnames(data);
             else
                 %save to rename all later
-                if ~renamed(ia)
+                if ~renamed(ib) && ~keepold
                     fn{ib} = newname;
                     renamed(ia) = 1;
                 else

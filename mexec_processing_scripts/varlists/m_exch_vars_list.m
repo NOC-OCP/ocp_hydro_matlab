@@ -35,6 +35,8 @@ if typ==1 % this is for ctd profiles
         'CTDXMISS_FLAG_W', ' ', 'transmittance_flag', '%d'
         'CTDFLUOR','MG/M^3', 'fluor', '%7.4f'
         'CTDFLUOR_FLAG_W', ' ', 'fluor_flag', '%d'
+        'PAR', 'UMOL/M^2/SEC', 'par', '%6.5f' %par_up is up-looking (downwelling)
+        'PAR_FLAG_W', ' ', 'par_flag', '%d'
         'PAR', 'UMOL/M^2/SEC', 'par_up', '%6.5f' %par_up is up-looking (downwelling)
         'PAR_FLAG_W', ' ', 'par_up_flag', '%d'
         %'CTDPH', ' ', 'ph', '%8.4f'

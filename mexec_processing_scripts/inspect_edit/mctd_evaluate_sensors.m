@@ -188,6 +188,9 @@ for ks = 1:length(sn)
 figure(2); clf
 plot_residuals(dc, p, parameter);
 if ~isempty(printform)
+    if ~exist(printdir, 'dir')
+        mkdir(printdir)
+    end
     print(printform, fullfile(printdir, ['ctd_eval_' parameter '_' num2str(sn(ks)) '_hist' dirstr '_' datestr(now,'yyyymmddHHMM')]))
 end
 cont = input('k for keyboard prompt, enter to continue to next\n','s');

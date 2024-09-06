@@ -24,29 +24,7 @@ switch opt1
                 sal_off(:,2) = sal_off(:,2)*1e-5;
         end
 
-
-    case 'castpars'
-        switch opt2
-            case 's_choice'
-                s_choice = 2;
-                stns_alternate_s = []; % none yet
-            case 'o_choice'
-                o_choice = 2; %use sensor 2
-                stns_alternate_o = []; % none yet
-            case 'bestdeps'
-                iscor = 1;
-                xducer_offset = 0; %to be added
-                replacedeps = [
-                    1 3598    % em122
-                    6 1419    % em122
-                    ];
-                replacealt = [
-                    %                     0 90 % noted on ctd deck unit log; didn't approach closer than 90, so bad values occur close to bottom of cast
-                    %                     1 51 % noted on ctd deck unit log; altimeter was noisy, so bad values less than 50 could be selected as 'good'
-                    ];
-
-        end
-    case 'ctd_proc'
+            case 'ctd_proc'
         switch opt2
             case 'raw_corrs'
                 co.oxyhyst433847.H1 = -.043;
@@ -86,6 +64,22 @@ switch opt1
                 co.calstr.oxygen.sn433847.msg = 'upcast oxygen s/n 3847 adjusted to agree with 60 samples, after applying hysteresis correction; up/down difference after hysteresis correction is of order (1 umol/kg)';
                 co.calstr.oxygen.sn432831.dy174 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0   800    1500   3000  4000 ],[1.007 1.007 1.004  1.015  1.030 1.035],d0.press);';
                 co.calstr.oxygen.sn432831.msg = 'upcast oxygen s/n 2831 adjusted to agree with 60 samples, after applying hysteresis correction; up/down difference after hysteresis correction is of order (1 umol/kg)';
+                            case 'bestdeps'
+                iscor = 1;
+                xducer_offset = 0; %to be added
+                replacedeps = [
+                    1 3598    % em122
+                    6 1419    % em122
+                    ];
+                replacealt = [
+                    %                     0 90 % noted on ctd deck unit log; didn't approach closer than 90, so bad values occur close to bottom of cast
+                    %                     1 51 % noted on ctd deck unit log; altimeter was noisy, so bad values less than 50 could be selected as 'good'
+                    ];
+            case 'sensor_choice'
+                s_choice = 2;
+                stns_alternate_s = []; % none yet
+                o_choice = 2; %use sensor 2
+                stns_alternate_o = []; % none yet
         end
 
 
@@ -246,7 +240,7 @@ switch opt1
                 n12 = 12; 
                 expocode = '74EQ20240328';
                 sect_id = 'RAPID-East';
-                submitter = 'OCPNOCBAK'; %group institution person
+                submitter = 'OCPNOCYLF'; %group institution person
                 common_headstr = {'#SHIP: RRS Discovery';...
                     '#Cruise DY174; RAPID moorings';...
                     '#Region: Eastern North Atlantic (subtropical)';...
@@ -258,7 +252,7 @@ switch opt1
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 24-place rosette with 12 bottles',n12);...
-                        '#CTD: Who - B. King (NOC); Status - final.';...
+                        '#CTD: Who - B. King, T. Petit (NOC); Status - final.';...
                         '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : COR';...
                         '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
@@ -267,14 +261,31 @@ switch opt1
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 24-place rosette with 12 bottles',n12);...
-                        '#CTD: Who - B. King (NOC); Status - final';...
+                        '#CTD: Who - B. King, T. Petit (NOC); Status - final';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                         '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom';...
-                        '#Salinity: Who - B. King (NOC); Status - preliminary; SSW batch P165.';...
+                        '#Salinity: Who - B. King (NOC); Status - final; SSW batch P165.';...
                         '#Oxygen: Who - S. Trace-Kleeberg (NOC); Status - final.';...
                         }];
                 end
+            case 'sam_shore'
+                fnin = fullfile(MEXEC_G.mexec_data_root,'ctd','BOTTLE_SHORE','chems_log.csv');
+                varmap.dic = {'co2'};
+                varmap.talk = {'co2'};
+                varmap.phos = {'nut'};
+                varmap.silc = {'nut'};
+                varmap.totnit = {'nut'};
+        end
+
+    case 'batchactions'
+        switch opt2
+            case 'output_for_others'
+                in.type = 'ctd'; in.stnlist = klistl;
+                out.type = 'mstar'; out.bin_size = 1; out.bin_units = 'hz'; 
+                out.csvpre = fullfile(MEXEC_G.mexec_data_root,'collected_files','ctd_1hz');
+                out.vars_units = repmat({'time';'latitude';'longitude';'press';'depth';'temp';'psal';'oxygen';'dens';'pden0'},1,3);
+                mout_csv(in, out)
         end
 
 end

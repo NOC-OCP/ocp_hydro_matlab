@@ -217,7 +217,7 @@ switch opt1
                     case 41
                         niskin_flag(position==21) = 3 ;
                     case 44
-                        niskin_flag(ismember(position,[18 23])) = 3 ;  % O-ring?
+                        niskin_flag(ismember(position,[18 23])) = 3 ;  % O-ring? %***this one isn't supposed to have odds?
                     case 46
                         niskin_flag(ismember(position,[18 22])) = 3 ; % open at bottom
                         niskin_flag(ismember(position,[2 4 8 10 16])) = 3 ; % open at top
@@ -419,6 +419,9 @@ switch opt1
                 n0 = 14;
                 n12 = 100;
                 n24 = 181-1-n0-n12;
+                n = 81; %reported ones -- where any bottle is fired
+                n0 = 99; %no bottles
+                %there is also 77, aborted/not processed
                 expocode = 'FKAD20230131';
                 sect_id = 'SR1b';
                 submitter = 'OCPNOCYLF'; %group institution person
@@ -432,7 +435,7 @@ switch opt1
                 if strcmp(in.type,'ctd')
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {sprintf('#%d stations with 12-place rosette; %d stations with 24-place rosette; %d stations without bottles',n12,n24,n0);...
+                        {sprintf('#%d stations with 24-place rosette; %d stations with no bottles fired',n,n0);...
                         '#CTD: Who - Y. Firing; Status - final.';...
                         '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         '# DEPTH_TYPE   : COR';...
@@ -441,7 +444,7 @@ switch opt1
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {sprintf('#%d stations with 12-place rosette; %2d stations with 24-place rosette',n12,n24);...
+                        {sprintf('#%d stations with 24-place rosette',n);...
                         '#CTD: Who - Y. Firing (NOC); Status - final';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                         '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...

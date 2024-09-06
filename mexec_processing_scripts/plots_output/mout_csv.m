@@ -29,8 +29,8 @@ function status = mout_csv(in, out)
 %   bin_size (only used if in.type=='ctd'): integer scalar (default 2)
 %   bin_units (only used if in.type=='ctd'): 'dbar', 'm', or 'hz' (default
 %     dbar)
-%   bin_prof (only used if in.type=='ctd' & out.bin_units is 'm' or 'hz'):
-%     'down' or 'up' to average down (default) or upcast
+%   bin_prof (only used if in.type=='ctd' & out.bin_units is 'm' or
+%     'dbar'): 'down' (default) or 'up' to average down or upcast
 %   time_units (optional, only used if out.type=='mstar'): CF-format time
 %     unit string, e.g. 'days since 1900-01-01' or 'seconds since
 %     2022-07-30'
@@ -113,6 +113,7 @@ else
 end
 
 
+out0 = out;
 for kloop = klist
     
     %load file
@@ -304,7 +305,13 @@ for kloop = klist
     else
         outfile = sprintf('%s.csv',out.csvpre);
     end
-    fid = fopen(outfile,'w'); mfixperms(outfile);
+    if exist(outfile, 'file')
+        mfixperms(outfile);
+        fid = fopen(outfile,'w');
+    else
+        fid = fopen(outfile,'w'); 
+        mfixperms(outfile);
+    end
     
     %write header
     if isfield(out,'header')
@@ -357,6 +364,7 @@ for kloop = klist
     if klist~=0
         disp(['file ' num2str(kloop) ' written'])
     end
+    out = out0; %in case different variables in each file
 end
 
 
