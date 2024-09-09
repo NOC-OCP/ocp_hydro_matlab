@@ -179,6 +179,7 @@ if MEXEC_G.ix_ladcp
         {'M_LADCP' 'ladcp'
         'M_IX' fullfile('ladcp','ix')}];
 end
+opt1 = 'setup'; opt2 = 'mdirlist'; get_cropt
 
 % set things about the ship
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];

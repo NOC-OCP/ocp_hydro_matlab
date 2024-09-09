@@ -246,7 +246,7 @@ if calcsal
         st = ds_sal.k15*2;
         if sum(strcmp(sal_off_base,'sampnum_run'))
             x = ds_sal.runtime - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
-            plot(x,ds_sal.runavg-st,'oc'); hold on
+            plot(x,st-ds_sal.runavg,'oc'); hold on
             disp('cyan o: all sample averages recorded')
             ist = 1;
         else

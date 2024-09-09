@@ -6,6 +6,8 @@ switch opt1
                 use_ix_ladcp = 1;
             case 'time_origin'
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2024 1 1 0 0 0];
+            case 'mdirlist'
+                MEXEC_G.MDIRLIST{strcmp('M_BOT_SAL',MEXEC_G.MDIRLIST(:,1)),2} = fullfile('ctd','BOTTLE_SAL','AUTOSAL','Autosal Data');
         end
 
     case 'ship'
@@ -72,10 +74,40 @@ switch opt1
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
         check_sal = 0;
-        check_oxy = 0;
+        check_oxy = 1;
         check_sbe35 = 0;
 
-                    case 'outputs'
+    case 'botpsal'
+        switch opt2
+            case 'sal_files'                
+                salfiles = dir(fullfile(root_sal,['DY180*.csv'])); 
+                salfiles = {salfiles.name};
+            case 'sal_parse'
+                cellT = 21;
+                ssw_k15 = 0.99993;
+                ssw_batch = 'P168';
+            case 'sal_calc'
+                sal_off = [000 -1.5; 005 -1.5]; %10th am
+                sal_off(:,1) = sal_off(:,1)+999e3;
+                sal_off(:,2) = sal_off(:,2)*1e-5;
+                %sal_off_base = 'sampnum_list'; 
+            case 'sal_flags'
+                % 402 second sample is a low outlier
+                % 1205 third sample is a low outlier
+                % 2413 second and third samples are low and high outliers, respectively
+                % 5209 second and third samples are low and high outliers, respectively
+                % 5217 first sample is low outlier
+                % 
+%                 %too low (33-ish), maybe samples contaminated
+%                 m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
+%                 ds_sal.flag(m) = 4;
+% m = ismember(ds_sal.sampnum,[6715 8810]); ds_sal.flag(m) = 3;
+%                 %Missing salinometer analysis due to blockage
+%                 none = ismember(ds_sal.sampnum, [9104 9105]);
+%                 ds_sal.flag(none) = 5;
+        end
+
+    case 'outputs'
         switch opt2
             case 'summary'
                 snames = {'nsal' 'noxy' 'nnut' 'nco2'};

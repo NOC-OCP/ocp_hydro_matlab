@@ -214,7 +214,7 @@ switch opt1
         check_oxy = 1; %step through mismatched oxygen replicates
         check_sbe35 = 1; %display bad sbe35 lines (may error later if they are present and not flagged)
 
-    case 'botsal'
+    case 'botpsal'
         switch opt2
             case 'sal_parse'
                 calcsal = 1; %calculate from conductivity ratio and temperature
