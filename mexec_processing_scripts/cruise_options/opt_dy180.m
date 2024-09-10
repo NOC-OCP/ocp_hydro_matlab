@@ -107,6 +107,25 @@ switch opt1
 %                 ds_sal.flag(none) = 5;
         end
 
+    case 'botoxy'
+        switch opt2
+            case 'oxy_files'
+                ofiles = dir(fullfile(root_oxy,'DY180_oxy_CTD*.xls'));
+                ofiles = {ofiles.name}; 
+                %hcpat = {'Niskin';'Bottle'};
+                %chrows = 1:2;
+                %chunits = 3;
+                hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
+                chrows = 1;
+                chunits = 2;
+            case 'oxy_parse'
+                calcoxy = 1;
+                varmap.position = {'bottle'};
+                varmap.statnum = {'number'};
+                varmap.fix_temp = {'temp'};
+                varmap.conc_o2 = {'umol_per_l'};
+        end
+
     case 'outputs'
         switch opt2
             case 'summary'

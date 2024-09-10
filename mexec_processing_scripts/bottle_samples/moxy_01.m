@@ -17,7 +17,7 @@ if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file(s) specified i
 root_oxy = mgetdir('M_BOT_OXY');
 ofpat = ['oxy_' mcruise '_*.csv'];
 ofiles = dir(fullfile(root_oxy, ofpat));
-ofiles = struct2cell(ofiles); ofiles = ofiles(1,:)';
+ofiles = {ofiles.name}; %ofiles = struct2cell(ofiles); ofiles = ofiles(1,:)';
 hcpat = {'Niskin' 'Bottle' 'Number'}; 
 chrows = 1:2; chunits = 3;
 clear iopts numhead
