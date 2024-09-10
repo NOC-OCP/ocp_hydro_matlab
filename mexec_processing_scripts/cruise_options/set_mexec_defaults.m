@@ -224,6 +224,9 @@ switch opt1
         switch opt2
             case 'oxy_parse'
                 calcoxy = 1;
+            case 'oxy_calc'
+                labT = 25;
+                vol_reag_tot = 2;
             case 'oxy_flags'
                 %1 sample drawn but analysis not received, 2 acceptable, 3
                 %questionable, 4 bad, 5 not reported, 6 mean of duplicates,

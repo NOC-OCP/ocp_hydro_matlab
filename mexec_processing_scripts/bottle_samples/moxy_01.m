@@ -17,7 +17,6 @@ if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file(s) specified i
 root_oxy = mgetdir('M_BOT_OXY');
 ofpat = ['oxy_' mcruise '_*.csv'];
 ofiles = dir(fullfile(root_oxy, ofpat));
-ofiles = {ofiles.name}; %ofiles = struct2cell(ofiles); ofiles = ofiles(1,:)';
 hcpat = {'Niskin' 'Bottle' 'Number'}; 
 chrows = 1:2; chunits = 3;
 clear iopts numhead
@@ -29,6 +28,7 @@ if isempty(ofiles)
     warning(['no oxygen data files found in ' root_oxy '; skipping'])
     return
 end
+ofiles = fullfile({ofiles.folder}',{ofiles.name}');
 
 %load data
 if exist('iopts','var') && isstruct(iopts)
@@ -52,6 +52,7 @@ varmap.vol_std = {'std_vol'};
 varmap.vol_titre_std = {'standard_titre'};
 varmap.fix_temp = {'fixing_temp'};
 varmap.oxy_bottle = {'bottle no'};
+%varmap.sample_titre = {'sample_titre'};
 varmap.date_titre = {'dnum'};
 varmap.bot_vol_tfix = {'botvol_at_tfix'};
 opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt %edit map for renaming variables, and flag whether to calculate conc_o2
@@ -68,8 +69,7 @@ end
 
 if calcoxy
     %calculate concentration from titre, standard and 
-    ds_oxy = oxy_calc(ds_oxy, labT);
-
+    ds_oxy = oxy_calc(ds_oxy);
 end
 
 %make sure flags match where data are present/missing
@@ -158,10 +158,12 @@ moxy_to_sam
 %%%%%%%%%%%%%%%%%%%    subfunctions    %%%%%%%%%%%%%%%%%%%
 %----------------------------------------------------------
 
-%%% ds_oxy = oxy_calc(ds_oxy, labT)
+%%% ds_oxy = oxy_calc(ds_oxy)
 %
-function ds_oxy = oxy_calc(ds_oxy, labT)
-labT = 25; %default
+% labT is only used if bot_vol_tfix not supplied
+
+function ds_oxy = oxy_calc(ds_oxy)
+
 ds_oxy(isnan(ds_oxy.position),:) = [];
 
 %check units
@@ -173,7 +175,7 @@ oxyunits.bot_vol_tfix = {'ml' 'mls'};
 oxyunits.sample_titre = {'ml' 'mls'};
 oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
 oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
-if ~isempty(chunits) && ~isempty(ds_oxy.Properties.VariableUnits)
+if ~isempty(ds_oxy.Properties.VariableUnits)
     [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
 end
 
@@ -200,6 +202,8 @@ ds_oxy.(dname)(~bd & bt) = NaN;
 %neither oxy nor temp: 9
 ds_oxy.flag(bd & bt) = 9;
 
+opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
+
 %compute bottle volumes at fixing temperature if not present
 if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))
     if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
@@ -214,7 +218,6 @@ if sum(strcmp('conc_o2',ds_oxy_fn))==0
     std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
     sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
     mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
-    opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
     n_o2_reag = mol_o2_reag*vol_reag_tot;
     % molarity (mol/mL) of titrant
     mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);

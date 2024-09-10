@@ -80,8 +80,7 @@ switch opt1
     case 'botpsal'
         switch opt2
             case 'sal_files'                
-                salfiles = dir(fullfile(root_sal,['DY180*.csv'])); 
-                salfiles = {salfiles.name};
+                salfiles = dir(fullfile(root_sal,'DY180*.csv')); 
             case 'sal_parse'
                 cellT = 21;
                 ssw_k15 = 0.99993;
@@ -111,7 +110,6 @@ switch opt1
         switch opt2
             case 'oxy_files'
                 ofiles = dir(fullfile(root_oxy,'DY180_oxy_CTD*.xls'));
-                ofiles = {ofiles.name}; 
                 %hcpat = {'Niskin';'Bottle'};
                 %chrows = 1:2;
                 %chunits = 3;
@@ -120,10 +118,15 @@ switch opt1
                 chunits = 2;
             case 'oxy_parse'
                 calcoxy = 1;
-                varmap.position = {'bottle'};
+                labT = [];
                 varmap.statnum = {'number'};
-                varmap.fix_temp = {'temp'};
-                varmap.conc_o2 = {'umol_per_l'};
+                varmap.position = {'bottle_number'};
+                varmap.vol_blank = {'titre_mls'};
+                varmap.vol_std = {'vol_mls'};
+                varmap.vol_titre_std = {'titre_mls_1'};
+                varmap.fix_temp = {'temp_c'};
+                varmap.bot_vol_tfix = {'at_tfix_mls'};
+                varmap.sample_titre = {'titre_mls_2'};
         end
 
     case 'outputs'

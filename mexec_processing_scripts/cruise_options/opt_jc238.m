@@ -273,11 +273,10 @@ switch opt1
 
         end
 
-    case 'msal_01'
+    case 'botpsal'
         switch opt2
             case 'sal_files'
-                salfiles = dir(fullfile(root_sal, ['JC238*.csv']));
-                salfiles = {salfiles.name};
+                salfiles = dir(fullfile(root_sal, 'JC238*.csv'));
                 clear iopts; iopts.datetimeformat = 'dd/MM/uuuu'; %***for NMF files
             case 'sal_parse'
                 cellT = 24;
@@ -326,10 +325,10 @@ switch opt1
                 sal_adj_comment = ['Bottle salinities adjusted using SSW batch P165'];
         end
 
-    case 'moxy_01'
+    case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {'Winkler_Calculation_Spreadsheet_JC238_2022.xlsx'};
+                ofiles = dir(fullfile(root_oxy,'Winkler_Calculation_Spreadsheet_JC238_2022.xlsx'));
                 hcpat = {'CTD cast no.'};
                 chrows = 1;
                 chunits = [];

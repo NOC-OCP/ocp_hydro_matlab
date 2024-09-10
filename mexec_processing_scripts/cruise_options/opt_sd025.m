@@ -271,7 +271,7 @@ switch opt1
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {'oxygen_calculation_newflasks_sd025_4.xlsx'};
+                ofiles = dir(fullfile(root_oxy,'oxygen_calculation_newflasks_sd025_4.xlsx'));
                 hcpat = {'Niskin';'Bottle'};
                 chrows = 1:2;
                 chunits = 3;

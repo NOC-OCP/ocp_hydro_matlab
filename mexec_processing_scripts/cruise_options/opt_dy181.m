@@ -296,7 +296,6 @@ switch opt1
         switch opt2
             case 'sal_files'                
                 salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
-                salfiles = {salfiles.name};
             case 'sal_parse'
                 cellT = 21;
                 ssw_k15 = 0.99993;
@@ -344,7 +343,7 @@ m = ismember(ds_sal.sampnum,[6715 8810]); ds_sal.flag(m) = 3;
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {fullfile(root_oxy,'Winkler Calculation Spreadsheet_270724.xlsx')};
+                ofiles = dir(fullfile(root_oxy,'Winkler Calculation Spreadsheet_270724.xlsx'));
                 iih = 8;
                 hcpat = {'Longitude'};
                 chrows = 1; chunits = [];
@@ -359,6 +358,8 @@ m = ismember(ds_sal.sampnum,[6715 8810]); ds_sal.flag(m) = 3;
                 varmap.position = {'niskin_bot_no'};
                 varmap.fix_temp = {'fixing_temp_c'};
                 varmap.conc_o2 = {'c_o2_umol_per_l'};
+            case 'oxy_calc'
+                vol_reag_tot = 2.0397;
             case 'oxy_flags'
                 %sampnum, a flag, b flag, c flag
                 flr = [103 3 3 3; ... 

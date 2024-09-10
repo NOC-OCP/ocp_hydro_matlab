@@ -2,7 +2,7 @@ switch opt1
     case 'botpsal'
         switch opt2
             case 'sal_files'
-                salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); salfiles = {salfiles.name};
+                salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
             case 'sal_parse'
                 cellT = 21;
                 ssw_k15 = 0.99986;
@@ -86,7 +86,7 @@ switch opt1
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = {'DY174_Oxygen_Calculation.xlsx'};
+                ofiles = dir(fullfile(root_oxy,'DY174_Oxygen_Calculation.xlsx'));
                 %hcpat = {'Niskin';'Bottle'};
                 %chrows = 1:2;
                 %chunits = 3;

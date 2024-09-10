@@ -35,7 +35,7 @@ sub_samp_range = [998000 998999]; %substandards
 
 % find list of files and information on variables
 root_sal = mgetdir('M_BOT_SAL');
-salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); salfiles = {salfiles.name};
+salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); 
 hcpat = {'sampnum'}; chrows = 1; chunits = [];
 sheets = 1; iopts = struct([]);
 datform = 'dd/mm/yyyy';
@@ -44,12 +44,8 @@ opt1 = 'botpsal'; opt2 = 'sal_files'; get_cropt %list of files to load
 if isempty(salfiles)
     warning(['no salinity data files found in ' root_sal '; skipping']);
     return
-else
-    for flno = 1:length(salfiles)
-        salfiles{flno} = fullfile(root_sal,salfiles{flno});
-    end
 end
-
+salfiles = fullfile({salfiles.folder}',{salfiles.name}');
 
 %%%%%% load and parse %%%%%%
 
