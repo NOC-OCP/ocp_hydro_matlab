@@ -50,6 +50,17 @@ switch opt1
                 if ~exist(cnvfile,'file')
                     cnvfile = fullfile(cdir,sprintf('%s_CTD%03dT.cnv',upper(mcruise),stn)); %try Ti
                 end
+            case 'ctd_cals'
+                co.docal.cond = 1;
+                co.docal.oxygen = 1;
+                co.calstr.cond.sn44065.dy180 = 'dcal.cond = d0.cond.*(1-0.005/35);';
+                co.calstr.cond.sn44065.msg = '';
+                co.calstr.cond.sn44138.dy180 = 'dcal.cond = d0.cond.*(1-0.008/35);';
+                co.calstr.cond.sn44138.msg = '';
+                co.calstr.oxygen.sn2722.dy180 = 'dcal.oxygen = d0.oxygen.*interp1([0 1100],[1 1.005],d0.press).*interp1([1 52],[1.05 1.07],d0.statnum);';
+                co.calstr.oxygen.sn2722.msg = '';
+                co.calstr.oxygen.sn431882.dy180 = 'dcal.oxygen = d0.oxygen.*interp1([0 1100],[1 1.005],d0.press).*interp1([1 52],[1.020 1.030],d0.statnum);'; %1.025
+                co.calstr.oxygen.sn431882.msg = '';
             case 'rawedit_auto'
                 if stnlocal==35
                     co.rangelim.press = [-1 8000];
@@ -86,10 +97,7 @@ switch opt1
                 ssw_k15 = 0.99993;
                 ssw_batch = 'P168';
             case 'sal_calc'
-                sal_off = [000 -1.5; 005 -1.5]; %10th am
-                sal_off(:,1) = sal_off(:,1)+999e3;
-                sal_off(:,2) = sal_off(:,2)*1e-5;
-                %sal_off_base = 'sampnum_list'; 
+                salin_off = -1.5e-5; %constant
             case 'sal_flags'
                 % 402 second sample is a low outlier
                 % 1205 third sample is a low outlier
@@ -97,13 +105,8 @@ switch opt1
                 % 5209 second and third samples are low and high outliers, respectively
                 % 5217 first sample is low outlier
                 % 
-%                 %too low (33-ish), maybe samples contaminated
-%                 m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
-%                 ds_sal.flag(m) = 4;
-% m = ismember(ds_sal.sampnum,[6715 8810]); ds_sal.flag(m) = 3;
-%                 %Missing salinometer analysis due to blockage
-%                 none = ismember(ds_sal.sampnum, [9104 9105]);
-%                 ds_sal.flag(none) = 5;
+                m = ismember(ds_sal.sampnum,[1403 1406 1408 1501]);
+                ds_sal.flag(m) = 4;
         end
 
     case 'botoxy'
@@ -127,6 +130,27 @@ switch opt1
                 varmap.fix_temp = {'temp_c'};
                 varmap.bot_vol_tfix = {'at_tfix_mls'};
                 varmap.sample_titre = {'titre_mls_2'};
+            case 'oxy_flags'
+                %sampnum, a flag, b flag, c flag
+                flr = [1201 3 3 9; ... 
+                       2703 3 3 9; ... 
+                       2707 2 2 4; ...
+                       3903 9 3 4; ...
+                       3906 3 3 9; ...
+                       4403 2 2 4; ...
+                       5203 3 4 4; ... % to be further evaluated later
+                       5223 2 2 2; ...
+                      ];
+                [~,ifl,id] = intersect(flr(:,1),d.sampnum);
+                d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
+                d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
+                d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
+                % outliers relative to profile/CTD (not replicates)
+                flag4 = [1207 2716 2720 2722 2724 2705 3909 5206 5210 5214 5216 5218]';
+                d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
+                flag4b = [1501 2720]; %both a and b high, maybe bad niskin closure
+                d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
+                d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
         end
 
     case 'outputs'

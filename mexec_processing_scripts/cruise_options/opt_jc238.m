@@ -283,7 +283,7 @@ switch opt1
                 ssw_batch = 'P165';
                 ssw_k15 = 0.99986;
             case 'sal_calc'
-                sal_off = [
+                salin_off = [
                     1 1
                     2 3
                     3 3 %3 is a repeat from same bottle as 2; using value from 2
@@ -320,8 +320,8 @@ switch opt1
                     34 -2
                     35 -1
                     36 -1];
-                sal_off(:,1) = sal_off(:,1)+999000;
-                sal_off(:,2) = sal_off(:,2)*1e-5;
+                salin_off(:,1) = salin_off(:,1)+999000;
+                salin_off(:,2) = salin_off(:,2)*1e-5;
                 sal_adj_comment = ['Bottle salinities adjusted using SSW batch P165'];
         end
 

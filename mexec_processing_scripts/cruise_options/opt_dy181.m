@@ -302,7 +302,7 @@ switch opt1
                 calcsal = 1;
                 ssw_batch = 'P168';
             case 'sal_calc'
-                sal_off = [000 -.5; 001 -1.5; 003 -2; ... %10th am
+                salin_off = [000 -.5; 001 -1.5; 003 -2; ... %10th am
                     004 0; 005 1.5; 007 7; ... %11th pm
                     009 -3; 010 -1; 012 -2.5; ... %12th am
                     013 -6; 014 -2; ... %12th pm
@@ -327,14 +327,14 @@ switch opt1
                     065 2.5; %066 3; ... %not sure if 066 was a new bottle or not
                     067 2.5; ... % using constant value %067 -8
                     ];
-                sal_off(:,1) = sal_off(:,1)+999e3;
-                sal_off(:,2) = sal_off(:,2)*1e-5;
-                sal_off_base = 'sampnum_list'; 
+                salin_off(:,1) = salin_off(:,1)+999e3;
+                salin_off(:,2) = salin_off(:,2)*1e-5;
+                salin_off_base = 'sampnum_list'; 
             case 'sal_flags'
                 %too low (33-ish), maybe samples contaminated
                 m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
                 ds_sal.flag(m) = 4;
-m = ismember(ds_sal.sampnum,[6715 8810]); ds_sal.flag(m) = 3;
+                m = ismember(ds_sal.sampnum,[6715 8810]); ds_sal.flag(m) = 3;
                 %Missing salinometer analysis due to blockage
                 none = ismember(ds_sal.sampnum, [9104 9105]);
                 ds_sal.flag(none) = 5;

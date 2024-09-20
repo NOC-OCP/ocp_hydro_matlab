@@ -324,7 +324,7 @@ switch opt1
                 cellT = 21;
                 ssw_k15 = 0.99986;
             case 'sal_calc'
-                sal_off = [008 -3; 009 +1; ...
+                salin_off = [008 -3; 009 +1; ...
                     010 -2; 011 +1; 012 +0; 013 -0; ...
                     014 -4; 015 -3; 016 -2; 017 -2; 018 -3; 019 -2; 020 -2; ...
                     021 -1; 022 +1; ...
@@ -348,9 +348,9 @@ switch opt1
                     99 NaN %just to make sure we don't interpolate across the two machines!
                     101 0; 102 -1; 103 0 %very large spread/excluded 2 from 101 and 1 from 103***
                     ];
-                sal_off(:,1) = sal_off(:,1)+999e3;
-                sal_off(:,2) = sal_off(:,2)*1e-5;
-                sal_off_base = 'sampnum_list';
+                salin_off(:,1) = salin_off(:,1)+999e3;
+                salin_off(:,2) = salin_off(:,2)*1e-5;
+                salin_off_base = 'sampnum_list';
             case 'sal_flags'
                 ii = find(ds_sal.sampnum==999047):find(ds_sal.sampnum==999050);
                 ds_sal.flag(ii) = 3;

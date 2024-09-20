@@ -106,7 +106,7 @@ case 'rvdas_database'
         switch oopt
             case 'sal_calc'
                 cellT = 21;
-                sal_off = [
+                salin_off = [
                     000 -1
                     001 -4
                     002 -6
@@ -132,9 +132,9 @@ case 'rvdas_database'
                     022 +5
                     023 +3
                     ];
-                sal_off(:,1) = sal_off(:,1)+999e3;
-                sal_off(:,2) = sal_off(:,2)*1e-5;
-                sal_off_base = 'sampnum_run';
+                salin_off(:,1) = salin_off(:,1)+999e3;
+                salin_off(:,2) = salin_off(:,2)*1e-5;
+                salin_off_base = 'sampnum_run';
             case 'tsg_sampnum'
                 tsg.sampnum = dsu.sampnum;
                 tsg.dnum = datenum(num2str(tsg.sampnum),'yyyymmddHHMM');

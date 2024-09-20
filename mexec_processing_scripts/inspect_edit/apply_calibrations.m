@@ -63,10 +63,10 @@ qflag = 0;
 for no = 1:length(varargin)
     if isstruct(varargin{no})
         docal = varargin{no};
-        cflag = fieldnames(docal);
-        for vno = 1:length(cflag)
-            if ~docal.(cflag{vno}) && isfield(calstr,cflag{vno})
-                calstr = rmfield(calstr,cflag{vno});
+        cs = fieldnames(calstr);
+        for vno = 1:length(cs)
+            if ~isfield(docal,cs{vno}) || ~docal.(cs{vno})
+                calstr = rmfield(calstr,cs{vno});
             end
         end
     else

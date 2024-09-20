@@ -12,8 +12,8 @@ switch opt1
                 dv = datevec(ds_sal.runtime);
                 dv(dv(:,3)<30,[2 3]) = dv(dv(:,3)<30,[3 2]);
                 ds_sal.runtime = datenum(dv);
-                sal_off_base = 'sampnum_list'; %using indices, not sampnum
-                sal_off = [
+                salin_off_base = 'sampnum_list'; %using indices, not sampnum
+                salin_off = [
                     1 0; 11 0; ... %salinometer 65764. time gap between 1 (and samples) and 11, so using constant
                     12 1.5; 33 1.5; 58 1.5; ... %here on: salinometer 71185
                     59 2.5; 84 2.5; 97 2.5; ...
@@ -21,7 +21,7 @@ switch opt1
                     145 4; 158 4; ...
                     159 5; 184 5; ... 
                     ];
-                sal_off(:,2) = sal_off(:,2)*1e-5;
+                salin_off(:,2) = salin_off(:,2)*1e-5;
         end
 
             case 'ctd_proc'

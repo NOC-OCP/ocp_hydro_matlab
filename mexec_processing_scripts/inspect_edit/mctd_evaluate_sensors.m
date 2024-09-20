@@ -226,10 +226,10 @@ if nargin>3
 end
 
 subplot(5,5,[1:5])
-hl = plot(dc.(p.xvar), dc.ctdres, 'y+', dc.(p.xvar)(p.iigc), dc.ctdres(p.iigc), 'c+', dc.(p.xvar), dc.res, '.g', dc.(p.xvar)(p.iigc), dc.res(p.iigc), 'b.', dc.(p.xvar)(p.deep), dc.res(p.deep), '.k'); grid
+hl = plot(dc.(p.xvar), dc.ctdres, 'y+', dc.(p.xvar)(p.iigc), dc.ctdres(p.iigc), 'c+', dc.(p.xvar), dc.res, '.g', dc.(p.xvar)(p.iigc), dc.res(p.iigc), 'b.'); grid
 xlabel(p.xvarlabel); xlim(p.xrange); ylim(p.rlim); 
 set(hl(1),'color',[.8 .8 .8]); set(hl(3),'color',[.5 .5 .5])
-legend(hl([2 4 5 3]),p.colabel,p.cclabel,'deep','high var','location','southeastoutside');
+legend(hl([2 4 3]),p.colabel,p.cclabel,'high var','location','southeastoutside');
 set(gca,'xaxislocation','top')
 
 subplot(5,5,[10 15 20 25])
@@ -239,7 +239,7 @@ ylabel('-press'); ylim(p.presrange); xlim(p.rlim)
 set(gca,'yaxislocation','right')
 
 subplot(5,5,[6:9])
-hl = plot(dc.ctemp, dc.ctdres, 'y+', dc.ctemp(p.iigc), dc.ctdres(p.iigc), 'c+', dc.ctemp, dc.res, '.g', dc.ctemp(p.iigc), dc.res(p.iigc), '.b', dc.ctemp(p.deep), dc.res(p.deep), '.k'); grid
+hl = plot(dc.ctemp, dc.ctdres, 'y+', dc.ctemp(p.iigc), dc.ctdres(p.iigc), 'c+', dc.ctemp, dc.res, '.g', dc.ctemp(p.iigc), dc.res(p.iigc), '.b'); grid
 set(hl(1),'color',[.8 .8 .8]); set(hl(3),'color',[.5 .5 .5])
 xlabel('T'); ylim(p.rlim);
 

@@ -217,9 +217,9 @@ if calcsal
 
     %%%%%% standards offsets %%%%%%
 
-    sal_off = []; sal_off_base = 'sampnum_run'; sal_adj_comment = '';
+    salin_off = []; salin_off_base = 'sampnum_run'; sal_adj_comment = '';
     opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
-    if ~strcmp(sal_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
+    if ~strcmp(salin_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
         [~,ii] = sort(ds_sal.runtime);
         ds_sal = ds_sal(ii,:);
     end
@@ -240,7 +240,7 @@ if calcsal
         figure(10); clf
         subplot(211)
         st = ds_sal.k15*2;
-        if sum(strcmp(sal_off_base,'sampnum_run'))
+        if sum(strcmp(salin_off_base,'sampnum_run'))
             x = ds_sal.runtime - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
             plot(x,st-ds_sal.runavg,'oc'); hold on
             disp('cyan o: all sample averages recorded')
@@ -286,19 +286,19 @@ if calcsal
 
 
     %get offsets for samples
-    if isempty(sal_adj_comment) && ~isempty(sal_off)
+    if isempty(sal_adj_comment) && ~isempty(salin_off)
         sal_adj_comment = ['Adjustments specified in opt_' mcruise];
     end
-    if isempty(sal_off)
+    if isempty(salin_off)
         sal_adj_comment = 'no standards adjustment';
-    elseif length(sal_off)==1
-        ds_sal.sal_off = repmat(sal_off, size(ds_sal.sampnum));
-    elseif length(sal_off)==length(ds_sal.sampnum)
-        ds_sal.sal_off = sal_off;
+    elseif length(salin_off)==1
+        ds_sal.salin_off = repmat(salin_off, size(ds_sal.sampnum));
+    elseif length(salin_off)==length(ds_sal.sampnum)
+        ds_sal.salin_off = salin_off;
     else
         %interpolate
-        switch sal_off_base
-            case 'sampnum_run' %offsets given using standards sampnums; interpolate between them using runtime or order
+        switch salin_off_base
+            case 'sampnum_run' %offsets given using standards sampnums (must be found in ds_sal); interpolate between them using runtime or order
                 dt = ds_sal.runtime(iis)'-ds_sal.runtime(iistd);
                 dt(dt<0) = NaN; [dt1,ii1] = min(dt);
                 dt = ds_sal.runtime(iis)'-ds_sal.runtime(iistd);
@@ -308,34 +308,34 @@ if calcsal
                     warning('%s\n %s\n','these samples are an hour or more from any standard; if a standard was not run','on either side of each crate, sampnum_run may not be the best method:');
                     disp(ds_sal.sampnum(iis(iiw)))
                 end
-                [c,ia,ib] = intersect(sal_off(:,1),ds_sal.sampnum);
-                ds_sal.sal_off = NaN+zeros(size(ds_sal.sampnum));
-                ds_sal.sal_off(ib) = sal_off(ia,2);
+                [c,ia,ib] = intersect(salin_off(:,1),ds_sal.sampnum);
+                ds_sal.salin_off = NaN+zeros(size(ds_sal.sampnum));
+                ds_sal.salin_off(ib) = salin_off(ia,2);
                 if sum(strcmp('runtime',ds_sal.Properties.VariableNames))
-                    ds_sal.sal_off(iis) = interp1(ds_sal.runtime(iistd),ds_sal.sal_off(iistd),ds_sal.runtime(iis));
+                    ds_sal.salin_off(iis) = interp1(ds_sal.runtime(iistd),ds_sal.salin_off(iistd),ds_sal.runtime(iis));
                 else
-                    ds_sal.sal_off(iis) = interp1(iistd,ds_sal.sal_off(iistd),iis); %***
+                    ds_sal.salin_off(iis) = interp1(iistd,ds_sal.salin_off(iistd),iis); %***
                 end
-            case 'sampnum_list' %offsets given using indices in ds_sal -- use this if you are missing standards
-                ds_sal.sal_off = interp1(sal_off(:,1), sal_off(:,2), [1:length(ds_sal.sampnum)]');
-                % [~,ia,ib] = intersect(ds_sal.sampnum(iistd),sal_off(:,1));
+            case 'sampnum_list' %offsets given based on indices in ds_sal -- use this if you are missing standards (e.g. salin_off(:,1) could contain 0, or 50.5, etc.)
+                ds_sal.salin_off = interp1(salin_off(:,1), salin_off(:,2), [1:length(ds_sal.sampnum)]');
+                % [~,ia,ib] = intersect(ds_sal.sampnum(iistd),salin_off(:,1));
                 % if ~isempty(ib) && length(ia)<length(iistd)
                 %     warning('no offsets for some standards: ')
                 %     disp(ds_sal.sampnum(iistd(setdiff(1:length(iistd),ia)))-std_samp_range(1))
                 % end
-                % if length(ib)<size(sal_off(:,1))
+                % if length(ib)<size(salin_off(:,1))
                 %     warning('offsets present for standards not in file: ')
-                %     disp(sal_off(setdiff(1:length(sal_off),ib))-std_samp_range(1))
+                %     disp(salin_off(setdiff(1:length(salin_off),ib))-std_samp_range(1))
                 % end
-                % ds_sal.sal_off(iistd(ia)) = sal_off(ib,2);
-                % ds_sal.sal_off(iis) = interp1(iistd,ds_sal.sal_off(iistd),iis);
+                % ds_sal.salin_off(iistd(ia)) = salin_off(ib,2);
+                % ds_sal.salin_off(iis) = interp1(iistd,ds_sal.salin_off(iistd),iis);
         end
     end
 
     %apply offsets
     ds_sal.salinity = gsw_SP_salinometer(ds_sal.runavg/2, ds_sal.cellt); %changed on JC103 in rapid branch, after JR16002 in JCR branch
-    if ~isempty(sal_off)
-        ds_sal.salinity_adj = gsw_SP_salinometer((ds_sal.runavg+ds_sal.sal_off)/2, ds_sal.cellt);
+    if ~isempty(salin_off)
+        ds_sal.salinity_adj = gsw_SP_salinometer((ds_sal.runavg+ds_sal.salin_off)/2, ds_sal.cellt);
         iin = find(isnan(ds_sal.salinity_adj));
         ds_sal.flag(iin) = max(4,ds_sal.flag(iin));
     else
