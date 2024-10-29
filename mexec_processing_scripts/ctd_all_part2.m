@@ -30,10 +30,10 @@ msbe35_01(stn) %read sbe35 data, if not already done
 %calculate and apply depths
 station_summary(stn)
 mdep_01(stn)
-get_sensor_groups(stn)
+% get_sensor_groups(stn)
 
 %output to csv files
-mout_cchdo_exchangeform(stn)
+% mout_cchdo_exchangeform(stn)
 
 %and sync
 opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt

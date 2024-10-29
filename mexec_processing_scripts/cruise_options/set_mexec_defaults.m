@@ -86,6 +86,7 @@ switch opt1
                 %name in raw file, name in 24 hz file (don't change the 2nd
                 %column!)
                 oxyvars = {'oxygen_sbe1', 'oxygen1'; 'oxygen_sbe2', 'oxygen2'};
+                oxyunit = 'umol/kg';
                 oxy_align = 6; %number of seconds by which oxygen has been shifted in SBE processing (or should be shifted by mctd_02)
                 oxy_end = 1; %set to 1 to truncate O oxy_align seconds earlier than T, C
                 %mctd_01

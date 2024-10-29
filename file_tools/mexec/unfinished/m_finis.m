@@ -18,7 +18,9 @@ disp(' ')
 disp('Finishing up')
 end
 
-m_verson(ncfile,version_increment); %advance the version
+if isfield(MEXEC_G,'VERSION_FILE') && exist(MEXEC_G.VERSION_FILE,'file')
+    m_verson(ncfile,version_increment); %advance the version
+end
 m_add_history(ncfile);
 m_update_filedate(ncfile); % set the file update variable
 

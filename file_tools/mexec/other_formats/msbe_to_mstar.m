@@ -312,7 +312,7 @@ end
 %parse (some) sensor serial numbers from header and store temporarily
 sa = {'t090C' 't190C'; 'c0mS/cm' 'c1mS/cm'; 'sbox0Mm/Kg' 'sbox1Mm/Kg'};
 st = {'#     <TemperatureSensor'; '#     <ConductivitySensor'; '#     <OxygenSensor'};
-opt1 = 'mctd_01'; opt2 = 'track_serials'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'track_serials'; get_cropt
 sns = {};
 for sno = 1:length(st)
     ii = find(strncmp(st{sno},head,length(st{sno})));

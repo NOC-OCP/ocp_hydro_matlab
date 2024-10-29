@@ -56,10 +56,11 @@ MEXEC_G.SITE_suf = 'atNOC'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.mexec_data_root = 'C:/Users/sammon/Downloads/JC260_CTD_data/'; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
-MEXEC_G.other_programs_root = "C:/Users/sammon/'OneDrive - NOC'/scripts/";
+MEXEC_G.other_programs_root = 'C:/Users/sammon/OneDrive - NOC/scripts/';
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 MEXEC_G.raw_underway = 1; %if 0, skip the rvdas setup
+MEXEC_G.Muse_version_lockfile = 'no'; % takes value 'yes' or 'no'
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
@@ -267,7 +268,6 @@ if MEXEC_G.raw_underway
     end
 end
 
-MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -302,12 +302,12 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
     MEXEC_G.VERSION_FILE = fullfile(housekeeping_version, version_file_name);
     MEXEC.versfile = MEXEC_G.VERSION_FILE;
     MEXEC.simplelockfile = [MEXEC.versfile(1:end-4) '_lock'];
-    if exist(MEXEC_G.VERSION_FILE,'file') ~= 2
+    if exist(MEXEC_G.VERSION_FILE,'file') ~= 2 || exist(MEXEC.simplelockfile,'file')~=2
         disp('Version file does not seem to exist; will create version file and version lock file')
         datanames = {};
         versions = [];
         save(MEXEC_G.VERSION_FILE,'datanames','versions'); mfixperms(MEXEC_G.VERSION_FILE);
-        [us,~] = system(['touch ' MEXEC.simplelockfile]); mfixperms(MEXEC.simplelockfile);
+        [us,ur] = system(['touch ''' MEXEC.simplelockfile '''']); mfixperms(MEXEC.simplelockfile);
         if us == 0 && exist(MEXEC.simplelockfile,'file') == 2 % seems to be a successful create of lock file
             m = 'Version lock file touched successfully';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m)

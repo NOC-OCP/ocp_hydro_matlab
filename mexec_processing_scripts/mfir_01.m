@@ -27,12 +27,17 @@ if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,s
 dataname = ['fir_' mcruise '_' stn_string];
 blotfile = fullfile(root_ctd, dataname);
 
-cellall = mtextdload(blinfile,',',10); % load all text
+if contains(blinfile,'.bl')
+    cellall = mtextdload(blinfile,',',10); % load all text
 if size(cellall,2)<4
     warning('no bottles for cast %s; skipping',stn_string)
     return
 end
 nr = size(cellall,1);
+elseif contains(blinfile,'.btl')
+else
+warning('bottle file type not recognised')
+end
 
 n = 1;
 pos = NaN; scn = NaN;
