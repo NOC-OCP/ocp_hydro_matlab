@@ -37,7 +37,7 @@ switch opt1
             case 's_choice'
                 s_choice = 2; %fin sensor
             case 'o_choice'
-                o_choice = 2; %fin sensor
+                o_choice = 2; %fin sensor, also more consistency in Ti O sensor
 
         end
 
@@ -54,13 +54,15 @@ switch opt1
                 co.docal.cond = 1;
                 co.docal.oxygen = 1;
                 co.calstr.cond.sn44065.dy180 = 'dcal.cond = d0.cond.*(1-0.005/35);';
-                co.calstr.cond.sn44065.msg = '';
+                co.calstr.cond.sn44065.msg = 'calibration for cond 04c-4065 (cond1) based on N samples from M casts';
                 co.calstr.cond.sn44138.dy180 = 'dcal.cond = d0.cond.*(1-0.008/35);';
-                co.calstr.cond.sn44138.msg = '';
+                co.calstr.cond.sn44138.msg = 'calibration for cond 04c-4138 (cond2) based on N samples from M casts';
                 co.calstr.oxygen.sn2722.dy180 = 'dcal.oxygen = d0.oxygen.*interp1([0 1100],[1 1.005],d0.press).*interp1([1 52],[1.05 1.07],d0.statnum);';
-                co.calstr.oxygen.sn2722.msg = '';
+                co.calstr.oxygen.sn2722.msg = 'calibration for oxy 2722 (oxygen1) based on N samples from M casts';
                 co.calstr.oxygen.sn431882.dy180 = 'dcal.oxygen = d0.oxygen.*interp1([0 1100],[1 1.005],d0.press).*interp1([1 52],[1.020 1.030],d0.statnum);'; %1.025
-                co.calstr.oxygen.sn431882.msg = '';
+                co.calstr.oxygen.sn431882.msg = 'calibration for oxy 43-1882 (oxygen2) based on N samples from M casts';
+                %c1 042156, c2 043873, o1 430619, o2 0862 (what about o1 on
+                %cast1?), o2 0709 (cast 2 5 10 16)
             case 'rawedit_auto'
                 if stnlocal==35
                     co.rangelim.press = [-1 8000];
