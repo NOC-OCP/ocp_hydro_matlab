@@ -50,6 +50,7 @@ while 1
     knl = strfind(s,newline); s(knl) = []; % strip out newline chars
     kcr = strfind(s,sprintf('\r')); s(kcr) = []; % strip out carriage return chars
     kc = strfind(s,delim);
+    if klines==259; keyboard; end
     
     kparts = 0;
     % bak on JC032: set cell to empty; relevant if not all lines have the

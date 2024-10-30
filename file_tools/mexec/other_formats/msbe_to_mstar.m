@@ -28,7 +28,7 @@ fid = fopen(sfile,'r');
 head = {};
 while 1
     s = fgets(fid);
-    if strncmp('*END*',s,5); break; end
+    if ~ischar(s) || strncmp('*END*',s,5); break; end
     %knl = strfind(s,newline); s(knl) = []; % strip out newline chars
     %kcr = strfind(s,sprintf('\r')); s(kcr) = []; % strip out carriage return chars
     s = replace(replace(s,newline,''),'\r',''); % strip out newline and carriage return chars
