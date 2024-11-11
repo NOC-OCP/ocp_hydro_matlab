@@ -51,15 +51,15 @@ clear MEXEC_G
 global MEXEC_G
 
 %defaults: what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='dy181';
-MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
+MEXEC_G.MSCRIPT_CRUISE_STRING='jc269';
+MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
-MEXEC_G.mexec_data_root = '/data/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
+MEXEC_G.mexec_data_root = '/noc/mpoc/eurogoship/jc269/mcruise/data'; %if empty, will search for cruise directory near current directory and near home directory
 force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
-MEXEC_G.other_programs_root = '/data/pstar/programs/others/'; 
-MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
+MEXEC_G.other_programs_root = '/noc/mpoc/eurogoship/programs/others/'; 
+MEXEC_G.mexec_shell_scripts = '/noc/mpoc/eurogoship/programs/gitvcd/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-MEXEC_G.raw_underway = 1; %if 0, skip the rvdas setup
+MEXEC_G.raw_underway = 0; %if 0, skip the rvdas setup
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
