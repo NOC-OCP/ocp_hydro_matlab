@@ -51,6 +51,39 @@ switch opt1
                 %co.calstr.cond.sn44065.dy180 = 'dcal.cond = d0.cond.*(1-0.005/35);';
                 %co.calstr.cond.sn44065.msg = 'calibration for cond 04c-4065 (cond1) based on N samples from M casts';
             case 'rawedit_auto'
+                if stn==1
+                    co.badscan.temp2 = [4.95e4 7.9e4];
+                    co.badscan.cond2 = co.badscan.temp2;
+                    co.badscan.oxygen_sbe2 = [0 2.9e4; co.badscan.temp2];
+                elseif stn==3
+                    co.badscan.temp2 = [4.75e4 7.8e4];
+                    co.badscan.cond2 = co.badscan.temp2;
+                    co.badscan.oxygen_sbe2 = [1.8e4 2.7e4; co.badscan.temp2];
+                elseif stn==4
+                    co.badscan.oxygen_sbe1 = [1.4026e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==6
+                    co.rangelim.cond1 = [34 40];
+                    co.rangelim.cond2 = co.rangelim.cond1;
+                    co.badscan.oxygen_sbe1 = [1.3922e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==7
+                    co.badscan.oxygen_sbe1 = [1.303e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+
+                    % elseif ismember(stn,[44 45])
+                %     co.badscan.oxygen_sbe2 = [-inf inf]; %steps, all questionable
+                % elseif stn==61
+                %     co.despike.cond1 = [0.02 0.02];
+                %     co.despike.cond2 = [0.02 0.02];
+                % elseif stn==88
+                %     co.badscan.cond1 = [9.198e4 inf]; %offset, probably resolves before surface but hard to say where
+                % elseif stn==98                         %CTD clogged with jellyfish
+                %     co.badscan.oxygen_sbe1 = [39200 inf];
+                %     co.badscan.temp1 = [39200 inf];
+                %     co.badscan.cond1 = [39200 inf];
+                %     co.badscan.cond2 = [11004 39421];
+                end
         end
 
     case 'nisk_proc'
@@ -136,16 +169,16 @@ switch opt1
                 snames = {'nsal' 'noxy' 'nnut' 'nco2'};
                 sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'nitr'} {'dic' 'talk'}};
             case 'exch'
-                ns = 10; nt = 10;
-                expocode = '74EQ20240522';
+                ns = 10; nt = 10; %***
+                expocode = '740H20240904'; %***
                 sect_id = 'Bio-Carbon';
-                submitter = 'OCPNOCYLF'; %group institution person
-                common_headstr = {'#SHIP: RRS Discovery';...
-                    '#Cruise DY180; Bio Carbon spring';...
+                submitter = 'COPNOCAP'; %group institution person
+                common_headstr = {'#SHIP: RRS James Cook';...
+                    '#Cruise JC269; Bio Carbon autumn';...
                     '#Region: subpolar north Atlantic';...
                     ['#EXPOCODE: ' expocode];...
-                    '#DATES: 20240522 - 20240628';...
-                    '#Chief Scientist: S. Henson (NOC)';...
+                    '#DATES: 202409** - 202410**';...
+                    '#Chief Scientist: M. Moore (University of Southampton)';...
                     '#Supported by grants from the UK Natural Environment Research Council.'}; %***
                 if strcmp(in.type,'ctd')
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};

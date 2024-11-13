@@ -125,6 +125,6 @@ m = {'To edit out spikes, run mctd_rawedit.';
     'If you need to remove a range of scans, set doscanedit in mctd_ rawedit case of opt_ cruise';
     'If you want to remove out-of-range values or large spikes before manual despiking, set dorangeedit ';
     'or dodespike in mctd_ rawedit case of opt_ cruise';
-    'However, if there are large spikes in temperature you should instead set redoctm in the mctd_01 ';
+    'However, if there are large spikes in temperature you should instead set redoctm=1 in the ctd_proc, redoctm ';
     'case of opt_cruise, and restart the processing from the beginning'};
 sprintf('%s\n',m{:})
