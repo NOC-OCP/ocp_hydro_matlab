@@ -28,7 +28,7 @@ fid = fopen(sfile,'r');
 head = {};
 while 1
     s = fgets(fid);
-    if strncmp('*END*',s,5); break; end
+    if ~ischar(s) || strncmp('*END*',s,5); break; end
     %knl = strfind(s,newline); s(knl) = []; % strip out newline chars
     %kcr = strfind(s,sprintf('\r')); s(kcr) = []; % strip out carriage return chars
     s = replace(replace(s,newline,''),'\r',''); % strip out newline and carriage return chars
@@ -312,7 +312,7 @@ end
 %parse (some) sensor serial numbers from header and store temporarily
 sa = {'t090C' 't190C'; 'c0mS/cm' 'c1mS/cm'; 'sbox0Mm/Kg' 'sbox1Mm/Kg'};
 st = {'#     <TemperatureSensor'; '#     <ConductivitySensor'; '#     <OxygenSensor'};
-opt1 = 'mctd_01'; opt2 = 'track_serials'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'track_serials'; get_cropt
 sns = {};
 for sno = 1:length(st)
     ii = find(strncmp(st{sno},head,length(st{sno})));

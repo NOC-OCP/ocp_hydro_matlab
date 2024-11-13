@@ -12,7 +12,9 @@ end
 
 %bottle firing data into .fir file
 mfir_03(stn)
-mfir_03_extra(stn)
+if ~isempty(which('gamma_n'))
+    mfir_03_extra(stn)
+end
 %add winch data
 if win
     try

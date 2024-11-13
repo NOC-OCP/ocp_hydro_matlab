@@ -21,7 +21,7 @@ for kloop = klistl
     stn = kloop; mctd_03(stn);
     stn = kloop; mctd_04(stn);
     
-    if MEXEC_G.ix_ladcp
+    if isfield(MEXEC_G,'ix_ladcp') && MEXEC_G.ix_ladcp
         mout_1hzasc(stn);
     end
     
@@ -31,7 +31,9 @@ for kloop = klistl
         continue
     end
     stn = kloop; mfir_03(stn);
-    stn = kloop; mfir_03_extra(stn);
+    if ~isempty(which('gamma_n'))
+        stn = kloop; mfir_03_extra(stn);
+    end
     stn = kloop; mfir_to_sam(stn);
 
     %calculate and apply depths
