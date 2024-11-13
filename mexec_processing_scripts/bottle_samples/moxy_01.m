@@ -15,11 +15,11 @@ if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file(s) specified i
 
 % find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');
-ofpat = ['oxy_' mcruise '_*.csv'];
-ofiles = dir(fullfile(root_oxy, ofpat));
-hcpat = {'Niskin' 'Bottle' 'Number'}; 
-chrows = 1:2; chunits = 3;
+% defaults
+ofiles = dir(fullfile(root_oxy, ['oxy_' mcruise '_*.csv']));
+hcpat = {'Niskin' 'Bottle' 'Number'}; chrows = 1:2; chunits = 3;
 clear iopts numhead
+% change defaults in opt_cruise
 opt1 = 'botoxy'; opt2 = 'oxy_files'; get_cropt
 if ~exist('sheets','var')
     sheets = 1:99;
@@ -28,7 +28,9 @@ if isempty(ofiles)
     warning(['no oxygen data files found in ' root_oxy '; skipping'])
     return
 end
-ofiles = fullfile({ofiles.folder}',{ofiles.name}');
+if isstruct(ofiles)
+    ofiles = fullfile({ofiles.folder}',{ofiles.name}');
+end
 
 %load data
 if exist('iopts','var') && isstruct(iopts)

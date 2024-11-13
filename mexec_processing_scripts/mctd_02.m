@@ -186,6 +186,7 @@ for no = 1:nox
     d = rmfield(d,oxyvars{no,1});
     m = strcmp(oxyvars{no,1},h.fldnam);
     h.fldnam(m) = oxyvars(no,2);
+    h.fldunt{m} = oxyunit;
 end
 d = orderfields(d, h.fldnam);
 %%rename oxygen_sbe* to oxygen*
