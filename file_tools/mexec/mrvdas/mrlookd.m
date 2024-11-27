@@ -54,16 +54,20 @@ switch nargin
 end
 
 
-mrtv = mrdefine;
-mrtables_list = mrtv.tablenames;
+def = mrdefine('this_cruise');
+
+mrtables_list = def.mrtables_list;
+tablemap = def.tablemap;
+
 sortlist = sort(mrtables_list);
+
 ntables = length(sortlist);
 
 
 for kl = 1:ntables
     table = sortlist{kl};
-    ktable = strcmp(table,mrtv.tablenames);
-    mtable = mrtv.mstarpre{ktable};
+    ktable = strcmp(table,tablemap(:,2));
+    mtable = tablemap{ktable,1};
     mtablepad = [mtable '                          '];
     mtablepad = mtablepad(1:12); % mexec table, padded to length 12;
     d = mrdfinfo(table,'q',fastflag);

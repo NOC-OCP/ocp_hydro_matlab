@@ -52,21 +52,16 @@ function [dd,varnames,varunits] = mrlast(varargin)
 m_common
 
 argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-rtable = argot.table;
+table = argot.table;
 qflag = argot.qflag;
-mrtv = argot.mrtv;
 
-d = mrdfinfo('noparse','rtable',rtable,'qflag',qflag,'mrtv',mrtv);
+d = mrdfinfo(table,qflag);
 
 dstart = floor(86400*d.dn2)/86400;
 dend = ceil(86400*d.dn2)/86400;
-if isnan(dstart+dend)
-    error('mrdfinfo found no times in %s',rtable)
-end
-argot.dnums = [dstart dend];
 
 if isempty(qflag); fprintf(MEXEC_A.Mfidterm,'\n'); end
-[dd,nn,uu] = mrload('noparse',argot);
+[dd,nn,uu] = mrload(table,dstart,dend,qflag,'');
 if isempty(qflag); fprintf(MEXEC_A.Mfidterm,'\n'); end
 
 nvar = length(nn);

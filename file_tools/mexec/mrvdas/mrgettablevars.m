@@ -1,6 +1,5 @@
-function tablevars = mrgettablevars(table,varargin)
-% tablevars = mrgettablevars(table)
-% tablevars = mrgettablevars(table,quiet)
+function tablevars = mrgettablevars(table)
+% function tablevars = mrgettablevars(table)
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -12,34 +11,57 @@ function tablevars = mrgettablevars(table,varargin)
 % Look in the rvdas database and find the vars that are present for a table
 %
 % Examples
+% 
+%   tablevars = mrgettablevars('pospmv');
 %
 %   tablevars = mrgettablevars('posmv_pos_gpgga');
+%
+%   mrgettablevars pospmv; tablevars = ans;
 % 
 % Input:
 % 
-%   table: rvdas table name. It can be any of the rvdas table
+%   table: rvdas or mexec table name. It can be any of the rvdas table
 %     names, not just the ones with mexec equivalents.
 % 
 % Output:
 % 
-%   tablevars is a cell array listing the variables in the rvdas table 
+%   tablevars is a structure whose fieldnames are the variables found in the rvdas table 
 
 
 m_common
-quiet = 1; if nargin>1; quiet = varargin{1}; end
+
+def = mrdefine('this_cruise'); 
+tablemap = def.tablemap;
+ktable = find(strcmp(table,tablemap(:,1)));
+if length(ktable) == 1
+    % if table matches an mexec table name, convert it to rvdas table name.
+    table = tablemap{ktable,2}; 
+end
 
 sqltext = ['"\copy (select * from ' table ' order by time asc limit 0) to '''];
-[csvname, ~, ~] = mr_try_psql(sqltext,quiet);
+[csvname, ~, ~] = mr_try_psql(sqltext);
 
 fid = fopen(csvname,'r');
 t = fgetl(fid);  % t is now the comma delimited list of variable names
 fclose(fid);
 delete(csvname);
 
-%remove sensorid and messageid
-t = replace(replace(t,'sensorid,',''),'messageid,','');
-%turn into list of variables
-tablevars = strsplit(t,',');
+t = [',' t ','];
+kc = strfind(t,',');
+varlist = cell(0);
+for kl = 1:length(kc)-1
+    varlist = [varlist; {t(kc(kl)+1:kc(kl+1)-1)}];
+end
+
+varlist(2:3) = []; % remove 'sensorid' and 'messageid'
 
 %typically there will now be time, followed by a number of variables
-%sometimes followed by the same number of flag variables
+%followed by the same number of flag variables
+
+clear tablevars
+for kl = 1:length(varlist)
+    tablevars.(varlist{kl}) = []; % create an empty field with this name. 
+end
+
+return
+

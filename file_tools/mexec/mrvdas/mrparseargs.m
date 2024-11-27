@@ -90,11 +90,12 @@ function argot = mrparseargs(argsin)
 %   A variable list should be a single string, containing as many variable
 %     names as are required.
 %   The selection for copying from rvdas occurs in mr_make_psql.m
-%   The selection works by looking at the list of variables defined by
-%   mrtv = mrdefine ;
-%   and then search each variable in
-%   mrtv.tablevars(strcmp(argot.table,mrtv.tablenames)) to see if it
-%   matches strfind in the varlist string.
+%   The selection works by looking at the list of variables in the rvdas
+%   table.
+%   def = mrdefine;
+%   vdef = def.mrtables.(table);
+%   and then search each variable in vdef to see if it matches strfind in
+%     the varlist string.
 %   Examples of varlist strings that would match salinity and conductivity would be
 %     'salinity,conductivity'
 %     'salinity, conductivity '
@@ -108,7 +109,7 @@ function argot = mrparseargs(argsin)
 
 % Output:
 %
-% argot, a structure with fields
+% A structure with fields
 %   qflag = 'q' if 'q' was found, '' otherwise
 %   table = '' if no argument matched an mexec or rvdas table. This field
 %      is the rvdas or mexec table name if a match was found
@@ -116,13 +117,10 @@ function argot = mrparseargs(argsin)
 %   othernums an array of other numbers if found, in the order in argsin
 %   otherstrings is an array of other strings, eg a varlist for mrload or
 %     mrlistit, in the order in argsin
-%   mrtv is the output of mrdefine, a lookup for table names, variables to
-%     load, and mstar filenames, variables and units
 %
-%    So calling programs can pull dnums, othernums and otherstrings out of
+%  So calling programs can pull dnums, othernums and otherstrings out of
 %    those fields in argot, in the order in which they were entered.
-%
-% 
+
 
 m_common
 
@@ -143,11 +141,10 @@ end
 
 
 % Search for any of the arguments to be an mexec or rvdas table name
-mrtv = mrdefine;
-argot.mrtv = mrtv;
-tmap_mexec = mrtv.mstarpre;
-tmap_rvdas = mrtv.tablenames;
-rtable = '';
+def = mrdefine;
+tmap_mexec = def.tablemap(:,1);
+tmap_rvdas = def.tablemap(:,2);
+table = '';
 nargs = length(allargs);
 for ka = 1:nargs
     arg = allargs{ka};
@@ -155,18 +152,12 @@ for ka = 1:nargs
     if ~ischar(arg); continue; end % not a char argument
     if sum(strcmp(arg,tmap_mexec))>=1 || sum(strcmp(arg,tmap_rvdas))>=1
         ftab = 1;
-        rtable = arg;
+        table = arg;
         allargs(ka) = [];
         break %only find up to one table name
     end
 end
-if isempty(rtable)
-    mrtv.tablenames
-    rtable = input('no valid rvdas table names found, which of the tables above do you want?   ','s');
-    if isempty(rtable)
-        error('no valid rvdas table name found')
-    end
-end
+
 
 % If any of the arguments are character strings that start with the text 'now'
 % these are probably times, so evaluate the string.
@@ -272,6 +263,6 @@ end
 argot.othernums = fliplr(othernums);  % flip because we parse from the end of the arguments
 argot.otherstrings = fliplr(otherstrings);  % flip because we parse from the end of the arguments
 argot.dnums = fliplr(dnums);
-argot.table = rtable;
+argot.table = table;
 argot.qflag = qflag;
 return

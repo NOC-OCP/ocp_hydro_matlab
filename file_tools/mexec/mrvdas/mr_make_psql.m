@@ -1,5 +1,5 @@
-function sqltext = mr_make_psql(varargin)
-% function sqltext = mr_make_psql(table,dv1,dv2,varlist)
+function [sqltext,sqlunits]= mr_make_psql(varargin)
+% function [sqltext,sqlunits]= mr_make_psql(table,dv1,dv2,varlist)
 % 
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -40,41 +40,43 @@ function sqltext = mr_make_psql(varargin)
 %
 % sqltext: command for the psql string to be executed
 %
+% csvname: The full pathname of a csv file that will be used for output
+%   from rvdas and input to matlab load.
+% 
+% sqlunits: The units associated with the variables that will be retrieved
+%
+% Authentication on rvdas:
+%
+% The file /local/users/pstar/.pgpass contains authentication details so
+% commands run on koaeula retrieve data from rvdas. No need to mount rvdas
+% on koaeula.
+%
+% #hostname:port:database:username:password
+% rvdas.cook.local:5432:preJC211_2:rvdas:rvdas
+% rvdas.cook.local:5432:JC211:rvdas:rvdas
 
 
 m_common
 opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
 
-if nargin>0 && strcmp('noparse',varargin{1})
-    argot = varargin{2};
-    if isfield(argot,'varstring')
-        varstring = argot.varstring;
-    else
-        varstring = '';
-    end
+argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
+table = argot.table;
+qflag = argot.qflag;
+
+if length(argot.otherstrings) < 1
+    varstring = '';
 else
-    argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-    if isempty(argot.otherstrings)
-        varstring = '';
-    else
-        varstring = argot.otherstrings{1};
-    end
-end
-rtable = mrresolve_table(argot.table);
-dnums = argot.dnums;
-mrtv = argot.mrtv;
-if isfield(argot,'qflag')
-    qflag = argot.qflag;
-else
-    qflag = 'q';
+    varstring = argot.otherstrings{1};
 end
 
-switch length(dnums)
+def = mrdefine;
+
+switch length(argot.dnums)
     case 2
-        dv1 = dnums(1);
-        dv2 = dnums(2);
+        dv1 = argot.dnums(1);
+        dv2 = argot.dnums(2);
     case 1
-        dv1 = dnums(1);
+        dv1 = argot.dnums(1);
         dv2 = now+50*365; % far in future
     case 0
         dv1 = now-50*365; % far in past
@@ -82,8 +84,12 @@ switch length(dnums)
 end
 
 
-%dv1 = datevec(datenum(dv1)); % this will convert a datenum to a datevec if it isn't already
-%dv2 = datevec(datenum(dv2));
+
+dv1 = datevec(datenum(dv1)); % this will convert a datenum to a datevec if it isn't already
+dv2 = datevec(datenum(dv2));
+
+% sort out the table name
+table = mrresolve_table(table); % table is now an RVDAS table name for sure.
 
 dv1str = datestr(dv1,'yyyy-mm-dd HH:MM:SS');
 dv2str = datestr(dv2,'yyyy-mm-dd HH:MM:SS');
@@ -92,59 +98,68 @@ dv2str = datestr(dv2,'yyyy-mm-dd HH:MM:SS');
 % it
 
 try
-    m = strcmp(rtable,mrtv.tablenames);
-    mrtv = mrtv(m,:);
-    sqlname = mrtv.tablenames{1};
+    vdef = def.mrtables.(table);
 catch
-    error('%s is not defined; if it is in the database, add to \nmstar_dirs_tables and mstar_by_table and rerun mrdefine(''redo'')',rtable);
+    error([table ' is not defined in mrtable (see mrdefine and mrtables_from_json)']);
 end
 
-% select the variables we want (if varstring is empty or has no matches, select all)
-if isempty(varstring)
-    vars = mrtv.tablevars{1};
-else
-    varcell = strsplit(lower(varstring),' ');
-    varcell = varcell(~cellfun('isempty',varcell)); %in case empty string at end
-    vars = {};
+sqlname = vdef{1,1};
+sqlvars = 'time';
+sqlunits = {'string'};
 
-    %first try rvdas variable names
-    [~,ia,ib] = intersect(lower(mrtv.tablevars{1}),varcell);
-    if ~isempty(ia)
-        vars = [vars mrtv.tablevars{1}(ia)];
-        varcell(ib) = [];
-    end
-
-    %next try mstar names
-    [~,ia,ib] = intersect(lower(mrtv.mstarvars{1}),varcell);
-    if ~isempty(ia)
-        vars = [vars mrtv.tablevars{1}(ia)];
-        varcell(ib) = [];
-    end
-
-    if ~isempty(varcell)
-        warning('these vars not found in %s:',rtable)
-        disp(varcell)
-    end
-
-    if ~sum(strcmp('time',vars))
-        vars = ['time' vars];
-    end
-
-end
-
-
+% First get a list of variables numbers in the vdef array that we want
+% Select variables from vdef that are found in varstring
+% If no matching variables are found, get them all.
+% If varstring is empty, there will be no matching, so get them all.
 % If latitude and longitude are in the varstring, and if latdir and londir
 % are also present, then they are needed by mrload to make sense of the lat
 % and lon variables.
-if sum(strcmpi('latitude',vars)) && ~sum(strcmpi('latdir',vars)) && sum(strcmpi('latdir',mrtv.tablevars))
-    vars = [vars 'latdir'];
-end
-if sum(strcmpi('longitude',vars)) && ~sum(strcmpi('londir',vars)) && sum(strcmpi('londir',mrtv.tablevars))
-    vars = [vars 'londir'];
+
+if ~isempty(varstring)
+    latitude_in_varstring = contains(lower(varstring),'latitude');
+    latdir_not_in_varstring = ~contains(lower(varstring),'latdir');
+    latdir_in_vdef = sum(strcmpi('latdir',vdef(:,1)));
+    if latitude_in_varstring && latdir_not_in_varstring && latdir_in_vdef
+        % add latdir to varstring
+        varstring = [varstring ' latdir'];
+    end
+    longitude_in_varstring = contains(lower(varstring),'longitude');
+    londir_not_in_varstring = ~contains(lower(varstring),'londir');
+    londir_in_vdef = sum(strcmpi('londir',vdef(:,1)));
+    if longitude_in_varstring && londir_not_in_varstring && londir_in_vdef
+        % add londir to varstring
+        varstring = [varstring ' londir'];
+    end
 end
 
-sqlvars = cell2mat(cellfun(@(x) [x ','], vars, 'UniformOutput', false));
-sqlvars = sqlvars(1:end-1);
+varnums = [];
+ii = findstr(varstring,' ');
+if ~isempty(ii)
+    clear vars; vars{1,1} = lower(varstring(1:ii(1)-1));
+    for no = 1:length(ii)-1
+        vars{no+1,1} = lower(varstring(ii(no)+1:ii(no+1)-1));
+    end
+    if ii(end)<length(varstring)
+        no = size(vars,1);
+        vars{no+1,1} = lower(varstring(ii(end)+1:end));
+    end
+    for no = 1:size(vdef,1)
+        vdef{no,1} = lower(vdef{no,1});
+    end
+    [~,varnums,~] = intersect(vdef(:,1),vars);
+end
+if isempty(varnums); varnums = 2:size(vdef,1); end
+
+for kl = varnums(:)'
+    thisvar = vdef{kl,1};
+    thisunit = vdef{kl,2};
+    sqlvars = [sqlvars ',' thisvar];
+    if isempty(thisunit)
+        thisunit = 'json_empty';
+        vdef(kl,2) = {thisunit}; % don't want empty units string, even if json defs allow it.
+    end
+    sqlunits = [sqlunits; thisunit];
+end
 
 % where time between '2021-01-25' and '2021-01-27'
 sqltext = ['"\copy (select ' sqlvars ' from ' sqlname ' where time between ''' dv1str ''' and ''' dv2str ''' order by time asc) to '''];

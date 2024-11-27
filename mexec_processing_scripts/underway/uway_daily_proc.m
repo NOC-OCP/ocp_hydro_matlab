@@ -15,77 +15,44 @@
 %starts over 
 
 m_common
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+year = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
 
-if ~exist('ydays','var')
-    ydays = floor(now-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,1,1)); %default: yesterday
+if ~exist('days','var')
+    days = floor(now-datenum(year,1,1)); %default: yesterday
 end
 
 %%%%% get list of underway streams to process %%%%%
-switch MEXEC_G.Mshipdatasystem
-    case 'rvdas'
-        mtable = mrdefine;
-    case 'scs'
-        mtable = msdefine; %***
-    case 'techsas'
-        mtable = mtdefine; %***
-end
-opt1 = 'uway_proc'; opt2 = 'proc_streams';
-if exist('uway_proc_list','var') %only from this list
-    [~,iik,~] = intersect(mtable.mstardir,uway_proc_list,'stable');
-    mtable = mtable(iik,:);
-elseif exist('uway_excludes','var')
-    [~,iie,~] = intersect(mtable.mstardir, uway_excludes);
-    mtable(iie,:) = [];
-end
-
+uway_set_streams
 
 %%%%% loop through processing steps for list of days %%%%%
 
-if ~exist('reload_uway','var') || reload_uway==1
-    % load one day at a time and append to one file per stream
-    ns = length(mtable.tablenames);
-    ls = nan+zeros(ns,length(ydays));
-    for yday = ydays
-        for sno = 1:ns
-            ls(sno,yday-ydays(1)+1) = mday_00_load(mtable.tablenames{sno}, yday, mtable);
-        end
-        disp(['loaded day ' num2str(yday)]); pause(0.1)
+%which variables to merge from one file into another
+combvars = {}; %***
+opt1 = 'uway_proc'; opt2 = 'comb_uvars'; get_cropt 
+
+%load raw data from RVDAS/SCS/TECHSAS
+loadstatus = zeros(1,length(shortnames));
+for daynumber = days
+    for sno = 1:length(shortnames)
+        ls = mday_00_load(streamnames{sno}, shortnames{sno}, fullfile(MEXEC_G.mexec_data_root,udirs{sno}), daynumber, year);
+        loadstatus(sno) = loadstatus(sno) + ls;
     end
-    disp('some missing from: ')
-    disp(mtable.tablenames(sum(ls,2)'>0))
+    disp(['loaded day ' num2str(daynumber)]); pause(0.1)
 end
 
-% for each stream, starting with nav streams, apply additional processing
-% and cleaning to data 
-mudirs = cellfun(@(x,y) [x '/' y],mtable.mstardir,mtable.mstarpre,'UniformOutput',false);
-[mudirs,ii] = unique(mudirs);
-mufiles = mtable.mstarpre(ii);
-iin = find(contains(mudirs,'nav/'));
-iio = setdiff([1:length(mudirs)]',iin);
-mufiles = mufiles([iin;iio]);
-if exist('never_edit','var')
-    mufiles = setdiff(mufiles,never_edit);
+%apply additional processing and cleaning to data
+for sno = 1:length(shortnames)
+    mday_01_edit(fullfile(MEXEC_G.mexec_data_root,udirs{sno}), shortnames{sno}, days)
+    disp(['edited ' shortnames{sno}])
 end
-mufiles = {'surfmet'};
-for sno = 1:length(mufiles)
-    de = mday_01_edit(mufiles{sno}, ydays, mtable);
-    if de
-        fprintf(1,'edited %s\n', mufiles{sno})
-    end
-end
-%return
 
-%combine streams, do hand edits (for some streams), and average to produce
+%combine streams, do hand edits (for some streams), and average to producei
+%
 %output/best files
-ctypes = {'nav','bathy','ocean','atmos'}; %important to do nav first
-reload_av = 1; %set to 0 to just go through edit stage
-for cno = 1:length(ctypes)
-    mday_02_merge_av(ctypes{cno}, ydays, mtable, reload_av);
-    fprintf(1,'merged %s files\n',ctypes{cno})
-end
-
-if ismember(ctypes,'ocean')
-    disp('you could now run mtsg_bottle_ctd_compare')
-end
+mnav_best(days); disp('got best nav/heading data')
+%mwind_true(days); disp('converted to true wind')
+mtsg_merge_av(days); disp('tsg variables merged with met') %combines old mtsg_medav_clean_cal and mtsg_surfmet_merge
+mbathy_edit_av(days)
 
 % % make plots

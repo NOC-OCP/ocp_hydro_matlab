@@ -1,4 +1,4 @@
-function [rtable, mtable] = mrresolve_table(tablein,varargin)
+function [rtable, mtable] = mrresolve_table(tablein)
 % function rtable = mrresolve_table(tablein)
 % function [rtable, mtable] = mrresolve_table(tablein)
 %
@@ -39,14 +39,11 @@ m_common
 if isempty(tablein)
     error('Must specify non-empty tablein to lookup')
 end
-if nargin>1
-    mrtv = varargin{1};
-else
-    mrtv = mrdefine;
-end
 
-tmap_mexec = mrtv.mstarpre;
-tmap_rvdas = mrtv.tablenames;
+def = mrdefine('this_cruise');
+
+tmap_mexec = def.tablemap(:,1);
+tmap_rvdas = def.tablemap(:,2);
 
 rtable = []; mtable = [];
 n = 0; nmax = 3;
@@ -63,8 +60,8 @@ while isempty(rtable) && isempty(mtable) && n<nmax
         end
     elseif ~isempty(kmexec)
         % mexec shorthand table name found
-        if length(kmexec) > 1 
-            fprintf(MEXEC_A.Mfider,'%s\n%s\n','Input name is found more than once in the list of mexec shorthand names,','try one of the matching rvdas table names:');
+        if length(kmexec) > 1 % the table is defective and an mexec short name appears more than once
+            fprintf(MEXEC_A.Mfider,'%s\n%s\n','Input name is found more than once in the list of mexec shorthand names,','try one of the matching rvdas table names (see mrtables_from_json for more info):');
             fprintf(MEXEC_A.Mfider,'%s\n',tmap_rvdas{kmexec})
             tablein = input('input new table name or ''q'' to quit ','s');
             if isempty(tablein) || strcmp(tablein,'q')
@@ -76,13 +73,11 @@ while isempty(rtable) && isempty(mtable) && n<nmax
                 mtable = tablein;
             end
         end
-    else
-        tmap_rvdas
-        tablein = input('Input name is not found uniquely in the list of RVDAS names \nor mexec shorthand names, try again from list above  ','s');
-        n = n+1;
     end
+        n = n+1;
 end
 
 if isempty(rtable) && isempty(mtable) % neither found
-    erorr('Error trying to match name %s',tablein);
+    fprintf(MEXEC_A.Mfider,'\n%s%s%s\n\n','Error trying to match name ''',tablein,'''');
+    error('error in mrresolve_table. Input name is not found uniquely in the list of RVDAS names or mexec shorthand names');
 end

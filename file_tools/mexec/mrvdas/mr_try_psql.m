@@ -1,4 +1,4 @@
-function [csvname, result, psql_string] = mr_try_psql(sqltext,varargin)
+function [csvname, result, psql_string] = mr_try_psql(sqltext)
 % constructs psql string and tries with and without LD_LIBRARY PATH
 % psql string is constructed by combining: 
 % 1) the database/access information, set here (using ship,
@@ -10,15 +10,41 @@ function [csvname, result, psql_string] = mr_try_psql(sqltext,varargin)
 
 m_common
 opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
-quiet = 1; if nargin>1; quiet = varargin{1}; end
 
-%if we haven't checked before in this session, first see if we have the
-%credentials, either in ~/.pgpass (with correct, user-only permissions) or
-%in another (shared) file specified in opt_cruise 
-if ~isfield(MEXEC_G,'RVDAS_checked') || isempty(MEXEC_G.RVDAS_checked)
-    mrvdas_check_dbaccess(RVDAS);
+%if we haven't checked before in this session, first see if we're connected to
+%the database, and if we have a .pgpass file with the correct permissions
+%and entries 
+if ~isfield(MEXEC_G,'RVDAS_checked') || ~MEXEC_G.RVDAS_checked
+
+    [stat, ~] = system(['ping ' RVDAS.machine ' -c 1']);
+    if stat~=0
+        [stat, ~] = system(['ping ' RVDAS.machine ' -c 10']);
+        if stat~=0
+            error('%s not responding, cannot access RVDAS database', RVDAS.machine);
+        end
+    end
+    
+    [stat, result] = system('ls -l ~/.pgpass');
+    if stat~=0 || ~strcmp(result(5:10),'------')
+        error('your ~/.pgpass file is not found or has group or world access;\n %s','try (in shell): chmod 0600 ~/.pgpass');
+    end
+    
+    fid = fopen('~/.pgpass','r');
+    MEXEC_G.RVDAS_checked = 0;
+    while fid>0
+        tline = fgetl(fid);
+        if isempty(tline)
+            fclose(fid); fid = -2;
+        elseif contains(tline,RVDAS.machine) && contains(tline,RVDAS.database(2:end-1)) && contains(tline,RVDAS.user)
+            MEXEC_G.RVDAS_checked = 1;
+            fclose(fid); fid = -2;
+        end
+    end
+    if ~MEXEC_G.RVDAS_checked
+        error('your ~/.pgpass file does not appear to contain an entry with the correct\n%s\n%s','machine, database, and/or user','(format should be: machine:port:database:user:password)');
+    end
 end
-
+        
 %now construct the string and try first without then with changes to
 %LD_LIBRARY_PATH
 if ismac
@@ -26,13 +52,7 @@ if ismac
 else
     RVDAS.psql_path = ''; %'/usr/bin/' but on linux matlab finds it on path on its own
 end
-if isnumeric(MEXEC_G.RVDAS_checked)
-    %use .pgpass
-    sqlroot = [RVDAS.psql_path 'psql -h ' RVDAS.machine ' -U ' RVDAS.user ' -d ' RVDAS.database];
-else
-    %use credentials now stored in RVDAS_checked
-    sqlroot = [RVDAS.psql_path 'psql ' MEXEC_G.RVDAS_checked];
-end
+sqlroot = [RVDAS.psql_path 'psql -h ' RVDAS.machine ' -U ' RVDAS.user ' -d ' RVDAS.database];
 csvname = fullfile(RVDAS.csvroot, ['table_' datestr(now,'yyyymmddHHMMSSFFF') '.csv']);
 psql_string = [sqlroot ' -c ' sqltext csvname];
 if ~contains(psql_string,'\dt') && ~contains(psql_string,'\dv')
@@ -42,35 +62,12 @@ end
 try
     [stat, result] = system(psql_string);
     if stat~=0
-        warning('LD_LIBRARY_PATH?')
-        [stat, result] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
-        if stat~=0
-            fid = fopen('/data/pstar/psqls_f','w');
-            fprintf(fid,'%s\n',psql_string);
-            fclose(fid);
-            [s,r] = system('/usr/bin/chmod ug+x /data/pstar/psqls_f');
-            if s==0
-                [stat,result] = system('/data/pstar/psqls_f');
-                if stat~=0
-                    fprintf(1,'in terminal, execute /data/pstar/psqls_f \n then press enter to continue')
-                    pause
-                    if exist(csvname,'file')
-                        stat = 0;
-                    else
-                        warning('check /data/pstar/psqls_f')
-                    end
-                end
-            else
-                keyboard
-            end
-        end
+        error('LD_LIBRARY_PATH?')
     end
 catch
-    keyboard
+    [stat, result] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
 end
 
 if stat~=0
-    error('failed at executing\n %s\n does your ~/.pgpass or RVDAS login file contain the correct machine:port:database:user:password?', psql_string);
-elseif ~quiet
-    disp(['ran: ' psql_string])
+    error('failed at executing\n %s\n does your ~/.pgpass contain the correct machine:port:database:user:password?', psql_string);
 end

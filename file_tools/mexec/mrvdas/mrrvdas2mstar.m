@@ -1,5 +1,5 @@
 function status = mrrvdas2mstar(varargin)
-% function status = mrrvdas2mstar(table, dn1, dn2, otfile, dataname, varlist, qflag);
+% function sttaus = mrrvdas2mstar(table, dn1, dn2, otfile, dataname, varlist, qflag);
 %
 % *************************************************************************
 % mexec interface for RVDAS data acquisition
@@ -43,28 +43,49 @@ function status = mrrvdas2mstar(varargin)
 m_common
 status = 1;
 
-if nargin>0 && strcmp(varargin{1},'noparse')
-    argot = varargin{2};
-    otfile = argot.otfile;
-    dataname = argot.dataname;
-else
-    argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
-    if length(argot.otherstrings)<1
-        otfile = argot.table;
-    else
-        otfile = argot.otherstrings{1};
-    end
-    if length(argot.otherstrings)<2
-        dataname = otfile;
-    else
-        dataname = argot.otherstrings{2};
-    end
+argot = mrparseargs(varargin); % varargin is a cell array, passed into mrparseargs
+table = argot.table; 
+if isempty(table)
+    disp(varargin)
+    error('no rvdas table or mstar shorthand found in inputs (above)');
 end
+qflag = argot.qflag;
 clear varargin % because otherwise they confuse msave
+
+if length(argot.otherstrings) < 1
+    otfile = argot.table;
+else
+    otfile = argot.otherstrings{1};
+end
+
+if length(argot.otherstrings) < 2
+    dataname = otfile;
+else
+    dataname = argot.otherstrings{2};
+end
+
+if length(argot.otherstrings) < 3
+    varstring = '';
+else
+    varstring = argot.otherstrings{3};
+end
 
 otfile = m_add_nc(otfile);
 
-[dd, names, units] = mrload('noparse',argot);
+switch length(argot.dnums)
+    case 2
+        dn1 = argot.dnums(1);
+        dn2 = argot.dnums(2);
+    case 1
+        dn1 = argot.dnums(1);
+        dn2 = now+50*365; % far in future
+    case 0
+        dn1 = now-50*365; % far in past
+        dn2 = now+50*365; % far in future
+end
+
+
+[dd, names, units] = mrload(table,dn1,dn2,varstring,qflag);
 
 if numel(dd.dnum) == 0
     % no data found, quit without writing a file
@@ -87,17 +108,14 @@ dd = rmfield(dd, 'dnum');
 units = units(ia);
 
 %add variable names and units to hnew, or remove from dd
-%also remove duplicate times, after (if set in opt_cruise) subsampling
-%and/or rounding times
-opt1 = 'uway_proc'; opt2 = 'tstep_save'; get_cropt
+%also subsample to 1 hz (if indicated) or remove repeated times
+save_1hz_uway = 1; tstep_force = [];
+opt1 = 'uway_proc'; opt2 = '1hz_max'; get_cropt
 tstep = 1;
-if ~isempty(tstep_force)
+if save_1hz_uway && isempty(tstep_force)
     dt = diff(dd.time); dt = dt(dt>0); 
     dt = mode(dt);
-    tstep = max(round(1/dt),1); 
-end
-if ~isempty(tstep_resol)
-    dd.time = round(dd.time/tstep_resol)*tstep_resol;
+    tstep = max(round(1/dt),1);
 end
 if tstep>1
     iits = 1:tstep:length(dd.time);
@@ -106,7 +124,6 @@ if tstep>1
 else
     [~,iit] = unique(dd.time,'stable');
 end
-iit = iit(~isnan(dd.time(iit)));
 
 clear hnew
 hnew.fldnam = names(:)';
@@ -119,7 +136,7 @@ for kl = 1:length(names)
         dd.(vname) = dd.(vname)(iit);
     else
         dd = rmfield(dd,vname);
-        warning('skipping non-numeric variable %s from table %s',vname,argot.table)
+        warning('skipping non-numeric variable %s from table %s',vname,table)
     end
 end
 hnew.fldnam = hnew.fldnam(m); hnew.fldunt = hnew.fldunt(m);
