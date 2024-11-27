@@ -36,6 +36,7 @@ if strcmp(param,'oxygen')
 else
     dooxy = 0;
 end
+dref.lat = dref.psal(1,:); dref.lon = dref.lat;
 dcomp = dref;
 nref = 1; ncomp = 1;
 for kloop = klist
@@ -47,11 +48,15 @@ for kloop = klist
         dref.potemp(ia,nref) = d.potemp1(ib);
         dref.psal(ia,nref) = d.psal1(ib);
         if dooxy; dref.oxygen(ia,nref) = d.oxygen1(ib); end
+        dref.lat(1,nref) = h.latitude;
+        dref.lon(1,nref) = h.longitude;
         nref = nref+1;
     elseif ismember(s1, comp_sns)
         dcomp.potemp(ia,ncomp) = d.potemp1(ib);
         dcomp.psal(ia,ncomp) = d.psal1(ib);
         if dooxy; dcomp.oxygen(ia,nref) = d.oxygen1(ib); end
+        dcomp.lat(1,ncomp) = h.latitude;
+        dcomp.lon(1,ncomp) = h.longitude;
         ncomp = ncomp+1;
     end
     s2 = h.fldserial(strcmp([param '2'],'h.fldnam'));
@@ -59,26 +64,43 @@ for kloop = klist
         dref.potemp(ia,nref) = d.potemp2(ib);
         dref.psal(ia,nref) = d.psal2(ib);
         if dooxy; dref.oxygen(ia,nref) = d.oxygen2(ib); end
+        dref.lat(1,nref) = h.latitude;
+        dref.lon(1,nref) = h.longitude;
         nref = nref+1;
     elseif ismember(s2, comp_sns)
         dcomp.potemp(ia,ncomp) = d.potemp2(ib);
         dcomp.psal(ia,ncomp) = d.psal2(ib);
         if dooxy; dcomp.oxygen(ia,nref) = d.oxygen2(ib); end
+        dcomp.lat(1,ncomp) = h.latitude;
+        dcomp.lon(1,ncomp) = h.longitude;
         ncomp = ncomp+1;
     end
 end
 iip = find(~isnan(dref.potemp) | ~isnan(dcomp.potemp));
 dref.potemp(:,nref+1:end) = []; dref.psal(:,nref+1:end) = []; if dooxy; dref.oxygen(:,nref+1:end) = []; end
-dcomp.potemp(:,nref+1:end) = []; dcomp.psal(:,nref+1:end) = []; if dooxy; dcomp.oxygen(:,nref+1:end) = []; end
+dcomp.potemp(:,ncomp+1:end) = []; dcomp.psal(:,ncomp+1:end) = []; if dooxy; dcomp.oxygen(:,ncomp+1:end) = []; end
+dref.lat(1,nref+1:end) = []; dref.lon(1,nref+1:end) = [];
+dcomp.lat(1,ncomp+1:end) = []; dcomp.lon(1,ncomp+1:end) = [];
 
 % now use hydro_tools? ***
 
-% compare
+% plot locations
+figure(1); clf
+plot(dref.lon,dref.lat,'o',dcomp.lon,dcomp.lat,'s'); grid
+
+% compare data
+figure(2); clf
 if dooxy
 
-    scatter(dref.potemp,-pg,)
+    scatter(dref.potemp,-pg,20,dref.oxygen)
+    hold on
+    scatter(dcomp.potemp,-pg,10,dcomp.oxygen,'filled');
 
 else
+
+    scatter(dref.potemp,-pg,20,dref.psal)
+    hold on
+    scatter(dcomp.potemp,-pg,10,dcomp.psal,'filled')
 
 end
 
