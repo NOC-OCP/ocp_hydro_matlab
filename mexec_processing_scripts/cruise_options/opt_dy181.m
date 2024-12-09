@@ -141,8 +141,6 @@ switch opt1
                 if exist('otfile_appendto','var')
                     m_fix_hdr(otfile_appendto, hreplace);
                 end
-            case 'oxy_align'
-                oxy_end = 1; %truncate oxygen oxy_align s before T,C
             case 'raw_corrs'
                 co.oxyhyst432061.H1 = -0.03;
                 co.oxyhyst432061.H2 = 7000;

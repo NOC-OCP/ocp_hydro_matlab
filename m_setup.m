@@ -51,7 +51,7 @@ clear MEXEC_G
 global MEXEC_G
 
 %defaults: what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='dy181';
+MEXEC_G.MSCRIPT_CRUISE_STRING='dy186';
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.mexec_data_root = '/data/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
