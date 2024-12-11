@@ -25,8 +25,6 @@ switch opt1
     case 'setup'
         switch opt2
             case 'time_origin'
-            case 'setup_datatypes'
-                use_ix_ladcp = 'query';
         end
 
     case 'ship'

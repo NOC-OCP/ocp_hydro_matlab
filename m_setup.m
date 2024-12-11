@@ -1,4 +1,4 @@
-function varargout = m_setup(varargin)
+function m_setup(varargin)
 %  m_setup: to be run before attempting any mexec processing of
 %  cruise data; sets up environment (global variables and paths)
 %
@@ -52,15 +52,16 @@ global MEXEC_G
 
 %defaults: what are we processing and where? 
 MEXEC_G.MSCRIPT_CRUISE_STRING='dy186';
+MEXEC_G.ix_ladcp = 0; %set to 0 to not add ldeo_ix paths (for instance if processing mooring data)
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.mexec_data_root = '/data/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
-force_ext_software_versions = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 MEXEC_G.other_programs_root = '/data/pstar/programs/others/'; 
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 MEXEC_G.raw_underway = 1; %if 0, skip the rvdas setup
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
+force_vers = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
@@ -116,34 +117,12 @@ opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
 if ~isfield(MEXEC_G,'MDEFAULT_DATA_TIME_ORIGIN')
     error('you must set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN in opt_{cruise}.m under opt1=''setup''; opt2=''time_origin''')
 end
-use_ix_ladcp = 'yes';
-opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt %use_ix_ladcp set here (and used below)
 
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
 if ~isempty(MEXEC_G.other_programs_root)
-    switch use_ix_ladcp
-        case 'yes'
-            MEXEC_G.ix_ladcp = 1;
-            path_choose = 1;
-        case 'query'
-            disp('LDEO_IX and m_moorproc_toolbox/rodbload contain functions with the same names')
-            path_choose = input('will you be processing a CTD cast with LADCP data (1),\n mooring/caldip data (2),\n or CTD only (no LADCP) (0)?\n');
-            if path_choose==1
-                MEXEC_G.ix_ladcp = 1; %output 1-Hz CTD data for use by LDEO IX LADCP processing
-            else
-                MEXEC_G.ix_ladcp = 0;
-            end
-        otherwise %e.g. 'no'
-            path_choose = 0;
-            MEXEC_G.ix_ladcp = 0;
-    end
-    MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
-else
-    MEXEC_G.ix_ladcp = 0;
-    path_choose = [];
+    MEXEC_G.exsw_paths = sw_addpath(MEXEC_G.other_programs_root,'force_vers',force_vers,'addladcp',MEXEC_G.ix_ladcp);
 end
-if nargout>0; varargout{1} = path_choose; end
 
 % location processing and writing mexec files
 if isempty(MEXEC_G.mexec_data_root)
