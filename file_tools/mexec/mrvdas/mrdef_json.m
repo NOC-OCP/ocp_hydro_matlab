@@ -10,15 +10,17 @@ jsondir = fullfile(MEXEC_G.mexec_data_root,'rvdas','json_files');
 if ~exist(jsondir,'dir')
     mkdir(jsondir); mfixperms(jsondir, 'dir');
 end
-RVDAS.jsondir = jsondir;
+RVDAS.jsondir = '';
 opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
 switch MEXEC_G.Mship
     case 'sda'
         system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);
     otherwise
-        if contains(RVDAS.jsondir,'pstar')
+        if isempty(RVDAS.jsondir)
+            warning('relying on .json files already in %s', jsondir)
+        elseif contains(RVDAS.jsondir,'pstar') %this is a link to shared drive mounted on workstation
             system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);
-        else
+        else %this must be a directory on the RVDAS computer itself
             system(['rsync -au --delete ' RVDAS.user '@' RVDAS.machine ':' RVDAS.jsondir '/ ' jsondir '/']);
         end
 end
@@ -51,7 +53,7 @@ for no = 1:length(insts)
     if isempty(d)
         warning('no .json identified in %s for %s',jsondir,insts{no})
         for tno = 1:length(iit)
-            mrtables.tableunts{iit(tno)} = cell(size(mrtables.tablevars{iit(no)}));
+            mrtables.tableunts{iit(tno)} = cell(size(mrtables.tablevars{iit(tno)}));
             mrtables.longnames{iit(tno)} = mrtables.tableunts{iit(tno)};
         end
     else
@@ -63,7 +65,7 @@ for no = 1:length(insts)
             fn = fieldnames(jdata);
             for fno = 1:length(fn)
                 iif = find(strcmp(fn{fno},mrtables.tablenames(iit)));
-                if length(iif)==1
+                if isscalar(iif)
                     vars = mrtables.tablevars{iit(iif)};
                     unts = repmat({' '},size(vars)); lnames = unts;
                     [~,ia,ib] = intersect(vars,jdata.(fn{fno}).vars);

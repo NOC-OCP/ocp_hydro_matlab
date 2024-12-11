@@ -68,7 +68,7 @@ otfile = m_add_nc(otfile);
 
 if numel(dd.dnum) == 0
     % no data found, quit without writing a file
-    warning('No data cycles loaded with mrload')
+    warning('No data cycles loaded with mrload from %s',argot.table)
     return
 end
 

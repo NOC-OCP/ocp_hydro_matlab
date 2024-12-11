@@ -57,12 +57,12 @@ end
 
 %***check for multiple streams from same inst? not important at this
 %stage, all will be in corresponding mstar file
-if isstruct(mtable)
-filepre = cell(size(streams));
-for fno = 1:length(streams)
-    m = strcmp(streams{fno},mtable.tablenames);
-    filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
-end
+if isstruct(mtable) || istable(mtable)
+    filepre = cell(size(streams));
+    for fno = 1:length(streams)
+        m = strcmp(streams{fno},mtable.tablenames);
+        filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
+    end
 elseif iscell(mtable)
     filepre = mtable;
 end
@@ -127,6 +127,7 @@ if regrid
         else
             h.fldserial = repmat({' '},size(h.fldnam));
         end
+                if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
 
         %save
         h.dataname = [datatype '_' mcruise '_combined_av'];
@@ -153,6 +154,13 @@ end
 
 %edit
 opt1 = 'uway_proc'; opt2 = 'avedit'; get_cropt
+%deal with a common edit
+if exist('flowlims','var') && exist('tsgpumpvars','var') && ~isempty(flowlims) && ~isempty(tsgpumpvars)
+    uopts.rangelim.flow = flowlims;
+    for vno = 1:length(tsgpumpvars)
+        uopts.badflow.(tsgpumpvars{vno}) = [NaN NaN];
+    end
+end
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad)
     [dg, comment] = apply_autoedits(dg, uopts);
@@ -165,6 +173,7 @@ if handedit
     edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
     [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
 end
+    if isfield(hg,'fldserial') && length(hg.fldserial)<length(hg.fldnam); keyboard; end
 
 %save again
 mfsave(otfile, dg, hg);

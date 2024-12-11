@@ -246,6 +246,7 @@ if MEXEC_G.raw_underway
         fprintf(1,'using cached %s table list / mstar lookup\n',MEXEC_G.Mshipdatasystem)
     catch
         try
+            fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
             switch MEXEC_G.Mshipdatasystem
                 case 'rvdas'
                     mrtv = mrdefine('redo');

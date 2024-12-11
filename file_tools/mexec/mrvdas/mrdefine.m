@@ -53,7 +53,7 @@ else
 
     df = dir(tabledefmat);
     if isempty(df)
-        fprintf(2,'no %s found; skipping\n',tabledefmat)
+        fprintf(2,'no %s found; try running with input argument ''redo''\n',tabledefmat)
     else
         fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
         load(tabledefmat,'mrtv')

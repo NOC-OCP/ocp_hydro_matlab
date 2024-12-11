@@ -25,6 +25,8 @@ switch opt1
     case 'setup'
         switch opt2
             case 'time_origin'
+            case 'setup_datatypes'
+                use_ix_ladcp = 'query';
         end
 
     case 'ship'
@@ -58,6 +60,12 @@ switch opt1
                 end
             case 'rvdas_database'
                 RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
+                switch MEXEC_G.Mship
+                    case {'dy','jc'}
+                        RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
+                end
+                RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+                RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr';
             case 'rvdas_form'
                 switch MEXEC_G.Mship
                     case 'sda'

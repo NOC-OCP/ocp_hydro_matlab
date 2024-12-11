@@ -50,9 +50,10 @@ if strcmp(stage,'pre')
     if ~isempty(headvar)
         %calculate dummy easting and northing in order to vector average
         [d.dum_e, d.dum_n] = uvsd(ones(size(d.(headvar))), d.(headvar), 'sduv');
-        h.fldnam = [h.fldnam 'dum_e' 'dum_n'];
-        h.fldunt = [h.fldunt 'dummy easting' 'dummy northing'];
-        h.comment = [h.comment '\n easting and northing calculated from heading at 1 hz'];
+        if ~sum(strcmp('dum_e',h.fldnam))
+            h = m_append_header_fld(h, {'dum_e' 'dum_n'}, {'dummy easting' 'dummy northing'}, headvar);
+            h.comment = [h.comment '\n easting and northing calculated from heading at 1 hz'];
+        end
         ngvars = [ngvars headvar];
     end
 
@@ -63,16 +64,19 @@ if strcmp(stage,'pre')
             depsvar = munderway_varname('depsrefvar',h.fldnam,1,'s');
             deptvar = munderway_varname('deptrefvar',h.fldnam,1,'s');
             if isempty(depvar) && ~isempty(deptvar)
-                d.waterdepth = d.(deptvar) + d.transduceroffset; %***
-                h.fldnam = [h.fldnam 'waterdepth'];
-                h.fldunt = [h.fldunt 'm'];
-                depvar = munderway_varname('depvar',h.fldnam,1,'s');
-                depsvar = munderway_varname('depsrefvar',h.fldnam,1,'s');
-                deptvar = munderway_varname('deptrefvar',h.fldnam,1,'s');
+                if ~sum(strcmp('waterdepth',h.fldnam))
+                    d.waterdepth = d.(deptvar) + d.transduceroffset; %***
+                    h = m_append_header_fld(h, {'waterdepth'}, {'m'}, depvar);
+                    depvar = munderway_varname('depvar',h.fldnam,1,'s');
+                    depsvar = munderway_varname('depsrefvar',h.fldnam,1,'s');
+                    deptvar = munderway_varname('deptrefvar',h.fldnam,1,'s');
+                end
             end
+            if ~iscell(depvar); depvar = {depvar}; end
+            if ~iscell(depsvar); depsvar = {depsvar}; end
+            if ~iscell(deptvar); deptvar = {deptvar}; end
             depvar = union(depvar,union(depsvar,deptvar));
             if ~isempty(depvar)
-                if ~iscell(depvar); depvar = {depvar}; end
                 %append source, because singlebeam and multibeam may have the same
                 %variable names
                 for no = 1:length(depvar)
@@ -101,8 +105,7 @@ if strcmp(stage,'pre')
                     %compute x and y component (platform-relative) from speed
                     %and (compass) direction
                     [d.xcomponent, d.ycomponent] = uvsd(d.(ws), d.(wd), 'sduv');
-                    h.fldnam = [h.fldnam 'xcomponent' 'ycomponent'];
-                    h.fldunt = [h.fldunt 'm/s' 'm/s']; %***
+                    h = m_append_header_fld(h, {'xcomponent' 'ycomponent'}, {'m/s' 'm/s'}, ws);
                 end
                 %load smoothed bestnav, compute ship heading as a vector
                 [dn, hn] = mload(fullfile(MEXEC_G.mexec_data_root, 'nav', ['bestnav_' MEXEC_G.MSCRIPT_CRUISE_STRING]),'/');
@@ -120,9 +123,10 @@ if strcmp(stage,'pre')
                 %vector wind over earth
                 d.truwind_e = relwind_e + real(shipv);
                 d.truwind_n = relwind_n + imag(shipv);
-                h.fldnam = [h.fldnam 'truwind_e' 'truwind_n'];
-                h.fldunt = [h.fldunt 'm/s eastward' 'm/s northward'];
-                h.comment = [h.comment '\n truwind calculated using average nav and heading data interpolated and added to 1Hz wind data'];
+                if ~sum(strcmp('truwind_e',h.fldnam))
+                    h = m_append_header_fld(h, {'truwind_e' 'truwind_n'}, {'m/s eastward' 'm/s northward'}, ws);
+                    h.comment = [h.comment '\n truwind calculated using average nav and heading data interpolated and added to 1Hz wind data'];
+                end
                 ngvars = [ngvars ws wd 'xcomponent' 'ycomponent'];
             else
                 exc = {'fluo' 'trans' 'flow' 'tempr' 'temph' 'conductivity' 'salinity'}; %***munderway_varname
@@ -141,6 +145,9 @@ if strcmp(stage,'pre')
     if ~isempty(excv)
         d = rmfield(d,excv);
         h.fldunt(iie) = []; h.fldnam(iie) = []; 
+        if isfield(h, 'fldserial')
+            h.fldserial(iie) = [];
+        end
     end
 
     varargout{1} = gvars; varargout{2} = ngvars;
@@ -169,13 +176,11 @@ elseif strcmp(stage, 'post')
             [d.smg, d.cmg] = uvsd(ve, vn, 'uvsd');
             d.distrun = cumsum(dist);
             if ~sum(strcmp('heading',h.fldnam))
-                h.fldnam = [h.fldnam 'heading'];
-                h.fldunt = [h.fldunt 'degrees E of N'];
+                h = m_append_header_fld(h, {'heading'}, {'degrees E of N'}, lonvar);
                 h.comment = [h.comment '\n heading calculated from vector-averaged easting and northing'];
             end
             if ~sum(strcmp('smg',h.fldnam))
-                h.fldnam = [h.fldnam 'smg' 'cmg' 'distrun'];
-                h.fldunt = [h.fldunt 'm/s' 'degrees' 'km'];
+                h = m_append_header_fld(h, {'smg' 'cmg' 'distrun'}, {'m/s' 'degrees' 'km'}, lonvar);
                 h.comment = [h. comment '\n speed, course over ground, and distance run calculated from vector-averaged data'];
             end
 
@@ -208,17 +213,20 @@ elseif strcmp(stage, 'post')
                     newdep = newdep{1};
                 end
                 d.(newdep) = d.(depbtvar) + d.(xducervar);
-                h.fldnam = [h.fldnam newdep];
-                h.fldunt = [h.fldunt 'm'];
+                if ~ismember(h.fldnam,newdep)
+                    h = m_append_header_fld(h, {newdep}, {'m'}, depbtvar);
+                end
                 d = rmfield(d,depbtvar); 
-                h.fldunt(strcmp(depbtvar,h.fldnam)) = [];
-                h.fldnam(strcmp(depbtvar,h.fldnam)) = [];
+                m = strcmp(depbtvar,h.fldnam);
+                h.fldunt(m) = []; h.fldnam(m) = [];
+                if isfield(h, 'fldserial'); h.fldserial(m) = []; end
                 comment = sprintf('\n %s has transducer offset applied', newdep);
             end
             if ~isempty(xducervar)
                 d = rmfield(d,xducervar);
-                h.fldunt(ismember(h.fldnam,xducervar)) = [];
-                h.fldnam(ismember(h.fldnam,xducervar)) = [];
+                m = ismember(h.fldnam,xducervar);
+                h.fldunt(m) = []; h.fldnam(m) = [];
+                if isfield(h, 'fldserial'); h.fldserial(m) = []; end
             end
 
         case 'ocean'
@@ -242,9 +250,8 @@ elseif strcmp(stage, 'post')
                         svar = 'psal';
                     end
                     d.(svar) = gsw_SP_from_C(fac*d.(cvar),d.(tvar),0);
-                    if ~isfield(d,svar)
-                        h.fldnam = [h.fldnam svar];
-                        h.fldunt = [h.fldunt 'pss-78'];
+                    if ~ismember(h.fldnam,svar)
+                        h = m_append_header_fld(h, {svar}, {'pss-78'}, cvar);
                     end
                     if ~exist('cpstr','var'); cpstr = ''; end
                     comment = sprintf('\n psal calculated from edited, averaged%s %s and %s',cpstr,cvar,tvar);
@@ -268,9 +275,9 @@ elseif strcmp(stage, 'post')
         case 'atmos'
             %recalculate wind speed and direction from averaged vectors
             [d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
-            h.fldnam = [h.fldnam 'truwind_spd' 'truwind_dir'];
-            h.fldunt = [h.fldunt 'm_per_s' 'degrees counterclockwise of eastward']; %***
-            h.fldserial = [h.fldserial repmat(h.fldserial(strcmp('truwind_e',h.fldnam)),1,2)];
+            if ~ismember(h.fldnam,'truwind_spd')
+                h = m_append_header_fld(h, {'truwind_spd' 'truwind_dir'}, {'m_per_s' 'degrees counterclockwise of eastward'}, 'truwind_e');
+            end
             comment = '\ntruwind calculated from vector-averaged components';
 
     end

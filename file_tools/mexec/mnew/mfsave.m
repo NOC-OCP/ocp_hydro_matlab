@@ -121,6 +121,7 @@ end
 if ~exist('h','var') || ~isfield(h, 'fldnam')
     h.fldnam = fieldnames(d);
 end
+        if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
 
 if ~exist(filename, 'file') && ~writenew
     warning(['file ' filename ' not found, creating new']);

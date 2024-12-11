@@ -29,17 +29,31 @@ m_common
 quiet = 1; if nargin>1; quiet = varargin{1}; end
 
 sqltext = ['"\copy (select * from ' table ' order by time asc limit 0) to '''];
-[csvname, ~, ~] = mr_try_psql(sqltext,quiet);
+try
+    [csvname, ~, ~] = mr_try_psql(sqltext,quiet);
+catch ME
+    if contains(ME.message,'does not exist') %table is in the list of tables but not in the database; skip
+        tablevars = {};
+        return
+    else
+        throw ME
+    end
+end
 
 fid = fopen(csvname,'r');
 t = fgetl(fid);  % t is now the comma delimited list of variable names
 fclose(fid);
-delete(csvname);
 
+if t==-1
+    tablevars = {}; %table could be accessed in database but has no variables; skip
+    return
+end    
 %remove sensorid and messageid
 t = replace(replace(t,'sensorid,',''),'messageid,','');
 %turn into list of variables
 tablevars = strsplit(t,',');
+
+delete(csvname);
 
 %typically there will now be time, followed by a number of variables
 %sometimes followed by the same number of flag variables

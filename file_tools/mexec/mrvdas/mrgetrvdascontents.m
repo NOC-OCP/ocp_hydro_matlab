@@ -42,6 +42,7 @@ rvdas_tables = mrgettables(quiet);
 ntables = length(rvdas_tables.tablenames);
 rvdas_tables.tablevars = cell(ntables,1);
 
+iis = [];
 for kl = 1:ntables
     tabname = rvdas_tables.tablenames{kl};
     
@@ -51,6 +52,12 @@ for kl = 1:ntables
     end
     
     tablevars = mrgettablevars(tabname,quiet);
-    rvdas_tables.tablevars{kl} = tablevars;
+    if isempty(tablevars)
+        warning('table %s does not exist or has no variables; skipping',tabname)
+        iis = [iis kl];
+    else
+        rvdas_tables.tablevars{kl} = tablevars;
+    end
         
 end
+rvdas_tables(iis,:) = [];

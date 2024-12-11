@@ -109,6 +109,7 @@ if nargout>1
 
     % first defaults
     skips.sentence = {};
+    skips.sentence_pat = {};
     skips.sentence_var = {}; %***add to mrmstarnames parsing (for sda)
     skips.msg = {'glgsv', ...
         'gndtm', 'gngsa', 'gngst', 'gnzda', ...

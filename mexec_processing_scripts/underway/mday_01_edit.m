@@ -64,7 +64,7 @@ if fixtimes
 end
 
 % factory/laboratory equations and coefficients for calibration/conversion
-% from V to physical units, where not already applied
+% from V/counts to physical units, where not already applied
 opt1 = 'uway_proc'; opt2 = 'sensor_unit_conversions'; get_cropt
 if isfield(so, 'calstr') && sum(cell2mat(struct2cell(so.docal)))
     [dcal, hcal] = apply_calibrations(d, h, so.calstr, so.docal, 'q');
@@ -89,6 +89,13 @@ end
 
 % remove bad times, despike, remove out-of-range values, etc.
 opt1 = 'uway_proc'; opt2 = 'rawedit'; get_cropt
+%deal with common edits
+if exist('badtimes','var') && exist('tsgpumpvars','var') && ~isempty(badtimes) && ~isempty(tsgpumpvars)
+    for vno = 1:length(tsgpumpvars)
+        uopts.badtime.(tsgpumpvars{vno}) = badtimes;
+    end
+end
+%***xducer offset?
 timestring = sprintf('days since %d-01-01 00:00:00',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1));
 d.dday = m_commontime(d, 'time', h, timestring);
 h.fldnam = [h.fldnam 'dday'];
@@ -111,7 +118,7 @@ if handedit
     [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, vars_to_ed);
 end
 
-% speed of sound correction
+% speed of sound correction for single-beam echosounder (from 1500 m/s)
 if strcmp(streamtype,'sbm')
     [d, h, comment] = mday_01_cordep(d, h, mtable); 
     if ~isempty(comment)
