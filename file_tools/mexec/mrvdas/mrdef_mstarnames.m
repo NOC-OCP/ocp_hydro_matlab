@@ -8,7 +8,8 @@ function mrtables_out = mrdef_mstarnames(mrtables, varargin)
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
-% Define mstar filename prefixes for rvdas tables, and (optionally) limit to 
+% Define mstar filename prefixes for rvdas tables, and (optionally) exclude
+% tables/variables/messages we don't want (as set in opt_cruise.m)
 %
 %
 % Input:

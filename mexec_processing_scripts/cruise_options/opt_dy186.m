@@ -17,7 +17,6 @@ switch opt1
                 default_attstream = 'posmv_pashr';
             case 'rvdas_database'
                 RVDAS.jsondir = ''; %no "original" on shared drive, copy is already in cruise/data/rvdas/json_files
-                RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
                 RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr'; %contains credentials, address, and database, e.g. postgresql://user:passwd@ip.ad.re.ss/DY186
             case 'rvdas_skip'
                 %skips.sentence = [skips.sentence, 'surfmet_gpxsm', 'ranger2usbl_psonlld'];
@@ -105,12 +104,11 @@ switch opt1
             case 'redoctm'
                 redoctm = 1;
             case 'cnvfilename'
-                %cnvfile = fullfile(cdir,sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
-           
+                cnvfile = fullfile(cdir,sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
             case 'raw_corrs' % -----> if change the hystherisis coef
             case 'rawedit_auto' % -----> only if repeated spikes or out of range
             case 'ctd_cals' % -----> to apply calibration
-                % co.docal.temp = 1;
+                % co.docal.temp = 0;
                 % co.docal.cond = 0;
                 % co.docal.oxygen = 0;
                 % co.calstr.temp.sn034383.dy174 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[-15 -15]/1e4,d0.press);';
@@ -127,7 +125,7 @@ switch opt1
                 % co.calstr.oxygen.sn432831.dy174 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0   800    1500   3000  4000 ],[1.007 1.007 1.004  1.015  1.030 1.035],d0.press);';
                 % co.calstr.oxygen.sn432831.msg = 'upcast oxygen s/n 2831 adjusted to agree with 60 samples, after applying hysteresis correction; up/down difference after hysteresis correction is of order (1 umol/kg)';
             case 'sensor_choice' % -----> if we choose to use sensor 2 instead of sensor 1 for some or all of the stations
-            case 'bestdeps' % ------> if max depth in bathy/mbm/edt.nc does not match ???
+            case 'bestdeps' % ------> if not full depth (can add later)
         end
 
          
@@ -148,12 +146,10 @@ switch opt1
                     21 3054
                     23 3056
                     ];
-
                 niskin_pos = niskin_barcodes(:,1);
                 niskin_number = niskin_barcodes(:,2);
             case 'blfilename'
-                % blinfile = fullfile(root_botraw,sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
-
+                blinfile = fullfile(root_botraw,sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
             case 'botflags'
                 % k_empty = find(niskin_number == -9); % positions with no bottle
                 % [~,kposempty,~] = intersect(position,k_empty); % index of empty places in set of positions that have appeared in .bl file
@@ -179,7 +175,6 @@ switch opt1
                 % ssw_k15 = 0.99993;
                 calcsal = 1;
                 % ssw_batch = 'P168';
-
             case 'sal_calc'
                 % salin_off = [000 -.5; 001 -1.5; 003 -2; ... %10th am
                 %     004 0; 005 1.5; 007 7; ... %11th pm
@@ -212,7 +207,9 @@ switch opt1
                 varmap.statnum = {'number'};
                 varmap.fix_temp = {'temp'};
                 varmap.conc_o2 = {'umol_per_l'};
-                
+                %will need to replace 24 with 1 probably based on oxygen
+                %sampling log (it is using bottle label rather than bottle
+                %position)
             case 'oxy_calc'
                 % vol_reag_tot = 2.0397;
             case 'oxy_flags'

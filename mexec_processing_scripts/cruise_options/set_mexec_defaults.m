@@ -14,17 +14,20 @@
 
 switch opt1
 
+    case 'setup'
+        switch opt2
+            case 'time_origin'
+                %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
+            case 'use_ix_ladcp'
+                use_ix_ladcp = 'query'; %'query' means ask each time; or set to 'no' or 'yes'
+        end
+
     case 'mstar'
         %things about mstar file format
         if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024
             docf = 1; %cf-compliant time units
         else
             docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
-        end
-
-    case 'setup'
-        switch opt2
-            case 'time_origin'
         end
 
     case 'ship'
@@ -58,12 +61,8 @@ switch opt1
                 end
             case 'rvdas_database'
                 RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-                switch MEXEC_G.Mship
-                    case {'dy','jc'}
-                        RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
-                end
+                %RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-                RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr';
             case 'rvdas_form'
                 switch MEXEC_G.Mship
                     case 'sda'
@@ -74,13 +73,10 @@ switch opt1
                         npre = 0; %table names start with instrument name
                         use_cruise_views = 0;
                 end
+            case 'rvdas_skip'
+                %see opt_dy181
         end
         
-    case 'ladcp_proc'
-        min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
-        min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
-        min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
-
     case 'ctd_proc'
         switch opt2
             %multiple files
@@ -215,6 +211,11 @@ switch opt1
                         method = 'meanbin';
                 end
         end
+
+    case 'ladcp_proc'
+        min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
+        min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
+        min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
 
     case 'check_sams'
         check_sal = 1; %plot individual salinity readings

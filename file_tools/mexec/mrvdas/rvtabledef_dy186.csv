@@ -1,4 +1,9 @@
-tablenames,tablevars,mstarpre,mstardir,paramtype,rvdasmsg,tableunts,longnames,mstarvars,mstarunts
+RVDAS info from database "DY186" and .json files in 
+loaded by mrdefine.m on 12-Dec-2024 14:06:32
+saved in /data/pstar/cruise/data/rvdas/rvtabledef_dy186.mat and /data/pstar/programs/gitvcd/ocp_hydro_matlab/file_tools/mexec/mrvdas/rvtabledef_dy186.csv
+csv copy only for information (.mat used by mrdefine)
+
+tablenames, tablevars, mstarpre, mstardir, paramtype, rvdasmsg, tableunts, longnames, mstarvars, mstarunts
 adcp_vdvbw,"time,longitudinalwaterspeed,transversewaterspeed,longitudinalgroundspeed,transversegroundspeed",adcp,other,log,vdvbw," , , , , "," , , , , ","time,longitudinalwaterspeed,transversewaterspeed,longitudinalgroundspeed,transversegroundspeed"," ,decimal_degrees,m_per_second,decimal_degrees,m_per_second"
 autosal_autosal,"time,temperature",autosal,other,lab,autosal," , "," , ","time,temperature"," ,degreesC"
 cnav_gngga,"time,utctime,latitude,latdir,longitude,londir,altitude",cnav,nav,pos,gngga," , , , , , , "," , ,Latitude, ,Longitude, ,Antenna altitude above mean sea level","time,utctime,latitude,latdir,longitude,londir,altitude"," ,hhmmss_fff,decimal_degrees,decimal_degrees,decimal_degrees,decimal_degrees, "
