@@ -131,7 +131,7 @@ else
 end
 
 hnew.dataname = dataname;
-hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER];
+hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER MEXEC_G.COMMENT_DELIMITER_STRING];
 if exist(m_add_nc(otfile),'file')
     mfsave(otfile, dd, hnew, '-merge', 'time');
 else

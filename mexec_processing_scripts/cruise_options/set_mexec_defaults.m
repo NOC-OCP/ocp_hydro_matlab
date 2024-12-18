@@ -201,7 +201,7 @@ switch opt1
                         tavp = 30;
                         method = 'meanbin';
                     case 'bathy'
-                        tavp = 5*60; 
+                        tavp = 1*60; %dy186 change to 1 minute
                         method = 'medbin';
                     case 'tsg'
                         tavp = 60;

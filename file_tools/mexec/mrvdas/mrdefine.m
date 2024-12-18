@@ -67,7 +67,10 @@ else
     if isempty(df)
         fprintf(2,'no %s found; try running with input argument ''redo''\n',tabledefmat)
     else
-        fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
+        if ~isfield(MEXEC_G,'mrvdas_update_warning') || (now-MEXEC_G.mrvdas_update_warning)>1
+            fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
+            MEXEC_G.mrvdas_update_warning = now;
+        end
         load(tabledefmat,'mrtv')
     end
 

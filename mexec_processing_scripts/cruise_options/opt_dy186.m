@@ -72,10 +72,8 @@ switch opt1
                 %     h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
                 end
                 if sum(strcmp(streamtype,{'sbm','mbm'}))
-                %     handedit = 1; %edit raw bathy
-                %     vars_to_ed = munderway_varname('depvar',h.fldnam,1,'s');
-                %     vars_to_ed = union(vars_to_ed,munderway_varname('depsrefvar',h.fldnam,1,'s'));
-                %     vars_to_ed = union(vars_to_ed,munderway_varname('deptrefvar',h.fldnam,1,'s'));
+                     handedit = 1; %edit raw bathy
+                     vars_to_ed = h.fldnam(cellfun(@(x) contains(x,'dep'), h.fldnam));
                 end
             case 'tsg_avedits' 
                 check_tsg = 1;
@@ -89,7 +87,7 @@ switch opt1
                      flowlims = [1 2.5]; %nominal range of good enough flow on this ship; tsgpumpvars will be naned when flow outside this range
                      tsgpumpvars = {'temph','tempr','conductivity','salinity','fluo','trans','soundvelocity'};
                      %variables to edit by hand (GUI): 
-                %     %vars_to_ed = {'flow'};
+                     vars_to_ed = {'tempdk', 'temph', 'conductivity', 'tempr', 'flow', 'fluo', 'trans'};
                 %     %vars_to_ed = {'temph','conductivity'};
                 %     vars_to_ed = {'salinity'};
                 %     vars_to_ed = {'tempr','temph'};
@@ -104,7 +102,13 @@ switch opt1
             case 'redoctm'
                 redoctm = 1;
             case 'cnvfilename'
-                cnvfile = fullfile(cdir,sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
+                %if stn==2
+                %    %reconverted from .hex using correct
+                %    %XMLCON/coefficients
+                %    cnvfile = fullfile(cdir,'DY186_CTD002b.cnv');
+                %else
+                   cnvfile = fullfile(cdir,sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
+                %end
             case 'raw_corrs' % -----> if change the hystherisis coef
             case 'rawedit_auto' % -----> only if repeated spikes or out of range
             case 'ctd_cals' % -----> to apply calibration
@@ -151,38 +155,56 @@ switch opt1
             case 'blfilename'
                 blinfile = fullfile(root_botraw,sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
             case 'botflags'
-                % k_empty = find(niskin_number == -9); % positions with no bottle
-                % [~,kposempty,~] = intersect(position,k_empty); % index of empty places in set of positions that have appeared in .bl file
-                % niskin_flag(kposempty) = 9;
-                % switch stnlocal
-                %     case 1
-                %         niskin_flag(position==23) = 4; %not closed correctly
-                %     case 4
-                %         niskin_flag(position==1) = 4; %not closed correctly
-                %         niskin_flag(position==11) = 4; %not closed correctly
-                %     otherwise
-                % end
+                %k_empty = find(niskin_number == -9); % positions with no bottle (cast 2) -- though these are excluded by msbe35_to_sam anyway so these lines may not be necessary
+                %[~,kposempty,~] = intersect(position,k_empty); % index of empty places in set of positions that have appeared in .bl file
+                %niskin_flag(kposempty) = 9;
+                switch stnlocal
+                    case 3
+                        niskin_flag(position==11) = 4; %not closed correctly
+                    case 5
+                        niskin_flag(position==15) = 4; %not closed correctly
+                    case 6
+                        niskin_flag(position==11) = 4; %not closed correctly
+                    otherwise
+                end
         end
 
+    case 'sbe35'
+        switch opt2
+            case 'sbe35file'
+                sbe35file = 'CTD_*.asc';
+            case 'sbe35_parse'
+                %deal with file containing multiple stations' data
+                if strcmp(file_list{kf},'CTD_010203.asc') %statnum is last 3 chars before ".", so in this case incorrectly interpreted as 203
+                    m = t.statnum==203; 
+                    t.statnum(m) = 2; %no bottles fired on 1 as it was aborted
+                    m = t.statnum==2 & t.datnum>datenum(2024,12,11,18,0,0);
+                    t.statnum(m) = 3; 
+                    %not sure why but there are some bn=0 lines, which we
+                    %can't use anyway, so exclude
+                    m = t.bn==0;
+                    t(m,:) = [];
+                end
+        end
 
         %%%%%%%%%%%%%%%%% bottle samples %%%%%%%%%%%%%%%%%%%%%%%
     case 'botpsal'
         switch opt2
             case 'sal_files'
-                %salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
+                salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
             case 'sal_parse'
                 cellT = 21; % Temperature of the bath
-                % ssw_k15 = 0.99993;
+                ssw_k15 = 0.99988;
                 calcsal = 1;
-                % ssw_batch = 'P168';
+                ssw_batch = 'P167';
             case 'sal_calc'
-                % salin_off = [000 -.5; 001 -1.5; 003 -2; ... %10th am
-                %     004 0; 005 1.5; 007 7; ... %11th pm
-                %     009 -3; 010 -1; 012 -2.5; ... %12th am
-                %     ];
-                % salin_off(:,1) = salin_off(:,1)+999e3;
-                % salin_off(:,2) = salin_off(:,2)*1e-5;
-                % salin_off_base = 'sampnum_list'; 
+                salin_off = [000 -3; 001 -6; ... 
+                    002 -4; 003 -2; ... 
+                    004 0; 005 -7; ... 
+                    ];
+                salin_off(:,1) = salin_off(:,1)+999e3;
+                salin_off(:,2) = salin_off(:,2)*1e-5;
+                salin_off_base = 'sampnum_list'; 
             case 'sal_flags'
                 % %too low (33-ish), maybe samples contaminated
                 % m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
@@ -197,16 +219,24 @@ switch opt1
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                %ofiles = dir(fullfile(root_oxy,'DY186_Oxygen_Calculation.xlsx'));
+                ofiles = dir(fullfile(root_oxy,'DY186_oxy*.xls'));
                 hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
                 chrows = 1;
                 chunits = 2;
             case 'oxy_parse'
                 calcoxy = 1;
-                varmap.position = {'bottle'};
+                varmap.position = {'bottle_number'};
+                m = ds_oxy.bottle_number==24; ds_oxy.bottle_number(m) = 1;
+                varmap.fix_temp = {'temp_c'};
+                varmap.vol_blank = {'titre_mls'};
+                varmap.vol_titre_std = {'titre_mls_1'};
+                varmap.sample_titre = {'titre_mls_2'};
+                varmap.vol_std = {'vol_mls'};
+                varmap.bot_vol_tfix = {'at_tfix_mls'};
                 varmap.statnum = {'number'};
-                varmap.fix_temp = {'temp'};
-                varmap.conc_o2 = {'umol_per_l'};
+                d = cellstr(ds_oxy.number);
+                ds_oxy.number = cellfun(@(x) str2double(x(4:end)), d);
+                ds_oxy.flag = [];
                 %will need to replace 24 with 1 probably based on oxygen
                 %sampling log (it is using bottle label rather than bottle
                 %position)
@@ -214,13 +244,7 @@ switch opt1
                 % vol_reag_tot = 2.0397;
             case 'oxy_flags'
                 %sampnum, a flag, b flag, c flag
-                % flr = [103 3 3 3; ... 
-                %        113 4 2 2; ... %a is the outlier
-                %        509 4 2 9; ... %duplicates only, a much higher than neighbours
-                %       4123 4 2 2; ... %a much lower than all
-                %       6621 4 2 2; ... %a is the outlier
-                %       7207 2 4 9; ...
-                %       7623 2 4 9; ...
+                % flr = [315 3 2 9; ... %a is lower than all
                 %       ];
                 % [~,ifl,id] = intersect(flr(:,1),d.sampnum);
                 % d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
@@ -236,14 +260,6 @@ switch opt1
                 % d.botoxya_flag(ismember(d.sampnum,flag3)) = 3;
                 % m = d.sampnum==8315;
                 % d.botoxya_flag(m) = 3; d.botoxyb_flag(m) = 3;
-        end
-
-
-    case 'sbe35'
-        switch opt2
-            case 'sbe35file'
-                %sbe35file = sprintf('%s_*.asc', upper(mcruise));
-                %stnind = [7:9]; % index in file name of where the station number can be found. File name eg = DY174_001.asc, so index is 7:9
         end
 
 

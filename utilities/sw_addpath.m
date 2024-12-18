@@ -26,7 +26,7 @@ if addladcp
     ld(n,:) = {other_programs_root 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
     ld(n,:) = {fullfile(other_programs_root, 'ladcp') 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
 end
-if force_vers
+if ~force_vers
     ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root
 end
 

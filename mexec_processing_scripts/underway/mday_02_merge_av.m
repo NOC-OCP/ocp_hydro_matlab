@@ -36,7 +36,7 @@ switch datatype
         streams = {'ea640_sddpt'; 'em122_kidpt'};
         required = [0 0];
         otfile = ['bathy_' mcruise '.nc'];
-        tavp_s = 5*60; % 5 min
+        tavp_s = 60; % 1 min
         gmethod = 'medbin';
     case 'ocean'
         source = {'surfmet';'sbe45';'sbe38'};
@@ -131,7 +131,7 @@ if regrid
 
         %save
         h.dataname = [datatype '_' mcruise '_combined_av'];
-        h.comment = sprintf('\n %s from %s, % over bins of width %s s',source{fno},infile,gmethod(1:end-2),num2str(tavp_s));
+        h.comment = sprintf('\n %s from %s, %s over bins of width %d s',source{fno},infile,gmethod(1:end-2),tavp_s);
         mfsave(otfile, dg, h, '-merge', 'times')
 
     end
@@ -171,7 +171,15 @@ end
 if handedit
     btol = (tavp_s/2)/86400;
     edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
-    [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
+    %loop through groupings of variables that can be plotted on the same
+    %axes
+    if ~exist('vars_to_ed_multiple','var') || isempty(vars_to_ed_multiple)
+        vars_to_ed_multiple = {vars_to_ed};
+    end
+    for eg = 1:length(vars_to_ed_multiple)
+        vars_to_ed = vars_to_ed_multiple{eg};
+        [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
+    end
 end
     if isfield(hg,'fldserial') && length(hg.fldserial)<length(hg.fldnam); keyboard; end
 

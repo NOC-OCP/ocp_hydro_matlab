@@ -69,7 +69,9 @@ if ~isnan(Mversionlock) % use lock file
         [us, ur] = movefile(MEXEC.simplelockfile, userlockfile); mfixperms(userlockfile);
         if us == 1 & exist(userlockfile,'file') == 2 % successful rename of lock file
             m = 'Version lock file moved to user lock file so version file is locked: OK';
-            fprintf(MEXEC_A.Mfidterm,'%s\n',m)
+            if ~MEXEC_G.quiet
+                fprintf(MEXEC_A.Mfidterm,'%s\n',m)
+            end
             break;
         end
         % else lock file isn't there, it must be in use
@@ -114,7 +116,9 @@ if ~isnan(Mversionlock) % reset lock file
     while 1
         if us == 1 && exist(MEXEC.simplelockfile,'file') == 2 && exist(userlockfile,'file') ~=2 % seems to be a successful rename of lock file
             m = 'Version lock file restored to default so version file is unlocked: OK';
-            fprintf(MEXEC_A.Mfidterm,'%s\n',m);
+            if ~MEXEC_G.quiet
+                fprintf(MEXEC_A.Mfidterm,'%s\n',m);
+            end
             break
         elseif us ~=1
             m1 = 'There has been a problem restoring the version lock file in subroutine m_verson.m:';

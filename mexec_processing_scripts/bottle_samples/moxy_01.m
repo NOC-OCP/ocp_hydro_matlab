@@ -96,7 +96,7 @@ ds_oxy_fn = ds_oxy.Properties.VariableNames;
 %now put into structure and output
 clear d hnew
 hnew.dataname = ['oxy_' mcruise '_01'];
-hnew.comment = ['data loaded from ' fullfile(root_oxy, ofpat) ' \n '];
+hnew.comment = ['data loaded from ' root_oxy ' \n '];
 hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
 [d.sampnum, iia, ~] = unique(ds_oxy.sampnum, 'stable');
@@ -264,9 +264,10 @@ if sum(m0)
         ds.sampnum(ib0),qb./y,'x', ds.sampnum(ib0),qq./y,'+',...
         d.sampnum(ia),r,'.b', ds.sampnum(ib0),q(ia0,:)./y,'o');
     ylabel('oxygen bot/ctd'); xlabel('sampnum'); grid
+    title('all values, questionable replicates highlighted')
     legend(hl([1 end-3:end]),['+/-' num2str(orthp) ' factor on bottle value'],'all (a)','a','b','c','location','southwest'); 
     set(hl(1:nr),'color',[.5 .5 .5]); set(hl(nr+1:end-4),'color',[0 0 0])
-    title('flagged bad x, questionable +')
+    title('o differing replicates (x if flagged bad, + if flagged questionable)')
 
     %display values for each station
     stns = unique(stn0); stns = stns(stns>=stn_start);

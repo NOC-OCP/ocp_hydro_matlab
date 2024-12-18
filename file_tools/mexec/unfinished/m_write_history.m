@@ -47,8 +47,8 @@ for k = 1:length(dnames_u)
     end
     m4 = ['% input files'];
     fprintf(fid,'%s\n',m4); nlines = nlines+1;
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m4);
-    if isfield(MEXEC_A,'Mhistory_in') ~= 1
+    if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m4); end
+    if ~isfield(MEXEC_A,'Mhistory_in')
         m4a = ['% no input files'];
         fprintf(fid,'%s\n',m4a); nlines = nlines+1;
         fprintf(MEXEC_A.Mfidterm,'%s\n',m4a);
@@ -57,18 +57,18 @@ for k = 1:length(dnames_u)
             h = MEXEC_A.Mhistory_in{kin};
             m4 = ['% Filename '  h.filename '   Data Name :  ' h.dataname ' <version> ' sprintf('%d',h.version) ' <site> ' h.mstar_site];
             fprintf(fid,'%s\n',m4); nlines = nlines+1;
-            fprintf(MEXEC_A.Mfidterm,'%s\n',m4);
+            if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m4); end
         end
     end
     m5 = ['% output files'];
     fprintf(fid,'%s\n',m5); nlines = nlines+1;
-    fprintf(MEXEC_A.Mfidterm,'%s\n',m5);
+    if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m5); end
 
     for kot = 1:length(MEXEC_A.Mhistory_ot)
         h = MEXEC_A.Mhistory_ot{kot};
         m6 = ['% Filename '  h.filename '   Data Name :  ' h.dataname ' <version> ' sprintf('%d',h.version) ' <site> ' h.mstar_site];
         fprintf(fid,'%s\n',m6); nlines = nlines+1;
-        fprintf(MEXEC_A.Mfidterm,'%s\n',m6);
+        if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m6); end
     end
 
     m = 'MEXEC_A.MARGS_IN = {';

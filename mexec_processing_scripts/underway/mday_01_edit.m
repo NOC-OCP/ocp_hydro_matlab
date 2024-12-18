@@ -115,6 +115,10 @@ if handedit
     ddays = ydays-1;
     btol = 0.5/86400; %1/2 s
     edfile = fullfile(fileparts(otfile),'editlogs',[abbrev '_' mcruise]);
+    if isempty(intersect(vars_to_ed,fieldnames(d)))
+        warning('vars_to_ed not in file, using all')
+        vars_to_ed = fieldnames(d);
+    end
     [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, vars_to_ed);
 end
 

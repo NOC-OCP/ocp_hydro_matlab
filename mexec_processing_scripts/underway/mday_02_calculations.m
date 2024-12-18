@@ -163,6 +163,9 @@ elseif strcmp(stage, 'post')
         case 'nav'
             % convert dummy easting and northing back to heading
             [~, d.heading] = uvsd(d.dum_e, d.dum_n, 'uvsd');
+            varsrm = {'dum_e','dum_n'};
+            d = rmfield(d,varsrm);
+            m = ismember(h.fldnam,varsrm); h.fldnam(m) = []; h.fldunt(m) = []; h.fldserial(m) = [];
             % calculate speed, course, distrun
             latvar = munderway_varname('latvar', h.fldnam, 1 ,'s');
             lonvar = munderway_varname('lonvar', h.fldnam, 1, 's');
