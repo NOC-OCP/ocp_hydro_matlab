@@ -112,12 +112,12 @@ switch opt1
             case 'raw_corrs' % -----> if change the hystherisis coef
             case 'rawedit_auto' % -----> only if repeated spikes or out of range
             case 'ctd_cals' % -----> to apply calibration
-                % co.docal.temp = 0;
-                % co.docal.cond = 0;
-                % co.docal.oxygen = 0;
-                % co.calstr.temp.sn034383.dy174 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[-15 -15]/1e4,d0.press);';
-                % co.calstr.temp.sn034383.msg = 'temp s/n 4383 adjusted by -1.5 mdeg to agree with SBE35; median of depths > 2500 dbar on stations 1 to 10';
-                % co.calstr.temp.sn035780.dy174 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[15 15]/1e4,d0.press);';
+                co.docal.temp = 0;
+                co.docal.cond = 0;
+                co.docal.oxygen = 0;
+                co.calstr.temp.sn034593.dy186 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[-15 -15]/1e4,d0.press);';
+                %co.calstr.temp.sn034593.msg = 'temp s/n 4383 adjusted by -1.5 mdeg to agree with SBE35; median of depths > 2500 dbar on stations 1 to 10';
+                co.calstr.temp.sn034712.dy186 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[15 15]/1e4,d0.press);';
                 % co.calstr.cond.sn043874.dy174 = 'dcal.cond = d0.cond.*(1+ (interp1([1 12],[0 -2e-3],d0.statnum) + interp1([-10 1500 4000],[-2e-3 1e-3 0],d0.press))/35);';
                 % %dcal.cond = d0.cond.*(1 + (interp1([1 12],[0 -20]/1e4,d0.statnum) + interp1([-10 0 500 1000 1500 3000 4000],[-24 -24 -11 2 12 4 4]/1e4,d0.press))/35);';
                 % co.calstr.cond.sn043874.msg = 'cond s/n 3874 adjusted to agree with bottle salinity up to station 12';
@@ -244,22 +244,8 @@ switch opt1
                 % vol_reag_tot = 2.0397;
             case 'oxy_flags'
                 %sampnum, a flag, b flag, c flag
-                % flr = [315 3 2 9; ... %a is lower than all
-                %       ];
-                % [~,ifl,id] = intersect(flr(:,1),d.sampnum);
-                % d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
-                % d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
-                % d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
-                % % outliers relative to profile/CTD (not replicates)
-                % flag3 = [3617 3811 3817 4217 4219 ...
-                %     8801 9405]';
-                % flag4 = [3501 3507 3509 3515 3603 3607 3715 ...
-                %     9223 9319 9706]';
-                % %8802, 8804, 8810, 8812, 8816, 8822
-                % d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
-                % d.botoxya_flag(ismember(d.sampnum,flag3)) = 3;
-                % m = d.sampnum==8315;
-                % d.botoxya_flag(m) = 3; d.botoxyb_flag(m) = 3;
+                flr = [315 3 2 9; ... %a is lower than all
+                      ];
         end
 
 
