@@ -2,8 +2,6 @@ switch opt1
 
     case 'setup'
         switch opt2
-            case 'setup_datatypes'
-                use_ix_ladcp = 1;
             case 'time_origin'
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2024 1 1 0 0 0];
             case 'mdirlist'
@@ -40,6 +38,8 @@ switch opt1
         switch opt2
             case 'redoctm'
                 redoctm = 1;
+            case 'doloopedit'
+                doloopedit = 0;
             case 'cnvfilename'
                 cnvfile = fullfile(cdir,sprintf('%s_CTD_%03dS.cnv',upper(mcruise),stn)); %try stainless first
                 if ~exist(cnvfile,'file')
@@ -62,6 +62,10 @@ switch opt1
                 elseif stn==4
                     co.badscan.oxygen_sbe1 = [1.4026e5 Inf];
                     co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==5
+                    co.badscan.temp2 = [3.75e4 6.81e4];
+                    co.badscan.cond2 = co.badscan.temp2;
+                    co.badscan.oxygen_sbe2 = co.badscan.temp2;
                 elseif stn==6
                     co.rangelim.cond1 = [34 40];
                     co.rangelim.cond2 = co.rangelim.cond1;
@@ -70,19 +74,44 @@ switch opt1
                 elseif stn==7
                     co.badscan.oxygen_sbe1 = [1.303e5 Inf];
                     co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
-
-                    % elseif ismember(stn,[44 45])
-                %     co.badscan.oxygen_sbe2 = [-inf inf]; %steps, all questionable
-                % elseif stn==61
-                %     co.despike.cond1 = [0.02 0.02];
-                %     co.despike.cond2 = [0.02 0.02];
-                % elseif stn==88
-                %     co.badscan.cond1 = [9.198e4 inf]; %offset, probably resolves before surface but hard to say where
-                % elseif stn==98                         %CTD clogged with jellyfish
-                %     co.badscan.oxygen_sbe1 = [39200 inf];
-                %     co.badscan.temp1 = [39200 inf];
-                %     co.badscan.cond1 = [39200 inf];
-                %     co.badscan.cond2 = [11004 39421];
+                elseif stn==8
+                    co.badscan.temp2 = [4.2e4 4.78e4; 4.9e4 5.9e4];
+                    co.badscan.cond2 = co.badscan.temp2;
+                    co.badscan.oxygen_sbe2 = co.badscan.temp2;
+                elseif stn==9
+                    co.badscan.oxygen_sbe1 = [1.366e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==10
+                    co.badscan.oxygen_sbe1 = [1.1264e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==12
+                    co.badscan.oxygen_sbe1 = [1.265e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==14
+                    co.badscan.oxygen_sbe1 = [8.707e4 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==16
+                    co.badscan.oxygen_sbe1 = [1.2884e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==20
+                    co.badscan.oxygen_sbe1 = [1.351e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==21
+                    co.badscan.oxygen_sbe1 = [1.288e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==23
+                    co.badscan.oxygen_sbe1 = [1.393e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==25
+                    co.badscan.oxygen_sbe1 = [1.2515e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==26
+                    co.badscan.oxygen_sbe1 = [1.2056e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==27
+                    co.badscan.cond2 = [1.005e5 1.017e5];
+                    co.badscan.oxygen_sbe1 = [1.552e5 Inf];
+                    co.badscan.oxygen_sbe2 = [co.badscan.cond2; 1.134e5 1.135e5; co.badscan.oxygen_sbe1];
                 end
         end
 
@@ -96,8 +125,8 @@ switch opt1
         end
 
     case 'ladcp_proc'
-        cfg.uppat = sprintf('%s_LADCP_CTD%03dS*.000',upper(mcruise),stnlocal);
-        cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000',upper(mcruise),stnlocal);
+        cfg.uppat = sprintf('%s_LADCP_CTD_%03dU.000',upper(mcruise),stnlocal);
+        cfg.dnpat = sprintf('%s_LADCP_CTD_%03dD.000',upper(mcruise),stnlocal);
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
 

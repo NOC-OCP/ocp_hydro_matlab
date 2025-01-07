@@ -110,4 +110,3 @@ suspect=[1:round(N/2) nd-round(N/2)+1:nd];
 isel = ~ismember([1:nd],suspect);
 jg_filt = jg1(isel);
 m_filt = tmpd(isel);
-

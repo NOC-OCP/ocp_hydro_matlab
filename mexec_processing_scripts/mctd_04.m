@@ -88,8 +88,6 @@ for vno = 1:length(var_copycell)
     hn.fldunt = [hn.fldunt h.fldunt{iiv(vno)}];
 end
 
-
-
 %%%%% optionally loopedit downcast %%%%%
 if isdown
     doloopedit = 0;
