@@ -7,9 +7,10 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-root_pos = mgetdir(default_navstream);
-root_hed = mgetdir(default_hedstream);
-root_att = mgetdir(default_attstream);
+%workaround for last dy180 underway processing (post-cruise)
+root_pos = fullfile(MEXEC_G.mexec_data_root,'nav','pos');
+root_hed = fullfile(MEXEC_G.mexec_data_root,'nav','hed');
+root_att = fullfile(MEXEC_G.mexec_data_root,'nav','att');
 if strcmp(MEXEC_G.Mshipdatasystem,'rvdas')
     def = mrdefine;
     navstream = def.tablemap{strcmp(default_navstream,def.tablemap(:,2)),1};
