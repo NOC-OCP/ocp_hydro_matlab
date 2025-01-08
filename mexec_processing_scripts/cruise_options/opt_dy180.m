@@ -8,6 +8,7 @@ switch opt1
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2024 1 1 0 0 0];
             case 'mdirlist'
                 MEXEC_G.MDIRLIST{strcmp('M_BOT_SAL',MEXEC_G.MDIRLIST(:,1)),2} = fullfile('ctd','BOTTLE_SAL','AUTOSAL','Autosal Data');
+                MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_LADCP' 'ladcp'}];
         end
 
     case 'ship'
@@ -83,6 +84,7 @@ switch opt1
         cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000',upper(mcruise),stnlocal);
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
+        sfile = fullfile(spath, sprintf('os150nb_edited_xducerxy_%s_ctd_%03d_forladcp.mat',mcruise,stn)); %75kHz was bad much of the cruise
 
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
