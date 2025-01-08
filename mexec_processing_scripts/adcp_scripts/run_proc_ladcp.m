@@ -19,6 +19,7 @@ end
 cdir = pwd;
 m_common; mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
+% configuration defaults and cruise-specific options
 clear cfg
 opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 cfg.stnstr = stn_string;
@@ -42,20 +43,23 @@ cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata',cfg.stnstr);
 cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
 cfg.p.ambiguity = 4.0; %this one is not used?
 %cfg.p.vlim = 4.0; %this one is***require setting in opt_cruise
-opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
+%SADCP, if it's been processed and output to file for ladcp
+spath = fullfile(mgetdir('M_LADCP'), 'ix', 'SADCP');
+sfile = fullfile(spath, sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn)); 
+%***set type, as well as inst, in opt_cruise?opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
 opt1 = 'ladcp_proc'; get_cropt %required to set pattern for down- and up-looker files
 infiled = fullfile(cfg.rawdir,cfg.dnpat);
 infileu = fullfile(cfg.rawdir,cfg.uppat);
 dopause = 0;
 stn = stnlocal;
 
-% first sync (if lad_syncscript found)
-if isfield(MEXEC_G,'mexec_shell_scripts')
-    css = fullfile(MEXEC_G.mexec_shell_scripts,'lad_syncscript');
-    if exist(css,'file')
-        system(css);
-    end
-end
+% % first sync (if lad_syncscript found)
+% if isfield(MEXEC_G,'mexec_shell_scripts')
+%     css = fullfile(MEXEC_G.mexec_shell_scripts,'lad_syncscript');
+%     if exist(css,'file')
+%         system(css);
+%     end
+% end
 
 % find out which raw files we have
 if isul
@@ -130,10 +134,6 @@ else
     cfg.orient = 'DLUL'; cfg.constraints = {'GPS' 'BT'};
 end
 
-%SADCP, if it's been processed and output to file for ladcp
-spath = fullfile(mgetdir('M_LADCP'), 'ix', 'SADCP');
-sfile = fullfile(spath, sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn)); 
-%***set type, as well as inst, in opt_cruise?
 if exist(sfile,'file')
     cfg.f.sadcp = sfile;
     cfg.constraints = [cfg.constraints 'SADCP'];
