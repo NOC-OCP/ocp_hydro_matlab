@@ -226,6 +226,9 @@ switch opt1
         switch opt2
             case 'sal_parse'
                 calcsal = 1; %calculate from conductivity ratio and temperature
+            case 'sal_calc'
+                salin_off_base = 'sampnum_run'; %alternately, sampnum_list, if you are sure they will be loaded in order
+                salin_off = []; sal_adj_comment = '';
         end
 
     case 'botoxy'

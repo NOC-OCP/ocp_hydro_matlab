@@ -198,13 +198,13 @@ switch opt1
                 calcsal = 1;
                 ssw_batch = 'P167';
             case 'sal_calc'
-                salin_off = [000 -3; 001 -6; ... 
-                    002 -4; 003 -2; ... 
-                    004 0; 005 -7; ... 
-                    ];
-                salin_off(:,1) = salin_off(:,1)+999e3;
-                salin_off(:,2) = salin_off(:,2)*1e-5;
-                salin_off_base = 'sampnum_list'; 
+%                 salin_off = [000 -3; 001 -6; ... 
+%                     002 -4; 003 -2; ... 
+%                     004 0; 005 -7; ... 
+%                     ];
+%                 salin_off(:,1) = salin_off(:,1)+999e3;
+%                 salin_off(:,2) = salin_off(:,2)*1e-5;
+%                 salin_off_base = 'sampnum_list'; 
             case 'sal_flags'
                 % %too low (33-ish), maybe samples contaminated
                 % m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);

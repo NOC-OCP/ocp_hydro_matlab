@@ -102,13 +102,10 @@ if calcsal
     vars = fieldnames(samevars);
     fn = ds_sal.Properties.VariableNames;
     for vno = 1:length(vars)
-        ii0 = strcmp(vars{vno},fn);
-        iid = find(contains(samevars.(vars{vno}),fn));
-        if ~sum(ii0) && ~isempty(iid)
+        if ~sum(strcmp(vars{vno},fn)) && ~sum(contains(samevars.(vars{vno}),fn))
             %add this one
             ds_sal.(vars{vno}) = nan(size(ds_sal,1),1);
             fn = [fn vars{vno}];
-            ii0 = strcmp(vars{vno},fn);
         end
     end
     fn = ds_sal.Properties.VariableNames;
@@ -135,14 +132,6 @@ if calcsal
         ds_sal.flag = 2+zeros(size(ds_sal,1),1);
     else
         ds_sal.flag(isnan(ds_sal.flag)) = 9;
-    end
-
-    if 0 %***
-        if sum(strcmp('comment',fn))
-            ds_sal.comment(iid,1) = ds.comment;
-        else
-            ds_sal.comment(iid,1) = repmat(' ',size(a0));
-        end
     end
 
     if ~ismember('sample_4',fn)
@@ -217,7 +206,6 @@ if calcsal
 
     %%%%%% standards offsets %%%%%%
 
-    salin_off = []; salin_off_base = 'sampnum_run'; sal_adj_comment = '';
     opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
     if ~strcmp(salin_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
         [~,ii] = sort(ds_sal.runtime);
@@ -240,7 +228,7 @@ if calcsal
         figure(10); clf
         subplot(211)
         st = ds_sal.k15*2;
-        if sum(strcmp(salin_off_base,'sampnum_run'))
+        if strcmp(salin_off_base,'sampnum_run')
             x = ds_sal.runtime - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
             plot(x,st-ds_sal.runavg,'oc'); hold on
             disp('cyan o: all sample averages recorded')
