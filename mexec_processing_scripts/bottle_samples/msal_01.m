@@ -61,6 +61,8 @@ if isfield(ds_sal,'sampnum') && sum(isnan(ds_sal.sampnum))
     %filled in for the first (average) line, for example
     ds_sal = fill_samdata_statnum(ds_sal, 'sampnum');
 end
+%remove NaN sampnum lines
+ds_sal(isnan(ds_sal.sampnum),:) = [];
 
 %parse, for instance getting information from header
 % for no = 1:length(salhead)
@@ -138,9 +140,9 @@ if calcsal
         ds_sal.sample_4 = NaN+ds_sal.sample_1;
     end
 
-    %shift tsg sampnum times if using >0 method
-    ii = find(ds_sal.sampnum>1000e8);
-    ds_sal.sampnum(ii) = ds_sal.sampnum(ii)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
+    %temporarily shift tsg sampnum times for plotting if using >0 method
+    iitsg = find(ds_sal.sampnum>1000e8);
+    ds_sal.sampnum(iitsg) = ds_sal.sampnum(iitsg)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
 
     %edits
     reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
@@ -188,7 +190,12 @@ if calcsal
     end
     if exist('bads','var') && ~isempty(bads) %new edits to apply
         [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+    
     end
+
+    %put year back on to tsg samples
+    ds_sal.sampnum(iitsg) = ds_sal.sampnum(iitsg) + MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
+
     opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
     %recalculate mean
     a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];

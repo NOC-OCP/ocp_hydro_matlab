@@ -1,6 +1,7 @@
 %scripts to rerun after editing using mctd_rawedit, or if calibration is
 %changed
 
+m_common
 root_ctd = mgetdir('M_CTD');
 
 if ~exist('klist','var')
@@ -16,7 +17,12 @@ klistl = klist(:)'; %clear klist
 
 for kloop = klistl
 
-    stn = kloop; mctd_02(stn)
+    try
+       stn = kloop; mctd_02(stn)
+    catch
+        warning('skipping station %s',stn)
+        continue
+    end
 
     stn = kloop; mctd_03(stn);
     stn = kloop; mctd_04(stn);

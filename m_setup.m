@@ -53,13 +53,13 @@ global MEXEC_G
 %defaults: what are we processing and where? 
 MEXEC_G.MSCRIPT_CRUISE_STRING='dy186';
 MEXEC_G.ix_ladcp = 0; %set to 0 to not add ldeo_ix paths (for instance if processing mooring data)
-MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
+MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
-MEXEC_G.mexec_data_root = '/data/pstar/cruise/data'; %if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.other_programs_root = '/data/pstar/programs/others/matlab/'; 
+MEXEC_G.mexec_data_root = '/noc/mpoc/rpdmoc/cruise_data/dy186/mcruise/data';%if empty, will search for cruise directory near current directory and near home directory
+MEXEC_G.other_programs_root = '/noc/mpoc/eurogoship/programs/others/'; 
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-MEXEC_G.raw_underway = 1; %if 0, skip the rvdas setup
+MEXEC_G.raw_underway = 0; %if 0, skip the rvdas setup
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 force_vers = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 
@@ -210,20 +210,19 @@ switch MEXEC_G.Mship
         MEXEC_G.Mshipdatasystem = '';
 end
 
-
-if MEXEC_G.raw_underway 
-    %***still need to configure where directories are for some applications***
-    try
-        switch MEXEC_G.Mshipdatasystem
-            case 'rvdas'
-                mrtv = mrdefine;
-            case 'scs'
-                mrtv = msdefine; %***
-            case 'techsas'
-                mrtv = mtdefine; %***
+%underway directories
+try
+    switch MEXEC_G.Mshipdatasystem
+        case 'rvdas'
+            mrtv = mrdefine;
+        case 'scs'
+            mrtv = msdefine; %***
+        case 'techsas'
+            mrtv = mtdefine; %***
         end
         fprintf(1,'using cached %s table list / mstar lookup\n',MEXEC_G.Mshipdatasystem)
-    catch
+catch
+    if MEXEC_G.raw_underway
         try
             fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
             switch MEXEC_G.Mshipdatasystem
@@ -236,16 +235,18 @@ if MEXEC_G.raw_underway
             end
             fprintf(1,'reloaded table definitions\n')
         catch
-            warning('skipping underway data setup')
+            warning('skipping underway data setup and directories')
         end
+    else
+        warning('skipping underway data directories')
     end
-    if exist('mrtv','var')
-        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; ...
-            [cellfun(@(x) ['M_' upper(x)], mrtv.mstarpre, 'UniformOutput', false), ...
-            mrtv.mstardir]];
-        [~,ii] = unique(MEXEC_G.MDIRLIST(:,1),'stable');
-        MEXEC_G.MDIRLIST = MEXEC_G.MDIRLIST(ii,:);
-    end
+end
+if exist('mrtv','var')
+    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; ...
+        [cellfun(@(x) ['M_' upper(x)], mrtv.mstarpre, 'UniformOutput', false), ...
+        mrtv.mstardir]];
+    [~,ii] = unique(MEXEC_G.MDIRLIST(:,1),'stable');
+    MEXEC_G.MDIRLIST = MEXEC_G.MDIRLIST(ii,:);
 end
 
 
