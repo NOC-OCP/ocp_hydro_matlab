@@ -193,6 +193,11 @@ tic;					% start timer
 
 %pcs.step_name = 'INITIALIZATION';		% allow debugging of initial params
 pcs.cur_step = 0; pcs.update_figures = [];
+if ~isfield(cfg,'figh')
+    for no = 1:14
+        cfg.figh(no) = figure(no); clf
+    end
+end
 %end_processing_step;
 
 %----------------------------------------------------------------------
@@ -383,7 +388,7 @@ if pcs.begin_step <= pcs.cur_step
   end
 
   % Plot a summary plot of the raw data
-  figure(2), clf
+  set(groot,'CurrentFigure',cfg.figh(2)); clf
   p=plotraw(d,p);
   pause(.01)
   
@@ -565,7 +570,7 @@ if pcs.begin_step <= pcs.cur_step
   pcs.update_figures = [pcs.update_figures 1 11];
 
   % Plot final results
-  figure(1), clf
+  set(groot,'CurrentFigure',cfg.figh(1)), clf
   plotinv(dr,d,p,ps)
   
   % Convert p.warn to one line of text with newline characters
@@ -574,7 +579,7 @@ if pcs.begin_step <= pcs.cur_step
      p.warnings = [p.warnings deblank(p.warnp(i,:)) newline];
   end
   
-  figure(11)
+  set(groot,'CurrentFigure',cfg.figh(11))
   clf
   % experimental diagnostic of battery voltage
   %
@@ -646,7 +651,7 @@ end
             h = [];
         end
         if ~isempty(h)
-            figure(jj); pause(1);
+            set(groot,'CurrentFigure',cfg.figh(jj)); pause(1);
             eval(sprintf('print -f%d -dpsc %s_%02d.ps',jj,f.res,jj))
         end
     end
@@ -658,7 +663,7 @@ end
             h = [];
         end
         if ~isempty(h)
-            figure(jj); pause(1);
+            set(groot,'CurrentFigure',cfg.figh(jj)); pause(1);
             eval(sprintf('print -f%d -dpng %s_%02d.png',jj,f.res,jj))
         end
     end
@@ -670,7 +675,7 @@ end
             h = [];
         end
         if ~isempty(h)
-            figure(jj); pause(1);
+            set(groot,'CurrentFigure',cfg.figh(jj)); pause(1);
             eval(sprintf('print -f%d -dpdf %s_%02d.pdf',jj,f.res,jj))
         end
     end
