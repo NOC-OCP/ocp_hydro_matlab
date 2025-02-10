@@ -96,7 +96,11 @@ ds_oxy_fn = ds_oxy.Properties.VariableNames;
 %now put into structure and output
 clear d hnew
 hnew.dataname = ['oxy_' mcruise '_01'];
-hnew.comment = ['data loaded from ' fullfile(root_oxy, ofpat) ' \n '];
+if length(ofiles)==1
+    hnew.comment = ['data loaded from ' ofiles{1} ' \n'];
+elseif exist('ofpat','var')
+    hnew.comment = ['data loaded from ' fullfile(root_oxy, ofpat) ' \n '];
+end
 hnew.fldnam = {'sampnum' 'statnum' 'position'};
 hnew.fldunt = {'number' 'number' 'on.rosette'};
 [d.sampnum, iia, ~] = unique(ds_oxy.sampnum, 'stable');

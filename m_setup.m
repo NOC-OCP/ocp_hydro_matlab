@@ -47,7 +47,6 @@ function varargout = m_setup(varargin)
 %    subdirectories to your path 
 %
 
-clear MEXEC_G
 global MEXEC_G
 
 %defaults: what are we processing and where? 
@@ -137,7 +136,7 @@ if ~isempty(MEXEC_G.other_programs_root)
             path_choose = 0;
             MEXEC_G.ix_ladcp = 0;
     end
-    MEXEC_G = sw_addpath(MEXEC_G.other_programs_root,MEXEC_G,force_ext_software_versions);
+    MEXEC_G.exsw_paths = sw_addpath(MEXEC_G.other_programs_root,'force_vers',force_ext_software_versions,'addladcp',MEXEC_G.ix_ladcp);
 else
     MEXEC_G.ix_ladcp = 0;
     path_choose = [];

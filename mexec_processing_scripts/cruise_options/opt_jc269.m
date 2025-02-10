@@ -46,10 +46,17 @@ switch opt1
                     cnvfile = fullfile(cdir,sprintf('%s_CTD_%03dT.cnv',upper(mcruise),stn)); %try Ti
                 end
             case 'ctd_cals'
-                co.docal.cond = 0;
-                co.docal.oxygen = 0;
-                %co.calstr.cond.sn44065.dy180 = 'dcal.cond = d0.cond.*(1-0.005/35);';
-                %co.calstr.cond.sn44065.msg = 'calibration for cond 04c-4065 (cond1) based on N samples from M casts';
+                co.docal.cond = 1;
+                co.docal.oxygen = 1;
+                co.calstr.cond.sn42450.jc269 = 'dcal.cond = d0.cond.*(1+0.001/35);';
+                co.calstr.cond.sn42450.msg = 'calibration for cond 04c-2450 (cond*) based on 48 samples from 12 casts (top 1000 m)';
+                co.calstr.cond.sn42858.jc269 = 'dcal.cond = d0.cond.*(1+0.002/35);';
+                co.calstr.cond.sn42858.msg = 'calibration for cond 04c-2858 (cond*) based on 48 samples from 12 casts (top 1000 m)';
+                co.calstr.oxygen.sn2819.jc269 = 'dcal.oxygen = d0.oxygen*1.055+interp1([0 30],[-1 2],d0.statnum);';%+interp1([0 1100],[0 1],d0.press);';
+                co.calstr.oxygen.sn2819.msg = 'calibration for oxygen 2819 (oxygen*) based on 115 low-gradient samples from *** casts (top 1000 m)';
+                co.calstr.oxygen.sn431940.jc269 = 'dcal.oxygen = d0.oxygen.*interp1([0 1100],[1.063 1.055],d0.press)+interp1([0 30],[-2 1.8],d0.statnum);';
+                co.calstr.oxygen.sn431940.msg = 'calibration for oxygen 421940 (oxygen*) based on 115 low-gradient samples from *** casts (top 1000 m)';
+                %Ti: ***
             case 'rawedit_auto'
                 if stn==1
                     co.badscan.temp2 = [4.95e4 7.9e4];
@@ -129,29 +136,30 @@ switch opt1
         cfg.dnpat = sprintf('%s_LADCP_CTD_%03dD.000',upper(mcruise),stnlocal);
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
-
+        sfile = fullfile(spath, sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn));
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
-        check_sal = 1;
-        check_oxy = 1;
+        check_sal = 0;
+        check_oxy = 0;
         check_sbe35 = 0;
 
     case 'botpsal'
         switch opt2
             case 'sal_files'                
-                salfiles = dir(fullfile(root_sal,'JC269*.csv')); 
+                salfiles = dir(fullfile(root_sal,'autosal*.csv')); 
             case 'sal_parse'
                 cellT = 21;
                 ssw_k15 = 0.99993;
                 ssw_batch = 'P168';
             case 'sal_calc'
+                salin_off = -2.5e-5; %only run on one day so use constant
             case 'sal_flags'
         end
 
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = dir(fullfile(root_oxy,'DY180_oxy_CTD*.xls'));
+                ofiles = dir(fullfile(root_oxy,'JC269_Winkler*.xlsx'));
                 %hcpat = {'Niskin';'Bottle'};
                 %chrows = 1:2;
                 %chunits = 3;
@@ -161,6 +169,8 @@ switch opt1
             case 'oxy_parse'
                 calcoxy = 1;
                 labT = [];
+                ds_oxy(ismissing(ds_oxy.number),:) = []; %template sheet has blank rows but does have headings
+                ds_oxy.number = cell2mat(cellfun(@(x) str2num(x(4:6)),ds_oxy.number,'UniformOutput',false));
                 varmap.statnum = {'number'};
                 varmap.position = {'bottle_number'};
                 varmap.vol_blank = {'titre_mls'};
@@ -171,25 +181,19 @@ switch opt1
                 varmap.sample_titre = {'titre_mls_2'};
             case 'oxy_flags'
                 %sampnum, a flag, b flag, c flag
-                flr = [1201 3 3 9; ... 
-                       2703 3 3 9; ... 
-                       2707 2 2 4; ...
-                       3903 9 3 4; ...
-                       3906 3 3 9; ...
-                       4403 2 2 4; ...
-                       5203 3 4 4; ... % to be further evaluated later
-                       5223 2 2 2; ...
-                      ];
+                flr = [623 3 3;
+                    2003 3 3];
                 [~,ifl,id] = intersect(flr(:,1),d.sampnum);
                 d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
                 d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
-                d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
                 % outliers relative to profile/CTD (not replicates)
-                flag4 = [1207 2716 2720 2722 2724 2705 3909 5206 5210 5214 5216 5218]';
+                flag4 = [1607 2103 2119]';
                 d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
-                flag4b = [1501 2720]; %both a and b high, maybe bad niskin closure
-                d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
-                d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
+                flag3 = [923]';
+                d.botoxya_flag(ismember(d.sampnum,flag3)) = 3;
+                % flag4b = []; %both a and b high, maybe bad niskin closure
+                % d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
+                % d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
         end
 
     case 'outputs'

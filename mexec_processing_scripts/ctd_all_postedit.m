@@ -2,6 +2,7 @@
 %changed
 
 root_ctd = mgetdir('M_CTD');
+m_common
 
 if ~exist('klist','var')
     if ~exist('stn','var') %prompt
