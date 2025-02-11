@@ -55,8 +55,8 @@ MEXEC_G.MSCRIPT_CRUISE_STRING='dy180';
 MEXEC_G.ix_ladcp = 0; %set to 0 to not add ldeo_ix paths (for instance if processing mooring data)
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
-MEXEC_G.mexec_data_root = '/Users/yfiring/cruises/dy180/mcruise/data'; %if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.other_programs_root = '/Users/yfiring/programs/others/matlab/'; 
+MEXEC_G.mexec_data_root = '/noc/mpoc/eurogoship/dy180/mcruise/data'; %if empty, will search for cruise directory near current directory and near home directory
+MEXEC_G.other_programs_root = '/noc/mpoc/eurogoship/programs/others/'; 
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 MEXEC_G.raw_underway = 0; %if 0, skip the rvdas setup
@@ -117,6 +117,7 @@ opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
 if ~isfield(MEXEC_G,'MDEFAULT_DATA_TIME_ORIGIN')
     error('you must set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN in opt_{cruise}.m under opt1=''setup''; opt2=''time_origin''')
 end
+opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt
 
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);

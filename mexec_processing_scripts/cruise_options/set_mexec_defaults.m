@@ -18,8 +18,8 @@ switch opt1
         switch opt2
             case 'time_origin'
                 %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
-            case 'use_ix_ladcp'
-                use_ix_ladcp = 'query'; %'query' means ask each time; or set to 'no' or 'yes'
+            %case 'use_ix_ladcp'
+            %    use_ix_ladcp = 'query'; %'query' means ask each time; or set to 'no' or 'yes'
         end
 
     case 'mstar'
@@ -216,6 +216,8 @@ switch opt1
         min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
         min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
         min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
+        spath = fullfile(mgetdir('M_LADCP'), 'ix', 'SADCP');
+        sfile = fullfile(spath, sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn));
 
     case 'check_sams'
         check_sal = 1; %plot individual salinity readings
