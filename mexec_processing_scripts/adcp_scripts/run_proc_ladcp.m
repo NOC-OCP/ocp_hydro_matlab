@@ -23,7 +23,7 @@ if isfield(MEXEC_G,'mexec_shell_scripts')
     if exist(css,'file'); dosync = 1; else; dosync = 0; end
 end
 constraints_try = {{'GPS'}; {'GPS' 'BT'}; {'GPS' 'BT' 'SADCP'}};
-if ~isempty(varargin) && strcmp(varargin{1},'sadcp-only')
+if ~isempty(varargin) && strcmp(varargin{1},'add-sadcp')
     constraints_try = constraints_try(end);
 end
 
@@ -65,7 +65,7 @@ for stn = 1:length(klist)
     infiled = fullfile(cfg.rawdir,cfg.dnpat);
     infileu = fullfile(cfg.rawdir,cfg.uppat);
     dopause = 0;
-    stn = stnlocal;
+    %stn = stnlocal;
     % first sync (if lad_syncscript found) -- just once per call
     if dosync; system(css); dosync = 0; end
 
