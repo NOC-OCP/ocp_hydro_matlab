@@ -1,10 +1,18 @@
-function run_proc_ladcp(klist,varargin)
+function run_proc_ladcp(klist,constraints_try,varargin)
 %
-% to run all processing versions (with available constraints):
-% run_proc_ladcp(stn)
+% to run with all available constraints:
+% run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'})
+% if sadcp not available
+% run_proc_ladcp(stn,{'GPS' 'BT'})
 %
-% to run only dlul_gps_bt_sadcp: 
-% run_proc_ladcp(stn,'sadcp')
+% to run each intermediate step (gps-only, gps+bt, then all 3):
+% run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'},'incr')
+%
+% to also run dl and ul separately with gps constraints:
+% run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'},'incr','sepdlul')
+%
+% or to run all constraints but also separate dl and ul:
+% run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'},'','sepdlul')
 %
 %wrapper script for LADCP IX processing with different constraints
 %always process up and downlooker separately to check beam
@@ -12,6 +20,11 @@ function run_proc_ladcp(klist,varargin)
 %but only process together if it's deep enough***, otherwise DL is version
 %of record
 
+if nargin>4 && strcmp(varargin{3},'pause')
+    dopause = 1;
+else
+    dopause = 0;
+end
 
 if isempty(which('getinv'))
     error('LADCP processing functions not on path; try running m_setup again')
@@ -22,17 +35,24 @@ if isfield(MEXEC_G,'mexec_shell_scripts')
     css = fullfile(MEXEC_G.mexec_shell_scripts,'lad_syncscript');
     if exist(css,'file'); dosync = 1; else; dosync = 0; end
 end
-constraints_try = {{'GPS'}; {'GPS' 'BT'}; {'GPS' 'BT' 'SADCP'}};
-if ~isempty(varargin) && strcmp(varargin{1},'add-sadcp')
-    constraints_try = constraints_try(end);
-end
 
 klist = klist(:)';
 for no = 1:14
     cfg0.figh(no) = figure(no);
 end
+doincr = 0; dosep = 0;
+if nargin>2
+    if strcmp(varargin{1},'incr')
+        doincr = 1;
+    end
+    if nargin>3
+        if strcmp(varargin{2},'sepdlul')
+            dosep = 1;
+        end
+    end
+end
 
-for stn = 1:length(klist)
+for stn = klist
 
     % configuration defaults and cruise-specific options
     cfg = cfg0;
@@ -57,6 +77,7 @@ for stn = 1:length(klist)
     cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata',cfg.stnstr);
     cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
     cfg.p.ambiguity = 4.0; %this one is not used?
+    SADCP_inst = 'os75nb';
     %cfg.p.vlim = 4.0; %this one is***require setting in opt_cruise
     %SADCP, if it's been processed and output to file for ladcp
     %***set type, as well as inst, in opt_cruise?opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
@@ -64,7 +85,6 @@ for stn = 1:length(klist)
     opt1 = 'ladcp_proc'; get_cropt %required to set pattern for down- and up-looker files
     infiled = fullfile(cfg.rawdir,cfg.dnpat);
     infileu = fullfile(cfg.rawdir,cfg.uppat);
-    dopause = 0;
     %stn = stnlocal;
     % first sync (if lad_syncscript found) -- just once per call
     if dosync; system(css); dosync = 0; end
@@ -85,51 +105,53 @@ for stn = 1:length(klist)
     end
     if ~isdl && ~isul; continue; end
 
-    for cno = 1:length(constraints_try)
-        cfg.constraints = constraints_try{cno};
-        if isscalar(cfg.constraints)
-            %process DL and UL separately, if possible, just for the
-            %nav+pressure (GPS) constraint
-            if isdl
-                cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg,dopause);
-            end
-            if isul
-                cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg,dopause);
-            end
-        end
-        if ismember({'BT'},cfg.constraints) && ~couldbt
-            if length(cfg.constraints)>2
-                cfg.constraints = setdiff(cfg.constraints,{'BT'}); %GPS SADCP
-            else
-                continue
-            end
-        end
-        if ismember({'SADCP'},cfg.constraints)
-            if exist(sfile,'file')
-                cfg.f.sadcp = sfile;
-                cfg.SADCP_inst = 'os75nb';
-            else
-                continue
-            end
-        end
-        %for other constraints, ideally process together, otherwise DL
-        %only, otherwise UL only
-        if isul && isdl
-            cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg); lpause(cfg,dopause);
-        elseif isdl
-            cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg,dopause);
-        else
-            cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg,dopause);
-        end
+    %limit constraints
+    cfg.constraints = constraints_try;
+    if ~isdl || ~couldbt
+        cfg.constraints = setdiff(cfg.constraints,'BT');
+    end
+    if ~exist('sfile','var') || ~exist(sfile,'file')
+        cfg.constraints = setdiff(cfg.constraints,'SADCP');
+    else
+        cfg.f.sadcp = sfile;
+        cfg.SADCP_inst = SADCP_inst;
+    end
 
+    %first run with all
+    if isul && isdl
+        cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
+    elseif isdl
+        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
+    else
+        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
+    end
+
+    if doincr
+        %now run with one less
+        cfg.constraints(end) = [];
+        if isfield(cfg,'SADCP_inst') && ~sum(ismember(cfg.constraints,'SADCP'))
+            cfg = rmfield(cfg,'SADCP_inst');
+            cfg.f = rmfield(cfg.f,'sadcp');
+        end
+        while ~isempty(cfg.constraints)
+            process_cast_cfgstr(stn, cfg); lpause(cfg,dopause)
+            cfg.constraints(end) = [];
+        end
+    end
+
+    if dosep && isdl && isul
+        %run last (least) set of constraints with dl and ul separately (if
+        %both aren't present for this cast, this is unnecessary)
+        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
+        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
     end
 
 end
 cd(cdir)
 
-function lpause(cfg,dopause)
-            if dopause
-                fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cfg.constraints{:});
-                pause
-            end
+function lpause(cfg, dopause)
+if dopause
+    fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cell2mat(cfg.constraints));
+    pause
+end
 

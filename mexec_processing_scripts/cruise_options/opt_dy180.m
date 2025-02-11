@@ -101,6 +101,7 @@ switch opt1
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
         sfile = fullfile(spath, sprintf('os150nb_edited_xducerxy_%s_ctd_%03d_forladcp.mat',mcruise,stn)); %75kHz was bad much of the cruise
+        SADCP_inst = 'os150nb';
 
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)

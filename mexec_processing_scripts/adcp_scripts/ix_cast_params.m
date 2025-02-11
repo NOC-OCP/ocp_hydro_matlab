@@ -47,7 +47,7 @@ else
    if sum(strcmp(cfg.constraints, 'BT')); ps.botfac = 1; end
    if sum(strcmp(cfg.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
-subdir = fullfile(cfg.pdir_root, subdir, 'processed');
+subdir = fullfile(cfg.pdir_root, subdir);
 if ps.sadcpfac && isfield(cfg, 'SADCP_inst')
    subdir = [subdir '_' cfg.SADCP_inst];
 end
