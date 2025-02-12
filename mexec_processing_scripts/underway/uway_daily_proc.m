@@ -110,7 +110,7 @@ for cno = 1:length(ctypes)
     fprintf(1,'merged %s files\n',ctypes{cno})
 end
 
-if ismember(ctypes,'ocean')
+if sum(ismember(ctypes,'ocean'))
     disp('you could now run mtsg_bottle_ctd_compare')
 end
 
