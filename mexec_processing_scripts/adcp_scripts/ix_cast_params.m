@@ -97,10 +97,10 @@ end
 if isempty(f.ladcpdo) && isempty(f.ladcpup)
     error('no down or up files found')
 end
-if length(f.ladcpdo)==1
+if isscalar(f.ladcpdo)
     f.ladcpdo = f.ladcpdo{1};
 end
-if length(f.ladcpup)==1
+if isscalar(f.ladcpup)
     f.ladcpup = f.ladcpup{1};
 end
 if isdo && ~isup % downlooker only

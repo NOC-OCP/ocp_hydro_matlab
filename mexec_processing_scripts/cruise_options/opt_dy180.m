@@ -95,9 +95,23 @@ switch opt1
         end
 
     case 'ladcp_proc'
-        cfg.uppat = sprintf('%s_LADCP_CTD%03dS*.000',upper(mcruise),stnlocal);
-        if stnlocal==23; isul = 0; end
-        cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000',upper(mcruise),stnlocal);
+        if ismember(stnlocal,[38 39])
+            cfg.dnpat = sprintf('%s_LADCP_CTD038M and 039M.000',upper(mcruise));
+            cfg.uppat = sprintf('%s_LADCP_CTD038S and 039S.000',upper(mcruise));
+        else
+            cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000',upper(mcruise),stnlocal);
+            cfg.dnpat = sprintf('%s_LADCP_CTD%03dS*.000',upper(mcruise),stnlocal);
+        end
+        if contains(cfg.stnstr,'_')
+            [dd,hd] = mloadq(fullfile(mgetdir('ctd'),sprintf('dcs_%s_%03d',mcruise,stnlocal)),'time_start time_end ');
+            dd.dnum_start = m_commontime(dd,'time_start',hd,'datenum');
+            dd.dnum_end = m_commontime(dd,'time_end',hd,'datenum');
+            cfg.p.time_start_force = round(datevec(dd.dnum_start-2/60/24));
+            cfg.p.time_end_force = round(datevec(dd.dnum_end+2/60/24));
+        end
+        if stnlocal==23
+            isul = 0;
+        end
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
         sfile = fullfile(spath, sprintf('os150nb_edited_xducerxy_%s_ctd_%03d_forladcp.mat',mcruise,stn)); %75kHz was bad much of the cruise
@@ -179,6 +193,10 @@ switch opt1
             case 'summary'
                 snames = {'nsal' 'noxy' 'nnut' 'nco2'};
                 sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'nitr'} {'dic' 'talk'}};
+            case 'ladcp'
+                if stnlocal==38 || stnlocal==39
+                    cfg.stnstr = '038_039';
+                end
             case 'exch'
                 ns = 43; nt = 10;
                 expocode = '74EQ20240522';

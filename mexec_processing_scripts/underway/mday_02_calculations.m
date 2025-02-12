@@ -112,6 +112,7 @@ if strcmp(stage,'pre')
                 headvar = munderway_varname('headvar', hn.fldnam, 1, 's');
                 [headav_e, headav_n] = uvsd(ones(size(dn.(headvar))), dn.(headvar), 'sduv');
                 %interpolate to wind file times
+                dn.dday = m_commontime(dn,'time',hn,sprintf('days since %d-01-01 00:00:00',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)));
                 headav = interp1(dn.dday, complex(headav_e, headav_n), d.dday);
                 %back to ship heading
                 [~, merged_heading] = uvsd(real(headav), imag(headav), 'uvsd');
