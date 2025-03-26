@@ -60,7 +60,7 @@ switch opt1
                 if ismember(abbrev,{'sbe45','surfmet'})
                     %cut off start (and eventually end) when TSG bad
                     %because underway seawater supply pumps off
-                    badtimes = [-inf (datenum(2024,12,11,17,20,0)-datenum(2024,1,1))*86400];
+                    badtimes = [-inf (datenum(2024,12,11,19,40,0)-datenum(2024,1,1))*86400];
                     if strcmp(abbrev,'sbe45')
                         tsgpumpvars = {'temph','tempr','conductivity','salinity','soundvelocity'};
                     else
@@ -79,9 +79,9 @@ switch opt1
                 check_tsg = 1;
             case 'tsg_cals'
                 clear uo
-                uo.docal.salinity = 0;
-                %uo.calstr.salinity.pl.dy186 = '';
-                %uo.calstr.salinity.pl.msg = '';
+                uo.docal.salinity = 1;
+                uo.calstr.salinity.pl.dy186 = 'dcal.salinity = d0.salinity+2e-3;';
+                uo.calstr.salinity.pl.msg = 'TSG salinity calibrated based on comparison with 14 bottle salinities from first 3.5 days';
             case 'avedit'
                 if strcmp(datatype,'ocean')
                      flowlims = [1 2.5]; %nominal range of good enough flow on this ship; tsgpumpvars will be naned when flow outside this range
@@ -209,7 +209,7 @@ switch opt1
                      002 -4; 003 -2; ... 
                      004 0; 005 -7; ... 
                      006 0; 007 -1; ...
-                     008 -1; 009 -2; 009.1 -2; %009.1 is to apply to last 4 samples run right after 009
+                     008 -1; 009 -2; %009.1 -2; %009.1 is to apply to last 4 samples run right after 009
                      ];
                  salin_off(:,1) = salin_off(:,1)+999e3;
                  salin_off(:,2) = salin_off(:,2)*1e-5;
@@ -222,8 +222,11 @@ switch opt1
                  %interpolation will apply the constant. (only runtime and
                  %sampnum are used for this row as it appears to be a
                  %standards row) 
-                 ds_sal = [ds_sal; ds_sal(end,:)];
-                 ds_sal.runtime(end) = max(ds_sal.runtime)+5/60/24; ds_sal.sampnum(end) = 999000+salin_off(end,1);
+                 %no sample times recorded for these, so never mind
+                 %ii = find(ds_sal.sampnum==999009);
+                 %ds_sal = [ds_sal; ds_sal(ii,:)];
+                 %ds_sal.runtime(end) = max(ds_sal.runtime)+5/60/24; 
+                 %ds_sal.sampnum(end) = 999e3+salin_off(end,1);
             case 'sal_flags'
                 % %too low (33-ish), maybe samples contaminated
                 % m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
