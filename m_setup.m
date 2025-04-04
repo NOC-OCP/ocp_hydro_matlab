@@ -21,11 +21,9 @@ function m_setup(varargin)
 %      SITE_suf (e.g. 'atsea' or 'atnoc' to make SITE 'jc238_atsea' etc.)
 %      other_programs_root (e.g. '~/programs/others/')
 %      mexec_data_root (e.g. '~/cruises/jc238/mcruise/data/')
-%      raw_underway (1) to set up underway data directories and test
-%        database access -- set to 0 if not on ship unless a backup is
-%        available*** -- not necessary if only reading in mexec-processed
-%        underway data (e.g. plotting TSG data that has already been saved
-%        in mstar files)
+%      underway (1) to set up underway data directories and test
+%        database access, 2 to set up underway data directories only,
+%        0 to skip
 %      quiet (2) 0 to make both mexec_processing_scripts and
 %        file_tools/mexec programs verbose, 1 to make only
 %        mexec_processing_scripts verbose, 2 to minimise intermediate
@@ -56,10 +54,10 @@ MEXEC_G.ix_ladcp = 0; %set to 0 to not add ldeo_ix paths (for instance if proces
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.mexec_data_root = '/Users/yfiring/cruises/dy180/mcruise/data'; %if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.other_programs_root = '/noc/mpoc/eurogoship/programs/others/'; 
+MEXEC_G.other_programs_root = '/Users/yfiring/programs/others/';%noc/mpoc/eurogoship/programs/others/'; 
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-MEXEC_G.raw_underway = 0; %if 0, skip the rvdas setup
+MEXEC_G.raw_underway = 2; %if 0, skip the rvdas setup
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 force_vers = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 
@@ -225,19 +223,21 @@ if MEXEC_G.raw_underway
         end
         fprintf(1,'using cached %s table list / mstar lookup\n',MEXEC_G.Mshipdatasystem)
     catch
-        try
-            fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
-            switch MEXEC_G.Mshipdatasystem
-                case 'rvdas'
-                    mrtv = mrdefine('redo');
-                case 'scs'
-                    mrtv = msdefine('redo');
-                case 'techsas'
-                    mrtv = mtdefine('redo');
+        if MEXEC_G.raw_underway==1
+            try
+                fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
+                switch MEXEC_G.Mshipdatasystem
+                    case 'rvdas'
+                        mrtv = mrdefine('redo');
+                    case 'scs'
+                        mrtv = msdefine('redo');
+                    case 'techsas'
+                        mrtv = mtdefine('redo');
+                end
+                fprintf(1,'reloaded table definitions\n')
+            catch
+                warning('skipping underway data setup')
             end
-            fprintf(1,'reloaded table definitions\n')
-        catch
-            warning('skipping underway data setup')
         end
     end
     if exist('mrtv','var')

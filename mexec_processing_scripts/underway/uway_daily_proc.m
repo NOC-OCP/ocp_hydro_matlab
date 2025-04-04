@@ -83,7 +83,7 @@ if reload_av || reload_uway %something new to take through preliminary edits sta
     if exist('never_edit','var')
         mufiles = setdiff(mufiles,never_edit);
     end
-    mufiles = {'surfmet'};
+    %mufiles = {'surfmet'};
     for sno = 1:length(mufiles)
         de = mday_01_edit(mufiles{sno}, ydays, mtable);
         if de
@@ -95,6 +95,7 @@ end
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
 ctypes = {'nav','bathy','ocean','atmos'}; %important to do nav first
+ctypes = ctypes(3); %did nav; bathy is a problem, skip for now
 for cno = 1:length(ctypes)
     mday_02_merge_av(ctypes{cno}, ydays, mtable, reload_av);
     fprintf(1,'merged %s files\n',ctypes{cno})

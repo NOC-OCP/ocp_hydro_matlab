@@ -15,7 +15,7 @@ switch opt1
         switch opt2
             case 'datasys_best'
                 default_navstream = 'posmv_gpgga';
-                default_hedstream = 'posmv_pashr';
+                default_hedstream = 'posmv_gphdt';
                 default_attstream = 'posmv_pashr';
             case 'rvdas_database'
                 RVDAS.machine = '192.168.65.51';
@@ -26,7 +26,50 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
-            case 'excludestreams'
+            case 'rawedit'
+                ts = (datenum(2024,5,19,0,0,0)-datenum(2024,1,1))*86400;
+                if strcmp(abbrev,'sbe45')
+                    uopts.badtime.temph = [-inf ts];
+                    uopts.badtime.tempr = [-inf ts];
+                    uopts.badtime.conductivity = [-inf ts];
+                    uopts.badtime.salinity = [-inf ts];
+                    uopts.badtime.soundvelocity = [-inf ts];
+                elseif strcmp(abbrev,'surfmet')
+                    uopts.badtime.fluo = [-inf ts];
+                    uopts.badtime.trans = [-inf ts];
+                end
+                if sum(strcmp(streamtype,{'sbm','mbm'}))
+                    handedit = 1; %edit raw bathy
+                    vars_to_ed = munderway_varname('depvar',h.fldnam,1,'s');
+                    vars_to_ed = union(vars_to_ed,munderway_varname('depsrefvar',h.fldnam,1,'s'));
+                    vars_to_ed = union(vars_to_ed,munderway_varname('deptrefvar',h.fldnam,1,'s'));
+                end
+                if strcmp(abbrev,'ea640')
+                    d = rmfield(d,'waterdepthfromsurface');
+                    h.fldunt(strcmp('waterdepthfromsurface',h.fldnam)) = [];
+                    h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
+                end
+            case 'tsg_cals'
+                uo.docal.salinity = 0;
+                %uo.calstr.salinity.pl.dy181 = 'dcal.salinity = d0.salinity+interp1([184 209],[0.001 0.014],d0.dday);';
+                %uo.calstr.salinity.pl.msg = 'salinity adjusted by removing trend based on differences from 135 bottle salinities';
+                            case 'avedit'
+                if strcmp(datatype,'ocean')
+                    uopts.rangelim.flow = [1 2.5]; %***
+                    uopts.badflow.temph_raw = [NaN NaN];
+                    uopts.badflow.temp_remote_raw = [NaN NaN];
+                    uopts.badflow.cond = [NaN NaN];
+                    uopts.badtemph.cond = [NaN NaN];
+                    uopts.badtemph.salinity_raw = [NaN NaN];
+                    uopts.badflow.fluo = [NaN NaN];
+                    uopts.badflow.trans = [NaN NaN];
+                    %vars_to_ed = {'flow'};
+                    %vars_to_ed = {'temph','conductivity'};
+                    vars_to_ed = {'salinity_raw'};
+                    vars_to_ed = {'temp_remote_raw','temph_raw'};
+                elseif strcmp(datatype,'bathy')
+                    vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
+                end
         end
 
     case 'castpars'
@@ -134,12 +177,11 @@ switch opt1
             case 'sal_calc'
                 salin_off = -1.5e-5; %constant
             case 'sal_flags'
-                % 402 second sample is a low outlier
-                % 1205 third sample is a low outlier
-                % 2413 second and third samples are low and high outliers, respectively
-                % 5209 second and third samples are low and high outliers, respectively
-                % 5217 first sample is low outlier
-                % 
+                % outliers in readings: 402 second low, 1205 third low,
+                % 2413 and 5209 second and third low and high, 5217 first
+                % low. none far enough out to discard. flag averages as 3?
+                % bad averaged samples (much farther off than could be
+                % explained by background gradients/variability): 
                 m = ismember(ds_sal.sampnum,[1403 1406 1408 1501]);
                 ds_sal.flag(m) = 4;
         end
@@ -148,9 +190,6 @@ switch opt1
         switch opt2
             case 'oxy_files'
                 ofiles = dir(fullfile(root_oxy,'DY180_oxy_CTD*.xls'));
-                %hcpat = {'Niskin';'Bottle'};
-                %chrows = 1:2;
-                %chunits = 3;
                 hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
                 chrows = 1;
                 chunits = 2;
@@ -197,6 +236,15 @@ switch opt1
                 if stnlocal==38 || stnlocal==39
                     cfg.stnstr = '038_039';
                 end
+            case 'bodc'
+                %skip par? or keep?
+                %change siteID to the convention they're using
+                %(CTsomething?)
+                %how to include , in a field ([+N,-S] etc.)
+                %add bottle chl
+                %
+                %out.vars_blank = units{strcmp('Water Depth',out.vars_units(:,1)),3} = 'fillval'; %no water depth info (reliable) at the moment*** don't know if casts were full-depth
+                %vars_exclude = {'CTDSIG0';'BOTSIG0'}; %exclude these even if they do correspond to fields in sam file
             case 'exch'
                 ns = 43; nt = 10;
                 expocode = '74EQ20240522';
@@ -210,8 +258,8 @@ switch opt1
                     '#Chief Scientist: S. Henson (NOC)';...
                     '#Supported by grants from the UK Natural Environment Research Council.'}; %***
                 if strcmp(in.type,'ctd')
-                    headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
-                    headstring = [headstring; common_headstr;
+                    out.header = {['CTD,' datestr(now,'yyyymmdd') submitter]};
+                    out.header = [out.header; common_headstr;
                         {sprintf('#%d stations with 24-place stainless-steel rosette',ns);...
                         sprintf('#%d stations with 24-place trace metal clean rosette',nt);...
                         '#CTD: Who - Y. Firing and T. Petit (NOC); Status - final.';...
@@ -222,8 +270,8 @@ switch opt1
                         '# DEPTH_TYPE   : TBA';...
                         }];
                 else
-                    headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
-                    headstring = [headstring; common_headstr;
+                    out.header = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
+                    out.header = [out.header; common_headstr;
                         {sprintf('#%d stations with 24-place stainless-steel rosette',ns);...
                         sprintf('#%d stations with 24-place trace metal clean rosette',nt);...
                         '#CTD: Who - Y. Firing and T. Petit (NOC); Status - final';...

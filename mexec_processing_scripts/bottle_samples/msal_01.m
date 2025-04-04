@@ -76,6 +76,8 @@ end
 % end
 opt1 = 'botpsal'; opt2 = 'sal_parse'; get_cropt
 opt1 = 'check_sams'; get_cropt
+m = ~isfinite(ds_sal.sampnum);
+ds_sal(m,:) = [];
 
 if calcsal
     %add option to fill in information about cellt or Bath Temp and k15 from header***

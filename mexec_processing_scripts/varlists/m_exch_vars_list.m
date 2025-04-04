@@ -10,6 +10,10 @@ function [vars, varsh] = m_exch_vars_list(typ)
 % and in opt_cruise under scriptname = 'mout_cchdo' you can set lists of
 % variables (mstar names) to exclude even if they are in the files
 
+if ischar(typ)
+    if strcmp(typ,'sam'); typ = 2; elseif strcmp(typ,'ctd'); typ = 1; end
+end
+
 if typ==1 % this is for ctd profiles
     
     varsh = {'EXPOCODE', ' ', 'expocode', '%s'
@@ -71,6 +75,20 @@ elseif typ==2 % this is for comparing with bottle samples
         'CTDOXY_FLAG_W', ' ', 'uoxygen_flag', '%d'
         'OXYGEN', 'UMOL/KG', 'botoxy', '%6.1f'
         'OXYGEN_FLAG_W', ' ', 'botoxy_flag', '%d'
+        'CTDFLUOR','MG/M^3', 'ufluor', '%7.4f'
+        'CTDFLUOR_FLAG_W',' ', 'ufluor_flag', '%d'
+        'CHLORA', 'ML/L', 'botchla', '%7.1f'
+        'CHLORA_FLAG_W', ' ', 'botchla_flag', '%d'
+        'CTDTURB','M^1/SR', 'turbidity', '%8.6f'
+        'CTDTURB_FLAG_W', ' ', 'turbidity_flag', '%d'
+        'CTDXMISS','%TRANS', 'transmittance', '%8.4f'
+        'CTDXMISS_FLAG_W', ' ', 'transmittance_flag', '%d'
+%        'PAR', 'UMOL/M^2/SEC', 'upar_up', '%6.5f' %par_up is up-looking (downwelling)
+        'PAR', 'UMOL/M^2/SEC', 'upar', '%6.5f' %par_up is up-looking (downwelling)
+        'PAR_FLAG_W', ' ', 'upar_flag', '%d' %par_up is up-looking (downwelling)
+        %'CTDPH', ' ', 'uph', '%8.4f'
+        'CTDSIG0', 'KG/M^3', 'upden', '%8.2f'
+        'BOTSIG0', 'KG/M^3', 'pden', '%8.2f'
         'SILCAT', 'UMOL/KG', 'silc', '%8.3f'
         'SILCAT_FLAG_W', ' ', 'silc_flag', '%d'
         'NITRAT', 'UMOL/KG', 'no3', '%8.3f'
@@ -115,16 +133,8 @@ elseif typ==2 % this is for comparing with bottle samples
         'RA-226_FLAG_W', ' ', 'ra226_flag', '%d'
         'RA-228', 'DM/.1MG', 'ra228', '%7.4f'
         'RA-228_FLAG_W', ' ', 'ra228_flag', '%d'
-        'CTDFLUOR','MG/M^3', 'ufluor', '%7.4f'
-        'CHLORA', 'ML/L', 'botchla', '%7.1f'
-        'CHLORA_FLAG_W', ' ', 'botchla_flag', '%d'
         'POC', 'UG/L', 'poc', '%7.1f'
         'POC_FLAG_W', ' ', 'poc_flag', '%d'
-%        'PAR', 'UMOL/M^2/SEC', 'upar_up', '%6.5f' %par_up is up-looking (downwelling)
-        'PAR', 'UMOL/M^2/SEC', 'upar', '%6.5f' %par_up is up-looking (downwelling)
-        %'CTDPH', ' ', 'uph', '%8.4f'
-        'CTDSIG0', 'KG/M^3', 'upden', '%8.2f'
-        'BOTSIG0', 'KG/M^3', 'pden', '%8.2f'
 };
         varsh = {};
 else

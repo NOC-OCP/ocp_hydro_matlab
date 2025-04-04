@@ -58,16 +58,23 @@ end
 %***check for multiple streams from same inst? not important at this
 %stage, all will be in corresponding mstar file
 if isstruct(mtable) || istable(mtable)
-    filepre = cell(size(streams));
+    filepre = cell(size(streams)); filepre_old = filepre;
     for fno = 1:length(streams)
         m = strcmp(streams{fno},mtable.tablenames);
+        filepre_old{fno} = fullfile(MEXEC_G.mexec_data_root,mtable.mstardir{m},mtable.paramtype{m},mtable.mstarpre{m});
         filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
     end
 elseif iscell(mtable)
     filepre = mtable;
 end
-filepre = unique(filepre);
-otfile = fullfile(fileparts(filepre{1}),otfile);
+filepre = unique(filepre,'stable');
+filepre_old = unique(filepre_old,'stable');
+if exist(fileparts(filepre_old{1}),'dir')
+    filepre = filepre_old; 
+    otfile = fullfile(fileparts(fileparts(filepre{1})),otfile);
+else
+    otfile = fullfile(fileparts(filepre{1}),otfile);
+end
 
 if regrid
 

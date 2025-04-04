@@ -69,7 +69,8 @@ if oxy_end==1
         d.(oxyvars{no})(oe) = NaN;
     end
     d.oxygen(oe) = NaN;
-    h.comment = [h.comment 'edited out last ' num2str(oxy_align*24) ' scans from oxygen\n'];
+    commentstr = ['edited out last ' num2str(oxy_align*24) ' scans from oxygen'];
+    if ~contains(h.comment, commentstr); h.comment = [h.comment '\n ' commentstr]; end
 end
 
 
@@ -137,15 +138,16 @@ if ~isdown && ~isup
     warning('neither down nor up cast has enough good data; skipping')
     return
 end
-hn.comment = 'gridded to 2 dbar using grid_profile method lfitbin\n';
+commentstr = 'gridded to 2 dbar using grid_profile method lfitbin';
+if ~contains(hn.comment, commentstr); hn.comment = [hn.comment '\n ' commentstr]; end
 if g2opts.postfill>0
     if isfinite(g2opts.postfill)
-        hn.comment = [hn.comment 'gaps up to ' num2str(g2opts.postfill) ' in 2 dbar filled using linear interpolation\n'];
+        commentstr = ['gaps up to ' num2str(g2opts.postfill) ' in 2 dbar filled using linear interpolation'];
     else
-        hn.comment = [hn.comment 'gaps in 2 dbar filled using linear interpolation\n'];
+        commentstr = ['gaps in 2 dbar filled using linear interpolation'];
     end
 end
-
+if ~contains(hn.comment, commentstr); hn.comment = [hn.comment '\n ' commentstr]; end
 
 %%%%% add or recalculate depth and potemp %%%%%
 
@@ -174,14 +176,14 @@ if ~sum(strcmp('potemp',hn.fldnam))
 end
 hn = keep_hvatts(hn, h);
 
-hn.comment = [hn.comment 'depth and potemp calculated using gsw\n'];
-
+commentstr = 'depth and potemp calculated using gsw';
+if ~contains(hn.comment, commentstr); hn.comment = [hn.comment commentstr]; end
 
 %%%%% save %%%%%
 
 if isdown
     hnd = hn;
-    hnd.comment = [commentd hnd.comment];
+    if ~contains(hnd.comment,commentd); hnd.comment = [commentd; '\n '; hnd.comment]; end
     mfsave(otfile1d, dn2, hnd);
 end
 
