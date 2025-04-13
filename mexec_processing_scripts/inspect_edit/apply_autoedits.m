@@ -5,7 +5,7 @@ function [d, comment] = apply_autoedits(d, castopts)
 % 
 %
 %   pumpsNaN -- for each parameter which is a field of castopts.pumpsNaN,
-%     data are masked up to castopts.pumpsNaN.(parameter) time points after
+%     data are NaNed up to castopts.pumpsNaN.(parameter) time points after
 %     pumps come (back) on -- this is mostly specific to the CTD, though
 %     could be used for another series if a variable pumps were present
 %     e.g. for 24 Hz CTD data,
@@ -14,7 +14,7 @@ function [d, comment] = apply_autoedits(d, castopts)
 %       etc.
 %   
 %   rangelim -- for each parameter which is a field of castopts.rangelim,
-%     data are masked outside of the range given by
+%     data are NaNed outside of the range given by
 %     castopts.rangelim.(parameter)
 %     e.g. 
 %     castopts.rangelim.temp1 = [-2 40];

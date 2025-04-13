@@ -67,14 +67,14 @@ if isstruct(mtable) || istable(mtable)
 elseif iscell(mtable)
     filepre = mtable;
 end
-filepre = unique(filepre,'stable');
-filepre_old = unique(filepre_old,'stable');
-if exist(fileparts(filepre_old{1}),'dir')
-    filepre = filepre_old; 
-    otfile = fullfile(fileparts(fileparts(filepre{1})),otfile);
-else
-    otfile = fullfile(fileparts(filepre{1}),otfile);
+for no = 1:length(filepre)
+    d = dir([filepre{no} '*.nc']);
+    if isempty(d)
+        filepre{no} = filepre_old{no};
+    end
 end
+filepre = unique(filepre,'stable');
+otfile = fullfile(fileparts(filepre{1}),otfile);
 
 if regrid
 
@@ -168,6 +168,12 @@ if exist('flowlims','var') && exist('tsgpumpvars','var') && ~isempty(flowlims) &
         uopts.badflow.(tsgpumpvars{vno}) = [NaN NaN];
     end
 end
+if handedit
+    %apply previous manually selected edits
+    btol = (tavp_s/2)/86400;
+    edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
+    [dg, ~] = apply_guiedits(dg, 'dday', [edfile '*'], 0, btol);
+end
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad)
     [dg, comment] = apply_autoedits(dg, uopts);
@@ -176,9 +182,12 @@ if ~isempty(uopts)
     end
 end
 if handedit
-    btol = (tavp_s/2)/86400;
-    edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
-    [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
+    %manual selection of (additional) points to edit
+    if exist('vars_offset_scale','var')
+        [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed, vars_offset_scale);
+    else
+        [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
+    end
 end
     if isfield(hg,'fldserial') && length(hg.fldserial)<length(hg.fldnam); keyboard; end
 

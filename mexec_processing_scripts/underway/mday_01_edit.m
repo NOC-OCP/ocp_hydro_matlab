@@ -25,7 +25,10 @@ didedits = 0;
 ii = find(strcmp(abbrev,mtable.mstarpre)); 
 rootdir = fullfile(MEXEC_G.mexec_data_root, mtable.mstardir{ii(1)});
 infile = fullfile(rootdir, sprintf('%s_%s_all_raw.nc', abbrev, mcruise));
-if ~exist(m_add_nc(infile),'file'); return; end
+if ~exist(m_add_nc(infile),'file')
+    warning('no %s, skipping', infile)
+    return
+end
 otfile = [infile(1:end-6) 'edt.nc'];
 if exist(otfile,'file')
     didedits = 1; %always add days to file if it already exists

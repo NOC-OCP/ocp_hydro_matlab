@@ -5,7 +5,8 @@ function bads = gui_editpoints(d, xvar, varargin)
 % plotted together
 %
 % d is a structure. if scalar, fields other than indepvar are plotted vs
-% indepvar; if vector, each element should contain indepvar and one other
+% indepvar; if vector, each element should contain indepvar (which may have
+% different values in each element of the structure) and one other 
 % (non-empty) variable.
 %
 % indepvar (string) is the name of the independent variable
@@ -68,7 +69,7 @@ for no = 1:2:length(varargin)
 end
 if ~exist('colors','var')
     colors = [1 0 0; 1 .5 0; 0 .5 0; 0 1 1; 0 0 1; .5 0 .5];
-    colornames = {'red';'orange';'green';'teal';'blue';'purple'};
+    colornames = {'red';'orange';'green';'cyan';'blue';'purple'};
 end
 nc = size(colors,1); if nc==1; nc = length(colors); end
 if ~exist('markers','var')
@@ -99,10 +100,13 @@ for gno = 1:length(xgroups)
 
         if ~exist('hl','var')
             %make new plot
+            hasdata = 0;
             for no = 1:nl
+                if sum(~isnan(d0(no).(fn{no})(iis))); hasdata = 1; end
                 hl(no) = plot(d0(no).(xvar)(iis),d0(no).(fn{no})(iis),'color',colors(no,:),'marker',markers(no),'linestyle',lines{no});
                 hold on
             end
+            if ~hasdata; done = 1; cont = 1; continue; end %skip days with no data
             grid on
         elseif exist('edno','var') && ~isempty(edno) && isfinite(edno)
             %add edited line back to plot

@@ -26,15 +26,19 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
+            case 'combine'
+infiles = {'met/met/surfmet_dy180_all_raw.nc';
+    'met/rad/surfmet_dy180_all_raw.nc';
+    'met/tsg/surfmet_dy180_all_raw_tsgonly.nc'};
+outfile = 'met/surfmet_dy180_all_raw.nc';
             case 'rawedit'
-                ts = (datenum(2024,5,19,0,0,0)-datenum(2024,1,1))*86400;
-                if strcmp(abbrev,'sbe45')
-                    uopts.badtime.temph = [-inf ts];
-                    uopts.badtime.tempr = [-inf ts];
-                    uopts.badtime.conductivity = [-inf ts];
-                    uopts.badtime.salinity = [-inf ts];
-                    uopts.badtime.soundvelocity = [-inf ts];
-                elseif strcmp(abbrev,'surfmet')
+                ts = (datenum(2024,5,21,0,0,0)-datenum(2024,1,1))*86400;
+                if strcmp(abbrev,'surfmet')
+                    uopts.badtime.temph_raw = [-inf ts];
+                    uopts.badtime.temp_remote_raw = [-inf ts];
+                    uopts.badtime.conductivity_raw = [-inf ts];
+                    uopts.badtime.salinity_raw = [-inf ts];
+                    uopts.badtime.soundvelocity_raw = [-inf ts];
                     uopts.badtime.fluo = [-inf ts];
                     uopts.badtime.trans = [-inf ts];
                 end
@@ -49,26 +53,73 @@ switch opt1
                     h.fldunt(strcmp('waterdepthfromsurface',h.fldnam)) = [];
                     h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
                 end
+                        case 'sensor_unit_conversions'
+                switch abbrev
+                    case 'surfmet'
+                        so.docal.fluo = 1;
+                        so.docal.trans = 1;
+                        so.docal.parport = 1;
+                        so.docal.parstarboard = 1;
+                        so.docal.tirport = 1;
+                        so.docal.tirstarboard = 1;
+                        %specify calibration equation, calibrated units,
+                        %and instrument-serial number with
+                        %so.calstr.{variablename}.pl.{cruise},
+                        %so.calunits.{variablename}, and
+                        %so.instn.{variablename} 
+                        %e.g. so.calstr.fluo.pl.dy180, so.calunits.fluo,
+                        %and so.instsn.fluo
+                        so.calstr.fluo.pl.dy180 = 'dcal.fluo = 10.3*(d0.fluo-0.078);'; %or sf is nonlinear?***
+                        so.instsn.fluo = 'WS3S134';
+                        so.calunits.fluo = 'ug_per_l';
+                        so.calstr.trans.pl.dy180 = 'dcal.trans = (d0.trans-0.017)/(4.699-0.017)*100;';
+                        so.instsn.trans = 'CST-112R';
+                        so.calunits.trans = 'percent';
+                        so.calstr.parport.pl.dy180 = 'dcal.parport = d0.parport*(1e6/9.944);';
+                        so.instsn.parport = 'SKE-510 28558';
+                        so.calunits.parport = 'W_per_m2';
+                        so.calstr.parstarboard.pl.dy180 = 'dcal.parstarboard = d0.parstarboard*(1e6/8.937);';
+                        so.instsn.parstarboard = 'SKE-510 28561';
+                        so.calunits.parstarboard = 'W_per_m2';
+                        so.calstr.tirport.pl.dy180 = 'dcal.tirport = d0.tirport*(1e6/9.69);';
+                        so.instsn.tirport = 'CMP-994133';
+                        so.calunits.tirport = 'W_per_m2';
+                        so.calstr.tirstarboard.pl.dy180 = 'dcal.tirstarboard = d0.tirstarboard*(1e6/11.31);';
+                        so.instsn.tirstarboard = '994132';
+                        so.calunits.tirstarboard = 'W_per_m2';
+                end
             case 'tsg_cals'
-                uo.docal.salinity = 0;
+                uo.dcal.temp_remote_raw = 1;
+                uo.docal.salinity = 1;
+                uo.calstr.temp_remote_raw.pl.dy180 = 'dcal.temp_remote_raw = d0.temp_remote_raw-0.145';
+                uo.calstr.temp_remote_raw.msg = 'median difference from *** 3-m CTD data points';
                 %uo.calstr.salinity.pl.dy181 = 'dcal.salinity = d0.salinity+interp1([184 209],[0.001 0.014],d0.dday);';
                 %uo.calstr.salinity.pl.msg = 'salinity adjusted by removing trend based on differences from 135 bottle salinities';
                             case 'avedit'
                 if strcmp(datatype,'ocean')
-                    uopts.rangelim.flow = [1 2.5]; %***
-                    uopts.badflow.temph_raw = [NaN NaN];
-                    uopts.badflow.temp_remote_raw = [NaN NaN];
-                    uopts.badflow.cond = [NaN NaN];
-                    uopts.badtemph.cond = [NaN NaN];
-                    uopts.badtemph.salinity_raw = [NaN NaN];
-                    uopts.badflow.fluo = [NaN NaN];
-                    uopts.badflow.trans = [NaN NaN];
-                    %vars_to_ed = {'flow'};
-                    %vars_to_ed = {'temph','conductivity'};
-                    vars_to_ed = {'salinity_raw'};
-                    vars_to_ed = {'temp_remote_raw','temph_raw'};
+                    %ucsw system things should be NaNed when pump speed low (or high?)
+                    %includes remote temp because this is just inside inlet
+                    fvars = {'temph_raw','temp_remote_raw','fluo','trans','cond_raw','salinity_raw','soundvelocity_raw'};
+                    for no = 1:length(fvars)
+                        uopts.badflow.(fvars{no}) = [-inf 0.6; 2.5 inf];
+                    end
+                    %soundvelocity depends on remote temp? 
+                    uopts.badtemp_remote_raw.soundvelocity_raw = [NaN NaN];
+                    %conductivity and salinity depend on temp
+                    uopts.badtemph_raw.cond_raw = [NaN NaN];
+                    uopts.badtemph_raw.salinity_raw = [NaN NaN];
+                    %bad temp often associated with bad fluo and trans
+                    %(flow issues)
+                    uopts.badtemph_raw.fluo = [NaN NaN];
+                    uopts.badtemph_raw.trans = [NaN NaN];
+                    vars_to_ed = {'flow','fluo','trans','temph_raw','temp_remote_raw','salinity_raw'};
+                    vars_offset_scale = {[0 1], [0 1], [-95 0.1], [-11 1], [-11 1], [-35 2]};
                 elseif strcmp(datatype,'bathy')
                     vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
+                end
+            case 'tsg_sdiff'
+                if strcmp(uvar,'fluo')
+                    sc1 = 1; sc2 = 0.5;
                 end
         end
 

@@ -43,7 +43,7 @@ switch opt1
                         so.calstr.trans.pl.dy181 = 'dcal.trans = (d0.trans-0.017)/(4.699-0.017)*100;';
                         so.instsn.trans = 'CST-112R';
                         so.calunits.trans = 'percent';
-                        so.calstr.parport.pl.dy181 = 'dcal.parport = d0.parport*(1e6/8.944);';
+                        so.calstr.parport.pl.dy181 = 'dcal.parport = d0.parport*(1e6/8.944);'; %***or 9.994? 
                         so.instsn.parport = 'SKE-510 28558';
                         so.calunits.parport = 'W_per_m2';
                         so.calstr.parstarboard.pl.dy181 = 'dcal.parstarboard = d0.parstarboard*(1e6/8.937);';

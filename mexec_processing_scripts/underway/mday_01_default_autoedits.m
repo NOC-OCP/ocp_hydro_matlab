@@ -1,5 +1,5 @@
 function uopts = mday_01_default_autoedits(h, streamtype)
-%%%%% default range limits and despiking settings %%%%%
+%%%%% default range limits (very broad) and despiking settings %%%%%
 % uopts = mday_01_default_autoedits(h)
 % 
 % define by variable type and apply to variable names in each category

@@ -83,7 +83,7 @@ if reload_av || reload_uway %something new to take through preliminary edits sta
     if exist('never_edit','var')
         mufiles = setdiff(mufiles,never_edit);
     end
-    %mufiles = {'surfmet'};
+    mufiles = {'surfmet'};
     for sno = 1:length(mufiles)
         de = mday_01_edit(mufiles{sno}, ydays, mtable);
         if de

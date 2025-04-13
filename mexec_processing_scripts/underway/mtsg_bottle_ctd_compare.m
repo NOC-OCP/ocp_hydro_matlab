@@ -1,342 +1,454 @@
+function mtsg_bottle_ctd_compare(varargin)
+% mtsg_bottle_ctd_compare(dintake)
+% mtsg_bottle_ctd_compare(dintake, sepdownup)
+% mtsg_bottle_ctd_compare(dintake, sepdownup, reload_cal)
 % compare TSG/underway data from the merged, 1-min averaged surface_ocean
-% file with bottle paramters (salinity) and (optionally) near-surface CTD
-% data
-% 
+% file with bottle parameters (salinity and/or fluorescence, where
+% available) and (optionally) near-surface CTD temperature and salinity
+%
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; % cruise name (from MEXEC_G global)
 
-comp2ctd = true ; % set to false if you don't want to compare to CTD data
-
-if comp2ctd==true
-    updownboth = 'both' ; %'up' %'down'
-
-    % set a variable for the CTD salinity variable to look at (currently psal
-    % but could make it variable...) 
-    ctd_sal_var = 'psal';
-    ctd_temp_var = 'temp';
-
-    %***fluo etc.
-
-end 
-
-roottsg = fullfile(MEXEC_G.mexec_data_root,'met');
-rootsal = mgetdir('M_BOT_SAL'); %***
-rootctd = mgetdir('M_CTD');
-
-[dt, ht] = mload(fullfile(roottsg, ['surface_ocean_' mcruise '.nc']),'/');
-% obtains variable names for each parameter from ht and list of known
-% common variable names for that parameter
-salvar = munderway_varname('salvar',ht.fldnam,1,'s');
-tempvar = munderway_varname('tempvar',ht.fldnam,1,'s');
-tempsst = munderway_varname('sstvar',ht.fldnam,1,'s');
-condvar = munderway_varname('condvar',ht.fldnam,1,'s');
-%***fluo etc.
-
-[db, hb] = mload(fullfile(rootsal, ['tsgsal_' mcruise '_all.nc']),'/');
-%sort all variables in case bottle salinities not in order
-[a, iibot] = sort(db.time);
-fn = fieldnames(db);
-for fno = 1:length(fn)
-    db.(fn{fno}) = db.(fn{fno})(iibot);
-end
-
-%put bottle ddays in dday
-db.dday = m_commontime(db, 'time', hb, ht.fldunt(strcmp('dday',ht.fldnam)));
-bdelay = 1/1440; %delay bottles by 1 minute to allow for dday between bottle being drawn and passing through TSG?
-%get_cropt***
-db.dday = db.dday-bdelay;
-
-%convert to conductivity at TSG housing temp
-db.htemp = interp1(dt.dday, dt.temph, db.dday);
-db.cond = gsw_C_from_SP(db.salinity_adj, db.htemp, 0);
-db.tsgcond = interp1(dt.dday, dt.(condvar), db.dday);
-db.tsgsal = interp1(dt.dday, dt.(salvar), db.dday);
-db.stemp = interp1(dt.dday, dt.(tempsst), db.dday);
-
-%also use SST as x-axis
-nsp = 2;
-if exist('tempsst','var') && ~isempty(tempsst)
-    db.tsst = interp1(dt.dday, dt.(tempsst), db.dday);
-    nsp = 4;
-end
-
-opt1 = 'botpsal'; opt2 = 'tsg_bad'; get_cropt %NaN some of the db.salinity_adj points
-
-crat = db.cond./db.tsgcond;
-sdiff = db.salinity_adj - interp1(dt.dday, dt.salinity, db.dday);
-sdiff_std = m_nanstd(sdiff); sdiff_mean = m_nanmean(sdiff);
-idx = find(abs(sdiff-sdiff_mean)>3*sdiff_std); % bak dy146 sdiff-sdiff_mean ?
-% List and discard possible outliers
-if ~isempty(idx)
-	fprintf(1,'\n Std deviation of bottle tsg - differnces is %7.3f \n',sdiff_std)
-	fprintf(1,' The following are outliers to be checked: \n')
-	fprintf(1,' Sample  Jday dday    Difference  \n')
-	for ii = idx(:)'
-		jdx = floor(db.dday(ii));
-		fprintf(1,'  %2d  -  %d  %s  %7.3f \n',ii,jdx,datestr(db.dday(ii),15),sdiff(ii))
-	end
-end
-sdiffall = sdiff;
-sdiff(idx) = NaN; % set values where value>3*SD as NaN
-crat(idx) = NaN;
-
-% set breakpoints for sdiffsm anydday tsg was not running (tbreaks) to
-% allow for cleaning 
-tbreak = []; 
-opt1 = mfilename; opt2 = 'tsg_ddaybreaks'; get_cropt;
-if ~isempty(tbreak)
-    tbreak = m_commondday(tbreak,'datenum',tun);
-end
-tbreak = [-inf; tbreak; inf];
-nseg = length(tbreak)-1;
-
-sdiffsm_all = [];
-t_all = [];
-sdiffsave = sdiff;
-for kseg = 1:nseg % segments; always at least 1; if tbreak started empty, then there is one segment
-    tstart = tbreak(kseg)+1/86400;
-    tend = tbreak(kseg+1)-1/86400;
-    
-    kbottle = find(db.dday > tstart & db.dday < tend);
-    sdiff = sdiffsave(kbottle);
-    
-    % add start and end ddays as pseudo ddays of bottles, so there will
-    % always be a smoothed adjustment for interpolation
-    
-    t = db.dday(kbottle)-1;
-    
-    % work out if interval is before or after start of tsg data (and select
-    % the later of the 2 start ddays and earlier of the 2 end ddays)
-    t0 = max([tstart min(dt.dday-1)]); % tstart, or start of tsg data
-    t1 = min([tend max(dt.dday-1)]); % tend or end of tsg data
-    t = [t0; t; t1];
-    sdiff = [nan; sdiff; nan]; % pad this set of ddays with two nans for the pseudo ddays
-    % need values for sdiff at the start and end point (for interpolation)
-    % such that there will definitely be a tsg dday less and more than the
-    % bottle dday for all bottle ddays
-    
-    
-    %smoothed difference--default is a two-pass filter on the whole dday series
-    clear sdiffsm
-    sc1 = 0.5; sc2 = 0.02;
-    opt1 = mfilename; opt2 = 'tsg_sdiff'; get_cropt
-    if ~isempty(sc1) && ~isempty(sc2) && ~exist('sdiffsm','var')
-        sdiffsm = filter_bak(ones(1,21),sdiff); % first filter
-        sdiff(abs(sdiff-sdiffsm) > sc1) = NaN;
-        sdiffsm = filter_bak(ones(1,21),sdiff); % harsh filter to determine smooth adjustment
-        sdiff(abs(sdiff-sdiffsm) > sc2) = NaN;
-        sdiffsm = filter_bak(ones(1,21),sdiff); % harsh filter to determine smooth adjustment
-        sdiffsm_all = [sdiffsm_all; sdiffsm];
-        sdiffsm = sdiffsm_all; % rename back to sdfiff and t for saving, but _all vars are the aggregated ones over all segments
-        t_all = [t_all; t];
-        t = t_all; 
-        if 0
-            save(fullfile(root_tsg,'sdiffsm'), 't', 'sdiffsm'); mfixperms(fullfile(root_tsg,'sdiffsm'));
+dintake = 3; %depth of UCSW intake, if >0, extract CTD data within 1 dbar of dintake
+%***cruise option
+sepdownup = 0; %ctd down and upcast data are loaded separately, but will be combined before comparing to tsg if sepdownup is 0
+reload_cal = 1;
+if nargin>0
+    dintake = varargin{1};
+    if nargin>1
+        sepdownup = varargin{2};
+        if nargin>2
+            reload_cal = varargin{3};
         end
-    else
-        warning(['sdiffsm not set; check opt_' mcruise])
-        sdiffsm = NaN+sdiff;
     end
 end
-
-calstr = '';
-% plot TSG and bottle salinity data
-figure(1); clf
-subplot(nsp,1,1)
-hl = plot(dt.dday, dt.flow+35, 'c', dt.dday, dt.(salvar), db.dday, db.salinity_adj, 'o', db.dday, db.tsgsal, '.'); grid
-legend(hl, 'flow (scaled)', 'TSG','bottle','TSG')
-ylabel('Salinity (psu)'); xlabel(ht.fldunt(strcmp('dday',ht.fldnam)))
-title([calstr ' TSG'])
-xlim(dt.dday([1 end]))
-subplot(nsp,1,2) 
-plot(db.dday, sdiffall, 'r+-',t_all+1, sdiffsm,' kx-'); grid ; hold on ; 
-ylabel([calstr ' bottle - TSG (psu)']); xlabel(ht.fldunt(strcmp('dday',ht.fldnam)))
-xlim(dt.dday([1 end]))
-ylim([-.02 .06])
-if nsp==4
-    subplot(nsp,1,3)
-    plot(db.stemp, sdiffall, 'r+', db.stemp, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
-    xlabel('Sea Surface Temperature (^\circC)')
-    ylabel([calstr ' bottle - TSG (psu)'])
-    legend('Total Difference', 'Smoothed Difference'); hold on ; 
-    subplot(nsp,1,4)
-    plot(db.tsgsal, sdiffall, 'r+', db.tsgsal, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
-    xlabel([calstr ' TSG salinity (psu)'])
-    ylabel([calstr ' bottle - TSG (psu)'])
+dstr = num2str(dintake);
+if dintake>0
+    comp2ctd = 1;
+else
+    comp2ctd = 0;
 end
+
+
+%%%%% load data %%%%%
+
+tsgfile = fullfile(MEXEC_G.mexec_data_root,'met',['surface_ocean_' mcruise '.nc']);
+atmfile = fullfile(MEXEC_G.mexec_data_root,'met',['surfmet_' mcruise '_all_edt.nc']);
+salfile = fullfile(mgetdir('M_BOT_SAL'),['tsgsal_' mcruise '_all.nc']);
+chlfile = fullfile(mgetdir('M_BOT_CHL'),['ucswchl_' mcruise '_all.nc']);
+cdatafile = fullfile(MEXEC_G.mexec_data_root,'bottle_samples','uway_cal_data');
+
+%comparison data (bottle, ctd)
+if reload_cal
+
+    %load sample data, convert to dday
+    bsal = 0; bchl = 0;
+    bdelay = 1/1440; %delay bottles by 1 min to allow for delay between bottle being drawn and passing through TSG? ***option?
+    tud = ['days since ' MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) '-01-01 00:00:00'];
+    if exist(salfile,'file')
+        [dbs, hbs] = mload(salfile,'/');
+        dbs.dday = m_commontime(dbs, 'time', hbs, tud)-bdelay;
+        bsal = 1;
+        disp('loaded bottle salinity')
+        dispnames.db.salinity_adj = 'Bottle salinity (pss-78)';
+    end
+    if exist(chlfile,'file')
+        [dbf, hbf] = mload(chlfile,'/');
+        dbf.dday = m_commontime(dbf, 'time', hbf, tud)-bdelay;
+        bchl = 1;
+        disp('loaded bottle Chl')
+        dispnames.db.chl = 'Bottle Chl (ug/l)';
+    end
+
+    %combine types of sample data into one structure db
+    if bsal && bchl
+        db = dbs;
+        n0 = length(db.dday); nn = length(dbf.dday);
+        db.dday = [db.dday; dbf.dday];
+        fv = setdiff(fieldnames(db),{'dday'});
+        for no = 1:length(fv)
+            db.(fv{no}) = [dv.(fv{no}); nan(nn,1)];
+        end
+        fv = setdiff(fieldnames(dbf),{'dday'});
+        for no = 1:length(fv)
+            db.(fv{no}) = [nan(n0,1); dbf.(fv{no})];
+        end
+    elseif bsal
+        db = dbs;
+    elseif bchl
+        db = dbf;
+    end
+
+    %add ctd data
+    if comp2ctd
+        disp('loading CTD data')
+        dc = ctds_from_level(dintake, 1);
+        n0 = length(db.dday); nn = length(dc.dday);
+        db.dday = [db.dday; dc.dday];
+        fv = setdiff(fieldnames(db),{'dday'});
+        for no = 1:length(fv)
+            db.(fv{no}) = [db.(fv{no}); nan(nn,1)];
+        end
+        fv = setdiff(fieldnames(dc),{'dday'});
+        for no = 1:length(fv)
+            db.(fv{no}) = [nan(n0,1); dc.(fv{no})];
+        end
+        dispnames.db.ctdt = ['CTD (down) temp at ' dstr ' dbar'];
+        dispnames.db.ctut = ['CTD (up) temp at ' dstr ' dbar'];
+        dispnames.db.ctds = ['CTD (down) psal at ' dstr ' dbar'];
+        dispnames.db.ctus = ['CTD (up) psal at ' dstr ' dbar'];
+        dispnames.db.ctdf = ['CTD (down) fluor at ' dstr ' dbar'];
+        dispnames.db.ctuf = ['CTD (up) fluor at ' dstr ' dbar'];
+    end
+
+    %***add shallowest bottle stop data?****
+
+    %sort times
+    db = struct2table(db);
+    [~,ii] = sort(db.dday);
+    if length(ii)<length(db.dday)
+        disp('different samples at the same time')
+        keyboard
+        %would need new code to deal with this, but it's unlikely to come up (can
+        %only draw one sample at a time, and unlikely CTD would be precisely
+        %the same time to the second)
+    end
+    db = db(ii,:);
+
+    save(cdatafile,'db','dintake')
+
+else
+
+    load(cdatafile)
+    bsal = 0; bchl = 0;
+    if isfield(db,'salinity_adj') && sum(~isnan(db.salinity_adj))
+        bsal = 1;
+    end
+    if isfield(db,'chl') && sum(~isnan(db.chl))
+        bchl = 1;
+    end
+
+end
+if comp2ctd && ~sepdownup
+    db.ct = db.ctdt; db.ct(isnan(db.ct)) = db.ctut(isnan(db.ct));
+    db.cs = db.ctds; db.cs(isnan(db.cs)) = db.ctus(isnan(db.cs));
+    db.cf = db.ctdf; db.cf(isnan(db.cf)) = db.ctuf(isnan(db.cf));
+    db = removevars(db, ["ctdt","ctds","ctdf","ctut","ctus","ctuf"]);
+    dispnames.db.ct = ['CTD temp at ' dstr ' dbar'];
+    dispnames.db.cs = ['CTD psal at ' dstr ' dbar'];
+    dispnames.db.cf = ['CTD fluor at ' dstr ' dbar'];
+end
+%***temporary: dy180 fluor sample file has duplicate times, exclude (cruise
+%option***)
+if strcmp('dy180',mcruise)
+    db(~isnan(db.chl),:) = []; %will need to reload anyway because without the correct times the ctd data aren't being extracted for these points (they all appear to be at midnight)
+end
+
+%tsg data
+[dt, ht] = mload(tsgfile,'/');
+dt = struct2table(dt);
+% guess variable name for each parameter from list of known common names
+salvar = munderway_varname('salvar',ht.fldnam,1,'s');
+temph = munderway_varname('tempvar',ht.fldnam,1,'s'); %housing
+tempin = munderway_varname('sstvar',ht.fldnam,1,'s'); %remote
+%tempsst = munderway_varname('sstvar',setdiff(ht.fldnam,tempin),1,'s'); %sst (what about dk?)
+fluovar = 'fluo'; %doesn't seem to vary in tsg file? if it does, add to munderway_varname
+%don't bother if we don't have any data
+m = ~isnan(dt.(temph)) | ~isnan(dt.(tempin)); %if ~isempty(tempsst); m = m | ~isnan(dt.(tempsst)); end
+dt = dt(m,:);
+%define display names
+dispnames.dt.(temph) = ['TSG housing temp (' temph ')'];
+dispnames.dt.(tempin) = ['UCSW intake temp (' tempin ')'];
+dispnames.dt.(salvar) = ['TSG salinity (' salvar ')'];
+dispnames.dt.(fluovar) = ['TSG fluorescence (' fluovar ')'];
+
+%interpolate TSG variables to match calibration data
+ivars = {temph,tempin,salvar,fluovar};
+for no = 1:length(ivars)
+    db.(ivars{no}) = interp1(dt.dday, dt.(ivars{no}), db.dday);
+    dispnames.db.(ivars{no}) = dispnames.dt.(ivars{no});
+end
+
+
+%%%%% compare data %%%%%
+
+%find where system was disturbed, so calibration likely to change
+tbreak = find_cleaning(dt, temph);
+
+
+%make comparison plots, flag points not to include in comparison, and
+%calculate fits/smoothed differences
+%plt.xl = dt.dday(~isnan(dt.(tempin))); plt.xl = [min(plt.xl) max(plt.xl)];
+plt.xl = [min(db.dday)-1/24/60 max(db.dday)+1/24/60];
+plt.pcolors = [.5 0 0; 1 0 .8; .5 0 .5; 0 0 0];
+plt.psym = ['>';'^';'p';'o'];
+plt.bigm = 8; %default markersize is 6
+
+if comp2ctd
+    % compare TSG and CTD temp
+    figure(1); clf
+    clear pdata
+    pdata.extra = {temph, 'c', '--'};
+    pdata.ts = temph;
+    if sepdownup
+        pdata.points = {'ctut', 'CTDu-UCSWin';...
+            'ctdt', 'CTDd-UCSWin'}; %prefer downcast, so make this last
+    else
+        pdata.points = {'ct', 'CTD-UCSWin'};
+    end
+    plt.ylab = {'T (degC)';'T difference'};
+    cst = plotuc(dt, db, dispnames, pdata, plt, tbreak, []);
+end
+
+if comp2ctd || bsal
+    % plot TSG and bottle salinity data %add flow rate?***
+    figure(2); clf
+    clear pdata
+    pdata.ts = salvar;
+    if comp2ctd && sepdownup
+        pdata.points = {'ctus', 'CTDu-TSG';...
+            'ctds', 'CTDd-TSG'};
+    else
+        pdata.points = {'cs', 'CTD-TSG'};
+    end
+    if bsal
+        %prefer to compare to bottles, so make this last
+        pdata.points = [pdata.points; 'salinity_adj', 'Bottle-TSG'];
+    end
+    plt.ylab = {'S (psu)';'S difference'};
+    css = plotuc(dt, db, dispnames, pdata, plt, tbreak, []);
+end
+
+if comp2ctd || bchl %note if CTD is calibrated or not
+    % compare TSG and CTD and bottle fluor
+    figure(3); clf
+    clear pdata
+    pdata.ts = fluovar;
+    if comp2ctd && sepdownup
+        pdata.points = {'ctuf', 'CTDu-UCSW';...
+            'ctdf', 'CTDd-UCSW'};
+    else
+        pdata.points = {'cf', 'CTD-UCSW'};
+    end
+    if bchl
+        %prefer to compare to bottles
+        pdata.points = [pdata.points; 'chl', 'Bottle-UCSW'];
+    end
+    plt.ylab = {'Chl (ug/ml)';'Chl difference'};
+    %find too-much-light points, to be excluded
+    [dr, ~] = mload(atmfile,'/');
+    ll = 0.1e7; %cruise option? depends on calibration of sensors? ***check ctd samples taken?
+    db.par = interp1(dr.dday,dr.parport+dr.parstarboard,db.dday)/2;
+    mbad = db.par>ll;
+    csf = plotuc(dt, db, dispnames, pdata, plt, tbreak, mbad);
+end
+
+keyboard
+%add overall smoothed and trends***
+
 printdir = fullfile(MEXEC_G.mexec_data_root,'plots');
 printform = '-dpdf';
 print(printform,fullfile(printdir,['tsg_bottle_' mcruise]));
 
-disp('mean diff, median diff')
-[m_nanmean(sdiff) m_nanmedian(sdiff)]
-disp('RMS of residuals:')
-rms_res = sqrt(sum(sdiff(~isnan(sdiff)).^2)/sum(~isnan(sdiff)))
-% disp('stderr:')
-% stde = sqrt(sum(sdiff(~isnan(sdiff)).^2)/(sum(~isnan(sdiff))-1)) % not output by bak on dy146; not sure this is helpful
-
-disp(['choose a constant or simple dday-dependent correction for TSG, add to '])
-disp(['uway_proc, tsg_cals case in opt_cruise (to be applied to _edt variable(s))'])
-disp(['(or set it so it uses the smooth function shown here)'])
-
-dintake = 3;
-ddk = 5;
-if comp2ctd
-    disp('loading CTD data')
-    [dsum,hsum] = mload(fullfile(mgetdir('M_SUM'),['station_summary_' mcruise '_all']),'/');
-    ii = find(dsum.time_start/86400>dt.dday(1) & dsum.time_end/86400<dt.dday(end));
-    statnum = dsum.statnum(ii);
-    dt.ctdt = NaN+dt.dday; dt.ctds = dt.ctdt;
-    for sno = 1:length(statnum)
-        [d,h] = mload(fullfile(mgetdir('M_CTD'),sprintf('ctd_%s_%03d_psal',mcruise,statnum(sno))),'/');
-        d.dday = m_commontime(d, 'time', h, ht.fldunt(strcmp('dday',ht.fldnam)));
-        [ddcs,hdcs] = mload(fullfile(mgetdir('M_CTD'),sprintf('dcs_%s_%03d',mcruise,statnum(sno))),'/');
-        iid = find(d.scan>ddcs.scan_start & d.scan<ddcs.scan_bot & d.press>dintake-1 & d.press<dintake+1);
-        iiu = find(d.scan>ddcs.scan_bot & d.scan<ddcs.scan_end & d.press>dintake-1 & d.press<dintake+1);
-        timdif = abs(dt.dday-mean(d.dday(iid)));
-        dt.ctdt(timdif==min(timdif)) = nanmean(d.temp(iid));
-        dt.ctds(timdif==min(timdif)) = nanmean(d.psal(iid));
-        timdif = abs(dt.dday-mean(d.dday(iiu)));
-        dt.ctdt(timdif==min(timdif)) = nanmean(d.temp(iiu));
-        dt.ctds(timdif==min(timdif)) = nanmean(d.psal(iid)); %***save down vs up separately?
-    end
-
-    % plot TSG, bottle and CTD data
-    figure(2); clf
-    subplot(2,1,1) %nsp
-    h2 = plot(dt.dday, dt.(salvar), db.dday, db.salinity_adj, 'o', db.dday, db.tsgsal, '<'); grid
-    hold on;
-    h3 = plot(dt.dday, dt.ctds, 'r.');
-    legend([h2; h3], 'TSG','bottle','TSG', 'CTD')
-    hold on; 
-    ylabel('Salinity (psu)'); xlabel('decimal day')
-    title([calstr ' TSG'])
-    xlim(dt.dday([1 end]))
-     subplot(2,1,2) %nsp
-    h2 = plot(dt.dday, dt.temph, dt.dday, dt.tempr, dt.dday, dt.tempdk, db.dday, db.tsst, 'o'); grid
-    hold on;
-    h3 = plot(dt.dday, dt.ctdt, 'r.');
-    legend([h2; h3], 'TSG housing','TSG inlet','DK', 'DK','CTD')
-    hold on; 
-    ylabel('T (degC)'); xlabel('decimal day')
-    title([calstr ' TSG'])
-    xlim(dt.dday([1 end]))
-return   
-    if 0%nseg < 2
-        % relate tsg dday to ctd dday
-        % dt.(salvar) = dt.(salvar); %this already defined above
-        db.tsgsal_ctd_shallow = interp1(dt.dday, dt.(salvar), ds_i_all_shallowest.dday_jul);
-        db.tsgsal_ctd_5m = interp1(dt.dday, dt.(salvar), ds_i_all_5m.dday_jul);
-
-    else 
-        %  work out overlapping ddays for each segment
-        try 
-            db.tsgsal_ctd_shallow = interp1(dt.dday, dt.(salvar), ds_i_all_shallowest.dday_jul);
-            db.tsgsal_ctd_5m = interp1(dt.dday, dt.(salvar), ds_i_all_5m.dday_jul);
-
-        catch 
-            disp('Interpolation of TSG sal onto CTD sal failed. Likely as TSG not running during CTD deployment. Next section will likely fail.')
-        end
-        
-    end
-
-    nsp = 2;
-    if 0%exist('tempsst','var') && ~isempty(tempsst)
-        db.stemp_ctd_shallow = interp1(dt.dday, dt.(tempsst), ds_i_all_shallowest.dday_jul);
-        db.stemp_ctd_5m = interp1(dt.dday, dt.(tempsst), ds_i_all_5m.dday_jul);
-
-        nsp = 4;
-    end
-
-    %NaN some of the db.salinity_adj points ???
-
-    sdiff_ctd_shallow = ds_i_all_shallowest.(ctd_sal_var)-db.tsgsal_ctd_shallow; %offset is bottle minus tsg, so that it is correction to be added to tsg
-    sdiff_std_ctd_shallow = m_nanstd(sdiff_ctd_shallow); sdiff_mean_ctd_shallow = m_nanmean(sdiff_ctd_shallow);
-    idx = find(abs(sdiff_ctd_shallow-sdiff_mean_ctd_shallow)>3*sdiff_std_ctd_shallow); % bak dy146 sdiff-sdiff_mean ?
-    % List and discard possible outliers
-    if ~isempty(idx)
-	    fprintf(1,'\n Std deviation of ctd tsg - differnces is %7.3f \n',sdiff_std_ctd_shallow)
-	    fprintf(1,' The following are outliers to be checked: \n')
-	    fprintf(1,' Sample  Jday dday    Difference  \n')
-	    for ii = idx(:)'
-		    jdx = floor(ds_i_all_shallowest.dday_jul(ii));
-		    fprintf(1,'  %2d  -  %d  %s  %7.3f \n',ii,jdx,datestr(ds_i_all_shallowest.dday_jul(ii),15),sdiff_ctd_shallow(ii))
-	    end
-    end
-    sdiffall_ctd_shallow = sdiff_ctd_shallow;
-    sdiff_ctd_shallow(idx) = NaN; % set values where value>3*SD as NaN
-
-
-    sdiff_ctd_5m = ds_i_all_5m.(ctd_sal_var)-db.tsgsal_ctd_5m; %offset is bottle minus tsg, so that it is correction to be added to tsg
-    sdiff_std_ctd_5m = m_nanstd(sdiff_ctd_5m); sdiff_mean_ctd_5m = m_nanmean(sdiff_ctd_5m);
-    idx = find(abs(sdiff_ctd_5m-sdiff_mean_ctd_5m)>3*sdiff_std_ctd_5m); % bak dy146 sdiff-sdiff_mean ?
-    % List and discard possible outliers
-    if ~isempty(idx)
-	    fprintf(1,'\n Std deviation of ctd tsg - differnces is %7.3f \n',sdiff_std_ctd_5m)
-	    fprintf(1,' The following are outliers to be checked: \n')
-	    fprintf(1,' Sample  Jday dday    Difference  \n')
-	    for ii = idx(:)'
-		    jdx = floor(ds_i_all_5m.dday_jul(ii));
-		    fprintf(1,'  %2d  -  %d  %s  %7.3f \n',ii,jdx,datestr(ds_i_all_5m.dday_jul(ii),15),sdiff_ctd_5m(ii))
-	    end
-    end
-    sdiffall_ctd_5m = sdiff_ctd_5m;
-
-    sdiff_ctd_5m(idx) = NaN; % set values where value>3*SD as NaN
-
-
-    % plot TSG and bottle data
-    figure(3); clf
-    subplot(nsp,1,1)
-    
-    % plot bottles too
-    h4 = plot(dt.dday, dt.(salvar), db.dday, db.salinity, '.y', db.dday, db.salinity_adj, 'o', db.dday, db.tsgsal, '<', ds_i_all.dday_jul, ds_i_all.(ctd_sal_var), 'r.', ds_i_all_shallowest.dday_jul, ds_i_all_shallowest.(ctd_sal_var), 'r.'); grid
-    legend(h4([1 3 4 5 6]), 'TSG','bottle','TSG', ctd_all_leg_str, 'Shallowest'); % , '5m')
-    h4(6).MarkerSize = 20;
-
-    % just plot CTD data NOT bottles
-    %h4 = plot(dt.dday, dt.(salvar), ds_i_all.dday_jul, ds_i_all.(ctd_sal_var), 'k.', ds_i_all_shallowest.dday_jul, ds_i_all_shallowest.(ctd_sal_var), 'r.'); grid
-    %legend(h4([1 2 3]), 'TSG', ctd_all_leg_str, 'Shallowest'); % , '5m')
-    %h4(3).MarkerSize = 20;
-    
-    %h3 = plot(ds_i_all.dday_jul, ds_i_all.(ctd_sal_var), 'r.', ds_i_all_shallowest.dday_jul, ds_i_all_shallowest.(ctd_sal_var), 'r.');
-    %legend(h2([1 3 4]), 'TSG','bottle','TSG'); %, 'CTD')
-
-    ylabel('Salinity (psu)'); xlabel('yearday, noon on 1 Jan = 1.5')
-    title([calstr ' TSG'])
-    xlim(dt.dday([1 end]))
-    ylim([34.5, 35.5])
-    subplot(nsp,1,2)
-    plot(ds_i_all_shallowest.dday_jul, sdiffall_ctd_shallow, 'r+-', ds_i_all_5m.dday_jul, sdiffall_ctd_5m, 'k+-') ; grid %,t_all+1, sdiffsm,' kx-'); grid
-    hold on ;
-    ylabel([calstr ' CTD minus TSG (psu)']); xlabel('yearday, noon on 1 Jan = 1.5')
-    xlim(dt.dday([1 end]))
-    ylim([-.02 .06])
-    legend('Shallowest', '5m');
-    hold on ;
-    if nsp==4
-        subplot(nsp,1,3)
-        plot(db.stemp_ctd_shallow, sdiffall_ctd_5m, 'r+', db.stemp_ctd_5m, sdiffall_ctd_5m, 'k+') ; grid %, db.stemp, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
-        xlabel('Sea Surface Temperature (^\circC)')
-        ylabel([calstr ' CTD - TSG (psu)'])
-        legend('Shallowest', '5m');
-        ylim([-.01, 0.06])
-        subplot(nsp,1,4)
-        plot(db.tsgsal_ctd_shallow, sdiffall_ctd_shallow, 'r+', db.tsgsal_ctd_5m, sdiffall_ctd_5m, 'k+') ; grid %, db.tsgsal, sdiffsm(2:end-1), 'kx'); grid % bak on dy146: sdiffsm(2:end-1) so array lengths match
-        xlabel([calstr ' TSG salinity (psu)'])
-        ylabel([calstr ' CTD - TSG (psu)'])
-        legend('Shallowest', '5m');
-        ylim([-.01, 0.06])
-
-    end
-    
-    % compare TSG and CTD temp
-    figure(4); clf ; 
-    h5 = plot(dt.dday, dt.(tempsst), 'k', dt.dday, dt.(tempvar), 'b', ds_i_all.dday_jul, ds_i_all.(ctd_temp_var), 'r.', ds_i_all_shallowest.dday_jul, ds_i_all_shallowest.(ctd_temp_var), 'r.');
-    legend(h5([1 2 3]), 'TSG tempr', 'TSG temph', 'CTD temp', 'Shallowest CTD temp') ; %, ctd_all_leg_str, 'Shallowest'); % , '5m')
-    h5(3).MarkerSize = 20;
-
-
+if 0%***
+    save(fullfile(root_tsg,'sdiffsm'), 'cst', 'css', 'csf'); mfixperms(fullfile(root_tsg,'sdiffsm'));
 end
-    
+
+
+%%%%% subfunctions %%%%%
+
+function tbreak = find_cleaning(dt, temph)
+% set breakpoints for fitting/smoothed differences any time tsg was not
+% running (tbreaks) to allow for cleaning
+tbreak = [];
+opt1 = 'uway_proc'; opt2 = 'tsg_ddaybreaks'; get_cropt; %maybe cleaning times were recorded!***how to use
+%check and look for more
+dgood = dt.dday(~isnan(dt.(temph)));
+d = diff(dgood);
+djump = dgood(d>15/60/24); %15 minutes too short to need to break the fit?
+djump_more = dgood(d>5/60/24);
+djump = djump(:)'; djump_more = djump_more(:)';
+figure(10); clf
+subplot(211)
+yl = [min(dt.(temph)) max(dt.(temph))]';
+plot(dt.dday,dt.(temph),repmat(djump_more,2,1),repmat(yl,1,length(djump_more)),'--',repmat(djump,2,1),repmat(yl,1,length(djump)))
+axis tight; grid; ylabel(temph); xlabel('decimal day'); title('breaks')
+subplot(212)
+dday = repmat(dt.dday(:),1,length(djump)) - repmat(djump,length(dt.dday),1);
+t = repmat(dt.(temph)(:),1,length(djump));
+ddaym = repmat(dt.dday(:),1,length(djump_more)) - repmat(djump_more,length(dt.dday),1);
+tm = repmat(dt.(temph)(:),1,length(djump_more));
+plot(ddaym*24*60, tm, '--', dday*24*60, t); xlim([-60 60*2])
+xlabel('minutes from break'); ylabel(temph); grid
+tbreak = djump+.5/60/24;
+disp('breaks at:')
+fprintf(1,'%f ',tbreak); fprintf(1,'\n')
+a = input('accept suggested [solid] (y) or change (n)? ','s');
+if strcmp('n',a)
+    disp('modify tbreak')
+    keyboard
+end
+tbreak = [-inf tbreak inf];
+
+
+function cs = plotuc(dt, db, dispnames, pdata, plt, tbreak, mbad)
+
+uvar = pdata.ts; %underway (TSG) variable
+cvar = pdata.points{end,1}; %main comparison parameter (the last one to be plotted), will be passed to flagsdiffs
+
+%make initial plot
+
+%time series with comparison points
+ha(1) = subplot(211);
+hl = [];
+if isfield(pdata, 'extra')
+    hl = plot(dt.dday, dt.(pdata.extra{1}), 'color', pdata.extra{2}, 'linestyle', pdata.extra{3}, 'DisplayName', dispnames.dt.(pdata.extra{1}));
+    hold on
+end
+hl = [hl plot(dt.dday, dt.(uvar), 'b', 'DisplayName', dispnames.db.(uvar))]; hold on
+np = size(pdata.points,1);
+for no = 1:np
+    hp(no) = plot(db.dday, db.(pdata.points{no,1}), 'linestyle', 'none', 'color', plt.pcolors(no,:), 'marker', plt.psym(no), 'DisplayName', dispnames.db.(pdata.points{no,1}));
+end
+hp(end).MarkerSize = plt.bigm; %last one is the main one
+xlabel('decimal day'); ylabel(plt.ylab{1}); grid; axis tight; xlim(plt.xl)
+%add tbreak vertical lines
+yl = ha(1).YLim'; plot(repmat(tbreak,2,1), repmat(yl,1,length(tbreak)));
+legend([hl hp])
+
+%differences
+ha(2) = subplot(212);
+for no = 1:np
+    hd(no) = plot(db.dday, db.(pdata.points{no,1})-db.(uvar), 'linestyle', 'none', 'color', plt.pcolors(no,:), 'marker', plt.psym(no), 'DisplayName', pdata.points{no,2}); hold on
+end
+hd(end).MarkerSize = plt.bigm; %last one is the main one
+xlabel('decimal day'); ylabel(plt.ylab{2}); grid; axis tight; xlim(plt.xl)
+%add tbreak vertical lines
+yl = ha(2).YLim'; plot(repmat(tbreak,2,1), repmat(yl,1,length(tbreak)));
+legend(hd)
+
+linkaxes(ha,'x')
+
+%get smoothed differences, using the last-plotted parameter
+trange = dt.dday(~isnan(dt.(uvar))); trange = [min(trange) max(trange)]; %range of good TSG data
+[cs.flags, cs.diffsm, cs.diffseg, cs.cseg] = flagsdiffs(db, uvar, cvar, tbreak, mbad, trange);
+cs.readme = {'diffsm: smoothed differences';
+    'diffseg: median differences over each segment after excluding outliers';
+    'trseg: trends in each segment''s differences after excluding outliers';
+    'cseg: coefficients of above, [b; m] in mx+b'};
+
+%add to plot
+axes(ha(2))
+hlsd(1) = plot(db.dday, cs.diffsm, 'DisplayName', ['smoothed difference ' pdata.points{end,2}]);
+hlsd(2) = plot(dt.dday, interp1(db.dday,cs.diffseg,dt.dday,'nearest'), 'DisplayName', 'segment medians', 'linestyle', '--');
+for kseg = 1:length(tbreak)-1
+    t = dt.dday(dt.dday>tbreak(kseg) & dt.dday<=tbreak(kseg+1));
+    hlsd(kseg+2) = plot(t, [ones(length(t),1) t]*cs.cseg(:,kseg), 'DisplayName', 'segment trends', 'linestyle', '-.', 'color', 'k');
+end
+h = [hd hlsd(1:3)];
+fm = 3;
+if sum(cs.flags>fm)
+    %overplot flagged points in gray
+    hlb = plot(db.dday(cs.flags>fm), db.(cvar)(cs.flags>fm)-db.(uvar)(cs.flags>fm), 'color', [.6 .6 .6], 'marker', hd(end).Marker, 'markersize', hd(end).MarkerSize, 'linestyle', 'none', 'DisplayName', 'flagged, excluded from above');
+    h = [h hlb];
+end
+legend(h,'location','southwest')
+
+
+function [flags, sdiffsm, pl, trcseg_all] = flagsdiffs(db, uvar, cvar, tbreak, mbad, trange)
+%compare underway data in uvar with calibration data in cvar field of db
+
+% List and discard possible outliers
+flags = 2+zeros(size(db.dday));
+if ~isempty(mbad) && sum(mbad)
+    flags(mbad) = 4;
+    db.(uvar)(mbad) = NaN; %***
+end
+sdiff = db.(cvar) - db.(uvar);
+sdiff_std = m_nanstd(sdiff);
+sdiff_median = m_nanmedian(sdiff);
+idx = find(abs(sdiff-sdiff_median)>3*sdiff_std); 
+if ~isempty(idx)
+    fprintf(1,'\n Std deviation of differences between comparison data (%s) and TSG/UCSW sensor is %7.3f \n',cvar,sdiff_std)
+    fprintf(1,' The following are outliers to be checked: \n')
+    fprintf(1,' Sample - dday time    Difference  \n')
+    for ii = idx(:)'
+        jdx = floor(db.dday(ii));
+        fprintf(1,'  %2d  -  %d  %s  %7.3f \n',ii,jdx,datestr(db.dday(ii),15),sdiff(ii))
+    end
+    a = input('exclude the listed points from the comparison (enter) or keyboard (k) ','s');
+else
+    a = input('keyboard to set points to exclude from the comparison (k) or enter to continue? ','s');
+end
+if strcmp('k',a)
+    disp('set indices of bad points, idx')
+    keyboard
+end
+sdiff(idx) = NaN; % set values where value>3*SD as NaN
+flags(idx) = 4; %may not be bad bottles just bad comparisons, but these are "definitely" bad
+
+%now break into segments and compute smoothed differences
+nseg = length(tbreak)-1;
+t_all = [];
+sdiffsm_all = []; sdiffseg_all = []; trseg_all = [];
+trcseg_all = nan(2,nseg);
+sc1 = 0.5; sc2 = 0.02;
+opt1 = 'uway_proc'; opt2 = 'tsg_sdiff'; get_cropt
+if ~exist('sdiffsm','var') %if set in opt_cruise, overrides the below
+    for kseg = 1:nseg
+        tstart = tbreak(kseg)+1/86400;
+        tend = tbreak(kseg+1)-1/86400;
+        kbottle = find(db.dday > tstart & db.dday < tend);
+        % work out if interval is before or after start of tsg data (and select
+        % the later of the 2 start ddays and earlier of the 2 end ddays)
+        t0 = max([tstart trange(1)]); % tstart, or start of tsg data
+        t1 = min([tend trange(2)]); % tend or end of tsg data
+
+        t = [t0; db.dday(kbottle); t1];
+        sdiffseg = [nan; sdiff(kbottle); nan]; % pad this set of ddays with two nans for the pseudo ddays
+        % need values for sdiff at the start and end point (for interpolation)
+        % such that there will definitely be a tsg dday less and more than the
+        % bottle dday for all bottle ddays
+
+        %smoothed difference--default is a two-pass filter on the whole
+        %series (should replace with a constant time
+        %window filter rather than a constant number of points filter
+        %as for everything except bottle salinity in some cases the time
+        %distribution of comparison points is likely to be uneven)***
+        sdiffsm = filter_bak(ones(1,21),sdiffseg); % first filter
+        sdiffseg(abs(sdiffseg-sdiffsm) > sc1) = NaN;
+        sdiffsm = filter_bak(ones(1,21),sdiffseg); % harsh filter to determine smooth adjustment
+        sdiffseg(abs(sdiffseg-sdiffsm) > sc2) = NaN;
+        sdiffsm = filter_bak(ones(1,21),sdiffseg); % harsh filter to determine smooth adjustment
+        sdiffsm_all = [sdiffsm_all; sdiffsm];
+        t_all = [t_all; t];
+        %median in each segment
+        sdiffseg_all = [sdiffseg_all; repmat(median(sdiffseg,'omitnan'),length(t),1)];
+        %trends in each segment
+        r = [ones(length(t),1) t];
+        %b = regress(sdiff(~isnan(sdiff)),r(~isnan(sdiff),:));
+        bs = regress(sdiffsm(~isnan(sdiffseg)),r(~isnan(sdiffseg),:));
+        trcseg_all(:,kseg) = bs;
+        %flags
+        ii = kbottle(isnan(sdiffseg(2:end-1)));
+        flags(ii) = max(3,flags(ii)); %these may not be as far out
+    end
+    if ~sum(~isnan(sdiffsm_all))
+        warning('smoothing excluding all points from %s, adjust sc1 and sc2 in opt_cruise?',uvar)
+    end
+    sdiffsm = interp1(t_all(~isnan(sdiffsm_all)),sdiffsm_all(~isnan(sdiffsm_all)),db.dday);
+    sdiffseg = interp1(t_all(~isnan(sdiffseg_all)),sdiffseg_all(~isnan(sdiffseg_all)),db.dday);
+
+    r = [ones(length(db.dday),1) db.dday];
+    b = regress(sdiff(~isnan(sdiff)),r(~isnan(sdiff),:));
+    bs = regress(sdiffsm(~isnan(sdiffsm)),r(~isnan(sdiffsm),:));
+    disp('mean diff, median diff, RMS diff, offset and trend')
+    disp([m_nanmean(sdiff) m_nanmedian(sdiff) sqrt(sum(sdiff(~isnan(sdiff)).^2)/sum(~isnan(sdiff))) b'])
+    disp('from smoothed data:')
+    disp([m_nanmean(sdiffsm) m_nanmedian(sdiffsm) sqrt(sum(sdiffsm(~isnan(sdiffsm)).^2)/sum(~isnan(sdiffsm))) bs'])
+
+    disp('choose a constant or simple dday-dependent correction for TSG, add to ')
+    disp('uway_proc, tsg_cals case in opt_cruise (to be applied to _edt variable(s))')
+    disp('(or set it so it uses the smooth function shown here, but be cautious if the comparison is to CTD rather than UCSW bottle samples!)')
+end

@@ -253,6 +253,11 @@ elseif strcmp(stage, 'post')
                     d.(svar) = gsw_SP_from_C(fac*d.(cvar),d.(tvar),0);
                     if ~ismember(h.fldnam,svar)
                         h = m_append_header_fld(h, {svar}, {'pss-78'}, cvar);
+                    else
+                        su = h.fldunt{strcmp(svar,h.fldnam)};
+                        if isempty(su) || strcmp(' ',su) || strcmp('json_empty',su)
+                            h.fldunt{strcmp(svar,h.fldnam)} = 'pss-78';
+                        end
                     end
                     if ~exist('cpstr','var'); cpstr = ''; end
                     comment = sprintf('\n psal calculated from edited, averaged%s %s and %s',cpstr,cvar,tvar);
