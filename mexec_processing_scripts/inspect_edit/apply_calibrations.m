@@ -3,6 +3,9 @@ function [dcal, hcal] = apply_calibrations(d0, h0, calstr, varargin)
 % [dcal, hcal] = apply_calibrations(d0, h0, calstr, docal);
 % [dcal, hcal] = apply_calibrations(d0, h0, calstr, 'q');
 %
+% use to apply a conversion/calibration function (user-defined or factory)
+% to data
+%
 % d0 and h0 are the uncalibrated data and header loaded from mstar file
 % using mload
 % calstr is a nested structure:

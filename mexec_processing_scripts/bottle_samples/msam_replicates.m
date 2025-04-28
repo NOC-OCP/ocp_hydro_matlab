@@ -1,67 +1,83 @@
-function [d, hnew] = mpar_replicates(ds, tabdatavars, mstarvars, units)
-% [d, hnew] = mpar_replicates(ds, tabdatavars, mstarvars, units)
+function [dnew, hnew] = msam_replicates(ds, samtyp)
+% [dnew, hnew] = msam_replicates(ds, samtyp)
 %
-% ds is a table including columns sampnum, (tabdatavar), and flag
+% ds is a structure or table including columns sampnum, (tabdatavar), and
+% flag 
 %
-% for each tabdatavar, renames to mstarvar, adds units, separates and
-% renames replicates, makes flags consistent, and puts into a structure and
-% header suitable for writing to mstar-format .nc files
+% for each tabdatavar, adds units, separates and renames replicates, makes
+% flags consistent, and puts into a structure and header suitable for
+% writing to mstar-format .nc files 
 %
 
+if isstruct(ds)
+    ds = struct2table(ds);
+end
 
-hnew.fldnam = {'sampnum' 'statnum' 'position'};
-hnew.fldunt = {'number' 'number' 'on.rosette'};
-[d.sampnum, iia, ~] = unique(ds.sampnum, 'stable');
-
-% calculate statnum and position in case they don't already exist
-d.statnum = floor(d.sampnum/100); d.position = d.sampnum-d.statnum*100;
-
-ds_fn = ds.Properties.Variablenames;
-va = [mstarvar 'a'];
-fa = [mstarvar 'a_flag'];
-
-if sum(strcmp(tabdatavar,ds_fn))
-    d.botoxya_per_l = ds.(tabdatavar)(iia);
-    hnew.fldnam = [hnew.fldnam va fa];
-    hnew.fldunt = [hnew.fldunt unit 'woce_9.4'];
+%masks for different types of fields (only want to look for main sample
+%data)
+names0 = ds.Properties.VariableNames;
+m1 = ismember(names0,{'sampnum'}); %everything in ~m1 will be replicated
+mf = ~m1 & cellfun(@(x) contains(x,'_flag'),names0);
+if sum(mf); ds.Properties.VariableUnits(mf) = {'woce_4.9'}; end
+if strcmp(samtyp, 'oxy')
+    mt = ~m1 & ~mf & cellfun(@(x) contains(x, '_temp'), names0); %only for botoxy_temp
+    if sum(mt); ds.Properties.VariableUnits(mt) = {'degC'}; end
 else
-    error('no %s in input',tabdatavar)
+    mt = false(size(names0));
 end
-if sum(strcmp('flag',ds_fn))
-    d.(fa) = ds.flag(iia);
-else
-    d.(fa) = 2+zeros(size(d.(va));
-    d.(fa)(isnan(d.(va))) = 5; %assume if there is a line in the file it's because a sample was drawn
+mi = ~m1 & ~mf & cellfun(@(x) contains(x, '_inst'), names0);
+mv = ~m1 & ~mf & ~mt & ~mi; %"normal" variables
+
+%replace NaN flags with 9
+dat = ds{:,mf}; dat(isnan(dat)) = 9; ds{:,mf} = dat;
+
+%turn names of different analysing instruments into numbers
+for no = find(mi)
+    gi = findgroups(ds.(names0{no}));
+    gis = groupsummary(ds,names0{no});
+    ds.(names0{no}) = gi;
+    ds.Properties.VariableUnits{no} = strjoin(gis.(names0{no}),' / ');
 end
 
-if sum(strcmp('fix_temp',ds_fn))
-    d.botoxya_temp = ds.fix_temp(iia);
-    hnew.fldnam = [hnew.fldnam 'botoxya_temp'];
-    hnew.fldunt = [hnew.fldunt 'degC'];
-end
+%fill missing sampnums with unique values (so as not to group)
+m = ~isfinite(ds.sampnum);
+ds.sampnum(m) = [0:sum(m)-1]-1e10; %these sampnums aren't used for anything even TSG times
 
-iib = setdiff(1:length(ds.sampnum),iia);
-%***add code to handle duplicates in different columns on same line? 
-if ~isempty(iib) 
-    d.botoxyb_per_l = NaN+d.botoxya_per_l;
-    d.botoxyb_temp = d.botoxyb_per_l;
-    d.botoxyb_flag = 9+zeros(size(d.sampnum));
-    [~,ii,iid] = intersect(ds.sampnum(iib),d.sampnum);
-    d.botoxyb_per_l(iid) = ds.conc_o2(iib(ii));
-    d.botoxyb_temp(iid) = ds.fix_temp(iib(ii));
-    d.botoxyb_flag(iid) = ds.flag(iib(ii));
-    hnew.fldnam = [hnew.fldnam 'botoxyb_per_l' 'botoxyb_temp' 'botoxyb_flag'];
-    hnew.fldunt = [hnew.fldunt 'umol/L' 'degC' 'woce_9.4'];
-    iic = setdiff(1:length(ds.sampnum),[iia' iib(ii)]);
-    if ~isempty(iic)
-        d.botoxyc_per_l = NaN+d.botoxya_per_l;
-        d.botoxyc_temp = d.botoxyc_per_l;
-        d.botoxyc_flag = 9+zeros(size(d.sampnum));
-        [~,ii,iid] = intersect(ds.sampnum(iic),d.sampnum);
-        d.botoxyc_per_l(iid) = ds.conc_o2(iic(ii));
-        d.botoxyc_temp(iid) = ds.fix_temp(iic(ii));
-        d.botoxyc_flag(iid) = ds.flag(iic(ii));
-        hnew.fldnam = [hnew.fldnam 'botoxyc_per_l' 'botoxyc_temp' 'botoxyc_flag'];
-        hnew.fldunt = [hnew.fldunt 'umol/L' 'degC' 'woce_9.4'];
+%separate out replicates
+names0 = ds.Properties.VariableNames;
+gs = groupsummary(ds,"sampnum");
+mr = max(gs.GroupCount);
+g = findgroups(ds.sampnum);
+alph = 'abcdefghijklmnopqrstuvwxyz'; alph = [alph;repmat(' ',1,length(alph))];
+alph = alph(:)'; alph = strsplit(alph);
+alph = alph(1:mr);
+for no = find(~m1)
+    nc = size(gs,2);
+    varn = names0{no};
+    %padded array for each sampnum
+    a = splitapply(@(x) [x(:)' nan(1,mr-length(x))], ds.(varn), g);
+    %append to table gs
+    gs = [gs array2table(a)];
+    if mv(no)
+        %names with letter suffixes
+        gs.Properties.VariableNames(nc+1:end) = cellfun(@(x) [varn x],alph,'UniformOutput',false);
+    elseif mf(no) || mt(no) || mi(no)
+        %letters go in the middle, before _flag (or _temp, if relevant)
+        ii = strfind(varn,'_'); ii = ii(end);
+        gs.Properties.VariableNames(nc+1:end) = cellfun(@(x) [varn(1:ii-1) x varn(ii:end)],alph,'UniformOutput',false);
     end
+    %copy units
+    gs.Properties.VariableUnits(nc+1:end) = ds.Properties.VariableUnits(strcmp(varn,names0));
 end
+gs.GroupCount = [];
+%recalculate statnum and position
+gs.statnum = floor(gs.sampnum/100);
+gs.position = gs.sampnum-gs.statnum*100;
+gs.Properties.VariableUnits(end-1:end) = {'number','on.rosette'};
+%overwrite ds
+ds = gs;
+
+%for output
+hnew.fldnam = ds.Properties.VariableNames;
+hnew.fldunt = ds.Properties.VariableUnits;
+dnew = table2struct(ds,'ToScalar',true);

@@ -146,9 +146,16 @@ switch opt1
         switch opt2
             case 'blfilename'
             case 'botflags'
-                %1 no info, 2 no problems noted, 3 leaking, 4 did not trip
-                %correctly, 5 not reported, 7 unknown problem, 9 samples
-                %not drawn
+                ft = {'1 no info';
+                    '2 no problems noted';
+                    '3 leaking';
+                    '4 did not trip correctly';
+                    '5 not reported';
+                    '7 unknown problem';
+                    '9 samples not drawn'}; %***
+                if ~MEXEC_G.quiet
+                    fprintf(1,'using WOCE Niskin flags: \n%s',ft{:})
+                end
             case 'niskins'
                 niskin_number = [1:24]'; %s/n
                 niskin_pos = [1:24]'; %position (firing number)
@@ -219,28 +226,48 @@ switch opt1
         spath = fullfile(mgetdir('M_LADCP'), 'ix', 'SADCP');
         sfile = fullfile(spath, sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn));
 
-    case 'check_sams'
-        check_sal = 1; %plot individual salinity readings
-        check_oxy = 1; %step through mismatched oxygen replicates
-        check_sbe35 = 1; %display bad sbe35 lines (may error later if they are present and not flagged)
-
-    case 'botpsal'
+    case 'samp_proc'
         switch opt2
-            case 'sal_parse'
-                calcsal = 1; %calculate from conductivity ratio and temperature
-        end
-
-    case 'botoxy'
-        switch opt2
-            case 'oxy_parse'
-                calcoxy = 1;
-            case 'oxy_calc'
-                labT = 25;
-                vol_reag_tot = 2;
-            case 'oxy_flags'
-                %1 sample drawn but analysis not received, 2 acceptable, 3
-                %questionable, 4 bad, 5 not reported, 6 mean of duplicates,
-                %9 sample not drawn
+            case 'files'
+                switch samtyp
+                    case 'chl'
+                        allctd = 0;
+                    case 'oxy'
+                        sopts.hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
+                        stops.icolhead = 1;
+                        sopts.icolunits = 2;
+                        allctd = 1; 
+                    case 'nut'
+                        allctd = 1; %don't usually have underway, and may need to fill in statnum on some lines
+                    case 'sal'
+                        sopts.DateLocale = "en_GB"; %***
+                        allctd = 0; %usually have underway too
+                end
+            case 'parse'
+                msam_load_parse_defaults %script with switch-case to set varmap and calc flags
+            case 'check'
+                checksam.chl = 0;
+                checksam.oxy = 1;
+                checksam.nut = 1;
+                checksam.sal = 1;
+                checksam.sbe35 = 1;
+            case 'flags'
+                ft = {'1 sample drawn but analysis not received';
+                    '2 acceptable';
+                    '3 questionable';
+                    '4 bad';
+                    '5 not reported';
+                    '6 mean of duplicates';
+                    '9 sample not drawn'};
+                if ~MEXEC_G.quiet
+                    fprintf(1,'using WOCE flags: \n%s', ft{:})
+                end
+            case 'calc'
+                switch samtyp
+                    case 'oxy'
+                        labT = 25;
+                        vol_reag_tot = 2;
+                end
         end
 
     case 'outputs'

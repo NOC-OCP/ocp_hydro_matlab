@@ -27,10 +27,10 @@ switch opt1
     case 'uway_proc'
         switch opt2
             case 'combine'
-infiles = {'met/met/surfmet_dy180_all_raw.nc';
-    'met/rad/surfmet_dy180_all_raw.nc';
-    'met/tsg/surfmet_dy180_all_raw_tsgonly.nc'};
-outfile = 'met/surfmet_dy180_all_raw.nc';
+                infiles = {'met/met/surfmet_dy180_all_raw.nc';
+                    'met/rad/surfmet_dy180_all_raw.nc';
+                    'met/tsg/surfmet_dy180_all_raw_tsgonly.nc'};
+                outfile = 'met/surfmet_dy180_all_raw.nc';
             case 'rawedit'
                 ts = (datenum(2024,5,21,0,0,0)-datenum(2024,1,1))*86400;
                 if strcmp(abbrev,'surfmet')
@@ -53,7 +53,7 @@ outfile = 'met/surfmet_dy180_all_raw.nc';
                     h.fldunt(strcmp('waterdepthfromsurface',h.fldnam)) = [];
                     h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
                 end
-                        case 'sensor_unit_conversions'
+            case 'sensor_unit_conversions'
                 switch abbrev
                     case 'surfmet'
                         so.docal.fluo = 1;
@@ -66,7 +66,7 @@ outfile = 'met/surfmet_dy180_all_raw.nc';
                         %and instrument-serial number with
                         %so.calstr.{variablename}.pl.{cruise},
                         %so.calunits.{variablename}, and
-                        %so.instn.{variablename} 
+                        %so.instn.{variablename}
                         %e.g. so.calstr.fluo.pl.dy180, so.calunits.fluo,
                         %and so.instsn.fluo
                         so.calstr.fluo.pl.dy180 = 'dcal.fluo = 10.3*(d0.fluo-0.078);'; %or sf is nonlinear?***
@@ -95,7 +95,7 @@ outfile = 'met/surfmet_dy180_all_raw.nc';
                 uo.calstr.temp_remote_raw.msg = 'median difference from *** 3-m CTD data points';
                 %uo.calstr.salinity.pl.dy181 = 'dcal.salinity = d0.salinity+interp1([184 209],[0.001 0.014],d0.dday);';
                 %uo.calstr.salinity.pl.msg = 'salinity adjusted by removing trend based on differences from 135 bottle salinities';
-                            case 'avedit'
+            case 'avedit'
                 if strcmp(datatype,'ocean')
                     %ucsw system things should be NaNed when pump speed low (or high?)
                     %includes remote temp because this is just inside inlet
@@ -103,7 +103,7 @@ outfile = 'met/surfmet_dy180_all_raw.nc';
                     for no = 1:length(fvars)
                         uopts.badflow.(fvars{no}) = [-inf 0.6; 2.5 inf];
                     end
-                    %soundvelocity depends on remote temp? 
+                    %soundvelocity depends on remote temp?
                     uopts.badtemp_remote_raw.soundvelocity_raw = [NaN NaN];
                     %conductivity and salinity depend on temp
                     uopts.badtemph_raw.cond_raw = [NaN NaN];
@@ -125,10 +125,10 @@ outfile = 'met/surfmet_dy180_all_raw.nc';
 
     case 'castpars'
         switch opt2
-            case 'minit' 
-               %Ti vs SS for stn_string? or don't need this because it's
-               %sequential numbering and handled with cnvfilename? do need
-               %it for e.g. vmadcp station av***
+            case 'minit'
+                %Ti vs SS for stn_string? or don't need this because it's
+                %sequential numbering and handled with cnvfilename? do need
+                %it for e.g. vmadcp station av***
             case 's_choice'
                 s_choice = 2; %fin sensor
             case 'o_choice'
@@ -165,7 +165,7 @@ outfile = 'met/surfmet_dy180_all_raw.nc';
                 co.calstr.oxygen.sn430619.dy180 = 'dcal.oxygen = d0.oxygen.*1.025;';
                 co.calstr.oxygen.sn430619.msg = 'adjustment to oxygen 43-0619 (oxygen1) based on comparison in theta-oxygen space with calibrated stainless frame sensors';
                 if stn==20
-                    co.calstr.oxygen.sn862.dy180 = 'dcal.oxygen = 1.15*(0.65*d0.oxygen-30)+2;'; 
+                    co.calstr.oxygen.sn862.dy180 = 'dcal.oxygen = 1.15*(0.65*d0.oxygen-30)+2;';
                     co.calstr.oxygen.sn862.msg = 'oxygen 0862 on cast 20 first adjusted to match other 0862 oxygens (original coefficients may be wrong) then adjusted based on comparison in theta-oxygen space with calibrated stainless frame sensors';
                 else
                     co.calstr.oxygen.sn862.dy180 = 'dcal.oxygen = 1.15*d0.oxygen+2;';
@@ -211,71 +211,103 @@ outfile = 'met/surfmet_dy180_all_raw.nc';
         sfile = fullfile(spath, sprintf('os150nb_edited_xducerxy_%s_ctd_%03d_forladcp.mat',mcruise,stn)); %75kHz was bad much of the cruise
         SADCP_inst = 'os150nb';
 
-    case 'check_sams'
-        %make this display-dependent? (or session-dependent?)
-        check_sal = 0;
-        check_oxy = 1;
-        check_sbe35 = 0;
-
-    case 'botpsal'
+    case 'samp_proc'
         switch opt2
-            case 'sal_files'                
-                salfiles = dir(fullfile(root_sal,'DY180*.csv')); 
-            case 'sal_parse'
-                cellT = 21;
-                ssw_k15 = 0.99993;
-                ssw_batch = 'P168';
-            case 'sal_calc'
-                salin_off = -1.5e-5; %constant
-            case 'sal_flags'
-                % outliers in readings: 402 second low, 1205 third low,
-                % 2413 and 5209 second and third low and high, 5217 first
-                % low. none far enough out to discard. flag averages as 3?
-                % bad averaged samples (much farther off than could be
-                % explained by background gradients/variability): 
-                m = ismember(ds_sal.sampnum,[1403 1406 1408 1501]);
-                ds_sal.flag(m) = 4;
-        end
-
-    case 'botoxy'
-        switch opt2
-            case 'oxy_files'
-                ofiles = dir(fullfile(root_oxy,'DY180_oxy_CTD*.xls'));
-                hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
-                chrows = 1;
-                chunits = 2;
-            case 'oxy_parse'
-                calcoxy = 1;
-                labT = [];
-                varmap.statnum = {'number'};
-                varmap.position = {'bottle_number'};
-                varmap.vol_blank = {'titre_mls'};
-                varmap.vol_std = {'vol_mls'};
-                varmap.vol_titre_std = {'titre_mls_1'};
-                varmap.fix_temp = {'temp_c'};
-                varmap.bot_vol_tfix = {'at_tfix_mls'};
-                varmap.sample_titre = {'titre_mls_2'};
-            case 'oxy_flags'
-                %sampnum, a flag, b flag, c flag
-                flr = [1201 3 3 9; ... 
-                       2703 3 3 9; ... 
-                       2707 2 2 4; ...
-                       3903 9 3 4; ...
-                       3906 3 3 9; ...
-                       4403 2 2 4; ...
-                       5203 3 4 4; ... % to be further evaluated later
-                       5223 2 2 2; ...
-                      ];
-                [~,ifl,id] = intersect(flr(:,1),d.sampnum);
-                d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
-                d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
-                d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
-                % outliers relative to profile/CTD (not replicates)
-                flag4 = [1207 2716 2720 2722 2724 2705 3909 5206 5210 5214 5216 5218]';
-                d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
-                flag4b = [1501 2720]; %both a and b high, maybe bad niskin closure
-                d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
-                d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
+            case 'files'
+                switch samtyp
+                    case 'chl'
+                        files = {fullfile(root_in,'DY180_Chlorophyll a data_master.xlsx')};
+                        sopts.DateLocale = "en_GB";
+                    case 'oxy'
+                        files = dir(fullfile(root_in,'DY180_oxy_CTD*.xls'));
+                    case 'sal'
+                        salfiles = dir(fullfile(root_sal,'DY180*.csv'));
+                end
+            case 'parse'
+                switch samtyp
+                    case 'chl'
+                        %create cast from cast_number
+                        ds.cast = nan(size(ds.cast_number));
+                        mc = strncmp('CTD',ds.cast_number,3);
+                        ds.cast(mc) = cellfun(@(x) str2double(extract(x,digitsPattern(1,3))), ds.cast_number(mc));
+                        %times*** need to be added, only dates!
+                        ddlim = datenum([2024 5 21; 2024 6 27])-datenum(2024,1,1);
+                        ds.dday = datenum(ds.date_day_month_year)-datenum(2024,1,1);
+                        ds = ds(ds.dday>=ddlim(1) & ds.dday<=ddlim(2),:);
+                        %and temporarily (?) use dday to fill cast as in
+                        %msal_01
+                        ds.cast(isnan(ds.cast)) = -ds.dday(isnan(ds.cast))*1e2; %so sampnum will be ddd0000
+                        %add flags based on notes
+                        ds.flag = 2+zeros(size(ds,1),1);
+                        ds.flag(cellfun(@(x) contains(x,["broken","assume","Wrong","Check"]),ds.notes)) = 3; %questionable
+                        ds.flag(ds.chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl==0) = 5; %not reported
+                        ds.flag(~isfinite(ds.chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl)) = 5; %not reported
+                        %variables to rename (or to keep and write to file without renaming)
+                        varmap.dday = {'dday'};
+                        varmap.statnum = {'cast'};
+                        varmap.position = {'niskin_bottle'};
+                        varmap.chl = {'chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl'};
+                        varmap.chl_flag = {'flag'};
+                        varmap.chl_inst = {'fluorometer_id_816_or_black_1'};
+                        keepothervars = 0;
+                        addcomment = '\nchlorophyll units assumed';
+                    case 'sal'
+                        cellT = 21;
+                        ssw_k15 = 0.99993;
+                        ssw_batch = 'P168';
+                    case 'oxy'
+                        labT = [];
+                        varmap.statnum = {'number'};
+                        varmap.position = {'bottle_number'};
+                        varmap.vol_blank = {'titre_mls'};
+                        varmap.vol_std = {'vol_mls'};
+                        varmap.vol_titre_std = {'titre_mls_1'};
+                        varmap.fix_temp = {'temp_c'};
+                        varmap.bot_vol_tfix = {'at_tfix_mls'};
+                        varmap.sample_titre = {'titre_mls_2'};
+                end
+            case 'calc'
+                switch samtyp
+                    case 'sal'
+                        salin_off = -1.5e-5; %constant
+                end
+            case 'check'
+                %checksam.chl = 1;
+                checksam.oxy = 1;
+                checksam.sal = 0;
+                checksam.sbe35 = 0;
+            case 'flags' %flags before replicate averaging and after replicate averaging***
+                switch samtyp
+                    case 'sal'
+                        % outliers in readings: 402 second low, 1205 third low,
+                        % 2413 and 5209 second and third low and high, 5217 first
+                        % low. none far enough out to discard. flag averages as 3?
+                        % bad averaged samples (much farther off than could be
+                        % explained by background gradients/variability):
+                        m = ismember(ds_sal.sampnum,[1403 1406 1408 1501]);
+                        ds_sal.flag(m) = 4;
+                    case 'oxy'
+                        %sampnum, a flag, b flag, c flag
+                        flr = [1201 3 3 9; ...
+                            2703 3 3 9; ...
+                            2707 2 2 4; ...
+                            3903 9 3 4; ...
+                            3906 3 3 9; ...
+                            4403 2 2 4; ...
+                            5203 3 4 4; ... % to be further evaluated later
+                            5223 2 2 2; ...
+                            ];
+                        [~,ifl,id] = intersect(flr(:,1),d.sampnum);
+                        d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
+                        d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
+                        d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
+                        % outliers relative to profile/CTD (not replicates)
+                        flag4 = [1207 2716 2720 2722 2724 2705 3909 5206 5210 5214 5216 5218]';
+                        d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
+                        flag4b = [1501 2720]; %both a and b high, maybe bad niskin closure
+                        d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
+                        d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
+                end
         end
 
     case 'outputs'

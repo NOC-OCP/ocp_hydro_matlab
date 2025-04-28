@@ -40,7 +40,7 @@ hcpat = {'sampnum'}; chrows = 1; chunits = [];
 sheets = 1; iopts = struct([]);
 datform = 'dd/mm/yyyy';
 timform = 'HH:MM:SS';
-opt1 = 'botpsal'; opt2 = 'sal_files'; get_cropt %list of files to load
+opt1 = 'samp_proc'; opt2 = 'sal_files'; get_cropt %list of files to load
 if isempty(salfiles)
     warning(['no salinity data files found in ' root_sal '; skipping']);
     return
@@ -74,8 +74,8 @@ end
 %         l = str2num(l(ii:ii+1));
 %     end
 % end
-opt1 = 'botpsal'; opt2 = 'sal_parse'; get_cropt
-opt1 = 'check_sams'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'sal_parse'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
 m = ~isfinite(ds_sal.sampnum);
 ds_sal(m,:) = [];
 
@@ -157,7 +157,7 @@ if calcsal
 
     %edits
     reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
-    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
     if reapply_saledits
         [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
     end
@@ -202,7 +202,7 @@ if calcsal
     if exist('bads','var') && ~isempty(bads) %new edits to apply
         [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
     end
-    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
     %recalculate mean
     a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
     ds_sal.runavg = m_nanmean(a,2);
@@ -220,7 +220,7 @@ if calcsal
     %%%%%% standards offsets %%%%%%
 
     salin_off = []; salin_off_base = 'sampnum_run'; sal_adj_comment = '';
-    opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'sal_calc'; get_cropt
     if ~strcmp(salin_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
         [~,ii] = sort(ds_sal.runtime);
         ds_sal = ds_sal(ii,:);
@@ -366,7 +366,7 @@ else
     salunits.flag = {'woce_9.4'};
     salunits.salinity = {'psu'};
 end
-opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
 
 %%%%%% save %%%%%%
 
@@ -396,7 +396,7 @@ hc.comment = [sal_adj_comment];
 mfsave(salfile, d, hc);
 
 %plot CTD samples
-opt1 = 'check_sams'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
 if check_sal
     figure(10); subplot(223)
     ii = find(d.sampnum>0 & d.sampnum<9e5);
@@ -405,7 +405,7 @@ if check_sal
 end
 
 %write some fields for CTD samples to sam_ file
-msal_to_sam
+msam_add_to_samfile('sal')
 
 %get TSG samples, figure out times: either -dddhhmm (where ddd is
 %year-day starting at 1), or yyyymmddhhmm, or mmddhhmm
@@ -433,7 +433,7 @@ if ~isempty(iiu)
         MM = str2num(s(:,6:7));
         tsg.dnum(ii) = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1) + jjj-1 + (HH+MM/60)/24;
     end
-    opt1 = 'botpsal'; opt2 = 'tsg_sampnum'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'tsg_sampnum'; get_cropt
     [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
     dsu.time = NaN+dsu.sampnum;
     opt1 = 'mstar'; get_cropt

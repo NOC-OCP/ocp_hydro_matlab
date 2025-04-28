@@ -56,3 +56,4 @@ elseif ~isfield(MEXEC_G,'no_cruise_options_file') || ~MEXEC_G.no_cruise_options_
     end
 end
 
+clear opt1 opt2

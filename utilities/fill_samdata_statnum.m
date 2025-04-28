@@ -37,16 +37,20 @@ function tabl = fill_samdata_statnum(tabl, varnames)
 %         3              5                 1
 %
 
+%***could probably be replaced with fillmissing with method 'previous'
+
 if ischar(varnames)
     varnames = {varnames};
 end
 
 for vno = 1:length(varnames)
     a = tabl.(varnames{vno});
-    iim = find(isnan(a)); iiv = find(~isnan(a));
+    m = isnan(a);
+    iim = find(m); iiv = find(~m);
     b = iiv'<iim;
     c = repmat(iiv',length(iim),1);
     d = c; d(~b) = NaN;
     f = max(d,[],2);
+    iim = iim(~isnan(f)); f = f(~isnan(f));
     tabl.(varnames{vno})(iim) = a(f);
 end

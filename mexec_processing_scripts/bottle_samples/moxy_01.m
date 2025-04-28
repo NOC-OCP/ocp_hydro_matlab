@@ -11,7 +11,6 @@ function moxy_01
 % parse in opt_cruise, uses parameters set under oxy_calc to compute them
 
 m_common
-if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle oxygens from file(s) specified in opt_%s, computing concentrations (if specified), writing to oxy_%s_01.nc\n',mcruise,mcruise); end
 
 % find list of files and information on variables
 root_oxy = mgetdir('M_BOT_OXY');
@@ -20,7 +19,7 @@ ofiles = dir(fullfile(root_oxy, ['oxy_' mcruise '_*.csv']));
 hcpat = {'Niskin' 'Bottle' 'Number'}; chrows = 1:2; chunits = 3;
 clear iopts numhead
 % change defaults in opt_cruise
-opt1 = 'botoxy'; opt2 = 'oxy_files'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'oxy_files'; get_cropt
 if ~exist('sheets','var')
     sheets = 1:99;
 end
@@ -43,34 +42,18 @@ end
 if isempty(ds_oxy)
     error('no data loaded')
 end
-opt1 = 'check_sams'; get_cropt
 
-%rename variables (if necessary)
-varmap.statnum = {'cast_number'};
-varmap.position = {'niskin_bottle'};
-varmap.conc_o2 = {'c_o2_','c_o2'};
-varmap.vol_blank = {'blank_titre'};
-varmap.vol_std = {'std_vol'};
-varmap.vol_titre_std = {'standard_titre'};
-varmap.fix_temp = {'fixing_temp'};
-varmap.oxy_bottle = {'bottle no'};
-%varmap.sample_titre = {'sample_titre'};
-varmap.date_titre = {'dnum'};
-varmap.bot_vol_tfix = {'botvol_at_tfix'};
-opt1 = 'botoxy'; opt2 = 'oxy_parse'; get_cropt %edit map for renaming variables, and flag whether to calculate conc_o2
-[ds_oxy, ~] = var_renamer(ds_oxy, varmap);
-%statnum, sampnum, and remove extra lines
-ds_oxy = fill_samdata_statnum(ds_oxy,'statnum');
-ds_oxy.sampnum = ds_oxy.statnum*100 + ds_oxy.position;
-m = isnan(ds_oxy.sampnum); ds_oxy(m,:) = [];
-%create flags if necessary, then make sure they match available data
-ds_oxy_fn = ds_oxy.Properties.VariableNames;
-if sum(strcmp('flag',ds_oxy_fn))==0
-    ds_oxy.flag = NaN+zeros(size(ds_oxy.sampnum));
-end
+%get map for rennaming
+ds_oxy = var_renamer(ds_oxy, 'keep_othervars',keepothervars);
+%remove columns with no non-nan varlues
+ds_oxy = rmmissing(ds_oxy,2,'MinNumMissing',size(ds_oxy,1));
+%handle replicate samples
+[ds_oxy, hnew] = msam_replicates(ds_oxy); 
 
 if calcoxy
-    %calculate concentration from titre, standard and 
+    %calculate concentration from titre, standard and ***this has to
+    %happend before replicates? no, change oxy_calc code so it can handle
+    %replicates (each field that goes into the calculation will have one)
     ds_oxy = oxy_calc(ds_oxy);
 end
 
@@ -147,94 +130,23 @@ if ~isempty(iib)
     end
 end
 
-opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'oxy_flags'; get_cropt
 
 orth = 0.01; %ratio threshold for replicate agreement to be examined
-opt1 = 'check_sams'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
 if check_oxy
     oxy_repl_check(d, mcruise, orth, check_oxy)
     %get flags again in case changed (does this update?)
-    opt1 = 'botoxy'; opt2 = 'oxy_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'oxy_flags'; get_cropt
 end
 
 mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);
 
-moxy_to_sam
+msam_add_to_samfile('oxy')
 
 %%%%%%%%%%%%%%%%%%%    subfunctions    %%%%%%%%%%%%%%%%%%%
 %----------------------------------------------------------
 
-%%% ds_oxy = oxy_calc(ds_oxy)
-%
-% labT is only used if bot_vol_tfix not supplied
-
-function ds_oxy = oxy_calc(ds_oxy)
-
-ds_oxy(isnan(ds_oxy.position),:) = [];
-
-%check units
-clear oxyunits
-oxyunits.vol_blank = {'ml' 'mls'};
-oxyunits.vol_std = {'ml' 'mls'};
-oxyunits.vol_titre_std = {'ml' 'mls'};
-oxyunits.bot_vol_tfix = {'ml' 'mls'};
-oxyunits.sample_titre = {'ml' 'mls'};
-oxyunits.fix_temp = {'c' 'degc' 'deg_c'};
-oxyunits.conc_o2 = {'umol/l' 'umol_per_l' 'umols_per_l'};
-if ~isempty(ds_oxy.Properties.VariableUnits)
-    [ds_oxy, ~] = check_units(ds_oxy, oxyunits);
-end
-
-%fill in flags to be consistent
-ds_oxy_fn = ds_oxy.Properties.VariableNames;
-if sum(strcmp('sample_titre',ds_oxy_fn))
-    dname = 'sample_titre';
-else
-    dname = 'conc_o2';
-end
-ds_oxy.flag(ds_oxy.flag<=0) = NaN;
-bd = isnan(ds_oxy.(dname));
-bt = isnan(ds_oxy.fix_temp);
-%both oxy and temp, no flag: 2
-ds_oxy.flag(~bd & ~bt & isnan(ds_oxy.flag)) = 2;
-%both oxy and temp, flag 5 or 9: NaN oxy
-ds_oxy.(dname)(~bd & ~bt & ismember(ds_oxy.flag, [5 9])) = NaN;
-%temp but no oxy: 5 or 9
-ds_oxy.flag(bd & ~bt & ds_oxy.flag<9) = 5;
-%oxy but no temp: 5 and NaN oxy (no good without temp)
-if sum(~bd & bt)>0; warning('oxy values without fix_temp will be discarded'); end
-ds_oxy.flag(~bd & bt) = 5;
-ds_oxy.(dname)(~bd & bt) = NaN;
-%neither oxy nor temp: 9
-ds_oxy.flag(bd & bt) = 9;
-
-opt1 = 'botoxy'; opt2 = 'oxy_calc'; get_cropt
-
-%compute bottle volumes at fixing temperature if not present
-if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))
-    if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
-        ds_oxy.bot_cal_temp = labT+zeros(size(ds_oxy.sampnum));
-    end
-    ds_oxy.bot_vol_tfix = ds_oxy.bot_vol.*(1+9.75e-5*(ds_oxy.fix_temp-ds_oxy.bot_cal_temp));
-end
-
-%compute concentration if not present
-if sum(strcmp('conc_o2',ds_oxy_fn))==0
-    mol_std = 1.667*1e-6;   % molarity (mol/mL) of standard KIO3
-    std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
-    sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
-    mol_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
-    n_o2_reag = mol_o2_reag*vol_reag_tot;
-    % molarity (mol/mL) of titrant
-    mol_titrant = (std_react_ratio*ds_oxy.vol_std*mol_std)./(ds_oxy.vol_titre_std - ds_oxy.vol_blank);
-    % moles of O2 in sample
-    ds_oxy.n_o2 = (ds_oxy.sample_titre - ds_oxy.vol_blank).*mol_titrant*sample_react_ratio;
-    % volume of sample, accounting for pickling reagent volumes.
-    sample_vols = ds_oxy.bot_vol_tfix - vol_reag_tot; %mL
-    % concentration of O2 in sample, accounting for concentration in pickling reagents
-    %a = 1.5*(ds_oxy.sample_titre-ds_oxy.vol_blank).*(ds_oxy.vol_std/1000).*(1.667e-4./(ds_oxy.vol_titre_std-ds_oxy.vol_blank));
-    ds_oxy.conc_o2 = (ds_oxy.n_o2 - n_o2_reag)./sample_vols*1e6*1e3; %mol/mL to umol/L
-end
 
 function oxy_repl_check(d, mcruise, orth, stn_start)
 % check where oxygen replicates in d differ by more than 1+/-orth (ratio)
