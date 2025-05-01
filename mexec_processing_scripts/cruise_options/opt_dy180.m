@@ -89,37 +89,45 @@ switch opt1
                         so.calunits.tirstarboard = 'W_per_m2';
                 end
             case 'tsg_cals'
-                uo.dcal.temp_remote_raw = 1;
-                uo.docal.salinity = 1;
-                uo.calstr.temp_remote_raw.pl.dy180 = 'dcal.temp_remote_raw = d0.temp_remote_raw-0.145';
-                uo.calstr.temp_remote_raw.msg = 'median difference from *** 3-m CTD data points';
-                %uo.calstr.salinity.pl.dy181 = 'dcal.salinity = d0.salinity+interp1([184 209],[0.001 0.014],d0.dday);';
-                %uo.calstr.salinity.pl.msg = 'salinity adjusted by removing trend based on differences from 135 bottle salinities';
+                %first rename _raw variables
+                ds = struct2table(d);
+                ds.Properties.VariableNames = cellfun(@(x) replace(x,'_raw',''),ds.Properties.VariableNames,'UniformOutput',false);
+                d = table2struct(ds,'ToScalar',true);
+                h.fldnam = ds.Properties.VariableNames;
+                %now use new names for calibrations
+                uo.dcal.temp_remote = 0;
+                uo.docal.salinity = 0;
+                uo.docal.fluo = 0;
+                uo.calstr.temp_remote.pl.dy180 = 'dcal.temp_remote = d0.temp_remote-0.1258';
+                uo.calstr.temp_remote.msg = 'temperature offset by median of smoothed differences from 51 3-m CTD temperatures';
+                uo.calstr.salinity.pl.dy180 = 'dcal.salinity = d0.salinity+6e-4;';
+                uo.calstr.salinity.pl.msg = 'salinity offset by median of smoothed differences from 53 3-m CTD salinities';
+                %uo.calstr.fluo.pl.dy180 = 'dcal.fluo = d0.fluo*0.27;';
+                %uo.calstr.fluo.pl.msg = 'fluorescence scaled by median of smoothed ratio to 26 night-time 3-m CTD fluorescence measurements';
             case 'avedit'
                 if strcmp(datatype,'ocean')
                     %ucsw system things should be NaNed when pump speed low (or high?)
                     %includes remote temp because this is just inside inlet
-                    fvars = {'temph_raw','temp_remote_raw','fluo','trans','cond_raw','salinity_raw','soundvelocity_raw'};
+                    fvars = {'temph','temp_remote','fluo','trans','cond','salinity','soundvelocity'};
                     for no = 1:length(fvars)
                         uopts.badflow.(fvars{no}) = [-inf 0.6; 2.5 inf];
                     end
                     %soundvelocity depends on remote temp?
-                    uopts.badtemp_remote_raw.soundvelocity_raw = [NaN NaN];
+                    uopts.badtemp_remote.soundvelocity = [NaN NaN];
                     %conductivity and salinity depend on temp
-                    uopts.badtemph_raw.cond_raw = [NaN NaN];
-                    uopts.badtemph_raw.salinity_raw = [NaN NaN];
+                    uopts.badtemph.cond = [NaN NaN];
+                    uopts.badtemph.salinity = [NaN NaN];
                     %bad temp often associated with bad fluo and trans
                     %(flow issues)
-                    uopts.badtemph_raw.fluo = [NaN NaN];
-                    uopts.badtemph_raw.trans = [NaN NaN];
-                    vars_to_ed = {'flow','fluo','trans','temph_raw','temp_remote_raw','salinity_raw'};
+                    uopts.badtemph.fluo = [NaN NaN];
+                    uopts.badtemph.trans = [NaN NaN];
+                    vars_to_ed = {'flow','fluo','trans','temph','temp_remote','salinity'};
                     vars_offset_scale = {[0 1], [0 1], [-95 0.1], [-11 1], [-11 1], [-35 2]};
+                    handedit = 0; %already done, switch off when running to apply calibration
                 elseif strcmp(datatype,'bathy')
                     vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
                 end
-            case 'tsg_sdiff'
                 if strcmp(uvar,'fluo')
-                    sc1 = 1; sc2 = 0.5;
                 end
         end
 

@@ -90,15 +90,17 @@ switch filttype
     case 'median'
         for kx = 1:nx
             xpart = xe(kx:kx+2*n);
-            y(kx) = m_nanmedian(xpart);
+            if sum(~isnan(xpart))
+                y(kx) = median(xpart,'omitmissing');
+            end
         end
     case {'default' 'cont'}
         for kx = 1:nx
             xpart = xe(kx:kx+2*n);
             w = b;
             w(isnan(xpart)) = nan; % discard weight where x is NaN
-            s = m_nansum(xpart.*w); % bak on di346 jan 2010; use m_nansum in place of nansum.
-            ws = m_nansum(w);
+            s = sum(xpart.*w,'omitmissing'); 
+            ws = sum(w,'omitmissing');
             if ws > 0
                 y(kx) = s/ws;
             end
@@ -108,8 +110,8 @@ switch filttype
             xpart = xe(kx:kx+2*n);
             w = b;
             w(isnan(xpart)) = nan; % discard weight where x is NaN
-            s = m_nansum(xpart.*w); % bak on di346 jan 2010; use m_nansum in place of nansum.
-            ws = m_nansum(w);
+            s = sum(xpart.*w,'omitmissing'); 
+            ws = sum(w,'omitmissing');
             if ws ~= 0
                 y(kx) = s/ws;
             else

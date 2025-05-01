@@ -2,10 +2,23 @@ function mtsg_bottle_ctd_compare(varargin)
 % mtsg_bottle_ctd_compare(dintake)
 % mtsg_bottle_ctd_compare(dintake, sepdownup)
 % mtsg_bottle_ctd_compare(dintake, sepdownup, reload_cal)
+% mtsg_bottle_ctd_compare(dintake, sepdownup, reload_cal, printsuf)
+%
 % compare TSG/underway data from the merged, 1-min averaged surface_ocean
 % file with bottle parameters (salinity and/or fluorescence, where
 % available) and (optionally) near-surface CTD temperature and salinity
+% from near intake depth dintake, examining down and upcast data separately
+% if sepdownup
+% comparison/calibration data (including, optionally, CTD data) are saved
+% in uway_cal_data.mat and if reload_cal is set to 0 they are loaded from
+% this file, otherwise (default) they are reloaded from tsgsal, ucswchl,
+% and ctd files
+% if printsuf is not empty, comparison figures are printed to .png; use
+% printsuf to save files as '*_uncal.png' or '*_cal.png' 
 %
+% e.g.
+% mtsg_bottle_ctd_compare(3, 0, 0, 'uncal')
+
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; % cruise name (from MEXEC_G global)
@@ -14,12 +27,16 @@ dintake = 3; %depth of UCSW intake, if >0, extract CTD data within 1 dbar of din
 %***cruise option
 sepdownup = 0; %ctd down and upcast data are loaded separately, but will be combined before comparing to tsg if sepdownup is 0
 reload_cal = 1;
+printsuf = '';
 if nargin>0
     dintake = varargin{1};
     if nargin>1
         sepdownup = varargin{2};
         if nargin>2
             reload_cal = varargin{3};
+            if nargin>3
+                printsuf = varargin{4};
+            end
         end
     end
 end
@@ -33,6 +50,7 @@ end
 
 %%%%% load data %%%%%
 
+sdir = fullfile(MEXEC_G.mexec_data_root,'met');
 tsgfile = fullfile(MEXEC_G.mexec_data_root,'met',['surface_ocean_' mcruise '.nc']);
 atmfile = fullfile(MEXEC_G.mexec_data_root,'met',['surfmet_' mcruise '_all_edt.nc']);
 salfile = fullfile(mgetdir('M_BOT_SAL'),['tsgsal_' mcruise '_all.nc']);
@@ -94,12 +112,12 @@ if reload_cal
         for no = 1:length(fv)
             db.(fv{no}) = [nan(n0,1); dc.(fv{no})];
         end
-        dispnames.db.ctdt = ['CTD (down) temp at ' dstr ' dbar'];
-        dispnames.db.ctut = ['CTD (up) temp at ' dstr ' dbar'];
-        dispnames.db.ctds = ['CTD (down) psal at ' dstr ' dbar'];
-        dispnames.db.ctus = ['CTD (up) psal at ' dstr ' dbar'];
-        dispnames.db.ctdf = ['CTD (down) fluor at ' dstr ' dbar'];
-        dispnames.db.ctuf = ['CTD (up) fluor at ' dstr ' dbar'];
+        dispnames.db.tctdd = ['CTD (down) temp at ' dstr ' dbar'];
+        dispnames.db.tctdu = ['CTD (up) temp at ' dstr ' dbar'];
+        dispnames.db.sctdd = ['CTD (down) psal at ' dstr ' dbar'];
+        dispnames.db.sctdu = ['CTD (up) psal at ' dstr ' dbar'];
+        dispnames.db.fctdd = ['CTD (down) fluor at ' dstr ' dbar'];
+        dispnames.db.fctdu = ['CTD (up) fluor at ' dstr ' dbar'];
     end
 
     %***add shallowest bottle stop data?****
@@ -131,13 +149,13 @@ else
 
 end
 if comp2ctd && ~sepdownup
-    db.ct = db.ctdt; db.ct(isnan(db.ct)) = db.ctut(isnan(db.ct));
-    db.cs = db.ctds; db.cs(isnan(db.cs)) = db.ctus(isnan(db.cs));
-    db.cf = db.ctdf; db.cf(isnan(db.cf)) = db.ctuf(isnan(db.cf));
-    db = removevars(db, ["ctdt","ctds","ctdf","ctut","ctus","ctuf"]);
-    dispnames.db.ct = ['CTD temp at ' dstr ' dbar'];
-    dispnames.db.cs = ['CTD psal at ' dstr ' dbar'];
-    dispnames.db.cf = ['CTD fluor at ' dstr ' dbar'];
+    db.tctd = db.tctdd; db.tctd(isnan(db.tctd)) = db.tctdu(isnan(db.tctd));
+    db.sctd = db.sctdd; db.sctd(isnan(db.sctd)) = db.sctdu(isnan(db.sctd));
+    db.fctd = db.fctdd; db.fctd(isnan(db.fctd)) = db.fctdu(isnan(db.fctd));
+    db = removevars(db, ["tctdd","sctdd","fctdd","tctdu","sctdu","fctdu"]);
+    dispnames.db.tctd = ['CTD temp at ' dstr ' dbar'];
+    dispnames.db.sctd = ['CTD psal at ' dstr ' dbar'];
+    dispnames.db.fctd = ['CTD fluor at ' dstr ' dbar'];
 end
 %***temporary: dy180 fluor sample file has duplicate times, exclude (cruise
 %option***)
@@ -176,6 +194,15 @@ end
 %find where system was disturbed, so calibration likely to change
 tbreak = find_cleaning(dt, temph);
 
+if comp2ctd
+    dotemp = 1;
+end
+if comp2ctd || bsal
+    dosal = 1;
+end
+if comp2ctd || bchl
+    dochl = 1;
+end
 
 %make comparison plots, flag points not to include in comparison, and
 %calculate fits/smoothed differences
@@ -185,74 +212,83 @@ plt.pcolors = [.5 0 0; 1 0 .8; .5 0 .5; 0 0 0];
 plt.psym = ['>';'^';'p';'o'];
 plt.bigm = 8; %default markersize is 6
 
-if comp2ctd
+if dotemp
     % compare TSG and CTD temp
     figure(1); clf
     clear pdata
     pdata.extra = {temph, 'c', '--'};
-    pdata.ts = temph;
+    pdata.ts = tempin;
     if sepdownup
-        pdata.points = {'ctut', 'CTDu-UCSWin';...
-            'ctdt', 'CTDd-UCSWin'}; %prefer downcast, so make this last
+        pdata.points = {'tctdu', 'CTDu-UCSWin';...
+            'tctdd', 'CTDd-UCSWin'}; %prefer downcast, so make this last
     else
-        pdata.points = {'ct', 'CTD-UCSWin'};
+        pdata.points = {'tctd', 'CTD-UCSWin'};
+    end
+    if ~isempty(printsuf)
+        plt.pname = fullfile(sdir,sprintf('underway_%s_%s_%s.png',pdata.ts,pdata.points{end,1},printsuf));
     end
     plt.ylab = {'T (degC)';'T difference'};
     cst = plotuc(dt, db, dispnames, pdata, plt, tbreak, []);
 end
 
-if comp2ctd || bsal
+if dosal
     % plot TSG and bottle salinity data %add flow rate?***
     figure(2); clf
     clear pdata
+    pdata.printsuf = printsuf;
     pdata.ts = salvar;
     if comp2ctd && sepdownup
-        pdata.points = {'ctus', 'CTDu-TSG';...
-            'ctds', 'CTDd-TSG'};
+        pdata.points = {'sctdu', 'CTDu-TSG';...
+            'sctdd', 'CTDd-TSG'};
     else
-        pdata.points = {'cs', 'CTD-TSG'};
+        pdata.points = {'sctd', 'CTD-TSG'};
     end
     if bsal
         %prefer to compare to bottles, so make this last
         pdata.points = [pdata.points; 'salinity_adj', 'Bottle-TSG'];
     end
     plt.ylab = {'S (psu)';'S difference'};
+    if ~isempty(printsuf)
+        plt.pname = fullfile(sdir,sprintf('underway_%s_%s_%s.png',pdata.ts,pdata.points{end,1},printsuf));
+    end
     css = plotuc(dt, db, dispnames, pdata, plt, tbreak, []);
 end
 
-if comp2ctd || bchl %note if CTD is calibrated or not
+if dochl %note if CTD is calibrated or not
     % compare TSG and CTD and bottle fluor
     figure(3); clf
+    %also plot par
+    [dr, ~] = mload(atmfile,'/');
+    dt.par = interp1(dr.dday,dr.parport+dr.parstarboard,dt.dday)/2/1e7;
+    dispnames.dt.par = 'PAR/1e7 (allowed<0.1)';
+    db.par = interp1(dt.dday,dt.par,db.dday);
+    ll = 0.1; %cruise option? does this depend on sensor cal?***
     clear pdata
+    pdata.extra = {'par', 'c', '--'};
     pdata.ts = fluovar;
     if comp2ctd && sepdownup
-        pdata.points = {'ctuf', 'CTDu-UCSW';...
-            'ctdf', 'CTDd-UCSW'};
+        pdata.points = {'fctdu', 'CTDu-UCSW';...
+            'fctdd', 'CTDd-UCSW'};
     else
-        pdata.points = {'cf', 'CTD-UCSW'};
+        pdata.points = {'fctd', 'CTD-UCSW'};
     end
     if bchl
         %prefer to compare to bottles
         pdata.points = [pdata.points; 'chl', 'Bottle-UCSW'];
     end
-    plt.ylab = {'Chl (ug/ml)';'Chl difference'};
+    if ~isempty(printsuf)
+        plt.pname = fullfile(sdir,sprintf('underway_%s_%s_%s.png',pdata.ts,pdata.points{end,1},printsuf));
+    end
+    plt.ylab = {'Chl (ug/ml)';'Chl ratio'};
     %find too-much-light points, to be excluded
-    [dr, ~] = mload(atmfile,'/');
-    ll = 0.1e7; %cruise option? depends on calibration of sensors? ***check ctd samples taken?
-    db.par = interp1(dr.dday,dr.parport+dr.parstarboard,db.dday)/2;
     mbad = db.par>ll;
     csf = plotuc(dt, db, dispnames, pdata, plt, tbreak, mbad);
 end
 
 keyboard
-%add overall smoothed and trends***
-
-printdir = fullfile(MEXEC_G.mexec_data_root,'plots');
-printform = '-dpdf';
-print(printform,fullfile(printdir,['tsg_bottle_' mcruise]));
 
 if 0%***
-    save(fullfile(root_tsg,'sdiffsm'), 'cst', 'css', 'csf'); mfixperms(fullfile(root_tsg,'sdiffsm'));
+    save(fullfile(sdir,'sdiffsm'), 'cst', 'css', 'csf'); mfixperms(fullfile(sdir,'sdiffsm'));
 end
 
 
@@ -267,7 +303,7 @@ opt1 = 'uway_proc'; opt2 = 'tsg_ddaybreaks'; get_cropt; %maybe cleaning times we
 dgood = dt.dday(~isnan(dt.(temph)));
 d = diff(dgood);
 djump = dgood(d>15/60/24); %15 minutes too short to need to break the fit?
-djump_more = dgood(d>5/60/24);
+djump_more = dgood(d>5/60/24 & d<=15/60/24);
 djump = djump(:)'; djump_more = djump_more(:)';
 figure(10); clf
 subplot(211)
@@ -296,6 +332,11 @@ function cs = plotuc(dt, db, dispnames, pdata, plt, tbreak, mbad)
 
 uvar = pdata.ts; %underway (TSG) variable
 cvar = pdata.points{end,1}; %main comparison parameter (the last one to be plotted), will be passed to flagsdiffs
+flags = 2+zeros(size(db.dday));
+if ~isempty(mbad) && sum(mbad)
+    flags(mbad) = 4;
+    db.(uvar)(mbad) = NaN; %***
+end
 
 %make initial plot
 
@@ -317,10 +358,20 @@ xlabel('decimal day'); ylabel(plt.ylab{1}); grid; axis tight; xlim(plt.xl)
 yl = ha(1).YLim'; plot(repmat(tbreak,2,1), repmat(yl,1,length(tbreak)));
 legend([hl hp])
 
-%differences
+%differences or ratios
+if strcmp(uvar,'fluo')
+    useratio = 1;
+else
+    useratio = 0;
+end
 ha(2) = subplot(212);
 for no = 1:np
-    hd(no) = plot(db.dday, db.(pdata.points{no,1})-db.(uvar), 'linestyle', 'none', 'color', plt.pcolors(no,:), 'marker', plt.psym(no), 'DisplayName', pdata.points{no,2}); hold on
+    if useratio
+        y = db.(pdata.points{no,1})./db.(uvar);
+    else
+        y = db.(pdata.points{no,1})-db.(uvar);
+    end
+    hd(no) = plot(db.dday, y, 'linestyle', 'none', 'color', plt.pcolors(no,:), 'marker', plt.psym(no), 'DisplayName', pdata.points{no,2}); hold on
 end
 hd(end).MarkerSize = plt.bigm; %last one is the main one
 xlabel('decimal day'); ylabel(plt.ylab{2}); grid; axis tight; xlim(plt.xl)
@@ -331,44 +382,22 @@ legend(hd)
 linkaxes(ha,'x')
 
 %get smoothed differences, using the last-plotted parameter
-trange = dt.dday(~isnan(dt.(uvar))); trange = [min(trange) max(trange)]; %range of good TSG data
-[cs.flags, cs.diffsm, cs.diffseg, cs.cseg] = flagsdiffs(db, uvar, cvar, tbreak, mbad, trange);
-cs.readme = {'diffsm: smoothed differences';
-    'diffseg: median differences over each segment after excluding outliers';
-    'trseg: trends in each segment''s differences after excluding outliers';
-    'cseg: coefficients of above, [b; m] in mx+b'};
 
-%add to plot
-axes(ha(2))
-hlsd(1) = plot(db.dday, cs.diffsm, 'DisplayName', ['smoothed difference ' pdata.points{end,2}]);
-hlsd(2) = plot(dt.dday, interp1(db.dday,cs.diffseg,dt.dday,'nearest'), 'DisplayName', 'segment medians', 'linestyle', '--');
-for kseg = 1:length(tbreak)-1
-    t = dt.dday(dt.dday>tbreak(kseg) & dt.dday<=tbreak(kseg+1));
-    hlsd(kseg+2) = plot(t, [ones(length(t),1) t]*cs.cseg(:,kseg), 'DisplayName', 'segment trends', 'linestyle', '-.', 'color', 'k');
-end
-h = [hd hlsd(1:3)];
-fm = 3;
-if sum(cs.flags>fm)
-    %overplot flagged points in gray
-    hlb = plot(db.dday(cs.flags>fm), db.(cvar)(cs.flags>fm)-db.(uvar)(cs.flags>fm), 'color', [.6 .6 .6], 'marker', hd(end).Marker, 'markersize', hd(end).MarkerSize, 'linestyle', 'none', 'DisplayName', 'flagged, excluded from above');
-    h = [h hlb];
-end
-legend(h,'location','southwest')
-
-
-function [flags, sdiffsm, pl, trcseg_all] = flagsdiffs(db, uvar, cvar, tbreak, mbad, trange)
-%compare underway data in uvar with calibration data in cvar field of db
-
-% List and discard possible outliers
-flags = 2+zeros(size(db.dday));
-if ~isempty(mbad) && sum(mbad)
-    flags(mbad) = 4;
-    db.(uvar)(mbad) = NaN; %***
-end
+%thresholds for differences
+th4 = 3; %3*stdev different from median -- bad flag of 4
+if useratio
+    sdiff = db.(cvar)./db.(uvar);
+else
 sdiff = db.(cvar) - db.(uvar);
-sdiff_std = m_nanstd(sdiff);
-sdiff_median = m_nanmedian(sdiff);
-idx = find(abs(sdiff-sdiff_median)>3*sdiff_std); 
+end
+sc1 = 0.5; %absolute difference relative to median -- bad flag of 3, excluded from smoothing
+sc2 = 0.02; %absolute difference relative to first-pass smoothed -- exclude from second pass
+opt1 = 'uway_proc'; opt2 = 'tsg_sdiff'; get_cropt
+
+% List and discard possible major outliers
+sdiff_std = std(sdiff,'omitmissing');
+sdiff_median = median(sdiff,'omitmissing');
+idx = find(abs(sdiff-sdiff_median)>th4*sdiff_std);
 if ~isempty(idx)
     fprintf(1,'\n Std deviation of differences between comparison data (%s) and TSG/UCSW sensor is %7.3f \n',cvar,sdiff_std)
     fprintf(1,' The following are outliers to be checked: \n')
@@ -379,76 +408,152 @@ if ~isempty(idx)
     end
     a = input('exclude the listed points from the comparison (enter) or keyboard (k) ','s');
 else
-    a = input('keyboard to set points to exclude from the comparison (k) or enter to continue? ','s');
+    a = input('no points found to exclude from the comparison; keyboard to set some (k) or enter to continue ','s');
 end
 if strcmp('k',a)
     disp('set indices of bad points, idx')
     keyboard
 end
-sdiff(idx) = NaN; % set values where value>3*SD as NaN
-flags(idx) = 4; %may not be bad bottles just bad comparisons, but these are "definitely" bad
-
-%now break into segments and compute smoothed differences
-nseg = length(tbreak)-1;
-t_all = [];
-sdiffsm_all = []; sdiffseg_all = []; trseg_all = [];
-trcseg_all = nan(2,nseg);
-sc1 = 0.5; sc2 = 0.02;
-opt1 = 'uway_proc'; opt2 = 'tsg_sdiff'; get_cropt
-if ~exist('sdiffsm','var') %if set in opt_cruise, overrides the below
-    for kseg = 1:nseg
-        tstart = tbreak(kseg)+1/86400;
-        tend = tbreak(kseg+1)-1/86400;
-        kbottle = find(db.dday > tstart & db.dday < tend);
-        % work out if interval is before or after start of tsg data (and select
-        % the later of the 2 start ddays and earlier of the 2 end ddays)
-        t0 = max([tstart trange(1)]); % tstart, or start of tsg data
-        t1 = min([tend trange(2)]); % tend or end of tsg data
-
-        t = [t0; db.dday(kbottle); t1];
-        sdiffseg = [nan; sdiff(kbottle); nan]; % pad this set of ddays with two nans for the pseudo ddays
-        % need values for sdiff at the start and end point (for interpolation)
-        % such that there will definitely be a tsg dday less and more than the
-        % bottle dday for all bottle ddays
-
-        %smoothed difference--default is a two-pass filter on the whole
-        %series (should replace with a constant time
-        %window filter rather than a constant number of points filter
-        %as for everything except bottle salinity in some cases the time
-        %distribution of comparison points is likely to be uneven)***
-        sdiffsm = filter_bak(ones(1,21),sdiffseg); % first filter
-        sdiffseg(abs(sdiffseg-sdiffsm) > sc1) = NaN;
-        sdiffsm = filter_bak(ones(1,21),sdiffseg); % harsh filter to determine smooth adjustment
-        sdiffseg(abs(sdiffseg-sdiffsm) > sc2) = NaN;
-        sdiffsm = filter_bak(ones(1,21),sdiffseg); % harsh filter to determine smooth adjustment
-        sdiffsm_all = [sdiffsm_all; sdiffsm];
-        t_all = [t_all; t];
-        %median in each segment
-        sdiffseg_all = [sdiffseg_all; repmat(median(sdiffseg,'omitnan'),length(t),1)];
-        %trends in each segment
-        r = [ones(length(t),1) t];
-        %b = regress(sdiff(~isnan(sdiff)),r(~isnan(sdiff),:));
-        bs = regress(sdiffsm(~isnan(sdiffseg)),r(~isnan(sdiffseg),:));
-        trcseg_all(:,kseg) = bs;
-        %flags
-        ii = kbottle(isnan(sdiffseg(2:end-1)));
-        flags(ii) = max(3,flags(ii)); %these may not be as far out
+if ~isempty(idx)
+    db.(cvar)(idx) = NaN; % set values where value>3*SD as NaN
+    db.(uvar)(idx) = NaN;
+    sdiff(idx) = NaN;
+    flags(idx) = 4; %may not be bad bottles just bad comparisons, but these are "definitely" bad
+    %replot
+    delete(hd)
+for no = 1:np
+    if useratio
+        y = db.(pdata.points{no,1})./db.(uvar);
+    else
+        y = db.(pdata.points{no,1})-db.(uvar);
     end
-    if ~sum(~isnan(sdiffsm_all))
-        warning('smoothing excluding all points from %s, adjust sc1 and sc2 in opt_cruise?',uvar)
-    end
-    sdiffsm = interp1(t_all(~isnan(sdiffsm_all)),sdiffsm_all(~isnan(sdiffsm_all)),db.dday);
-    sdiffseg = interp1(t_all(~isnan(sdiffseg_all)),sdiffseg_all(~isnan(sdiffseg_all)),db.dday);
-
-    r = [ones(length(db.dday),1) db.dday];
-    b = regress(sdiff(~isnan(sdiff)),r(~isnan(sdiff),:));
-    bs = regress(sdiffsm(~isnan(sdiffsm)),r(~isnan(sdiffsm),:));
-    disp('mean diff, median diff, RMS diff, offset and trend')
-    disp([m_nanmean(sdiff) m_nanmedian(sdiff) sqrt(sum(sdiff(~isnan(sdiff)).^2)/sum(~isnan(sdiff))) b'])
-    disp('from smoothed data:')
-    disp([m_nanmean(sdiffsm) m_nanmedian(sdiffsm) sqrt(sum(sdiffsm(~isnan(sdiffsm)).^2)/sum(~isnan(sdiffsm))) bs'])
-
-    disp('choose a constant or simple dday-dependent correction for TSG, add to ')
-    disp('uway_proc, tsg_cals case in opt_cruise (to be applied to _edt variable(s))')
-    disp('(or set it so it uses the smooth function shown here, but be cautious if the comparison is to CTD rather than UCSW bottle samples!)')
+    hd(no) = plot(db.dday, y, 'linestyle', 'none', 'color', plt.pcolors(no,:), 'marker', plt.psym(no), 'DisplayName', pdata.points{no,2}); hold on
 end
+    hd(end).MarkerSize = plt.bigm; %last one is the main one
+    xlabel('decimal day'); ylabel(plt.ylab{2}); grid on; axis tight; xlim(plt.xl)
+    %add tbreak vertical lines
+    yl = ha(2).YLim'; plot(repmat(tbreak,2,1), repmat(yl,1,length(tbreak)));
+    legend(hd)
+end
+
+%now break into segments and compute smoothed differences, plus for a
+%segment containing the whole series
+tsb = [tbreak(1:end-1)' tbreak(2:end)']; 
+tsb = [tsb; -Inf Inf];
+nseg = size(tsb,1);
+cs.smd = NaN+dt.dday;
+cs.smd_all = cs.smd;
+cs.trsmdseg = cs.smd;
+cs.msmdseg = cs.smd;
+cs.csmdseg = nan(2,nseg);
+sint = 0.5/24/60; %interpolate to 30 s
+per = round(24/24/sint); if per/2==floor(per/2); per = per-1; end
+for kseg = 1:nseg
+    tstart = tsb(kseg,1)+sint;
+    tend = tsb(kseg,2)-sint;
+    kbottle = find(db.dday > tstart & db.dday < tend);
+    ksens = find(dt.dday > tstart & dt.dday < tend);
+    if isscalar(kbottle)
+        cs.smd(ksens) = sdiff(kbottle);
+        cs.msmdseg(ksens) = sdiff(kbottle);
+        cs.trsmdseg(ksens) = sdiff(kbottle);
+        continue
+    end
+
+    %flag questionable based on first parameter-specific (possibly
+    %cruise-specific) thresholds
+    mb = abs(sdiff(kbottle)-median(sdiff(kbottle),'omitmissing'))>sc1;
+    flags(kbottle(mb)) = max(flags(kbottle(mb)),3);
+    sdiff(kbottle(mb)) = NaN;
+
+    %interpolate to even spacing and filter
+    m = flags(kbottle)==2;
+    sdiffseg = interp1(db.dday(kbottle(m)),sdiff(kbottle(m)), dt.dday(ksens));
+    sdf = filter_bak(ones(1,per),sdiffseg);
+
+    %check for outliers and interpolate over them, then redo filter
+    mb = abs(sdiffseg-sdf)>sc2;
+    sdiffseg(mb) = interp1(find(~mb),sdiffseg(~mb),find(mb));
+    sdf = filter_bak(ones(1,per),sdiffseg);
+    
+    %fill to edges of segment
+    mb = isnan(sdf);
+    sdf(mb) = interp1(find(~mb),sdf(~mb),find(mb),'nearest','extrap');
+
+    if kseg==nseg
+        cs.smd_all = sdf;
+    else
+        cs.smd(ksens) = sdf;
+    %compute median of smoothed segment
+    cs.msmdseg(ksens) = median(sdf);
+    %map back to bottle points and compute trend
+    s = interp1(dt.dday(ksens),sdf,db.dday(kbottle));
+    mb = isnan(s);
+    s(mb) = interp1(find(~mb),s(~mb),find(mb),'nearest','extrap');
+    %compute trend coefficients of segment
+    cs.csmdseg(:,kseg) = regress(s,[ones(length(kbottle),1) db.dday(kbottle)]);
+    %and trend series for segment
+    cs.trsmdseg(ksens) = [ones(length(ksens),1) dt.dday(ksens)]*cs.csmdseg(:,kseg);
+    end
+
+end
+
+%median of smoothed series, and trend based on bottle times
+cs.msmd_all = median(cs.smd_all);
+s = interp1(dt.dday, cs.smd_all, db.dday);
+cs.csmd_all = regress(s,[ones(length(s),1) db.dday]);
+cs.trsmd_all = [ones(length(dt.dday),1) dt.dday]*cs.csmd_all;
+%median of concatenated smoothed segment series, and trend based on bottle times
+cs.msmd = median(cs.smd,'omitnan');
+s = interp1(dt.dday, cs.smd, db.dday);
+mb = isnan(s);
+s(mb) = interp1(find(~mb),s(~mb),find(mb),'nearest','extrap');
+cs.csmd = regress(s,[ones(length(s),1) db.dday]);
+cs.trsmd = [ones(length(dt.dday),1) dt.dday]*cs.csmd;
+
+cs.diffs = sdiff;
+cs.flags = flags;
+cs.readme = {'diffs: differences between underway and bottle/ctd comparion points';
+    'smd_all: smoothed differences';
+    'msmdseg: median differences for each smoothed segment';
+    'smd: concatenated smoothed segment differences';
+    'trsmd*: trend, csmd* coefficients of trend ([b;m] from mx+b)'};
+
+%add to plot
+axes(ha(2))
+hlsd(2) = plot(dt.dday, cs.smd, 'DisplayName', ['segment smoothed difference ' pdata.points{end,2}], 'color', [0 0 1], 'linewidth', 2);
+hlsd(1) = plot(dt.dday, cs.smd_all, 'DisplayName', ['smoothed difference ' pdata.points{end,2}], 'color', [1 0 0], 'linewidth', 2);
+hlsd(3) = plot(dt.dday, cs.msmdseg, 'DisplayName', 'segment medians', 'linestyle', '--');
+nd = length(hlsd);
+for kseg = 1:length(tbreak)-1
+    %plot in different colors
+    t = dt.dday(dt.dday>tbreak(kseg) & dt.dday<=tbreak(kseg+1));
+    hlsd(kseg+nd) = plot(t, [ones(length(t),1) t]*cs.csmdseg(:,kseg), 'DisplayName', 'segment trends', 'linestyle', '-.', 'color', 'k');
+end
+h = [hd hlsd(1:4)];
+hlt = plot(dt.dday, [ones(length(dt.dday),1) dt.dday]*cs.csmd, 'DisplayName', 'trend', 'linestyle', ':', 'color', 'k');
+h = [h hlt];
+fm = 2;
+if sum(cs.flags>fm)
+    %overplot flagged points in gray
+    hlb = plot(db.dday(cs.flags>fm), db.(cvar)(cs.flags>fm)-db.(uvar)(cs.flags>fm), 'color', [.6 .6 .6], 'marker', hd(end).Marker, 'markersize', hd(end).MarkerSize, 'linestyle', 'none', 'DisplayName', 'flagged 3, excluded from smoothing');
+    h = [h hlb];
+end
+legend(h)
+
+disp('choose a constant or simple dday-dependent correction for TSG, add to ')
+disp('uway_proc, tsg_cals case in opt_cruise (to be applied to _edt variable(s))')
+disp('(or set it so it uses the smooth function shown here, but be cautious with this if the comparison is to CTD or to few UCSW bottle samples!)')
+if ~isempty(plt.pname)
+    pstr = [' before printing to ' plt.pname ' '];
+else
+    pstr = '';
+end
+a = input(sprintf('keyboard (k) to inspect/modify plot%s,\n or enter to continue  ',pstr),'s');
+if strcmp(a,'k')
+    keyboard
+end
+if ~isempty(plt.pname)
+    print('-dpng',plt.pname)
+end
+

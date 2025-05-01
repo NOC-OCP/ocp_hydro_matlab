@@ -20,8 +20,8 @@ end
 ns = length(statnum);
 
 dc.dday = nan(ns,1);
-dc.ctdt = dc.dday; dc.ctds = dc.ctdt; dc.ctdf = dc.ctdt;
-dc.ctut = dc.ctdt; dc.ctus = dc.ctds; dc.ctuf = dc.ctdf;
+dc.tctdd = dc.dday; dc.sctdd = dc.dday; dc.fctdd = dc.dday;
+dc.tctdu = dc.dday; dc.sctdu = dc.dday; dc.fctdu = dc.dday;
 for sno = 1:ns
     %load 1hz
     [d, h] = mload(fullfile(mgetdir('M_CTD'),sprintf('ctd_%s_%03d_psal',mcruise,statnum(sno))),'/');
@@ -33,10 +33,10 @@ for sno = 1:ns
     mu = ml & d.scan>ddcs.scan_bot & d.scan<ddcs.scan_end;
     %average
     dc.dday(sno,:) = mean(d.dday(md | mu),'omitnan');
-    dc.ctdt(sno,:) = mean(d.temp(md),'omitnan');
-    dc.ctds(sno,:) = mean(d.psal(md),'omitnan');
-    dc.ctdf(sno,:) = mean(d.fluor(md),'omitnan');
-    dc.ctut(sno,:) = mean(d.temp(mu),'omitnan');
-    dc.ctus(sno,:) = mean(d.psal(mu),'omitnan');
-    dc.ctuf(sno,:) = mean(d.fluor(mu),'omitnan');
+    dc.tctdd(sno,:) = mean(d.temp(md),'omitnan');
+    dc.sctdd(sno,:) = mean(d.psal(md),'omitnan');
+    dc.fctdd(sno,:) = mean(d.fluor(md),'omitnan');
+    dc.tctdu(sno,:) = mean(d.temp(mu),'omitnan');
+    dc.sctdu(sno,:) = mean(d.psal(mu),'omitnan');
+    dc.fctdu(sno,:) = mean(d.fluor(mu),'omitnan');
 end
