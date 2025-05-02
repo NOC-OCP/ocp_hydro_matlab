@@ -134,7 +134,7 @@ if regrid
         else
             h.fldserial = repmat({' '},size(h.fldnam));
         end
-                if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
+        if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
 
         %save
         h.dataname = [datatype '_' mcruise '_combined_av'];
@@ -153,12 +153,6 @@ end
 % load and QC combined data (all?***)
 [dg, hg] = mload(otfile,'/');
 
-% calibrate/adjust existing variables and calculate additional variables
-[dg, hg, comment] = mday_02_calculations(dg, hg, 'post', datatype);
-if ~isempty(comment)
-    hg.comment = [hg.comment comment];
-end
-
 %edit
 opt1 = 'uway_proc'; opt2 = 'avedit'; get_cropt
 %deal with a common edit
@@ -168,12 +162,10 @@ if exist('flowlims','var') && exist('tsgpumpvars','var') && ~isempty(flowlims) &
         uopts.badflow.(tsgpumpvars{vno}) = [NaN NaN];
     end
 end
-if handedit
-    %apply previous manually selected edits
-    btol = (tavp_s/2)/86400;
-    edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
-    [dg, ~] = apply_guiedits(dg, 'dday', [edfile '*'], 0, btol);
-end
+%apply previous manually selected edits
+btol = (tavp_s/2)/86400;
+edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
+[dg, ~] = apply_guiedits(dg, 'dday', [edfile '*'], 0, btol);
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad)
     [dg, comment] = apply_autoedits(dg, uopts);
@@ -189,7 +181,13 @@ if handedit
         [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
     end
 end
-    if isfield(hg,'fldserial') && length(hg.fldserial)<length(hg.fldnam); keyboard; end
+if isfield(hg,'fldserial') && length(hg.fldserial)<length(hg.fldnam); keyboard; end
+
+% calibrate/adjust existing variables and calculate additional variables
+[dg, hg, comment] = mday_02_calculations(dg, hg, 'post', datatype);
+if ~isempty(comment)
+    hg.comment = [hg.comment comment];
+end
 
 %save again
 mfsave(otfile, dg, hg);

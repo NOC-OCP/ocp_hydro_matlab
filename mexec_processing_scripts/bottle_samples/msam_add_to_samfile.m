@@ -160,17 +160,16 @@ for cno = 1:length(convn)
         case 'replavg'
             if convs.(convn{cno})
                 %find data parameters
-                isflag = cellfun(@(x) contains(x,'_flag'), hnew.fldnam);
+                ism = cellfun(@(x) contains(x,'_flag') | contains(x,'_ins'), hnew.fldnam);
                 %***do special things for botoxytemp (just report
                 %botoxya_temp)
-                vnames = unique(cellfun(@(x) x(1:end-1), setdiff(hnew.fldnam(~isflag), svars), 'UniformOutput', false));
+                vnames = unique(cellfun(@(x) x(1:end-1), setdiff(hnew.fldnam(~ism), [svars 'dday']), 'UniformOutput', false));
                 %and loop through them to average
-                keyboard %***chla_ins ets.
                 for nno = 1:length(vnames)
                     vname = vnames{nno};
                     m = strncmp(vname,hnew.fldnam,length(vname));
-                    mv = m & ~isflag;
-                    mf = m & isflag;
+                    mv = m & ~ism;
+                    mf = m & ism;
                     un = unique(hnew.fldunt(mv));
                     %is there more than one column that starts with vname? with matching flags?
                     if sum(mv)>1 && sum(mf)==sum(mv)

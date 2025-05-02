@@ -89,17 +89,11 @@ switch opt1
                         so.calunits.tirstarboard = 'W_per_m2';
                 end
             case 'tsg_cals'
-                %first rename _raw variables
-                ds = struct2table(d);
-                ds.Properties.VariableNames = cellfun(@(x) replace(x,'_raw',''),ds.Properties.VariableNames,'UniformOutput',false);
-                d = table2struct(ds,'ToScalar',true);
-                h.fldnam = ds.Properties.VariableNames;
-                %now use new names for calibrations
-                uo.dcal.temp_remote = 0;
-                uo.docal.salinity = 0;
+                uo.docal.temp_remote = 1;
+                uo.docal.salinity = 1;
                 uo.docal.fluo = 0;
-                uo.calstr.temp_remote.pl.dy180 = 'dcal.temp_remote = d0.temp_remote-0.1258';
-                uo.calstr.temp_remote.msg = 'temperature offset by median of smoothed differences from 51 3-m CTD temperatures';
+                uo.calstr.temp_remote.pl.dy180 = 'dcal.temp_remote = d0.temp_remote+(0.2855-2.7e-3*d0.dday);';
+                uo.calstr.temp_remote.pl.msg = 'temperature offset by trend of smoothed differences from 51 3-m CTD temperatures';
                 uo.calstr.salinity.pl.dy180 = 'dcal.salinity = d0.salinity+6e-4;';
                 uo.calstr.salinity.pl.msg = 'salinity offset by median of smoothed differences from 53 3-m CTD salinities';
                 %uo.calstr.fluo.pl.dy180 = 'dcal.fluo = d0.fluo*0.27;';
@@ -126,8 +120,6 @@ switch opt1
                     handedit = 0; %already done, switch off when running to apply calibration
                 elseif strcmp(datatype,'bathy')
                     vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
-                end
-                if strcmp(uvar,'fluo')
                 end
         end
 

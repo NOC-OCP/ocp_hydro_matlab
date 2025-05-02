@@ -95,6 +95,12 @@ if strcmp(stage,'pre')
             exc = {'parport' 'parstarboard' 'tirport' 'tirstarboard' 'humidity' 'airpressure' 'airtemperature'}; %***munderway_vars
             exc(~ismember(exc,h.fldnam)) = [];
             ngvars = [ngvars exc];
+            %rename _raw variables***in later cruises this is not
+            %necessary/done earlier?
+            ds = struct2table(d);
+            ds.Properties.VariableNames = cellfun(@(x) replace(x,'_raw',''),ds.Properties.VariableNames,'UniformOutput',false);
+            d = table2struct(ds,'ToScalar',true);
+            h.fldnam = ds.Properties.VariableNames;
 
         case 'atmos'
 
@@ -270,8 +276,16 @@ elseif strcmp(stage, 'post')
             if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
                 [dcal, hcal] = apply_calibrations(d, h, uo.calstr, uo.docal, 'q');
                 for no = 1:length(hcal.fldnam)
-                    %apply to d, and don't save uncalibrated versions
-                    d.([hcal.fldnam{no}]) = dcal.(hcal.fldnam{no});
+                    %apply to d, but save uncalibrated versions in case calibration changes
+                    cname = [hcal.fldnam{no} '_cal'];
+                    d.(cname) = dcal.(hcal.fldnam{no});
+                    if ~ismember(h.fldnam,cname)
+                        h.fldnam = [h.fldnam cname];
+                        h.fldunt = [h.fldunt h.fldunt(strcmp(hcal.fldnam{no},h.fldnam))];
+                        if isfield(h,'fldserial')
+                            h.fldserial = [h.fldserial h.fldserial(strcmp(hcal.fldnam{no},h.fldnam))];
+                        end
+                    end
                 end
                 if no>0
                     h.comment = [h.comment hcal.comment];

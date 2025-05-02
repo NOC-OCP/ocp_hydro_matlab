@@ -2,7 +2,7 @@ function mtsg_bottle_ctd_compare(varargin)
 % mtsg_bottle_ctd_compare(dintake)
 % mtsg_bottle_ctd_compare(dintake, sepdownup)
 % mtsg_bottle_ctd_compare(dintake, sepdownup, reload_cal)
-% mtsg_bottle_ctd_compare(dintake, sepdownup, reload_cal, printsuf)
+% mtsg_bottle_ctd_compare(dintake, sepdownup, reload_cal, usecal, printsuf)
 %
 % compare TSG/underway data from the merged, 1-min averaged surface_ocean
 % file with bottle parameters (salinity and/or fluorescence, where
@@ -14,7 +14,7 @@ function mtsg_bottle_ctd_compare(varargin)
 % this file, otherwise (default) they are reloaded from tsgsal, ucswchl,
 % and ctd files
 % if printsuf is not empty, comparison figures are printed to .png; use
-% printsuf to save files as '*_uncal.png' or '*_cal.png' 
+% printsuf to save files as '*_uncal.png' or '*_3dbar.png' etc.
 %
 % e.g.
 % mtsg_bottle_ctd_compare(3, 0, 0, 'uncal')
@@ -23,24 +23,9 @@ function mtsg_bottle_ctd_compare(varargin)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; % cruise name (from MEXEC_G global)
 
-dintake = 3; %depth of UCSW intake, if >0, extract CTD data within 1 dbar of dintake
-%***cruise option
-sepdownup = 0; %ctd down and upcast data are loaded separately, but will be combined before comparing to tsg if sepdownup is 0
-reload_cal = 1;
-printsuf = '';
-if nargin>0
-    dintake = varargin{1};
-    if nargin>1
-        sepdownup = varargin{2};
-        if nargin>2
-            reload_cal = varargin{3};
-            if nargin>3
-                printsuf = varargin{4};
-            end
-        end
-    end
-end
-dstr = num2str(dintake);
+v = {3, 0, 1, 1, ''};
+v(1:nargin) = varargin(1:nargin);
+[dintake, sepdownup, reload_cal, usecal, printsuf] = varargin{:};
 if dintake>0
     comp2ctd = 1;
 else
@@ -55,7 +40,7 @@ tsgfile = fullfile(MEXEC_G.mexec_data_root,'met',['surface_ocean_' mcruise '.nc'
 atmfile = fullfile(MEXEC_G.mexec_data_root,'met',['surfmet_' mcruise '_all_edt.nc']);
 salfile = fullfile(mgetdir('M_BOT_SAL'),['tsgsal_' mcruise '_all.nc']);
 chlfile = fullfile(mgetdir('M_BOT_CHL'),['ucswchl_' mcruise '_all.nc']);
-cdatafile = fullfile(MEXEC_G.mexec_data_root,'bottle_samples','uway_cal_data');
+cdatafile = fullfile(MEXEC_G.mexec_data_root,'bottle_samples','uway_cal_data'); %save here
 
 %comparison data (bottle, ctd)
 if reload_cal
@@ -112,6 +97,7 @@ if reload_cal
         for no = 1:length(fv)
             db.(fv{no}) = [nan(n0,1); dc.(fv{no})];
         end
+        dstr = num2str(dintake);
         dispnames.db.tctdd = ['CTD (down) temp at ' dstr ' dbar'];
         dispnames.db.tctdu = ['CTD (up) temp at ' dstr ' dbar'];
         dispnames.db.sctdd = ['CTD (down) psal at ' dstr ' dbar'];
@@ -172,6 +158,11 @@ temph = munderway_varname('tempvar',ht.fldnam,1,'s'); %housing
 tempin = munderway_varname('sstvar',ht.fldnam,1,'s'); %remote
 %tempsst = munderway_varname('sstvar',setdiff(ht.fldnam,tempin),1,'s'); %sst (what about dk?)
 fluovar = 'fluo'; %doesn't seem to vary in tsg file? if it does, add to munderway_varname
+if usecal
+    if sum(strcmp([tempin '_cal'],ht.fldnam)); tempin = [tempin '_cal']; end
+    if sum(strcmp([salvar '_cal'],ht.fldnam)); salvar = [salvar '_cal']; end
+    if sum(strcmp([fluovar '_cal'],ht.fldnam)); fluovar = [fluovar '_cal']; end
+end
 %don't bother if we don't have any data
 m = ~isnan(dt.(temph)) | ~isnan(dt.(tempin)); %if ~isempty(tempsst); m = m | ~isnan(dt.(tempsst)); end
 dt = dt(m,:);
@@ -228,7 +219,7 @@ if dotemp
         plt.pname = fullfile(sdir,sprintf('underway_%s_%s_%s.png',pdata.ts,pdata.points{end,1},printsuf));
     end
     plt.ylab = {'T (degC)';'T difference'};
-    cst = plotuc(dt, db, dispnames, pdata, plt, tbreak, []);
+    cst = plotuc(dt, db, dispnames, pdata, plt, tbreak);
 end
 
 if dosal
@@ -251,7 +242,7 @@ if dosal
     if ~isempty(printsuf)
         plt.pname = fullfile(sdir,sprintf('underway_%s_%s_%s.png',pdata.ts,pdata.points{end,1},printsuf));
     end
-    css = plotuc(dt, db, dispnames, pdata, plt, tbreak, []);
+    css = plotuc(dt, db, dispnames, pdata, plt, tbreak);
 end
 
 if dochl %note if CTD is calibrated or not
@@ -282,7 +273,10 @@ if dochl %note if CTD is calibrated or not
     plt.ylab = {'Chl (ug/ml)';'Chl ratio'};
     %find too-much-light points, to be excluded
     mbad = db.par>ll;
-    csf = plotuc(dt, db, dispnames, pdata, plt, tbreak, mbad);
+    if ~isempty(mbad) && sum(mbad)
+        db.(pdata.ts)(mbad) = NaN;
+    end
+    csf = plotuc(dt, db, dispnames, pdata, plt, tbreak);
 end
 
 keyboard
@@ -328,15 +322,12 @@ end
 tbreak = [-inf tbreak inf];
 
 
-function cs = plotuc(dt, db, dispnames, pdata, plt, tbreak, mbad)
+function cs = plotuc(dt, db, dispnames, pdata, plt, tbreak)
 
 uvar = pdata.ts; %underway (TSG) variable
-cvar = pdata.points{end,1}; %main comparison parameter (the last one to be plotted), will be passed to flagsdiffs
+cvar = pdata.points{end,1}; %main comparison parameter (the last one to be plotted), will be passed to mdiffs
 flags = 2+zeros(size(db.dday));
-if ~isempty(mbad) && sum(mbad)
-    flags(mbad) = 4;
-    db.(uvar)(mbad) = NaN; %***
-end
+flags(isnan(db.(uvar))) = 4;
 
 %make initial plot
 
@@ -395,16 +386,21 @@ sc2 = 0.02; %absolute difference relative to first-pass smoothed -- exclude from
 opt1 = 'uway_proc'; opt2 = 'tsg_sdiff'; get_cropt
 
 % List and discard possible major outliers
-sdiff_std = std(sdiff,'omitmissing');
-sdiff_median = median(sdiff,'omitmissing');
-idx = find(abs(sdiff-sdiff_median)>th4*sdiff_std);
+sdiff_test = sdiff; id0 = find(flags==4);
+for r = 1:3
+    sdiff_std = std(sdiff_test,'omitmissing');
+    sdiff_median = median(sdiff_test,'omitmissing');
+    idx = find(abs(sdiff_test-sdiff_median)>th4*sdiff_std);
+    sdiff_test(idx) = NaN;
+end
+idx = setdiff(find(isnan(sdiff_test)),id0);
 if ~isempty(idx)
     fprintf(1,'\n Std deviation of differences between comparison data (%s) and TSG/UCSW sensor is %7.3f \n',cvar,sdiff_std)
     fprintf(1,' The following are outliers to be checked: \n')
     fprintf(1,' Sample - dday time    Difference  \n')
-    for ii = idx(:)'
-        jdx = floor(db.dday(ii));
-        fprintf(1,'  %2d  -  %d  %s  %7.3f \n',ii,jdx,datestr(db.dday(ii),15),sdiff(ii))
+    for bii = idx(:)'
+        jdx = floor(db.dday(bii));
+        fprintf(1,'  %2d  -  %d  %s  %7.3f \n',bii,jdx,datestr(db.dday(bii),15),sdiff(bii))
     end
     a = input('exclude the listed points from the comparison (enter) or keyboard (k) ','s');
 else
@@ -457,6 +453,8 @@ for kseg = 1:nseg
         cs.smd(ksens) = sdiff(kbottle);
         cs.msmdseg(ksens) = sdiff(kbottle);
         cs.trsmdseg(ksens) = sdiff(kbottle);
+        continue
+    elseif isempty(kbottle)
         continue
     end
 
@@ -520,7 +518,7 @@ cs.readme = {'diffs: differences between underway and bottle/ctd comparion point
     'trsmd*: trend, csmd* coefficients of trend ([b;m] from mx+b)'};
 
 %add to plot
-axes(ha(2))
+axes(ha(2)); hold on
 hlsd(2) = plot(dt.dday, cs.smd, 'DisplayName', ['segment smoothed difference ' pdata.points{end,2}], 'color', [0 0 1], 'linewidth', 2);
 hlsd(1) = plot(dt.dday, cs.smd_all, 'DisplayName', ['smoothed difference ' pdata.points{end,2}], 'color', [1 0 0], 'linewidth', 2);
 hlsd(3) = plot(dt.dday, cs.msmdseg, 'DisplayName', 'segment medians', 'linestyle', '--');
@@ -543,8 +541,8 @@ legend(h)
 
 disp('choose a constant or simple dday-dependent correction for TSG, add to ')
 disp('uway_proc, tsg_cals case in opt_cruise (to be applied to _edt variable(s))')
-disp('(or set it so it uses the smooth function shown here, but be cautious with this if the comparison is to CTD or to few UCSW bottle samples!)')
-if ~isempty(plt.pname)
+disp('(or set it so it uses an extrapolation of the smooth function shown here, but be cautious with this if the comparison is to CTD or to few UCSW bottle samples!)')
+if isfield(plt,'pname')
     pstr = [' before printing to ' plt.pname ' '];
 else
     pstr = '';
@@ -553,7 +551,7 @@ a = input(sprintf('keyboard (k) to inspect/modify plot%s,\n or enter to continue
 if strcmp(a,'k')
     keyboard
 end
-if ~isempty(plt.pname)
+if isfield(plt,'pname')
     print('-dpng',plt.pname)
 end
 
