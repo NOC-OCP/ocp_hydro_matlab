@@ -99,27 +99,31 @@ switch opt1
                 %uo.calstr.fluo.pl.dy180 = 'dcal.fluo = d0.fluo*0.27;';
                 %uo.calstr.fluo.pl.msg = 'fluorescence scaled by median of smoothed ratio to 26 night-time 3-m CTD fluorescence measurements';
             case 'avedit'
-                if strcmp(datatype,'ocean')
-                    %ucsw system things should be NaNed when pump speed low (or high?)
-                    %includes remote temp because this is just inside inlet
-                    fvars = {'temph','temp_remote','fluo','trans','cond','salinity','soundvelocity'};
-                    for no = 1:length(fvars)
-                        uopts.badflow.(fvars{no}) = [-inf 0.6; 2.5 inf];
-                    end
-                    %soundvelocity depends on remote temp?
-                    uopts.badtemp_remote.soundvelocity = [NaN NaN];
-                    %conductivity and salinity depend on temp
-                    uopts.badtemph.cond = [NaN NaN];
-                    uopts.badtemph.salinity = [NaN NaN];
-                    %bad temp often associated with bad fluo and trans
-                    %(flow issues)
-                    uopts.badtemph.fluo = [NaN NaN];
-                    uopts.badtemph.trans = [NaN NaN];
-                    vars_to_ed = {'flow','fluo','trans','temph','temp_remote','salinity'};
-                    vars_offset_scale = {[0 1], [0 1], [-95 0.1], [-11 1], [-11 1], [-35 2]};
-                    handedit = 0; %already done, switch off when running to apply calibration
-                elseif strcmp(datatype,'bathy')
-                    vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
+                switch datatype
+                    case 'ocean'
+                        %bad temp often associated with bad fluo and trans
+                        uopts.badtemph.fluo = [NaN NaN];
+                        uopts.badtemph.trans = [NaN NaN];
+                        vars_to_ed = {'flow','fluo','trans','temph','temp_remote','salinity'};
+                        vars_offset_scale.temph = [-11; 1];
+                        vars_offset_scale.temp_remote = vars_offset_scale.temph;
+                        vars_offset_scale.salinity = [-35; 2];
+                        handedit = 0; %already done, switch off when running to apply calibration
+                    case 'bathy'
+                        vars_to_ed = {'waterdepth_mbm','waterdepth_sbm'};
+                        %handedit = 0; %already done
+                    case 'atmos'
+                        vars_offset_scale.airtemperature = [-11; 1];
+                        vars_to_ed = setdiff(vars_to_ed,{'truwind_spd'}); %missing data in the middle
+                        %remove wind variables from combined file for now
+                        m = cellfun(@(x) contains(x,'wind'),hg.fldnam);
+                        dg = rmfield(dg,hg.fldnam(m));
+                        hg.fldnam(m) = []; hg.fldunt(m) = []; 
+                        if isfield(hg,'fldserial')
+                            hg.fldserial(m) = [];
+                        end
+                        hg = rmfield(hg,{'alrlim','uprlim','absent','num_absent','dimsset','dimrows','dimcols','noflds'});
+                        handedit = 0; %already done (not including wind)
                 end
         end
 

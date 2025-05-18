@@ -73,7 +73,7 @@ end
 
 % for each stream, starting with nav streams, apply additional processing
 % and cleaning to data 
-if reload_av || reload_uway %something new to take through preliminary edits stage
+if reload_uway %something new to take through preliminary edits stage
     mudirs = cellfun(@(x,y) [x '/' y],mtable.mstardir,mtable.mstarpre,'UniformOutput',false);
     [mudirs,ii] = unique(mudirs);
     mufiles = mtable.mstarpre(ii);
@@ -95,7 +95,7 @@ end
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
 ctypes = {'nav','bathy','ocean','atmos'}; %important to do nav first
-ctypes = ctypes(3); %did nav; bathy is a problem, skip for now
+ctypes = ctypes(4); %did ocean, need to redo nav for wind; bathy is a problem, save for later
 for cno = 1:length(ctypes)
     mday_02_merge_av(ctypes{cno}, ydays, mtable, reload_av);
     fprintf(1,'merged %s files\n',ctypes{cno})

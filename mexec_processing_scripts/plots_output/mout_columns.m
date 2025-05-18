@@ -1,35 +1,41 @@
 function status = mout_columns(intype, outtype, varargin)
 % status = mout_columns(intype, outtype, params)
 %
-% write selected data from mstar CTD and Niskin sample data file(s) to csv
-% or xlsx, optionally bin-averaging, changing time coordinate, computing
-% additional variables, and/or renaming variables and formatting to match
-% exchange format or the BODC sample data template
+% write selected data from mstar CTD, Niskin sample data, or underway
+% file(s) to csv or xlsx, optionally bin-averaging, changing time
+% coordinate, computing additional variables, and/or renaming variables and
+% formatting to match exchange format or the BODC sample data template
 %
 % calls set_mexec_defaults, opt_{cruise}, mout_columns_defaults, and
-% mout_columns_prepare_data
+% mout_columns_prepare_data or mout_columns_prepare_uway
 %
 % intype:
-%   'sam' to write sample data or 'ctd' to write CTD profiles
+%   'sam' to write sample data,
+%   'ctd' to write CTD profiles,
 %
 % outtype:
 %   'mstar' to keep mstar variable names and include mstar file global
 %     attributes in header,
-%   'exch' to produce WOCE exchange-format files including parameter names
-%     and required headers
-%   'bodc' to use bodc sample data template for sample file (for ctd,
-%     reverts to 'mstar') and writetable to .xlsx
+%   'exch' to produce WOCE exchange-format .csv files including parameter
+%     names and required headers (for 'sam' or 'ctd'),
+%   'bodc' (for intype 'sam' only) to use bodc sample data template for
+%     and write to .xlsx 
 %
-% params (optional): structure (all fields optional)
-%   ddir: directory where input data files are found
-%   outdir: directory for output file(s)
-%   stnlist: list of stations to include
-%   vars_exclude: list of variables not to write from input files
-%   extras: structure giving values of variables not in (or calculated
-%     from) file to be repeated on every row (e.g. expocode)***put in cropt
-%   extrah: structure with variables not in individual input
-%     file headers to be added to header (should be included in
-%     params.varsh)***put in cropt?
+% params: optional structure (defaults set by mout_columns_defaults.m): 
+%
+%   fields used for any intype and outtype: 
+%     ddir: directory where input data files are found
+%        e.g. /data/pstar/cruise/data/ctd or for underway,
+%        /data/pstar/cruise/data 
+%     outdir: directory for output file(s)
+%        e.g. /data/pstar/cruise/data/collected_files
+%     stnlist: list of stations to include
+%     vars_exclude: list of variables not to write from input files
+%     extras: structure giving values of variables not in (or calculated
+%       from) file to be repeated on every row (e.g. expocode)***put in cropt
+%     extrah: structure with variables not in individual input
+%       file headers to be added to header (should be included in
+%       params.varsh)***put in cropt?
 %
 %   fields used for intype 'ctd' only:
 %     suf: '_24hz' to force regridding from the 24hz file
@@ -39,16 +45,16 @@ function status = mout_columns(intype, outtype, varargin)
 %       'down'): 'down' or 'up' to average down or upcast
 %
 %   fields used for outtype 'exch' or 'mstar only:
-%     header: cell array to print at top of file
+%     header: cell array to print as lines at top of file
 %
 %   fields used for outtype 'mstar' or 'bodc' only:
 %     csvpre: prefix for output csv file(s)
 %
 %   fields used for outtype 'mstar' only:
 %     vars_units: either Nx1 cell array containing original (mstar)
-%     variable names to write, or Nx4 cell array containing 
-%       [original (mstar) variable names, output variable names, output variable units, format strings]
-%       e.g. vars_units = m_exch_vars_list(1); vars_units = vars_units(:,[3 1 2 4]);
+%       variable names to write, or Nx4 cell array containing 
+%         [original (mstar) variable names, output variable names, output variable units, format strings]
+%         e.g. vars_units = m_exch_vars_list(1); vars_units = vars_units(:,[3 1 2 4]);
 %       if vars_units is Nx1, output variable names will be the same, units
 %       will come from mstar header/attributes, and m_exch_vars_list.m will
 %       be searched for format strings. 
@@ -88,6 +94,9 @@ params.out = outtype;
 if strcmp(params.in,'ctd') && strcmp(params.out,'bodc')
     params.out = 'mstar'; %no defined bodc ctd .csv format
 end
+if strcmp(params.in,'uway')
+    params.out = 'mstar';
+end
 if isfield(params,'header') && ischar(params.header)
     params.header = {params.header};
 end
@@ -95,7 +104,7 @@ end
 params = mout_columns_defaults(params);
 
 params0 = params; %in case different variables in each file
-kloop = params.stnlist(1);
+kloop = 1;
 while kloop<=length(params.stnlist)
 
     %load and modify (grid, derive variables) data, put into table dtab
@@ -164,11 +173,6 @@ while kloop<=length(params.stnlist)
     str1 = strjoin(params.vars_units(:,2),',');
     str2 = strjoin(params.vars_units(:,3),',');
     fprintf(fid,'%s\n%s\n',str1,str2);
-    %fprintf(fid, '%s, ', params.vars_units{1:end-1,2});
-    %fprintf(fid, '%s\n', params.vars_units{end,2});
-    %%and units
-    %fprintf(fid, '%s, ', params.vars_units{1:end-1,3});
-    %fprintf(fid, '%s\n', params.vars_units{end,3});
 
     %data rows
     iir = 1:params.nr;

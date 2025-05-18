@@ -185,13 +185,40 @@ switch opt1
                 handedit = 0;
             case 'avedit'
                 uopts = struct();
-                vars_to_ed = setdiff(fieldnames(dg)',{'dday','time','times'});
-                if strcmp(datatype,'bathy')
-                    handedit = 1;
-                elseif strcmp(datatype,'ocean')
-                    handedit = 1;
-                else
-                    handedit = 0;
+                tvars = fieldnames(dg)';
+                tvars = [tvars(cellfun(@(x) contains(x,'time'),tvars)) 'dday'];
+                vars_to_ed = setdiff(fieldnames(dg)',tvars);
+                switch datatype
+                    case 'bathy'
+                        handedit = 1;
+                    case 'ocean'
+                        handedit = 1;
+                        %ucsw system things should be NaNed when pump speed out of range, including remote temp (inside inlet)
+                        fvars = {'temph','temp_remote','fluo','trans','cond','salinity','soundvelocity'};
+                        for no = 1:length(fvars)
+                            uopts.badflow.(fvars{no}) = [-inf 0.6; 2.5 inf];
+                        end
+                        %soundvelocity depends on remote temp
+                        uopts.badtemp_remote.soundvelocity = [NaN NaN];
+                        %conductivity and salinity depend on housing temp
+                        uopts.badtemph.cond = [NaN NaN];
+                        uopts.badtemph.salinity = [NaN NaN];
+                        vars_offset_scale.trans = [-95; 0.1];
+                    case 'atmos'
+                        handedit = 1;
+                        wvars = {'truwind_e','truwind_n','truwind_dir'};
+                        for no = 1:length(wvars)
+                            uopts.badtruwind_spd.(wvars{no}) = [NaN NaN];
+                        end
+                        vars_to_ed = setdiff(vars_to_ed,wvars); %just edit speed and apply to other wind vars (by re-running after editing)
+                        vars_offset_scale.airpressure = [-1000; 1];
+                        vars_offset_scale.humidity = [-80; 0.5];
+                        vars_offset_scale.parport = [0; 1e-7];
+                        vars_offset_scale.parstarboard = vars_offset_scale.parport;
+                        vars_offset_scale.tirport = vars_offset_scale.parport;
+                        vars_offset_scale.tirstarboard = vars_offset_scale.parport;
+                    case 'nav'
+                        handedit = 0;
                 end
             case 'tsg_cals'
                 uo.docal.temp = 0; %do not apply any calibration to tsg temp
@@ -200,22 +227,6 @@ switch opt1
                 if isfield(uo,'calstr')
                     uo = rmfield(uo,'calstr'); %no default, must be set by opt_{cruise}
                     %see opt_sd025 for examples
-                end
-            case 'uway_av'
-                %tavp in s
-                switch datatype
-                    case 'nav'
-                        tavp = 30;
-                        method = 'meanbin';
-                    case 'bathy'
-                        tavp = 5*60; 
-                        method = 'medbin';
-                    case 'tsg'
-                        tavp = 60;
-                        method = 'medbin';
-                    case 'wind'
-                        tavp = 30;
-                        method = 'meanbin';
                 end
         end
 

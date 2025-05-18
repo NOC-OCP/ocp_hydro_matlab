@@ -68,8 +68,8 @@ for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
 if ~exist('colors','var')
-    colors = [1 0 0; 1 .5 0; 0 .5 0; 0 1 1; 0 0 1; .5 0 .5];
-    colornames = {'red';'orange';'green';'cyan';'blue';'purple'};
+    colors = [1 .5 1; 1 0 0; 1 .5 0; 0 .5 0; 0 1 1; 0 0 1; .5 0 .5; 0 0 0];
+    colornames = {'magenta';'red';'orange';'green';'cyan';'blue';'purple';'black'};
 end
 nc = size(colors,1); if nc==1; nc = length(colors); end
 if ~exist('markers','var')

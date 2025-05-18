@@ -12,8 +12,6 @@ end
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-dto = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
-timestring = ['days since ' datestr(dto,'yyyy-mm-dd HH:MM:SS')];
 ddays = ydays-1;
 
 ngvars = {'utctime'}; %never grid this
@@ -54,6 +52,8 @@ switch datatype
         tavp_s = 30; % 30 s
         gmethod = 'meannum';
 end
+otfile = fullfile(mgetdir('sum'),otfile);
+opt1 = 'uway_proc'; opt2 = 'merge_av'; get_cropt
 
 %***check for multiple streams from same inst? not important at this
 %stage, all will be in corresponding mstar file
@@ -61,31 +61,28 @@ if isstruct(mtable) || istable(mtable)
     filepre = cell(size(streams)); filepre_old = filepre;
     for fno = 1:length(streams)
         m = strcmp(streams{fno},mtable.tablenames);
-        filepre_old{fno} = fullfile(MEXEC_G.mexec_data_root,mtable.mstardir{m},mtable.paramtype{m},mtable.mstarpre{m});
         filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
+        d = dir([filepre{fno} '*.nc']);
+        if isempty(d)
+            filepre{fno} = fullfile(MEXEC_G.mexec_data_root,mtable.mstardir{m},mtable.paramtype{m},mtable.mstarpre{m});
+        end
     end
 elseif iscell(mtable)
     filepre = mtable;
 end
-for no = 1:length(filepre)
-    d = dir([filepre{no} '*.nc']);
-    if isempty(d)
-        filepre{no} = filepre_old{no};
-    end
-end
 filepre = unique(filepre,'stable');
-otfile = fullfile(fileparts(filepre{1}),otfile);
 
 if regrid
 
     %gridding parameters
     opt1 = 'uway_proc'; opt2 = 'uway_av'; get_cropt
-    tavp_s = round(tavp_s); tavp = tavp_s/86400; %now days
-    tg = [ddays(1)-tavp/2:tavp:ddays(end)+1+tavp/2]';
-    opts.ignore_nan = 1;
+    %grid in seconds
+    tavp_s = round(tavp_s);
+    tg = [round(ddays(1)*86400-tavp_s/2):round(tavp_s):round(ddays(end)*86400+1+tavp_s/2)]';
+    opts.ignore_nan = 1; 
     opts.grid_ends = [1 1];
-    opts.postfill = tavp_s; %***
-    opts.bin_partial = 0;
+    opts.postfill = tavp_s; %after gridding, interpolate over gaps up to one step
+    opts.bin_partial = 1; %only relevant for bathy 
     if strcmp(gmethod,'meannum')
         opts.num = tavp_s;
     end
@@ -108,38 +105,33 @@ if regrid
             end
         end
         [d, h] = mload(infile,'/');
-
-        %prepare
-        timvar = munderway_varname('timvar',h.fldnam,1,'s');
-        d.dday = m_commontime(d, timvar, h, timestring);
-        if ~sum(strcmp('dday',h.fldnam))
-            h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt timestring];
-        end
-        [h.fldnam,ii] = setdiff(h.fldnam,timvar,'stable'); h.fldunt = h.fldunt(ii);
-        d = rmfield(d,timvar);
-        [d, h, gvars, ngvars] = mday_02_calculations(d, h, 'pre', ...
-            datatype, gvars, ngvars, source{fno}, gmethod, ddays);
-
-        %grid
-        tic; dg = grid_profile(d, 'dday', tg, gmethod, opts); toc
-        if ~sum(strcmp(gmethod,'meannum'))
-            dg.dday = (tg(1:end-1)+tg(2:end))/2;
-        end
-        %keep these for merging
-        dg.times = round(dg.dday*86400);
-        h.fldnam = [h.fldnam 'times'];
-        h.fldunt = [h.fldunt replace(timestring,'days','seconds')];
-        if isfield(h,'fldserial')
-            h.fldserial = [h.fldserial ' '];
-        else
+        if ~isfield(h,'fldserial')
             h.fldserial = repmat({' '},size(h.fldnam));
         end
-        if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
 
+        %prepare
+        [d, h] = mday_02_calculations(d, h, 'pre', datatype, gvars, ngvars, source{fno}, gmethod, ddays);
+
+        %grid
+        tgvar = sprintf('time_s_%d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1));
+        tic; dg = grid_profile(d, tgvar, tg, gmethod, opts); toc
+        dg = table2struct(dg,'ToScalar',true);
+        if ~sum(strcmp(gmethod,'meannum'))
+            dg.(tgvar) = (tg(1:end-1)+tg(2:end))/2;
+        end
+        %now add dday for QC plots
+        dg.dday = dg.(tgvar)/86400;
+        if ~sum(strcmp('dday',h.fldnam))
+            h.fldnam = [h.fldnam 'dday'];
+            h.fldunt = [h.fldunt replace(h.fldunt{strcmp(tgvar,h.fldnam)},'seconds','days')];
+            h.fldserial = [h.fldserial ' '];
+        else
+            dg = orderfields(dg,h.fldnam);
+        end
         %save
         h.dataname = [datatype '_' mcruise '_combined_av'];
-        h.comment = sprintf('\n %s from %s, % over bins of width %s s',source{fno},infile,gmethod(1:end-2),num2str(tavp_s));
-        mfsave(otfile, dg, h, '-merge', 'times')
+        h.comment = sprintf('%s \n%s from %s, % over bins of width %s s',h.comment,source{fno},infile,gmethod(1:end-2),num2str(tavp_s));
+        mfsave(otfile, dg, h, '-merge', tgvar) %***what if there were NaNs that can now be filled?
 
     end
     if ~sum(found)
@@ -155,13 +147,6 @@ end
 
 %edit
 opt1 = 'uway_proc'; opt2 = 'avedit'; get_cropt
-%deal with a common edit
-if exist('flowlims','var') && exist('tsgpumpvars','var') && ~isempty(flowlims) && ~isempty(tsgpumpvars)
-    uopts.rangelim.flow = flowlims;
-    for vno = 1:length(tsgpumpvars)
-        uopts.badflow.(tsgpumpvars{vno}) = [NaN NaN];
-    end
-end
 %apply previous manually selected edits
 btol = (tavp_s/2)/86400;
 edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
@@ -179,6 +164,14 @@ if handedit
         [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed, vars_offset_scale);
     else
         [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
+    end
+end
+if ~isempty(uopts)
+    % autoedits (e.g. if A depends on B, remove A when B is bad) again to
+    % apply hand-selected NaNs to related variables
+    [dg, comment] = apply_autoedits(dg, uopts);
+    if ~isempty(comment)
+        hg.comment = [hg.comment comment];
     end
 end
 if isfield(hg,'fldserial') && length(hg.fldserial)<length(hg.fldnam); keyboard; end

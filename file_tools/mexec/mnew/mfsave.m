@@ -252,9 +252,12 @@ else %overwrite (some) existing variables, store list of rest
             m_uprlwr(ncfile, h.fldnam{vno});
             
         else %new variable, write below
-            isnew = [isnew vno];     
-            h0.fldnam = [h0.fldnam h.fldnam{vno}];
-            h0.fldunt = [h0.fldunt h.fldunt{vno}];
+            isnew = [isnew vno];
+            h0.fldnam = [h0.fldnam h.fldnam(vno)];
+            h0.fldunt = [h0.fldunt h.fldunt(vno)];
+            if isfield(h,'fldserial') && isfield(h0,'fldserial')
+                h0.fldserial = [h0.fldserial h.fldserial(vno)];
+            end
 
         end
         

@@ -8,6 +8,7 @@ function [d, h, varargout] = mday_02_calculations(d, h, stage, datatype, varargi
 %     for bathymetry, append source to water depth variable names (same names
 %       used by different instruments)
 %     for all, remove from d and h any variables not to be gridded
+%     input d is a structure but output d is a table
 %
 % [dg, h, comment] = mday_02_calculations(dg, h, 'post', datatype);
 %   working on edited (cleaned), gridded (time-averaged) d:
@@ -20,39 +21,64 @@ function [d, h, varargout] = mday_02_calculations(d, h, stage, datatype, varargi
 m_common
 
 if strcmp(stage,'pre')
-    gvars = varargin{1}; ngvars = varargin{2}; 
+    gvars = varargin{1}; ngvars = varargin{2};
     source = varargin{3};
     gmethod = varargin{4};
     ddays = varargin{5};
 end
 
+tgvar = sprintf('time_s_%d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1));
+timestring = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% pre %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmp(stage,'pre')
 
+    d = struct2table(d);
+    d.Properties.VariableUnits = h.fldunt;
+    d = addprop(d,{'VariableSerials'},{'variable'});
+    d.Properties.CustomProperties.VariableSerials = h.fldserial;
+
+    %regularise time units
+    timvar0 = munderway_varname('timvar',d.Properties.VariableNames,1,'s');
+    m = strcmp(timvar0,d.Properties.VariableNames);
+    timunt0 = d.Properties.VariableUnits{m};
+    if ~strcmp(timunt0, timestring)
+        d(:,m) = m_commontime(d(:,m), timunt0, timestring);
+    end
+    d.Properties.VariableNames{m} = tgvar;
     if strcmp(gmethod,'meannum')
-        %fill in the (few, hopefully) missing points first
-        d.dday = round(d.dday*86400)/86400;
-        if abs(mode(diff(d.dday*86400))-1)<1e-3 && (d.dday(end)-d.dday(1))*86400>length(d.dday)
-            t0 = setdiff([ddays(1)*86400:(ddays(end)+1)*86400-1]',round(d.dday*86400));
-            d.dday = [d.dday; t0/86400];
-            [d.dday,ii] = sort(d.dday);
-            for no = 1:length(h.fldnam)
-                if ~strcmp(h.fldnam{no},'dday')
-                    d.(h.fldnam{no}) = [d.(h.fldnam{no}); nan(length(t0),1)];
-                    d.(h.fldnam{no}) = d.(h.fldnam{no})(ii);
-                end
-            end
+        %convert to regular 1-Hz grid, subsampling (in case initial processing
+        %did not) and/or filling in missing points as necessary
+        %discard extra (same to the nearest second) samples
+        [timesec,ii] = unique(round(d.(tgvar)));
+        d = d(ii,:);
+        %fill in missing points with nans
+        t0 = [floor(ddays(1))*86400:ceil(ddays(end))*86400-1]';
+        if length(t0)>length(timesec)
+            dat = d{:,:};
+            [~,ia,ib] = intersect(t0,timesec);
+            datr = nan(length(t0),size(dat,2));
+            datr(ia,:) = dat(ib,:);
+            d = paddata(d, length(t0));
+            d{:,:} = datr;
+            d.(tgvar) = t0;
+        else
+            d.(tgvar) = timesec;
         end
     end
 
     %this needs to be done for nav or wind
-    headvar = munderway_varname('headvar',h.fldnam,1,'s');
+    headvar = munderway_varname('headvar',d.Properties.VariableNames,1,'s');
     if ~isempty(headvar)
         %calculate dummy easting and northing in order to vector average
         [d.dum_e, d.dum_n] = uvsd(ones(size(d.(headvar))), d.(headvar), 'sduv');
-        if ~sum(strcmp('dum_e',h.fldnam))
-            h = m_append_header_fld(h, {'dum_e' 'dum_n'}, {'dummy easting' 'dummy northing'}, headvar);
-            h.comment = [h.comment '\n easting and northing calculated from heading at 1 hz'];
+        if ~sum(strcmp('dum_e',d.Properties.VariableNames))
+            d.Properties.VariableUnits(end-1:end) = {'easting', 'northing'};
+            d.Properties.CustomProperties.VariableSerials(end-1:end) = d.Properties.CustomProperties.VariableSerials(strcmp(headvar,d.Properties.VariableNames));
+        end
+        comment = 'easting and northing calculated from heading at 1 hz';
+        if ~contains(h.comment, comment)
+            h.comment = [h.comment '\n ' comment];
         end
         ngvars = [ngvars headvar];
     end
@@ -60,16 +86,17 @@ if strcmp(stage,'pre')
     switch datatype
 
         case 'bathy'
-            depvar = munderway_varname('depvar',h.fldnam,1,'s');
-            depsvar = munderway_varname('depsrefvar',h.fldnam,1,'s');
-            deptvar = munderway_varname('deptrefvar',h.fldnam,1,'s');
+            depvar = munderway_varname('depvar',d.Properties.VariableNames,1,'s');
+            depsvar = munderway_varname('depsrefvar',d.Properties.VariableNames,1,'s');
+            deptvar = munderway_varname('deptrefvar',d.Properties.VariableNames,1,'s');
             if isempty(depvar) && ~isempty(deptvar)
-                if ~sum(strcmp('waterdepth',h.fldnam))
+                if ~sum(strcmp('waterdepth',d.Properties.VariableNames))
                     d.waterdepth = d.(deptvar) + d.transduceroffset; %***
-                    h = m_append_header_fld(h, {'waterdepth'}, {'m'}, depvar);
-                    depvar = munderway_varname('depvar',h.fldnam,1,'s');
-                    depsvar = munderway_varname('depsrefvar',h.fldnam,1,'s');
-                    deptvar = munderway_varname('deptrefvar',h.fldnam,1,'s');
+                    d.Properties.VariableUnits(end) = {'m'};
+                    d.Properties.CustomProperties.VariableSerials(end) = d.Properties.CustomProperties.VariableSerials(strcmp(deptvar,d.Properties.VariableNames));
+                    depvar = munderway_varname('depvar',d.Properties.VariableNames,1,'s');
+                    depsvar = munderway_varname('depsrefvar',d.Properties.VariableNames,1,'s');
+                    deptvar = munderway_varname('deptrefvar',d.Properties.VariableNames,1,'s');
                 end
             end
             if ~iscell(depvar); depvar = {depvar}; end
@@ -79,88 +106,81 @@ if strcmp(stage,'pre')
             if ~isempty(depvar)
                 %append source, because singlebeam and multibeam may have the same
                 %variable names
-                for no = 1:length(depvar)
-                    on = depvar{no}; nn = [on '_' source];
-                    d.(nn) = d.(on);
-                    h.fldnam(strcmp(on,h.fldnam)) = {nn};
-                end
-                d = rmfield(d,depvar);
-                d = orderfields(d,h.fldnam);
+                m = ismember(d.Properties.VariableNames,depvar);
+                d.Properties.VariableNames(m) = cellfun(@(x) [x '_' source],d.Properties.VariableNames(m),'UniformOutput',false);
+                d(:,strcmp(depvar,d.Properties.VariableNames)) = [];
                 %ngvars = [ngvars xducerdepvar]; %***combine before this to avoid
                 %gridding this too?
             end
 
         case 'ocean'
             %put the surfmet radiation variables in atmos instead
-            exc = {'parport' 'parstarboard' 'tirport' 'tirstarboard' 'humidity' 'airpressure' 'airtemperature'}; %***munderway_vars
-            exc(~ismember(exc,h.fldnam)) = [];
-            ngvars = [ngvars exc];
+            ngvars = [ngvars,intersect(d.Properties.VariableNames,{'parport' 'parstarboard' 'tirport' 'tirstarboard' 'humidity' 'airpressure' 'airtemperature'})];
             %rename _raw variables***in later cruises this is not
             %necessary/done earlier?
-            ds = struct2table(d);
-            ds.Properties.VariableNames = cellfun(@(x) replace(x,'_raw',''),ds.Properties.VariableNames,'UniformOutput',false);
-            d = table2struct(ds,'ToScalar',true);
-            h.fldnam = ds.Properties.VariableNames;
+            d.Properties.VariableNames = cellfun(@(x) replace(x,'_raw',''),d.Properties.VariableNames,'UniformOutput',false);
 
         case 'atmos'
 
-            ws = munderway_varname('rwindsvar',h.fldnam,1,'s');
-            wd = munderway_varname('rwinddvar',h.fldnam,1,'s');
+            ws = munderway_varname('rwindsvar',d.Properties.VariableNames,1,'s');
+            wd = munderway_varname('rwinddvar',d.Properties.VariableNames,1,'s');
             if ~isempty(ws)
-                if ~sum(strcmp('xcomponent',h.fldnam)) %***
+                if ~sum(strcmp('xcomponent',d.Properties.VariableNames)) %***
                     %compute x and y component (platform-relative) from speed
                     %and (compass) direction
                     [d.xcomponent, d.ycomponent] = uvsd(d.(ws), d.(wd), 'sduv');
-                    h = m_append_header_fld(h, {'xcomponent' 'ycomponent'}, {'m/s' 'm/s'}, ws);
+                    d.Properties.VariableUnits(end-1:end) = {'m/s'};
+                    d.Properties.CustomProperties.VariableSerials(end-1:end) = d.Properties.CustomProperties.VariableSerials(strcmp(ws,d.Properties.VariableNames));
                 end
                 %load smoothed bestnav, compute ship heading as a vector
-                [dn, hn] = mload(fullfile(MEXEC_G.mexec_data_root, 'nav', ['bestnav_' MEXEC_G.MSCRIPT_CRUISE_STRING]),'/');
+                [dn, hn] = mload(fullfile(mgetdir('sum'),['bestnav_' MEXEC_G.MSCRIPT_CRUISE_STRING]), '/');
                 headvar = munderway_varname('headvar', hn.fldnam, 1, 's');
                 [headav_e, headav_n] = uvsd(ones(size(dn.(headvar))), dn.(headvar), 'sduv');
                 %interpolate to wind file times
-                dn.dday = m_commontime(dn,'time',hn,sprintf('days since %d-01-01 00:00:00',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)));
-                headav = interp1(dn.dday, complex(headav_e, headav_n), d.dday);
+                headav = interp1(dn.(tgvar), complex(headav_e, headav_n), d.(tgvar));
                 %back to ship heading
                 [~, merged_heading] = uvsd(real(headav), imag(headav), 'uvsd');
                 relwind_direarth = mcrange(180+d.(wd)+merged_heading, 0, 360);
                 [relwind_e, relwind_n] = uvsd(d.(ws), relwind_direarth, 'sduv');
                 %ship velocity
                 [shipv_e, shipv_n] = uvsd(dn.smg, dn.cmg, 'sduv');
-                shipv = interp1(dn.dday, complex(shipv_e,shipv_n), d.dday);
+                shipv = interp1(dn.(tgvar), complex(shipv_e,shipv_n), d.(tgvar));
                 %vector wind over earth
                 d.truwind_e = relwind_e + real(shipv);
                 d.truwind_n = relwind_n + imag(shipv);
                 if ~sum(strcmp('truwind_e',h.fldnam))
-                    h = m_append_header_fld(h, {'truwind_e' 'truwind_n'}, {'m/s eastward' 'm/s northward'}, ws);
-                    h.comment = [h.comment '\n truwind calculated using average nav and heading data interpolated and added to 1Hz wind data'];
+                    d.Properties.VariableUnits(end-1:end) = {'m/s eastward' 'm/s northward'};
+                    d.Properties.CustomProperties.VariableSerials(end-1:end) = d.Properties.CustomProperties.VariableSerials(strcmp(ws,d.Properties.VariableNames));
+                    comment = 'truwind calculated using average nav and heading data interpolated and added to 1Hz wind data';
+                    if ~contains(h.comment, comment); h.comment = [h.comment '\n ' comment]; end
                 end
                 ngvars = [ngvars ws wd 'xcomponent' 'ycomponent'];
             else
-                exc = {'fluo' 'trans' 'flow' 'tempr' 'temph' 'conductivity' 'salinity'}; %***munderway_varname
-                exc(~ismember(exc,h.fldnam)) = [];
-                ngvars = [ngvars exc];
+                %handle the surface ocean variables in ocean instead
+                ngvars = [ngvars intersect(d.Properties.VariableNames, {'fluo' 'trans' 'flow' 'tempr' 'temph' 'conductivity' 'salinity'})]; %***munderway_varname
             end
 
 
     end
 
-    [excv,iie] = intersect(h.fldnam, ngvars);
+    %exclude variables in ngvars
+    [excv,~] = intersect(d.Properties.VariableNames, ngvars);
+    %and those not in gvars
     if exist('gvars','var') && ~isempty(gvars)
-        [ev,ii] = setdiff(h.fldnam, gvars);
-        excv = [excv ev]; iie = [iie(:)' ii(:)'];
+        [ev,~] = setdiff(d.Properties.VariableNames, gvars);
+        excv = unique([excv ev]); 
     end
     if ~isempty(excv)
-        d = rmfield(d,excv);
-        h.fldunt(iie) = []; h.fldnam(iie) = []; 
-        if isfield(h, 'fldserial')
-            h.fldserial(iie) = [];
-        end
+        d(:,ismember(d.Properties.VariableNames,excv)) = [];
     end
 
-    varargout{1} = gvars; varargout{2} = ngvars;
+    %match h back to d.Properties
+    h.fldnam = d.Properties.VariableNames;
+    h.fldunt = d.Properties.VariableUnits;
+    h.fldserial = d.Properties.CustomProperties.VariableSerials;
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%% post %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%% post %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(stage, 'post')
 
     comment = [];
@@ -176,7 +196,7 @@ elseif strcmp(stage, 'post')
             dist = zeros(size(d.(latvar))); delt = dist; ang = nan+dist;
             ii = find(~isnan(d.(latvar)));
             [dist(ii(2:end)), ang(ii(2:end))] = sw_dist(d.(latvar)(ii), d.(lonvar)(ii), 'km');
-            delt(ii(2:end)) = diff(d.dday(ii)*86400);
+            delt(ii(2:end)) = diff(d.(tgvar)(ii)*86400);
             speed = 1000*dist./delt; %m/s
             ve = speed.*cos(ang*pi/180);
             vn = speed.*sin(ang*pi/180);
@@ -223,7 +243,7 @@ elseif strcmp(stage, 'post')
                 if ~ismember(h.fldnam,newdep)
                     h = m_append_header_fld(h, {newdep}, {'m'}, depbtvar);
                 end
-                d = rmfield(d,depbtvar); 
+                d = rmfield(d,depbtvar);
                 m = strcmp(depbtvar,h.fldnam);
                 h.fldunt(m) = []; h.fldnam(m) = [];
                 if isfield(h, 'fldserial'); h.fldserial(m) = []; end
@@ -294,11 +314,13 @@ elseif strcmp(stage, 'post')
 
         case 'atmos'
             %recalculate wind speed and direction from averaged vectors
-            [d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
-            if ~ismember(h.fldnam,'truwind_spd')
-                h = m_append_header_fld(h, {'truwind_spd' 'truwind_dir'}, {'m_per_s' 'degrees counterclockwise of eastward'}, 'truwind_e');
+            if isfield(d,'truwind_e')
+                [d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
+                if ~ismember(h.fldnam,'truwind_spd')
+                    h = m_append_header_fld(h, {'truwind_spd' 'truwind_dir'}, {'m_per_s' 'degrees counterclockwise of eastward'}, 'truwind_e');
+                end
+                comment = '\ntruwind calculated from vector-averaged components';
             end
-            comment = '\ntruwind calculated from vector-averaged components';
 
     end
 

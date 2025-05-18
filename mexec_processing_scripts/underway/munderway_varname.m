@@ -82,7 +82,7 @@ function output = munderway_varname(varargin)
 %add new names, or lists of names, as necessary. includes misspellings
 %encountered in databases. 
 
-varnames.timvar = {'time' 'measureTS' 'utctime' 'dnum'};
+varnames.timvar = {'time' 'measureTS' 'dnum', 'utctime'};
 
 varnames.salvar = {'sal_cal' 'salinity_calibrated' 'salinity_cal' 'salinity' 'psal' 'salinity_raw'};
 varnames.tempvar = {'housingtemp' 'temp_h' 'tstemp' 'temp_raw' 'temph_raw' 'temp_m' 'temp_housing_cal' 'temp_housing' 'temp_housing_raw' 'temperature' 'temp' 'temph'};
