@@ -22,7 +22,7 @@ dolast = 0;
 x = [1:s(1)]';
 for no = 1:length(varargin)
     if isnumeric(varargin{no})
-        if length(varargin{no})==1
+        if isscalar(varargin{no})
             maxgap = varargin{no};
         else
             x = varargin{no};

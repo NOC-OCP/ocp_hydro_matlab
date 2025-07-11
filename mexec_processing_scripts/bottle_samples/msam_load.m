@@ -16,72 +16,78 @@ if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle/calibration %s from file(s) spec
 root_in = mgetdir(['bot_' samtyp]);
 npat = ''; files = {};
 clear sopts
-switch samtyp
-    case 'chl'
-        sopts.hcpat = {'Site'};
-    case 'oxy'
-        files = dir(fullfile(root_oxy,['oxy_' mcruise '_*.csv']));
-        sopts.hcpat = {'Niskin' 'Bottle' 'Number'};
-        sopts.icolhead = 1:2; sopts.icolunits = 3;
-        sopts.sheets = 1:99;
-    case 'nut'
-        %find files and load
-        npat = ['*.xlsx']; files = [];
-        sopts.hcpat = {'Nitrate+Nit'};
-        sopts.icolhead = 1; sopts.icolunits = 1; sopts.sheets = 1;
-        opt1 = 'samp_proc'; opt2 = 'files'; get_cropt
-    case 'sal'
-    case 'sbe35'
-end
 opt1 = 'samp_proc'; opt2 = 'files'; get_cropt
-files = sam_files(root_in, npat, files);
 if isempty(files)
-    if ~isempty(npat)
-        warning('no %s files matching %s found in %s', samtyp, npat, root_in)
-    else
-        warning('no %s files found in %s', samtyp, root_in)
-    end
+    warning('no %s files found in %s; check opt_%s', samtyp, root_in, mcruise)
+    return
+end
+if length(sopts)>1 && length(sopts)~=length(files)
+    warning('sopts must be a scalar or must have the same length as files')
     return
 end
 [ds, shead] = load_samdata(files, sopts); %shead may be used by opt_cruise to parse info from header?
+%remove columns with no non-nan values
+ds = rmmissing(ds,2,'MinNumMissing',size(ds,1)); 
 
-%parse what was in files (split strings and datetimes, rename variables to standardised names, set units***)
+%parse what was in files (split strings and datetimes, rename variables to
+%standardised names, add units)
 opt1 = 'samp_proc'; opt2 = 'parse'; get_cropt
-if ~ismember(ds.Properties.VariableNames,'flag')
-    ds.flag = 2+zeros(size(ds,1),1);
-end
 if exist('varmap','var')
     ds = var_renamer(ds, varmap, 'keep_othervars', keepothervars);
 end
-ds = rmmissing(ds,2,'MinNumMissing',size(ds,1)); %remove columns with no non-nan values
-%calculate sampnum from station and niskin position
-if allctd && sum(isnan(ds.statnum))
-    %fill missing station numbers if necessary
-    ds = fill_samdata_statnum(ds, 'statnum');
-    %remove rows where statnum is the only good value
-    names0 = ds.Properties.VariableNames;
-    m1 = ismember(names0,{'statnum'});
-    ds = rmmissing(ds,'DataVariables',names0(~m1),'MinNumMissing',sum(~m1));
-end
-%calculate sampnum and remove statnum and position for now
-ds.sampnum = 100*ds.statnum + ds.position;
-ds.Properties.VariableUnits(strcmp('sampnum',ds.Properties.VariableNames)) = {'number'};
-ds.statnum = []; ds.position = [];
 %where _per_l is in name, move into units
 m = cellfun(@(x) contains(x,'_per_l'), ds.Properties.VariableNames);
 ds.Properties.VariableUnits(m) = {'umol_per_l'}; %***what if not umol?
 ds.Properties.VariableNames(m) = cellfun(@(x) replace(x,'_per_l',''), ds.Properties.VariableNames(m), 'UniformOutput', false);
+
+% either start with sampnum filled in, or indicate which samples are ctd
+% and which are uway in order to calculate it? or, calculate it in parse?
+% if necessary, calculate independent variable sampnum: 
+% sampnum=100*statnum+position for CTD samples
+% sampnum=yyyymmddHHMM for underway samples
+if ~sum(strcmp('sampnum',ds.Properties.VariableNames))
+    ds.sampnum = nan(size(ds,1),1);
+end
+ds.Properties.VariableUnits(strcmp('sampnum',ds.Properties.VariableNames)) = {'number'};
+if sum(isnan(ds.sampnum)) && cu(1)
+    if sum(isnan(ds.statnum))
+        %can we fill missing station numbers?
+        if sum(strcmp('isctd',ds.Properties.VariableNames))
+            mc = ds.isctd;
+        elseif ~cu(2)
+            mc = ones(size(ds,1),1);
+        else
+            mc = 0;
+        end
+        if sum(mc)
+            ds(mc,:) = fill_samdata_statnum(ds(mc,:), 'statnum');
+            %now remove rows where statnum is the only good value
+            names0 = ds.Properties.VariableNames;
+            m1 = ismember(names0,{'statnum'});
+            ds = rmmissing(ds,'DataVariables',names0(~m1),'MinNumMissing',sum(~m1));
+        end
+    end
+    m = ~isnan(ds.statnum);
+    ds.sampnum(m) = ds.statnum(m)*100+ds.position(m);
+    ds.statnum = []; ds.position = [];
+end
+%calculate dday
+if ~allctd
+   %*** 
+end
 
 %calculate new variables in standardised ways, handle replicates and flags
 switch samtyp
     case 'oxy'
         ds = oxy_calc(ds); %***output is per_l or per_kg? 
     case 'sal'
-        ds = sal_calc(ds);
+        ds = sal_calc(ds); %***
 end
-
 [dnew, hnew] = msam_replicates(ds, samtyp); %dnew is a structure***
 hnew.comment = sprintf('variables loaded from files %s in %s%s',npat,root_in,addcomment);
+if ~ismember(ds.Properties.VariableNames,'flag')
+    ds.flag = 2+zeros(size(ds,1),1); %***flags before replicates or after or both?***
+end
 opt1 = 'samp_proc'; opt2 = 'flag'; get_cropt %apply flags if specified in opt_cruise
 
 %check data (usually replicates against each other)***right now this only
@@ -101,10 +107,9 @@ root_out = mgetdir(['bot_' samtyp]);
 otfile = fullfile(root_out, [hnew.dataname '.nc']);
 mfsave(otfile, dnew, hnew);
 
-%add CTD Niskin data to sam_cruise_all.nc file
+%add CTD Niskin data to sam_cruise_all.nc file, and underway data to
+%uwaysam_cruise_all.nc file***
 msam_add_to_samfile(samtyp)
-
-%save underway***
 switch samtyp
     case 'chl'
         outu = fullfile(root_in,['ucswchl_' mcruise '_all.nc']);
@@ -119,14 +124,3 @@ switch samtyp
         mfsave(outu,du,hu)
 end
 
-
-function files = sam_files(root_in, npat, files)
-if isempty(files) && ~isempty(npat)
-    files = dir(fullfile(root_in,npat));
-    files = struct2cell(files); files = files(1,:)';
-    for flno = 1:length(files)
-        files{flno} = fullfile(root_in,files{flno});
-    end
-elseif isstruct(files)
-    files = fullfile({files.folder}',{files.name}');
-end

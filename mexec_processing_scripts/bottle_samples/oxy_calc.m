@@ -47,7 +47,7 @@ opt1 = 'samp_proc'; opt2 = 'oxy_calc'; get_cropt
 %compute bottle volumes at fixing temperature if not present
 if sum(strcmp('bot_vol_tfix',ds_oxy_fn))==0 && sum(strcmp('bot_vol',ds_oxy_fn))
     if sum(strcmp('bot_cal_temp',ds_oxy_fn))==0
-        ds_oxy.bot_cal_temp = labT+zeros(size(ds_oxy.sampnum));
+        ds_oxy.bot_cal_temp = labT+zeros(size(ds_oxy,1));
     end
     ds_oxy.bot_vol_tfix = ds_oxy.bot_vol.*(1+9.75e-5*(ds_oxy.fix_temp-ds_oxy.bot_cal_temp));
 end

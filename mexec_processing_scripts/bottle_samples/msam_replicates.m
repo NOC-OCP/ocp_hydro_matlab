@@ -74,10 +74,8 @@ gs.GroupCount = [];
 gs.statnum = floor(gs.sampnum/100);
 gs.position = gs.sampnum-gs.statnum*100;
 gs.Properties.VariableUnits(end-1:end) = {'number','on.rosette'};
-%overwrite ds
-ds = gs;
 
 %for output
 hnew.fldnam = ds.Properties.VariableNames;
 hnew.fldunt = ds.Properties.VariableUnits;
-dnew = table2struct(ds,'ToScalar',true);
+dnew = table2struct(gs,'ToScalar',true);

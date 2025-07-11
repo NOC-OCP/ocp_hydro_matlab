@@ -24,7 +24,7 @@ end
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %set defaults
-set_mexec_defaults
+mexec_defaults_all
 
 %continue to set cruise-specific options
 cfile = sprintf('opt_%s',mcruise);

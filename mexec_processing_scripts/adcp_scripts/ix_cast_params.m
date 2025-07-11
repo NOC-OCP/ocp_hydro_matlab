@@ -77,7 +77,7 @@ if isdo
    n = 1;
    while ~isempty(d)
       if d(1).bytes>1024
-          f.ladcpdo{n} = fullfile(cfg.rawdir, d(1).name);
+          f.ladcpdo{n} = fullfile(d(1).folder, d(1).name);
           n = n+1;
       end
       d(1) = [];
@@ -88,7 +88,7 @@ if isup
    n = 1;
    while ~isempty(d)
       if d(1).bytes>1024
-          f.ladcpup{n} = fullfile(cfg.rawdir, d(1).name);
+          f.ladcpup{n} = fullfile(d(1).folder, d(1).name);
           n = n+1;
       end
       d(1) = [];

@@ -1,23 +1,27 @@
 function opts = spv_argparse(defs, inputs)
-% opts = spv_argparse(defs, input_struct)
-% opts = spv_argparse(defs, input_parameter_value_array)
+% opts = spv_argparse(defs, inputs)
 %
-% (optionally, first) assign parameter-value pair input arguments to a
-% structure (then)
-% fill in any unset defaults in inputs using defaults contained in
-% structure defs
+% produce option structure opts, starting with defaults structure defs and
+%   overwriting its fields (or adding new fields) from cell array inputs
+% going in order through the elements of inputs: 
+%   if element n is a structure, copy its fields to opts
+%   if element n is a string, treat it and the following element as a
+%     parameter-value pair, assigning opts.(inputs{n}) = inputs{n+1}; 
+%
+% all structures are scalar
 
-if ~isstruct(inputs)
-    if ~iseven(length(inputs))
-        error('inputs must be structure or cell array of parameter-value pairs')
-    end
-    inputs = cell2struct(inputs(2:2:end),inputs(1:2:end),2);
-end
-
-opts = inputs;
-fn = fieldnames(defs);
-for fno = 1:length(fn)
-    if ~isfield(opts, fn{fno})
-        opts.(fn{fno}) = defs.(fn{fno});
+opts = defs;
+n = 1;
+while n<=length(inputs)
+    if isstruct(inputs{n})
+        fn = fieldnames(inputs{n});
+        for fno = 1:length(fn)
+            opts.(fn{fno}) = inputs{n}.(fn{fno});
+        end
+        n = n+1;
+    elseif ischar(inputs{n})
+        opts.(inputs{n}) = inputs{n+1};
+    else
+        error('inputs can only contain structures or parameter-value pairs')
     end
 end

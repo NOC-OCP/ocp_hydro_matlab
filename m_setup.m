@@ -59,7 +59,7 @@ MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 MEXEC_G.raw_underway = 2; %if 0, skip the rvdas setup
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
-force_vers = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
+force_swvers = []; %or this can be a structure e.g. force_swvers.gamma_n = 'eos80_legacy_gamma_n'; force_swvers.LDEO_IX = 'LDEO_IX_13';
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
@@ -120,7 +120,12 @@ opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt
 % find and add (append) paths to other useful libraries
 [~, dat] = version(); MEXEC_G.MMatlab_version_date = datenum(dat);
 if ~isempty(MEXEC_G.other_programs_root)
-    MEXEC_G.exsw_paths = sw_addpath(MEXEC_G.other_programs_root,'force_vers',force_vers,'addladcp',MEXEC_G.ix_ladcp);
+    esw = sw_addpath(MEXEC_G.other_programs_root,force_swvers, MEXEC_G.ix_ladcp);
+    if isfield(MEXEC_G,'exsw_paths') && ~isempty(MEXEC_G.exsw_paths)
+        MEXEC_G.exsw_paths = union(MEXEC_G.exsw_paths, esw);
+    else
+        MEXEC_G.exsw_paths = esw;
+    end
 end
 
 % location processing and writing mexec files

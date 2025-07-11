@@ -1,3 +1,5 @@
+mexec_defaults_noc %first get NOC MPOC/OBG defaults
+
 switch opt1
 
     case 'setup'
@@ -220,41 +222,47 @@ switch opt1
             case 'files'
                 switch samtyp
                     case 'chl'
-                        files = {fullfile(root_in,'DY180_Chlorophyll a data_master.xlsx')};
-                        sopts.DateLocale = "en_GB";
+                        clear files sopts 
+                        %uway data: 2nd sheet, units on 1st line, variable
+                        %names on 2nd line, want to parse datetimes
+                        n = 1; 
+                        files{n} = fullfile(root_in,'Copy of UW_log_Master.xlsx');
+                        sopts{n} = cell2struct({2; 1; 2; "en_GB"},...
+                            {'sheets','icolunits','icolhead','DateLocale'});
+                        %CTD data: variable names on 1st line
+                        n = n+1; 
+                        files{n} = fullfile(root_in,'DY180_Chlorophyll a data_master.xlsx');
+                        sopts{n}.icolhead = 1;
                     case 'oxy'
                         files = dir(fullfile(root_in,'DY180_oxy_CTD*.xls'));
+                        sopts.hcpat = {'Niskin' 'Bottle' 'Number'};
+                        sopts.icolhead = 1:2; sopts.icolunits = 3;
+                        sopts.sheets = 1:99;
                     case 'sal'
                         salfiles = dir(fullfile(root_sal,'DY180*.csv'));
                 end
             case 'parse'
                 switch samtyp
                     case 'chl'
-                        %create cast from cast_number
-                        ds.cast = nan(size(ds.cast_number));
+                        %create sampnum from cast_number and niskin_bottle
+                        ds.sampnum = nan(size(ds.cast_number));
                         mc = strncmp('CTD',ds.cast_number,3);
-                        ds.cast(mc) = cellfun(@(x) str2double(extract(x,digitsPattern(1,3))), ds.cast_number(mc));
-                        %times*** need to be added, only dates!
-                        ddlim = datenum([2024 5 21; 2024 6 27])-datenum(2024,1,1);
-                        ds.dday = datenum(ds.date_day_month_year)-datenum(2024,1,1);
-                        ds = ds(ds.dday>=ddlim(1) & ds.dday<=ddlim(2),:);
-                        %and temporarily (?) use dday to fill cast as in
-                        %msal_01
-                        ds.cast(isnan(ds.cast)) = -ds.dday(isnan(ds.cast))*1e2; %so sampnum will be ddd0000
+                        ds.sampnum(mc) = cellfun(@(x) str2double(extract(x,digitsPattern(1,3))), ds.cast_number(mc));
+                        ds.sampnum = ds.sampnum*100+ds.niskin_bottle;
+                        %create sampnum from times
+                        mu = isnan(ds.sampnum) & ~isnat(ds.date_time_gmt); %***
+                        ds.sampnum(mu) = datestr(ds.date_time_gmt(mu),'yyyymmddHHMM');
                         %add flags based on notes
                         ds.flag = 2+zeros(size(ds,1),1);
-                        ds.flag(cellfun(@(x) contains(x,["broken","assume","Wrong","Check"]),ds.notes)) = 3; %questionable
+                        ds.flag(cellfun(@(x) contains(x,["broken","assume","Wrong","Check","Suspect?"]),ds.notes)) = 3; %questionable
                         ds.flag(ds.chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl==0) = 5; %not reported
                         ds.flag(~isfinite(ds.chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl)) = 5; %not reported
                         %variables to rename (or to keep and write to file without renaming)
-                        varmap.dday = {'dday'};
-                        varmap.statnum = {'cast'};
-                        varmap.position = {'niskin_bottle'};
                         varmap.chl = {'chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl'};
                         varmap.chl_flag = {'flag'};
                         varmap.chl_inst = {'fluorometer_id_816_or_black_1'};
-                        keepothervars = 0;
-                        addcomment = '\nchlorophyll units assumed';
+                        keepothervars = 0; %***where are units set?
+                        addcomment = '\nCTD chlorophyll units not given';
                     case 'sal'
                         cellT = 21;
                         ssw_k15 = 0.99993;
