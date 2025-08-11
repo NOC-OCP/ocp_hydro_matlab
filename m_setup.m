@@ -124,6 +124,12 @@ end
 if ~isempty(MEXEC_G.other_programs_root)
     MEXEC_G.exsw_paths = sw_addpath(MEXEC_G.other_programs_root,'force_vers',force_vers,'addladcp',MEXEC_G.ix_ladcp);
 end
+% weirdly, gamma_n now is not a function, have to use eos80_legacy_gamma_n
+if ~isempty(which('eos80_legacy_gamma_n'))
+	MEXEC_G.gamma_nfunc = @(s,t,z,x,y) eos80_legacy_gamma_n(s,t,z,x,y);
+elseif ~isempty(which('gamma_n'))
+	MEXEC_G.gamma_nfunc = @(s,t,z,x,y) gamma_n(s,t,z,x,y);
+end
 
 % location processing and writing mexec files
 if isempty(MEXEC_G.mexec_data_root)

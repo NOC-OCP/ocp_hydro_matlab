@@ -1,4 +1,3 @@
-
 function mfir_03_extra(stn)
 % mfir_03_extra: 
 %     merge additional information onto fir file:

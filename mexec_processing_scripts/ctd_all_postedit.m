@@ -37,7 +37,7 @@ for kloop = klistl
         continue
     end
     stn = kloop; mfir_03(stn);
-    if ~isempty(which('gamma_n'))
+    if isfield(MEXEC_G,'gamma_nfunc')
         stn = kloop; mfir_03_extra(stn);
     end
     stn = kloop; mfir_to_sam(stn);
@@ -51,7 +51,7 @@ msbe35_01(max(klistl)) %read sbe35 data, if not already done up
 get_sensor_groups(klistl)
 
 %output to csv files
-mout_cchdo_exchangeform(klistl)
+%mout_cchdo_exchangeform(klistl)
 
 %and sync
 opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt
