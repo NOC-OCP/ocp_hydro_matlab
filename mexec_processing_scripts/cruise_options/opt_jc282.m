@@ -73,4 +73,23 @@ switch opt1
 
         end
 
+	    case 'output'
+	    switch opt2
+	    case 'exch'
+	    nsta_nros = [NaN 24];
+shipcode = '740H'; %James Cook
+dates = ['20250809'; '20250831'];
+submitter = 'OCPNOCDGE'; %group institution person
+crname = 'JC282; ReBELs 2';
+reg = 'Labrador Sea; Subpolar North Atlantic';
+cs = 'F. Carvalho (NOC)';
+acknowl = 'Supported by grant from the UK Natural Environment Research Council';
+dept = {'COR'; 'water depth from CTDPRS + CTD altimeter range to bottom'}; %speed of sound corrected if relevant
+datas.CTD.who = 'D.G. Evans (NOC)';
+datas.CTD.status = 'preliminary';
+datas.Salinity.who = 'D.G. Evans (NOC)';
+data.Salinity.status = 'preliminary';
+data.Salinity.comment = '(SSW batch P???)';
+end
+
 end
