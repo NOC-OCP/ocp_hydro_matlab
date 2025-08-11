@@ -51,11 +51,11 @@ clear MEXEC_G
 global MEXEC_G
 
 %defaults: what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='jc281';
+MEXEC_G.MSCRIPT_CRUISE_STRING='jc282';
 MEXEC_G.ix_ladcp = 0; %set to 0 to not add ldeo_ix paths (for instance if processing mooring data)
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
-MEXEC_G.mexec_data_root = '/data/pstar/projects/obg/jc281/mcruise/data/'; 
+MEXEC_G.mexec_data_root = '/data/pstar/projects/obg/jc282/mcruise/data/'; 
 MEXEC_G.other_programs_root = {'/data/pstar/programs/others/matlab';'/data/pstar/repos/athurnherr'}; 
 MEXEC_G.mexec_shell_scripts = '/data/pstar/repos/NOC-OCP/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither

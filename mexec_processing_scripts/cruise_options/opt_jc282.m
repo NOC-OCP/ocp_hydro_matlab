@@ -8,30 +8,23 @@ switch opt1
         end
 
 
-    %from here: temporary for training on dy180 data!    
     case 'ctd_proc'
         switch opt2
             case 'redoctm'
                 redoctm = 1;
             case 'cnvfilename'
-                cnvfile = fullfile(cdir,sprintf('%s_CTD%03dS.cnv','DY180',stn)); %try stainless first
-                if ~exist(cnvfile,'file')
-                    cnvfile = fullfile(cdir,sprintf('%s_CTD%03dT.cnv','DY180',stn)); %try Ti
-                end
+                cnvfile = fullfile(cdir,sprintf('%s_CTD%03d.cnv',upper(mcruise),stn));
         end
 
             case 'nisk_proc'
         switch opt2
             case 'blfilename'
-                blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dS.bl', 'DY180', stn));
-                if ~exist(blinfile,'file')
-                    blinfile = fullfile(root_botraw,sprintf('%s_CTD%03dT.bl', 'DY180',stn));
-                end
+                blinfile = fullfile(root_botraw,sprintf('%s_CTD%03d.bl', upper(mcruise), stn));
         end
 
     case 'ladcp_proc'
-        cfg.uppat = sprintf('%s_LADCP_CTD%03dS*.000','DY180',stnlocal);
-        cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000','DY180',stnlocal);
+        cfg.uppat = sprintf('%s_LADCP_CTD%03dS*.000',upper(mcruise),stnlocal);
+        cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000',upper(mcruise),stnlocal);
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
 
