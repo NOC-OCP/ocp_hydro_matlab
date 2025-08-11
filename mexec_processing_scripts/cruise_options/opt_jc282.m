@@ -73,7 +73,7 @@ switch opt1
 
         end
 
-	    case 'output'
+	    case 'outputs'
 	    switch opt2
 	    case 'exch'
 	    nsta_nros = [NaN 24];
@@ -88,8 +88,14 @@ dept = {'COR'; 'water depth from CTDPRS + CTD altimeter range to bottom'}; %spee
 datas.CTD.who = 'D.G. Evans (NOC)';
 datas.CTD.status = 'preliminary';
 datas.Salinity.who = 'D.G. Evans (NOC)';
-data.Salinity.status = 'preliminary';
-data.Salinity.comment = '(SSW batch P???)';
+datas.Salinity.status = 'preliminary';
+datas.Salinity.comment = '(SSW batch P???)';
 end
+
+	case 'batchactions'
+		switch opt2
+			case 'output_for_others'
+system('rsync -au /data/pstar/cruise/data/collected_files/ /mnt/public/JC282/CTD/collected_files/')
+		end
 
 end

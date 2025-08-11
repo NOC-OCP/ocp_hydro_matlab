@@ -31,7 +31,7 @@ common_ctdstr = {sprintf('#CTD: Who - %s; Status - %s',datas.CTD.who,datas.CTD.s
 if strcmp(datas.CTD.status,'final')
   common_ctdstr = [common_ctdstr;
 		   '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.'];
-		 
+end		 
 
 %first write the sam file
 if exist(fullfile(mgetdir('sam'),sprintf('sam_%s_all.nc',mcruise)),'file')
