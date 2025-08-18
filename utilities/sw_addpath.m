@@ -1,29 +1,11 @@
-function mpath = sw_addpath(swroot, force_vers, addladcp)
+function mpath = sw_addpath(ld, force_vers)
 %
-% add some external software toolboxes used by ocp_hydro_matlab to path:
-%   seawater, Gibbs seawater, neutral density, m_map, and (optionally)
-%   LDEO_IX  
+% add external software toolboxes specified by table ld to path
 %
 % defaults to finding the highest version available in swroot,
 %   unless force_vers is a structure 
 %     (e.g. force_vers.gsw_matlab = 'gsw_matlab_v3_06_16';),
 %   in which case uses any hard-coded versions listed there
-%   only adds LDEO_IX if addladcp is 1
-
-ld = {'seawater', '', swroot;...
-    'gsw_matlab', '', swroot;...
-    'gamma_n', '', swroot;...
-    'm_map', '', swroot;...
-    'LDEO_IX', '', swroot};
-if addladcp
-    d = dir(fullfile(swroot,'LDEO_IX*'));
-    if isempty(d)
-        ld(end,3) = fullfile(swroot, 'ladcp');
-    end
-else
-    ld(end,:) = [];
-end
-ld = cell2table(ld,'VariableNames',{'lib','vers','predir'});
 
 if isstruct(force_vers)
     % replace empty vers with force_vers
@@ -44,7 +26,7 @@ mpath = cellfun(@(x,y,z) fullfile(x,[y z]),...
 isnew = ~ismember(mpath,split(path,':'));
 for lno = 1:length(mpath)
     if exist(mpath{lno},'dir')==7 %presume subdirectories will also be present     
-        if isnew
+        if isnew(lno)
             fprintf(1,'adding to path: %s\n',mpath{lno})
             addpath(genpath(mpath{lno}), '-end')
         end

@@ -6,7 +6,27 @@ function msam_load(samtyp)
 % replicates and flags, save to a concatenated sample file for this type,
 % and save data from CTD Niskins to sam_cruise_all.nc
 %
-% see samp_proc case in set_mexec_defaults.m and in opt_cruise.m 
+% after parsing, one of the columns od table ds must be sampnum: 
+% for CTD samples, 
+%   sampnum = 100*statnum + position
+%       where statnum is the station and position the niskin position on
+%         the rosette (from [1:24] or [1:36])
+% for underway samples, 
+%   sampnum = yyyymmddHHMM
+%   or 
+%   sampnum = -dddHHMM (where ddd is year-day, and the negative sign is
+%     important) 
+% for (sub)standards or other special rows to be used by {samtyp}_calc.m,  
+%   9e5 >= sampnum <= 1e6, e.g. salinity standards are labelled with
+%     sampnum = 999NNN, where NNN increments sequentially in the order in
+%     which the standards were run (and 998NNN, 990NNN, etc. may be used
+%     for sub-standards) 
+%
+% lines where the sampnum column is empty will be filled in from the last
+%   non-empty sampnum above (effectively labelling successive rows as
+%   replicates)
+%
+% see samp_proc case in mexec_defaults_*.m and in opt_{cruise}.m 
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
@@ -29,9 +49,17 @@ end
 %remove columns with no non-nan values
 ds = rmmissing(ds,2,'MinNumMissing',size(ds,1)); 
 
-%parse what was in files (split strings and datetimes, rename variables to
-%standardised names, add units)
+%parse what was in files (split strings and datetimes, fill in missing
+%station numbers, rename variables to standardised names, add units)
 opt1 = 'samp_proc'; opt2 = 'parse'; get_cropt
+if exist('fillstatnum','var')
+    ds = fill_samdata_statnum(ds, fillstatum);
+    names0 = ds.Properties.VariableNames;
+    m1 = ismember(names0,{fillstatnum});
+    ds = rmmissing(ds,'DataVariables',names0(~m1),'MinNumMissing',sum(~m1));
+    ds.sampnum(~isnan(ds.position)) = ds.statnum(~isnan(ds.position))*100 + ds.position(~isnan(ds.position));
+    %***
+end
 if exist('varmap','var')
     ds = var_renamer(ds, varmap, 'keep_othervars', keepothervars);
 end
@@ -39,44 +67,9 @@ end
 m = cellfun(@(x) contains(x,'_per_l'), ds.Properties.VariableNames);
 ds.Properties.VariableUnits(m) = {'umol_per_l'}; %***what if not umol?
 ds.Properties.VariableNames(m) = cellfun(@(x) replace(x,'_per_l',''), ds.Properties.VariableNames(m), 'UniformOutput', false);
-
-% either start with sampnum filled in, or indicate which samples are ctd
-% and which are uway in order to calculate it? or, calculate it in parse?
-% if necessary, calculate independent variable sampnum: 
-% sampnum=100*statnum+position for CTD samples
-% sampnum=yyyymmddHHMM for underway samples
-if ~sum(strcmp('sampnum',ds.Properties.VariableNames))
-    ds.sampnum = nan(size(ds,1),1);
-end
 ds.Properties.VariableUnits(strcmp('sampnum',ds.Properties.VariableNames)) = {'number'};
-if sum(isnan(ds.sampnum)) && cu(1)
-    if sum(isnan(ds.statnum))
-        %can we fill missing station numbers?
-        if sum(strcmp('isctd',ds.Properties.VariableNames))
-            mc = ds.isctd;
-        elseif ~cu(2)
-            mc = ones(size(ds,1),1);
-        else
-            mc = 0;
-        end
-        if sum(mc)
-            ds(mc,:) = fill_samdata_statnum(ds(mc,:), 'statnum');
-            %now remove rows where statnum is the only good value
-            names0 = ds.Properties.VariableNames;
-            m1 = ismember(names0,{'statnum'});
-            ds = rmmissing(ds,'DataVariables',names0(~m1),'MinNumMissing',sum(~m1));
-        end
-    end
-    m = ~isnan(ds.statnum);
-    ds.sampnum(m) = ds.statnum(m)*100+ds.position(m);
-    ds.statnum = []; ds.position = [];
-end
-%calculate dday
-if ~allctd
-   %*** 
-end
 
-%calculate new variables in standardised ways, handle replicates and flags
+%calculate variables in standardised ways, handle replicates and flags
 switch samtyp
     case 'oxy'
         ds = oxy_calc(ds); %***output is per_l or per_kg? 
@@ -94,8 +87,8 @@ opt1 = 'samp_proc'; opt2 = 'flag'; get_cropt %apply flags if specified in opt_cr
 %works for CTD data not underway? or does it depend on parameter?
 stn_start = 1;
 opt1 = 'samp_proc'; opt2 = 'check'; get_cropt
-if isfield(checksam,samtyp) && checksam.(samtyp)
-    repl_check(samtyp, dnew, orth, stn_start); %***working on this for nut, need to add code for chl as well as sal and sbe35 (sal repls compared earlier? yes, and handled differently, not flagged as mean of replicates because not separate samples exactly)***
+if isfield(checksam,samtyp) && checksam.(samtyp)>0
+    repl_check(samtyp, dnew, checksam.(samtyp), stn_start); %***working on this for nut, need to add code for chl as well as sal and sbe35 (sal repls compared earlier? yes, and handled differently, not flagged as mean of replicates because not separate samples exactly)***
     %redo flags in case check has changed them (but does this update?
     %instead warn to rerun msam_load?***)
     opt1 = 'samp_proc'; opt2 = 'flags'; get_cropt

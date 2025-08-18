@@ -2,10 +2,11 @@
 % parameters/variables used by multiple scripts (those used in only one
 % script are set in situ), before calling opt_{cruise} to set
 % cruise-specific parameters if applicable. note opt_{cruise} may also call
-% mexec_defaults_sbe to set some CTD processing parameters, while this
-% script contains ship- or underway data system specific parameters as well
-% as generally applicable defaults (e.g. broad acceptable range of
-% atmospheric variables***)
+% mexec_defaults_sbe or mexec_defaults_noc to set some CTD processing
+% parameters, while this script contains ship- or underway data system
+% specific parameters as well as generally applicable defaults (e.g. broad
+% acceptable range of atmospheric variables, default directory tree for
+% output data, etc.***)
 %
 % see get_cropt help
 %
@@ -22,8 +23,8 @@ switch opt1
         switch opt2
             case 'time_origin'
                 %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
-            %case 'use_ix_ladcp'
-            %    use_ix_ladcp = 'query'; %'query' means ask each time; or set to 'no' or 'yes'
+                %case 'use_ix_ladcp'
+                %    use_ix_ladcp = 'query'; %'query' means ask each time; or set to 'no' or 'yes'
         end
 
     case 'mstar'
@@ -80,9 +81,8 @@ switch opt1
             case 'rvdas_skip'
                 %see opt_dy181
         end
-        
+
     case 'ctd_proc'
-        mexec_defaults_sbe
         switch opt2
             %multiple files
             case 'minit'
@@ -139,6 +139,8 @@ switch opt1
                 niskin_number = [1:24]'; %replace with S/N
                 niskin_pos = [1:24]'; %position (firing number)
             case 'fir_fill'
+            case 'fir_extra'
+                fir_extra = true; %do also add background gradient and variance, and density-matched downcast data, to fir_ (and sam_) file
         end
 
     case 'uway_proc'
@@ -149,17 +151,17 @@ switch opt1
                 %if your samples are coming in at a *regular* high
                 %frequency (e.g. 40Hz on the SDA), set tstep_force to
                 %subsample to (approximately) 1/tstep_force hz before
-                %saving 
-                tstep_force = []; 
+                %saving
+                tstep_force = [];
                 %round time to nearest tstep_resol s before saving
-                tstep_resol = 1; 
+                tstep_resol = 1;
             case 'time_problems'
                 fixtimes = 0; check_mono = 0; %assume no repeated or backwards times at edit stage
             case 'sensor_unit_conversions'
                 so = struct(); %default: none, parameters are read from database in physical units
             case 'rawedit'
                 %lots of these (including ranges for many parameters), so
-                %set in separate function 
+                %set in separate function
                 uopts = mday_01_default_autoedits(h, streamtype);
                 handedit = 0;
             case 'avedit'
@@ -212,22 +214,18 @@ switch opt1
     case 'samp_proc'
         switch opt2
             case 'files'
-                switch samtyp
-                    case 'chl'
-                        cu = [1 1]; %likely to have ctd and underway
-                    case 'oxy'
-                        cu = [1 0]; %unlikely/problematic from underway
-                    case 'nut'
-                        cu = [1 1]; %may have both
-                    case 'sal'
-                        cu = [1 1]; %usually have both
-                end
+                %no general defaults
+            case 'parse'
+                clear varmap
+                varmap.sampnum = {'sampnum'}; %always keep this
             case 'check'
-                %check all samples
+                %threshold to use to check replicate agreement (set to 0 to
+                %skip a sample type) 
                 checksam.chl = 1;
-                checksam.oxy = 1;
+                checksam.oxy = 0.01;
                 checksam.nut = 1;
                 checksam.sal = 1;
+                checksam.co2 = 1; %***code for this?
                 checksam.sbe35 = 1;
             case 'flags'
                 ft = {'1 sample drawn but analysis not received';
@@ -242,30 +240,52 @@ switch opt1
                 end
         end
 
+    case 'adcp_proc'
+        %for vmadcp
+        min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
+        min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
+        min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
+        root_vmadcp = mgetdir('M_VMADCP');
+        avfile = fullfile(root_vmadcp, 'mproc', [dataname '_ave.nc']);
+        if MEXEC_G.ix_ladcp
+            %for ladcp, using vmadcp
+            ladfile = fullfile(root_vmadcp, 'mproc', [dataname '_forladcp.mat']);
+            cfg.f.sadcp = ladfile;
+            %and ctd: set file location and format for ascii file of 1hz ctd
+            %data and nmea nav data, which will be used in ladcp LDEO_IX processing
+            cfg.f.ctd = fullfile(mgetdir('ladcp'), 'ctd', ['ctd.' stn_string '.02.asc']);
+            cfg.f.ctd_header_lines      = 1;
+            cfg.f.ctd_fields_per_line	= 6;
+            cfg.f.ctd_time_base = 1; %year-day
+            cfg.f.ctd_time_field = 1;
+            cfg.f.ctd_pressure_field	= 2;
+            cfg.f.ctd_temperature_field = 3;
+            cfg.f.ctd_salinity_field	= 4;
+            cfg.f.nav                   = cfg.f.ctd;
+            cfg.f.nav_header_lines	= cfg.f.ctd_header_lines;
+            cfg.f.nav_fields_per_line	= cfg.f.ctd_fields_per_line;
+            cfg.f.nav_time_base = cfg.f.ctd_time_base;
+            cfg.f.nav_time_field	= cfg.f.ctd_time_field;
+            cfg.f.nav_lat_field 	= 5;
+            cfg.f.nav_lon_field 	= 6;
+            %parameters for LADCP processing
+            cfg.p.magdec_source = 1;
+            %cfg.p.edit_mask_dn_bins = 1;
+            %cfg.p.edit_mask_up_bins = 1;
+            cfg.p.orig = 0; % save original data or not
+            isul = 1; %is there an uplooker? process it first on its own
+            cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata',cfg.stnstr);
+            cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
+            cfg.p.ambiguity = 4.0; %this one is not used?
+            SADCP_inst = 'os75nb';
+            %cfg.p.vlim = 4.0; %this one is***require setting in opt_cruise
+        end
+
     case 'outputs'
         switch opt2
             case 'grid'
                 ctd_regridlist  = {'temp' 'psal' 'potemp' 'oxygen'}; %grid these variables
                 sam_gridlist = {'botpsal' 'botoxy'}; %grid these variables
-            case 'ladcp'
-                %set file location and format for ascii file of 1hz ctd
-                %data (same as nav file) and location for sadcp file
-                cfg.f.ctd = fullfile(mgetdir('ladcp'), 'ctd', ['ctd.' stn_string '.02.asc']);
-                cfg.f.ctd_header_lines      = 1;
-                cfg.f.ctd_fields_per_line	= 6;
-                cfg.f.ctd_time_base = 1; %year-day
-                cfg.f.ctd_time_field = 1;
-                cfg.f.ctd_pressure_field	= 2;
-                cfg.f.ctd_temperature_field = 3;
-                cfg.f.ctd_salinity_field	= 4;
-                cfg.f.nav                   = cfg.f.ctd;
-                cfg.f.nav_header_lines	= cfg.f.ctd_header_lines;
-                cfg.f.nav_fields_per_line	= cfg.f.ctd_fields_per_line;
-                cfg.f.nav_time_base = cfg.f.ctd_time_base;
-                cfg.f.nav_time_field	= cfg.f.ctd_time_field;
-                cfg.f.nav_lat_field 	= 5;
-                cfg.f.nav_lon_field 	= 6;
-                cfg.f.sadcp = fullfile(mgetdir('ladcp'),'ix','SADCP',['os75nb_' mcruise '_' cfg.stnstr '_for_ladcp.mat']);
             case 'exch'
                 expocode = 'unknown';
                 sect_id = '';
@@ -277,7 +297,6 @@ switch opt1
             case 'plot' %***
                 station_depth_width = 0;
                 bottle_depth_size = 0;
-
         end
 
 end

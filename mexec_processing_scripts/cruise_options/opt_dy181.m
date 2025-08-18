@@ -127,12 +127,12 @@ switch opt1
                 end
             case 'ctd_raw_extra'
                 if stn==65
-                    %ctd_all_part1 should run this after mctd_01(65) and
-                    %before rest of processing
-                    ctd_raw_extra = ['mctd_01(65.1); ' ...
-                        'otfile = fullfile(mgetdir(''M_CTD''),''ctd_dy181_065_raw_noctm.nc''); ' ...
-                        'getpos_for_ctd(otfile, 1, ''write''); ' ...
-                        'mfir_01(65.1);'];
+                    %data from cast 65 in two cnv files, so ctd_process
+                    %runs this after mctd_01(65) to combine before the rest of 
+                    %processing
+                    msbe_01(65.1); 
+                    otfile = fullfile(mgetdir(''M_CTD''),''ctd_dy181_065_raw_noctm.nc''); getpos_for_ctd(otfile, 1, 'write');
+                    mfir_01(65.1);
                 end
             case 'header_edits'
                 %typo in xmlcon oxygen2 s/n on many stations

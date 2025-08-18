@@ -8,7 +8,7 @@
 %         unique, not reused between different opt1 cases)
 %
 % otherwise (normally), get_cropt will:
-%   call set_mexec_defaults
+%   call mexec_defaults_all
 %   call the cruise-specific options script (opt_{cruise}, e.g. opt_jc211)
 %     to make any cruise-specific changes
 %

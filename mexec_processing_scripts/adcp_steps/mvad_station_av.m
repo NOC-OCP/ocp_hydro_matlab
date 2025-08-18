@@ -1,8 +1,9 @@
 function mvad_station_av(stn, inst, cast_select, varargin)
-% function mvad_station_av(stn, inst, cast_select, varargin)
+% mvad_station_av(stn, inst, cast_select)
+% mvad_station_av(stn, inst, cast_select, time_list_file)
 %
 % extract on-station vmadcp data, output to file suitable for LDEO IX LADCP
-%   processing and (averaged profile) to Mstar-format file
+%   processing and output an averaged profile to Mstar-format file
 % 
 % inputs: 
 %   stn: CTD cast number (statnum)
@@ -17,35 +18,50 @@ function mvad_station_av(stn, inst, cast_select, varargin)
 %
 % mvad_station_av(1,'os75nb', 'ctd')
 % outputs OS75 velocities averaged over the cast time to files 
-%    data/vmadcp/mproc/os75nb_$cruise_ctd_001_ave.nc and
-%    data/vmadcp/mproc/os75nb_$cruise_ctd_001_forladcp.mat and
+%    data/vmadcp/mproc/os75nb_$cruise_ctd_001_ave.nc, 
+%    data/vmadcp/mproc/os75nb_$cruise_ctd_001_forladcp.mat
 %
-% mvad_station_av(5,'os150nb', 'wait', '~/cruise/data/vmadcp/mproc/list_stn_wait.txt')
-% outputs OS150 velocities averaged over the time intervals in the
-%    specified file (for instance, if station 5 was a shallow, quick cast,
-%    you may want to average VMADCP over 2 hours instead for a better
-%    reference) and outputs to 
+% mvad_station_av(5,'os150nb', 'file', '~/cruise/data/vmadcp/mproc/list_stn_wait.txt')
+% reads the specified file containing station numbers, start times, end
+%    times***, outputs OS150 velocities averaged over the time interval, 
+%    (for instance, if station 5 was a shallow, quick cast, you may want to
+%    average VMADCP over 2 hours instead for a better reference) and
+%    outputs to  
 %    data/vmadcp/mproc/os150nb_$cruise_wait_005_ave.nc,
-%    data/vmadcp/mproc/os150nb_$cruise_wait_005_forladcp.mat,
+%    data/vmadcp/mproc/os150nb_$cruise_wait_005_forladcp.mat
+%
+% mvad_station_av(2,'os75nb', 'list')
+% first calls mvad_list_station to display when ship was on station, then
+%   asks user to reset cast_select ('ctd' or 'file') and if relevant
+%   time_list_file before preceeding as above
 %
 %
 % YLF jc238, based on mvad_03 and mvad_for_ladcp (BAK jc069, jc159, jc211)
+
+if nargin>3
+    time_list_file = varargin{1};
+end
+if strcmp(cast_select,'list')
+    mvad_list_station(stn, inst)
+    cast_select = input('''ctd'' to use times from dcs file, ''file'' to use times from list file, or ''q'' to quit','s');
+    if strcmp('q',cast_select)
+        return
+    elseif strcmp('file',cast_select)
+        a = input('full path of file containing time interval to use for this station, or enter if you already supplied this','s');
+        if ~isempty(a)
+            time_list_file = a;
+        end
+    end
+end
 
 m_common
 opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
 %paths and filenames
 root_ctd = mgetdir('M_CTD');
-root_vmadcp = mgetdir('M_VMADCP');
 
 dataname = [inst '_' mcruise '_' cast_select '_' stn_string];
-avfile = fullfile(root_vmadcp, 'mproc', [dataname '_ave.nc']);
-if MEXEC_G.ix_ladcp
-    ladfile = fullfile(root_vmadcp, 'mproc', [dataname '_forladcp.mat']);
-end
-if nargin>3
-    listfile = varargin{1};
-end
+opt1 = 'adcp_proc'; get_cropt
 
 %get start and end times
 if strcmp(cast_select,'ctd')
@@ -53,7 +69,7 @@ if strcmp(cast_select,'ctd')
     tstart = m_commontime(dd,'time_start',hd,'datenum');
     tend = m_commontime(dd,'time_end',hd,'datenum');
 else
-    tt = readtable(listfile);
+    tt = readtable(time_list_file);
     ii = find(tt(:,1)==stn); ii = ii(end);
     if size(tt,2)==3
         %numbers
@@ -146,7 +162,7 @@ ha.latitude = da.lat(1); ha.lon = da.lon(1);
 if strcmp(cast_select,'ctd')
     ha.comment = [h.comment sprintf('\n averaged over %s to %s from dcs_%s_%s.nc',sstart,send,mcruise,stn_string)];
 else
-    ha.comment = [h.comment sprintf('\n averaged over %s to %s from %s',sstart,send,listfile)];
+    ha.comment = [h.comment sprintf('\n averaged over %s to %s from %s',sstart,send,time_list_file)];
 end
 
 %check dims

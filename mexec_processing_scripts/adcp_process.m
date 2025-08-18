@@ -1,4 +1,4 @@
-function run_proc_ladcp(klist,constraints_try,varargin)
+function adcp_process(klist,constraints_try,varargin)
 %
 % to run with all available constraints:
 % run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'})
@@ -19,6 +19,8 @@ function run_proc_ladcp(klist,constraints_try,varargin)
 %quality***(though does this work for really shallow cast?)
 %but only process together if it's deep enough***, otherwise DL is version
 %of record
+
+%add option to call mvad_station_av***
 
 if nargin>4 && strcmp(varargin{3},'pause')
     dopause = 1;
@@ -69,20 +71,7 @@ for stn = klist
         cfg.p.btrk_mode = 2;
         %cfg.p.btrk_ts = 30;
     end
-    cfg.p.magdec_source = 1;
-    %cfg.p.edit_mask_dn_bins = 1;
-    %cfg.p.edit_mask_up_bins = 1;
-    cfg.p.orig = 0; % save original data or not
-    isul = 1; %is there an uplooker? process it first on its own
-    cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata',cfg.stnstr);
-    cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
-    cfg.p.ambiguity = 4.0; %this one is not used?
-    SADCP_inst = 'os75nb';
-    %cfg.p.vlim = 4.0; %this one is***require setting in opt_cruise
-    %SADCP, if it's been processed and output to file for ladcp
-    %***set type, as well as inst, in opt_cruise?opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt
-    opt1 = 'outputs'; opt2 = 'ladcp'; get_cropt %cfg.f
-    opt1 = 'ladcp_proc'; get_cropt %required to set pattern for down- and up-looker files
+    opt1 = 'adcp_proc'; get_cropt %cfg and set pattern for down- and up-looker files
     infiled = fullfile(cfg.rawdir,cfg.dnpat);
     infileu = fullfile(cfg.rawdir,cfg.uppat);
     %stn = stnlocal;
@@ -110,10 +99,9 @@ for stn = klist
     if ~isdl || ~couldbt
         cfg.constraints = setdiff(cfg.constraints,'BT');
     end
-    if ~exist('sfile','var') || ~exist(sfile,'file')
+    if ~isfield(cfg.f,'sadcp') || ~exist(cfg.f.sadcp,'file')
         cfg.constraints = setdiff(cfg.constraints,'SADCP');
     else
-        cfg.f.sadcp = sfile;
         cfg.SADCP_inst = SADCP_inst;
     end
 

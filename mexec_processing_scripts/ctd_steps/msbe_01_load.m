@@ -234,3 +234,4 @@ for fno = 1:length(otfiles)
     otfile = otfiles{fno};
     [botlon, botlat] = getpos_for_ctd(otfile, 'write');
 end
+

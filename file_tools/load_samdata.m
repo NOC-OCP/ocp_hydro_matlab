@@ -502,19 +502,24 @@ if ~isempty(iic1) && ~isempty(un1) && ~isempty(un2)
     end
 end
 
-% pad beginning of table2 and end of table2 to have the same rows
+% pad beginning of table2 and end of table2 so they have the same rows
 r1 = size(table1,1);
 r2 = size(table2,1);
-vt1 = table1.Properties.VariableTypes;
-vt2 = table2.Properties.VariableTypes;
+if isprop(table1.Properties,'VariableTypes')
+    %R2025
+    vt1 = strcmp('cell', table1.Properties.VariableTypes);
+    vt2 = strcmp('cell', table2.Properties.VariableTypes);
+else
+    %R2023
+    vt1 = structfun(@(x) iscell(x), table2struct(table1,'ToScalar',true));
+    vt2 = structfun(@(x) iscell(x), table2struct(table2,'ToScalar',true));
+end
 table1 = table1([1:r1 repmat(r1,1,r2)],:);
-m = strcmp('cell',vt1);
-table1{r1+1:end,m} = {''};
-table1{r1+1:end,~m} = missing;
+table1{r1+1:end,vt1} = {''}; %cell doesn't allow 'missing'
+table1{r1+1:end,~vt1} = missing;
 table2 = table2([ones(1,r1) 1:r2],:);
-m = strcmp('cell',vt2);
-table2{1:r1,m} = {''};
-table2{1:r1,~m} = missing;
+table2{1:r1,vt2} = {''}; %cell doesn't allow 'missing'
+table2{1:r1,~vt2} = missing;
 
 %for same-name variables, fill in end rows in table1 with data from table2
 iir2 = r1+1:r1+r2;

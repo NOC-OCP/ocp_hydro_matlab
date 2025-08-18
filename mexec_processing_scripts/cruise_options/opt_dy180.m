@@ -245,20 +245,18 @@ switch opt1
                 switch samtyp
                     case 'chl'
                         %create sampnum from cast_number and niskin_bottle
-                        ds.sampnum = nan(size(ds.cast_number));
-                        mc = strncmp('CTD',ds.cast_number,3);
-                        ds.sampnum(mc) = cellfun(@(x) str2double(extract(x,digitsPattern(1,3))), ds.cast_number(mc));
-                        ds.sampnum = ds.sampnum*100+ds.niskin_bottle;
+                        ds.sampnum = nan(size(ds.CastNumber));
+                        ds.isctd = strncmp('CTD',ds.CastNumber,3);
+                        ds.sampnum(ds.isctd) = cellfun(@(x) str2double(extract(x,digitsPattern(1,3))), ds.CastNumber(ds.isctd));
+                        ds.sampnum = ds.sampnum*100+ds.NiskinBottle;
                         %create sampnum from times
-                        mu = isnan(ds.sampnum) & ~isnat(ds.date_time_gmt); %***
-                        ds.sampnum(mu) = datestr(ds.date_time_gmt(mu),'yyyymmddHHMM');
-                        %add flags based on notes
+                        mu = isnan(ds.sampnum) & ~isnat(ds.DATE);
+                        ds.sampnum(mu) = str2num(datestr(datenum(ds.DATE(mu))+ds.TIME_GMT_(mu),'yyyymmddHHMM'));
+                        %add flags based on notes from file with CTD data
                         ds.flag = 2+zeros(size(ds,1),1);
-                        ds.flag(cellfun(@(x) contains(x,["broken","assume","Wrong","Check","Suspect?"]),ds.notes)) = 3; %questionable
-                        ds.flag(ds.chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl==0) = 5; %not reported
-                        ds.flag(~isfinite(ds.chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl)) = 5; %not reported
+                        ds.flag(cellfun(@(x) contains(x,["broken","assume","Wrong","Check","Suspect?"]),ds.Notes)) = 3; %questionable
                         %variables to rename (or to keep and write to file without renaming)
-                        varmap.chl = {'chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl'};
+                        varmap.chl = {'Chl','Chlorophyll_DilX_R_adjX_Fl_Bl_S_Ace_Sampl_'};
                         varmap.chl_flag = {'flag'};
                         varmap.chl_inst = {'fluorometer_id_816_or_black_1'};
                         keepothervars = 0; %***where are units set?
@@ -324,6 +322,8 @@ switch opt1
 
     case 'outputs'
         switch opt2
+            case 'columndata'
+                outtypes = {'bodc','exch'}; %call mout_columns with these types, using its default settings
             case 'summary'
                 snames = {'nsal' 'noxy' 'nnut' 'nco2'};
                 sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'nitr'} {'dic' 'talk'}};

@@ -4,8 +4,6 @@
 %after mexec_defaults_all.m and before the rest of the contents of
 %opt_{cruise}.m
 
-switch opt1
-    case 'ctd_proc'
         switch opt2
             case 'oxy_align'
                 oxy_align = 6; %number of seconds by which oxygen has been shifted in SBE processing (or should be shifted by mctd_02)
@@ -27,4 +25,3 @@ switch opt1
         oxyhyst.H3 = 1450;
         oxyrev = oxyhyst;
         co.H_0 = [oxyhyst.H1 oxyhyst.H2 oxyhyst.H3]; %stores defaults for later reference
-end
