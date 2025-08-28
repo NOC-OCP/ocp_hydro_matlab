@@ -6,12 +6,13 @@ function uway_daily_proc(varargin)
 % steps including loading, editing of raw data, and combining/averaging
 %
 % uway_daily_proc %processes yesterday
-% uway_daily_proc(ydays, 'load_only', 1); %stops after loading raw data
+% uway_daily_proc(ydays, 'load_only', 1); %stops after loading raw data 
+%   into mstar (mday_00)
 % uway_daily_proc(ydays, 'reload_uway', 0); %processes ydays
-%   %starting from already-loaded raw files and skipping to
-%   %editing and averaging stage (mday_01 and mday_02)
+%   starting from already-loaded raw files and skipping to
+%   editing and averaging stage (mday_01 and mday_02)
 % uway_daily_proc(ydays, 'reload_uway', 0, 'reload_av', 0);
-%   %skips to editing of already-generated merged, averaged files
+%   skips to editing of already-generated merged, averaged files
 %
 % by default it will process all the available techsas/scs/rvdas underway
 % streams (of the set in mtnames/msnames/mrnames), unless you add

@@ -37,7 +37,7 @@ if nargin>0 && strcmp(varargin{1},'redo')
     % Limit to the tables and variables we want to load, add mstar names
     limit = [1 1];
     mrtables_use = mrdef_mstarnames(mrtables, limit);
-        
+
     % Check .json files for information on units
     mrtables_use = mrdef_json(mrtables_use);
 
