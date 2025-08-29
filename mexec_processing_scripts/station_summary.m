@@ -238,6 +238,7 @@ stnall = unique(ds.statnum);
 
 stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.csv']);
 fid = fopen(stnlistname,'w'); mfixperms(stnlistname);
+disp(stnlistname)
 
 % list headings
 for cno = 1:length(vars)

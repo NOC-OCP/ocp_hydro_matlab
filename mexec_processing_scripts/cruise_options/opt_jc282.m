@@ -55,7 +55,12 @@ switch opt1
                     case 13
                         niskin_flag(position==5) = 3;
                         niskin_flag(position==15) = 4;
-                   otherwise
+                    case 37
+                        niskin_flag(position==18) = 4;
+                    case 39
+                        niskin_flag(position==17) = 4;
+                        niskin_flag(position==19) = 4;
+                    otherwise
                 end
         end
 
@@ -119,6 +124,7 @@ switch opt1
                        301 4 4 9; ...
                        903 4 2 9; ...
                        910 4 9 9; ...
+                       3809 3 9 9; ...
                        ];
         end
 
