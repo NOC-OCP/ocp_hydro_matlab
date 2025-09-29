@@ -1,32 +1,32 @@
-function msam_add_to_samfile(paramtyp)
+function msam_merge(samtyp)
 %
-% msam_add_to_samfile(param)
+% msam_merge(samtyp)
 %
-% load sample (Niskin bottle or SBE35) data from specific type of file
-% (e.g. sal, nut, oxy), convert (e.g. to umol/kg) and average replicates as
-% necessary, paste into combined sam_mcruise_all.nc file
+% follow-on to msam_load: load the sample (Niskin bottle or SBE35) data
+% from specific type of file (e.g. sal, nut, oxy), convert (e.g. to
+% umol/kg) and average replicates as necessary, paste into combined
+% sam_mcruise_all.nc file 
 %
 % which variables to use and conversions to apply are specified by
 % switch-case on paramtype, below, can can be modified in the opt_cruise
 % file 
 %
-% called by msal_01, moxy_01, mnut_01, msam_other, msam_ashore_flag
+% called by samp_process.m
 
 m_common
 if MEXEC_G.quiet<1; fprintf(1, 'loading bottle %s from %s_%s_01.nc, writing to sam_%s_all.nc',mcruise,mcruise); end
 samfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
 
 %defaults
-dataname = [paramtyp '_' mcruise '_01'];
-paramfile = fullfile(mgetdir(['bot_' paramtyp]),[dataname '.nc']); %input file
+dataname = [samtyp '_' mcruise '_01'];
+paramfile = fullfile(mgetdir(['bot_' samtyp]),[dataname '.nc']); %input file
 svars = {'sampnum','niskin_flag'}; %variables to load from sample file
 varrename = {}; %don't rename, keep all input variables. if set, varrename is applied before any conversions.
 convs.replavg = 0; %no conversions
-
 %modify defaults
 %convs applied in subfunction add_samdata include umol_per_l_to_per_kg and
 %replavg
-switch paramtyp
+switch samtyp
     case 'chl'
         convs.replavg = 1; %do average replicates
         hnew.comment = ['chlorophyll data from ' dataname '.nc'];
@@ -58,7 +58,7 @@ switch paramtyp
     otherwise
 end
 
-%load data
+%load data saved by msam_load
 [dp, hp] = mloadq(paramfile, '/');
 dp = struct2table(dp);
 if isempty(varrename)
@@ -71,7 +71,7 @@ ds = struct2table(ds);
 [~,isam,iparam] = intersect(ds.sampnum,dp.sampnum,'stable');
 es = length(unique(dp.sampnum))-length(iparam);
 if es
-    warning('%d %s samples have no sampnum in %s, will be ignored',es,paramtyp,samfile)
+    warning('%d %s samples have no sampnum in %s, will be ignored',es,samtyp,samfile)
 end
 
 %add data from d to ds, converting as necessary
@@ -125,6 +125,22 @@ for no = 1:size(varrename,1)
         hnew.fldunt = [hnew.fldunt un];
     end
 end
+
+%underway merged file ***
+switch samtyp
+    case 'chl'
+        outu = fullfile(root_in,['ucswchl_' mcruise '_all.nc']);
+        tsd_uway = dnew(strncmp('UW',dnew.cast_number,2),:);
+        clear du hu
+        to = [MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 1 0 0 0];
+        du.time = datenum(tsd_uway.date_day_month_year)-datenum(to); %***HH MM?????
+        du.chl = tsd_uway.chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl;
+        hu.fldnam = {'time', 'chl'};
+        hu.fldunt = {['days since ' datestr(to,'yyyy-mm-dd HH:MM:SS')], 'ug_per_l'}; %***
+        hu.comment = comment;
+        mfsave(outu,du,hu)
+end
+
 
 %conversions
 convn = fieldnames(convs);
@@ -211,3 +227,5 @@ for cno = 1:length(convn)
 
     end
 end
+
+

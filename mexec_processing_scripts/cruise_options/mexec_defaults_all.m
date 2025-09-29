@@ -218,26 +218,32 @@ switch opt1
             case 'parse'
                 clear varmap
                 varmap.sampnum = {'sampnum'}; %always keep this
-            case 'check'
+                addcomment = '';
+            case 'replcheck'
                 %threshold to use to check replicate agreement (set to 0 to
-                %skip a sample type) 
-                checksam.chl = 1;
-                checksam.oxy = 0.01;
-                checksam.nut = 1;
-                checksam.sal = 1;
-                checksam.co2 = 1; %***code for this?
-                checksam.sbe35 = 1;
+                %skip checking that sample type)
+                checksam.chl = [1 2]; %compare by ratio, highlight differences over factor of 2
+                checksam.oxy = [2 0.01]; %compare by ratio, highlight differences over +/- 1%
+                checksam.nut = [2 0.05]; %compare by ratio, highlight differences over +/- 5%
+                checksam.sal = [0 1e-5]; %compare (salinometer reading) by difference, highlight differences over +/- 1e-5
+                checksam.co2 = [2 0.05]; %***confirm default
+                checksam.sbe35 = 0; %no threshold but if set to 1, check ascii file download quality (rarely necessary)
             case 'flags'
-                ft = {'1 sample drawn but analysis not received';
-                    '2 acceptable';
-                    '3 questionable';
-                    '4 bad';
-                    '5 not reported';
-                    '6 mean of duplicates';
-                    '9 sample not drawn'};
-                if ~MEXEC_G.quiet
-                    fprintf(1,'using WOCE flags: \n%s', ft{:})
+                ft = {'1 = sample drawn but analysis not received';
+                    '2 = acceptable';
+                    '3 = questionable';
+                    '4 = bad';
+                    '5 = not reported';
+                    '6 = mean of duplicates';
+                    '9 = sample not drawn'};
+                if ~MEXEC_G.quiet || (exist('helpmode','var') && helpmode)
+                    fprintf(1,'WOCE flags: \n%s', ft{:})
                 end
+                %***these should be set using gui and editlogs and
+                %apply_edits, so record is all in one place. only niskin
+                %flags should be set in opt_cruise*** also data file
+                %metadata should list location/name pattern of editlogs
+                %files (when they exist/have been applied)
         end
 
     case 'adcp_proc'

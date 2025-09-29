@@ -136,7 +136,7 @@ for fno = 1:length(infiles)
 
     if domtl
         warning('readtable failed; using mtextdload')
-        [dat, sh] = load_samdata_loadtextcsv(infiles{fno}, iopts.hcpat);
+        [dat, sh] = load_samdata_loadtextcsv(infiles{fno}, iopts.hcpat, icolhead, icolunits);
         if ~exist('samtable', 'var')
             samtable = dat;
         else

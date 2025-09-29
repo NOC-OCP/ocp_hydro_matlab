@@ -245,22 +245,28 @@ switch opt1
                 switch samtyp
                     case 'chl'
                         %create sampnum from cast_number and niskin_bottle
-                        ds.sampnum = nan(size(ds.CastNumber));
-                        ds.isctd = strncmp('CTD',ds.CastNumber,3);
-                        ds.sampnum(ds.isctd) = cellfun(@(x) str2double(extract(x,digitsPattern(1,3))), ds.CastNumber(ds.isctd));
-                        ds.sampnum = ds.sampnum*100+ds.NiskinBottle;
-                        %create sampnum from times
-                        mu = isnan(ds.sampnum) & ~isnat(ds.DATE);
-                        ds.sampnum(mu) = str2num(datestr(datenum(ds.DATE(mu))+ds.TIME_GMT_(mu),'yyyymmddHHMM'));
+                        sdata.statnum = nan(size(sdata.CastNumber));
+                        %some are C???X, some are CTD???X
+                        mc = strncmp('CTD',sdata.GearCode,3) & ~cellfun('isempty', sdata.CastNumber);
+                        sdata.statnum(mc) = cellfun(@(x) str2double(extract(x,digitsPattern(1,3))), sdata.CastNumber(mc));
+                        sdata.sampnum = m_sampnum('ctd',sdata.statnum,sdata.NiskinBottle);
+                        %otherwise, create sampnum from times
+                        mu = ~isnat(sdata.DATE) & isnan(sdata.sampnum);
+                        sdata.sampnum(mu) = str2num(datestr(datenum(sdata.DATE(mu))+sdata.TIME_GMT_(mu),'yyyymmddHHMM'));
+                        %no blank lines to fill, get rid of any rows that
+                        %don't have good sampnum at this point
+                        sdata(isnan(sdata.sampnum),:) = [];
                         %add flags based on notes from file with CTD data
-                        ds.flag = 2+zeros(size(ds,1),1);
-                        ds.flag(cellfun(@(x) contains(x,["broken","assume","Wrong","Check","Suspect?"]),ds.Notes)) = 3; %questionable
-                        %variables to rename (or to keep and write to file without renaming)
-                        varmap.chl = {'Chl','Chlorophyll_DilX_R_adjX_Fl_Bl_S_Ace_Sampl_'};
+                        sdata.flag = 2+zeros(size(sdata,1),1);
+                        sdata.flag(cellfun(@(x) contains(x,["broken","assume","Wrong","Check","Suspect?"]),sdata.Notes)) = 3; %questionable
+                        %combine two chl columns here
+                        mc = isnan(sdata.Chl);
+                        sdata.Chl(mc) = sdata.Chlorophyll_DilX_R_adjX_Fl_Bl_X_Ace_Sampl_(mc);
+                        %keep chl, chl_flag, chl_inst
+                        varmap.chl = {'Chl'};
                         varmap.chl_flag = {'flag'};
-                        varmap.chl_inst = {'fluorometer_id_816_or_black_1'};
+                        varmap.chl_inst = {'FluorometerID_816OrBlack1_'};
                         keepothervars = 0; %***where are units set?
-                        addcomment = '\nCTD chlorophyll units not given';
                     case 'sal'
                         cellT = 21;
                         ssw_k15 = 0.99993;
@@ -281,11 +287,8 @@ switch opt1
                     case 'sal'
                         salin_off = -1.5e-5; %constant
                 end
-            case 'check'
-                %checksam.chl = 1;
-                checksam.oxy = 1;
-                checksam.sal = 0;
-                checksam.sbe35 = 0;
+            case 'replcheck'
+                checksam.sal = 0; %done
             case 'flags' %flags before replicate averaging and after replicate averaging***
                 switch samtyp
                     case 'sal'

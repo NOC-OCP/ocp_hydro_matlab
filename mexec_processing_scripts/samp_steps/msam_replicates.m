@@ -1,12 +1,11 @@
-function [dnew, hnew] = msam_replicates(ds, samtyp)
-% [dnew, hnew] = msam_replicates(ds, samtyp)
+function gs = msam_replicates(ds, samtyp)
+% gs = msam_replicates(ds, samtyp)
 %
 % ds is a structure or table including columns sampnum, (tabdatavar), and
 % flag 
 %
 % for each tabdatavar, adds units, separates and renames replicates, makes
-% flags consistent, and puts into a structure and header suitable for
-% writing to mstar-format .nc files 
+% flags consistent, and outputs in table gs
 %
 
 if isstruct(ds)
@@ -16,22 +15,17 @@ end
 %masks for different types of fields (only want to look for main sample
 %data)
 names0 = ds.Properties.VariableNames;
-m1 = ismember(names0,{'sampnum'}); %everything in ~m1 will be replicated
+m1 = ismember(names0,{'sampnum'}); %everything in ~m1 will be replicated where sampnum is repeated, and given alphabetic suffixes
 mf = ~m1 & cellfun(@(x) contains(x,'_flag'),names0);
-if sum(mf); ds.Properties.VariableUnits(mf) = {'woce_4.9'}; end
 if strcmp(samtyp, 'oxy')
     mt = ~m1 & ~mf & cellfun(@(x) contains(x, '_temp'), names0); %only for botoxy_temp
-    if sum(mt); ds.Properties.VariableUnits(mt) = {'degC'}; end
 else
     mt = false(size(names0));
 end
 mi = ~m1 & ~mf & cellfun(@(x) contains(x, '_inst'), names0);
 mv = ~m1 & ~mf & ~mt & ~mi; %"normal" variables
 
-%replace NaN flags with 9
-dat = ds{:,mf}; dat(isnan(dat)) = 9; ds{:,mf} = dat;
-
-%turn names of different analysing instruments into numbers
+%turn names of different analysing instruments into numbers***why?
 for no = find(mi)
     gi = findgroups(ds.(names0{no}));
     gis = groupsummary(ds,names0{no});
@@ -43,16 +37,19 @@ end
 m = ~isfinite(ds.sampnum);
 ds.sampnum(m) = [0:sum(m)-1]-1e10; %these sampnums aren't used for anything even TSG times
 
+%compute mean and stdev of replicates
+gm = groupsummary(ds,"sampnum","mean");
+mr = max(gm.GroupCount);
+nc = size(gm,2);
+gs = groupsummary(ds,"sampnum","std");
+
 %separate out replicates
 names0 = ds.Properties.VariableNames;
-gs = groupsummary(ds,"sampnum");
-mr = max(gs.GroupCount);
 g = findgroups(ds.sampnum);
 alph = 'abcdefghijklmnopqrstuvwxyz'; alph = [alph;repmat(' ',1,length(alph))];
 alph = alph(:)'; alph = strsplit(alph);
 alph = alph(1:mr);
 for no = find(~m1)
-    nc = size(gs,2);
     varn = names0{no};
     %padded array for each sampnum
     a = splitapply(@(x) [x(:)' nan(1,mr-length(x))], ds.(varn), g);
@@ -75,7 +72,5 @@ gs.statnum = floor(gs.sampnum/100);
 gs.position = gs.sampnum-gs.statnum*100;
 gs.Properties.VariableUnits(end-1:end) = {'number','on.rosette'};
 
-%for output
-hnew.fldnam = ds.Properties.VariableNames;
-hnew.fldunt = ds.Properties.VariableUnits;
-dnew = table2struct(gs,'ToScalar',true);
+%add existing flags from editlogs***
+opt1 = 'samp_proc'; opt2 = 'flag'; get_cropt %apply flags if specified in opt_cruise

@@ -1,5 +1,5 @@
-function sample_process(paramlist, varargin)
-% function sample_process(paramlist, resartsam)
+function sample_process(ptlist, varargin)
+% function sample_process(ptlist, resartsam)
 %
 % wrapper script for bottle/calibration sample data (and flags)
 %
@@ -13,20 +13,21 @@ function sample_process(paramlist, varargin)
 %   types:   
 % sample_process('all', 1)
 %
-% to load just salinity and add to existing sam_*_all.nc file:
-% sample_process({'sal'})
+% to load just inorganic carbon (dic, talk, ph) data and add to existing
+%   sam_*_all.nc file: 
+% sample_process({'co2'})
 %
-% calls msam_load for each parameter type specified
-% with second (optional) input argument set to 1 also calls mfir_to_sam and
-%   get_sensor_groups 
+% for each parameter type specified, calls msam_load then msam_merge
+% with second (optional) input argument set to 1, first calls mfir_to_sam
+%   and get_sensor_groups 
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %parameters to try if paramlist is 'all'
 params = {'sbe35','sal','oxy','nut','co2','iso','cfc','chl'};
-if ~iscell(paramlist) && strcmp(paramlist,'all')
-    paramlist = params;
+if ~iscell(ptlist) && strcmp(ptlist,'all')
+    ptlist = params;
 end
 
 %if specified, restart sam_ file
@@ -52,8 +53,9 @@ if nargin>1 && varargin{1}
 end
 
 %now start loading parameter data
-for pno = 1:length(paramlist)
-    msam_load(paramlist{pno})
+for pno = 1:length(ptlist)
+    msam_load(ptlist{pno})
+    msam_merge(ptlist{pno})
 end
 
 opt1 = 'outputs'; opt2 = 'columndata'; get_cropt
