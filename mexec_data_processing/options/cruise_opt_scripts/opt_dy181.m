@@ -131,7 +131,7 @@ switch opt1
                     %runs this after mctd_01(65) to combine before the rest of 
                     %processing
                     msbe_01(65.1); 
-                    otfile = fullfile(mgetdir(''M_CTD''),''ctd_dy181_065_raw_noctm.nc''); getpos_for_ctd(otfile, 1, 'write');
+                    otfile = fullfile(mgetdir('M_CTD'),'ctd_dy181_065_raw_noctm.nc'); getpos_for_ctd(otfile, 1, 'write');
                     mfir_01(65.1);
                 end
             case 'header_edits'

@@ -287,8 +287,10 @@ switch opt1
                     case 'sal'
                         salin_off = -1.5e-5; %constant
                 end
-            case 'replcheck'
+            case 'check'
                 checksam.sal = 0; %done
+                checksam.oxy = 0; %done
+                checksam.chl = 0; %code not ready yet, do by hand
             case 'flags' %flags before replicate averaging and after replicate averaging***
                 switch samtyp
                     case 'sal'

@@ -40,7 +40,6 @@ ds.sampnum(m) = [0:sum(m)-1]-1e10; %these sampnums aren't used for anything even
 %compute mean and stdev of replicates
 gm = groupsummary(ds,"sampnum","mean");
 mr = max(gm.GroupCount);
-nc = size(gm,2);
 gs = groupsummary(ds,"sampnum","std");
 
 %separate out replicates
@@ -50,6 +49,7 @@ alph = 'abcdefghijklmnopqrstuvwxyz'; alph = [alph;repmat(' ',1,length(alph))];
 alph = alph(:)'; alph = strsplit(alph);
 alph = alph(1:mr);
 for no = find(~m1)
+    nc = size(gs,2);
     varn = names0{no};
     %padded array for each sampnum
     a = splitapply(@(x) [x(:)' nan(1,mr-length(x))], ds.(varn), g);

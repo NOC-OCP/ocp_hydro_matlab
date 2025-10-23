@@ -1,5 +1,5 @@
-function sample_process(ptlist, varargin)
-% function sample_process(ptlist, resartsam)
+function samp_process(ptlist, varargin)
+% function samp_process(ptlist, resartsam)
 %
 % wrapper script for bottle/calibration sample data (and flags)
 %

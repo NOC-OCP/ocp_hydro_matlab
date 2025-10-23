@@ -15,41 +15,55 @@ b) comparing and secondary QC, gridding/mapping, and plotting of hydrographic (C
     │
     ├── docs                       <- mexec user guide (for at-sea processing) and mapping guide (for gridding CTD and bottle profiles/sections)
     │
-    ├── file_tools                 <- mostly just called by other scripts/functions
-    │   ├── mexec                  <- specifically for interacting with mexec .nc files and data history logs
-    │   └── pstar                  <- for converting from old pstar format
-    │
-    ├── hydro_tools                <- for gridding and plotting of historical (already-processed) hydrographic (CTD and bottle sample) data 
+    ├── hydro_grid_compare                <- for gridding and plotting of historical (already-processed) hydrographic (CTD and bottle sample) data 
     │   ├── gridhsec.m             <- top-level wrapper function
     │   └── set_hsecpars.m         <- example file giving parameters for multiple cruises/sections
     │
-    ├── mexec_processing_scripts   <- processing of CTD, bottle sample, and underway data
-    │   ├── ctd_all_*.m            <- wrappers to apply a set of steps to one or more station(s), calling:
-    │   ├── m???_*.m               <- calculations on a single station
+    ├── mexec_processing_scripts   <- processing of CTD, bottle sample, and underway data. the user interacts with the scripts in wrappers/ and options/
     │   │
-    │   ├── adcp_scripts           <- interface with LDEO IX LADCP and CODAS VMADCP processing
+    │   ├── processing_steps       <- steps acting on data from one or more sources, called by the scripts in wrappers/
     │   │
-    │   ├── bottle_samples         <- ingest bottle sample data
+    │   ├── options                <- scripts setting sensor-, parameter-, and/or cruise-specific processing options (e.g. averaging, calibration coefficients, etc.)
+    │   │   ├── cruise_opt_scripts <- scripts from individual cruises, including past cruises
+    │   │   ├── defaults           <-
+    │   │   │   ├── mexec_defaults_all.m <- defaults
+    │   │   │   ├── mexec_defaults_noc.m <- defaults
+    │   │   │   └── mexec_defaults_sbe.m <- defaults
+    │   │   ├── generate_cruise_opt_script.m   <- defaults
+    │   │   ├── get_cropt.m   <- defaults
+    │   │   └── parse_scripts_display_options.m <- help
     │   │
-    │   ├── cruise_options         <- cruise-specific processing options (e.g. averaging options, calibration coefficients)
-    │   │   ├── get_cropt.m        <- wrapper
-    │   │   ├── setdef_cropt_*.m   <- defaults
-    │   │   └── opt_*.m            <- one per cruise
+    │   ├── wrappers               <- wrapper scripts for processing different types of data through different stages
+    │   │   ├── adcp_process.m     <- LADCP profiles, optionally with SADCP; sets up for and calls LDEO IX for LADCP processing, and reads in CODAS-processed SADCP
+    │   │   ├── ctd_process.m      <- CTD profiles, with different options depending on stage(s). SBE/some RBR
+    │   │   ├── samp_process.m     <- bottle sample data
+    │   │   └── uway_process.m     <- underway time series (nav, met, surface ocean, and [centre beam] bathymetry)
     │   │
-    │   ├── plots_output           <- diagnostic/summary plots, or output data in other formats (e.g. WOCE exchange)
-    │   │
-    │   ├── remedies               <- not part of standard processing path, use if files need to be specially edited or processing restarted
-    │   │
-    │   ├── rennovate              <- temporary storage for scripts that may not be working with current version (to be reviewed for update or discard)
-    │   │
-    │   ├── underway               <- standard processing of underway data streams
-    │   │   └── m_daily_proc.m     <- wrapper
-    │   │
-    │   └── varlists               <- mappings between variable name (and units) schemas
+    │   └── tools               <- mappings between variable name (and units) schemas
+    │       ├── conventions
+    │       ├── inspect_edit
+    │       └── summaries_output
     │
-    └── utilities                  <- functions called by others
-        ├── general                <- don't require specific data input format
-        ├── mexec                  <- work on mexec-style data structures
-        └── profile_tools          <- calculations specific to CTD profiles
+    └── utilities            
+        ├── calculations     
+        ├── carter_ssc       
+        ├── ctd_profile_tools
+        ├── data_tools
+        ├── file_tools
+        ├── function_tools
+        ├── grid_1D
+        ├── mexec
+        └── plots
 
 
+./*_process.m are wrapper functions
+
+in ctd_steps, *_01_* can be done in parallel, but mfir_05_* must be done after all *_01*, *_02*, *_03*, *_04*
+
+ctd processing is done one station at a time (***mctd_checkplots, mctd_evaluate_sensors)
+
+sample processing is done on all available data
+
+underway processing is done one day at a time (or can loop)
+
+cruise_options/ has scripts used by many scripts/functions for setting cruise-specific processing parameters and choices
