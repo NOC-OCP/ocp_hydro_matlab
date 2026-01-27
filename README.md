@@ -67,3 +67,12 @@ sample processing is done on all available data
 underway processing is done one day at a time (or can loop)
 
 cruise_options/ has scripts used by many scripts/functions for setting cruise-specific processing parameters and choices
+
+
+all: read (from csv, spreadsheet, ***matlab or netcdf?***), parse (rename variables, possibly get info from header*info from sample data file and possibly opt_cruise)
+oxygen: [convert titre to conc*info from sample data file and possibly opt_cruise then] do replicates then flag [then convert to umol/kg*info from ctd: fix temp, sal(Niskin-close)]
+salinity: [do reading replicates then average reading replicates*info from sample data file and possibly opt_cruise then do standardisation then] do replicates then flag [then convert to cond*info from ctd: temp(Niskin-close)]
+nutrients: do replicates then flag [then convert to umol/kg*info from ctd and opt_cruise: lab temp, sal(Niskin-close)]
+chl: do replicates then flag [then convert to umol/kg*info from ctd ?]
+carbon: remove standards/CRM values then do replicates then do flags [then convert to umol/kg?]
+no data yet (shore analysis): convert flags?

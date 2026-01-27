@@ -200,6 +200,7 @@ MEXEC_G.MDIRLIST = {
     'M_CTD_BOT' fullfile('ctd','ASCII_FILES')
     'M_CTD_WIN' fullfile('ctd','WINCH')
     'M_CTD_DEP' 'station_information'
+    'M_BOT'     'bottle_samples'
     'M_BOT_SAL' fullfile('bottle_samples','BOTTLE_SAL')
     'M_BOT_OXY' fullfile('bottle_samples','BOTTLE_OXY')
     'M_BOT_NUT' fullfile('bottle_samples','BOTTLE_NUT')
@@ -213,7 +214,7 @@ MEXEC_G.MDIRLIST = {
     'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
     'M_SUM' 'collected_files'
     'M_VMADCP' 'vmadcp'
-    };
+    }; %***change how MDIRLIST is used and move to cruise options (defaults)
 if MEXEC_G.ix_ladcp
     MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
         {'M_LADCP' 'ladcp'

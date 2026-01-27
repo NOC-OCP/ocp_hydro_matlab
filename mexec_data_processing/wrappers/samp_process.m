@@ -1,21 +1,21 @@
 function samp_process(ptlist, varargin)
 % function samp_process(ptlist, resartsam)
 %
-% wrapper script for bottle/calibration sample data (and flags)
+% wrapper script for discrete sample data 
 %
 % to load all available data from all available parameter types and add to
 %   existing sam_*_all.nc file, either:  
-% sample_process({'sbe35','sal','oxy','nut','co2','iso','cfc','chl'})
+% samp_process({'sbe35','sal','oxy','nut','co2','iso','cfc','chl'})
 %   or
-% sample_process('all')
+% samp_process('all')
 %
 % to restart sam_*_all.nc file before loading all available parameter
 %   types:   
-% sample_process('all', 1)
+% samp_process('all', 1)
 %
 % to load just inorganic carbon (dic, talk, ph) data and add to existing
 %   sam_*_all.nc file: 
-% sample_process({'co2'})
+% samp_process({'co2'})
 %
 % for each parameter type specified, calls msam_load then msam_merge
 % with second (optional) input argument set to 1, first calls mfir_to_sam
@@ -30,7 +30,7 @@ if ~iscell(ptlist) && strcmp(ptlist,'all')
     ptlist = params;
 end
 
-%if specified, restart sam_ file
+%if specified, restart sam_ file and populate with CTD
 if nargin>1 && varargin{1}
     %delete sam_*_all file
     root_ctd = mgetdir('M_CTD');

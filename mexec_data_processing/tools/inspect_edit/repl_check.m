@@ -1,6 +1,6 @@
-function repl_check(dbot, compare_params, varargin)
-% repl_check(dbot, compare_params)
-% repl_check(dbot, compare_params, ctd_compare_params)
+function repl_check(samtyp, dbot, compare_params, varargin)
+% repl_check(samtyp, dbot, compare_params)
+% repl_check(samtyp, dbot, compare_params, ctd_compare_params)
 %
 % from table dbot, plot replicate samples and flag deviations over
 % threshold specified in samcth, comparing in terms of ratio (replB/replA,
@@ -9,6 +9,11 @@ function repl_check(dbot, compare_params, varargin)
 % will also be compared (ufluor/chla, or upsal-botpsala, etc.)
 % and if mapped data exist ***
 %
+
+% ***where there are more than ? replicates compute stdev, where there are
+% fewer compute range, where there are only two do neither***
+% should be able to apply to both sal readings and then (later in same
+% call) to actual replicate sal samples
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
@@ -168,7 +173,7 @@ for vno = 1:length(vbases)
         end
         hlq = plot(x(mchk&mu), dbc(mchk&mu,:), '.r');
         legend([hli; hl])
-        grid on; title(['UCSW ' samtyp])
+        grid on; title(['USW ' samtyp])
     end
     if sum(ms)
         figure(3); clf

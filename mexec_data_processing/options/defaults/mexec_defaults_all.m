@@ -214,7 +214,7 @@ switch opt1
     case 'samp_proc'
         switch opt2
             case 'files'
-                %no general defaults
+                sopts.remove_empty_cols = 1;
             case 'parse'
                 clear varmap
                 varmap.sampnum = {'sampnum'}; %always keep this

@@ -31,7 +31,7 @@ switch opt1
             case 'combine'
                 infiles = {'met/met/surfmet_dy180_all_raw.nc';
                     'met/rad/surfmet_dy180_all_raw.nc';
-                    'met/tsg/surfmet_dy180_all_raw_tsgonly.nc'};
+                    'met/surfmet_dy180_all_raw_tsgonly.nc'};
                 outfile = 'met/surfmet_dy180_all_raw.nc';
             case 'rawedit'
                 ts = (datenum(2024,5,21,0,0,0)-datenum(2024,1,1))*86400;
@@ -290,7 +290,7 @@ switch opt1
             case 'check'
                 checksam.sal = 0; %done
                 checksam.oxy = 0; %done
-                checksam.chl = 0; %code not ready yet, do by hand
+                checksam.chl = 0; 
             case 'flags' %flags before replicate averaging and after replicate averaging***
                 switch samtyp
                     case 'sal'

@@ -1,10 +1,10 @@
-function [samtable, samhead] = load_samdata(infiles, varargin)
-% function [samtable, samhead] = load_samdata(infiles, 'parameter', value)
-% function [samtable, samhead] = load_samdata(infiles, iopts)
+function [samdata, samhead] = load_samdata(infiles, varargin)
+% function [samdata, samhead] = load_samdata(infiles, 'parameter', value)
+% function [samdata, samhead] = load_samdata(infiles, iopts)
 %
 % reads in sample data from spreadsheet or comma delimited files,
 % parses into header, column headers, column units, and data, 
-% outputs data as concatenated table samtable and header in cell array
+% outputs data as concatenated table samdata and header in cell array
 %   samhead
 %
 % data are read from from one or more single and/or concatenated (see
@@ -136,11 +136,11 @@ for fno = 1:length(infiles)
 
     if domtl
         warning('readtable failed; using mtextdload')
-        [dat, sh] = load_samdata_loadtextcsv(infiles{fno}, iopts.hcpat, icolhead, icolunits);
-        if ~exist('samtable', 'var')
-            samtable = dat;
+        [dat, sh] = load_samdata_loadtextcsv(infiles{fno}, iopts.hcpat, iopts.icolhead, iopts.icolunits);
+        if ~exist('samdata', 'var')
+            samdata = dat;
         else
-            samtable = load_samdata_combine_tables(samtable, dat);
+            samdata = load_samdata_combine_tables(samdata, dat);
         end
         samhead(fno) = sh;
 
@@ -170,12 +170,12 @@ for fno = 1:length(infiles)
             %only keep rows with some numeric (non-nan) data
             mr = sum(~ismissing(dat),2)>0;
             dat = dat(mr,:);
-            %add to samtable
-            if ~exist('samtable', 'var')
-                samtable = dat;
-            else
+            %add to samdata
+            if exist('samdata', 'var')
                 %append, matching variables and adding new ones as necessary
-                samtable = load_samdata_combine_tables(samtable, dat);
+                samdata = load_samdata_combine_tables(samdata, dat);
+            else
+                samdata = dat;
             end
         end %loop through sheets
     end
@@ -183,6 +183,9 @@ for fno = 1:length(infiles)
     disp(['loaded ' infiles{fno}])
 
 end %loop through files
+if isfield(iopts,'remove_empty_cols') && iopts.remove_empty_cols
+    samdata = rmmissing(samdata,2,'MinNumMissing',size(samdata,1)); 
+end
 
 warning('on','MATLAB:table:ModifiedAndSavedVarnames')
 warning('on','MATLAB:textscan:AllNatSuggestFormat')
@@ -196,6 +199,7 @@ function iopts = load_samdata_iopts(inargs)
 iopts.icolhead = 1; %first line is column headers
 iopts.icolunits = []; %no units line
 iopts.hcpat = {}; %don't search for hcpat
+iopts.remove_empty_columns = 0; %keep even all-NaN columns
 %inputs
 if ~isempty(inargs)
     iopts = spv_argparse(iopts, inargs);
@@ -332,7 +336,7 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [samtable, samhead] = load_samdata_loadtextcsv(infile, hcpat, icolhead, icolunits)
+function [samdata, samhead] = load_samdata_loadtextcsv(infile, hcpat, icolhead, icolunits)
 maxcol = 2e3;
 %load as cell array
 indata = mtextdload(infile, ',', maxcol);
@@ -351,16 +355,16 @@ for bno = 1:nb
         dat.Properties.VariableUnits = un(bno,:);
     end
     samhead{bno} = indata(iih(1,:),:);
-    if ~exist('samtable','var')
+    if ~exist('samdata','var')
         %initialise
-        samtable = dat;
+        samdata = dat;
     else
         %append
-        samtable = load_samdata_combine_tables(samtable, dat);
+        samdata = load_samdata_combine_tables(samdata, dat);
     end
 end
-if ~exist('samtable','var')
-    samtable = [];
+if ~exist('samdata','var')
+    samdata = [];
 end
 if ~exist('samhead','var')
     samhead = [];
