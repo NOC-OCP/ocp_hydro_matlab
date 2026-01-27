@@ -269,8 +269,6 @@ switch opt1
                 cfg.f.nav_lon_field 	= 6;
                 cfg.f.sadcp = fullfile(mgetdir('ladcp'),'ix','SADCP',['os75nb_' mcruise '_' cfg.stnstr '_for_ladcp.mat']);
             case 'exch'
-	    headstring = {' '};
-		expocode = 'unknown';
                 sect_id = ' ';
                 vars_exclude_ctd = {}; %changed jc238 from {'fluor' 'transmittance'};
                 vars_exclude_sam = {};

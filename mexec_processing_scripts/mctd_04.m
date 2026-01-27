@@ -93,16 +93,17 @@ end
 %%%%% optionally loopedit downcast %%%%%
 if isdown
     doloopedit = 0;
-    ptol = 0.08; %default is not to apply, but this would be the default value if you did
-    spdtol = 0.24; %default value from SBE program
+    maxshoal = 0.08; %dbar
+    minpstep = 0.25/24; %0.25 dbar/s
     opt1 = 'ctd_proc'; opt2 = 'doloopedit'; get_cropt
     if doloopedit
         vars_other = setdiff(var_copycell, {'press'});
         disp(['applying loopediting for ' otfile1d])
-        dn.press = m_loopedit(dn.press, 'ptol', ptol, 'spdtol', spdtol);
+        ploopflag = m_loopedit(dn.press, maxshoal, minpstep);
+        dn.press(ploopflag) = NaN;
         for vno = 1:length(vars_other)
-            dn.(vars_other{vno})(isnan(dn.press)) = NaN;
-            commentd = sprintf('loopediting applied to downcast using ptol %f, spdtol %f\n',ptol,spdtol);
+            dn.(vars_other{vno})(ploopflag) = NaN;
+            commentd = sprintf('loopediting applied to downcast requiring downward motion at least %f dbar per scan, allowing no more than %f dbar of shoaling\n',minpstep*24,maxshoal);
         end
     else
         commentd = '';
