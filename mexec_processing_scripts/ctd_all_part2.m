@@ -12,7 +12,7 @@ end
 
 %bottle firing data into .fir file
 mfir_03(stn)
-if ~isempty(which('gamma_n'))
+if isfield(MEXEC_G,'gamma_nfunc')
     mfir_03_extra(stn)
 end
 %add winch data

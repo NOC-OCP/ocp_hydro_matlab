@@ -161,6 +161,7 @@ switch depth_source
         
     case 'bathy'
         
+        
         simvar = munderway_varname('singlebvar',MEXEC_G.MDIRLIST(:,1)',1,'s');
         if ~isempty(simvar)
             fileb = fullfile(mgetdir(simvar), [simvar '_' mcruise '_01.nc']);

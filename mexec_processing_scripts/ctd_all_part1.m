@@ -11,7 +11,7 @@ mctd_02(stn);
 mctd_03(stn); %average to 1 hz, compute salinity
 
 global MEXEC_G
-if MEXEC_G.ix_ladcp
+if isfield(MEXEC_G,'ix_ladcp') && MEXEC_G.ix_ladcp
     mout_1hzasc(stn) %output 1 hz data in ascii format (required for LDEO IX LADCP processing)
 end
 

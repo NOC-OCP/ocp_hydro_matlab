@@ -1,8 +1,8 @@
 %scripts to rerun after editing using mctd_rawedit, or if calibration is
 %changed
 
-root_ctd = mgetdir('M_CTD');
 m_common
+root_ctd = mgetdir('M_CTD');
 
 if ~exist('klist','var')
     if ~exist('stn','var') %prompt
@@ -17,7 +17,12 @@ klistl = klist(:)'; %clear klist
 
 for kloop = klistl
 
-    stn = kloop; mctd_02(stn)
+    try
+       stn = kloop; mctd_02(stn)
+    catch
+        warning('skipping station %s',stn)
+        continue
+    end
 
     stn = kloop; mctd_03(stn);
     stn = kloop; mctd_04(stn);
@@ -32,21 +37,21 @@ for kloop = klistl
         continue
     end
     stn = kloop; mfir_03(stn);
-    if ~isempty(which('gamma_n'))
+    if isfield(MEXEC_G,'gamma_nfunc')
         stn = kloop; mfir_03_extra(stn);
     end
     stn = kloop; mfir_to_sam(stn);
 
     %calculate and apply depths
-    station_summary(stn)
-    mdep_01(stn)
+    %station_summary(stn)
+    %mdep_01(stn)
     
 end
-msbe35_01(max(klistl)) %read sbe35 data, if not already done up 
-get_sensor_groups(klistl)
+%msbe35_01(max(klistl)) %read sbe35 data, if not already done up 
+%get_sensor_groups(klistl)
 
 %output to csv files
 mout_cchdo_exchangeform(klistl)
 
 %and sync
-opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt
+%opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt
