@@ -2,8 +2,6 @@ switch opt1
 
     case 'setup'
         switch opt2
-            case 'setup_datatypes'
-                use_ix_ladcp = 1;
             case 'time_origin'
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2024 1 1 0 0 0];
             case 'mdirlist'
@@ -40,16 +38,32 @@ switch opt1
         switch opt2
             case 'redoctm'
                 redoctm = 1;
+            case 'doloopedit'
+                doloopedit = 0;
             case 'cnvfilename'
                 cnvfile = fullfile(cdir,sprintf('%s_CTD_%03dS.cnv',upper(mcruise),stn)); %try stainless first
                 if ~exist(cnvfile,'file')
                     cnvfile = fullfile(cdir,sprintf('%s_CTD_%03dT.cnv',upper(mcruise),stn)); %try Ti
                 end
             case 'ctd_cals'
-                co.docal.cond = 0;
-                co.docal.oxygen = 0;
-                %co.calstr.cond.sn44065.dy180 = 'dcal.cond = d0.cond.*(1-0.005/35);';
-                %co.calstr.cond.sn44065.msg = 'calibration for cond 04c-4065 (cond1) based on N samples from M casts';
+                co.docal.cond = 1;
+                co.docal.oxygen = 1;
+                co.calstr.cond.sn42450.jc269 = 'dcal.cond = d0.cond.*(1+0.001/35);';
+                co.calstr.cond.sn42450.msg = 'calibration for cond 04c-2450 (cond1) based on 48 samples from 12 casts (top 1000 m)';
+                co.calstr.cond.sn42858.jc269 = 'dcal.cond = d0.cond.*(1+0.002/35);';
+                co.calstr.cond.sn42858.msg = 'calibration for cond 04c-2858 (cond2) based on 48 samples from 12 casts (top 1000 m)';
+                co.calstr.oxygen.sn2819.jc269 = 'dcal.oxygen = d0.oxygen*1.055+interp1([0 30],[-1 2],d0.statnum);';%+interp1([0 1100],[0 1],d0.press);';
+                co.calstr.oxygen.sn2819.msg = 'calibration for oxygen 2819 (oxygen2) based on 115 low-gradient samples from *** casts (top 1000 m)';
+                co.calstr.oxygen.sn431940.jc269 = 'dcal.oxygen = d0.oxygen.*interp1([0 1100],[1.063 1.055],d0.press)+interp1([0 30],[-2 1.8],d0.statnum);';
+                co.calstr.oxygen.sn431940.msg = 'calibration for oxygen 421940 (oxygen1) based on 115 low-gradient samples from *** casts (top 1000 m)';
+                co.calstr.cond.sn2164.jc269 = 'dcal.cond = d0.cond.*(1+0.005/35);';
+                co.calstr.cond.sn2164.msg = 'adjustment for cond 2164 (cond1) based on comparison with theta-S of calibrated stainless sensor profiles';
+                co.calstr.cond.sn3567.jc269 = 'dcal.cond = d0.cond;';
+                co.calstr.cond.sn3567.msg = 'adjustment for cond 3567 (cond2) based on comparison with theta-S of calibrated stainless sensor profiles';
+                co.calstr.oxygen.sn4570.jc269 = 'dcal.oxygen = d0.oxygen*1.04+4;';
+                co.calstr.oxygen.sn4570.msg = 'adjustment for oxygen 4570 (oxygen1) based on comparison with theta-O of calibrated stainless sensor profiles';
+                co.calstr.oxygen.sn4571.jc269 = 'dcal.oxygen = d0.oxygen*1.035+9;';
+                co.calstr.oxygen.sn4571.msg = 'adjustment for oxygen 4571 (oxygen2) based on comparison with theta-O of calibrated stainless sensor profiles';
             case 'rawedit_auto'
                 if stn==1
                     co.badscan.temp2 = [4.95e4 7.9e4];
@@ -62,6 +76,10 @@ switch opt1
                 elseif stn==4
                     co.badscan.oxygen_sbe1 = [1.4026e5 Inf];
                     co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==5
+                    co.badscan.temp2 = [3.75e4 6.81e4];
+                    co.badscan.cond2 = co.badscan.temp2;
+                    co.badscan.oxygen_sbe2 = co.badscan.temp2;
                 elseif stn==6
                     co.rangelim.cond1 = [34 40];
                     co.rangelim.cond2 = co.rangelim.cond1;
@@ -70,19 +88,44 @@ switch opt1
                 elseif stn==7
                     co.badscan.oxygen_sbe1 = [1.303e5 Inf];
                     co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
-
-                    % elseif ismember(stn,[44 45])
-                %     co.badscan.oxygen_sbe2 = [-inf inf]; %steps, all questionable
-                % elseif stn==61
-                %     co.despike.cond1 = [0.02 0.02];
-                %     co.despike.cond2 = [0.02 0.02];
-                % elseif stn==88
-                %     co.badscan.cond1 = [9.198e4 inf]; %offset, probably resolves before surface but hard to say where
-                % elseif stn==98                         %CTD clogged with jellyfish
-                %     co.badscan.oxygen_sbe1 = [39200 inf];
-                %     co.badscan.temp1 = [39200 inf];
-                %     co.badscan.cond1 = [39200 inf];
-                %     co.badscan.cond2 = [11004 39421];
+                elseif stn==8
+                    co.badscan.temp2 = [4.2e4 4.78e4; 4.9e4 5.9e4];
+                    co.badscan.cond2 = co.badscan.temp2;
+                    co.badscan.oxygen_sbe2 = co.badscan.temp2;
+                elseif stn==9
+                    co.badscan.oxygen_sbe1 = [1.366e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==10
+                    co.badscan.oxygen_sbe1 = [1.1264e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==12
+                    co.badscan.oxygen_sbe1 = [1.265e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==14
+                    co.badscan.oxygen_sbe1 = [8.707e4 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==16
+                    co.badscan.oxygen_sbe1 = [1.2884e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==20
+                    co.badscan.oxygen_sbe1 = [1.351e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==21
+                    co.badscan.oxygen_sbe1 = [1.288e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==23
+                    co.badscan.oxygen_sbe1 = [1.393e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==25
+                    co.badscan.oxygen_sbe1 = [1.2515e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==26
+                    co.badscan.oxygen_sbe1 = [1.2056e5 Inf];
+                    co.badscan.oxygen_sbe2 = co.badscan.oxygen_sbe1;
+                elseif stn==27
+                    co.badscan.cond2 = [1.005e5 1.017e5];
+                    co.badscan.oxygen_sbe1 = [1.552e5 Inf];
+                    co.badscan.oxygen_sbe2 = [co.badscan.cond2; 1.134e5 1.135e5; co.badscan.oxygen_sbe1];
                 end
         end
 
@@ -96,33 +139,34 @@ switch opt1
         end
 
     case 'ladcp_proc'
-        cfg.uppat = sprintf('%s_LADCP_CTD%03dS*.000',upper(mcruise),stnlocal);
-        cfg.dnpat = sprintf('%s_LADCP_CTD%03dM*.000',upper(mcruise),stnlocal);
+        cfg.uppat = sprintf('%s_LADCP_CTD_%03dU.000',upper(mcruise),stnlocal);
+        cfg.dnpat = sprintf('%s_LADCP_CTD_%03dD.000',upper(mcruise),stnlocal);
         cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata');
         cfg.p.vlim = 4; %rather than ambiguity vel, match this to LV
-
+        sfile = fullfile(spath, sprintf('os75nb_%s_ctd_%03d_forladcp.mat',mcruise,stn));
     case 'check_sams'
         %make this display-dependent? (or session-dependent?)
-        check_sal = 1;
-        check_oxy = 1;
+        check_sal = 0;
+        check_oxy = 0;
         check_sbe35 = 0;
 
     case 'botpsal'
         switch opt2
             case 'sal_files'                
-                salfiles = dir(fullfile(root_sal,'JC269*.csv')); 
+                salfiles = dir(fullfile(root_sal,'autosal*.csv')); 
             case 'sal_parse'
                 cellT = 21;
                 ssw_k15 = 0.99993;
                 ssw_batch = 'P168';
             case 'sal_calc'
+                salin_off = -2.5e-5; %only run on one day so use constant
             case 'sal_flags'
         end
 
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = dir(fullfile(root_oxy,'DY180_oxy_CTD*.xls'));
+                ofiles = dir(fullfile(root_oxy,'JC269_Winkler*.xlsx'));
                 %hcpat = {'Niskin';'Bottle'};
                 %chrows = 1:2;
                 %chunits = 3;
@@ -132,6 +176,8 @@ switch opt1
             case 'oxy_parse'
                 calcoxy = 1;
                 labT = [];
+                ds_oxy(ismissing(ds_oxy.number),:) = []; %template sheet has blank rows but does have headings
+                ds_oxy.number = cell2mat(cellfun(@(x) str2num(x(4:6)),ds_oxy.number,'UniformOutput',false));
                 varmap.statnum = {'number'};
                 varmap.position = {'bottle_number'};
                 varmap.vol_blank = {'titre_mls'};
@@ -142,25 +188,19 @@ switch opt1
                 varmap.sample_titre = {'titre_mls_2'};
             case 'oxy_flags'
                 %sampnum, a flag, b flag, c flag
-                flr = [1201 3 3 9; ... 
-                       2703 3 3 9; ... 
-                       2707 2 2 4; ...
-                       3903 9 3 4; ...
-                       3906 3 3 9; ...
-                       4403 2 2 4; ...
-                       5203 3 4 4; ... % to be further evaluated later
-                       5223 2 2 2; ...
-                      ];
+                flr = [623 3 3;
+                    2003 3 3];
                 [~,ifl,id] = intersect(flr(:,1),d.sampnum);
                 d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
                 d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
-                d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
                 % outliers relative to profile/CTD (not replicates)
-                flag4 = [1207 2716 2720 2722 2724 2705 3909 5206 5210 5214 5216 5218]';
+                flag4 = [1607 2103 2119]';
                 d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
-                flag4b = [1501 2720]; %both a and b high, maybe bad niskin closure
-                d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
-                d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
+                flag3 = [923]';
+                d.botoxya_flag(ismember(d.sampnum,flag3)) = 3;
+                % flag4b = []; %both a and b high, maybe bad niskin closure
+                % d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
+                % d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
         end
 
     case 'outputs'
@@ -169,7 +209,7 @@ switch opt1
                 snames = {'nsal' 'noxy' 'nnut' 'nco2'};
                 sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'nitr'} {'dic' 'talk'}};
             case 'exch'
-                ns = 10; nt = 10; %***
+                ns = 16; nt = 11;
                 expocode = '740H20240904'; %***
                 sect_id = 'Bio-Carbon';
                 submitter = 'COPNOCAP'; %group institution person
@@ -177,7 +217,7 @@ switch opt1
                     '#Cruise JC269; Bio Carbon autumn';...
                     '#Region: subpolar north Atlantic';...
                     ['#EXPOCODE: ' expocode];...
-                    '#DATES: 202409** - 202410**';...
+                    '#DATES: 20240906 - 20241007';...
                     '#Chief Scientist: M. Moore (University of Southampton)';...
                     '#Supported by grants from the UK Natural Environment Research Council.'}; %***
                 if strcmp(in.type,'ctd')
@@ -185,10 +225,12 @@ switch opt1
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 24-place stainless-steel rosette',ns);...
                         sprintf('#%d stations with 24-place trace metal clean rosette',nt);...
-                        '#CTD: Who - Y. Firing and T. Petit (NOC); Status - preliminary.';...
-                        %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        '#CTD: Who - A. Paloczy and Y. Firing (NOC); Status - final.';...
+                        '#The CTD PRS; TMP data are all good.';...
+                        '#The CTD SAL; OXY data from stations 2 4 6 7 9 10 12 14 16 18 20 21 23 25-27 are all calibrated using bottle sample data and good.';...
+                        '#The CTD SAL; OXY data from stations 1 3 5 8 11 13 15 17 19 22 24 calibrated by comparison with above stations and good';...
                         '# DEPTH_TYPE   : COR';...
-                        '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
+                        '# DEPTH_TYPE   : from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
                         }];
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
@@ -197,13 +239,17 @@ switch opt1
                         sprintf('#%d stations with 24-place trace metal clean rosette',nt);...
                         '#CTD: Who - Y. Firing and T. Petit (NOC); Status - preliminary';...
                         '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
-                        %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
-                        '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom';...
-                        '#Salinity: Who - Y. Firing (NOC); Status - preliminary; SSW batch P165***.';...
-                        '#Oxygen: Who - E. Mawji (NOC); Status - preliminary.';...
-                        '#Nutrients: Who - E. Mawji (NOC); Status - preliminary.';...
-                        '#DIC and Talk: Who - ??? (NOC); Status - preliminary.';...
-                        '#***';...
+                        '#CTD: Who - A. Paloczy and Y. Firing (NOC); Status - final.';...
+                        '#The CTD PRS; TMP data are all good.';...
+                        '#The CTD SAL; OXY data from stations 2 4 6 7 9 10 12 14 16 18 20 21 23 25-27 are all calibrated using bottle sample data and good.';...
+                        '#The CTD SAL; OXY data from stations 1 3 5 8 11 13 15 17 19 22 24 calibrated by comparison with above stations and good';...
+                        '# DEPTH_TYPE   : COR';...
+                        '# DEPTH_TYPE   : from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
+                        '#Salinity: Who - A. Paloczy (NOC); Status - final; SSW batch P168.';...
+                        '#Oxygen: Who - E. Mawji (NOC); Status - final.';...
+                        %'#Nutrients: Who - E. Mawji (NOC); Status - preliminary.';...
+                        %'#DIC and Talk: Who - ??? (NOC); Status - preliminary.';...
+                        %'#***';...
                         }];
                 end
         end
