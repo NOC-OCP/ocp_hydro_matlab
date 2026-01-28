@@ -61,12 +61,14 @@ if isstruct(mtable) || istable(mtable)
     filepre = cell(size(streams));
     for fno = 1:length(streams)
         m = strcmp(streams{fno},mtable.tablenames);
-        filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
+        if sum(m)
+	    filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
+	end
     end
 elseif iscell(mtable)
     filepre = mtable;
 end
-filepre = unique(filepre);
+filepre = unique(filepre(~cellfun('isempty',filepre)));
 otfile = fullfile(fileparts(filepre{1}),otfile);
 
 if regrid

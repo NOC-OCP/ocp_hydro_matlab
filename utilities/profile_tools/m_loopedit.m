@@ -1,71 +1,56 @@
-function pe = m_loopedit(p, varargin);
-% function pe = m_loopedit(p, 'ptol', ptol, 'spdtol', spdtol)
+function ploopflag = m_loopedit(p, maxshoal, minpstep)
+%function ploopflag = m_loopedit(p, maxshoal, minpstep)
 %
-% edit out periods where the CTD package reverses
-% by more than ptol (default 0.08 dbar)
-% or speed goes below spdtol (default 0.1 dbar/time step, or 0.24 m/s for
-% 24 hz data)
+% for downcast data, flag periods where the CTD package either:
+%   has reversed more than maxshoal from any earlier point
+%     (d1.press(i) < max(d1.press(1:i)) - maxshoal)
+%   or
+%   is not moving downward by at least minpstep from the last point 
+%     (d1.press(i)-d1.press(i-1) < minpstep)
 %
-% only suitable for downcast data
-%
-% once you've used this you can apply same NaNs to other fields
 %
 % see mctd_04
 
-ptol = 0.08;
-spdtol = 0.24;
-for no = 1:2:length(varargin)
-    eval([varargin{no} ' = varargin{no+1};'])
+if maxshoal<=0
+    error('maxshoal must be positive')
 end
-if ~isfinite(ptol) && ~isfinite(spdtol)
-    error('at least one of ptol or spdtol must have a value')
+if ~isfinite(maxshoal) && ~isfinite(minpstep)
+    error('at least one of maxshoal or minpstep must have a defined value')
 end
 
 if p(end)<p(1)
     error('only suitable for downcast data')
 end
 
-%make column vector
-if size(p,1) == 1
-    trp = 1;
-    p = p';
-else
-    trp = 0;
-end
+flagup = false(size(p)); flagslo = flagup;
 
-if ~isempty(ptol) && ~isnan(ptol)
-    %calculate max pressure above (before) each point
-    %in chunks, otherwise matrix is too big
-    np = length(p);
-    pm = false(1,np); %this will contain max pressure above (before) each point
-    %separate into chunks otherwise matrix is too big
-    nm = 5000; ns = floor(np/nm); nr = np-nm*ns;
-    %first chunk
-    pm(1:nr) = max(triu(repmat(p(1:nr),1,nr),1)); %max p before each level
-    %rest of them
-    ii = nr+[1:nm];
-    while(ii(end)<np)
-        pm(ii) = max(triu(repmat(p(ii),1,nm),1)); %max p in this chunk at/before each level
-        pm(ii) = max(pm(ii), max(pm(1:ii(1)-1))); %and test against earlier chunks
-        ii = ii + nm;
+if isfinite(maxshoal)
+    %calculate max pressure above (before) each point, using chunks to keep
+    %matrices manageable
+    if size(p,1) == 1
+        p = p';
     end
-    flagp = (p<=pm'-ptol);
-else
-    flagp = false(size(p));
+    np = length(p);
+    nm = 5000; ns = ceil(np/nm);
+    pm = p;
+    for no = 1:ns
+        ii = [1:nm]+(no-1)*nm; 
+        if no==ns
+            ii = ii(ii<=np); nm = length(ii);
+        end
+        %max pressure within this chunk and up to each time
+        pm(ii) = max(triu(repmat(p(ii),1,nm),1))';
+        %check against earlier chunks
+        if no>1
+            pm(ii) = max(pm(ii),max(pm(1:ii(1)-1)));
+        end
+    end
+    flagup =(p<=pm-maxshoal);
 end
 
-if ~isempty(spdtol) && ~isnan(spdtol)
+if isfinite(minpstep)
     %speed to this point
-    spd = [NaN; diff(p)];
-    flags = (spd<spdtol);
-else
-    flags = false(size(p));
+    flagslo(2:end) = p(2:end)-p(1:end-1) < minpstep;
 end
 
-pe = p;
-pe(flags | flagp) = NaN;
-
-%same orientation as p originally
-if trp
-    pe = pe';
-end
+ploopflag = flagslo | flagup;

@@ -5,6 +5,11 @@ function [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, vars_to_ed)
 %apply previous manually selected edits
 [d, ~] = apply_guiedits(d, 'dday', [edfile '*'], 0, btol);
 
+if ~feature('ShowFigureWindows')
+   warning('no display available to run GUI data editor; skipping')
+   return
+end
+
 %choose new ones
 edgrp_all = {};
 for no = 1:length(ddays)

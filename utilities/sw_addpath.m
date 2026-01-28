@@ -9,6 +9,9 @@ function sw_paths = sw_addpath(other_programs_root,varargin)
 % used 
 % if 'addladcp' is set to 0, LADCP code will not be included
 
+if ~iscell(other_programs_root)
+    other_programs_root = {other_programs_root};
+end
 force_vers = 0;
 addladcp = 1;
 for no = 1:2:length(varargin)
@@ -17,14 +20,13 @@ end
 
 ld = table('Size', [1 4], 'VariableTypes', {'string' 'string' 'string' 'string'}, 'VariableNames', {'predir' 'lib' 'exmfile' 'verstr'});
 n = 1;
-ld(n,:) = {other_programs_root 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
-ld(n,:) = {other_programs_root 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
-ld(n,:) = {other_programs_root 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
-%ld(n,:) = {other_programs_root 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
-ld(n,:) = {other_programs_root 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
+ld(n,:) = {other_programs_root{1} 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
+ld(n,:) = {other_programs_root{1} 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
+ld(n,:) = {other_programs_root{1} 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
+%ld(n,:) = {other_programs_root{1} 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
+ld(n,:) = {other_programs_root{1} 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
 if addladcp
-    ld(n,:) = {other_programs_root 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
-    ld(n,:) = {fullfile(other_programs_root, 'ladcp') 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
+    ld(n,:) = {other_programs_root{end} 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
 end
 if ~force_vers
     ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root

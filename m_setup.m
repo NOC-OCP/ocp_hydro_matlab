@@ -51,22 +51,21 @@ clear MEXEC_G
 global MEXEC_G
 
 %defaults: what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='dy186';
+MEXEC_G.MSCRIPT_CRUISE_STRING='jc282';
 MEXEC_G.ix_ladcp = 0; %set to 0 to not add ldeo_ix paths (for instance if processing mooring data)
-MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
+MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
-MEXEC_G.mexec_data_root = '/noc/mpoc/rpdmoc/cruise_data/dy186/mcruise/data';%if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.other_programs_root = '/noc/mpoc/eurogoship/programs/others/'; 
-MEXEC_G.mexec_data_root = '/Users/yfiring/projects/rpdmoc/cruise_data/dy186/mcruise/data';%if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.other_programs_root = '/Users/yfiring/programs/others/'; 
-MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/gitvcd/mexec_exec/';
+MEXEC_G.mexec_data_root = '/data/pstar/projects/obg/jc282/mcruise/data/'; 
+MEXEC_G.other_programs_root = {'/data/pstar/programs/others/matlab';'/data/pstar/repos/athurnherr'}; 
+MEXEC_G.mexec_shell_scripts = '/data/pstar/repos/NOC-OCP/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-MEXEC_G.raw_underway = 0; %if 0, skip the rvdas setup (use saved mrtables)
+MEXEC_G.raw_underway = 1; %if 0, skip the rvdas setup (use saved mrtables)
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 force_vers = 0; %set to 1 to use hard-coded version numbers for e.g. LADCP software, gsw, gamma_n (otherwise finds highest version number available)
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
+    disp('running m_setup with some user input parameters')
     MEXEC_G_user = varargin{1};
     fn = fieldnames(MEXEC_G_user);
     fn0 = fieldnames(MEXEC_G);
@@ -125,6 +124,12 @@ end
 if ~isempty(MEXEC_G.other_programs_root)
     MEXEC_G.exsw_paths = sw_addpath(MEXEC_G.other_programs_root,'force_vers',force_vers,'addladcp',MEXEC_G.ix_ladcp);
 end
+% weirdly, gamma_n now is not a function, have to use eos80_legacy_gamma_n
+if ~isempty(which('eos80_legacy_gamma_n'))
+	MEXEC_G.gamma_nfunc = @(s,t,z,x,y) eos80_legacy_gamma_n(s,t,z,x,y);
+elseif ~isempty(which('gamma_n'))
+	MEXEC_G.gamma_nfunc = @(s,t,z,x,y) gamma_n(s,t,z,x,y);
+end
 
 % location processing and writing mexec files
 if isempty(MEXEC_G.mexec_data_root)
@@ -182,7 +187,7 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
     case 'kn'
         MEXEC_G.Mship = 'knorr';
         MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
-    case 'en'
+    case 'en'            
         MEXEC_G.Mship = 'endeavor';
         MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
     otherwise
@@ -226,7 +231,7 @@ try
 catch
     if MEXEC_G.raw_underway
         try
-            fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
+            fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')\n')
             switch MEXEC_G.Mshipdatasystem
                 case 'rvdas'
                     mrtv = mrdefine('redo');
