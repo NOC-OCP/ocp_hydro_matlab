@@ -1,47 +1,38 @@
-function MEXEC_G = sw_addpath(other_programs_root,varargin)
-% function MEXEC_G = sw_addpath(other_programs_root)
-% function MEXEC_G = sw_addpath(other_programs_root,0)
+function sw_paths = sw_addpath(other_programs_root,varargin)
+% sw_paths = sw_addpath(other_programs_root,'force_vers',force_vers)
+% sw_paths = sw_addpath(other_programs_root,'addladcp',addladcp)
 %
 % add external software directories listed below (seawater toolbox, etc.)
 % to path
-% for Matlab2016 or later, finds the highest version available in
-% other_programs_root/ unless optional scalar input argument is 0, in which
-% case versions listed below will be used
-% if structure MEXEC_G is passed as optional input argument, it can be used
-% to switch off including LADCP code in the list
-% (MEXEC_G is passed as an input argument not a global variable so this code
-% can be run without m_setup)
+% finds the highest version available in other_programs_root/ unless
+% 'force_vers' is set to 1, in which case versions listed below will be
+% used 
+% if 'addladcp' is set to 0, LADCP code will not be included
 
-for no = 1:length(varargin)
-    if isstruct(varargin{no})
-        MEXEC_G = varargin{no};
-    else
-        force_ext_software_versions = varargin{no};
-    end
+if ~iscell(other_programs_root)
+    other_programs_root = {other_programs_root};
 end
-if ~exist('MEXEC_G','var')
-    MEXEC_G.ix_ladcp = 1;
-    MEXEC_G.MMatlab_version_date = now;
+force_vers = 0;
+addladcp = 1;
+for no = 1:2:length(varargin)
+    eval([varargin{no} ' = varargin{no+1};']);
 end
 
 ld = table('Size', [1 4], 'VariableTypes', {'string' 'string' 'string' 'string'}, 'VariableNames', {'predir' 'lib' 'exmfile' 'verstr'});
 n = 1;
-ld(n,:) = {other_programs_root 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
-ld(n,:) = {other_programs_root 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
-ld(n,:) = {other_programs_root 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
-%ld(n,:) = {other_programs_root 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
-ld(n,:) = {other_programs_root 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
-if ~isfield(MEXEC_G, 'ix_ladcp') || MEXEC_G.ix_ladcp
-    ld(n,:) = {other_programs_root 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
-    ld(n,:) = {fullfile(other_programs_root, 'ladcp') 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
+ld(n,:) = {other_programs_root{1} 'seawater', 'sw_dpth' '_ver3_2'}; n = n+1;
+ld(n,:) = {other_programs_root{1} 'm_map' 'm_gshhs_i' '_v1_4'}; n = n+1;
+ld(n,:) = {other_programs_root{1} 'gamma_n' 'gamma_n' '_v3_05_10'}; n = n+1;
+%ld(n,:) = {other_programs_root{1} 'eos80_legacy_gamma_n' 'eos80_legacy_gamma_n' ''}; n = n+1;
+ld(n,:) = {other_programs_root{1} 'gsw_matlab', 'gsw_SA_from_SP' '_v3_03'}; n = n+1;
+if addladcp
+    ld(n,:) = {other_programs_root{end} 'LDEO_IX' 'loadrdi' '_13'}; n = n+1;
 end
-if MEXEC_G.MMatlab_version_date>=datenum(2016,1,1) && ~force_ext_software_versions
+if ~force_vers
     ld = sw_vers(ld); %replace verstr with highest version of each library found in mstar_root
 end
 
-if ~isfield(MEXEC_G,'exsw_paths')
-    MEXEC_G.exsw_paths = {};
-end
+sw_paths = {};
 
 for lno = 1:size(ld,1)
     
@@ -50,7 +41,7 @@ for lno = 1:size(ld,1)
         if exist(mpath,'dir')==7 %presume subdirectories will also be present     
             fprintf(1,'adding to path: %s\n',mpath)
             addpath(genpath(mpath), '-end')
-            MEXEC_G.exsw_paths = [MEXEC_G.exsw_paths; mpath];
+            sw_paths = [sw_paths; mpath];
         else
             warning([mpath ' not found'])
         end
@@ -87,7 +78,7 @@ for lno = 1:size(lib_tab,1)
         if isempty(a)
             notfound = [notfound; lno];
         else
-            if length(a)==1
+            if isscalar(a)
                 ind = 1;
             else
                 %get version numbers

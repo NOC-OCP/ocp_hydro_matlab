@@ -77,7 +77,7 @@ function mfsave(filename, d, varargin)
 % >> d.botpsal = botpsal;
 % >> h.fldnam = {'botpsal'};
 % >> h.comment = 'Salinity data loaded from saldata_cruise_all.txt \n and standardised';
-% >> mfsave(filename, d, h, '-append');
+% >> mfsave(sprintf('sal_%s_01.nc',mcruise), d, h, '-append');
 %
 % to add data to variable(s) in the file but for a different set of e.g.
 %     sampnum:
@@ -121,6 +121,7 @@ end
 if ~exist('h','var') || ~isfield(h, 'fldnam')
     h.fldnam = fieldnames(d);
 end
+if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
 
 if ~exist(filename, 'file') && ~writenew
     warning(['file ' filename ' not found, creating new']);
@@ -169,7 +170,7 @@ if mergemode
     if ~isfield(d, indepvar) || sum(isfinite(d.(indepvar)))==0
         error(['merge variable ' indepvar ' in input d has no good values']);
     elseif ~sum(strcmp(indepvar, h0.fldnam))
-            error([indepvar ' not found in file ' filename ' to merge on']);
+        error([indepvar ' not found in file ' filename ' to merge on']);
     end
 
     d0 = mloadq(filename, indepvar);
@@ -307,23 +308,25 @@ if isfield(h,'comment') && ~isempty(h.comment)
     while strncmp(h.comment,delim,ndelim)
         h.comment(1:ndelim) = [];
     end
-    filecomin = h.comment;
+    comstring = h.comment;
 else
-    filecomin = [];
+    comstring = [];
 end
-if isfield(h,'dataname') && isfield(h,'mstar_site') && isfield(h,'version')
-    commentadd = [' from: ' h.dataname ' <s> ' h.mstar_site ' <v> ' sprintf('%d',h.version)];
-else
-    commentadd = ' ';
+% removed lines being added to comment that were mostly redundant
+if isempty(comstring)
+    if writenew
+        comstring = 'Variables written';
+    elseif mergemode
+        comstring = ['Variables added, merging on ' indepvar];
+    else
+        comstring = ['Variables added'];
+    end
 end
-if writenew
-    comstring = [filecomin 'Variables' commentadd ' written'];
-elseif mergemode
-    comstring = [filecomin 'Variables' commentadd ' added, merging on ' indepvar];
-else
-    comstring = [filecomin 'Variables' commentadd ' added'];
+comstring = [comstring ' at ' datestr(now,31) ' by ' MEXEC_G.MUSER];
+if isfield(h, 'mstar_site')
+    comstring = [comstring ', ' h.mstar_site];
 end
-m_add_comment(ncfile,[comstring '  at ' datestr(now,31) '  by ' MEXEC_G.MUSER]);
+m_add_comment(ncfile,comstring)
 
 % history
 if writenew

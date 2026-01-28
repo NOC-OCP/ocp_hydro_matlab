@@ -68,7 +68,7 @@ otfile = m_add_nc(otfile);
 
 if numel(dd.dnum) == 0
     % no data found, quit without writing a file
-    warning('No data cycles loaded with mrload')
+    warning('No data cycles loaded with mrload from %s',argot.table)
     return
 end
 
@@ -131,7 +131,7 @@ else
 end
 
 hnew.dataname = dataname;
-hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER];
+hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER MEXEC_G.COMMENT_DELIMITER_STRING];
 if exist(m_add_nc(otfile),'file')
     mfsave(otfile, dd, hnew, '-merge', 'time');
 else

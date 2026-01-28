@@ -8,7 +8,8 @@ function mrtables_out = mrdef_mstarnames(mrtables, varargin)
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
-% Define mstar filename prefixes for rvdas tables, and (optionally) limit to 
+% Define mstar filename prefixes for rvdas tables, and (optionally) exclude
+% tables/variables/messages we don't want (as set in opt_cruise.m)
 %
 %
 % Input:
@@ -89,11 +90,11 @@ for tno = 1:nt
         %if we have an extra prefix like anemometer_ on this ship/database
         iiu = iiu(npre:end); 
     end
-    if length(iiu)==1
+    if isscalar(iiu)
         iiu(2) = iiu(1); %tablemap{:,4} will be empty
     end
     msg = tabl(iiu(end)+1:end);
-    if length(iiu)==1
+    if isscalar(iiu)
         inst1 = tabl(1:iiu-1);
     else
         inst1 = tabl(1:iiu(2)-1);
@@ -145,6 +146,9 @@ if limit(1)
     mrtables_out(iis,:) = [];
     [~,iis,~] = intersect(lower(mrtables_out.tablenames), lower(skips.sentence));
     mrtables_out(iis,:) = [];
+    for no = 1:length(skips.sentence_pat)
+        mrtables_out(contains(lower(mrtables_out.tablenames), lower(skips.sentence_pat{no})),:) = [];
+    end
 end
 
 if sum(limit)

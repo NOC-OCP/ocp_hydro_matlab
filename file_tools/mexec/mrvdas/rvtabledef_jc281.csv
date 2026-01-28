@@ -1,0 +1,28 @@
+RVDAS info from database "JC281" and .json files in 
+loaded by mrdefine.m on 30-Jul-2025 15:23:07
+saved in /data/pstar/projects/obg/jc281/mcruise/data/rvdas/rvtabledef_jc281.mat and /data/pstar/repos/NOC-OCP/ocp_hydro_matlab/file_tools/mexec/mrvdas/rvtabledef_jc281.csv
+csv copy only for information (.mat used by mrdefine)
+
+tablenames, tablevars, mstarpre, mstardir, paramtype, rvdasmsg, tableunts, longnames, mstarvars, mstarunts
+adcp_vdvbw,"time,longitudinalwaterspeed,transversewaterspeed,null1,null2,null3",adcp,other,log,vdvbw,"","","time,longitudinalwaterspeed,transversewaterspeed,null1,null2,null3"," ,decimal_degrees,m_per_second, , , "
+cnav_gngga,"time,utctime,latitude,latdir,longitude,londir,altitude",cnav,nav,pos,gngga,"","","time,utctime,latitude,latdir,longitude,londir,altitude"," ,hhmmss_fff,decimal_degrees,decimal_degrees,decimal_degrees,decimal_degrees, "
+cnav_gnvtg,"time,cog,cogm,sog,sogkmph",cnav,nav,shipmov,gnvtg,"","","time,cog,cogm,sog,sogkmph"," , , , , "
+ea640_sddbs,"time,depthmetre",ea640,bathy,sbm,sddbs,"","","time,depth"," ,m"
+ea640_sddpt,"time,depth,transduceroffset",ea640,bathy,sbm,sddpt,"","","time,depth,transduceroffset"," , , "
+em122_kidpt,"time,waterdepthmeter,transduceroffset",em122,bathy,mbm,kidpt,"","","time,waterdepth,transduceroffset"," ,m, "
+posmv_gpgga,"time,utctime,latitude,latdir,longitude,londir,altitude",posmv,nav,pos,gpgga,"","","time,utctime,latitude,latdir,longitude,londir,altitude"," ,hhmmss_fff,decimal_degrees,decimal_degrees,decimal_degrees,decimal_degrees, "
+posmv_gpggk,"time,utctime,pdop,eht",posmv,nav,pos,gpggk,"","","time,utctime,pdop,eht"," ,hhmmss_fff, , "
+posmv_gphdt,"time,heading",posmv,nav,head,gphdt,"","","time,heading"," , "
+posmv_gpvtg,"time,cog,cogm,sog,sogkmph",posmv,nav,shipmov,gpvtg,"","","time,cog,cogm,sog,sogkmph"," , , , , "
+posmv_pashr,"time,utctime,roll,pitch,heave,headingacuracy",posmv,nav,att,pashr,"","","time,utctime,roll,pitch,heave,headingacuracy"," ,hhmmss_fff, , , , "
+ranger2usbl_psonlld,"time,utctime,id,lat,long,depth,hor_err_major,hor_err_minor,hor_err_dir,depth_error,optional_spec,opt1,opt2,opt3",ranger2usbl,other,usbl,psonlld,"","","time,utctime,id,lat,long,depth,hor_err_major,hor_err_minor,hor_err_dir,depth_error,optional_spec,opt1,opt2,opt3"," ,hhmmss_fff, ,decimal_degrees,decimal_degrees, , , , , , , , , "
+sbe38dk_sbe38,"time,tempdk",sbe38dk,met,sst,sbe38,"","","time,tempdk"," ,degreesC"
+sbe45_nanan,"time,temph,conductivity,salinity,soundvelocity,tempr",sbe45,met,tsg,nanan,"","","time,temph,conductivity,salinity,soundvelocity,tempr"," ,degreesC,S_per_m,psu, ,degreesC"
+seapathatt_psxn23,"time,roll,pitch,heading,heave",seapathatt,nav,att,psxn23,"","","time,roll,pitch,heading,heave"," , , , , "
+seapathpos_ingga,"time,utctime,latitude,latdir,longitude,londir,altitude",seapathpos,nav,pos,ingga,"","","time,utctime,latitude,latdir,longitude,londir,altitude"," ,hhmmss_fff,decimal_degrees,decimal_degrees,decimal_degrees,decimal_degrees, "
+seapathpos_inhdt,"time,heading",seapathpos,nav,head,inhdt,"","","time,heading"," , "
+seapathpos_invtg,"time,cog,cogm,sog,sogkmph",seapathpos,nav,shipmov,invtg,"","","time,cog,cogm,sog,sogkmph"," , , , , "
+shipsgyro_hehdt,"time,heading",shipsgyro,nav,head,hehdt,"","","time,heading"," , "
+skipperlog_vdvbw,"time,longitudinalwaterspeed,transversewaterspeed,longitudinalgroundspeed,transversegroundspeed,null1,null2",skipperlog,other,log,vdvbw,"","","time,longitudinalwaterspeed,transversewaterspeed,longitudinalgroundspeed,transversegroundspeed,null1,null2"," ,decimal_degrees,m_per_second,decimal_degrees,m_per_second, , "
+winch_winch,"time,tension,cableout,rate,backtension,rollangle",winch,other,winch,winch,"","","time,tension,cableout,rate,backtension,rollangle"," , ,m_per_second, , , "
+windsonic_iimwv,"time,winddirection,windspeed",windsonic,met,wind,iimwv,"","","time,winddirection,windspeed"," , ,m_per_second"

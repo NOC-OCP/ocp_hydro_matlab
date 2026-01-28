@@ -68,6 +68,8 @@ function dg = grid_profile(d, gridvar, gridvec, method, varargin)
 %
 % calls gp_binav or gp_smooth, and optionally gp_fillgaps
 %
+% despite the name, this can be used for time series as well as profiles
+%
 % ylf dy146
 
 

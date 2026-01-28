@@ -37,7 +37,7 @@ if nargin>0 && strcmp(varargin{1},'redo')
     % Limit to the tables and variables we want to load, add mstar names
     limit = [1 1];
     mrtables_use = mrdef_mstarnames(mrtables, limit);
-        
+
     % Check .json files for information on units
     mrtables_use = mrdef_json(mrtables_use);
 
@@ -46,16 +46,31 @@ if nargin>0 && strcmp(varargin{1},'redo')
     % appended
     mrtv = mrdef_rename_varsunits(mrtables_use);
 
-    writetable(mrtv, tabledefcsv, 'Delimiter', ',')
-    save(tabledefmat, 'mrtv')
+    opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
+    header = {sprintf('RVDAS info from database %s and .json files in %s',RVDAS.database,RVDAS.jsondir);...
+        sprintf('loaded by mrdefine.m on %s',datestr(now));...
+        sprintf('saved in %s and %s', tabledefmat, tabledefcsv);...
+        sprintf('csv copy only for information (.mat used by mrdefine)');...
+        };
+    fid = fopen(tabledefcsv,'w');
+    fprintf(fid, '%s\n', header{:}); fprintf(fid, '\n');
+    fprintf(fid, '%s', mrtv.Properties.VariableNames{1});
+    fprintf(fid, ', %s', mrtv.Properties.VariableNames{2:end});
+    fprintf(fid, '\n');
+    fclose(fid);
+    writetable(mrtv, tabledefcsv, 'Delimiter', ',', 'WriteMode', 'append');
+    save(tabledefmat, 'mrtv', 'header')
 
 else
 
     df = dir(tabledefmat);
     if isempty(df)
-        fprintf(2,'no %s found; skipping\n',tabledefmat)
+        fprintf(2,'no %s found; try running with input argument ''redo''\n',tabledefmat)
     else
-        fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
+        if ~isfield(MEXEC_G,'mrvdas_update_warning') || (now-MEXEC_G.mrvdas_update_warning)>1
+            fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
+            MEXEC_G.mrvdas_update_warning = now;
+        end
         load(tabledefmat,'mrtv')
     end
 

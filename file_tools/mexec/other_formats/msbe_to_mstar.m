@@ -319,11 +319,13 @@ for sno = 1:length(st)
     if ~isempty(ii)
         sn = cellfun(@(x) x(findstr('<SerialNumber>',x)+14:findstr('</Serial',x)-1),head(ii+1),'UniformOutput',false);
         %sn = regexprep(sn,'[^a-zA-Z0-9]','_');
-        %***later will need to store numeric values so remove characters
+        %later will need use numeric values so remove characters and
+        %leading 0s
         sns = [sns; [sa(sno,1) regexprep(sn(1), '[^0-9]', '')]];
         if length(sn)>1
             sns = [sns; [sa(sno,2) regexprep(sn(2), '[^0-9]', '')]];
         end
+        sns(:,2) = cellfun(@(x) num2str(str2num(x)), sns(:,2), 'UniformOutput', false);
     end
 end
 

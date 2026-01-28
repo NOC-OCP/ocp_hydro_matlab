@@ -41,14 +41,14 @@ end
 
 try
     [stat, result] = system(psql_string);
-    if stat~=0
+    if stat~=0 && ~contains(result,'does not exist')
         warning('LD_LIBRARY_PATH?')
         [stat, result] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
         if stat~=0
             fid = fopen('/data/pstar/psqls_f','w');
             fprintf(fid,'%s\n',psql_string);
             fclose(fid);
-            [s,r] = system('/usr/bin/chmod ug+x /data/pstar/psqls_f');
+            [s,~] = system('/usr/bin/chmod ug+x /data/pstar/psqls_f');
             if s==0
                 [stat,result] = system('/data/pstar/psqls_f');
                 if stat~=0
@@ -70,7 +70,11 @@ catch
 end
 
 if stat~=0
-    error('failed at executing\n %s\n does your ~/.pgpass or RVDAS login file contain the correct machine:port:database:user:password?', psql_string);
+    if contains(result,'does not exist')
+        ME.message = result;
+    else
+        error('failed at executing\n %s\n does your ~/.pgpass or RVDAS login file contain the correct machine:port:database:user:password?', psql_string);
+    end
 elseif ~quiet
     disp(['ran: ' psql_string])
 end

@@ -14,14 +14,15 @@ MEXEC_A.MARGS_IN_LOCAL = {}; %clean up MEXEC_A.MARGS_IN_LOCAL in case there are 
 if nargin == 1; version_increment = 1; end
 
 if ~MEXEC_G.quiet
-disp(' ')
-disp('Finishing up')
+    disp(' ')
+    disp('Finishing up')
 end
 
 if isfield(MEXEC_G,'VERSION_FILE') && exist(MEXEC_G.VERSION_FILE,'file')
     m_verson(ncfile,version_increment); %advance the version
 end
-m_add_history(ncfile);
+%m_add_history(ncfile); %with mfsave this no longer contains useful info,
+%instead it should be added explicitly by calling programs
 m_update_filedate(ncfile); % set the file update variable
 
 nc_attput(ncfile.name,nc_global,'openflag','R'); %set the open/writing attribute

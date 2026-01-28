@@ -29,6 +29,11 @@ if ~isempty(varargin)
 end
 
 % Calculate neutral density
+try; m_common; catch; end
+if exist('MEXEC_G','var') && isfield(MEXEC_G,'gamma_nfunc')
+%alias
+gamma_n = MEXEC_G.gamma_nfunc;
+end
 dn_nd = gamma_n(dn_psal,dn_temp,pdn,lon0,lat0);
 up_nd = gamma_n(up_psal,up_temp,pdn,lon0,lat0);
 	
@@ -110,3 +115,4 @@ suspect=[1:round(N/2) nd-round(N/2)+1:nd];
 isel = ~ismember([1:nd],suspect);
 jg_filt = jg1(isel);
 m_filt = tmpd(isel);
+
