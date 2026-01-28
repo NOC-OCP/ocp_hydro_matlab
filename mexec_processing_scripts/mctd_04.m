@@ -91,6 +91,7 @@ end
 
 
 %%%%% optionally loopedit downcast %%%%%
+commentd = '';
 if isdown
     doloopedit = 0;
     maxshoal = 0.08; %dbar
@@ -98,15 +99,16 @@ if isdown
     opt1 = 'ctd_proc'; opt2 = 'doloopedit'; get_cropt
     if doloopedit
         vars_other = setdiff(var_copycell, {'press'});
-        disp(['applying loopediting for ' otfile1d])
         ploopflag = m_loopedit(dn.press, maxshoal, minpstep);
-        dn.press(ploopflag) = NaN;
-        for vno = 1:length(vars_other)
-            dn.(vars_other{vno})(ploopflag) = NaN;
-            commentd = sprintf('loopediting applied to downcast requiring downward motion at least %f dbar per scan, allowing no more than %f dbar of shoaling\n',minpstep*24,maxshoal);
+        nl = sum(ploopflag & ~isnan(dn.press));
+        if nl
+            disp(['applying loopediting for ' otfile1d])
+            dn.press(ploopflag) = NaN;
+            for vno = 1:length(vars_other)
+                dn.(vars_other{vno})(ploopflag) = NaN;
+                commentd = sprintf('loopediting applied to downcast removed %d scans with less downward motion than %f dbar/scan, or shoaled over %f dbar above previous deepest point\n',nl,minpstep,maxshoal);
+            end
         end
-    else
-        commentd = '';
     end
 end
 

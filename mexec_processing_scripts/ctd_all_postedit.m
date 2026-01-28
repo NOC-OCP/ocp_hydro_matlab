@@ -43,15 +43,15 @@ for kloop = klistl
     stn = kloop; mfir_to_sam(stn);
 
     %calculate and apply depths
-    station_summary(stn)
-    mdep_01(stn)
+    %station_summary(stn)
+    %mdep_01(stn)
     
 end
-msbe35_01(max(klistl)) %read sbe35 data, if not already done up 
-get_sensor_groups(klistl)
+%msbe35_01(max(klistl)) %read sbe35 data, if not already done up 
+%get_sensor_groups(klistl)
 
 %output to csv files
 mout_cchdo_exchangeform(klistl)
 
 %and sync
-opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt
+%opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt

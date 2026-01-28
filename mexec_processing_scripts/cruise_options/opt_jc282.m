@@ -35,19 +35,19 @@ switch opt1
             case 'ctd_cals' % -----> to apply calibration
                 co.docal.temp = 1;
                 co.docal.cond = 1;
-                %co.docal.oxygen = 1;
+                co.docal.oxygen = 1;
                 co.calstr.temp.sn35838.jc282 = 'dcal.temp = d0.temp - 5e-4 -5e-6*d0.statnum;';
                 co.calstr.temp.sn35838.msg = 'temp s/n 35838 adjusted based on trend relative to 88 SBE35 measurements with low background gradient/variance';
                 co.calstr.temp.sn34116.jc282 = 'dcal.temp = d0.temp - 7.9e-4 -1.9e-5*d0.statnum;';
                 co.calstr.temp.sn34116.msg = 'temp s/n 34116 adjusted based on trend relative to 86 SBE35 measurements with low background gradient/variance';
-                co.calstr.cond.sn43258.jc282 = 'dcal.cond = d0.cond.*(1+(interp1([0 3600],[-2e-3 -5e-3],d0.press))/35);';
+                co.calstr.cond.sn43258.jc282 = 'dcal.cond = d0.cond.*(1+(interp1([0 3600],[-2.5e-3 -5e-3],d0.press))/35);';
                 co.calstr.cond.sn43258.msg = 'pressure-dependent factor applied to cond s/n 43258 based on 46 bottle salinity measurements with low background gradient/variance';
                 co.calstr.cond.sn44143.jc282 = 'dcal.cond = d0.cond.*(1+interp1([0 3600],[-4e-3 -7e-3],d0.press)/35);';
                 co.calstr.cond.sn44143.msg = 'pressure-dependent factor applied to cond s/n 44143 based on 47 bottle salinity measurements with low background gradient/variance';
                 co.calstr.oxygen.sn430709.jc282 = 'dcal.oxygen = d0.oxygen.*interp1([0 3600],[1.04 1.075],d0.press)+0.58;';
-                co.calstr.oxygen.sn430709.jc282 = 'pressure-dependent factor applied to oxygen s/n 430709 based on 194 bottle measurements';
+                co.calstr.oxygen.sn430709.msg = 'pressure-dependent factor applied to oxygen s/n 430709 based on 194 bottle measurements';
                 co.calstr.oxygen.sn432818.jc282 = 'dcal.oxygen = d0.oxygen.*interp1([0 3600],[1.055 1.085],d0.press);';
-                co.calstr.oxygen.sn432818.jc282 = 'pressure-dependent factor applied to oxygen s/n 432818 based on 209 bottle measurements';
+                co.calstr.oxygen.sn432818.msg = 'pressure-dependent factor applied to oxygen s/n 432818 based on 209 bottle measurements';
             case 'doloopedit'
                 doloopedit = 1;
             case 'sensor_choice' % -----> if we choose to use sensor 2 instead of sensor 1 for some or all of the station
@@ -188,7 +188,7 @@ datas.CTD.status = 'preliminary';
 datas.CTD.comment = 'CTDPRS; CTDTMP; CTDSAL; CTDOXY are all good. CTDTMP adjusted to SBE35. CTDSAL; CTDOXY calibrated with bottle samples. CTDFLUOR is not bottle-calibrated.';
 datas.Salinity.who = 'D.G. Evans (NOC)';
 datas.Salinity.status = 'final';
-datas.Salinity.comment = '(SSW batch P???)'; %***need to fill in standard seawater batch number
+datas.Salinity.comment = '(SSW batch P168)';
 datas.Oxygen.who = '';
 datas.Oxygen.status = 'final';
 datas.Oxygen.comment = '';
