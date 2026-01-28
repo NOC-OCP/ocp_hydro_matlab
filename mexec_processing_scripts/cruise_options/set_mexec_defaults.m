@@ -7,12 +7,20 @@
 %
 % options are specified by switch-case through two
 % variables:
-%     opt1 (usually the name of the calling script)
+%     opt1 ()
 %     opt2 (another string, which for ease of searching should be
 %         kept unique, not reused under different opt1s)
 
 
 switch opt1
+
+    case 'setup'
+        switch opt2
+            case 'time_origin'
+                %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
+            case 'use_ix_ladcp'
+                use_ix_ladcp = 'query'; %'query' means ask each time; or set to 'no' or 'yes'
+        end
 
     case 'mstar'
         %things about mstar file format
@@ -20,11 +28,6 @@ switch opt1
             docf = 1; %cf-compliant time units
         else
             docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
-        end
-
-    case 'setup'
-        switch opt2
-            case 'time_origin'
         end
 
     case 'ship'
@@ -58,6 +61,8 @@ switch opt1
                 end
             case 'rvdas_database'
                 RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
+                %RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
+                RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
             case 'rvdas_form'
                 switch MEXEC_G.Mship
                     case 'sda'
@@ -68,13 +73,10 @@ switch opt1
                         npre = 0; %table names start with instrument name
                         use_cruise_views = 0;
                 end
+            case 'rvdas_skip'
+                %see opt_dy181
         end
         
-    case 'ladcp_proc'
-        min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
-        min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
-        min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
-
     case 'ctd_proc'
         switch opt2
             %multiple files
@@ -199,7 +201,7 @@ switch opt1
                         tavp = 30;
                         method = 'meanbin';
                     case 'bathy'
-                        tavp = 5*60; 
+                        tavp = 1*60; %dy186 change to 1 minute
                         method = 'medbin';
                     case 'tsg'
                         tavp = 60;
@@ -210,6 +212,11 @@ switch opt1
                 end
         end
 
+    case 'ladcp_proc'
+        min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
+        min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
+        min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
+
     case 'check_sams'
         check_sal = 1; %plot individual salinity readings
         check_oxy = 1; %step through mismatched oxygen replicates
@@ -219,6 +226,9 @@ switch opt1
         switch opt2
             case 'sal_parse'
                 calcsal = 1; %calculate from conductivity ratio and temperature
+            case 'sal_calc'
+                salin_off_base = 'sampnum_run'; %alternately, sampnum_list, if you are sure they will be loaded in order
+                salin_off = []; sal_adj_comment = '';
         end
 
     case 'botoxy'
@@ -259,8 +269,7 @@ switch opt1
                 cfg.f.nav_lon_field 	= 6;
                 cfg.f.sadcp = fullfile(mgetdir('ladcp'),'ix','SADCP',['os75nb_' mcruise '_' cfg.stnstr '_for_ladcp.mat']);
             case 'exch'
-                expocode = 'unknown';
-                sect_id = '';
+                sect_id = ' ';
                 vars_exclude_ctd = {}; %changed jc238 from {'fluor' 'transmittance'};
                 vars_exclude_sam = {};
                 vars_rename = {}; %first column in m_exch_vars_list, newname (e.g. CTDTURB, CTDBETA650_124)

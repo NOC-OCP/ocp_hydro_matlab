@@ -1,8 +1,0 @@
-    case 'botpsal'
-        switch opt2
-            case 'sal_files'
-                salfiles = dir(fullfile(root_sal,'DY180*.csv'));
-            case 'sal_parse'
-                cellT = 21;
-                ssw_k15 = 0.99993;
-                ssw_batch = 'P168';most likely also P168, autosal reading was 1.99986

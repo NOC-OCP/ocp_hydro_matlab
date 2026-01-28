@@ -75,24 +75,21 @@ if ok == 0
     m_make_carter; % results will be saved in global, so only executed once per matlab session
 end
 
+%find the carter areas
 careas = MEXEC_G.Mcarter.c_area;
-
-
 lat(lat < -90) = -90;
-lat(lat >= 90) = 89.5;
+lat(lat >= 89.5) = 89.5;
 lon  = mcrange(lon,-180,180);
 klati = floor(lat) + 91;
 kloni = floor(lon) + 181;
 
 kindex = klati + (kloni-1)* size(careas,1);
-
 kindexok = isfinite(kindex);
 carea = nan+lat;
 carea(kindexok) = careas(kindex(kindexok));
-if length(carea)==1; carea = repmat(carea, size(uncdep)); end
+if isscalar(carea); carea = repmat(carea, size(uncdep)); end
 
 % now get the depth correction
-
 cordep = nan+uncdep;
 
 for k = 1:numel(uncdep)

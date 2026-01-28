@@ -30,7 +30,29 @@ set_mexec_defaults
 cfile = sprintf('opt_%s',mcruise);
 if exist([cfile '.m'],'file')
     eval(cfile)
-else
-    warning([cfile '.m not found; probably needs to be created to set cruise-specific options'])
+elseif ~isfield(MEXEC_G,'no_cruise_options_file') || ~MEXEC_G.no_cruise_options_file
+    c = input(sprintf('%s.m not found; create now?  ',cfile),'s');
+    if strncmp(c,'y',1)
+        fp = fileparts(which(mfilename));
+        fcfile = fullfile(fp, [cfile '.m']);
+        try
+            syr = input('cruise start year?  ');
+            fid = fopen(fcfile,'w');
+            fprintf(fid,'switch opt1\n    %s\n        switch opt2\n            %s\n','case ''setup''','case ''time_origin''');
+            fprintf(fid,'                MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [%d 1 1 0 0 0];\n',syr);
+            fprintf(fid,'        end\nend');
+            fclose(fid);
+            fprintf(1,'initialised %s with MDEFAULT_DATA_TIME_ORIGIN,\n now make additional edits, then enter to continue',cfile)
+            edit(cfile); pause
+        catch
+            system(['touch ' fcfile]);
+            fprintf(1,'could not initialise %s, edit now then enter to continue',cfile)
+            edit(cfile); pause
+        end
+        eval(cfile)
+    else
+        warning('skipping %s, default parameters only until MEXEC_G is cleared',cfile)
+        MEXEC_G.no_cruise_options_file = 1;
+    end
 end
 

@@ -41,7 +41,7 @@ function mctd_evaluate_sensors(parameter, varargin)
 % e.g.
 %   testcal.temp = 1;
 %   mctd_evaluate_sensors('temp',testcal)
-%     will apply the calibrations coded into the mctd_02 case in opt_cruise
+%     will apply the calibrations coded into the ctd_cals case in opt_cruise
 %     (for both temp1 and temp2) before plotting
 %   testcal.temp = 1; calstr0.temp1.jc238 = 'dcal.temp1 = d0.temp1+1e-4;';
 %   mctd_evaluate_sensors('temp',testcal,calstr0)

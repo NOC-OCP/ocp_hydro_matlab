@@ -124,7 +124,7 @@ if check_sbe35
     for no = 1:length(iic)
         if ~ismember(iic(no),ii_did)
             ii = find(t.sampnum==t.sampnum(iic(no)));
-            if length(unique(t.files(ii)))==1 && isunix
+            if isscalar(unique(t.files(ii))) && isunix
                 system(['cat ' fullfile(root_sbe35,t.files{iic(no)})])
                 sprintf('sampnum %d on multiple lines (above)\n',t.sampnum(iic(no)))
             else

@@ -1,4 +1,3 @@
-
 function mdep_01(stn)
 % mdep_01: read water depth for ctd cast from station_summary_cruise_all.nc
 %     produced by best_station_depths based on (as specified by
@@ -15,7 +14,6 @@ if MEXEC_G.quiet<=1; fprintf(1,'adding water depth from station_summary_%s_all.n
 
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
-root_sal = mgetdir('M_BOT_SAL');
 root_ctd = mgetdir('M_CTD');
 root_sum = mgetdir('sum');
 
