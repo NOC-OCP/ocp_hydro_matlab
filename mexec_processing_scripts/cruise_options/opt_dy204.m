@@ -8,8 +8,8 @@ switch opt1
     case 'ship'
         switch opt2
             case 'rvdas_database'
-                RVDAS.database = 'DY203post';
         		RVDAS.loginfile = '/data/plocal/rvdas_addr';
+                RVDAS.jsondir = fullfile(MEXEC_G.mexec_data_root,'rvdas','json_files');
         end
 
 end
