@@ -106,12 +106,16 @@ end
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
 ctypes = {'nav','bathy','ocean','atmos'}; %important to do nav first
+s = ones(size(ctypes));
 for cno = 1:length(ctypes)
-    mday_02_merge_av(ctypes{cno}, ydays, mtable, reload_av);
-    fprintf(1,'merged %s files\n',ctypes{cno})
+    s(cno) = mday_02_merge_av(ctypes{cno}, ydays, mtable, reload_av);
+    if s(cno)==0
+        fprintf(1,'merged %s files\n',ctypes{cno})
+    end
 end
 
-if sum(ismember(ctypes,'ocean'))
+m = strcmp('ocean',ctypes);
+if sum(m) && s(m)==0
     disp('you could now run mtsg_bottle_ctd_compare')
 end
 
