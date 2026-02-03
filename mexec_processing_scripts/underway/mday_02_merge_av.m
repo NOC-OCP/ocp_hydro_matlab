@@ -1,9 +1,10 @@
-function mday_02_merge_av(datatype, ydays, mtable, varargin)
-% mday_02_merge_av(datatype, ydays, mtable)
+function s = mday_02_merge_av(datatype, ydays, mtable, varargin)
+% s = mday_02_merge_av(datatype, ydays, mtable)
 %
 % ydays is in yearday
 % merge data from multiple inputs/instruments
 
+s = 1;
 if nargin>3
     regrid = varargin{1};
 else
@@ -94,7 +95,8 @@ if regrid
             infile = [filepre{fno} '_' mcruise '_all_raw.nc'];
             if ~exist(infile,'file')
                 if required(fno)
-                    error('no file found for %s',filepre{fno})
+                    warning('no file found for %s, abandoning merge of %s',filepre{fno},datatype)
+                    return
                 else
                     found(fno) = 0;
                     warning('no file found for %s*, skipping',filepre{fno})
@@ -187,3 +189,5 @@ end
 
 %save again
 mfsave(otfile, dg, hg);
+
+s = 0; %success
