@@ -36,17 +36,16 @@ switch opt1
                 niskin_pos = niskin_barcodes(:,1);
                 niskin_number = niskin_barcodes(:,2);
             case 'blfilename'
-                blinfile = fullfile(root_botraw,sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
+                blinfile = fullfile(root_botraw,sprintf('%s_CTD_%s.bl', upper(mcruise), stn_string));
             case 'botflags'
-                % switch stnlocal
-                %     case 3
-                %         niskin_flag(position==11) = 4; %not closed correctly
-                %     case 5
-                %         niskin_flag(position==15) = 4; %not closed correctly
-                %     case 6
-                %         niskin_flag(position==11) = 4; %not closed correctly
-                %     otherwise
-                % end
+                switch stnlocal
+                     case 1
+                         niskin_flag(ismember(position,[1 23])) = 4; %not closed correctly
+                     case 2
+                         niskin_flag(ismember(position,[1 9])) = 4; %not closed correctly %1 did not fire/release, 9 did not seal
+                     case 3
+                         niskin_flag(position==11) = 3; %too warm, suspect leak
+                end
         end
 
 
@@ -55,13 +54,7 @@ switch opt1
             case 'redoctm'
                 redoctm = 1;
             case 'cnvfilename'
-                %if stn==2
-                %    %reconverted from .hex using correct
-                %    %XMLCON/coefficients
-                %    cnvfile = fullfile(cdir,'DY186_CTD002b.cnv');
-                %else
-                   cnvfile = fullfile(cdir,sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
-                %end
+                cnvfile = fullfile(cdir,sprintf('%s_CTD_%s.cnv', upper(mcruise), stn_string));
             case 'raw_corrs' % -----> if change the hystherisis coef
             case 'rawedit_auto' % -----> only if repeated spikes or out of range
             case 'ctd_cals' % -----> to apply calibration
@@ -195,7 +188,7 @@ switch opt1
                 sgrps = {{'botpsal'} {'botoxy'}};
             case 'exch'
                 n12 = 8; 
-                expocode = '74EQ20241211';
+                expocode = '74EQ20260202'; %{shipcode}{start YYYYMMDD}
                 sect_id = 'RAPID-East';
                 submitter = 'OCPNOCTP'; %group institution person
                 common_headstr = {'#SHIP: RRS Discovery';...
