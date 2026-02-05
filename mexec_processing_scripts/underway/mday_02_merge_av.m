@@ -80,8 +80,8 @@ if regrid
     tg = [ddays(1)-tavp/2:tavp:ddays(end)+1+tavp/2]';
     opts.ignore_nan = 1;
     opts.grid_ends = [1 1];
-    opts.postfill = tavp_s; %***
-    opts.bin_partial = 0;
+    opts.postfill = tavp_s;
+    opts.bin_partial = 1; 
     if strcmp(gmethod,'meannum')
         opts.num = tavp_s;
     end
