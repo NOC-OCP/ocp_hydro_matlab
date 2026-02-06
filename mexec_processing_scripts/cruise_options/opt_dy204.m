@@ -16,6 +16,29 @@ switch opt1
                 default_attstream = 'posmv_pashr';
         end
 
+    case 'uway_proc'
+        switch opt2
+                        case 'rawedit'
+                % if ismember(abbrev,{'sbe45','surfmet'})
+                %     %cut off start (and eventually end) when TSG bad
+                %     %because underway seawater supply pumps off
+                %     badtimes = [-inf (datenum(2024,12,11,19,40,0)-datenum(2024,1,1))*86400];
+                %     if strcmp(abbrev,'sbe45')
+                %         tsgpumpvars = {'temph','tempr','conductivity','salinity','soundvelocity'};
+                %     else
+                %         tsgpumpvars = {'fluo','trans'};
+                %     end
+                % elseif strcmp(abbrev,'ea640')
+                % %     d = rmfield(d,'waterdepthfromsurface');
+                % %     h.fldunt(strcmp('waterdepthfromsurface',h.fldnam)) = [];
+                % %     h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
+                % end
+                % if sum(strcmp(streamtype,{'sbm','mbm'}))
+                %      handedit = 1; %edit raw bathy
+                %      vars_to_ed = h.fldnam(cellfun(@(x) contains(x,'dep'), h.fldnam));
+                % end
+        end
+     
      case 'nisk_proc'
         switch opt2
             case 'niskins'
