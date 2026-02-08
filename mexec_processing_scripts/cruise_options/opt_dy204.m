@@ -70,7 +70,12 @@ switch opt1
                      case 2
                          niskin_flag(ismember(position,[1 9])) = 4; %not closed correctly %1 did not fire/release, 9 did not seal
                      case 3
-                         niskin_flag(position==11) = 3; %too warm, suspect leak
+                         niskin_flag(ismember(position,[1 11])) = 3; %too warm, suspect leak
+                    case 5
+                        niskin_flag(ismember(position,[7 13])) = 4; %not closed correctly
+                        niskin_flag(position==1) = 3; %too warm, suspect leak
+                    case 7
+                        niskin_flag(position==7) = 4;
                 end
         end
 
@@ -83,6 +88,49 @@ switch opt1
                 cnvfile = fullfile(cdir,sprintf('%s_CTD_%s.cnv', upper(mcruise), stn_string));
             case 'raw_corrs' % -----> if change the hystherisis coef
             case 'rawedit_auto' % -----> only if repeated spikes or out of range
+                % to see with [dr,hr] = mload('/data/pstar/cruise/data/ctd/ctd_dy204_008_raw_cleaned','/'); plot(dr.scan,dr.cond2,'.-')
+                if stn==9 
+                    co.badscan.cond2 = [53002 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [52858 inf];
+                elseif stn==6 
+                    co.badscan.cond2 = [-inf 4000; 94955 95010]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [94800 inf];
+                elseif stn==8
+                    co.badscan.cond2 = [-inf 6353; 104542 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [-inf 6389];
+                elseif stn==10 
+                    co.badscan.cond2 = [49333 49349]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [49189 inf];
+                elseif stn==12
+                    co.badscan.cond2 = [172314 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [172170 inf];
+                elseif stn==15
+                    co.badscan.cond1 = [65227 65235]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.cond2 = [65238 65244]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [65094 inf];
+                    co.badscan.oxygen_sbe1 = [65112 inf];
+                elseif stn==14
+                    co.badscan.cond2 = [9956 9963; 192504 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.cond1 = [192500 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.oxygen_sbe2 = [192359 inf];
+                    co.badscan.oxygen_sbe1 = [192356 inf];
+                elseif stn==19
+                    co.badscan.cond2 = [68748 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.cond1 = [8161 8170]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.oxygen_sbe2 = [68604 inf];
+                    co.badscan.oxygen_sbe1 = [68621 inf]; 
+                end
             case 'ctd_cals' % -----> to apply calibration
                 co.docal.temp = 0;
                 co.docal.cond = 0;
@@ -140,18 +188,19 @@ switch opt1
             case 'sal_files'
                 salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
             case 'sal_parse'
-                % cellT = 21; % Temperature of the bath
-                % ssw_k15 = 0.99988;
-                % calcsal = 1;                ssw_batch = 'P167';
+                cellT = 21; % Temperature of the bath
+                ssw_k15 = 0.99988;
+                calcsal = 1;                
+                ssw_batch = 'P167';
             case 'sal_calc'
-                 % salin_off = [000 -3; 001 -6; ... 
-                 %     002 -4; 003 -2; ... 
+                 salin_off = [000 -6; 001 -6; ... 
+                     002 0; 003 0; ... 
                  %     004 0; 005 -7; ... 
                  %     006 0; 007 -1; ...
                  %     008 -1; 009 -2; %009.1 -2; %009.1 is to apply to last 4 samples run right after 009
-                 %     ];
-                 % salin_off(:,1) = salin_off(:,1)+999e3;
-                 % salin_off(:,2) = salin_off(:,2)*1e-5;
+                     ];
+                 salin_off(:,1) = salin_off(:,1)+999e3;
+                 salin_off(:,2) = salin_off(:,2)*1e-5;
                  
                  %no sample times recorded for these, so never mind
                  %ii = find(ds_sal.sampnum==999009);
@@ -172,33 +221,27 @@ switch opt1
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = dir(fullfile(root_oxy,'DY186_oxy*.xls'));
+                ofiles = dir(fullfile(root_oxy,'*.xlsx'));
                 hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
                 chrows = 1;
                 chunits = 2;
             case 'oxy_parse'
-                % calcoxy = 1;
-                % varmap.position = {'bottle_number'};
-                % m = ds_oxy.bottle_number==24; ds_oxy.bottle_number(m) = 1;
-                % varmap.fix_temp = {'temp_c'};
-                % varmap.vol_blank = {'titre_mls'};
-                % varmap.vol_titre_std = {'titre_mls_1'};
-                % varmap.sample_titre = {'titre_mls_2'};
-                % varmap.vol_std = {'vol_mls'};
-                % varmap.bot_vol_tfix = {'at_tfix_mls'};
-                % varmap.statnum = {'number'};
-                % d = cellstr(ds_oxy.number);
-                % ds_oxy.number = cellfun(@(x) str2double(x(4:end)), d);
+                calcoxy = 1;
+                varmap.position = {'bottle_number'};
+                varmap.fix_temp = {'temp_c'};
+                varmap.vol_blank = {'titre_mls'};
+                varmap.vol_titre_std = {'titre_mls_1'};
+                varmap.sample_titre = {'titre_mls_2'};
+                varmap.vol_std = {'vol_mls'};
+                varmap.bot_vol_tfix = {'at_tfix_mls'};
+                varmap.statnum = {'number'};
                 % ds_oxy.flag = [];
-                %will need to replace 24 with 1 probably based on oxygen
-                %sampling log (it is using bottle label rather than bottle
-                %position)
             case 'oxy_calc'
-                % vol_reag_tot = 2.0397;
-            case 'oxy_flags'
+                vol_reag_tot = 2;
+            case 'oxy_flags' %why duplicates not at the other stations?
                 %sampnum, a flag, b flag, c flag
-                % flr = [315 3 2 9; ... %a is lower than all
-                %       ];
+                flr = [711 2 4 9; ... %b is low
+                       ];
         end
 
 

@@ -180,7 +180,7 @@ for plotlist = cklist
             end
             pf1.ncfile.name = infiles{3,end}; % psal file
             
-            mplotxy(pf1);
+            mplotxy(pf1); 
             
         case 2
             
@@ -727,5 +727,4 @@ for plotlist = cklist
             
     end
 end
-
 clear klist
