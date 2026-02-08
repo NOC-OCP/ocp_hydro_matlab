@@ -90,7 +90,7 @@ if reload_av || reload_uway %something new to take through preliminary edits sta
     [mudirs,ii] = unique(mudirs);
     mufiles = mtable.mstarpre(ii);
     iin = find(contains(mudirs,'nav/'));
-    iio = setdiff([1:length(mudirs)]',iin);
+    iio = setdiff(1:length(mudirs),iin)';
     mufiles = mufiles([iin;iio]);
     if exist('never_edit','var')
         mufiles = setdiff(mufiles,never_edit);
