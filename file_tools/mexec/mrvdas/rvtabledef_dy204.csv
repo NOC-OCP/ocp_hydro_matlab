@@ -1,6 +1,6 @@
-RVDAS info from database "DY204" and .json files in /data/pstar/projects/rpdmoc/cruise_data/dy204/mcruise/data/rvdas/json_files
-loaded by mrdefine.m on 03-Feb-2026 08:43:13
-saved in /data/pstar/projects/rpdmoc/cruise_data/dy204/mcruise/data/rvdas/rvtabledef_dy204.mat and /data/pstar/programs/repos_branched/ocp_hydro_matlab_atb/file_tools/mexec/mrvdas/rvtabledef_dy204.csv
+RVDAS info from database "DY204" and .json files in /data/pstar_akeake/projects/rpdmoc/cruise_data/dy204/mcruise/data/rvdas/json_files
+loaded by mrdefine.m on 07-Feb-2026 08:06:20
+saved in /data/pstar_akeake/projects/rpdmoc/cruise_data/dy204/mcruise/data/rvdas/rvtabledef_dy204.mat and /data/pstar_akeake/programs/repos_branched/ocp_hydro_matlab_yfiring/file_tools/mexec/mrvdas/rvtabledef_dy204.csv
 csv copy only for information (.mat used by mrdefine)
 
 tablenames, tablevars, mstarpre, mstardir, paramtype, rvdasmsg, tableunts, longnames, mstarvars, mstarunts
@@ -15,6 +15,9 @@ ea640_sddpt,"time,waterdepthmetretransducer,transduceroffset",ea640,bathy,sbm,sd
 em122_kidpt,"time,waterdepthmetre,transduceroffset",em122,bathy,mbm,kidpt," , , "," , , ","time,waterdepth,transduceroffset"," ,m, "
 fugro_gpgga,"time,utctime,latitude,latdir,longitude,londir,altitude",fugro,nav,pos,gpgga," , , , , , , "," , ,Latitude, ,Longitude, ,Antenna altitude above mean sea level","time,utctime,latitude,latdir,longitude,londir,altitude"," ,hhmmss_fff,decimal_degrees,decimal_degrees,decimal_degrees,decimal_degrees, "
 fugro_gpvtg,"time,courseoverground",fugro,nav,shipmov,gpvtg," , "," , ","time,courseoverground"," , "
+nudamlgt_sflgt,"time,ptir,ppar,stir,spar",nudamlgt,met,rad,sflgt," ,Wm-2,Wm-2,Wm-2,Wm-2"," ,Port total irradience,Port photosynthetically available radiation,Starboard total irradience,Starboard photosynthetically available radiation","time,ptir,ppar,stir,spar"," ,wm-2,wm-2,wm-2,wm-2"
+nudammet_sfmet,"time,press,airtemp,humidity",nudammet,met,met,sfmet," ,hPa,degrees celsius,percent"," ,Atmospheric pressure,Atmospheric temperature,Atmospheric relative humidity","time,press,airtemp,humidity"," ,hpa,,percent"
+nudamuwy_sfuwy,"time,fluo,trans,flow",nudamuwy,met,tsg,sfuwy," , , , "," ,Seawater fluorescence,Seawater transmission,Seawater instrument flow rate","time,fluo,trans,flow"," , , , "
 phins_hehdt,"time,headingtrue",phins,nav,head,hehdt," , "," , ","time,headingtrue"," , "
 phins_pixseatitud,"time,roll,pitch",phins,nav,att,pixseatitud," , , "," ,Roll,Pitch","time,roll,pitch"," , , "
 phins_pixsegpsin0,"time,latitudedd,longitudedd,altitude,utctime",phins,nav,pos,pixsegpsin0," , , , , "," , , ,altitude, ","time,latitudedd,longitudedd,altitude,utctime"," ,decimal_degrees,decimal_degrees, ,hhmmss_fff"
@@ -37,5 +40,6 @@ surfmet_sflgt,"time,tirport,parport,tirstarboard,parstarboard",surfmet,met,rad,s
 surfmet_sfmet,"time,airpressure,airtemperature,humidity",surfmet,met,met,sfmet," , , ,percent","","time,airpressure,airtemperature,humidity"," , ,degreesC,percent"
 surfmet_sfuwy,"time,fluo,trans,flow",surfmet,met,tsg,sfuwy," , , , ","","time,fluo,trans,flow"," , , , "
 truewind_truewind,"time,truewinddirection,truewindspeed",truewind,met,wind,truewind," , , "," ,Calculated True Wind Direction,Calculated True Wind Speed","time,truewinddirection,truewindspeed"," , ,m_per_second"
+wamos_pwam,"time,hs,tm2,pdir,tp,lp,dp1,tp1,lp1,dp2,tp2,lp2,currentdir,currentspeed,stw,hmax,ctw",wamos,met,wav,pwam," ,m, ,degrees, , ,degrees, , ,degrees, , ,degrees, , , , ","" ","Significant Wave Height (m)","Mean period zero upcrossing period","Peak wave direction, coming from","peak wave period","peak wave length","Swell wave direction, coming from","Swell wave period","Swell wave length","Wind sea wave direction, coming from","Wind sea wave period","Wind sea wave length","current direction","current speed","True Wind Speed","Maximum Wawe Height in metre","True Wind Cardinality in degrees"","time,hs,tm2,pdir,tp,lp,dp1,tp1,lp1,dp2,tp2,lp2,currentdir,currentspeed,stw,hmax,ctw"," ,m, ,degrees, , ,degrees, , ,degrees, , ,degrees,m_per_second, , , "
 winch_winch,"time,tension,cableout,rate,backtension,rollangle",winch,other,winch,winch," , , , , , "," ,Tension - Load on the cable, ,Cable rate, , ","time,tension,cableout,rate,backtension,rollangle"," , ,m_per_second, , , "
 windsonic_iimwv,"time,winddirection,windspeed",windsonic,met,wind,iimwv," , , "," , , ","time,winddirection,windspeed"," , ,m_per_second"
