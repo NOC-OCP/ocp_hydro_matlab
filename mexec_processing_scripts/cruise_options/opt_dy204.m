@@ -79,6 +79,31 @@ switch opt1
                     co.badscan.cond2 = [49333 49349]; %at start: pumps on briefly, then off, then on. at end: spike
                     co.badscan.temp2 = co.badscan.cond2;
                     co.badscan.oxygen_sbe2 = [49189 inf];
+                elseif stn==12
+                    co.badscan.cond2 = [172314 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [172170 inf];
+                elseif stn==15
+                    co.badscan.cond1 = [65227 65235]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.cond2 = [65238 65244]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [65094 inf];
+                    co.badscan.oxygen_sbe1 = [65112 inf];
+                elseif stn==14
+                    co.badscan.cond2 = [9956 9963; 192504 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.cond1 = [192500 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.oxygen_sbe2 = [192359 inf];
+                    co.badscan.oxygen_sbe1 = [192356 inf];
+                elseif stn==19
+                    co.badscan.cond2 = [68748 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.cond1 = [8161 8170]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.oxygen_sbe2 = [68604 inf];
+                    co.badscan.oxygen_sbe1 = [68621 inf]; 
                 end
             case 'ctd_cals' % -----> to apply calibration
                 co.docal.temp = 0;
@@ -135,18 +160,19 @@ switch opt1
             case 'sal_files'
                 salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
             case 'sal_parse'
-                % cellT = 21; % Temperature of the bath
-                % ssw_k15 = 0.99988;
-                % calcsal = 1;                ssw_batch = 'P167';
+                cellT = 21; % Temperature of the bath
+                ssw_k15 = 0.99988;
+                calcsal = 1;                
+                ssw_batch = 'P167';
             case 'sal_calc'
-                 % salin_off = [000 -3; 001 -6; ... 
-                 %     002 -4; 003 -2; ... 
+                 salin_off = [000 -6; 001 -6; ... 
+                     002 0; 003 0; ... 
                  %     004 0; 005 -7; ... 
                  %     006 0; 007 -1; ...
                  %     008 -1; 009 -2; %009.1 -2; %009.1 is to apply to last 4 samples run right after 009
-                 %     ];
-                 % salin_off(:,1) = salin_off(:,1)+999e3;
-                 % salin_off(:,2) = salin_off(:,2)*1e-5;
+                     ];
+                 salin_off(:,1) = salin_off(:,1)+999e3;
+                 salin_off(:,2) = salin_off(:,2)*1e-5;
                  
                  %no sample times recorded for these, so never mind
                  %ii = find(ds_sal.sampnum==999009);
@@ -184,7 +210,7 @@ switch opt1
                 % ds_oxy.flag = [];
             case 'oxy_calc'
                 vol_reag_tot = 2;
-            case 'oxy_flags'
+            case 'oxy_flags' %why duplicates not at the other stations?
                 %sampnum, a flag, b flag, c flag
                 flr = [711 2 4 9; ... %b is low
                        ];
