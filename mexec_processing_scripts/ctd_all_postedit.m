@@ -51,7 +51,7 @@ end
 %get_sensor_groups(klistl)
 
 %output to csv files
-mout_cchdo_exchangeform(klistl)
+%mout_cchdo_exchangeform(klistl)
 
 %and sync
 %opt1 = 'batchactions'; opt2 = 'output_for_others'; get_cropt
