@@ -14,8 +14,34 @@ switch opt1
                 default_navstream = 'posmv_gpgga';
                 default_hedstream = 'posmv_pashr';
                 default_attstream = 'posmv_pashr';
+            case 'rvdas_skip'
+                skips.sentence_pat = [skips.sentence_pat, 'seapath*']; %seapath down this cruise
+
         end
 
+    case 'uway_proc'
+        switch opt2
+                        case 'rawedit'
+                % if ismember(abbrev,{'sbe45','surfmet'})
+                %     %cut off start (and eventually end) when TSG bad
+                %     %because underway seawater supply pumps off
+                %     badtimes = [-inf (datenum(2024,12,11,19,40,0)-datenum(2024,1,1))*86400];
+                %     if strcmp(abbrev,'sbe45')
+                %         tsgpumpvars = {'temph','tempr','conductivity','salinity','soundvelocity'};
+                %     else
+                %         tsgpumpvars = {'fluo','trans'};
+                %     end
+                % elseif strcmp(abbrev,'ea640')
+                % %     d = rmfield(d,'waterdepthfromsurface');
+                % %     h.fldunt(strcmp('waterdepthfromsurface',h.fldnam)) = [];
+                % %     h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
+                % end
+                % if sum(strcmp(streamtype,{'sbm','mbm'}))
+                %      handedit = 1; %edit raw bathy
+                %      vars_to_ed = h.fldnam(cellfun(@(x) contains(x,'dep'), h.fldnam));
+                % end
+        end
+     
      case 'nisk_proc'
         switch opt2
             case 'niskins'
@@ -89,20 +115,22 @@ switch opt1
 
     case 'sbe35'
         switch opt2
-            case 'sbe35file'
-                sbe35file = 'CTD_*.asc';
             case 'sbe35_parse'
                 %deal with file containing multiple stations' data
-                % if strcmp(file_list{kf},'CTD_010203.asc') %statnum is last 3 chars before ".", so in this case incorrectly interpreted as 203
-                %     m = t.statnum==203;
-                %     t.statnum(m) = 2; %no bottles fired on 1 as it was aborted
-                %     m = t.statnum==2 & t.datnum>datenum(2024,12,11,18,0,0);
-                %     t.statnum(m) = 3;
-                %     %not sure why but there are some bn=0 lines, which we
-                %     %can't use anyway, so exclude
-                %     m = t.bn==0;
-                %     t(m,:) = [];
-                % end
+                if contains(file_list{kf},'CTD010.asc')
+                    tbdy = [3 0 0 0; 4 1 0 0; 4 18 0 0; 4 20 0 0; 4 22 0 0; 5 10 0 0];
+                    for no = 6:10
+                        m = t.statnum==10 & t.datnum>datenum([2026 2 tbdy(no-5,:)]) & t.datnum<datenum([2026 2 tbdy(no-4,:)]);
+                        t.statnum(m) = no;
+                    end
+                elseif contains(file_list{kf},'CTD013.asc')
+                    m = t.statnum==13 & t.datnum<datenum(2026,2,6,14,30,0);
+                    t.statnum(m) = 12;
+                    ii = find(t.statnum==12 & t.bn==5);
+                    t(ii,:) = []; %duplicate bn, not clear which is right
+                elseif contains(file_list{kf},'CTD004.asc')
+                    ii = find(t.statnum==4 & t.bn==1); t(ii(1),:) = []; %leftover?
+                end
         end
 
 

@@ -14,17 +14,21 @@ function mrtables_out = mrdef_mstarnames(mrtables, varargin)
 %
 % Input:
 % 
-% mrtables is the output of mrgetrvdascontents
+% mrtables is the output of mrgetrvdascontents: all of the non-empty tables
+%   in the current RVDAS database, and all of their variables
 % second argument is a vector [use_mrtables_skip no_duplicate_vars]
-%   use_mrtables_skip [1]: 1 to call mrtables_skip and discard the listed
-%     messages (e.g. 'gnzda'), variables (e.g. 'ggaqual'), variables
-%     matching patterns (e.g. 'flag'), and (ship-specific) tables/sentences
-%     (e.g. 'sd025_transmissometer_wetlabs_cstar_ucsw1_pwltran1_reference')
-%     as well as those specified in opt_cruise rvdas_skip case
+%   use_mrtables_skip [1]: 1 to call mrtables_skip and discard what is
+%     listed there (messages, e.g. 'gnzda'; variables, e.g. 'ggaqual';
+%     variables matching patterns, e.g. 'flag'; and ship-specific
+%     tables/sentences, e.g.
+%     'sd025_transmissometer_wetlabs_cstar_ucsw1_pwltran1_reference').
+%     anything specified in opt_cruise rvdas_skip case will be skipped
+%     whatever the value of use_mrtables_skip. 
 %   no_duplicate_vars [1]: how to treat variables that are parsed into the
 %     RVDAS database from multiple messages from a given instrument: 1 to
 %     keep only the first ocurrence of each variable name from a given
-%     instrument (does not apply to 'time', which is kept in each table)
+%     instrument (does not apply to 'time', which is kept in each table)***
+%     not implemented?
 %
 %     
 % Output: 

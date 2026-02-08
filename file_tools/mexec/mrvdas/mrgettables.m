@@ -9,7 +9,7 @@ function rvdas_tables = mrgettables(varargin)
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
-% Make a list of all the tables in the rvdas database.
+% Access the RVDAS database to make a list of all the tables
 %  
 % Examples
 % 
