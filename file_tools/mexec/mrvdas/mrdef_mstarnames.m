@@ -144,14 +144,28 @@ function mrtables_out = limit_tables(mrtables_out, limit, skips)
 % mrtables_out = limit_tables(mrtables_out, limit, skips)
 %
 
+mrtables_in = mrtables_out;
 % discard tables/messages set in mrvdas_skip or in opt_cruise rvdas_skip
 if limit(1)
     [~,iis,~] = intersect(lower(mrtables_out.rvdasmsg), lower(skips.msg));
-    mrtables_out(iis,:) = [];
+    if ~isempty(iis)
+        disp('the following msg values are being left out of rvdasmsg in mrdef_mstarnames: ')
+        disp([mrtables_out.tablename(iis) mrtables_out.rvdasmsg(iis)])
+        mrtables_out(iis,:) = [];
+    end
     [~,iis,~] = intersect(lower(mrtables_out.tablenames), lower(skips.sentence));
-    mrtables_out(iis,:) = [];
+    if ~isempty(iis)
+        disp('the following sentences are being left out of tablenames in mrdef_mstarnames: ')
+        disp(mrtables_out.tablenames(iis))
+        mrtables_out(iis,:) = [];
+    end
     for no = 1:length(skips.sentence_pat)
-        mrtables_out(contains(lower(mrtables_out.tablenames), lower(skips.sentence_pat{no})),:) = [];
+        iis = contains(lower(mrtables_out.tablenames), lower(skips.sentence_pat{no}));
+        if ~isempty(iis)
+            disp('the following sentences are also being left out of tablenames in mrdef_mstarnames: ')
+            disp(mrtables_out.tablenames(iis))
+            mrtables_out(iis,:) = [];
+        end
     end
 end
 
@@ -192,5 +206,6 @@ if sum(limit)
 
     %remove lines that would now be empty of variables
     mrtables_out(novars,:) = [];
+
 end
 
