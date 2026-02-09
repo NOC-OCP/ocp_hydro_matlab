@@ -153,7 +153,7 @@ switch method
         end
         if grid_ends(2)==0
             %exclude completely empty bins on the high end
-            ge = ge(ge(:,1)<=max(d.(gridvar)));
+            ge = ge(ge(:,1)<=max(d.(gridvar)),:);
         end
         gridvec = mean(ge,2);
         dg.(gridvar) = gridvec;

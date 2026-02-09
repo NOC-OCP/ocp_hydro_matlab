@@ -15,7 +15,8 @@ switch opt1
                 default_hedstream = 'posmv_pashr';
                 default_attstream = 'posmv_pashr';
             case 'rvdas_skip'
-                skips.sentence_pat = [skips.sentence_pat, 'seapath*']; %seapath down this cruise
+                skips.sentence_pat = [skips.sentence_pat, ...
+                    'seapath', 'usbl', 'ctd']; %seapath down this cruise, usbl not used, don't need to read ctd depth through rvdas
 
         end
 
