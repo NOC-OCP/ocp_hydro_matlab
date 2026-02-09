@@ -76,6 +76,8 @@ switch opt1
                         niskin_flag(position==1) = 3; %too warm, suspect leak
                     case 7
                         niskin_flag(position==7) = 4;
+                    case 20
+                        niskin_flag(position==9) = 4;
                 end
         end
 
@@ -94,39 +96,39 @@ switch opt1
                     co.badscan.temp2 = co.badscan.cond2;
                     co.badscan.oxygen_sbe2 = [52858 inf];
                 elseif stn==6 
-                    co.badscan.cond2 = [-inf 4000; 94955 95010]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond2 = [-inf 4000; 94955 95010]; 
                     co.badscan.temp2 = co.badscan.cond2;
                     co.badscan.oxygen_sbe2 = [94800 inf];
                 elseif stn==8
-                    co.badscan.cond2 = [-inf 6353; 104542 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond2 = [-inf 6353; 104542 inf]; 
                     co.badscan.temp2 = co.badscan.cond2;
                     co.badscan.oxygen_sbe2 = [-inf 6389];
                 elseif stn==10 
-                    co.badscan.cond2 = [49333 49349]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond2 = [49333 49349]; 
                     co.badscan.temp2 = co.badscan.cond2;
                     co.badscan.oxygen_sbe2 = [49189 inf];
                 elseif stn==12
-                    co.badscan.cond2 = [172314 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond2 = [172314 inf];
                     co.badscan.temp2 = co.badscan.cond2;
                     co.badscan.oxygen_sbe2 = [172170 inf];
                 elseif stn==15
-                    co.badscan.cond1 = [65227 65235]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond1 = [65227 65235]; 
                     co.badscan.temp1 = co.badscan.cond1;
-                    co.badscan.cond2 = [65238 65244]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond2 = [65238 65244];
                     co.badscan.temp2 = co.badscan.cond2;
                     co.badscan.oxygen_sbe2 = [65094 inf];
                     co.badscan.oxygen_sbe1 = [65112 inf];
                 elseif stn==14
-                    co.badscan.cond2 = [9956 9963; 192504 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond2 = [9956 9963; 192504 inf]; 
                     co.badscan.temp2 = co.badscan.cond2;
-                    co.badscan.cond1 = [192500 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond1 = [192500 inf]; 
                     co.badscan.temp1 = co.badscan.cond1;
                     co.badscan.oxygen_sbe2 = [192359 inf];
                     co.badscan.oxygen_sbe1 = [192356 inf];
                 elseif stn==19
-                    co.badscan.cond2 = [68748 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond2 = [68748 inf]; 
                     co.badscan.temp2 = co.badscan.cond2;
-                    co.badscan.cond1 = [8161 8170]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.cond1 = [8161 8170]; 
                     co.badscan.temp1 = co.badscan.cond1;
                     co.badscan.oxygen_sbe2 = [68604 inf];
                     co.badscan.oxygen_sbe1 = [68621 inf]; 
@@ -171,6 +173,9 @@ switch opt1
                         m = t.statnum==10 & t.datnum>datenum([2026 2 tbdy(no-5,:)]) & t.datnum<datenum([2026 2 tbdy(no-4,:)]);
                         t.statnum(m) = no;
                     end
+                elseif contains(file_list{kf},'016.asc')
+                    m = t.statnum==16 & t.datnum<datenum(2026,2,7,19,00,0);
+                    t(m,:) = [];%.statnum(m) = 15; %already read in these lines from the CTD015.asc file
                 elseif contains(file_list{kf},'CTD013.asc')
                     m = t.statnum==13 & t.datnum<datenum(2026,2,6,14,30,0);
                     t.statnum(m) = 12;

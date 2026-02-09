@@ -110,7 +110,7 @@ switch MEXEC_G.Mshipdatasystem
             movefile(m_add_nc(otfile2),[otfile2 '.tmp'])
         end
         mrrvdas2mstar(instream,t_start_vec,t_end_vec,otfile2,dataname,varlist);
-        delete([otfile2 '.tmp']);
+        if exist([otfile2 '.tmp'],'file'); delete([otfile2 '.tmp']); end
 %         if strcmp(MEXEC_G.Mship,'sda')
 %             %subsample to 1 Hz (from 4 Hz)
 %             [d,h] = mloadq(otfile2,'/');
