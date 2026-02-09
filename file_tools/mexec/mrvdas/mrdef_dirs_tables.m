@@ -57,6 +57,10 @@ mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1','sfuwy'
 n = n+1; mt(n).dir = 'met'; mt(n).typ = 'met'; 
 mt(n).inst = {'surfmet','nudammet'};
 mt(n).msg = {'pcfrs','pvtnh2','pvbar','pmdew','sfmet'}; %pressure, humidity, precip n = n+1;
+%pco2
+n = n+1; mt(n).dir = 'met'; mt(n).typ = 'met';
+mt(n).inst = {'pco2'};
+mt(n).msg = {'ppco2'}; %not sure if this is running or what about the variables
 % radiation
 n = n+1; mt(n).dir = 'met'; mt(n).typ = 'rad'; 
 mt(n).inst = {'surfmet','nudamlgt'};
