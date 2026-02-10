@@ -40,16 +40,16 @@ switch datatype
         tavp_s = 60; % 1 min
         gmethod = 'medbin';
     case 'ocean'
-        source = {'surfmet';'sbe45';'sbe38'};
-        streams = {'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'};
+        source = {'surfmet'; 'sbe45'; 'sbe38'; 'nudamuwy'};
+        streams = {'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'; 'nudamuwy_sfuwy'};
         required = [1 1 0]; %***make cruise-specific
         otfile = ['surface_ocean_' mcruise '.nc'];
         tavp_s = 60; % 1 min
         gmethod = 'meannum';
     case 'atmos'
         opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-        source = {'surfmet'; 'windsonic'; 'position'};
-        streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'};
+        source = {'surfmet'; 'windsonic'; 'position'; 'nudammet'; 'nudamlgt'};
+        streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'; 'nudammet_sfmet'; 'nudamlgt_sflgt'};
         required = [0 1 1];
         otfile = ['atmos_truewind_' mcruise '.nc'];
         tavp_s = 30; % 30 s
@@ -63,8 +63,8 @@ if isstruct(mtable) || istable(mtable)
     for fno = 1:length(streams)
         m = strcmp(streams{fno},mtable.tablenames);
         if sum(m)
-	    filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
-	end
+    	    filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
+    	end
     end
 elseif iscell(mtable)
     filepre = mtable;
@@ -84,6 +84,7 @@ if regrid
     opts.bin_partial = 1; 
     if strcmp(gmethod,'meannum')
         opts.num = tavp_s;
+        opts.prefill = 1; %fill 1-s gaps
     end
 
     %load multiple files, either edt (if found) or raw, and merge to common
@@ -119,7 +120,7 @@ if regrid
 
         %grid
         tic; dg = grid_profile(d, 'dday', tg, gmethod, opts); toc
-        if ~sum(strcmp(gmethod,'meannum'))
+        if ~strcmp(gmethod,'meannum')
             dg.dday = (tg(1:end-1)+tg(2:end))/2;
         end
         %keep these for merging
@@ -131,7 +132,7 @@ if regrid
         else
             h.fldserial = repmat({' '},size(h.fldnam));
         end
-                if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
+        if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
 
         %save
         h.dataname = [datatype '_' mcruise '_combined_av'];
@@ -165,7 +166,7 @@ if exist('flowlims','var') && exist('tsgpumpvars','var') && ~isempty(flowlims) &
         uopts.badflow.(tsgpumpvars{vno}) = [NaN NaN];
     end
 end
-if ~isempty(uopts)
+if isstruct(uopts) && ~isempty(fieldnames(uopts))
     % autoedits (e.g. if A depends on B, remove A when B is bad)
     [dg, comment] = apply_autoedits(dg, uopts);
     if ~isempty(comment)
@@ -185,7 +186,7 @@ if handedit
         [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
     end
 end
-    if isfield(hg,'fldserial') && length(hg.fldserial)<length(hg.fldnam); keyboard; end
+if isfield(hg,'fldserial') && length(hg.fldserial)<length(hg.fldnam); keyboard; end
 
 %save again
 mfsave(otfile, dg, hg);

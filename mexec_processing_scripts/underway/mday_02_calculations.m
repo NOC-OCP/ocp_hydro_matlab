@@ -30,12 +30,15 @@ end
 if strcmp(stage,'pre')
 
     if strcmp(gmethod,'meannum')
-        %fill in the (few, hopefully) missing points first
-        d.dday = round(d.dday*86400)/86400;
-        if abs(mode(diff(d.dday*86400))-1)<1e-3 && (d.dday(end)-d.dday(1))*86400>length(d.dday)
-            t0 = setdiff([ddays(1)*86400:(ddays(end)+1)*86400-1]',round(d.dday*86400));
-            d.dday = [d.dday; t0/86400];
+        %fill in the (few, hopefully) missing time points to make data
+        %consistently 1 hz
+        d.dday = round(d.dday*86400);
+        if abs(mode(diff(d.dday))-1)<1e-3 && (d.dday(end)-d.dday(1))>length(d.dday)
+            %we must be missing some points
+            t0 = setdiff([ddays(1)*86400:(ddays(end)+1)*86400-1]',d.dday);
+            d.dday = [d.dday; t0];
             [d.dday,ii] = sort(d.dday);
+            d.dday = d.dday/86400;
             for no = 1:length(h.fldnam)
                 if ~strcmp(h.fldnam{no},'dday')
                     d.(h.fldnam{no}) = [d.(h.fldnam{no}); nan(length(t0),1)];
@@ -102,8 +105,9 @@ if strcmp(stage,'pre')
             wd = munderway_varname('rwinddvar',h.fldnam,1,'s');
             if ~isempty(ws)
                 if ~sum(strcmp('xcomponent',h.fldnam)) %***
-                    %compute x and y component (platform-relative) from speed
-                    %and (compass) direction
+                    %compute x and y component of platform-relative
+                    %velocity from platform-relative speed and direction
+                    %(degrees cw from bow)
                     [d.xcomponent, d.ycomponent] = uvsd(d.(ws), d.(wd), 'sduv');
                     h = m_append_header_fld(h, {'xcomponent' 'ycomponent'}, {'m/s' 'm/s'}, ws);
                 end
@@ -115,12 +119,15 @@ if strcmp(stage,'pre')
                 headav = interp1(dn.dday, complex(headav_e, headav_n), d.dday);
                 %back to ship heading
                 [~, merged_heading] = uvsd(real(headav), imag(headav), 'uvsd');
+                %rotate the relative wind into earth coordinates and toward
+                %rather than from
                 relwind_direarth = mcrange(180+d.(wd)+merged_heading, 0, 360);
+                %eastward and northward, still relative to platform
                 [relwind_e, relwind_n] = uvsd(d.(ws), relwind_direarth, 'sduv');
                 %ship velocity
                 [shipv_e, shipv_n] = uvsd(dn.smg, dn.cmg, 'sduv');
                 shipv = interp1(dn.dday, complex(shipv_e,shipv_n), d.dday);
-                %vector wind over earth
+                %wind vectors over earth (eastward and northward)
                 d.truwind_e = relwind_e + real(shipv);
                 d.truwind_n = relwind_n + imag(shipv);
                 if ~sum(strcmp('truwind_e',h.fldnam))
@@ -239,9 +246,9 @@ elseif strcmp(stage, 'post')
             tvar = munderway_varname('tempvar', h.fldnam, 1, 's');
             if ~isempty(cvar) && ~isempty(tvar)
                 cu = h.fldunt{strcmp(cvar,h.fldnam)};
-                if strcmp('mS/cm',cu) || strcmp('mS_per_cm',cu)
+                if strcmpi('mS/cm',cu) || strcmpi('mS_per_cm',cu)
                     fac = 1;
-                elseif strcmp('S/m',cu) || strcmp('S_per_m',cu)
+                elseif strcmpi('S/m',cu) || strcmpi('S_per_m',cu)
                     fac = 10;
                 else
                     warning('cond units %s not recognised, skipping calculating psal in %s',cu,datatype)
@@ -262,7 +269,7 @@ elseif strcmp(stage, 'post')
             elseif isempty(tvar)
                 warning('cond found but no temp to calculate psal in %s combined file',datatype)
             end
-            %calibrate
+            %calibrate salinity
             opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
             if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
                 [dcal, hcal] = apply_calibrations(d, h, uo.calstr, uo.docal, 'q');
@@ -274,12 +281,26 @@ elseif strcmp(stage, 'post')
                     h.comment = [h.comment hcal.comment];
                 end
             end
+            %calculate soundvelocity using (calibrated) TSG sal and
+            %sst/hull/dropkeel temp if available, inlet temp otherwise 
+            tvar = munderway_varname('sstvar', h.fldnam, 1, 's');
+            d.soundvelocity = sw_svel(d.(svar), d.(tvar), 0);
+            m = strcmp(h.fldnam,'soundvelocity');
+            if ~sum(m)
+                h.fldnam = [h.fldnam 'soundvelocity'];
+            end
+            m = strcmp(h.fldnam,'soundvelocity');
+            h.fldunt{m} = 'm/s';
+
 
         case 'atmos'
             %recalculate wind speed and direction from averaged vectors
             [d.truwind_spd, d.truwind_dir] = uvsd(d.truwind_e, d.truwind_n, 'uvsd');
+            %retransform direction into direction-from (0 = northerly, 90 =
+            %easterly)
+            d.truwind_dir = mcrange(90-d.truwind_dir,0,360);
             if ~ismember(h.fldnam,'truwind_spd')
-                h = m_append_header_fld(h, {'truwind_spd' 'truwind_dir'}, {'m_per_s' 'degrees counterclockwise of eastward'}, 'truwind_e');
+                h = m_append_header_fld(h, {'truwind_spd' 'truwind_dir'}, {'m_per_s' 'degrees clockwise from northerly (90=easterly)'}, 'truwind_e');
             end
             comment = '\ntruwind calculated from vector-averaged components';
 

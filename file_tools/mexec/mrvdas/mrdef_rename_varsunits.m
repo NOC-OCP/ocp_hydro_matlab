@@ -64,9 +64,11 @@ for no = 1:length(mrtables.tablenames)
     mvars(strcmp('dddmm',munts) & strncmpi('lat',mvars,3)) = {'latdegm'};
     mvars(strcmp('dddmm',munts) & strncmpi('lon',mvars,3)) = {'londegm'};
 
-    %typos as well as alternate forms
+    %typos as well as alternate forms, rename untsgrp(2:end) to untsgrp(1)
     untsgrp = {'degreesC' 'degC' 'degreesCelsius' 'degressCelsius' 'degrees celcius' 'degrees celsius'};
-    [munts, ~] = move_to_unts(munts, [], untsgrp, untsgrp{1}); 
+    [~, munts] = move_to_unts(munts, munts, untsgrp, untsgrp{1});
+    untsgrp = {'ug_per_l', 'microgram/litre'};
+    [~, munts] = move_to_unts(munts, munts, untsgrp, untsgrp{1});
     untsgrp = {'longitudinalwaterspeed', 'longitudalwaterspeed'};
     [munts, ~] = move_to_unts(munts, [], untsgrp, untsgrp{1}); 
     untsgrp = {'ucsw_hoist','divalueallchannels'};
@@ -81,25 +83,11 @@ for no = 1:length(mrtables.tablenames)
     %{'temp','temperature'}
     %{'cond','conductivity'}
 
-    %units where none supplied
-    m = strcmp(' ', munts) & (strncmp('lat', mvars,3) | strncmp('lon', mvars,3));
-    munts(m) = {'decimal_degrees'};
-    m = strcmp(' ', munts) & (contains(mvars, 'temp') | contains(mvars, 'sst'));
-    munts(m) = {'degreesC'};
-    m = strcmp(' ', munts) & contains(mvars, 'sal');
-    munts(m) = {'psu'};
-    m = strcmp(' ', munts) & contains(mvars, 'cond');
-    munts(m) = {'S_per_m'}; %***
-    m = strcmp(' ', munts) & (contains(mvars, 'speed') & ~contains(mvars, 'knot'));
-    munts(m) = {'m_per_second'};
-    %m = strcmp(' ', munts) & contains(mvars,'head');
-    %munts(m) = {'degrees_clockwise_from_N'};
-    %m = strcmp(' ', munts) & contains(mvars, 'dir');
-    %munts(m) = {'degrees'}; %***convention may be ship/inst specific
-    m = strcmp(' ', munts) & contains(mvars, 'cab');
-    munts(m) = {'m_per_second'};
-
     opt1 = 'ship'; opt2 = 'rvdas_units'; get_cropt
+
+    disp(mrtables.tablenames{no})
+    disp([mvars' munts' mrtables.longnames{no}'])
+    pause
 
     %reassign
     mrtables.mstarvars{no} = mvars;
