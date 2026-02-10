@@ -14,7 +14,7 @@ switch type
         u = in1; v = in2;
         %u and v to speed and direction
         spd = sqrt(u.^2 + v.^2);
-        dir = mcrange(atan2(u,v)*180/pi,0,360);
+        dir = mcrange(atan2(v,u)*180/pi,0,360);
         out1 = spd; out2 = dir;
     case 'sduv'
         spd = in1; dir = in2;

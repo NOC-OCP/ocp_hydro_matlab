@@ -67,8 +67,8 @@ for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
 if ~exist('colors','var')
-    colors = [1 0 0; 1 .5 0; 0 .5 0; 0 1 1; 0 0 1; .5 0 .5];
-    colornames = {'red';'orange';'green';'teal';'blue';'purple'};
+    colors = [0 .35 0; 0 1 1; .6 .6 1; .3 0 .3];
+    colornames = {'dark green';'bright cyan';'lavender';'dark plum'};
 end
 nc = size(colors,1); if nc==1; nc = length(colors); end
 if ~exist('markers','var')
@@ -109,6 +109,7 @@ for gno = 1:length(xgroups)
             delete(hl(edno)); hl(edno) = plot(d0(edno).(xvar)(iis),d0(edno).(fn{edno})(iis),'color',colors(edno,:),'marker',markers(edno),'linestyle',lines{edno});
             hold on
         end
+        legend(hl,cellfun(@(x) replace(x,'_','\_'),fn,'UniformOutput',false))
 
         disp('use figure buttons to zoom and pan, then select variable to edit from:')
         for no = 1:nl
