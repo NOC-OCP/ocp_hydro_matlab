@@ -75,7 +75,7 @@ if reload_uway
     end
     ms = logical(sum(ls,2)');
     if sum(ms)>0
-        disp('some missing from: ')
+        disp('some days missing from: ')
         disp(mtable.tablenames(ms))
     end
 end

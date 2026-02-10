@@ -68,11 +68,26 @@ for no = 1:length(insts)
                 if isscalar(iif)
                     vars = mrtables.tablevars{iit(iif)};
                     unts = repmat({' '},size(vars)); lnames = unts;
+                    serial = unts; calfunc = unts; calcoef = unts; 
+                    caled = unts; calunt = unts;
                     [~,ia,ib] = intersect(vars,jdata.(fn{fno}).vars);
                     unts(ia) = jdata.(fn{fno}).unts(ib);
                     lnames(ia) = jdata.(fn{fno}).longnames(ib);
+                    serial(ia) = jdata.(fn{fno}).serial(ib);
+                    calfunc(ia) = jdata.(fn{fno}).calibration_function(ib);
+                    calcoef(ia) = jdata.(fn{fno}).calibration_coefficient(ib);
+                    caled(ia) = jdata.(fn{fno}).calibration_applied(ib);                    
+                    calunt(ia) = jdata.(fn{fno}).calibrated_units(ib);
+                    m = cellfun('isempty', replace(unts,whitespacePattern,'')) & cellfun(@(x) length(x),calunt)>0;
+                    if sum(m)
+                        unts(m) = calunt(m);
+                    end
                     mrtables.tableunts{iit(iif)} = unts;
                     mrtables.longnames{iit(iif)} = lnames;
+                    mrtables.serials{iit(iif)} = serial;
+                    mrtables.calfunc{iit(iif)} = calfunc;
+                    mrtables.calcoef{iit(iif)} = calcoef;
+                    mrtables.caled{iit(iif)} = caled;
                     iit(iif) = [];
                 elseif length(iif)>1
                     warning('multiple matches for %s',fn{fno})
@@ -116,11 +131,17 @@ for sno = 1:nsent
     msg = lower([s.talkId s.messageId]);
     sqlname = [sqlpre id '_' msg];
     sf = struct2table(s.field,'AsArray',true);
-    jdata.(sqlname).vars = sf.fieldNumber;
+    jdata.(sqlname).vars = lower(sf.fieldNumber);
     jdata.(sqlname).unts = sf.unit;
     m = ~cellfun(@ischar, sf.unit) | cellfun(@isempty, sf.unit);
     if sum(m)
         jdata.(sqlname).unts(m) = {' '};
     end
     jdata.(sqlname).longnames = sf.name;
+    a = struct2table(sf.netcdf_attributes,'AsArray',true);
+    jdata.(sqlname).serial = {a.instrument.serial_number};
+    jdata.(sqlname).calibration_function = {a.calibrations.calibration_function};
+    jdata.(sqlname).calibration_coefficient = {a.calibrations.calibration_coefficients};
+    jdata.(sqlname).calibration_applied = {a.calibrations.calibration_applied};
+    jdata.(sqlname).calibrated_units = {a.calibrations.output_units};
 end

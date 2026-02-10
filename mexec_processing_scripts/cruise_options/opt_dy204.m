@@ -15,32 +15,44 @@ switch opt1
                 default_hedstream = 'posmv_pashr';
                 default_attstream = 'posmv_pashr';
             case 'rvdas_skip'
+                %seapath down this cruise
+                %usbl not used, wamos not used
+                %don't need to read ctd depth through rvdas
+                %can read surfmet variables from nudam instead
                 skips.sentence_pat = [skips.sentence_pat, ...
-                    'seapath', 'usbl', 'ctd']; %seapath down this cruise, usbl not used, don't need to read ctd depth through rvdas
-
+                    'seapath', 'usbl', 'wamos', 'ctd', 'surfmet']; 
+                %below tables are present but have 0 data (return COPY 0)
+                skips.sentence = [skips.sentence, ...
+                    'truewind_truewind', 'salrmtemp_salin', ...
+                    'phins_pixsegpsin0', 'pco2_ppco2', ...
+                    'cnav_gnvtg', 'autosal_autosal'];
         end
 
     case 'uway_proc'
         switch opt2
-                        case 'rawedit'
-                % if ismember(abbrev,{'sbe45','surfmet'})
-                %     %cut off start (and eventually end) when TSG bad
-                %     %because underway seawater supply pumps off
-                %     badtimes = [-inf (datenum(2024,12,11,19,40,0)-datenum(2024,1,1))*86400];
-                %     if strcmp(abbrev,'sbe45')
-                %         tsgpumpvars = {'temph','tempr','conductivity','salinity','soundvelocity'};
-                %     else
-                %         tsgpumpvars = {'fluo','trans'};
-                %     end
-                % elseif strcmp(abbrev,'ea640')
-                % %     d = rmfield(d,'waterdepthfromsurface');
-                % %     h.fldunt(strcmp('waterdepthfromsurface',h.fldnam)) = [];
-                % %     h.fldnam(strcmp('waterdepthfromsurface',h.fldnam)) = [];
-                % end
-                % if sum(strcmp(streamtype,{'sbm','mbm'}))
-                %      handedit = 1; %edit raw bathy
-                %      vars_to_ed = h.fldnam(cellfun(@(x) contains(x,'dep'), h.fldnam));
-                % end
+            case 'rawedit'
+                if ismember(abbrev,{'sbe45','surfmet','nudam'})
+                    %     %cut off start (and eventually end) when TSG bad
+                    %     %because underway seawater supply pumps off
+                    %     badtimes = [-inf (datenum(2024,12,11,19,40,0)-datenum(2024,1,1))*86400];
+                                    if strcmp(abbrev,'sbe45')
+                        tsgpumpvars = {'temph','tempr','conductivity','salinity','soundvelocity'};
+                    else
+                        tsgpumpvars = {'fluo','trans'};
+                    end
+                elseif strcmp(abbrev,'ea640')
+                    d = rmfield(d,'depth');
+                    h.fldunt(strcmp('depth',h.fldnam)) = [];
+                    h.fldnam(strcmp('depth',h.fldnam)) = [];
+                    % elseif sum(strcmp(streamtype,{'sbm','mbm'}))
+                    %      handedit = 1; %edit raw bathy
+                    %      vars_to_ed = h.fldnam(cellfun(@(x) contains(x,'dep'), h.fldnam));
+                end
+            case 'avedit'
+                if strcmp(datatype, 'ocean')
+                    tsgpumpvars = {'fluo','trans','temph','tempr','conductivity','salinity','soundvelocity'};
+                    vars_to_ed = setdiff(hg.fldnam, {'soundvelocity','times'}); %scale is too different***anyway, should recalculate based on T, C? after calibration?
+                end
         end
      
      case 'nisk_proc'
