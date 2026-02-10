@@ -115,6 +115,10 @@ ds.Properties.VariableNames = names;
 [ds, names, units] = lldegm_fix(ds, names, units, 'lat');
 [ds, names, units] = lldegm_fix(ds, names, units, 'lon');
 
+% check for factory calibrations that need to be applied
+m = strcmp(mrtv.caled{ktable}, 'false');
+if sum(m); keyboard; end %use calfunc and calcoef***
+
 %convert to structure
 dd = table2struct(ds,'ToScalar',true);
 m = strcmp('time',names);

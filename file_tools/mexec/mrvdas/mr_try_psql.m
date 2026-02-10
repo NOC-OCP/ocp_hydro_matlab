@@ -45,19 +45,20 @@ try
         warning('LD_LIBRARY_PATH?')
         [stat, result] = system(['unsetenv LD_LIBRARY_PATH; ' psql_string]);
         if stat~=0
-            fid = fopen('/data/pstar/psqls_f','w');
+            fname = fullfile(MEXEC_G.mexec_data_root,'rvdas','psqls_f');
+            fid = fopen(fname','w');
             fprintf(fid,'%s\n',psql_string);
             fclose(fid);
-            [s,~] = system('/usr/bin/chmod ug+x /data/pstar/psqls_f');
+            [s,~] = system(['/usr/bin/chmod ug+x ' fname]);
             if s==0
-                [stat,result] = system('/data/pstar/psqls_f');
+                [stat,result] = system(fname);
                 if stat~=0
-                    fprintf(1,'in terminal, execute /data/pstar/psqls_f \n then press enter to continue')
+                    fprintf(1,'in terminal, execute %s\n then press enter to continue', fname)
                     pause
                     if exist(csvname,'file')
                         stat = 0;
                     else
-                        warning('check /data/pstar/psqls_f')
+                        warning('check %s', fname)
                     end
                 end
             else

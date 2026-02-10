@@ -14,8 +14,48 @@ switch opt1
                 default_navstream = 'posmv_gpgga';
                 default_hedstream = 'posmv_pashr';
                 default_attstream = 'posmv_pashr';
+            case 'rvdas_skip'
+                %seapath down this cruise
+                %usbl not used, wamos not used
+                %don't need to read ctd depth through rvdas
+                %can read surfmet variables from nudam instead
+                skips.sentence_pat = [skips.sentence_pat, ...
+                    'seapath', 'usbl', 'wamos', 'ctd', 'surfmet']; 
+                %below tables are present but have 0 data (return COPY 0)
+                skips.sentence = [skips.sentence, ...
+                    'truewind_truewind', 'salrmtemp_salin', ...
+                    'phins_pixsegpsin0', 'pco2_ppco2', ...
+                    'cnav_gnvtg', 'autosal_autosal'];
         end
 
+    case 'uway_proc'
+        switch opt2
+            case 'rawedit'
+                if ismember(abbrev,{'sbe45','surfmet','nudam'})
+                    %     %cut off start (and eventually end) when TSG bad
+                    %     %because underway seawater supply pumps off
+                    %     badtimes = [-inf (datenum(2024,12,11,19,40,0)-datenum(2024,1,1))*86400];
+                                    if strcmp(abbrev,'sbe45')
+                        tsgpumpvars = {'temph','tempr','conductivity','salinity','soundvelocity'};
+                    else
+                        tsgpumpvars = {'fluo','trans'};
+                    end
+                elseif strcmp(abbrev,'ea640')
+                    d = rmfield(d,'depth');
+                    h.fldunt(strcmp('depth',h.fldnam)) = [];
+                    h.fldnam(strcmp('depth',h.fldnam)) = [];
+                    % elseif sum(strcmp(streamtype,{'sbm','mbm'}))
+                    %      handedit = 1; %edit raw bathy
+                    %      vars_to_ed = h.fldnam(cellfun(@(x) contains(x,'dep'), h.fldnam));
+                end
+            case 'avedit'
+                if strcmp(datatype, 'ocean')
+                    tsgpumpvars = {'fluo','trans','temph','tempr','conductivity','salinity','soundvelocity'};
+                    vars_to_ed = setdiff(hg.fldnam, {'soundvelocity','times'}); %scale is too different***anyway, should recalculate based on T, C? after calibration?
+                end
+        end
+     
+>>>>>>> remotes/origin/main
      case 'nisk_proc'
         switch opt2
             case 'niskins'
@@ -44,7 +84,14 @@ switch opt1
                      case 2
                          niskin_flag(ismember(position,[1 9])) = 4; %not closed correctly %1 did not fire/release, 9 did not seal
                      case 3
-                         niskin_flag(position==11) = 3; %too warm, suspect leak
+                         niskin_flag(ismember(position,[1 11])) = 3; %too warm, suspect leak
+                    case 5
+                        niskin_flag(ismember(position,[7 13])) = 4; %not closed correctly
+                        niskin_flag(position==1) = 3; %too warm, suspect leak
+                    case 7
+                        niskin_flag(position==7) = 4;
+                    case 20
+                        niskin_flag(position==9) = 4;
                 end
         end
 
@@ -57,6 +104,49 @@ switch opt1
                 cnvfile = fullfile(cdir,sprintf('%s_CTD_%s.cnv', upper(mcruise), stn_string));
             case 'raw_corrs' % -----> if change the hystherisis coef
             case 'rawedit_auto' % -----> only if repeated spikes or out of range
+                % to see with [dr,hr] = mload('/data/pstar/cruise/data/ctd/ctd_dy204_008_raw_cleaned','/'); plot(dr.scan,dr.cond2,'.-')
+                if stn==9 
+                    co.badscan.cond2 = [53002 inf]; %at start: pumps on briefly, then off, then on. at end: spike
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [52858 inf];
+                elseif stn==6 
+                    co.badscan.cond2 = [-inf 4000; 94955 95010]; 
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [94800 inf];
+                elseif stn==8
+                    co.badscan.cond2 = [-inf 6353; 104542 inf]; 
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [-inf 6389];
+                elseif stn==10 
+                    co.badscan.cond2 = [49333 49349]; 
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [49189 inf];
+                elseif stn==12
+                    co.badscan.cond2 = [172314 inf];
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [172170 inf];
+                elseif stn==15
+                    co.badscan.cond1 = [65227 65235]; 
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.cond2 = [65238 65244];
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.oxygen_sbe2 = [65094 inf];
+                    co.badscan.oxygen_sbe1 = [65112 inf];
+                elseif stn==14
+                    co.badscan.cond2 = [9956 9963; 192504 inf]; 
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.cond1 = [192500 inf]; 
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.oxygen_sbe2 = [192359 inf];
+                    co.badscan.oxygen_sbe1 = [192356 inf];
+                elseif stn==19
+                    co.badscan.cond2 = [68748 inf]; 
+                    co.badscan.temp2 = co.badscan.cond2;
+                    co.badscan.cond1 = [8161 8170]; 
+                    co.badscan.temp1 = co.badscan.cond1;
+                    co.badscan.oxygen_sbe2 = [68604 inf];
+                    co.badscan.oxygen_sbe1 = [68621 inf]; 
+                end
             case 'ctd_cals' % -----> to apply calibration
                 co.docal.temp = 0;
                 co.docal.cond = 0;
@@ -93,16 +183,23 @@ switch opt1
                 sbe35file = 'CTD_*.asc';
             case 'sbe35_parse'
                 %deal with file containing multiple stations' data
-                % if strcmp(file_list{kf},'CTD_010203.asc') %statnum is last 3 chars before ".", so in this case incorrectly interpreted as 203
-                %     m = t.statnum==203;
-                %     t.statnum(m) = 2; %no bottles fired on 1 as it was aborted
-                %     m = t.statnum==2 & t.datnum>datenum(2024,12,11,18,0,0);
-                %     t.statnum(m) = 3;
-                %     %not sure why but there are some bn=0 lines, which we
-                %     %can't use anyway, so exclude
-                %     m = t.bn==0;
-                %     t(m,:) = [];
-                % end
+                if contains(file_list{kf},'CTD010.asc')
+                    tbdy = [3 0 0 0; 4 1 0 0; 4 18 0 0; 4 20 0 0; 4 22 0 0; 5 10 0 0];
+                    for no = 6:10
+                        m = t.statnum==10 & t.datnum>datenum([2026 2 tbdy(no-5,:)]) & t.datnum<datenum([2026 2 tbdy(no-4,:)]);
+                        t.statnum(m) = no;
+                    end
+                elseif contains(file_list{kf},'016.asc')
+                    m = t.statnum==16 & t.datnum<datenum(2026,2,7,19,00,0);
+                    t(m,:) = [];%.statnum(m) = 15; %already read in these lines from the CTD015.asc file
+                elseif contains(file_list{kf},'CTD013.asc')
+                    m = t.statnum==13 & t.datnum<datenum(2026,2,6,14,30,0);
+                    t.statnum(m) = 12;
+                    ii = find(t.statnum==12 & t.bn==5);
+                    t(ii,:) = []; %duplicate bn, not clear which is right
+                elseif contains(file_list{kf},'CTD004.asc')
+                    ii = find(t.statnum==4 & t.bn==1); t(ii(1),:) = []; %leftover?
+                end
         end
 
 
@@ -112,24 +209,19 @@ switch opt1
             case 'sal_files'
                 salfiles = dir(fullfile(root_sal, ['autosal_' mcruise '_*.csv'])); 
             case 'sal_parse'
-                % cellT = 21; % Temperature of the bath
-                % ssw_k15 = 0.99988;
-                % calcsal = 1;                ssw_batch = 'P167';
+                cellT = 21; % Temperature of the bath
+                ssw_k15 = 0.99988;
+                calcsal = 1;                
+                ssw_batch = 'P167';
             case 'sal_calc'
-                 % salin_off = [000 -3; 001 -6; ... 
-                 %     002 -4; 003 -2; ... 
+                 salin_off = [000 -6; 001 -6; ... 
+                     002 0; 003 0; ... 
                  %     004 0; 005 -7; ... 
                  %     006 0; 007 -1; ...
                  %     008 -1; 009 -2; %009.1 -2; %009.1 is to apply to last 4 samples run right after 009
-                 %     ];
-                 % salin_off(:,1) = salin_off(:,1)+999e3;
-                 % salin_off(:,2) = salin_off(:,2)*1e-5;
-                 
-                 %no sample times recorded for these, so never mind
-                 %ii = find(ds_sal.sampnum==999009);
-                 %ds_sal = [ds_sal; ds_sal(ii,:)];
-                 %ds_sal.runtime(end) = max(ds_sal.runtime)+5/60/24; 
-                 %ds_sal.sampnum(end) = 999e3+salin_off(end,1);
+                     ];
+                 salin_off(:,1) = salin_off(:,1)+999e3;
+                 salin_off(:,2) = salin_off(:,2)*1e-5;
             case 'sal_flags'
                 % %too low (33-ish), maybe samples contaminated
                 % m = ismember(ds_sal.sampnum,[4807 4809 5713 5715 5801 5803 5805]);
@@ -144,33 +236,27 @@ switch opt1
     case 'botoxy'
         switch opt2
             case 'oxy_files'
-                ofiles = dir(fullfile(root_oxy,'DY186_oxy*.xls'));
+                ofiles = dir(fullfile(root_oxy,'*.xlsx'));
                 hcpat = {'Bottle';'Number'}; %Flag is on 2nd line so start here
                 chrows = 1;
                 chunits = 2;
             case 'oxy_parse'
-                % calcoxy = 1;
-                % varmap.position = {'bottle_number'};
-                % m = ds_oxy.bottle_number==24; ds_oxy.bottle_number(m) = 1;
-                % varmap.fix_temp = {'temp_c'};
-                % varmap.vol_blank = {'titre_mls'};
-                % varmap.vol_titre_std = {'titre_mls_1'};
-                % varmap.sample_titre = {'titre_mls_2'};
-                % varmap.vol_std = {'vol_mls'};
-                % varmap.bot_vol_tfix = {'at_tfix_mls'};
-                % varmap.statnum = {'number'};
-                % d = cellstr(ds_oxy.number);
-                % ds_oxy.number = cellfun(@(x) str2double(x(4:end)), d);
+                calcoxy = 1;
+                varmap.position = {'bottle_number'};
+                varmap.fix_temp = {'temp_c'};
+                varmap.vol_blank = {'titre_mls'};
+                varmap.vol_titre_std = {'titre_mls_1'};
+                varmap.sample_titre = {'titre_mls_2'};
+                varmap.vol_std = {'vol_mls'};
+                varmap.bot_vol_tfix = {'at_tfix_mls'};
+                varmap.statnum = {'number'};
                 % ds_oxy.flag = [];
-                %will need to replace 24 with 1 probably based on oxygen
-                %sampling log (it is using bottle label rather than bottle
-                %position)
             case 'oxy_calc'
-                % vol_reag_tot = 2.0397;
-            case 'oxy_flags'
+                vol_reag_tot = 2;
+            case 'oxy_flags' %why duplicates not at the other stations?
                 %sampnum, a flag, b flag, c flag
-                % flr = [315 3 2 9; ... %a is lower than all
-                %       ];
+                flr = [711 2 4 9; ... %b is low
+                       ];
         end
 
 

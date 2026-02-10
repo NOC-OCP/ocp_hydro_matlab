@@ -67,7 +67,7 @@ if numel(nump)>1
     slist = nump; 
 %     slist = slist(slist<stnlocal); % bak en705 19 july 2023; no reason why
 %     we should only display earlier stations
-elseif numel(nump)==1
+elseif isscalar(nump)
     slist = stnlocal-nump:stnlocal-1;
     slist(slist<0) = []; % bak en705 19 july 2023 : allow station number zero
 else
@@ -180,7 +180,7 @@ for plotlist = cklist
             end
             pf1.ncfile.name = infiles{3,end}; % psal file
             
-            mplotxy(pf1);
+            mplotxy(pf1); 
             
         case 2
             
@@ -727,5 +727,4 @@ for plotlist = cklist
             
     end
 end
-
 clear klist

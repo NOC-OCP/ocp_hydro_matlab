@@ -179,12 +179,10 @@ switch opt1
             case 'avedit'
                 uopts = struct();
                 vars_to_ed = setdiff(fieldnames(dg)',{'dday','time','times'});
-                if strcmp(datatype,'bathy')
-                    handedit = 1;
-                elseif strcmp(datatype,'ocean')
-                    handedit = 1;
-                else
+                if strcmp(datatype,'nav')
                     handedit = 0;
+                else
+                    handedit = 1;
                 end
             case 'tsg_cals'
                 uo.docal.temp = 0; %do not apply any calibration to tsg temp
