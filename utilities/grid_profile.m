@@ -230,12 +230,7 @@ switch method
         cdim = size(data,2);
         data = reshape(data(1:num*nav,:),[num nav cdim]);
         if ignore_nan
-            m = ~isnan(data);
-            data(~m) = 0;
-            w = sum(double(m));
-            data = sum(data)./w;
-            data(w==0) = NaN;
-            data = permute(data, [2 3 1]);
+            data = permute(mean(data, 'omitmissing'), [2 3 1]);
         else
             data = permute(mean(data), [2 3 1]);
         end

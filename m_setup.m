@@ -56,6 +56,7 @@ MEXEC_G.ix_ladcp = 0; %set to 0 to not add ldeo_ix paths (for instance if proces
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 workdir = '/data/pstar_akeake';
+workdir = '/data/pstar_kolea'; %***temporary for testing underway reprocessing
 MEXEC_G.mexec_data_root = [workdir '/projects/rpdmoc/cruise_data/dy204/mcruise/data/']; 
 MEXEC_G.other_programs_root = {[workdir '/programs/others/matlab'];[workdir 'programs/repos_github/athurnherr']}; 
 MEXEC_G.mexec_shell_scripts = [workdir '/programs/repos_github/mexec_exec/'];
