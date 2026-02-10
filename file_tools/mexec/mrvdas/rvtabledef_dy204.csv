@@ -1,6 +1,6 @@
-RVDAS info from database "DY204" and .json files in /data/pstar_kolea/projects/rpdmoc/cruise_data/dy204/mcruise/data/rvdas/json_files
-loaded by mrdefine.m on 09-Feb-2026 17:20:33
-saved in /data/pstar_kolea/projects/rpdmoc/cruise_data/dy204/mcruise/data/rvdas/rvtabledef_dy204.mat and /data/pstar_akeake/programs/repos_userbranched/ocp_hydro_matlab_yfiring/file_tools/mexec/mrvdas/rvtabledef_dy204.csv
+RVDAS info from database "DY204" and .json files in /data/pstar_ulili/projects/rpdmoc/cruise_data/dy204/mcruise/data/rvdas/json_files
+loaded by mrdefine.m on 10-Feb-2026 13:18:58
+saved in /data/pstar_ulili/projects/rpdmoc/cruise_data/dy204/mcruise/data/rvdas/rvtabledef_dy204.mat and /data/pstar_ulili/programs/repos_userbranched/ocp_hydro_matlab_yfiring/file_tools/mexec/mrvdas/rvtabledef_dy204.csv
 csv copy only for information (.mat used by mrdefine)
 
 tablenames, tablevars, mstarpre, mstardir, paramtype, rvdasmsg, tableunts, longnames, serials, calfunc, calcoef, caled, mstarvars, mstarunts
