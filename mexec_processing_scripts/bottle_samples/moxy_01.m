@@ -245,6 +245,10 @@ if isfield(d,'botoxyc_per_l')
 end
 
 if sum(m0)
+    ds = mloadq(fullfile(mgetdir('ctd'),sprintf('sam_%s_all.nc',mcruise)),'sampnum statnum uoxygen position upress ');
+    [~,ia,ib] = intersect(d.sampnum,ds.sampnum);
+    r = q(ia,:)./repmat(ds.uoxygen(ib),1,3);
+    rint = [r(:,1)*(1-orthp) r(:,1)*(1+orthp)];
     qb = q; qb(qf~=4) = NaN;
     qq = q; qq(qf~=3) = NaN;
     q = q(m0,:);
@@ -252,12 +256,8 @@ if sum(m0)
     qb = qb(m0,:);
     stn0 = d.statnum(m0);
     samp0 = d.sampnum(m0);
-    ds = mloadq(fullfile(mgetdir('ctd'),sprintf('sam_%s_all.nc',mcruise)),'sampnum statnum uoxygen position upress ');
-    [~,ia,ib] = intersect(d.sampnum,ds.sampnum);
     [~,ia0,ib0] = intersect(samp0,ds.sampnum);
 
-    r = d.botoxya_per_l(ia)./ds.uoxygen(ib);
-    rint = [d.botoxya_per_l(ia)*(1-orthp) d.botoxya_per_l(ia)*(1+orthp)]./repmat(ds.uoxygen(ib),1,2);
     figure(1); clf
     y = repmat(ds.uoxygen(ib0),1,size(q,2)); nr = length(ia);
     hl = plot([d.sampnum(ia) d.sampnum(ia)]',rint',...
@@ -265,9 +265,11 @@ if sum(m0)
         d.sampnum(ia),r,'.b', ds.sampnum(ib0),q(ia0,:)./y,'o');
     ylabel('oxygen bot/ctd'); xlabel('sampnum'); grid
     title('all values, questionable replicates highlighted')
-    legend(hl([1 end-3:end]),['+/-' num2str(orthp) ' factor on bottle value'],'all (a)','a','b','c','location','southwest'); 
+    legend(hl([1 end-3:end]),['+/-' num2str(orthp) ' factor on bottle a'],'all','a (repl. diff.)','b (repl. diff.)','c (repl. diff.)','location','southwest'); 
     set(hl(1:nr),'color',[.5 .5 .5]); set(hl(nr+1:end-4),'color',[0 0 0])
-    title('o differing replicates (x if flagged bad, + if flagged questionable)')
+    set(hl(end-2:end),'markersize',12);
+    set(hl(end-2),'color',[0 .2 .4]); set(hl(end-1),'color',[0 .7 .5]); set(hl(end),'color',[0 1 0]);
+    title('o replicates differ more than threshold; check (x if flagged bad, + if flagged questionable)')
 
     %display values for each station
     stns = unique(stn0); stns = stns(stns>=stn_start);

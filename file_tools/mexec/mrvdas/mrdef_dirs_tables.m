@@ -51,24 +51,28 @@ mt(n).inst = {'sbe38','sbe38dk'};
 mt(n).msg = {'sbe38','psbsst1','phsst'}; 
 % UCSW T, C, flow, fluo, trans
 n = n+1; mt(n).dir = 'met'; mt(n).typ = 'tsg'; 
-mt(n).inst = {'sbe45','surfmet'};
-mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1','sfuwy','pc4rhoist1'};
+mt(n).inst = {'sbe45','surfmet','nudamuwy'};
+mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1','sfuwy','pc4rhoist1','sfuwy'};
 % pressure, humidity, air temp
 n = n+1; mt(n).dir = 'met'; mt(n).typ = 'met'; 
-mt(n).inst = {'surfmet'};
+mt(n).inst = {'surfmet','nudammet'};
 mt(n).msg = {'pcfrs','pvtnh2','pvbar','pmdew','sfmet'}; %pressure, humidity, precip n = n+1;
+%pco2
+n = n+1; mt(n).dir = 'met'; mt(n).typ = 'met';
+mt(n).inst = {'pco2'};
+mt(n).msg = {'ppco2'}; %not sure if this is running or what about the variables
 % radiation
 n = n+1; mt(n).dir = 'met'; mt(n).typ = 'rad'; 
-mt(n).inst = {'surfmet'};
+mt(n).inst = {'surfmet','nudamlgt'};
 mt(n).msg = {'pkpyrge','pkpyran','pspar','sflgt'}; %radiometers
 % wind
 n = n+1; mt(n).dir = 'met'; mt(n).typ = 'wind'; 
 mt(n).inst = {'surfmet','windsonic','truewind'};
 mt(n).msg = {'iimwv','wimwv','pmwind','gpxsm','truewind'};
 % waves
-% n = n+1; mt(n).dir = 'met'; mt(n).typ = wav; 
-% mt(n).inst = {'wav'}; 
-% mt(n).msg = {'pwam1','pramr','pwam'}; 
+n = n+1; mt(n).dir = 'met'; mt(n).typ = 'wav'; 
+mt(n).inst = {'wav','wamos'}; 
+mt(n).msg = {'pwam1','pramr','pwam'}; 
 
 %singlebeam
 n = n+1; mt(n).dir = 'bathy'; mt(n).typ = 'sbm'; 

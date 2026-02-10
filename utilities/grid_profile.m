@@ -131,51 +131,36 @@ switch method
                     d.(fn{vno})(iib,:) = [];
                 end
             end
+            d.(gridvar)(iib) = [];
         end
-        d.(gridvar)(iib) = [];
         clear iib
 end
 
 
-%set up gridding coordinate from gridvec, and save output gridvar if it's
-%not being calculated as an average
+%set up gridding coordinate from gridvec, and save output gridvar
 switch method
-    case {'meanbin' 'medbin' 'lfitbin'}
+    case {'meanbin' 'medbin' 'lfitbin' 'medint' 'meanint'}
         %bin edges
-        ge = [gridvec(1:end-1) gridvec(2:end)];
-        mk = true(size(ge(:,1)));
-        me1 = ge(:,2)<min(d.(gridvar));
-        me2 = ge(:,1)>max(d.(gridvar));
+        if strcmp(method(end-2:end),'int')
+            ge = [gridvec+int(1) gridvec+int(2)];
+        else
+            ge = [gridvec(1:end-1) gridvec(2:end)];
+        end
+        method = replace(method, 'int', 'bin'); %now that we've set up the bin edges, treat *int method the same as *bin
         if grid_ends(1)==0
-            mk = mk & ~me1;
+            %exclude completely empty bins on the low end
+            ge = ge(ge(:,2)>=min(d.(gridvar)),:);
         end
         if grid_ends(2)==0
-            mk = mk & ~me2;
+            %exclude completely empty bins on the high end
+            ge = ge(ge(:,1)<=max(d.(gridvar)),:);
         end
-        ge = ge(mk, :);
-        mg = mk(~me1 & ~me2);
         gridvec = mean(ge,2);
-        if strcmp(method, 'lfitbin')
-            dg.(gridvar) = gridvec;
-        end
-    case {'medint' 'meanint'}
-        %bin edges
-        ge = [gridvec+int(1) gridvec+int(2)];
-        mk = true(size(ge(:,1)));
-        me1 = ge(:,2)<min(d.(gridvar));
-        me2 = ge(:,1)>max(d.(gridvar));
-        if grid_ends(1)==0
-            mk = mk & ~me1;
-        end
-        if grid_ends(2)==0
-            mk = mk & ~me2;
-        end
-        ge = ge(mk, :); gridvec = gridvec(mk);
-        mg = mk(~me1 & ~me2);
         dg.(gridvar) = gridvec;
         if ~isrow; dg.(gridvar) = dg.(gridvar)'; end        
-        %now that we've set up the bin edges can use binav below
-        method = [method(1:end-3) 'bin'];
+        %even if empty bins at end(s) were kept, don't bother running them
+        %through gridder
+        mg = gridvec>=min(d.(gridvar)) & gridvec<=max(d.(gridvar));
     case {'linterp' 'smhan'}
         mk = true(size(gridvec));
         me1 = gridvec<min(d.(gridvar));
@@ -245,12 +230,7 @@ switch method
         cdim = size(data,2);
         data = reshape(data(1:num*nav,:),[num nav cdim]);
         if ignore_nan
-            m = ~isnan(data);
-            data(~m) = 0;
-            w = sum(double(m));
-            data = sum(data)./w;
-            data(w==0) = NaN;
-            data = permute(data, [2 3 1]);
+            data = permute(mean(data, 'omitmissing'), [2 3 1]);
         else
             data = permute(mean(data), [2 3 1]);
         end

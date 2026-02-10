@@ -24,7 +24,11 @@ if nargin>0 && ~isempty(varargin{1}) && exist(otfile1,'file')
     end
 end
 % load sbe35 data
-sbe35file = sprintf('%s_SBE35_CTD*.asc', upper(mcruise));
+if contains(root_sbe35,'SBE35')
+    sbe35file = sprintf('%s_*.asc',upper(mcruise));
+else
+   sbe35file = sprintf('%s_SBE35_CTD*.asc', upper(mcruise));
+end
 %stnind is indices in filename sbe35file containing the station number
 %use negative to indicate distance from end e.g. [-6:-4] for
 %dy113_SBE35_CTD_010.asc
@@ -61,19 +65,22 @@ for kf = 1:length(file_list)
         str = fgetl(fid2);
         if ~ischar(str); break; end % fgetl has returned -1 as a number; next file
         strlen = length(str);
-        if strlen==77 % data are in 77 byte lines
+        if strlen>60 && contains(str,'t90')
             t.statnum(kount) = str2double(file_list{kf}(iis));
             t.files{kount} = file_list{kf}; %for debugging
             try
-                t.datnum(kount) = datenum(str(5:25));
-                %a = str2num(replace(replace(replace(replace(str(26:end),'bn = ',''),'diff = ',''),'val = ',''),'t90 = ',''));
-                %bn(kount) = a(1); tdiff(kount) = a(2); val(kount) = a(3); t90(kount) = a(4);
-                t.bn(kount) = str2double(str(32:33));
-                t.tdiff(kount) = str2double(str(42:46));
-                t.val(kount) = str2double(str(53:61));
-                t.t90(kount) = str2double(str(69:77));
+                c = strsplit(str);
+                ii = find(cellfun(@(x) strcmp(x,'bn'), c));
+                t.bn(kount) = str2double(c{ii+2});
+                t.datnum(kount) = datenum(strjoin(c(ii-4:ii-1)));
+                ii = find(cellfun(@(x) strcmp(x,'diff'), c));
+                t.tdiff(kount) = str2double(c{ii+2});
+                ii = find(cellfun(@(x) strcmp(x,'val'), c));
+                t.val(kount) = str2double(c{ii+2});
+                ii = find(cellfun(@(x) strcmp(x,'t90'), c));
+                t.t90(kount) = str2double(c{ii+2});
                 t.flag(kount) = 2;
-            catch
+            catch 
                 t.flag(kount) = 4;
             end
             kount = kount+1;
@@ -125,7 +132,7 @@ if check_sbe35
         if ~ismember(iic(no),ii_did)
             ii = find(t.sampnum==t.sampnum(iic(no)));
             if isscalar(unique(t.files(ii))) && isunix
-                system(['cat ' fullfile(root_sbe35,t.files{iic(no)})])
+                system(['cat "' fullfile(root_sbe35,t.files{iic(no)}) '"'])
                 sprintf('sampnum %d on multiple lines (above)\n',t.sampnum(iic(no)))
             else
                 sprintf('sampnum %d on multiple lines:\n',t.sampnum(iic(no)))

@@ -75,7 +75,7 @@ if reload_uway
     end
     ms = logical(sum(ls,2)');
     if sum(ms)>0
-        disp('some missing from: ')
+        disp('some days missing from: ')
         disp(mtable.tablenames(ms))
     end
 end
@@ -90,7 +90,7 @@ if reload_av || reload_uway %something new to take through preliminary edits sta
     [mudirs,ii] = unique(mudirs);
     mufiles = mtable.mstarpre(ii);
     iin = find(contains(mudirs,'nav/'));
-    iio = setdiff([1:length(mudirs)]',iin);
+    iio = setdiff(1:length(mudirs),iin)';
     mufiles = mufiles([iin;iio]);
     if exist('never_edit','var')
         mufiles = setdiff(mufiles,never_edit);
