@@ -154,10 +154,10 @@ switch opt1
                 % co.calstr.temp.sn34593.msg = 'temp s/n 34593 adjusted from +1 mdeg at surface to -1.3 mdeg at 6000m to agree with SBE35. Fit to 26/80 data points';
                 % co.calstr.temp.sn34712.dy186 = 'dcal.temp = d0.temp + interp1([-10 6000],1*[15 15]/1e4,d0.press);';
                 % co.calstr.temp.sn34712.msg = 'temp s/n 34712 adjusted by +1.5 mdeg to agree with SBE35. Fit to 26/80 data points';
-                % co.calstr.cond.sn42571.dy186 = 'dcal.cond = d0.cond.*(1+ (interp1([2 9],[-1e-3 1e-3],d0.statnum) + interp1([-10 1500 5000],[-2e-3 0.5e-3 -3e-3],d0.press))/35);';
-                % co.calstr.cond.sn42571.msg = 'cond s/n 42571 adjusted to agree with bottle salinity up to station 8 (42 good comparison points) SSW batch P167';
-                % co.calstr.cond.sn43054.dy186 = 'dcal.cond = d0.cond.*(1+ (interp1([-10 2000 5000],[-2.5e-3 -1.5e-3 -3e-3],d0.press) + interp1([1 12],[0 0],d0.statnum))/35);';
-                % co.calstr.cond.sn43054.msg = 'cond s/n 43054 adjusted to agree with bottle salinity up to station 8 (42 good comparison points) SSW batch P167';
+                co.calstr.cond.sn42165.dy204 = 'dcal.cond = d0.cond.*(1+ (interp1([1 20],[-4e-3 4e-3],d0.statnum) )/35);'; %+ interp1([-10 2000 5000],[2e-3 4e-3 4e-3],d0.press)
+                % co.calstr.cond.sn42165.msg = 'cond s/n 42165 adjusted to agree with bottle salinity up to station 8 (42 good comparison points) SSW batch P167';
+                co.calstr.cond.sn43873.dy204 = 'dcal.cond = d0.cond.*(1+ (interp1([-10 1500 5000],[0e-3 2e-3 2e-3],d0.press) + interp1([1 20],[0 0],d0.statnum))/35);';
+                % co.calstr.cond.sn43873.msg = 'cond s/n 43054 adjusted to agree with bottle salinity up to station 8 (42 good comparison points) SSW batch P167';
                 co.calstr.oxygen.sn432539.dy204 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0   5000 ],[1.08 1.08 1.08],d0.press).*interp1([1 20],[1.0 1.0],d0.statnum);';
                 %co.calstr.oxygen.sn432539.msg = 'oxygen s/n 1882 adjusted to agree with 77 points for stations 2 to 9 as compared with upcast after default hysterisis correction.';
                 co.calstr.oxygen.sn434580.dy204 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0  5000 ],[1.07 1.07 1.07],d0.press);';
