@@ -1,0 +1,23 @@
+name: env_dy204
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13
+# jupyter
+  - jupyterlab
+# xarray
+  - xarray
+  - bottleneck
+  - netcdf4
+  - scipy
+  - cftime
+  - nc-time-axis
+# plotting
+  - matplotlib
+  - cmocean
+  - seaborn
+# others
+  - nco
+  - h5py
+  - pip
+
