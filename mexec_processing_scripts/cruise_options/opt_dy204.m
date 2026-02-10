@@ -55,7 +55,6 @@ switch opt1
                 end
         end
      
->>>>>>> remotes/origin/main
      case 'nisk_proc'
         switch opt2
             case 'niskins'
