@@ -32,14 +32,11 @@ switch opt1
         switch opt2
             case 'rawedit'
                 if ismember(abbrev,{'sbe45','surfmet','nudam'})
-                    %     %cut off start (and eventually end) when TSG bad
-                    %     %because underway seawater supply pumps off
-                    %     badtimes = [-inf (datenum(2024,12,11,19,40,0)-datenum(2024,1,1))*86400];
-                                    if strcmp(abbrev,'sbe45')
-                        tsgpumpvars = {'temph','tempr','conductivity','salinity','soundvelocity'};
-                    else
-                        tsgpumpvars = {'fluo','trans'};
-                    end
+                    %     %cut off start when TSG bad
+                    %     %because underway seawater supply pumps
+                    %     off/starting up
+                     badtimes = [-inf 32.67047*86400; 40.3275*86400 inf];
+                        tsgpumpvars = {'temph','tempr','fluo','trans','conductivity','salinity','soundvelocity'};
                 elseif strcmp(abbrev,'ea640')
                     d = rmfield(d,'depth');
                     h.fldunt(strcmp('depth',h.fldnam)) = [];
@@ -52,6 +49,9 @@ switch opt1
                 if strcmp(datatype, 'ocean')
                     tsgpumpvars = {'fluo','trans','temph','tempr','conductivity','salinity','soundvelocity'};
                     vars_to_ed = setdiff(hg.fldnam, {'soundvelocity','times'}); %scale is too different***anyway, should recalculate based on T, C? after calibration?
+                    vars_to_ed = setdiff(vars_to_ed, {'fluo','trans','flow'});
+                elseif strcmp(datatype,'atmos')
+                    handedit = 0;
                 end
         end
      
