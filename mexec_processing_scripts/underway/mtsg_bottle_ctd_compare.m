@@ -169,10 +169,10 @@ printdir = fullfile(MEXEC_G.mexec_data_root,'plots');
 printform = '-dpdf';
 print(printform,fullfile(printdir,['tsg_bottle_' mcruise]));
 
-disp('mean diff, median diff')
-[m_nanmean(sdiff) m_nanmedian(sdiff)]
-disp('RMS of residuals:')
-rms_res = sqrt(sum(sdiff(~isnan(sdiff)).^2)/sum(~isnan(sdiff)))
+disp('mean, median, rms of salinity residuals')
+[m_nanmean(sdiff) m_nanmedian(sdiff) sqrt(sum(sdiff(~isnan(sdiff)).^2)/sum(~isnan(sdiff)))]
+disp('mean, median, rms of salinity smoothed residuals')
+[m_nanmean(sdiffsm) m_nanmedian(sdiffsm) sqrt(sum(sdiffsm(~isnan(sdiffsm)).^2)/sum(~isnan(sdiffsm)))]
 % disp('stderr:')
 % stde = sqrt(sum(sdiff(~isnan(sdiff)).^2)/(sum(~isnan(sdiff))-1)) % not output by bak on dy146; not sure this is helpful
 
@@ -199,7 +199,7 @@ if comp2ctd
         dt.ctds(timdif==min(timdif)) = nanmean(d.psal(iid));
         timdif = abs(dt.dday-mean(d.dday(iiu)));
         dt.ctdt(timdif==min(timdif)) = nanmean(d.temp(iiu));
-        dt.ctds(timdif==min(timdif)) = nanmean(d.psal(iid)); %***save down vs up separately?
+        dt.ctds(timdif==min(timdif)) = nanmean(d.psal(iid)); %***save down vs up separately? only use shallow bottle stop for up?
     end
 
     % plot TSG, bottle and CTD data
