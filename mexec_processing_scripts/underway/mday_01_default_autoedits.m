@@ -48,4 +48,7 @@ n = union(n, munderway_varname('deptrefvar', h.fldnam, 's'));
 for nno = 1:length(n)
     uopts.despike.(n{nno}) = [10 5 3]; %m
 end
+if ~isempty(n)
+    uopts.despike.med_despike_window_length = 15;
+end
 

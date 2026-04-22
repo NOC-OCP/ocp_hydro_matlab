@@ -126,6 +126,9 @@ end
     
 %despike
 if isfield(castopts,'despike')
+    if ~isfield(castopts.despike,'med_despike_window_length')
+        castopts.despike.med_despike_window_length = 5;
+    end
     fn = intersect(fieldnames(castopts.despike),fnd);
     for no = 1:length(fn)
         if strncmp(fn{no},'temp',4) && isfield(castopts,'redoctm') && ~castopts.redoctm
@@ -134,7 +137,7 @@ if isfield(castopts,'despike')
         t = castopts.despike.(fn{no});
         comment = [comment '\n despiked ' fn{no} ' using median_despike with successive thresholds '];
         for dno = 1:length(t)
-            d.(fn{no}) = median_despike(d.(fn{no}), t(dno));
+            d.(fn{no}) = median_despike(d.(fn{no}), t(dno), castopts.despike.med_despike_window_length);
             comment = [comment num2str(t(dno)) ' '];
         end
     end

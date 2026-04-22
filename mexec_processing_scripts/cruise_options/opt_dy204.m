@@ -48,7 +48,7 @@ switch opt1
             case 'avedit'
                 if strcmp(datatype, 'ocean')
                     tsgpumpvars = {'fluo','trans','temph','tempr','conductivity','salinity','soundvelocity'};
-                    vars_to_ed = setdiff(hg.fldnam, {'soundvelocity','times'}); %scale is too different***anyway, should recalculate based on T, C? after calibration?
+                    vars_to_ed = setdiff(hg.fldnam, {'soundvelocity','times'}); %recalculate svel after calibration anyway
                     vars_to_ed = setdiff(vars_to_ed, {'fluo','trans','flow'});
                 elseif strcmp(datatype,'atmos')
                     handedit = 0;
@@ -163,7 +163,7 @@ switch opt1
                 co.calstr.oxygen.sn434580.dy204 = 'dcal.oxygen = d0.oxygen.*interp1([-10      0  5000 ],[1.06 1.06 1.1],d0.press);';
                 co.calstr.oxygen.sn434580.msg = 'oxygen s/n 434580 adjusted to agree with 93 points for stations 1 to 20  as compared with upcast after default hysterisis correction.';
             case 'sensor_choice' % -----> if we choose to use sensor 2 instead of sensor 1 for some or all of the stations
-            case 'bestdeps' % ------> if not full depth (can add later)
+            case 'bestdeps' % ------> if not full depth (can add later)***
                 %depth_source = {'ctd','bathy'};
                 % replacedeps = [2 3453; %interpolated from multibeam
                 %     3 4572;
@@ -210,8 +210,9 @@ switch opt1
             case 'sal_parse'
                 cellT = 21; % Temperature of the bath
                 ssw_k15 = 0.99988;
-                calcsal = 1;                
+                calcsal = 1;
                 ssw_batch = 'P167';
+                ds_sal.date.Format = 'MM/dd/uuuu';
             case 'sal_calc'
                  salin_off = [000 -6; 001 -6; ... 
                      002 0; 003 0; ... % Standard 999003 same as 999002 because mistake at the autosal. Time changed manually accordingly.
@@ -291,7 +292,7 @@ switch opt1
 
     case 'check_sams'
         % check_oxy = 1; %step through mismatched oxygen replicates
-        % check_sal = 0; %step through each station's conductivity ratio readings
+        check_sal = 0; %if 1, step through each station's conductivity ratio readings
         % check_sbe35 = 1; %probably not neeeded
 
 

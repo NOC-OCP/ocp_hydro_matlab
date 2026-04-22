@@ -91,6 +91,7 @@ if reload_av || reload_uway %something new to take through preliminary edits sta
     mufiles = mtable.mstarpre(ii);
     iin = find(contains(mudirs,'nav/'));
     iio = setdiff(1:length(mudirs),iin)';
+    iin = []; %skip the nav ones for now
     mufiles = mufiles([iin;iio]);
     if exist('never_edit','var')
         mufiles = setdiff(mufiles,never_edit);

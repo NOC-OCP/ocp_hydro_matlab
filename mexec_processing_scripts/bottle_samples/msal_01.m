@@ -37,9 +37,8 @@ sub_samp_range = [998000 998999]; %substandards
 root_sal = mgetdir('M_BOT_SAL');
 salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); 
 hcpat = {'sampnum'}; chrows = 1; chunits = [];
-sheets = 1; iopts = struct([]);
-datform = 'dd/mm/yyyy';
-timform = 'HH:MM:SS';
+sheets = 1; 
+iopts.dtformats.date = 'dd/MM/uuuu'; %input format for date field, specifying this seems to be the only way to force matlab to parse correctly (DatetimeLocale seems irrelevant, DatetimeFormat maybe only reformats based on what matlab guessed was the input, not clear)
 opt1 = 'botpsal'; opt2 = 'sal_files'; get_cropt %list of files to load
 if isempty(salfiles)
     warning(['no salinity data files found in ' root_sal '; skipping']);
@@ -115,17 +114,7 @@ if calcsal
     %deal with time variable(s)
     md = strcmp('date',fn); mt = strcmp('time',fn);
     if sum(md) && sum(mt)
-        if ischar(ds_sal{:,mt})
-            tim = datevec(ds_sal{:,mt},timform);
-        else
-            tim = datevec(ds_sal{:,mt});
-        end
-        if ischar(ds_sal{:,md})
-            dat = datevec(ds_sal{:,md},datform);
-        else
-            dat = datevec(ds_sal{:,md});
-        end
-        ds_sal.runtime = datenum(dat + tim); %***
+        ds_sal.runtime = ds_sal.date + ds_sal.time;
         ds_sal.time = []; ds_sal.date = [];
         fn = ds_sal.Properties.VariableNames;
     end
@@ -232,6 +221,7 @@ if calcsal
     iisu = find(ds_sal.sampnum>=sub_samp_range(1) & ds_sal.sampnum<sub_samp_range(2));
     iis = setdiff(1:length(ds_sal.sampnum),[iistd; iisu]);
     if sum(strcmp('k15',fn))
+        
         figure(10); clf
         subplot(211)
         st = ds_sal.k15*2;
@@ -258,20 +248,19 @@ if calcsal
             x(iistd),st(iistd)-ds_sal.sample_3(iistd),'m.', ...
             x(iistd),st(iistd)-ds_sal.sample_4(iistd),'go', ...
             x(iistd),st(iistd)-ds_sal.runavg(iistd),'sb');
-        if ist
+        subplot(221)
             s = ds_sal.sampnum(iistd)-std_samp_range(1);
             text(x(iistd),zeros(1,length(iistd)),num2str(s(:)));
-            disp('labels: sequential standard number'); xlabel('day')
-        else
+            disp('labels: sequential standard number'); %xlabel('day')
+        ylim([-1 1]*1e-4); grid on; ylabel('nominal (2xK15) - recorded value')
+        subplot(222)
             xlabel('index')
             if sum(strcmp('runtime',ds_sal.Properties.VariableNames))
             text(x(iistd),zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'dd'));
             text(x(iistd),-5e-6+zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'HH:MM'));
             disp('labels: dd;HH:MM of standard');
             end
-        end
-        ylim([-1 1]*1e-4); ylabel('nominal (2xK15) - recorded value')
-        grid on
+        ylim([-1 1]*1e-4); grid on
         disp('(k,r,m): reading1, 2, 3 of standards; blue squares: average of standards. (fixed scale.)');
         cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
         if strcmp(cont,'k'); keyboard; end

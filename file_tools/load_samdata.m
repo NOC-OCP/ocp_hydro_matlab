@@ -196,8 +196,11 @@ for fno = 1:length(infile)
                 if strcmp(fn{no},'VariableTypes')
                     opts = setvartype(opts,iopts.VariableTypes);
                     mo = [];
-                elseif strcmp(fn{no},'datetimeformat')
-                    opts = setvaropts(opts,opts.VariableNames(mt),'InputFormat',iopts.datetimeformat);
+                elseif strcmp(fn{no},'dtformats')
+                    dtvars = fieldnames(iopts.dtformats);
+                    for dtno = 1:length(dtvars)
+                        opts = setvaropts(opts,dtvars{dtno},'InputFormat',iopts.dtformats.(dtvars{dtno}));
+                    end
                 else
                     opts.(fn{no}) = iopts.(fn{no});
                 end

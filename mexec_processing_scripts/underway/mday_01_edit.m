@@ -98,6 +98,7 @@ end
 %***xducer offset?
 timestring = sprintf('days since %d-01-01 00:00:00',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1));
 d.dday = m_commontime(d, 'time', h, timestring);
+d0 = d;
 h.fldnam = [h.fldnam 'dday'];
 h.fldunt = [h.fldunt timestring];
 if isfield(h,'fldserial')
