@@ -3,16 +3,16 @@ function status = mday_00_load(streamname, yday, mtable)
 %
 % use mrrvdas2mstar or mdatapup to grab a day of data from a techsas NetCDF
 % file, an SCS file, or an RVDAS table, subsample to 1 Hz, and add to
-% appended file for this stream 
+% appended file for this stream, {streamname}_{cruise}_all_raw.nc 
 %
 % char: streamname is the techsas or scs stream name (mtnames or msnames
 %     3rd column) or rvdas table name
-% char: mstarprefix is the prefix used in mstar filenames
-% numeric: day is the day number
-% numeric: year is the year in which day falls
+% numeric: yday is the year-day (1 at 00:00:00 on 1 January of the year set
+%   in MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) from which to load data
+% table: mtable, set by mrdefine, gives the list of variables to load and
+%   how to rename them 
 %
-% eg mday_00_load('gps_nmea',mrtv,33)
-% or
+% eg mday_00_load('gps_nmea',33,mrtv)
 %
 
 m_common

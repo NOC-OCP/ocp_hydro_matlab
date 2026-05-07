@@ -1,4 +1,4 @@
-function h = m_append_header_fld(h, newnames, newunits, newserv);
+function h = m_append_header_fld(h, newnames, newunits, newserv)
 % h = m_append_header_fld(h, newnames, newunits, var_to_copy);
 % h = m_append_header_fld(h, newnames, newunits, newserials);
 %

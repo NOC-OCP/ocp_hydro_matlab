@@ -20,7 +20,7 @@ switch opt1
                 %don't need to read ctd depth through rvdas
                 %can read surfmet variables from nudam instead
                 skips.sentence_pat = [skips.sentence_pat, ...
-                    'seapath', 'usbl', 'wamos', 'ctd', 'surfmet']; 
+                    'seapath', 'usbl', 'wamos', 'ctuopd', 'surfmet']; 
                 %below tables are present but have 0 data (return COPY 0)
                 skips.sentence = [skips.sentence, ...
                     'truewind_truewind', 'salrmtemp_salin', ...
@@ -30,20 +30,23 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
+            case 'sensor_unit_conversions'
+                if strcmp(abbrev,'em122')
+                    %didn't rename waterdepth to waterdepthtransducer initially;
+                    %after cruise just fix at this stage
+                    on = 'waterdepth'; nn = 'waterdepthtransducer';
+                    d.(nn) = d.(on);
+                    h = m_append_header_fld(h,{nn},{'m'},on);
+                    d = rmfield(d,on);
+                    m = strcmp(on,h.fldnam); h.fldunt(m) = []; h.fldnam(m) = [];
+                end
             case 'rawedit'
                 if ismember(abbrev,{'sbe45','surfmet','nudam'})
-                    %     %cut off start when TSG bad
+                    %     %cut off start and end when TSG bad
                     %     %because underway seawater supply pumps
                     %     off/starting up
-                     badtimes = [-inf 32.67047*86400; 40.3275*86400 inf];
-                        tsgpumpvars = {'temph','tempr','fluo','trans','conductivity','salinity','soundvelocity'};
-                elseif strcmp(abbrev,'ea640')
-                    d = rmfield(d,'depth');
-                    h.fldunt(strcmp('depth',h.fldnam)) = [];
-                    h.fldnam(strcmp('depth',h.fldnam)) = [];
-                    % elseif sum(strcmp(streamtype,{'sbm','mbm'}))
-                    %      handedit = 1; %edit raw bathy
-                    %      vars_to_ed = h.fldnam(cellfun(@(x) contains(x,'dep'), h.fldnam));
+                     uopts.badtimes(1).times = [-inf 32.67047*86400; 40.3275*86400 inf];
+                     uopts.badtimes(1).vars = {'temph','tempr','fluo','trans','conductivity','salinity','soundvelocity'};
                 end
             case 'avedit'
                 if strcmp(datatype, 'ocean')
@@ -53,6 +56,11 @@ switch opt1
                 elseif strcmp(datatype,'atmos')
                     handedit = 0;
                 end
+            case 'tsg_cals'
+                clear uo
+                uo.docal.salinity = 1;
+                uo.calstr.salinity.pl.dy204 = 'dcal.salinity = d0.salinity+0.0137;';
+                uo.calstr.salinity.pl.msg = 'TSG salinity calibrated based on comparison with 26 bottle salinities over first 6.5 days of cruise';
         end
      
      case 'nisk_proc'

@@ -163,18 +163,50 @@ switch opt1
                 %if your samples are coming in at a *regular* high
                 %frequency (e.g. 40Hz on the SDA), set tstep_force to
                 %subsample to (approximately) 1/tstep_force hz before
-                %saving 
-                tstep_force = []; 
+                %saving
+                tstep_force = [];
                 %round time to nearest tstep_resol s before saving
-                tstep_resol = 1; 
+                tstep_resol = 1;
             case 'time_problems'
                 fixtimes = 0; check_mono = 0; %assume no repeated or backwards times at edit stage
             case 'sensor_unit_conversions'
                 so = struct(); %default: none, parameters are read from database in physical units
+                if strcmp(streamtype,'sbm')
+                    %default: single beam depths need to be corrected for
+                    %speed of sound, use carter tables
+                    so.carter_cor = 1;
+                end
             case 'rawedit'
-                %lots of these (including ranges for many parameters), so
-                %set in separate function 
-                uopts = mday_01_default_autoedits(h, streamtype);
+                uopts = [];
+                %set range limits by variable type
+                ulims = {...
+                    'head', [0, 360]; 'pitch', [-5, 5]; 'roll', [-7, 7]; ...
+                    'lon', [-181, 181]; 'lat', [-91, 91]; ...
+                    'airtemp', [-50, 50]; 'humid', [0.1, 110]; 'airpres', [0.01, 1500]; ...
+                    'rwindd', [-0.1, 360.1]; 'twindd', [-0.1, 360.1]; ...
+                    'rwinds', [-0.001, 200]; 'twinds', [-0.001, 200]; ...
+                    'ppar', [-10e6, 1500e6]; 'spar', [-10e6, 1500e6]; ...
+                    'ptir', [-10e6, 1500e6]; 'stir', [-10e6, 1500e6]; ...
+                    'sst', [-2, 50]; 'temp', [-2, 50]; ...
+                    'cond', [0, 10]; 'trans', [0, 105]; ...
+                    'dep', [20, 1e4]; 'depsref', [20 1e4]; 'deptref', [20 1e4]; ...
+                    };
+                %now assign them to all variables in this category in this file
+                for pno = 1:size(ulims,1)
+                    n = munderway_varname([ulims{pno,1} 'var'], h.fldnam, 's');
+                    for nno = 1:length(n)
+                        uopts.rangelim.(n{nno}) = ulims{pno,2};
+                    end
+                end
+                %bathymetry: also despike
+                n = munderway_varname('depvar', h.fldnam, 's');
+                for nno = 1:length(n)
+                    uopts.despike.(n{nno}) = [10 5 3]; %m
+                    if nno==1
+                        uopts.despike.med_despike_window_length = 15;
+                    end
+                end
+                %no gui editing at this stage (before averaging)
                 handedit = 0;
             case 'avedit'
                 uopts = struct();

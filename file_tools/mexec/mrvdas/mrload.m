@@ -8,7 +8,8 @@ function [dd,varnames,varunits] = mrload(varargin)
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
-% Load data from rvdas into a matlab structure
+% Load data from rvdas database (either directly, or from the daily .csv
+% files output from the database) into a matlab structure 
 %
 % Examples
 %

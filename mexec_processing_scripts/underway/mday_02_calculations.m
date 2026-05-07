@@ -63,35 +63,19 @@ if strcmp(stage,'pre')
     switch datatype
 
         case 'bathy'
-            depvar = munderway_varname('depvar',h.fldnam,1,'s');
-            depsvar = munderway_varname('depsrefvar',h.fldnam,1,'s');
-            deptvar = munderway_varname('deptrefvar',h.fldnam,1,'s');
-            if isempty(depvar) && ~isempty(deptvar)
-                if ~sum(strcmp('waterdepth',h.fldnam))
-                    d.waterdepth = d.(deptvar) + d.transduceroffset; %***
-                    h = m_append_header_fld(h, {'waterdepth'}, {'m'}, depvar);
-                    depvar = munderway_varname('depvar',h.fldnam,1,'s');
-                    depsvar = munderway_varname('depsrefvar',h.fldnam,1,'s');
-                    deptvar = munderway_varname('deptrefvar',h.fldnam,1,'s');
-                end
+            %remove extra variables and append source to waterdepth
+            rmvars = setdiff(h.fldnam,{'time','dday','waterdepth'});
+            d = rmfield(d,rmvars);
+            m = ismember(h.fldnam,rmvars);
+            if isfield(h,'fldserial')
+                h.fldserial(m) = [];
             end
-            if ~iscell(depvar); depvar = {depvar}; end
-            if ~iscell(depsvar); depsvar = {depsvar}; end
-            if ~iscell(deptvar); deptvar = {deptvar}; end
-            depvar = union(depvar,union(depsvar,deptvar));
-            if ~isempty(depvar)
-                %append source, because singlebeam and multibeam may have the same
-                %variable names
-                for no = 1:length(depvar)
-                    on = depvar{no}; nn = [on '_' source];
-                    d.(nn) = d.(on);
-                    h.fldnam(strcmp(on,h.fldnam)) = {nn};
-                end
-                d = rmfield(d,depvar);
-                d = orderfields(d,h.fldnam);
-                %ngvars = [ngvars xducerdepvar]; %***combine before this to avoid
-                %gridding this too?
-            end
+            h.fldunt(m) = []; h.fldnam(m) = [];
+            nn = ['waterdepth_' source];
+            d.(nn) = d.waterdepth;
+            h.fldnam(strcmp('waterdepth',h.fldnam)) = {nn};
+            d = rmfield(d,'waterdepth');
+            d = orderfields(d, h.fldnam);
 
         case 'ocean'
             %put the surfmet radiation variables in atmos instead
@@ -211,32 +195,6 @@ elseif strcmp(stage, 'post')
                 xbathy = xbathy(iix); ybathy = ybathy(iiy);
                 clear lon lat iix iiy
                 %***
-            end
-            %water depth relative to surface
-            xducervar = munderway_varname('xducerdepvar', h.fldnam, 1, 's');
-            depbtvar = munderway_varname('deptrefvar', h.fldnam, 1, 's');
-            if ~isempty(depbtvar) && ~isempty(xducervar)
-                newdep = setdiff({'waterdepth','waterdepthfromsurface'},h.fldnam);
-                if isempty(newdep)
-                    warning('%s already contains both waterdepth and waterdepthfromsurface, skipping recalculation from depth relative to transducer',source)
-                else
-                    newdep = newdep{1};
-                end
-                d.(newdep) = d.(depbtvar) + d.(xducervar);
-                if ~ismember(h.fldnam,newdep)
-                    h = m_append_header_fld(h, {newdep}, {'m'}, depbtvar);
-                end
-                d = rmfield(d,depbtvar); 
-                m = strcmp(depbtvar,h.fldnam);
-                h.fldunt(m) = []; h.fldnam(m) = [];
-                if isfield(h, 'fldserial'); h.fldserial(m) = []; end
-                comment = sprintf('\n %s has transducer offset applied', newdep);
-            end
-            if ~isempty(xducervar)
-                d = rmfield(d,xducervar);
-                m = ismember(h.fldnam,xducervar);
-                h.fldunt(m) = []; h.fldnam(m) = [];
-                if isfield(h, 'fldserial'); h.fldserial(m) = []; end
             end
 
         case 'ocean'

@@ -8,8 +8,8 @@ function status = mrrvdas2mstar(varargin)
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
-% Load data from rvdas table and save it to an mexec file. This is done
-% with a call to mrload.
+% calls mrload to get data from an rvdas table, then saves to mexec format
+% file.  
 %
 % Examples
 %
