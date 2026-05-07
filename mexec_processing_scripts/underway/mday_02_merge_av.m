@@ -139,6 +139,7 @@ if regrid
             h.fldserial = repmat({' '},size(h.fldnam));
         end
         if isfield(h,'fldserial') && length(h.fldserial)<length(h.fldnam); keyboard; end
+        h.fldunt(cellfun(@(x) isempty(x),h.fldunt)) = {' '};
 
         %save
         h.dataname = [datatype '_' mcruise '_combined_av'];

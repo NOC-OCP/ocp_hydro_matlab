@@ -53,6 +53,8 @@ switch opt1
                     tsgpumpvars = {'fluo','trans','temph','tempr','conductivity','salinity','soundvelocity'};
                     vars_to_ed = setdiff(hg.fldnam, {'soundvelocity','times'}); %recalculate svel after calibration anyway
                     vars_to_ed = setdiff(vars_to_ed, {'fluo','trans','flow'});
+                    %last step, just look for salinity spikes
+                    vars_to_ed = {'salinity'};
                 elseif strcmp(datatype,'atmos')
                     handedit = 0;
                 end
