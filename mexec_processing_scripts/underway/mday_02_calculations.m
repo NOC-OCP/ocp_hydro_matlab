@@ -48,7 +48,8 @@ if strcmp(stage,'pre')
         end
     end
 
-    %this needs to be done for nav or wind
+    %this needs to be done for nav or wind but will be redone later for
+    %wind
     headvar = munderway_varname('headvar',h.fldnam,1,'s');
     if ~isempty(headvar)
         %calculate dummy easting and northing in order to vector average

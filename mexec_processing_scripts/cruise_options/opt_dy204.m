@@ -40,6 +40,13 @@ switch opt1
                     d = rmfield(d,on);
                     m = strcmp(on,h.fldnam); h.fldunt(m) = []; h.fldnam(m) = [];
                 end
+                %if strcmp(abbrev,'phins')
+                %    %pitch from phins has the opposite sign convention to is negatively correlated with posmv pitch,
+                %    %assume posmv is correct
+                %    so.docal.pitch = 1;
+                %    so.calstr.pitch.pl.dy204 = 'dcal.pitch = -d0.pitch;';
+                %    so.calunits.pitch = '+ bow down';
+                %end
             case 'rawedit'
                 if ismember(abbrev,{'sbe45','surfmet','nudam'})
                     %     %cut off start and end when TSG bad

@@ -30,33 +30,37 @@ gvars = {}; %by default grid all other variables
 switch datatype
     case 'nav'
         opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-        source = {'position'; 'heading'; 'attitude'};
-        streams = {default_navstream; default_hedstream; default_attstream};
-        required = [1 1 0];
+        ssr = {'position', default_navstream, 1;...
+            'heading', default_hedstream, 1;...
+            'attitude', default_attstream, 0};
         otfile = ['bestnav_' mcruise '.nc'];
         tavp_s = 30; %30 s
         gmethod = 'meannum';
         ngvars = [ngvars 'altitude' 'headingtrue' 'coursetrue'];
         ngvars = [ngvars 'speedknots' 'speedkmph' 'rollaccuracy' 'pitchaccuracy' 'headingaccuracy'];
     case 'bathy'
-        source = {'sbm'; 'mbm'};
-        streams = {'ea640_sddpt'; 'em122_kidpt'};
-        required = [0 0];
+        ssr = {'sbm', 'ea640_sddpt', 0;...
+            'mbm', 'em122_kidpt', 0};
         otfile = ['bathy_' mcruise '.nc'];
         tavp_s = 60; % 1 min
         gmethod = 'medbin';
     case 'ocean'
-        source = {'surfmet'; 'sbe45'; 'sbe38'; 'nudamuwy'};
-        streams = {'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'; 'nudamuwy_sfuwy'};
-        required = [1 1 0]; %***make cruise-specific
+        ssr = {'surfmet', 'surfmet_sfuwy', 1;...
+            'sbe45', 'sbe45_nanan', 1;...
+            'sbe38', 'sbe38dk_sbe38', 0;...
+            'nudamuwy', 'nudamuwy_sfuwy', 0};
         otfile = ['surface_ocean_' mcruise '.nc'];
         tavp_s = 60; % 1 min
         gmethod = 'meannum';
     case 'atmos'
         opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-        source = {'surfmet'; 'windsonic'; 'position'; 'nudammet'; 'nudamlgt'};
-        streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'; 'nudammet_sfmet'; 'nudamlgt_sflgt'};
-        required = [0 1 1];
+        ssr = {%'position', default_navstream, 1; 
+            %'heading', default_hedstream, 1; ...
+            'surfmet', 'surfmet_sfmet', 0; ...
+            'windsonic', 'windsonic_iimwv', 0; ...
+            'nudammet', 'nudammet_sfmet', 0; ...
+            'nudamlgt', 'nudamlgt_sflgt', 0};
+        %ngvars***
         otfile = ['atmos_truewind_' mcruise '.nc'];
         tavp_s = 30; % 30 s
         gmethod = 'meannum';
@@ -65,9 +69,10 @@ end
 %***check for multiple streams from same inst? not important at this
 %stage, all will be in corresponding mstar file
 if isstruct(mtable) || istable(mtable)
-    filepre = cell(size(streams));
-    for fno = 1:length(streams)
-        m = strcmp(streams{fno},mtable.tablenames);
+    ns = size(ssr,1);
+    filepre = cell(ns,1);
+    for fno = 1:ns
+        m = strcmp(ssr{fno,2},mtable.tablenames);
         if sum(m)
     	    filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
     	end
@@ -95,13 +100,13 @@ if regrid
 
     %load multiple files, either edt (if found) or raw, and merge to common
     %time grid, saving along the way
-    found = ones(size(required));
+    found = ones(ns,1);
     for fno = 1:length(filepre)
         infile = [filepre{fno} '_' mcruise '_all_edt.nc'];
         if ~exist(infile,'file')
             infile = [filepre{fno} '_' mcruise '_all_raw.nc'];
             if ~exist(infile,'file')
-                if required(fno)
+                if ssr{fno,3}
                     warning('no file found for %s, abandoning merge of %s',filepre{fno},datatype)
                     return
                 else
@@ -122,7 +127,7 @@ if regrid
         [h.fldnam,ii] = setdiff(h.fldnam,timvar,'stable'); h.fldunt = h.fldunt(ii);
         d = rmfield(d,timvar);
         [d, h, gvars, ngvars] = mday_02_calculations(d, h, 'pre', ...
-            datatype, gvars, ngvars, source{fno}, gmethod, ddays);
+            datatype, gvars, ngvars, ssr{fno,1}, gmethod, ddays);
 
         %grid
         tic; dg = grid_profile(d, 'dday', tg, gmethod, opts); toc
@@ -143,7 +148,7 @@ if regrid
 
         %save
         h.dataname = [datatype '_' mcruise '_combined_av'];
-        h.comment = sprintf('\n %s from %s, %s over bins of width %d s',source{fno},infile,gmethod(1:end-2),tavp_s);
+        h.comment = sprintf('\n %s from %s, %s over bins of width %d s',ssr{fno,1},infile,gmethod(1:end-2),tavp_s);
         mfsave(otfile, dg, h, '-merge', 'times')
 
     end
