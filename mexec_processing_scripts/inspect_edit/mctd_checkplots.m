@@ -612,6 +612,7 @@ for plotlist = cklist
                     hold on; grid on;
                 end
                 title ([saltype '1 up minus down diff']);
+                xlabel('p (dbar)')
                 
                 
                 subplot(324)
@@ -640,6 +641,7 @@ for plotlist = cklist
                     end
                     title ('oxygen 2 up minus down diff');
                 end
+                xlabel('p (dbar)')
             end
             
         case 10

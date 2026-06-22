@@ -71,19 +71,21 @@ if ~exist('colors','var')
     colornames = {'dark green';'bright cyan';'lavender';'dark plum'};
 end
 nc = size(colors,1); if nc==1; nc = length(colors); end
-if exist('markers','var')
-    colors = repmat(colors,ceil(length(markers)/size(colors,1)),1); colors = colors(1:length(markers),:);
-    colornames = repmat(colornames,ceil(length(markers)/length(colornames)),1); colornames = colornames(1:length(markers),:);
-else
+if ~exist('markers','var')
     markers = [repmat({'o'},nc,1); repmat({'<'},nc,1); repmat({'.'},nc,1)];
     colors = [colors; colors; colors];
     colornames = [colornames; colornames; colornames];
 end
+if size(colors,1)<size(markers,1)
+    ii = size(colors,1)+1:size(markers,1);
+    colors(ii,:) = 0;
+    colornames(ii) = {'black'};
+end
 if ~exist('lines','var')
     lines = repmat({'-'},nc*3,1);
 end
-colors = colors(1:length(m),:); markers = markers(1:length(m)); lines = lines(1:length(m)); colornames = colornames(1:length(m));
-colors = colors(m,:); markers = markers(m); lines = lines(m); colornames = colornames(m);
+colors = colors(1:length(m),:); markers = markers(1:length(m)); lines = lines(1:length(m));
+colors = colors(m,:); markers = markers(m); lines = lines(m);
 if ~exist('xgroups','var')
     xgroups = {1:length(d0(1).(xvar))};
 end
