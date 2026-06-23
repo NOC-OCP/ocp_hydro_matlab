@@ -97,7 +97,7 @@ if reload_av || reload_uway %something new to take through preliminary edits sta
         mufiles = setdiff(mufiles,never_edit);
     end
     for sno = 1:length(mufiles)
-        de = mday_01_edit_raw(mufiles{sno}, ydays, mtable);
+        de = mday_01_edit(mufiles{sno}, ydays, mtable);
         if de
             fprintf(1,'edited %s\n', mufiles{sno})
         end

@@ -3,7 +3,7 @@ function s = mday_02_merge_av(datatype, ydays, mtable, varargin)
 %
 % ydays is in yearday
 % 
-% follows mday_00_load and mday_01_edit_raw. merges edited data from
+% follows mday_00_load and mday_01_edit. merges edited data from
 % multiple inputs/instruments/streams, does additional calculations (e.g.
 % combining nav and wind for true wind), averages to interval set in
 % opt_cruise, and applies user-determined, cruise-specific calibrations or
