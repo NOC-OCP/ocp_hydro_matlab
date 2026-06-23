@@ -8,7 +8,7 @@
 %         unique, not reused between different opt1 cases)
 %
 % otherwise (normally), get_cropt will:
-%   call set_mexec_defaults
+%   call mexec_defaults_all
 %   call the cruise-specific options script (opt_{cruise}, e.g. opt_jc211)
 %     to make any cruise-specific changes
 %
@@ -24,7 +24,7 @@ end
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %set defaults
-set_mexec_defaults
+mexec_defaults_all
 
 %continue to set cruise-specific options
 cfile = sprintf('opt_%s',mcruise);
@@ -56,3 +56,4 @@ elseif ~isfield(MEXEC_G,'no_cruise_options_file') || ~MEXEC_G.no_cruise_options_
     end
 end
 
+clear opt1 opt2

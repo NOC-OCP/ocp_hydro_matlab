@@ -51,13 +51,13 @@ clear MEXEC_G
 global MEXEC_G
 
 %defaults: what are we processing and where? 
-MEXEC_G.MSCRIPT_CRUISE_STRING='dy204';
+MEXEC_G.MSCRIPT_CRUISE_STRING='dy214';
 MEXEC_G.ix_ladcp = 0; %set to 0 to not add ldeo_ix paths (for instance if processing mooring data)
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
-workdir = '/data/pstar_ulili';
-MEXEC_G.mexec_data_root = [workdir '/projects/rpdmoc/cruise_data/dy204/mcruise/data/']; 
-MEXEC_G.other_programs_root = {[workdir '/programs/others/matlab'];[workdir 'programs/repos_github/athurnherr']}; 
+workdir = '/data/link_to_pstar_primary';
+MEXEC_G.mexec_data_root = [workdir '/projects/osnap/cruises/dy214/data/']; 
+MEXEC_G.other_programs_root = {[workdir '/programs/others/matlab'];[workdir 'programs/repos_github/others']}; 
 MEXEC_G.mexec_shell_scripts = [workdir '/programs/repos_github/mexec_exec/'];
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 MEXEC_G.rvdas_sql_database = 0; %if 0, skip the rvdas setup (to work with data, use saved table definitions and access daily .csv outputs)
