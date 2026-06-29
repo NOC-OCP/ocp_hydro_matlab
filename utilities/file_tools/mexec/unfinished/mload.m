@@ -1,9 +1,8 @@
 function [d, h] = mload(varargin)
-
 % load data and header contents of mstar NetCDF file into structure
 % arrays
 % eg
-% [d h] = mload('filename.nc');
+% [d, h] = mload('filename.nc');
 % or type mload to be prompted for answers
 m_common
 if ~isfield(MEXEC_G,'quiet')

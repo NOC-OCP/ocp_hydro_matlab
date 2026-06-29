@@ -1,6 +1,6 @@
-m_common
-y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
-rootdir = MEXEC_G.mexec_data_root;
+rootdir = '~/cruises/sd025/mcruise/data/';
+%y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
+y0 = 2023;
 ldir = fullfile(rootdir,'ladcp','ix');
 sumfile = fullfile(rootdir,'collected_files','ladcp_best_profile.mat');
 

@@ -10,10 +10,6 @@ switch opt1
 
     case 'ship'
         switch opt2
-            case 'datasys_best'
-                default_navstream = 'posmv_gpgga';
-                default_hedstream = 'posmv_pashr';
-                default_attstream = 'posmv_pashr';
             case 'rvdas_skip'
                 skips.sentence_pat = [skips.sentence, 'logta'];
         end

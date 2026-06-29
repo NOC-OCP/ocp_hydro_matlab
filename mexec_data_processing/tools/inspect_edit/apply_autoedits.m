@@ -5,7 +5,7 @@ function [d, comment] = apply_autoedits(d, castopts)
 % 
 %
 %   pumpsNaN -- for each parameter which is a field of castopts.pumpsNaN,
-%     data are masked up to castopts.pumpsNaN.(parameter) time points after
+%     data are NaNed up to castopts.pumpsNaN.(parameter) time points after
 %     pumps come (back) on -- this is mostly specific to the CTD, though
 %     could be used for another series if a variable pumps were present
 %     e.g. for 24 Hz CTD data,
@@ -14,7 +14,7 @@ function [d, comment] = apply_autoedits(d, castopts)
 %       etc.
 %   
 %   rangelim -- for each parameter which is a field of castopts.rangelim,
-%     data are masked outside of the range given by
+%     data are NaNed outside of the range given by
 %     castopts.rangelim.(parameter)
 %     e.g. 
 %     castopts.rangelim.temp1 = [-2 40];
@@ -126,9 +126,6 @@ end
     
 %despike
 if isfield(castopts,'despike')
-    if ~isfield(castopts.despike,'med_despike_window_length')
-        castopts.despike.med_despike_window_length = 5;
-    end
     fn = intersect(fieldnames(castopts.despike),fnd);
     for no = 1:length(fn)
         if strncmp(fn{no},'temp',4) && isfield(castopts,'redoctm') && ~castopts.redoctm
@@ -137,7 +134,7 @@ if isfield(castopts,'despike')
         t = castopts.despike.(fn{no});
         comment = [comment '\n despiked ' fn{no} ' using median_despike with successive thresholds '];
         for dno = 1:length(t)
-            d.(fn{no}) = median_despike(d.(fn{no}), t(dno), castopts.despike.med_despike_window_length);
+            d.(fn{no}) = median_despike(d.(fn{no}), t(dno));
             comment = [comment num2str(t(dno)) ' '];
         end
     end

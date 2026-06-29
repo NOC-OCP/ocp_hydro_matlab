@@ -61,7 +61,10 @@ h.fldserial = [h.fldserial repmat({' '},1,length(h.fldnam)-length(h.fldserial))]
 [h.fldnam, ii] = unique(h.fldnam);
 h.fldunt = h.fldunt(ii);
 h.fldserial = h.fldserial(ii);
-h.comment = [h.comment '\n psal, asal, potemp, contemp calculated using gsw '];
+cstr = 'psal, asal, potemp, contemp calculated using gsw';
+if ~contains(h.comment, cstr)
+    h.comment = [h.comment '\n ' cstr];
+end
 
 %save to _24hz file
 mfsave(infile, d, h);
@@ -87,6 +90,7 @@ for no = 1:length(var_copycell)
 end
 hnew.fldnam = var_copycell;
 hnew = keep_hvatts(hnew, h);
+hnew.comment = h.comment;
 
 %average to 1hz, output to _psal file
 opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt

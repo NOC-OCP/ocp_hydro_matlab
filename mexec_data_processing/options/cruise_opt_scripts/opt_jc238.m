@@ -18,15 +18,8 @@ switch opt1
                 use_ix_ladcp = 'query';
             case 'time_origin'
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2022 1 1 0 0 0];
-        end
-        
-    case 'ship'
-        switch opt2
-            case 'datasys_best'
-                        default_navstream = 'pospmv';
-                        default_hedstream = 'attpmv';
-            case 'default_nav'
-                MEXEC_G.default_hedstream = 'attsea'; %posmv was 4 degrees out most of the trip
+            case 'ship'
+                MEXEC_G.best_nav_hed_att{3} = 'attsea'; %posmv was 4 degrees out most of the trip
         end
 
     case 'batchactions'

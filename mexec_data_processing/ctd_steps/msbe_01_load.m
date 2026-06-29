@@ -40,13 +40,11 @@ end
 %now overwrite defaults if relevant
 opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
 if ~exist(cnvfile,'file') && isfield(MEXEC_G,'mexec_shell_scripts')
-    css = fullfile(MEXEC_G.mexec_shell_scripts,'data_to_ws','ctd_syncscript.sh');
+    css = fullfile(MEXEC_G.mexec_shell_scripts,'ctd_syncscript');
     if exist(css,'file')
         system(css);
         if exist(cnvfile,'file')
             warn = 0;
-        else
-            warning('ran %s but %s not found; check cruise data server (try looking in /data/pstar/mounts/links)',css,cnvfile)
         end
     end
 end
@@ -236,3 +234,4 @@ for fno = 1:length(otfiles)
     otfile = otfiles{fno};
     [botlon, botlat] = getpos_for_ctd(otfile, 'write');
 end
+

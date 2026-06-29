@@ -2,7 +2,8 @@ function [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort)
 % function [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort)
 %
 % combine data from structures d0 and d, using indepvar which is present in
-%   both
+%   both to place data relative to unique([d0.(indepvar); d.(indepvar)])
+%   (no interpolation)
 %
 % fields fldnam and fldunt from structures h0 and h (corresponding to
 %   variables in d0 and d, respectively) will be combined in output

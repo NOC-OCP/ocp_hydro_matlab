@@ -33,27 +33,15 @@ if exist([cfile '.m'],'file')
 elseif ~isfield(MEXEC_G,'no_cruise_options_file') || ~MEXEC_G.no_cruise_options_file
     c = input(sprintf('%s.m not found; create now?  ',cfile),'s');
     if strncmp(c,'y',1)
-        fp = fileparts(which(mfilename));
-        fcfile = fullfile(fp, [cfile '.m']);
-        try
-            syr = input('cruise start year?  ');
-            fid = fopen(fcfile,'w');
-            fprintf(fid,'switch opt1\n    %s\n        switch opt2\n            %s\n','case ''setup''','case ''time_origin''');
-            fprintf(fid,'                MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [%d 1 1 0 0 0];\n',syr);
-            fprintf(fid,'        end\nend');
-            fclose(fid);
-            fprintf(1,'initialised %s with MDEFAULT_DATA_TIME_ORIGIN,\n now make additional edits, then enter to continue',cfile)
-            edit(cfile); pause
-        catch
-            system(['touch ' fcfile]);
-            fprintf(1,'could not initialise %s, edit now then enter to continue',cfile)
-            edit(cfile); pause
-        end
+        generate_cruise_opt_script(cfile)
         eval(cfile)
     else
         warning('skipping %s, default parameters only until MEXEC_G is cleared',cfile)
         MEXEC_G.no_cruise_options_file = 1;
     end
 end
+
+%check_cropt. required: year, Mship and PLATFORM_IDENTIFIER (and warn if no
+%Mshipdatasystem)***
 
 clear opt1 opt2

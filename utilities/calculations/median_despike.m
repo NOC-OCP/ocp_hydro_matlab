@@ -1,46 +1,34 @@
-function dataout = median_despike(data,smax,varargin)
-% function dataout = median_despike(data,smax)
-% function dataout = median_despike(data,smax,l)
+function dataout = median_despike(data,s)
+% function dataout = median_despike(data,s)
 %
-% 1-D data, NaN spikes larger than smax (absolute, not relative) over
-% l-point median (default: 5)
-%
-% if l is even it will be increased by 1
+% 1-D data and spike amplitude s (absolute, not relative)
+% 5-point median despike
 %
 % based on m_median_despike BAK
 
-if nargin>2
-    l = varargin{1};
-    if floor(l/2)==l/2
-        l = l+1;
-    end
-else
-    l = 5;
-end
-wmid = ceil(l/2);
-wid = wmid-1;
-
 dataout = nan+data;
 
-ki = 1:length(data);
-m = isnan(data);
-ki(m) = [];
-data(m) = [];
+n = length(data);
+ki = 1:n;
+
+knan = find(isnan(data));
+ki(knan) = [];
+data(knan) = [];
 
 % not central window for data at ends
 k = 1;
 while k <= length(data)
 %     keep the good ones, throw out the spikes; make a note of which data cycles are kept.
-    if k < wmid
-        kwin = wmid;
-    elseif  k > length(data)-wid
-        kwin = length(data)-wid;
+    if k < 3
+        kw = 3;
+    elseif  k > length(data)-2
+        kw = length(data)-2;
     else
-        kwin = k;
+        kw = k;
     end
-    dwin = data(kwin-wid:kwin+wid);
-    swin = sort(dwin); 
-    if abs(dwin(wmid+k-kwin)-swin(wmid)) > smax
+    d5 = data(kw-2:kw+2);
+    s5 = sort(d5);
+    if abs(d5(3+k-kw)-s5(3)) > s
         data(k) = [];
         ki(k) = [];
         continue
@@ -49,7 +37,6 @@ while k <= length(data)
         continue
     end
 end
-
 
 dataout(ki) = data;
 return

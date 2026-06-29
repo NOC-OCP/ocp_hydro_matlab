@@ -37,9 +37,10 @@ sub_samp_range = [998000 998999]; %substandards
 root_sal = mgetdir('M_BOT_SAL');
 salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); 
 hcpat = {'sampnum'}; chrows = 1; chunits = [];
-sheets = 1; 
-iopts.dtformats.date = 'dd/MM/uuuu'; %input format for date field, specifying this seems to be the only way to force matlab to parse correctly (DatetimeLocale seems irrelevant, DatetimeFormat maybe only reformats based on what matlab guessed was the input, not clear)
-opt1 = 'botpsal'; opt2 = 'sal_files'; get_cropt %list of files to load
+sheets = 1; iopts = struct([]);
+datform = 'dd/mm/yyyy';
+timform = 'HH:MM:SS';
+opt1 = 'samp_proc'; opt2 = 'sal_files'; get_cropt %list of files to load
 if isempty(salfiles)
     warning(['no salinity data files found in ' root_sal '; skipping']);
     return
@@ -60,8 +61,6 @@ if isfield(ds_sal,'sampnum') && sum(isnan(ds_sal.sampnum))
     %filled in for the first (average) line, for example
     ds_sal = fill_samdata_statnum(ds_sal, 'sampnum');
 end
-%remove NaN sampnum lines
-ds_sal(isnan(ds_sal.sampnum),:) = [];
 
 %parse, for instance getting information from header
 % for no = 1:length(salhead)
@@ -75,8 +74,10 @@ ds_sal(isnan(ds_sal.sampnum),:) = [];
 %         l = str2num(l(ii:ii+1));
 %     end
 % end
-opt1 = 'botpsal'; opt2 = 'sal_parse'; get_cropt
-opt1 = 'check_sams'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'sal_parse'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
+m = ~isfinite(ds_sal.sampnum);
+ds_sal(m,:) = [];
 
 if calcsal
     %add option to fill in information about cellt or Bath Temp and k15 from header***
@@ -103,10 +104,13 @@ if calcsal
     vars = fieldnames(samevars);
     fn = ds_sal.Properties.VariableNames;
     for vno = 1:length(vars)
-        if ~sum(strcmp(vars{vno},fn)) && ~sum(contains(samevars.(vars{vno}),fn))
+        ii0 = strcmp(vars{vno},fn);
+        iid = find(contains(samevars.(vars{vno}),fn));
+        if ~sum(ii0) && ~isempty(iid)
             %add this one
             ds_sal.(vars{vno}) = nan(size(ds_sal,1),1);
             fn = [fn vars{vno}];
+            ii0 = strcmp(vars{vno},fn);
         end
     end
     fn = ds_sal.Properties.VariableNames;
@@ -114,7 +118,17 @@ if calcsal
     %deal with time variable(s)
     md = strcmp('date',fn); mt = strcmp('time',fn);
     if sum(md) && sum(mt)
-        ds_sal.runtime = ds_sal.date + ds_sal.time;
+        if ischar(ds_sal{:,mt})
+            tim = datevec(ds_sal{:,mt},timform);
+        else
+            tim = datevec(ds_sal{:,mt});
+        end
+        if ischar(ds_sal{:,md})
+            dat = datevec(ds_sal{:,md},datform);
+        else
+            dat = datevec(ds_sal{:,md});
+        end
+        ds_sal.runtime = datenum(dat + tim); %***
         ds_sal.time = []; ds_sal.date = [];
         fn = ds_sal.Properties.VariableNames;
     end
@@ -125,17 +139,25 @@ if calcsal
         ds_sal.flag(isnan(ds_sal.flag)) = 9;
     end
 
+    if 0 %***
+        if sum(strcmp('comment',fn))
+            ds_sal.comment(iid,1) = ds.comment;
+        else
+            ds_sal.comment(iid,1) = repmat(' ',size(a0));
+        end
+    end
+
     if ~ismember('sample_4',fn)
         ds_sal.sample_4 = NaN+ds_sal.sample_1;
     end
 
-    %temporarily shift tsg sampnum times for plotting if using >0 method
-    iitsg = find(ds_sal.sampnum>1000e8);
-    ds_sal.sampnum(iitsg) = ds_sal.sampnum(iitsg)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
+    %shift tsg sampnum times if using >0 method
+    ii = find(ds_sal.sampnum>1000e8);
+    ds_sal.sampnum(ii) = ds_sal.sampnum(ii)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
 
     %edits
     reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
-    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
     if reapply_saledits
         [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
     end
@@ -179,13 +201,8 @@ if calcsal
     end
     if exist('bads','var') && ~isempty(bads) %new edits to apply
         [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
-    
     end
-
-    %put year back on to tsg samples
-    ds_sal.sampnum(iitsg) = ds_sal.sampnum(iitsg) + MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
-
-    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
     %recalculate mean
     a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
     ds_sal.runavg = m_nanmean(a,2);
@@ -202,7 +219,8 @@ if calcsal
 
     %%%%%% standards offsets %%%%%%
 
-    opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
+    salin_off = []; salin_off_base = 'sampnum_run'; sal_adj_comment = '';
+    opt1 = 'samp_proc'; opt2 = 'sal_calc'; get_cropt
     if ~strcmp(salin_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
         [~,ii] = sort(ds_sal.runtime);
         ds_sal = ds_sal(ii,:);
@@ -221,11 +239,10 @@ if calcsal
     iisu = find(ds_sal.sampnum>=sub_samp_range(1) & ds_sal.sampnum<sub_samp_range(2));
     iis = setdiff(1:length(ds_sal.sampnum),[iistd; iisu]);
     if sum(strcmp('k15',fn))
-        
         figure(10); clf
         subplot(211)
         st = ds_sal.k15*2;
-        if strcmp(salin_off_base,'sampnum_run')
+        if sum(strcmp(salin_off_base,'sampnum_run'))
             x = ds_sal.runtime - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
             plot(x,st-ds_sal.runavg,'oc'); hold on
             disp('cyan o: all sample averages recorded')
@@ -248,19 +265,20 @@ if calcsal
             x(iistd),st(iistd)-ds_sal.sample_3(iistd),'m.', ...
             x(iistd),st(iistd)-ds_sal.sample_4(iistd),'go', ...
             x(iistd),st(iistd)-ds_sal.runavg(iistd),'sb');
-        subplot(221)
+        if ist
             s = ds_sal.sampnum(iistd)-std_samp_range(1);
             text(x(iistd),zeros(1,length(iistd)),num2str(s(:)));
-            disp('labels: sequential standard number'); %xlabel('day')
-        ylim([-1 1]*1e-4); grid on; ylabel('nominal (2xK15) - recorded value')
-        subplot(222)
+            disp('labels: sequential standard number'); xlabel('day')
+        else
             xlabel('index')
             if sum(strcmp('runtime',ds_sal.Properties.VariableNames))
             text(x(iistd),zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'dd'));
             text(x(iistd),-5e-6+zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'HH:MM'));
             disp('labels: dd;HH:MM of standard');
             end
-        ylim([-1 1]*1e-4); grid on
+        end
+        ylim([-1 1]*1e-4); ylabel('nominal (2xK15) - recorded value')
+        grid on
         disp('(k,r,m): reading1, 2, 3 of standards; blue squares: average of standards. (fixed scale.)');
         cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
         if strcmp(cont,'k'); keyboard; end
@@ -348,7 +366,7 @@ else
     salunits.flag = {'woce_9.4'};
     salunits.salinity = {'psu'};
 end
-opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
 
 %%%%%% save %%%%%%
 
@@ -378,7 +396,7 @@ hc.comment = [sal_adj_comment];
 mfsave(salfile, d, hc);
 
 %plot CTD samples
-opt1 = 'check_sams'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
 if check_sal
     figure(10); subplot(223)
     ii = find(d.sampnum>0 & d.sampnum<9e5);
@@ -387,7 +405,7 @@ if check_sal
 end
 
 %write some fields for CTD samples to sam_ file
-msal_to_sam
+msam_add_to_samfile('sal')
 
 %get TSG samples, figure out times: either -dddhhmm (where ddd is
 %year-day starting at 1), or yyyymmddhhmm, or mmddhhmm
@@ -415,7 +433,7 @@ if ~isempty(iiu)
         MM = str2num(s(:,6:7));
         tsg.dnum(ii) = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1) + jjj-1 + (HH+MM/60)/24;
     end
-    opt1 = 'botpsal'; opt2 = 'tsg_sampnum'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'tsg_sampnum'; get_cropt
     [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
     dsu.time = NaN+dsu.sampnum;
     opt1 = 'mstar'; get_cropt
@@ -442,4 +460,166 @@ if ~isempty(iiu)
     plot(x,dsu.salinity,'o',x,dsu.salinity_adj,'s')
     title('TSG'); xlabel('yearday');
 
+end
+% miso_01: read in bottle isotope data from csv file or files
+%
+% Use: miso_01
+%
+% The input iso data, example filename jc159_13ctdic.csv
+%    is a comma-delimited list of isotope data, with a single header line
+%    containing fields
+%    Station, Niskin, d13C DIC PDB
+%    or otherwise as specified in opt_cruise file
+
+opt1 = 'miso_01';
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+if MEXEC_G.quiet<=1; fprintf(1, 'reading bottle del13C, Del14C, del18O data from .csv files into iso_%s_01.nc',mcruise); end
+
+% find list of files
+root_iso = mgetdir('M_BOT_ISO');
+dataname = ['iso_' mcruise '_01'];
+otfile2 = fullfile(root_iso, dataname);
+opt1 = mfilename; opt2 = 'iso_files'; get_cropt
+
+%load data
+if ~iscell(isofiles); isofiles = {isofiles}; end
+[ds_iso, isohead] = load_samdata(isofiles, hcpat, 'chrows', 1, 'chunits', 2);
+
+%parse (rename variables)
+opt1 = mfilename; opt2 = 'iso_parse'; get_cropt %***what about file-dependent parsing, like if we have multiple sources of 13c to rename?
+if ~isempty(isovarmap)
+    ds_iso_fn = ds_iso.Properties.VariableNames;
+    [~,ia,ib] = intersect(isovarmap(:,2)',ds_iso_fn);
+    ds_iso_fn(ib) = isovarmap(ia,1)';
+    ds_iso.Properties.VariableNames = ds_iso_fn;
+end
+
+%compute sampnum
+ds_iso.sampnum = 100*ds_iso.statnum + ds_iso.position; 
+%add flags if not present? ***
+
+%now put into structure and output
+
+%adjust for replicates and flags, and exclude station numbers with no data
+statnum = floor(iso.sampnum/100); sg = [];
+fn = fieldnames(iso);
+kvar = 2;
+while kvar < length(fn)
+    
+    %average replicate measurements (depending on flag. this should work if flags are 2,3,4,9)
+    iir = find(strcmp([fn{kvar} '_rpt'], fn) | strcmp([fn{kvar} '_repl'], fn));
+    if ~isempty(iir)
+        d = getfield(iso, fn{kvar});
+        dr = getfield(iso, fn{iir});
+        iif = find(strcmp([fn{kvar} '_flag'], fn));
+        iirf = find(strcmp([fn{iir} '_flag'], fn));
+        f = getfield(iso, fn{iif});
+        fr = getfield(iso, fn{iirf});
+        iig = find(f==2 & fr==2); ii2 = find(fr<f);
+        %both good: average (what about both flagged 3?)
+        d(iig) = .5*(d(iig)+dr(iig));
+        f(iig) = 6; %flag for average of repeat measurements
+        %second measurement better than first: use that
+        d(ii2) = dr(ii2);
+        f(ii2) = fr(ii2);
+        %now can replace with averaged values, and discard replicates and their flags
+        iso = setfield(iso, fn{kvar}, d);
+        iso = setfield(iso, fn{iif}, f);
+        iso = rmfield(iso, fn([iir iirf]));
+        isou = rmfield(isou, fn([iir iirf]));
+        fn([iir iirf]) = [];
+    end
+    
+    %make sure NaNs have flag 9 not 2 (or NaN)
+    iif = find(strcmp([fn{kvar} '_flag'], fn));
+    if ~isempty(iif)
+        d = iso.(fn{kvar});
+        df = iso.(fn{iif});
+        df(isnan(d)) = 9;
+        df(isnan(df)) = 9;
+    end
+    
+    %add statnums with data to list
+    iif = strfind(fn{kvar}, '_flag');
+    if ~isempty(iif)
+        sg = [sg; statnum(iso.(fn{kvar})<9)];
+    else
+        sg = [sg; statnum(~isnan(iso.(fn{kvar})))];
+    end
+    
+    %move on to next variable
+    kvar = kvar + 1;
+end
+sg = unique(sg);
+iisg = ismember(statnum, sg);
+
+opt2 = 'iso_flags'; get_cropt %additional modifications to flags if required
+
+%prepare for writing mstar file
+varnames = {'sampnum';'statnum';'position'};
+varnames_units = {'sampnum';'/';'number';'statnum';'/';'number';'position';'/';'number'};
+sampnum = iso.sampnum; position = sampnum-statnum*100;
+sampnum = sampnum(iisg); statnum = statnum(iisg); position = position(iisg);
+fn = fieldnames(iso);
+for kvar = 2:length(fn)
+    d = iso.(fn{kvar}); d = d(iisg);
+    eval([fn{kvar} ' = d;'])
+    varnames = [varnames; fn{kvar}];
+    varnames_units = [varnames_units; fn{kvar}; {'/'}; getfield(isou, fn{kvar})];
+end
+
+%write
+timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
+%--------------------------------
+MEXEC_A.MARGS_IN_1 = {
+    otfile2
+    };
+MEXEC_A.MARGS_IN_2 = varnames(:);
+MEXEC_A.MARGS_IN_3 = {
+    ' '
+    ' '
+    '1'
+    dataname
+    '/'
+    '2'
+    MEXEC_G.PLATFORM_TYPE
+    MEXEC_G.PLATFORM_IDENTIFIER
+    MEXEC_G.PLATFORM_NUMBER
+    '/'
+    '4'
+    timestring
+    '/'
+    '8'
+    };
+MEXEC_A.MARGS_IN_4 = varnames_units(:);
+MEXEC_A.MARGS_IN_5 = {
+    '-1'
+    '-1'
+    };
+MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
+msave
+%--------------------------------
+
+
+
+
+%nut replicates
+if 0
+        %***
+        %***subplots for different variables below?
+        dnew.press = nan+dnew.sampnum; [~,ia,ictd] = intersect(dnew.sampnum,dbot.sampnum);
+        dnew.press(ia) = dbot.upress(ictd);
+        vars = fieldnames(dnew);
+        vars = vars(contains(vars,'_flag'));
+        vars = cellfun(@(x) x(1:end-6),vars,'UniformOutput',false);
+        vars = unique(vars);
+        figure(1); clf
+        for vno = 1:length(vars)
+            sa = [vars{vno} 'a_per_l'];
+            sb = [vars{vno} 'b_per_l'];
+            iiq = find(abs(dnew.(sa)./dnew.(sb)-1)>orth);
+            subplot(1,length(vars),vno)
+            plot(dnew.(sa),-dnew.press,'.',dnew.(sa)(~isnan(dnew.(sb))),-dnew.press(~isnan(dnew.(sb))),'o',dnew.(sb),-dnew.press,'s',dnew.(sa)(iiq),-dnew.press(iiq),'x',dnew.(sb)(iiq),-dnew.press(iiq),'+')
+        end
+        dnew = rmfield(dnew,'press');
 end

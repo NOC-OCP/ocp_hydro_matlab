@@ -13,21 +13,13 @@ switch opt1
                 MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; {'M_LADCP' 'ladcp'}];
         end
 
-    case 'ship'
+    case 'uway_proc'
         switch opt2
-            case 'datasys_best'
-                default_navstream = 'posmv_gpgga';
-                default_hedstream = 'posmv_gphdt';
-                default_attstream = 'posmv_pashr';
             case 'rvdas_database'
                 RVDAS.machine = '192.168.65.51';
                 %RVDAS.jsondir = '/data/pstar/mounts/mnt_cruise_data/Ship_Systems/Data/RVDAS/Sensorfiles/'; %original
                 RVDAS.user = 'rvdas';
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-        end
-
-    case 'uway_proc'
-        switch opt2
             case 'combine'
                 infiles = {'met/met/surfmet_dy180_all_raw.nc';
                     'met/rad/surfmet_dy180_all_raw.nc';

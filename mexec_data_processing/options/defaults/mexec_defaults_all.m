@@ -22,9 +22,87 @@ switch opt1
     case 'setup'
         switch opt2
             case 'time_origin'
-                %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
-                %case 'use_ix_ladcp'
-                %    use_ix_ladcp = 'query'; %'query' means ask each time; or set to 'no' or 'yes'
+                % no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
+            case 'setup_datatypes'
+                % no default, set MEXEC_G.ix_ladcp %***match this better
+                % with startup_at_sea/moor_setup
+            case 'mdirlist'
+                MEXEC_G.MDIRLIST = {
+    'M_CTD' 'ctd'
+    'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
+    'M_CTD_BOT' fullfile('ctd','ASCII_FILES')
+    'M_CTD_WIN' fullfile('ctd','WINCH')
+    'M_CTD_DEP' 'station_information'
+    'M_BOT'     'bottle_samples'
+    'M_BOT_SAL' fullfile('bottle_samples','BOTTLE_SAL')
+    'M_BOT_OXY' fullfile('bottle_samples','BOTTLE_OXY')
+    'M_BOT_NUT' fullfile('bottle_samples','BOTTLE_NUT')
+    'M_BOT_PIG' fullfile('bottle_samples','BOTTLE_PIG')
+    'M_BOT_CO2' fullfile('bottle_samples','BOTTLE_CO2')
+    'M_BOT_CFC' fullfile('bottle_samples','BOTTLE_CFC')
+    'M_BOT_CH4' fullfile('bottle_samples','BOTTLE_CH4')
+    'M_BOT_CHL' fullfile('bottle_samples','BOTTLE_PIG')
+    'M_BOT_ISO' fullfile('bottle_samples','LOGS')
+    'M_SAM' 'ctd'
+    'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
+    'M_SUM' 'collected_files'
+    'M_VMADCP' 'vmadcp'
+    }; %***change how MDIRLIST is used
+if MEXEC_G.ix_ladcp
+    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
+        {'M_LADCP' 'ladcp'
+        'M_IX' fullfile('ladcp','ix')}];
+end %***change mgetdir?
+            case 'ship'
+                %parameters related to ship as platform
+                switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
+                    case {'di' 'dy'}
+                        MEXEC_G.Mship = 'discovery'; %only used below and in mwin_01_load, not necessary?
+                        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
+                        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
+                            MEXEC_G.Mshipdatasystem = 'rvdas';
+                        else
+                            MEXEC_G.Mshipdatasystem = 'techsas'; 
+                        end
+                    case 'jc'
+                        MEXEC_G.Mship = 'cook';
+                        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
+                        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
+                            MEXEC_G.Mshipdatasystem = 'rvdas';
+                        else
+                            MEXEC_G.Mshipdatasystem = 'techsas';
+                        end
+                    case 'sd'
+                        MEXEC_G.Mship = 'sda';
+                        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
+                        MEXEC_G.Mshipdatasystem = 'rvdas';
+                    case 'jr'
+                        MEXEC_G.Mship = 'jcr';
+                        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
+                        MEXEC_G.Mrsh_machine = 'jruj';  % remote machine for rvs datapup command
+                        MEXEC_G.Mshipdatasystem = 'scs1';
+                    case 'kn'
+                        MEXEC_G.Mship = 'knorr';
+                        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
+                        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>0 %***old to new scs year?
+                            MEXEC_G.Mshipdatasystem = 'scs';
+                        else
+                            MEXEC_G.Mshipdatasystem = 'scs1';
+                        end
+                    case 'en'
+                        MEXEC_G.Mship = 'endeavor';
+                        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
+                        MEXEC_G.Mshipdatasystem = 'scs';
+                    case 'ce'
+                        MEXEC_G.Mship = 'celtic_explorer';
+                        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
+                        MEXEC_G.Mshipdatasystem = 'scs'; %***
+                    otherwise
+                        warning('Ship %s not recognised, unless configured in opt_%s, system will not be set up',MEXEC_G.MSCRIPT_CRUISE_STRING(1:2),MEXEC_G.MSCRIPT_CRUISE_STRING) %***move to checking stage in get_cropt***
+                        MEXEC_G.Mship = '';
+                        MEXEC_G.PLATFORM_IDENTIFIER = '';
+                end
+
         end
 
     case 'mstar'
@@ -33,53 +111,10 @@ switch opt1
             docf = 1; %cf-compliant time units
         else
             docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
-        end
-
-    case 'ship'
-        %parameters related to ship underway data
-        switch opt2
-            case 'datasys_best'
-                switch MEXEC_G.Mshipdatasystem
-                    case 'techsas'
-                        uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
-                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
-                        if ismac; uway_root = [uway_root '_mac']; end
-                    case 'scs'
-                        uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
-                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_raw'); % scs raw data on logger machine
-                        uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_sed'); % scs raw data on logger machine
-                        uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_mat'); % local directory for scs converted to matlab
-                    case 'rvdas'
-                        uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
-                end
-            case 'ship_data_sys_names'
-                switch MEXEC_G.Mshipdatasystem
-                    case 'rvdas'
-                        tsgpre = 'tsg';
-                        metpre = 'surfmet';
-                    case 'techsas'
-                        tsgpre = 'tsg';
-                        metpre = 'met';
-                    case 'scs'
-                        tsgpre = 'oceanlogger';
-                        metpre = 'met';
-                end
-            case 'rvdas_database'
-                RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-                %RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
-                RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-            case 'rvdas_form'
-                switch MEXEC_G.Mship
-                    case 'sda'
-                        use_cruise_views = 1; %prepend string view_name to names from json files
-                        view_name = lower(MEXEC_G.MSCRIPT_CRUISE_STRING);
-                        npre = 1; %table names start with an extra prefix before the instrument make/model e.g. anemometer_ft_technologies_etc
-                    otherwise
-                        npre = 0; %table names start with instrument name
-                        use_cruise_views = 0;
-                end
-            case 'rvdas_skip'
-                %see opt_dy181
+            %can change this in opt_cruise if reprocessing*** find out
+            %where this is actually used, should always check
+            %h.data_time_origin and/or time variable units, not rely on
+            %this?***
         end
 
     case 'ctd_proc'
@@ -145,6 +180,58 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
+            case 'datasys_best'
+                uway_torg = 0;
+                switch MEXEC_G.Mshipdatasystem
+                    case 'rvdas'
+                        switch MEXEC_G.Mship
+                            case {'discovery','cook'}
+                                MEXEC_G.best_nav_hed_att = {'posmv_gpgga','posmv_pashr','posmv_pashr'};
+                            case 'sda'
+                                MEXEC_G.best_nav_hed_att = {'gnss_seapath_320_2','attitude_seapath_320_2_heading','attitude_sepath_320_2_motion'}; %sd025
+                        end
+                    case 'scs'
+                        switch MEXEC_G.Mship
+                            case 'endeavor'
+                                MEXEC_G.best_nav_hed_att = {'posfur','hdtgyro','abxtwo'};
+                        end
+                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_raw'); % scs raw data on logger machine
+                        uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_sed'); % scs raw data on logger machine
+                        uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_mat'); % local directory for scs converted to matlab
+                    case 'techsas'
+                        MEXEC_G.best_nav_hed_att = {'pospmv','attpmv','attpmv'};
+                        uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
+                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
+                        if ismac; uway_root = [uway_root '_mac']; end
+                end
+            case 'ship_data_sys_names' %***
+                switch MEXEC_G.Mshipdatasystem
+                    case 'rvdas'
+                        tsgpre = 'tsg';
+                        metpre = 'surfmet';
+                    case 'techsas'
+                        tsgpre = 'tsg';
+                        metpre = 'met';
+                    case 'scs'
+                        tsgpre = 'oceanlogger';
+                        metpre = 'met';
+                end
+            case 'rvdas_database'
+                RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
+                %RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
+                RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
+            case 'rvdas_form'
+                switch MEXEC_G.Mship
+                    case 'sda'
+                        use_cruise_views = 1; %prepend string view_name to names from json files
+                        view_name = lower(MEXEC_G.MSCRIPT_CRUISE_STRING);
+                        npre = 1; %table names start with an extra prefix before the instrument make/model e.g. anemometer_ft_technologies_etc
+                    otherwise
+                        npre = 0; %table names start with instrument name
+                        use_cruise_views = 0;
+                end
+            case 'rvdas_skip'
+                %see opt_dy181
             case 'tstep_save'
                 %subsample high-frequency streams and match up different
                 %messages from the same system by rounding timestamp

@@ -69,7 +69,8 @@ if oxy_end==1
         d.(oxyvars{no})(oe) = NaN;
     end
     d.oxygen(oe) = NaN;
-    h.comment = [h.comment 'edited out last ' num2str(oxy_align*24) ' scans from oxygen\n'];
+    commentstr = ['edited out last ' num2str(oxy_align*24) ' scans from oxygen'];
+    if ~contains(h.comment, commentstr); h.comment = [h.comment '\n ' commentstr]; end
 end
 
 
@@ -91,24 +92,21 @@ end
 
 
 %%%%% optionally loopedit downcast %%%%%
-commentd = '';
 if isdown
     doloopedit = 0;
-    maxshoal = 0.08; %dbar
-    minpstep = 0.25/24; %0.25 dbar/s
+    ptol = 0.08; %default is not to apply, but this would be the default value if you did
+    spdtol = 0.24; %default value from SBE program
     opt1 = 'ctd_proc'; opt2 = 'doloopedit'; get_cropt
     if doloopedit
         vars_other = setdiff(var_copycell, {'press'});
-        ploopflag = m_loopedit(dn.press, maxshoal, minpstep);
-        nl = sum(ploopflag & ~isnan(dn.press));
-        if nl
-            disp(['applying loopediting for ' otfile1d])
-            dn.press(ploopflag) = NaN;
-            for vno = 1:length(vars_other)
-                dn.(vars_other{vno})(ploopflag) = NaN;
-                commentd = sprintf('loopediting applied to downcast removed %d scans with less downward motion than %f dbar/scan, or shoaled over %f dbar above previous deepest point\n',nl,minpstep,maxshoal);
-            end
+        disp(['applying loopediting for ' otfile1d])
+        dn.press = m_loopedit(dn.press, 'ptol', ptol, 'spdtol', spdtol);
+        for vno = 1:length(vars_other)
+            dn.(vars_other{vno})(isnan(dn.press)) = NaN;
+            commentd = sprintf('loopediting applied to downcast using ptol %f, spdtol %f\n',ptol,spdtol);
         end
+    else
+        commentd = '';
     end
 end
 
@@ -140,15 +138,16 @@ if ~isdown && ~isup
     warning('neither down nor up cast has enough good data; skipping')
     return
 end
-hn.comment = 'gridded to 2 dbar using grid_profile method lfitbin\n';
+commentstr = 'gridded to 2 dbar using grid_profile method lfitbin';
+if ~contains(hn.comment, commentstr); hn.comment = [hn.comment '\n ' commentstr]; end
 if g2opts.postfill>0
     if isfinite(g2opts.postfill)
-        hn.comment = [hn.comment 'gaps up to ' num2str(g2opts.postfill) ' in 2 dbar filled using linear interpolation\n'];
+        commentstr = ['gaps up to ' num2str(g2opts.postfill) ' in 2 dbar filled using linear interpolation'];
     else
-        hn.comment = [hn.comment 'gaps in 2 dbar filled using linear interpolation\n'];
+        commentstr = ['gaps in 2 dbar filled using linear interpolation'];
     end
 end
-
+if ~contains(hn.comment, commentstr); hn.comment = [hn.comment '\n ' commentstr]; end
 
 %%%%% add or recalculate depth and potemp %%%%%
 
@@ -177,18 +176,66 @@ if ~sum(strcmp('potemp',hn.fldnam))
 end
 hn = keep_hvatts(hn, h);
 
-hn.comment = [hn.comment 'depth and potemp calculated using gsw\n'];
-
+commentstr = 'depth and potemp calculated using gsw';
+if ~contains(hn.comment, commentstr); hn.comment = [hn.comment commentstr]; end
 
 %%%%% save %%%%%
 
 if isdown
     hnd = hn;
-    hnd.comment = [commentd hnd.comment];
+    if ~contains(hnd.comment,commentd); hnd.comment = [commentd; '\n '; hnd.comment]; end
     mfsave(otfile1d, dn2, hnd);
 end
 
 if isup
     hnu = hn;
     mfsave(otfile1u, up2, hnu);
+endfunction [d, h] = copy_sensor(d, h, stn)
+
+m_common
+
+%identify preferred sensors for (T,C) and O on this station
+opt1 = 'ctd_proc'; opt2 = 'sensor_choice'; get_cropt 
+if ismember(stn, stns_alternate_s)
+    s_choice = setdiff([1 2], s_choice);
 end
+if ismember(stn, stns_alternate_o)
+   o_choice = setdiff([1 2],o_choice);
+end
+if o_choice == 2 && ~sum(strcmp('oxygen2', h.fldnam))
+   error(['no oxygen2 found; edit opt_' mcruise ' mctd_01 and try again'])
+end
+
+%copy selected sensor to new names without sensor number
+h0 = h;
+vars = {'temp' 'cond' 'psal' 'potemp' 'asal'};
+for vno = 1:length(vars)
+    name0 = [vars{vno} num2str(s_choice)];
+    ii = find(strcmp(name0,h.fldnam));
+    if ~isempty(ii)
+        d.(vars{vno}) = d.(name0);
+        if ~sum(strcmp(vars{vno},h.fldnam))
+            h.fldnam = [h.fldnam vars{vno}];
+            h.fldunt = [h.fldunt h.fldunt{ii}];
+            h.fldserial = [h.fldserial h.fldserial{ii}];
+        end
+        h0.fldnam{ii} = vars{vno};
+    end
+end
+h = keep_hvatts(h, h0);
+h0 = h;
+vars = {'oxygen'};
+for vno = 1:length(vars)
+    name0 = [vars{vno} num2str(o_choice)];
+    ii = find(strcmp(name0,h.fldnam));
+    if ~isempty(ii)
+        d.(vars{vno}) = d.(name0);
+        if ~sum(strcmp(vars{vno},h.fldnam))
+            h.fldnam = [h.fldnam vars{vno}];
+            h.fldunt = [h.fldunt h.fldunt{ii}];
+            h.fldserial = [h.fldserial h.fldserial{ii}];
+        end
+        h0.fldnam{ii} = vars{vno};
+    end
+end
+h = keep_hvatts(h, h0);

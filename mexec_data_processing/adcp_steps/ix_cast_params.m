@@ -47,7 +47,7 @@ else
    if sum(strcmp(cfg.constraints, 'BT')); ps.botfac = 1; end
    if sum(strcmp(cfg.constraints, 'SADCP')); ps.sadcpfac = 1; end
 end
-subdir = fullfile(cfg.pdir_root, subdir, 'processed');
+subdir = fullfile(cfg.pdir_root, subdir);
 if ps.sadcpfac && isfield(cfg, 'SADCP_inst')
    subdir = [subdir '_' cfg.SADCP_inst];
 end
@@ -77,7 +77,7 @@ if isdo
    n = 1;
    while ~isempty(d)
       if d(1).bytes>1024
-          f.ladcpdo{n} = fullfile(cfg.rawdir, d(1).name);
+          f.ladcpdo{n} = fullfile(d(1).folder, d(1).name);
           n = n+1;
       end
       d(1) = [];
@@ -88,7 +88,7 @@ if isup
    n = 1;
    while ~isempty(d)
       if d(1).bytes>1024
-          f.ladcpup{n} = fullfile(cfg.rawdir, d(1).name);
+          f.ladcpup{n} = fullfile(d(1).folder, d(1).name);
           n = n+1;
       end
       d(1) = [];
@@ -97,10 +97,10 @@ end
 if isempty(f.ladcpdo) && isempty(f.ladcpup)
     error('no down or up files found')
 end
-if length(f.ladcpdo)==1
+if isscalar(f.ladcpdo)
     f.ladcpdo = f.ladcpdo{1};
 end
-if length(f.ladcpup)==1
+if isscalar(f.ladcpup)
     f.ladcpup = f.ladcpup{1};
 end
 if isdo && ~isup % downlooker only

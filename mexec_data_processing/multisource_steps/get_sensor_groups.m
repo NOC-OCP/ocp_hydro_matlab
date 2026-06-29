@@ -1,7 +1,14 @@
-function get_sensor_groups(klist)
-%parse raw ctd file header comments to find S/Ns for temp1,
-%cond1, temp2, cond2, oxygen1, oxygen2; save to sam file (if there were
-%bottles fired) and .mat file (anyway)
+function get_sensor_groups(klist,varargin)
+% get_sensor_groups(klist)
+% parse raw ctd file header comments to find S/Ns for temp1,
+%   cond1, temp2, cond2, oxygen1, oxygen2; append to .mat file and to
+%   sam_*_all.nc file if it exists
+%
+% get_sensor_groups(klist,'restart')
+% as above but don't use existing .mat file if any
+%
+% get_sensor_groups(klist,'samonly')
+% load the existing .mat file as-is and save to sam_*_all.nc file
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
@@ -10,48 +17,53 @@ st = {'Temperature','Conductivity','Oxygen'};
 sa = {'temp','cond','oxygen'};
 
 opt1 = 'ctd_proc'; opt2 = 'ctdsens_groups'; get_cropt
-if exist(sgfile,'file')
-    load(sgfile,'sg','sng','sn_list')
-else
+if (nargin>1 && strcmp(varargin{1},'restart')) || ~exist(sgfile,'file')
+    %initialise empty
     for sno = 1:length(sa)
         sg.([sa{sno} '1']) = {};
         sg.([sa{sno} '2']) = {};
         sn_list.(sa{sno}) = {};
     end
     sng = struct();
+else
+    %load existing, either to use or to modify/append to
+    load(sgfile,'sg','sng','sn_list')
 end
 
-root_ctd = mgetdir('ctd');
-for stn = klist
-    if ~isempty(sg.temp1) && sum(cell2mat(sg.temp1(:,1))==stn)>0
-        continue %don't redo
+if nargin==1 || ~strcmp(varargin{1},'samonly')
+    %get serial numbers from raw ctd file headers
+    root_ctd = mgetdir('ctd');
+    for stn = klist
+        if ~isempty(sg.temp1) && sum(cell2mat(sg.temp1(:,1))==stn)>0
+            continue %don't redo
+        end
+
+        rfile = sprintf('%s/ctd_%s_%03d_raw.nc',root_ctd,mcruise,stn);
+        if ~exist(rfile,'file')
+            rfile = [rfile(1:end-3) '_noctm.nc'];
+            if ~exist(rfile,'file')
+                continue
+            end
+        end
+        h = m_read_header(rfile);
+        [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn);
     end
 
-    rfile = sprintf('%s/ctd_%s_%03d_raw.nc',root_ctd,mcruise,stn);
-    if ~exist(rfile,'file')
-        rfile = [rfile(1:end-3) '_noctm.nc'];
-        if ~exist(rfile,'file')
-            continue
+    fn = fieldnames(sg);
+    for fno = 1:length(fn)
+        if isempty(sg.(fn{fno}))
+            sg = rmfield(sg,fn{fno});
         end
     end
-    h = m_read_header(rfile);
-    [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn);
+    sng = orderfields(sng);
+
+    readme = {'sg has lists of stations and serial numbers for each sensor-position (e.g. temp1, cond1, temp2);'
+        'sng has lists of stations and sensor-positions for each serial number';
+        'sn_list has lists of serial numbers for each sensor (e.g. temp)'};
+    save(sgfile,'sg','sng','sn_list','readme'); mfixperms(sgfile);
 end
 
-fn = fieldnames(sg);
-for fno = 1:length(fn)
-    if isempty(sg.(fn{fno}))
-        sg = rmfield(sg,fn{fno});
-    end
-end
-sng = orderfields(sng);
-
-readme = {'sg has lists of stations and serial numbers for each sensor-position (e.g. temp1, cond1, temp2);'
-    'sng has lists of stations and sensor-positions for each serial number';
-    'sn_list has lists of serial numbers for each sensor (e.g. temp)'};
-save(sgfile,'sg','sng','sn_list','readme'); mfixperms(sgfile);
-
-%now save to sam file
+%now save data from sgfile to sam_*_all file
 samfile = fullfile(mgetdir('sam'),['sam_' mcruise '_all']);
 if ~exist(m_add_nc(samfile),'file')
     return
@@ -73,7 +85,7 @@ if sum(ismember(ds.statnum,klist)&~isnan(ds.upress))
                 ii = find(cell2mat(sg.(fn{fno})(:,1))==stn); ii = ii(end);
                 %***can only store numbers in mstar data, so for now, just
                 %discard anything else
-                a = regexprep(sg.(fn{fno})(ii,2), '[^0-9]',''); 
+                a = regexprep(sg.(fn{fno})(ii,2), '[^0-9]','');
                 ds.(['sn_' fn{fno}])(msam) = str2double(a);
             end
         end

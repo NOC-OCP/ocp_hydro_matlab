@@ -8,8 +8,7 @@ function [dd,varnames,varunits] = mrload(varargin)
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
-% Load data from rvdas database (either directly, or from the daily .csv
-% files output from the database) into a matlab structure 
+% Load data from rvdas into a matlab structure
 %
 % Examples
 %
@@ -79,35 +78,14 @@ end
 rtable = mrresolve_table(rtable,mrtv); % table is now an RVDAS table name for sure.
 ktable = strcmp(rtable,mrtv.tablenames);
 
-if MEXEC_G.rvdas_sql_database
-    %access database
-    sqlcom = mr_make_psql('noparse',argot);
-    [fnin, ~, ~] = mr_try_psql(sqlcom,quiet);
-    ds = readtable(fnin,'Delimiter',',');
-    %delete temporary .csv file
-    delete(fnin);
+%get command
+sqlcom = mr_make_psql('noparse',argot);
 
-else
-    %***next two lines should be set in cruise options maybe
-    cdir = fullfile(MEXEC_G.mexec_data_root,'rvdas','rvdas_csv_archive'); 
-    fnin = dir(fullfile(cdir,['metocean-' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '-' rtable '-raw-*.csv']));
-    for no = 1:length(fnin)
-        day = datenum(fnin(no).name(end-18:end-11),'yyyymmdd');
-        if argot.dnums(1)<day+1 && argot.dnums(2)>=day
-            ds0 = readtable(fullfile(fnin(no).folder,fnin(no).name),'Delimiter',',');
-            if exist('ds','var')
-                ds = [ds; ds0];
-            else
-                ds = ds0;
-            end
-        end
-    end
-    if ~exist('ds','var')
-        v = argot.mrtv.tablevars{strcmp(rtable,argot.mrtv.tablenames)};
-        ds = table('Size',[0 length(v)],'VariableTypes',repmat({'double'},1,length(v)));
-        ds.Properties.VariableNames = v;
-    end
-end
+%now run
+[fnin, ~, ~] = mr_try_psql(sqlcom,quiet);
+
+clear ds dd 
+ds = readtable(fnin,'Delimiter',',');
 
 % now fix variable names in the table, as well as the units array
 names = ds.Properties.VariableNames;
@@ -120,10 +98,8 @@ units(ia) = mrtv.mstarunts{ktable}(ib);
 %switch time to datenum
 if numel(ds.time) == 0
     ds.dnum = nan(size(ds.time));
-elseif MEXEC_G.rvdas_sql_database
-    ds.dnum = mrconverttime(ds.time);
 else
-    ds.dnum = cellfun(@(x) datenum(str2num(replace(x(1:end-6),{'-',' ',':','+'},','))), ds.time);
+    ds.dnum = mrconverttime(ds.time);
 end
 l = length(names);
 names(l+1) = {'dnum'};
@@ -138,10 +114,6 @@ ds.Properties.VariableNames = names;
 % variable name latdegm, londegm. 
 [ds, names, units] = lldegm_fix(ds, names, units, 'lat');
 [ds, names, units] = lldegm_fix(ds, names, units, 'lon');
-
-% check for factory calibrations that need to be applied
-m = strcmp(mrtv.caled{ktable}, 'false');
-if sum(m); keyboard; end %use calfunc and calcoef***
 
 %convert to structure
 dd = table2struct(ds,'ToScalar',true);
@@ -164,6 +136,9 @@ if ~quiet
     d2 = datestr(d2,'yyyy-mm-dd HH:MM:SS');
     fprintf(MEXEC_A.Mfidterm,'%d data cycles loaded from %s to %s\n',size(ds,1),d1,d2);
 end
+
+%delete temporary .csv file
+delete(fnin);
 
 
 switch nargout

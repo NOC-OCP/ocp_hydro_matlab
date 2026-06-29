@@ -1,4 +1,4 @@
-function mdep_01(stn)
+function depth_to_headers(stn)
 % mdep_01: read water depth for ctd cast from station_summary_cruise_all.nc
 %     produced by best_station_depths based on (as specified by
 %     opt_cruise) some or all of ldeo ladcp, combined ctd altimeter and
@@ -18,7 +18,7 @@ root_ctd = mgetdir('M_CTD');
 root_sum = mgetdir('sum');
 
 deps_fn = fullfile(root_sum, ['station_summary_' mcruise '_all.nc']);
-[d,h] = mloadq(deps_fn,'/');
+[d,~] = mloadq(deps_fn,'/');
 iis = find(d.statnum==stn & ~isnan(d.cordep));
 
 if isempty(iis)

@@ -79,7 +79,7 @@ comment = '';
 for vno = 1:length(vars)
     bp = donan.(vars{vno});
     x = d.(xvar)(:)';
-    if length(bp)==1
+    if isscalar(bp)
         md = abs(x-bp);
     elseif length(bp)>1
         md = min(abs(x-bp(:)));

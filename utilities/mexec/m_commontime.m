@@ -56,12 +56,12 @@ elseif nargin==3
 else
     error('must have 3 or 4 input arguments')
 end
-if isstruct(varargin{1})
+if isstruct(varargin{1}) || istable(varargin{1})
     d = varargin{1};
 elseif isnumeric(varargin{1})
     d.(timevar) = varargin{1};
 else
-    error('first input must be structure or vector')
+    error('first input must be structure, table, or vector')
 end
 
 %parse units and origins from inputs
@@ -92,7 +92,7 @@ end
 
 function [uni,ori] = parse_time_units(in,timevar)
 if iscell(in)
-    if length(in)==1
+    if isscalar(in)
         in = in{1};
     else
         error('non-scalar cell array input not accepted')

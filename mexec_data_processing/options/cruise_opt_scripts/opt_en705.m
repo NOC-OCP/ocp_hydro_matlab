@@ -8,15 +8,6 @@ switch opt1
                 use_ix_ladcp = 'no';
         end
 
-    case 'ship'
-        switch opt2
-            case 'datasys_best'
-                default_navstream = 'posfur';
-                default_hedstream = 'hdtgyro';
-                default_attstream = 'abxtwo';
-        end
-
-
     case 'castpars'
         switch opt2
             case 'nnisk'

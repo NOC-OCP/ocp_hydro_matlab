@@ -13,10 +13,6 @@ switch opt1
 
     case 'ship'
         switch opt2
-            case 'datasys_best'
-                default_navstream = 'posmv_gpgga';
-                default_hedstream = 'posmv_pashr';
-                default_attstream = 'posmv_pashr';
             case 'rvdas_database'
                 RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/'; %original
                 RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
@@ -43,7 +39,7 @@ switch opt1
                         so.calstr.trans.pl.dy181 = 'dcal.trans = (d0.trans-0.017)/(4.699-0.017)*100;';
                         so.instsn.trans = 'CST-112R';
                         so.calunits.trans = 'percent';
-                        so.calstr.parport.pl.dy181 = 'dcal.parport = d0.parport*(1e6/8.944);';
+                        so.calstr.parport.pl.dy181 = 'dcal.parport = d0.parport*(1e6/8.944);'; %***or 9.994? 
                         so.instsn.parport = 'SKE-510 28558';
                         so.calunits.parport = 'W_per_m2';
                         so.calstr.parstarboard.pl.dy181 = 'dcal.parstarboard = d0.parstarboard*(1e6/8.937);';
@@ -127,12 +123,12 @@ switch opt1
                 end
             case 'ctd_raw_extra'
                 if stn==65
-                    %ctd_all_part1 should run this after mctd_01(65) and
-                    %before rest of processing
-                    ctd_raw_extra = ['mctd_01(65.1); ' ...
-                        'otfile = fullfile(mgetdir(''M_CTD''),''ctd_dy181_065_raw_noctm.nc''); ' ...
-                        'getpos_for_ctd(otfile, 1, ''write''); ' ...
-                        'mfir_01(65.1);'];
+                    %data from cast 65 in two cnv files, so ctd_process
+                    %runs this after mctd_01(65) to combine before the rest of 
+                    %processing
+                    msbe_01(65.1); 
+                    otfile = fullfile(mgetdir('M_CTD'),'ctd_dy181_065_raw_noctm.nc'); getpos_for_ctd(otfile, 1, 'write');
+                    mfir_01(65.1);
                 end
             case 'header_edits'
                 %typo in xmlcon oxygen2 s/n on many stations

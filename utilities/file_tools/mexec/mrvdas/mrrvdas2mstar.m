@@ -8,8 +8,8 @@ function status = mrrvdas2mstar(varargin)
 % Evolution on that cruise by bak, ylf, pa
 % *************************************************************************
 %
-% calls mrload to get data from an rvdas table, then saves to mexec format
-% file.  
+% Load data from rvdas table and save it to an mexec file. This is done
+% with a call to mrload.
 %
 % Examples
 %
@@ -131,7 +131,7 @@ else
 end
 
 hnew.dataname = dataname;
-hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER MEXEC_G.COMMENT_DELIMITER_STRING];
+hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER];
 if exist(m_add_nc(otfile),'file')
     mfsave(otfile, dd, hnew, '-merge', 'time');
 else

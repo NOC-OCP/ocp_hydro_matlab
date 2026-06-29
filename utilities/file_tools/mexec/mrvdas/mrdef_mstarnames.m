@@ -14,21 +14,17 @@ function mrtables_out = mrdef_mstarnames(mrtables, varargin)
 %
 % Input:
 % 
-% mrtables is the output of mrgetrvdascontents: all of the non-empty tables
-%   in the current RVDAS database, and all of their variables
+% mrtables is the output of mrgetrvdascontents
 % second argument is a vector [use_mrtables_skip no_duplicate_vars]
-%   use_mrtables_skip [1]: 1 to call mrtables_skip and discard what is
-%     listed there (messages, e.g. 'gnzda'; variables, e.g. 'ggaqual';
-%     variables matching patterns, e.g. 'flag'; and ship-specific
-%     tables/sentences, e.g.
-%     'sd025_transmissometer_wetlabs_cstar_ucsw1_pwltran1_reference').
-%     anything specified in opt_cruise rvdas_skip case will be skipped
-%     whatever the value of use_mrtables_skip. 
+%   use_mrtables_skip [1]: 1 to call mrtables_skip and discard the listed
+%     messages (e.g. 'gnzda'), variables (e.g. 'ggaqual'), variables
+%     matching patterns (e.g. 'flag'), and (ship-specific) tables/sentences
+%     (e.g. 'sd025_transmissometer_wetlabs_cstar_ucsw1_pwltran1_reference')
+%     as well as those specified in opt_cruise rvdas_skip case
 %   no_duplicate_vars [1]: how to treat variables that are parsed into the
 %     RVDAS database from multiple messages from a given instrument: 1 to
 %     keep only the first ocurrence of each variable name from a given
-%     instrument (does not apply to 'time', which is kept in each table)***
-%     not implemented?
+%     instrument (does not apply to 'time', which is kept in each table)
 %
 %     
 % Output: 
@@ -144,28 +140,14 @@ function mrtables_out = limit_tables(mrtables_out, limit, skips)
 % mrtables_out = limit_tables(mrtables_out, limit, skips)
 %
 
-mrtables_in = mrtables_out;
 % discard tables/messages set in mrvdas_skip or in opt_cruise rvdas_skip
 if limit(1)
     [~,iis,~] = intersect(lower(mrtables_out.rvdasmsg), lower(skips.msg));
-    if ~isempty(iis)
-        disp('the following msg values are being left out of rvdasmsg in mrdef_mstarnames: ')
-        disp([mrtables_out.tablename(iis) mrtables_out.rvdasmsg(iis)])
-        mrtables_out(iis,:) = [];
-    end
+    mrtables_out(iis,:) = [];
     [~,iis,~] = intersect(lower(mrtables_out.tablenames), lower(skips.sentence));
-    if ~isempty(iis)
-        disp('the following sentences are being left out of tablenames in mrdef_mstarnames: ')
-        disp(mrtables_out.tablenames(iis))
-        mrtables_out(iis,:) = [];
-    end
+    mrtables_out(iis,:) = [];
     for no = 1:length(skips.sentence_pat)
-        iis = contains(lower(mrtables_out.tablenames), lower(skips.sentence_pat{no}));
-        if ~isempty(iis)
-            disp('the following sentences are also being left out of tablenames in mrdef_mstarnames: ')
-            disp(mrtables_out.tablenames(iis))
-            mrtables_out(iis,:) = [];
-        end
+        mrtables_out(contains(lower(mrtables_out.tablenames), lower(skips.sentence_pat{no})),:) = [];
     end
 end
 
@@ -206,6 +188,5 @@ if sum(limit)
 
     %remove lines that would now be empty of variables
     mrtables_out(novars,:) = [];
-
 end
 

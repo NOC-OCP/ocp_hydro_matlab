@@ -4,6 +4,3 @@
 wk_*.nc
 *.swp
 ~$*
-*.~lock*
-*.png
-*.pdf

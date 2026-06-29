@@ -11,7 +11,9 @@ function d = hdata_flagnan(d, varargin)
 %   statnum, station, niskin, position, press, upress, depth, udepth, scan,
 %   time, pumps} or in optional input vars_exclude (default {}), if there
 %   is no corresponding flag field, create it with values of 2 or 9 for
-%   non-NaN or NaN sample values, respectively. 
+%   non-NaN or NaN sample values, respectively. If d is a table,
+%   Properties.VariableUnits for the new flag field is set to optional
+%   input flagu (default 'woce_4.9')
 % 4) make sample and flag fields consistent with each other and with
 %   niskin_flag (if this is a field in d), using nisk_badflags
 %   (default: [3 4 9]) and sam_missflags (default: [9 1 5]), such that:
@@ -44,6 +46,7 @@ function d = hdata_flagnan(d, varargin)
 %default: use woce flags
 nisk_badflags = [3 4 9]; %for niskins: leaked, misfired, did not sample
 sam_missflags = [9 1 5]; %for samples: did not sample, not yet analysed, not reported
+flagu = 'woce_4.9'; %***same for ctd?
 %default: get rid of empty fields
 keepemptyvars = 0;
 %default: keep rows with no samples collected
@@ -63,26 +66,28 @@ end
 
 skipvars = {'sampnum' 'statnum' 'station' 'niskin' 'position' 'press' 'upress' 'depth' 'udepth' 'scan' 'time' 'utime' 'pumps'};
 if istable(d)
+    typ = 1;
     skipvars = [skipvars 'Properties' 'Row' 'Variables'];
+elseif isstruct(d)
+    typ = 2;
+    d = struct2table(d);
+else
+    typ = 3;
+    d = dataset2table(d);
 end
 if exist('vars_exclude','var')
     skipvars = [skipvars vars_exclude];
 end
 
-if length(sam_missflags)==1
+if isscalar(sam_missflags)
     sam_missflags = [NaN sam_missflags];
 end
 
 %get separate lists of sample and flag variables
-fnames = fieldnames(d);
-fnames = setdiff(fnames, skipvars);
-snames = {};
-for no = 1:length(fnames)
-    if ~endsWith(fnames{no},'flag')
-        snames = [snames fnames{no}];
-    end
-end
-fnames = setdiff(fnames, snames);
+snames = d.Properties.VariableNames;
+snames = setdiff(snames, skipvars);
+fnames = snames(cellfun(@(x) endsWith(x,'flag'),snames));
+snames = setdiff(snames, fnames);
 
 %replace -999s in flags
 keepf = true(size(fnames));
@@ -102,7 +107,8 @@ for no = 1:length(fnames)
 end
 fnames = fnames(keepf);
 
-%replace -999s in data and add flags if necessary
+%replace -999s in data and add flags if necessary (also add their names to
+%fnames)
 keeps = true(size(snames));
 for no = 1:length(snames)
     if isnumeric(d.(snames{no}))
@@ -120,6 +126,7 @@ for no = 1:length(snames)
             ii = find(strcmp([snames{no} 'flag'],fnames));
             if ~isempty(ii)
                 d.(fn) = d.(fnames{ii});
+                if typ==1; d.Properties.VariableUnits{end} = flagu; end
                 fnames{ii} = fn;
             end
         end
@@ -134,7 +141,8 @@ for no = 1:length(snames)
                 end
                 flag(m) = 2;
                 d.(fn) = flag;
-                fnames = [fnames; fn];
+                if typ==1; d.Properties.VariableUnits{end} = flagu; end
+                fnames = [fnames fn];
             end
         else
             flag = d.(fn);
@@ -150,6 +158,7 @@ for no = 1:length(snames)
             end
             flag(m1 & m2) = 9;
             d.(fn) = flag;
+            if typ==1; d.Properties.VariableUnits{end} = flagu; end
         end
     else
         keeps(no) = 0;
@@ -193,11 +202,13 @@ if isfield(d, 'niskin_flag')
 
 end
 
+varn = d.Properties.VariableNames;
 for no = 1:length(snames)
     
     %match sample flags and data, where both exist
-    if isfield(d, [snames{no} '_flag'])
-        flag = d.([snames{no} '_flag']);
+    sfname = [snames{no} '_flag'];
+    if sum(strcmp(sfname,varn))
+        flag = d.(sfname);
         sam = d.(snames{no});
         mf = ismember(flag,sam_missflags);
         if isnan(nanval(2))
@@ -207,13 +218,13 @@ for no = 1:length(snames)
         end
         flag(m & ~mf) = sam_missflags(end);
         sam(mf) = nanval(2);
-        d.([snames{no} '_flag']) = flag;
+        d.(sfname) = flag;
         d.(snames{no}) = sam;
         
         if keepemptyvars==-1
             %if all missing, get rid of column
             if sum(~isnan(sam))==0
-                d = rmfield(d, snames{no});
+                d.(snames{no}) = [];
             end
         end
         
@@ -222,46 +233,28 @@ for no = 1:length(snames)
 end
 
 if keepemptyvars<1
-    %check flag fields for discard
-    keepvar = true(length(fnames),1);
-    
     for no = 1:length(fnames)
         if sum(d.(fnames{no})~=9)==0
-            d = rmfield(d, fnames{no});
-            keepvar(no) = false;
-            
+            d(:,fnames{no}) = [];
             if keepemptyvars==0
                 %didn't remove data column above, but flags are all 9 so
                 %remove now
-                d = rmfield(d, fnames{no}(1:end-5));
-                keepvar(strcmp(fnames{no}(1:end-5),fnames)) = false;
+                d(:,fnames{no}(1:end-5)) = [];
             end
-            
         end
     end
-    
-    fnames = fnames(keepvar);
 end
 
-if keepemptyrows==0 && ~isempty(fnames) 
-    
+if keepemptyrows==0 && ~isempty(fnames)     
     %check for rows with no good data
-    if isfield(d,'sampnum')
-        anysam = false(size(d.sampnum));
-    else
-        anysam = false(size(d.time));
-    end
-    for no = 1:length(fnames)
-        flag = d.(fnames{no});
-        anysam = anysam | flag~=sam_missflags(1);
-    end
-
-    %discard empty rows from every (numeric) field
-    fn = fieldnames(d);
-    for fno = 1:length(fn)
-        if isnumeric(d.(fn{fno}))
-            d.(fn{fno}) = d.(fn{fno})(anysam);
-        end
-    end
-    
+    m = ismember(d.Properties.VariableNames,fnames);
+    a = sum(d(:,m)~=sam_missflags(1),2); a = a.sum>0;
+    d = d(a,:);
 end
+
+if typ==2
+    d = table2struct(d,'ToScalar',true);
+elseif typ==3
+    d = table2dataset(d);
+end
+

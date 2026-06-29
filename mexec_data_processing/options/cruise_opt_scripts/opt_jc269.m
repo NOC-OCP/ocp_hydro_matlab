@@ -10,21 +10,13 @@ switch opt1
 %                MEXEC_G.MDIRLIST{strcmp('M_BOT_SAL',MEXEC_G.MDIRLIST(:,1)),2} = fullfile('ctd','BOTTLE_SAL','AUTOSAL','Autosal Data');
         end
 
-    case 'ship'
+    case 'castpars'
         switch opt2
-            case 'datasys_best'
-                default_navstream = 'posmv_gpgga';
-                default_hedstream = 'posmv_pashr';
-                default_attstream = 'posmv_pashr';
             case 'rvdas_database'
 %                RVDAS.machine = '192.168.65.51';
 %                %RVDAS.jsondir = '/data/pstar/mounts/mnt_cruise_data/Ship_Systems/Data/RVDAS/Sensorfiles/'; %original
 %                RVDAS.user = 'rvdas';
 %                RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-        end
-
-    case 'castpars'
-        switch opt2
             case 'minit' 
                %Ti vs SS for stn_string? or don't need this because it's
                %sequential numbering and handled with cnvfilename? do need

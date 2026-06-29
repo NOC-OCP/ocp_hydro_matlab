@@ -1,27 +1,23 @@
-function varargout = m_make_carter
-% m_make_carter
-% or 
-% Mcarter = m_make_carter
+function m_make_carter
+% function m_make_carter
 %
 % called from mcarter
 %
-% build matlab variables containing Carter area and corrections
+% build matlab variabless containing Carter area and corrections
+% and store in global variables MEXEC_G.Mcarter.c_area and MEXEC_G.Mcarter.c_corrected
 % database taken from pexec directory at NOC 16 Oct 2008
 %
 % INPUT:
 %   none
 %
 % OUTPUT:
-%   optional: structure containing c_area (carter area boundaries) and
-%     c_corrected (corrected 100:100:maxdepth profiles)
-%   if no output, data saved in global MEXEC_G.Mcarter
+%   none: data saved in global variables
 %
 % UPDATED:
 %   Initial version BAK 2008-10-17 at NOC
-%
-%
-%
-%
+
+m_common
+
 % fn = 'carter_boundary.dat';
 % Data record formats (for each group of records):-
 % 
@@ -47,6 +43,7 @@ function varargout = m_make_carter
 %                               represents   the   Western  boundary  of  the
 %                               correction area within the 1 degree  latitude
 %                               band.
+
 
 boundary_all = {
 [ 1  89 0  1]
@@ -633,11 +630,13 @@ boundary_all = {
 
 
 ok = 0;
+k1 = 1;
 while ok == 0
     d = boundary_all{1}; boundary_all(1) = []; % read a line and turn it into numbers
     latb = d(2);
     if latb < -90; break; end
-    if d(3) == 0
+    recn = d(3);
+    if recn == 0;
         npairs = d(4);
         numlines = 1+ floor((npairs-1)/9);
         bdy = [];
@@ -650,8 +649,8 @@ while ok == 0
         klati = latb+91; % 1 at lat = -90; 180 at lat = +89;
         for kloni = 1:360
             klon = kloni - 181;
-            ki = find(bdy2(1,:) <= klon, 1, 'last' );
-            carea(klati,kloni) = bdy2(2,ki);
+            ki = max(find(bdy2(1,:) <= klon));
+           carea(klati,kloni) = bdy2(2,ki);
         end
     end
 end
@@ -1250,7 +1249,8 @@ while ok == 0
     d = corrections_all{1}; corrections_all(1) = []; % read a line and turn it into numbers
     area = d(2);
     if area > 85 ; break; end
-    if d(3) == 0
+    recn = d(3);
+    if recn == 0;
         nvalues = d(4);
         numlines = 1+ floor((nvalues-1)/12);
         val = [0 100 ]; % zero correction at 0 and 100 metres
@@ -1262,15 +1262,10 @@ while ok == 0
     end
 end
 
-Mcarter.c_area = carea;
-Mcarter.c_corrected = c_corrected;
-Mcarter.readme = 'uncorrected depths are 100*[1:length(MEXEC_G.Mcarter.c_corrected{k})]';
-if nargout==0
-    m_common
-    MEXEC_G.Mcarter = Mcarter;
-else
-    varargout{1} = Mcarter;
-end
+MEXEC_G.Mcarter.c_area = carea;
+MEXEC_G.Mcarter.c_corrected = c_corrected;
+
+
 
 % 
 % 
