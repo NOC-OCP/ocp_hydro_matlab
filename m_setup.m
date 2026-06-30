@@ -5,7 +5,7 @@ function m_setup(varargin)
 %  for a given cruise, you can configure the first block of code below
 %  initially, as well as setting up the cruise options file
 %  (opt_{cruise}.m, e.g. opt_jc238.m)
-%
+%get
 %  for later processing you may then just first block of code, or at most down to line containing "End of
 %  items to be edited on each site/cruise"
 %
@@ -51,13 +51,15 @@ global MEXEC_G
 
 %defaults: what are we processing and where?
 MEXEC_G.MSCRIPT_CRUISE_STRING='dy214';
-MEXEC_G.ix_ladcp = 1; %set to 0 to not add ldeo_ix paths (for instance if processing mooring data)
+MEXEC_G.ctd = 'sbe'; %or 'rbr'***future
+MEXEC_G.ladcp = 'ix'; %or 'no'
+MEXEC_G.uway = 'rvdas'; % or 'techsas' or 'scs' for other types of DAQ, 'auto' to select based on the ship, or 'post' if data have already been loaded into mstar format
+MEXEC_G.uway = 'post';
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.mexec_data_root = '/data/link_to_pstar_primary/projects/osnap/cruises/dy214/data'; %if empty, will search for cruise directory near current directory and near home directory
 MEXEC_G.mexec_shell_scripts = '/data/pstar/repos_github/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-MEXEC_G.raw_underway = 2; %if 0, skip the rvdas setup
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 exsw_force_vers = []; %or this can be a structure e.g. force_swvers.gamma_n = 'eos80_legacy_gamma_n'; force_swvers.LDEO_IX = 'LDEO_IX_13';
 exsw_rootdir = {'/data/link_to_pstar_primary/programs/others/';'/data/link_to_pstar_primary/repos_github/'}; %where gsw, LDEO_IX, etc. toolboxes live
@@ -108,7 +110,7 @@ end
 
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
-MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
+%MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 % including some specific to the cruise
@@ -150,43 +152,12 @@ if exist('exsw_rootdir','var') && ~isempty(exsw_rootdir)
     end
 end
 
-% location processing and writing mexec files
+% location for processing and writing mexec files
 if isempty(MEXEC_G.mexec_data_root)
-    %look for base directory for this cruise: first in path of current
-    %directory, then in home directory
-    d = pwd;
-    cd('~'); hd = pwd; cd(d);
-    ii = strfind(d, MEXEC_G.MSCRIPT_CRUISE_STRING);
-    if ~isempty(ii)
-        d = d(1:ii-1);
-        mpath = {fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
-            fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
-            fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING)};
-    else
-        mpath = {};
-    end
-    mpath = [mpath;
-        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
-        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
-        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING)
-        fullfile(hd,'cruises',MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data')];
-    fp = 0; n=1;
-    while fp==0 && n<=length(mpath)
-        if exist(mpath{n},'dir')==7
-            MEXEC_G.mexec_data_root = mpath{n};
-            fp = 1;
-        end
-        n=n+1;
-    end
-    if fp==0 %none found; query
-        disp('enter full path of cruise data processing directory')
-        disp('e.g. /local/users/pstar/jc238/mcruise/data')
-        MEXEC_G.mexec_data_root = input('  ', 's');
-        disp('if you want, you can modify m_setup.m to hard-code this directory into MEXEC_G.mexec_data_root')
-    else
-        disp(['MEXEC data root: ' MEXEC_G.mexec_data_root])
-    end
-    clear mpath d fp n ii
+    disp('enter full path of cruise data processing directory')
+    disp('e.g. /local/users/pstar/jc238/mcruise/data')
+    MEXEC_G.mexec_data_root = input('  ', 's');
+    disp('if you want, you can modify m_setup.m to hard-code this directory into MEXEC_G.mexec_data_root')
 end
 fprintf(1,'working in %s\n',MEXEC_G.mexec_data_root)
 
@@ -200,43 +171,41 @@ opt1 = 'setup'; opt2 = 'mdirlist'; get_cropt
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];
 opt1 = 'setup'; opt2 = 'ship'; get_cropt
 
-if MEXEC_G.raw_underway
-    %***still need to configure where directories are for some applications***
+if strcmp(MEXEC_G.uway,'post')
+    switch MEXEC_G.Mshipdatasystem
+        case 'rvdas'
+            mrtv = mrdefine;
+        case 'scs'
+            mrtv = msdefine; %***
+        case 'techsas'
+            mrtv = mtdefine; %***
+    end
+    fprintf(1,'using cached %s table list / mstar lookup\n',MEXEC_G.Mshipdatasystem)
+else
+    if strcmp(MEXEC_G.uway,'auto')
+        MEXEC_G.uway = MEXEC_G.Mshipdatasystem;
+    end
     try
-        switch MEXEC_G.Mshipdatasystem
+        fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
+        switch MEXEC_G.uway
             case 'rvdas'
-                mrtv = mrdefine;
+                mrtv = mrdefine('redo');
             case 'scs'
-                mrtv = msdefine; %***
+                mrtv = msdefine('redo');
             case 'techsas'
-                mrtv = mtdefine; %***
+                mrtv = mtdefine('redo');
         end
-        fprintf(1,'using cached %s table list / mstar lookup\n',MEXEC_G.Mshipdatasystem)
+        fprintf(1,'reloaded table definitions\n')
     catch
-        if MEXEC_G.raw_underway==1
-            try
-                fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
-                switch MEXEC_G.Mshipdatasystem
-                    case 'rvdas'
-                        mrtv = mrdefine('redo');
-                    case 'scs'
-                        mrtv = msdefine('redo');
-                    case 'techsas'
-                        mrtv = mtdefine('redo');
-                end
-                fprintf(1,'reloaded table definitions\n')
-            catch
-                warning('skipping underway data setup')
-            end
-        end
+        warning('skipping underway data setup')
     end
-    if exist('mrtv','var')
-        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; ...
-            [cellfun(@(x) ['M_' upper(x)], mrtv.mstarpre, 'UniformOutput', false), ...
-            mrtv.mstardir]];
-        [~,ii] = unique(MEXEC_G.MDIRLIST(:,1),'stable');
-        MEXEC_G.MDIRLIST = MEXEC_G.MDIRLIST(ii,:);
-    end
+end
+if exist('mrtv','var')
+    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; ...
+        [cellfun(@(x) ['M_' upper(x)], mrtv.mstarpre, 'UniformOutput', false), ...
+        mrtv.mstardir]];
+    [~,ii] = unique(MEXEC_G.MDIRLIST(:,1),'stable');
+    MEXEC_G.MDIRLIST = MEXEC_G.MDIRLIST(ii,:);
 end
 
 

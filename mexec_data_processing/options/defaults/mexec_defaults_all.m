@@ -28,31 +28,29 @@ switch opt1
                 % with startup_at_sea/moor_setup
             case 'mdirlist'
                 MEXEC_G.MDIRLIST = {
-    'M_CTD' 'ctd'
-    'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
-    'M_CTD_BOT' fullfile('ctd','ASCII_FILES')
-    'M_CTD_WIN' fullfile('ctd','WINCH')
-    'M_CTD_DEP' 'station_information'
-    'M_BOT'     'bottle_samples'
-    'M_BOT_SAL' fullfile('bottle_samples','BOTTLE_SAL')
-    'M_BOT_OXY' fullfile('bottle_samples','BOTTLE_OXY')
-    'M_BOT_NUT' fullfile('bottle_samples','BOTTLE_NUT')
-    'M_BOT_PIG' fullfile('bottle_samples','BOTTLE_PIG')
-    'M_BOT_CO2' fullfile('bottle_samples','BOTTLE_CO2')
-    'M_BOT_CFC' fullfile('bottle_samples','BOTTLE_CFC')
-    'M_BOT_CH4' fullfile('bottle_samples','BOTTLE_CH4')
-    'M_BOT_CHL' fullfile('bottle_samples','BOTTLE_PIG')
-    'M_BOT_ISO' fullfile('bottle_samples','LOGS')
-    'M_SAM' 'ctd'
-    'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
-    'M_SUM' 'collected_files'
-    'M_VMADCP' 'vmadcp'
-    }; %***change how MDIRLIST is used
-if MEXEC_G.ix_ladcp
-    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
-        {'M_LADCP' 'ladcp'
-        'M_IX' fullfile('ladcp','ix')}];
-end %***change mgetdir?
+                    'M_CTD' 'ctd'
+                    'M_CTD_RAW' fullfile('ctd','ASCII_FILES')
+                    'M_CTD_WIN' fullfile('ctd','WINCH')
+                    'M_CTD_DEP' 'station_information'
+                    'M_BOT'     'bottle_samples'
+                    };
+                b = {'sal','oxy','nut','pig','co2','cfc','ch4'};
+                MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; ...
+                    [cellfun(@(x) ['M_' upper(x)], b, 'UniformOutput', false), ...
+                     cellfun(@(x) fullfile('bottle_samples',upper(x)), b, 'UniformOutput', false)]
+                    ];
+                MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; 
+                    'M_BOT_ISO' fullfile('bottle_samples','LOGS')
+                    'M_SAM' 'ctd'
+                    'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
+                    'M_SUM' 'collected_files'
+                    'M_VMADCP' 'vmadcp'
+                    ]; %***change how MDIRLIST is used
+                if MEXEC_G.ix_ladcp
+                    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
+                        {'M_LADCP' 'ladcp'
+                        'M_IX' fullfile('ladcp','ix')}];
+                end %***change mgetdir?
             case 'ship'
                 %parameters related to ship as platform
                 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
@@ -62,7 +60,7 @@ end %***change mgetdir?
                         if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
                             MEXEC_G.Mshipdatasystem = 'rvdas';
                         else
-                            MEXEC_G.Mshipdatasystem = 'techsas'; 
+                            MEXEC_G.Mshipdatasystem = 'techsas';
                         end
                     case 'jc'
                         MEXEC_G.Mship = 'cook';

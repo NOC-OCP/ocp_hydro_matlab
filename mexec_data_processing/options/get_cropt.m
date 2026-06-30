@@ -26,7 +26,9 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 %set defaults
 mexec_defaults_all
 
-%continue to set cruise-specific options
+%set (or overwrite with) cruise-specific options, possibly including
+%instrument options (e.g. mexec_defaults_sbe) and/or organisation options
+%(e.g. mexec_defaults_org_noc)
 cfile = sprintf('opt_%s',mcruise);
 if exist([cfile '.m'],'file')
     eval(cfile)
@@ -39,6 +41,8 @@ elseif ~isfield(MEXEC_G,'no_cruise_options_file') || ~MEXEC_G.no_cruise_options_
         warning('skipping %s, default parameters only until MEXEC_G is cleared',cfile)
         MEXEC_G.no_cruise_options_file = 1;
     end
+else
+    warning('no %s, default parameters only until MEXEC_G is cleared',cfile)
 end
 
 %check_cropt. required: year, Mship and PLATFORM_IDENTIFIER (and warn if no
