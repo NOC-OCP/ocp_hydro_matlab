@@ -44,16 +44,21 @@ function ctd_process(stns, varargin)
 
 m_common
 stns = stns(:)'; %row vector needed to loop
-if nargin==1
-    warning('no steps specified, skipping')
-    return
-end
 
 steps = {'part1','part2','postedit','nisk_fir','reload_sns','for_ladcp','cast_cut_gui','winch','sbe35','checkplots','out_ctdcolumns','out_samcolumns'};
+
+if nargin==1
+    disp(steps)
+    dosteps = strsplit(input('which steps to run (as comma-separated list e.g. ''part1,part2'')?  ','s'),',');
+    return
+else
+    dosteps = varargin;
+end
+
 dostep = array2table(ismember(steps,varargin),'VariableNames',steps);
-if ~dostep.forladcp && (isfield(MEXEC_G,'ix_ladcp') && MEXEC_G.ix_ladcp) && (dostep.part1 || dostep.postedit)
+if ~dostep.for_ladcp && (isfield(MEXEC_G,'ix_ladcp') && MEXEC_G.ix_ladcp) && (dostep.part1 || dostep.postedit)
     %overwrite forladcp and output 1 Hz data anyway
-    dostep.forladcp = true;
+    dostep.for_ladcp = true;
 end
 if dostep.part2 || dostep.postedit || dostep.nisk_fir || dostep.sbe35
     %have updated sam file, write to .csv if specified in opt_cruise

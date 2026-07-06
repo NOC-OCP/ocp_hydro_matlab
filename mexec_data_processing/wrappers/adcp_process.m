@@ -1,4 +1,7 @@
 function adcp_process(klist,constraints_try,varargin)
+% adcp_process(klist, constraints_try, varargin)
+%
+% wrapper to process LADCP data from stations in klist
 %
 % to run with all available constraints:
 % run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'})
@@ -14,11 +17,10 @@ function adcp_process(klist,constraints_try,varargin)
 % or to run all constraints but also separate dl and ul:
 % run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'},'','sepdlul')
 %
-%wrapper script for LADCP IX processing with different constraints
-%always process up and downlooker separately to check beam
-%quality***(though does this work for really shallow cast?)
-%but only process together if it's deep enough***, otherwise DL is version
-%of record
+% for paired LADCPS, always processes up and downlooker separately to check
+% beam quality***(though does this work for really shallow cast?)
+% then (if cast is deep enough) processes them together, otherwise DL is
+% version of record
 
 %add option to call mvad_station_av***
 
@@ -71,7 +73,7 @@ for stn = klist
         cfg.p.btrk_mode = 2;
         %cfg.p.btrk_ts = 30;
     end
-    opt1 = 'adcp_proc'; get_cropt %cfg and set pattern for down- and up-looker files
+    opt1 = 'adcp_proc'; opt2 = 'ladcp'; get_cropt %cfg and set pattern for down- and up-looker files
     infiled = fullfile(cfg.rawdir,cfg.dnpat);
     infileu = fullfile(cfg.rawdir,cfg.uppat);
     %stn = stnlocal;

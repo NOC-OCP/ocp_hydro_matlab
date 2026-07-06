@@ -46,6 +46,8 @@ else
     infile = infile1;
     co.redoctm = 0;
 end
+infile = fullfile(root_ctd, ['ctd_dy181_' stn_string '_raw_noctm.nc']); %***temporary!!!
+co.redoctm = 1;
 
 %get default and cruise-(/station-)specific edits to do
 opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt

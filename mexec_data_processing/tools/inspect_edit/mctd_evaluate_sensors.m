@@ -286,6 +286,7 @@ else
     co_cal = 0;
 end
 rootdir = mgetdir('ctd');
+stns_examine = stns_examine(stns_examine>66);
 for no = 1:length(stns_examine)
     stnlocal = stns_examine(no);
     stn_string = sprintf('%03d', stnlocal);

@@ -33,24 +33,21 @@ switch opt1
                     'M_CTD_WIN' fullfile('ctd','WINCH')
                     'M_CTD_DEP' 'station_information'
                     'M_BOT'     'bottle_samples'
-                    };
-                b = {'sal','oxy','nut','pig','co2','cfc','ch4'};
-                MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; ...
-                    [cellfun(@(x) ['M_' upper(x)], b, 'UniformOutput', false), ...
-                     cellfun(@(x) fullfile('bottle_samples',upper(x)), b, 'UniformOutput', false)]
-                    ];
-                MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; 
                     'M_BOT_ISO' fullfile('bottle_samples','LOGS')
                     'M_SAM' 'ctd'
                     'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
                     'M_SUM' 'collected_files'
                     'M_VMADCP' 'vmadcp'
-                    ]; %***change how MDIRLIST is used
-                if MEXEC_G.ix_ladcp
-                    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
-                        {'M_LADCP' 'ladcp'
-                        'M_IX' fullfile('ladcp','ix')}];
-                end %***change mgetdir?
+                    'M_LADCP', 'ladcp'
+                    'M_IX', fullfile('ladcp','ix')
+                    'M_SAL' fullfile('bottle_samples','sal')
+                    'M_OXY' fullfile('bottle_samples','oxy')
+                    'M_NUT' fullfile('bottle_samples','nut')
+                    'M_PIG' fullfile('bottle_samples','pig')
+                    'M_CO2' fullfile('bottle_samples','co2')
+                    'M_CFC' fullfile('bottle_samples','cfc')
+                    'M_CH4' fullfile('bottle_samples','ch4')
+                    };
             case 'ship'
                 %parameters related to ship as platform
                 switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
@@ -337,10 +334,10 @@ switch opt1
         min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
         min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
         root_vmadcp = mgetdir('M_VMADCP');
-        avfile = fullfile(root_vmadcp, 'mproc', [dataname '_ave.nc']);
+        avfile = fullfile(root_vmadcp, 'mproc', sprintf('os75nb_dy181_ctd_%s_ave.mat',stn_string));
         if MEXEC_G.ix_ladcp
             %for ladcp, using vmadcp
-            ladfile = fullfile(root_vmadcp, 'mproc', [dataname '_forladcp.mat']);
+            ladfile = fullfile(root_vmadcp, 'mproc', sprintf('os75nb_dy181_ctd_%s_forladcp.mat',stn_string));
             cfg.f.sadcp = ladfile;
             %and ctd: set file location and format for ascii file of 1hz ctd
             %data and nmea nav data, which will be used in ladcp LDEO_IX processing

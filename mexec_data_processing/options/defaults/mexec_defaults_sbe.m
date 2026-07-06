@@ -4,6 +4,9 @@
 %after mexec_defaults_all.m and before the rest of the contents of
 %opt_{cruise}.m
 
+switch opt1
+
+    case 'ctd_proc'
 switch opt2
     case 'oxy_align'
         oxy_align = 6; %number of seconds by which oxygen has been shifted/should be shifted*** too long for warmer waters?
@@ -16,7 +19,6 @@ switch opt2
         co.pumpsNaN.cond2 = 12;
         co.pumpsNaN.oxygen_sbe1 = 8*24; %O takes 8 s to recover
         co.pumpsNaN.oxygen_sbe2 = 8*24;
-end
 case 'raw_corrs'
     %SBE defaults
     oxyhyst.H1 = -0.033;
@@ -24,3 +26,6 @@ case 'raw_corrs'
     oxyhyst.H3 = 1450;
     oxyrev = oxyhyst;
     co.H_0 = [oxyhyst.H1 oxyhyst.H2 oxyhyst.H3]; %stores defaults for later reference
+end
+
+end

@@ -1,5 +1,5 @@
-function mctd_01(stn)
-% mctd_01:
+function msbe_01_load(stn)
+% msbe_01_load:
 %
 % read in ctd data from SBE .cnv file (either _align_ctm version, or _noctm);
 % rename variables based on cruise options, and add units if not present,
@@ -9,8 +9,7 @@ function mctd_01(stn)
 %
 % output: _raw.nc or _raw_noctm.nc (write-protected***)
 %
-% Use: mctd_01        and then respond with station number, or for station 16
-%      stn = 16; mctd_01;
+% Use: msbe_01_load(stn)
 %
 % calls:
 %     msbe_to_mstar
@@ -27,7 +26,7 @@ if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n',mcruise,s
 % resolve root directories for various file types
 redoctm = 0; opt1 = 'ctd_proc'; opt2 = 'redoctm'; get_cropt
 root_ctd = mgetdir('M_CTD');
-cdir = mgetdir('M_CTD_CNV');
+cdir = mgetdir('M_CTD_RAW');
 dataname = ['ctd_' mcruise '_' stn_string];
 if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
     otfile = fullfile(root_ctd, [dataname '_raw.nc']);

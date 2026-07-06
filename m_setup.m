@@ -52,8 +52,7 @@ global MEXEC_G
 %defaults: what are we processing and where?
 MEXEC_G.MSCRIPT_CRUISE_STRING='dy214';
 MEXEC_G.ctd = 'sbe'; %or 'rbr'***future
-MEXEC_G.ladcp = 'ix'; %or 'no'
-MEXEC_G.uway = 'rvdas'; % or 'techsas' or 'scs' for other types of DAQ, 'auto' to select based on the ship, or 'post' if data have already been loaded into mstar format
+MEXEC_G.uway = 'auto'; % process underway data, system depends on ship
 MEXEC_G.uway = 'post';
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
@@ -62,7 +61,7 @@ MEXEC_G.mexec_shell_scripts = '/data/pstar/repos_github/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
 exsw_force_vers = []; %or this can be a structure e.g. force_swvers.gamma_n = 'eos80_legacy_gamma_n'; force_swvers.LDEO_IX = 'LDEO_IX_13';
-exsw_rootdir = {'/data/link_to_pstar_primary/programs/others/';'/data/link_to_pstar_primary/repos_github/'}; %where gsw, LDEO_IX, etc. toolboxes live
+MEXEC_G.exsw_rootdir = {'/data/link_to_pstar_primary/programs/others/';'/data/link_to_pstar_primary/repos_github/'}; %where gsw, LDEO_IX, etc. toolboxes live
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
@@ -110,41 +109,41 @@ end
 
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
-%MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
+MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 % including some specific to the cruise
-opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
+opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN don't need this until later
 if ~isfield(MEXEC_G,'MDEFAULT_DATA_TIME_ORIGIN')
     error('you must set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN in opt_{cruise}.m under opt1=''setup''; opt2=''time_origin''')
 end
 opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt
 
 % find and add (append) paths to other useful libraries
-if exist('exsw_rootdir','var') && ~isempty(exsw_rootdir)
+if isfield(MEXEC_G,'exsw_rootdir') && ~isempty(MEXEC_G.exsw_rootdir)
     ld = {'seawater', '';...
         'gsw_matlab', '';...
         'gamma_n', '';...
         'm_map', '';...
         'LDEO_IX', ''};
     ns = size(ld,1);
-    if iscell(exsw_rootdir)
-        if length(exsw_rootdir)==ns
-            ld = [ld exsw_rootdir];
+    if iscell(MEXEC_G.exsw_rootdir)
+        if length(MEXEC_G.exsw_rootdir)==ns
+            ld = [ld MEXEC_G.exsw_rootdir];
         else
-            ld = [ld repmat(exsw_rootdir(1),ns,1)];
-            if length(exsw_rootdir)==2
-                ld(end,3) = exsw_rootdir(2);
+            ld = [ld repmat(MEXEC_G.exsw_rootdir(1),ns,1)];
+            if length(MEXEC_G.exsw_rootdir)==2
+                ld(end,3) = MEXEC_G.exsw_rootdir(2);
             end
         end
     else
-        ld = [ld repmat({exsw_rootdir},ns,1)];
+        ld = [ld repmat({MEXEC_G.exsw_rootdir},ns,1)];
     end
-    if ~MEXEC_G.ix_ladcp
+    if ~isfield(MEXEC_G,'ladcp') || ~strcmp(MEXEC_G.ladcp,'ix')
         ld(end,:) = [];
     end
     ld = cell2table(ld,'VariableNames',{'lib','vers','predir'});
-    esw = sw_addpath(ld, exsw_force_vers);
+    esw = addpath_library_version(ld, exsw_force_vers);
     if isfield(MEXEC_G,'exsw_paths') && ~isempty(MEXEC_G.exsw_paths)
         MEXEC_G.exsw_paths = union(MEXEC_G.exsw_paths, esw);
     else
@@ -186,7 +185,7 @@ else
         MEXEC_G.uway = MEXEC_G.Mshipdatasystem;
     end
     try
-        fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
+        fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')\n')
         switch MEXEC_G.uway
             case 'rvdas'
                 mrtv = mrdefine('redo');
@@ -307,109 +306,4 @@ if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     disp('history directory does not seem to exist; will create it');
     mkdir(MEXEC_G.HISTORY_DIRECTORY); mfixperms(MEXEC_G.HISTORY_DIRECTORY,'dir');
 end
-
-function mpath = sw_addpath(ld, force_vers)
-%
-% add external software toolboxes specified by table ld to path
-%
-% defaults to finding the highest version available in swroot,
-%   unless force_vers is a structure 
-%     (e.g. force_vers.gsw_matlab = 'gsw_matlab_v3_06_16';),
-%   in which case uses any hard-coded versions listed there
-
-if isstruct(force_vers)
-    % replace empty vers with force_vers
-    fn = fieldnames(force_vers);
-    for no = 1:length(fn)
-        m = strcmp(fn{no},ld.lib);
-        ld.vers(m) = replace(force_vers.(fn{no}),ld.lib{no},'');
-    end
-end
-
-% find highest version available for the rest
-ld = sw_vers_parse(ld);
-
-% add to path where not already on path
-mpath = cellfun(@(x,y,z) fullfile(x,[y z]),...
-    ld.predir, ld.lib, ld.vers,...
-    'UniformOutput',false);
-isnew = ~ismember(mpath,split(path,':'));
-for lno = 1:length(mpath)
-    if exist(mpath{lno},'dir')==7 %presume subdirectories will also be present     
-        if isnew(lno)
-            fprintf(1,'adding to path: %s\n',mpath{lno})
-            addpath(genpath(mpath{lno}), '-end')
-        end
-    else
-        warning([mpath{lno} ' not found'])
-        mpath{lno} = '';
-    end
-end
-mpath = setdiff(mpath,{''},'stable');
-
-
-function lib_tab = sw_vers_parse(lib_tab)
-% lib_tab = sw_vers_parse(lib_tab)
-%
-% find highest version of a library in a given directory
-%
-% verstr: Nx1 cell array
-%
-% lib_tab is a table with fields:
-%     predir (where to look),
-%     lib (library name),
-%     vers (empty string to search)
-
-notfound = [];
-
-for lno = find(cellfun('isempty',lib_tab.vers))'
-    
-    %get list of matching directory names
-    d = dir(fullfile(lib_tab.predir{lno}, [lib_tab.lib{lno} '*']));
-    a = {d.name};
-    a = a(cell2mat({d.isdir}));
-        
-    if isempty(a)
-        notfound = [notfound; lno];
-    else
-        if isscalar(a)
-            ind = 1;
-        else
-            %get version numbers
-            b0 = replace(a,{[lib_tab.lib{lno} '_ver'];[lib_tab.lib{lno} '_v'];[lib_tab.lib{lno} '_'];lib_tab.lib{lno}},''); %remove initial part
-            b = replace(replace(b0,'_',' '),'.',' '); %so we can compare numbers
-            c = cellfun(@(x) str2num(x), b, 'UniformOutput', false); %a cell array of numeric vectors of different lengths
-            l = cellfun(@(x) length(x), c);
-            ii = find(l>0);
-            if isempty(ii) %all contain letters, so do alphanumeric sort
-                [~,ind] = sort(b); ind = ind(end);
-            else %ignore any letters and sort by numbers
-                if max(l)==1 %single level
-                    [~,ii1] = max(cell2mat(c(ii)));
-                    ind = ii(ii1);
-                else %put levels into matrix to find highest version
-                    d = zeros(max(l),length(c));
-                    for n = 1:max(l)
-                        d(n,ii) = cellfun(@(x) [x(n)], c(ii));
-                        n = n+1;
-                        ii = find(l>=n);
-                    end
-                    n = 1; ind = 1:length(c);
-                    while n<=size(d,1) && length(ind)>1
-                        ii = find(d(n,:)==max(d(n,:)));
-                        ind = ind(ii); d = d(:,ii);
-                        n = n+1;
-                    end
-                end
-            end
-        end
-           
-        %save string corresponding to highest version
-        lib_tab.vers{lno} = replace(a{ind},lib_tab.lib{lno},'');
-        
-    end
-    
-end
-
-lib_tab(notfound,:) = [];
 
