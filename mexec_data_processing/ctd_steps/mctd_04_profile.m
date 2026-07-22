@@ -1,4 +1,4 @@
-function mctd_04(stn)
+function mctd_04_profile(stn)
 % mctd_04:
 %
 % extract downcast and upcast data from 24hz file with derived vars
@@ -20,15 +20,10 @@ function mctd_04(stn)
 % and via get_cropt:
 %     setdef_cropt_cast (ctd_proc and mctd_04 cases)
 
-m_common; opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
+m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from 24 hz to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
-root_ctd = mgetdir('M_CTD');
-
-infile = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
-dcsfile = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
-otfile1d = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2db']);
-otfile1u = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2up']);
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
 
 MEXEC_A.Mprog = mfilename;
 
@@ -58,7 +53,7 @@ end
 %%%%% determine what variables will go in 2 dbar averaged files %%%%%
 %%%%% copy for downcast and upcast %%%%%
 
-[d, h] = mload(infile, '/');
+[d, h] = mload(ctdfile24, '/');
 [var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
 
 %use oxy_end to NaN that many seconds before dcs scan_start
@@ -184,13 +179,15 @@ if ~contains(hn.comment, commentstr); hn.comment = [hn.comment commentstr]; end
 if isdown
     hnd = hn;
     if ~contains(hnd.comment,commentd); hnd.comment = [commentd; '\n '; hnd.comment]; end
-    mfsave(otfile1d, dn2, hnd);
+    mfsave(ctdfiled, dn2, hnd);
 end
 
 if isup
     hnu = hn;
-    mfsave(otfile1u, up2, hnu);
-endfunction [d, h] = copy_sensor(d, h, stn)
+    mfsave(ctdfileu, up2, hnu);
+end
+
+function [d, h] = copy_sensor(d, h, stn)
 
 m_common
 

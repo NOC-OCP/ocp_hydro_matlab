@@ -44,16 +44,17 @@ function ctd_process(stns, varargin)
 
 m_common
 stns = stns(:)'; %row vector needed to loop
+steps = {'part1','part2','postedit','nisk_fir','reload_sns','for_ladcp','cast_cut_gui','winch','sbe35','checkplots','out_ctdcolumns','out_samcolumns'};
 if nargin==1
-    warning('no steps specified, skipping')
+    warning('specify one or more steps from this list:')
+    disp(steps)
     return
 end
 
-steps = {'part1','part2','postedit','nisk_fir','reload_sns','for_ladcp','cast_cut_gui','winch','sbe35','checkplots','out_ctdcolumns','out_samcolumns'};
 dostep = array2table(ismember(steps,varargin),'VariableNames',steps);
-if ~dostep.forladcp && (isfield(MEXEC_G,'ix_ladcp') && MEXEC_G.ix_ladcp) && (dostep.part1 || dostep.postedit)
+if ~dostep.for_ladcp && (isfield(MEXEC_G,'ladcp') && strcmp(MEXEC_G.ladcp,'ix')) && (dostep.part1 || dostep.postedit)
     %overwrite forladcp and output 1 Hz data anyway
-    dostep.forladcp = true;
+    dostep.for_ladcp = true;
 end
 if dostep.part2 || dostep.postedit || dostep.nisk_fir || dostep.sbe35
     %have updated sam file, write to .csv if specified in opt_cruise
@@ -68,8 +69,6 @@ if dostep.part1
     for stn = stns
         %read in sbe .cnv data to mstar
         msbe_01_load(stn);
-        %if acquisition was stopped and restarted, load and append other .cnv files from this cast
-        opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; get_cropt
     end
 end
 

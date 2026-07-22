@@ -69,7 +69,7 @@ end
 
 otfile = fullfile(root_ctd, ['grid_' mcruise '_' section '.mat']);
 if ~exist(otfile,'file') || ~exist('ctd_regridlist','var')
-    ctd_regridlist = {'temp' 'psal' 'oxygen'};
+    ctd_regridlist = {'temp' 'psal' 'oxy'};
 end
 %load the ctd data
 if isempty(ctd_regridlist)
@@ -131,7 +131,7 @@ sdata.position = d.position(mstn);
 sdata.press = d.upress(mstn);
 sdata.ctdtmp = d.utemp(mstn);
 sdata.ctdsal = d.upsal(mstn);
-sdata.ctdoxy = d.uoxygen(mstn);
+sdata.ctdoxy = d.uoxy(mstn);
 mv = false(1,length(sam_gridlist));
 for vno = 1:length(sam_gridlist)
     if isfield(d,sam_gridlist{vno})

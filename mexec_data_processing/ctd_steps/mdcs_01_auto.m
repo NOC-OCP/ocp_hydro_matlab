@@ -1,5 +1,4 @@
-
-function mdcs_01(stn)
+function mdcs_01_auto(stn)
 % mdcs_01: find bottom of cast
 %
 % Use: mdcs_01        and then respond with station number, or for station 16
@@ -11,20 +10,16 @@ function mdcs_01(stn)
 m_common; opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'finding scan numbers corresponding to cast segments for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
-% resolve root directories for various file types
-root_ctd = mgetdir('M_CTD');
-
-infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
-infile0 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
-h1 = m_read_header(infile1);
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+h1 = m_read_header(ctdfile1);
 if ~isempty(intersect(h1.fldnam,'pumps'))
     [d1, ~] = mloadq(infile1,'time','scan','press','pumps',' ');
 else
     [d1, ~] = mloadq(infile1,'time','scan','press',' ');
 end
 
-dataname = ['dcs_' mcruise '_' stn_string];
-otfile = fullfile(root_ctd, dataname);
+auto_start = 0; auto_bot = 0; auto_end = 0; kstart = []; kbot = []; kend = []; 
+opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
 
 if exist(m_add_nc(otfile),'file')
     [ds, hnew] = mloadq(otfile,'/');
@@ -34,9 +29,6 @@ else
     hnew.data_time_origin = h1.data_time_origin;
     hnew.comment = '';
 end
-
-auto_start = 0; auto_bot = 0; auto_end = 0; kstart = []; kbot = []; kend = []; 
-opt1 = mfilename; opt2 = 'cast_divide'; get_cropt
 
 if ~isfield(ds,'dc_bot') || auto_bot
     if isempty(kbot)
@@ -105,7 +97,7 @@ if ~isfield(ds,'dc_end') || auto_end
 end
 
 %corresponding indices in 24hz file
-d24 = mloadq(infile0,'scan',' ');
+d24 = mloadq(ctdfile24,'scan',' ');
 [~,ds.dc24_bot] = min(abs(d24.scan-ds.scan_bot));
 [~,ds.dc24_start] = min(abs(d24.scan-ds.scan_start));
 [~,ds.dc24_end] = min(abs(d24.scan-ds.scan_end));
@@ -126,4 +118,4 @@ varunits(ispress) = {'dbar'};
 
 MEXEC_A.Mprog = mfilename;
 hnew.fldnam = varnames; hnew.fldunt = varunits;
-mfsave(otfile, ds, hnew);
+mfsave(dcsfile, ds, hnew);

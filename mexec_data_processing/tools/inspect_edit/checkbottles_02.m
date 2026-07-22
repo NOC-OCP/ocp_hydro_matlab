@@ -5,7 +5,7 @@ function nsubs = checkbottles_02(stn, varargin)
 % (formerly bottle_inspectionall, then msam_checkbottles_02)
 %
 %
-% plots psal, oxygen, potemp, and the other variables you name
+% plots psal, oxy, potemp, and the other variables you name
 %
 % inputs:
 %   stn, station number
@@ -20,7 +20,7 @@ function nsubs = checkbottles_02(stn, varargin)
 m_common
 opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
-%subplots will be psal (and botpsal), oxygen (and botoxygen), and potemp (and botoxytemp and sbe35temp [if avail]),
+%subplots will be psal (and botpsal), oxy (and botoxy), and potemp (and botoxytemp and sbe35temp [if avail]),
 %as well as the variable input names
 vnams = {};
 for no = 1:length(varargin)
@@ -96,7 +96,7 @@ if ~isfield(dsam, 'sbe35temp')
     dsam.sbe35temp = NaN+dsam.utemp; dsam.sbe35temp_flag = dsam.sbe35temp; 
 end
 
-%optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxygen close)
+%optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxy close)
 testcal = [];
 opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
 if ~isempty(testcal) && isfield(castopts,'calstr')
@@ -154,11 +154,11 @@ subplot(1,nsubs,2)
 
 kbadoxy = find(dsam.botoxy_flag~=2 & dsam.botoxy_flag~=6);
 
-plot(dctd.oxygen(kdown),-dctd.press(kdown),'m--'); 
+plot(dctd.oxy(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
 title(['Stn ' sprintf('%03d',stnlocal)]);
-xlabel('oxygen');
-plot(dctd.oxygen(kup),-dctd.press(kup),'r-');
+xlabel('oxy');
+plot(dctd.oxy(kup),-dctd.press(kup),'r-');
 plot(dsam.botoxy,-dsam.upress,'b+','markersize',m1);
 plot(dsam.botoxy(kbadoxy),-dsam.upress(kbadoxy),'k^','markersize',m2);
 plot(dsam.botoxy(kbadnisk),-dsam.upress(kbadnisk),'rv','markersize',m2);

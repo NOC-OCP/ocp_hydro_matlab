@@ -13,19 +13,18 @@ if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s
 
 %%%%%%%%% write ctd data %%%%%%%%%
 
-root_ctd = mgetdir('M_CTD');
-infile = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
 
-if exist(m_add_nc(infile),'file') ~= 2
+if exist(m_add_nc(ctdfile1),'file') ~= 2
     disp(['file not found: ' infile ', not writing 1 hz ascii file'])
     return
 end
 
-dh = m_read_header(infile);
+dh = m_read_header(ctdfile1);
 if sum(strcmp(dh.fldnam, 'latitude'))
-    [dd, dh] = mload(infile,'time press temp psal latitude longitude','0');
+    [dd, dh] = mload(ctdfile1,'time press temp psal latitude longitude','0');
 else
-    [dd, dh] = mload(infile,'time press temp psal','0');
+    [dd, dh] = mload(ctdfile1,'time press temp psal','0');
     dd.dnum = m_commontime(dd,'time',dh,'datenum');
     dv1 = datevec(dd.dnum(1)-1/24);
     dv2 = datevec(dd.dnum(end)+1/24);

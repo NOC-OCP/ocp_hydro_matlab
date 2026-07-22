@@ -3,7 +3,7 @@ function mctd_evaluate_sensors(parameter, varargin)
 % mctd_evaluate_sensors(parameter, testcal, varargin)
 %
 % using sam_{cruise}_all.nc, compare CTD temperature, conductivity, or
-%   oxygen to sbe35 or bottle sample values in order to choose calibration
+%   oxy to sbe35 or bottle sample values in order to choose calibration
 %   functions; inspect casts with outlier residuals
 % loops through different sensor serial numbers
 %
@@ -15,7 +15,7 @@ function mctd_evaluate_sensors(parameter, varargin)
 %   linear station number drift + *** for oxy
 %
 % inputs:
-% parameter: 'temp', 'cond', 'oxygen' ***etc. tbi
+% parameter: 'temp', 'cond', 'oxy' ***etc. tbi
 %
 % [optional] testcal: structure whose fieldnames are variables (temp, cond,
 %   etc.) and values are 1 to apply calibrations or 0 (or missing) to not
@@ -24,7 +24,7 @@ function mctd_evaluate_sensors(parameter, varargin)
 %   calibration strings (see mctd_02 for syntax); if not supplied or empty,
 %   the calstr set in opt_cruise will be used
 % [optional] parameter-value pairs:
-%   useoxyratio (default 1) set to 0 to plot oxygen in terms of difference
+%   useoxyratio (default 1) set to 0 to plot oxy in terms of difference
 %     rather than ratio
 %   usedn (default 0) set to 1 to use neutral density-matched downcast ctd
 %     data instead of upcast
@@ -50,10 +50,10 @@ function mctd_evaluate_sensors(parameter, varargin)
 %   but not yet applied (to the ctd and sam files) temperature calibration,
 %   it is a good idea to also set testcal.temp = 1 to use the best estimate
 %   of temperature in the salinity-conductivity conversion
-% for oxygen, this script will not reconvert from umol/l to umol/kg, so if
+% for oxy, this script will not reconvert from umol/l to umol/kg, so if
 %   you have determined temperature and conductivity calibrations, apply
 %   them to the (ctd and sam) files first, then run this script to
-%   determine the final oxygen calibration
+%   determine the final oxy calibration
 %
 % loads sam_{cruise}_all.nc and sensor_groups.mat
 %
@@ -61,7 +61,7 @@ function mctd_evaluate_sensors(parameter, varargin)
 m_common
 
 %defaults and optional input arguments
-testcal.temp = 0; testcal.cond = 0; testcal.oxygen = 0; testcal.fluor = 0;
+testcal.temp = 0; testcal.cond = 0; testcal.oxy = 0; testcal.fluor = 0;
 calstr0 = []; %get calibration from opt_cruise -- but may depend on station number
 useoxyratio = 1;
 choose_sns = []; %only loop through these serial numbers
@@ -141,7 +141,7 @@ for ks = 1:length(sn)
     clear p
     p.xvar = 'statnum'; p.xvarlabel = p.xvar;
     %p.xvar = 'dday'; p.xvarlabel = 'days';
-    if strcmp(parameter,'oxygen') && ~useoxyratio
+    if strcmp(parameter,'oxy') && ~useoxyratio
         [dc, p, mod] = sensor_cal_comparisons(d, [parameter '_diff'], num2str(sn(ks)), udstr, iis1, iis2, okf, p);
     else
         [dc, p, mod] = sensor_cal_comparisons(d, parameter, num2str(sn(ks)), udstr, iis1, iis2, okf, p);
@@ -150,7 +150,7 @@ for ks = 1:length(sn)
         %keyboard
         continue
     end
-    if strcmp(parameter,'oxygen') && useoxyratio
+    if strcmp(parameter,'oxy') && useoxyratio
         p.edges = [.9:.005:1.1];
     else
         p.edges = [-1:.05:1]*p.rlim(2);
@@ -204,7 +204,7 @@ if ~isempty(ii)
     disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01?')
     next = input('y/k for keyboard/enter to skip and continue?\n','s');
     if strcmp(next,'y')
-        if strcmp(parameter,'oxygen') && useoxyratio %what about cond, that's a ratio too***
+        if strcmp(parameter,'oxy') && useoxyratio %what about cond, that's a ratio too***
             llim = (p.rlim(2)-1)/2+1;
         else
             llim = p.rlim(2)/2;
@@ -330,7 +330,7 @@ for no = 1:length(stns_examine)
     iis = find(dc.statnum==stnlocal);
     iisbf = intersect(iis,find(~ismember(dc.calflag, okf)));
     iiq = intersect(iis,find(abs(dc.res)>llim & ismember(dc.calflag, okf)));
-    if strcmp(parameter,'oxygen')
+    if strcmp(parameter,'oxy')
         iiq = intersect(iis,find(abs(dc.res-1)>llim-1 & ismember(dc.calflag,okf)));
     end
     plot(d1.(parameter)(ii1u), -d1.press(ii1u), 'c', ...

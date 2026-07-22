@@ -60,7 +60,7 @@ switch samtyp
         cvar = 'upsal';
         useratio = 0;
     case 'oxy'
-        cvar = 'uoxygen';
+        cvar = 'uoxy';
         useratio = 1;
     case 'chl'
         cvar = 'ufluor';

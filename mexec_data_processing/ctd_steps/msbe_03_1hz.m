@@ -1,4 +1,4 @@
-function mctd_03(stn)
+function msbe_03_1hz(stn)
 % mctd_03:
 %
 % input: _24hz
@@ -22,18 +22,12 @@ function mctd_03(stn)
 %      setdef_cropt_cast (ctd_proc and mctd_03 cases)
 
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt 
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
 
-root_ctd = mgetdir('M_CTD');
-
-prefix1 = ['ctd_' mcruise '_'];
-
-infile = fullfile(root_ctd, [prefix1 stn_string '_24hz']);
-otfile = fullfile(root_ctd, [prefix1 stn_string '_psal']);
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
 
 %calculate derived variables
-[d, h] = mloadq(infile,'/');
+[d, h] = mloadq(ctdfile24,'/');
 iig = find(d.press>-1.495); %gsw won't work on p<=-1.495
 if length(iig)<length(d.press)
     m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points'};
@@ -67,7 +61,7 @@ if ~contains(h.comment, cstr)
 end
 
 %save to _24hz file
-mfsave(infile, d, h);
+mfsave(ctdfile24, d, h);
 
 %identify and copy preferred sensor (for this station) to variable without
 %sensor number (e.g. psal = psal1)
@@ -97,4 +91,4 @@ opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt
 tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew.time,1)>1; tg = tg'; end
 dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_ends', [0 0], 'postfill', maxfill1);
-mfsave(otfile, dnew, hnew);
+mfsave(ctdfile1, dnew, hnew);

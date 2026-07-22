@@ -21,7 +21,7 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %variables with a 'u' (or 'd') before them in the sam file, which might be
 %calibrated or used in calibration functions
-udvars = {'press' 'dday' 'time' 'temp1' 'temp2' 'psal1' 'psal2' 'cond1' 'cond2' 'oxygen1' 'oxygen2' 'fluor'};
+udvars = {'press' 'dday' 'time' 'temp1' 'temp2' 'psal1' 'psal2' 'cond1' 'cond2' 'oxy1' 'oxy2' 'fluor'};
 
 if isempty(calstr)
     cropt_cal = 1;
@@ -56,8 +56,8 @@ for sno = stns(:)'
     h0.fldunt = repmat({' '},size(h0.fldnam));
     %paste in serial numbers
     if isfield(d,'sn_cond1') %assume if we have one we have all
-        snfs = {'cond1' 'cond2' 'temp1' 'temp2' 'oxygen1' 'oxygen2'};
-        if ~isfield(d,'sn_oxygen2'); snfs = snfs(1:end-1); end
+        snfs = {'cond1' 'cond2' 'temp1' 'temp2' 'oxy1' 'oxy2'};
+        if ~isfield(d,'sn_oxy2'); snfs = snfs(1:end-1); end
         h0.fldserial = repmat({' '},size(h0.fldnam));
         for fno = 1:length(snfs)
             h0.fldserial{strcmp(snfs{fno},h0.fldnam)} = sprintf('%04d',d.(['sn_' snfs{fno}])(iig(1)));

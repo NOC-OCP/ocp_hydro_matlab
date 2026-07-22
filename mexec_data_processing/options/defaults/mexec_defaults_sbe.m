@@ -1,27 +1,37 @@
 %sets CTD processing parameters based on SBE defaults or typical SBE
 %response
-%if relevant, put this at the top of your opt_{cruise}.m file, to be run
-%after mexec_defaults_all.m and before the rest of the contents of
-%opt_{cruise}.m
+%called from mexec_defaults_all in case opt1 = 'ctd_proc', 
+% if MEXEC_G.ctd = 'sbe' 
 
-        switch opt2
-            case 'oxy_align'
-                oxy_align = 6; %number of seconds by which oxygen has been shifted in SBE processing (or should be shifted by mctd_02)
-                oxy_end = 1; %set to 1 to truncate O oxy_align seconds earlier than T, C
-                %mctd_01
-            case 'rawedit_auto'
-                %when pumps are off
-                co.pumpsNaN.temp1 = 12; %T takes 1/2 s to recover
-                co.pumpsNaN.temp2 = 12;
-                co.pumpsNaN.cond1 = 12;
-                co.pumpsNaN.cond2 = 12;
-                co.pumpsNaN.oxygen_sbe1 = 8*24; %O takes 8 s to recover
-                co.pumpsNaN.oxygen_sbe2 = 8*24;
-        end
-    case 'raw_corrs'
-        %SBE defaults
-        oxyhyst.H1 = -0.033;
-        oxyhyst.H2 = 5000;
-        oxyhyst.H3 = 1450;
-        oxyrev = oxyhyst;
-        co.H_0 = [oxyhyst.H1 oxyhyst.H2 oxyhyst.H3]; %stores defaults for later reference
+if ~strcmp(opt1,'ctd_proc') || ~strcmp(MEXEC_G.datatypes.ctd,'sbe')
+    error('this file should only be called when ctd type is SBE and to get options for ctd_proc case')
+
+else
+    switch opt2
+
+        case 'rawedit_auto'
+            %when pumps are off
+            co.pumpsNaN.temp1 = 12; %T takes 1/2 s to recover
+            co.pumpsNaN.temp2 = 12;
+            co.pumpsNaN.cond1 = 12;
+            co.pumpsNaN.cond2 = 12;
+            co.pumpsNaN.oxy1 = 8*24; %O takes 8 s to recover
+            co.pumpsNaN.oxy2 = 8*24;
+
+        case 'raw_corrs'
+            if ~doneco.alignctd
+                co.oxy_align = 6; %number of seconds to shift oxygen earlier
+            end
+            co.doturbV = 0;
+            co.dooxy1V = 0; co.dooxy2V = 0; %make 1 or 2 to recalculate using temp1 or temp2
+            co.redooxyhyst = 0;
+            %SBE defaults
+            co.hyst_oxy0.H1 = -0.033;
+            co.hyst_oxy0.H2 = 5000;
+            co.hyst_oxy0.H3 = 1450;
+            co.hrev_oxy0 = co.hyst_oxy0;
+
+    end
+
+end
+

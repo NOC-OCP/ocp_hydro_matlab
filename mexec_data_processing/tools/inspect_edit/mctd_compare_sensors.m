@@ -35,31 +35,31 @@ end
 pg = [1:2:8000]';
 dref.potemp = NaN+zeros(length(pg),length(klist)*3); %***
 dref.psal = dref.potemp;
-if strcmp(param,'oxygen')
+if strcmp(param,'oxy')
     dooxy = 1;
 else
     dooxy = 0;
 end
-dref.oxygen = dref.potemp;
+dref.oxy = dref.potemp;
 dref.lat = dref.psal(1,:); dref.lon = dref.lat;
 dcomp = dref;
 nref = 1; ncomp = 1;
 for kloop = klist
     infile = fullfile(mgetdir('M_CTD'),sprintf('ctd_%s_%03d_2db',mcruise,kloop));
-    [d,h] = mload(infile,'press temp1 temp2 cond1 cond2 oxygen1 oxygen2 potemp1 potemp2 psal1 psal2');
+    [d,h] = mload(infile,'press temp1 temp2 cond1 cond2 oxy1 oxy2 potemp1 potemp2 psal1 psal2');
     [~,ia,ib] = intersect(pg,d.press);
     s1 = h.fldserial(strcmp([param '1'],h.fldnam));
     if ismember(s1, ref_sns)
         dref.potemp(ia,nref) = d.potemp1(ib);
         dref.psal(ia,nref) = d.psal1(ib);
-        dref.oxygen(ia,nref) = d.oxygen1(ib);
+        dref.oxy(ia,nref) = d.oxy1(ib);
         dref.lat(1,nref) = h.latitude;
         dref.lon(1,nref) = h.longitude;
         nref = nref+1;
     elseif ismember(s1, compare_sns)
         dcomp.potemp(ia,ncomp) = d.potemp1(ib);
         dcomp.psal(ia,ncomp) = d.psal1(ib);
-        dcomp.oxygen(ia,ncomp) = d.oxygen1(ib);
+        dcomp.oxy(ia,ncomp) = d.oxy1(ib);
         dcomp.lat(1,ncomp) = h.latitude;
         dcomp.lon(1,ncomp) = h.longitude;
         ncomp = ncomp+1;
@@ -68,22 +68,22 @@ for kloop = klist
     if ismember(s2, ref_sns)
         dref.potemp(ia,nref) = d.potemp2(ib);
         dref.psal(ia,nref) = d.psal2(ib);
-        dref.oxygen(ia,nref) = d.oxygen2(ib); 
+        dref.oxy(ia,nref) = d.oxy2(ib); 
         dref.lat(1,nref) = h.latitude;
         dref.lon(1,nref) = h.longitude;
         nref = nref+1;
     elseif ismember(s2, compare_sns)
         dcomp.potemp(ia,ncomp) = d.potemp2(ib);
         dcomp.psal(ia,ncomp) = d.psal2(ib);
-        dcomp.oxygen(ia,ncomp) = d.oxygen2(ib);
+        dcomp.oxy(ia,ncomp) = d.oxy2(ib);
         dcomp.lat(1,ncomp) = h.latitude;
         dcomp.lon(1,ncomp) = h.longitude;
         ncomp = ncomp+1;
     end
 end
 iip = find(~isnan(dref.potemp) | ~isnan(dcomp.potemp));
-dref.potemp(:,nref+1:end) = []; dref.psal(:,nref+1:end) = []; dref.oxygen(:,nref+1:end) = [];
-dcomp.potemp(:,ncomp+1:end) = []; dcomp.psal(:,ncomp+1:end) = []; dcomp.oxygen(:,ncomp+1:end) = [];
+dref.potemp(:,nref+1:end) = []; dref.psal(:,nref+1:end) = []; dref.oxy(:,nref+1:end) = [];
+dcomp.potemp(:,ncomp+1:end) = []; dcomp.psal(:,ncomp+1:end) = []; dcomp.oxy(:,ncomp+1:end) = [];
 dref.lat(nref+1:end) = []; dref.lon(nref+1:end) = [];
 dcomp.lat(ncomp+1:end) = []; dcomp.lon(ncomp+1:end) = [];
 
@@ -97,7 +97,7 @@ plot(dref.lon,dref.lat,'o',dcomp.lon,dcomp.lat,'s'); grid
 dt = 0.1;
 tg = ceil(min(dref.potemp)/dt)*dt:dt:floor(max(dref.potemp)/dt)*dt;
 if dooxy
-    pp = 'oxygen';
+    pp = 'oxy';
 else
     pp = 'psal';
 end
@@ -128,10 +128,10 @@ for no = 1:nc
     if ~isempty(ii)
     m1s(:,no) = nanmedian(dref.psal(:,ii),2);
     m1t(:,no) = nanmedian(dref.potemp(:,ii),2);
-    m1o(:,no) = nanmedian(dref.oxygen(:,ii),2);
+    m1o(:,no) = nanmedian(dref.oxy(:,ii),2);
     end
 end
-dt = m1t-dcomp.potemp; ds = m1s-dcomp.psal; do = m1o-dcomp.oxygen; dor = m1o./dcomp.oxygen;
+dt = m1t-dcomp.potemp; ds = m1s-dcomp.psal; do = m1o-dcomp.oxy; dor = m1o./dcomp.oxy;
 dt = dt(300:end,:); ds = ds(300:end,:); do = do(300:end,:); dor = dor(300:end,:);
 format long; disp([nanmedian(dt(:)) nanmedian(ds(:)) nanmedian(do(:)) nanmedian(dor(:))]); format("default")
 figure(1); clf
@@ -141,7 +141,7 @@ subplot(223); hist(do(:))
 subplot(224); hist(dor(:))
 figure(2); clf
 if dooxy
-    plot(dref.potemp,dref.oxygen,'.',dcomp.potemp,dcomp.oxygen,'k-');
+    plot(dref.potemp,dref.oxy,'.',dcomp.potemp,dcomp.oxy,'k-');
 else
     plot(dref.psal,-pg,'.',dcomp.psal,-pg,'x-');
 end

@@ -8,9 +8,9 @@ function [d, comment] = apply_guiedits(d, xvar, edfilepat, varargin)
 % useful if you've clobbered the _raw_cleaned.nc files after running
 % mctd_rawedit (for instance, if you've gone back to _noctm versions)
 %
-% optional 4th argument can be set [1 stnlocal] to account for the fact that if oxygen
+% optional 4th argument can be set [1 stnlocal] to account for the fact that if oxy
 % alignment is done in mctd_02, mctd_rawedit will have inspected aligned
-% data but this step is applied before alignment, so bad scans for oxygen
+% data but this step is applied before alignment, so bad scans for oxy
 % variables need to be offset
 %
 % optional 5th argument gives a tolerance for finding matching points
@@ -58,7 +58,7 @@ for fno = 1:length(edfiles)
                     donan.(varn) = []; %initialise, if we didn't have it in an earlier file
                 end
             else
-                if redoctm && contains(varn,'oxygen')
+                if redoctm && contains(varn,'oxy')
                     s = s+oxy_align*24; 
                 end
                 donan.(varn) = [donan.(varn) s]; %scan

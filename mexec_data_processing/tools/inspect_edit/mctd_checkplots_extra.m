@@ -169,13 +169,13 @@ for plotlist = cklist
             
             clear pf1;
             pf1.xlist = 'time';
-            pf1.ylist = ['press temp ' saltype ' oxygen'];
+            pf1.ylist = ['press temp ' saltype ' oxy'];
             first = find(dpsal{end}.scan > ddcs{end}.scan_start, 1 );
             last = find(dpsal{end}.scan < ddcs{end}.scan_end, 1, 'last' );
             pf1.startdc = first; % good data only
             pf1.stopdc = last;
             if oxy_end
-                pf1.stopdcv.oxygen = pf1.stopdc-oxy_align;
+                pf1.stopdcv.oxy = pf1.stopdc-oxy_align;
             end
             pf1.ncfile.name = infiles{3,end}; % psal file
             
@@ -221,7 +221,7 @@ for plotlist = cklist
             end
             subplot(221); grid on; title('temp')
             subplot(222); grid on; title(saltype)
-            subplot(223); grid on; title ('oxygen')
+            subplot(223); grid on; title ('oxy')
             subplot(224); grid on; title (['potemp-' saltype])
             
         case 3
@@ -266,7 +266,7 @@ for plotlist = cklist
             end
             subplot(221); grid on; title('temp')
             subplot(222); grid on; title(saltype)
-            subplot(223); grid on; title ('oxygen')
+            subplot(223); grid on; title ('oxy')
             subplot(224); grid on; title (['potemp-' saltype])
             
         case 4
@@ -324,7 +324,7 @@ for plotlist = cklist
             end
             subplot(221); grid on; title ('temp: dash for upcast')
             subplot(222); grid on; title ([saltype ': dash for upcast'])
-            subplot(223); grid on; title ('oxygen: dash for upcast')
+            subplot(223); grid on; title ('oxy: dash for upcast')
             subplot(224); grid on; title (['potemp-' saltype ': dash for upcast'])
             
         case 5
@@ -384,7 +384,7 @@ for plotlist = cklist
             end
             subplot(221); grid on; title ('temp: dash for upcast')
             subplot(222); grid on; title ([saltype ': dash for upcast'])
-            subplot(223); grid on; title ('oxygen: dash for upcast')
+            subplot(223); grid on; title ('oxy: dash for upcast')
             subplot(224); grid on; title (['potemp-' saltype ': dash for upcast'])
             
         case 6
@@ -475,7 +475,7 @@ for plotlist = cklist
                     plot(d2db{ks}.press,d2db{ks}.(oxyvars{2,2}),['r' '-'],'linewidth',lwid);
                 end
             end
-            title ('oxygen')
+            title ('oxy')
             
             subplot(224)
             for ks = numused
@@ -550,7 +550,7 @@ for plotlist = cklist
                     plot(dpsal{ks}.press(koku),od(koku),['r' '--'],'linewidth',lwid);
                 end
             end
-            title ('oxygen: dash for upcast')
+            title ('oxy: dash for upcast')
             
             
             subplot(224)
@@ -628,7 +628,7 @@ for plotlist = cklist
                     plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{1,2}),['k' '-'],'linewidth',lwid);
                     hold on; grid on;
                 end
-                title ('oxygen 1 up minus down diff');
+                title ('oxy 1 up minus down diff');
                 
                 subplot(326)
                 if nox>1
@@ -637,7 +637,7 @@ for plotlist = cklist
                         plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{2,2}),['k' '-'],'linewidth',lwid);
                         hold on; grid on;
                     end
-                    title ('oxygen 2 up minus down diff');
+                    title ('oxy 2 up minus down diff');
                 end
             end
             
@@ -735,7 +735,7 @@ for plotlist = cklist
             axes('position',pos_title);
             titstr = {
                 ['Station ' sprintf('%03d',sused(end)) ' up minus down - 2up & 2db'];
-                ['salinity and oxygen are matched on theta levels']
+                ['salinity and oxy are matched on theta levels']
                 };
             h = text(.5,.5,titstr);
             set(h,'HorizontalAlignment','center');
@@ -888,7 +888,7 @@ for plotlist = cklist
                     ax = axis; ax(3:4) = [-5 5]; axis(ax);
                     hold on; grid on;
                 end
-                title ('oxygen 1 up minus down diff');
+                title ('oxy 1 up minus down diff');
 
                 subplot(326)
                 if nox>1
@@ -898,7 +898,7 @@ for plotlist = cklist
                         ax = axis; ax(3:4) = [-5 5]; axis(ax);
                         hold on; grid on;
                     end
-                    title ('oxygen 2 up minus down diff');
+                    title ('oxy 2 up minus down diff');
                 end
             end
 

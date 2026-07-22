@@ -1,66 +1,52 @@
-function [dnew, hnew] = apply_oxyhyst(d, h, co, varargin)
+function [dnew, hnew] = apply_oxyhyst(d, h, oco)
 %reverse and/or apply oxygen hysteresis correction to _raw_cleaned file,
 %producing _24hz file
+%
+% fields of co are hyst_{oxyvar} to apply coefficients H1, H2, H3 to
+% oxyvar, and optionally hrev_{ovar} to first reverse the existing
+% correction
 
-nvar = 0;
 hnew.comment = '';
-m = strncmp('oxygen',h.fldnam,6);
-ovars = h.fldnam(m);
-ounts = h.fldunt(m);
-osns = h.fldserial(m);
-hnew.fldnam = {}; hnew.fldunt = {}; hnew.fldserial = {};
 
-if co.dooxyrev
-    %calculate the oxygen hysteresis reversed variables
-    for no = 1:length(ovars)
-        on = ['oxyrev' osns{no}];
-        if ~isfield(co,on)
-            on = 'oxyrev';
-        end
-        if size(co.(on).H3,2)==2
-            co.(on).H3 = interp1(co.(on).H3(:,1),co.(on).H3(:,2),d.press);
-        end
-        dnew.([ovars{no} '_rev']) = mcoxyhyst_reverse(d.(ovars{no}), d.time, d.press, co.(on).H1, co.(on).H2, co.(on).H3);
-        hnew.fldnam = [hnew.fldnam [ovars{no} '_rev']];
-        hnew.fldunt = [hnew.fldunt ounts{no}];
-        hnew.fldserial = [hnew.fldserial osns{no}];
+hvar = fieldnames(oco);
+rvar = hvar;
+hvar = hvar(strncmp(hvar,'hyst',4));
+rvar = rvar(strncmp(rvar,'hrev',4));
+
+hnew.fldnam = cell(1,length(hvar)); hnew.fldunt = hnew.fldnam; hnew.fldserial = hnew.fldnam;
+for vno = 1:length(hvar)
+    hv = hvar{vno};
+    rv = replace(hv,'hyst','hrev');
+    ov = replace(hvar{vno},'hyst_','');
+    if isemember(rvar,rv)
+        %first reverse
+        if size(oco.(rv).H3,2)==2; oco.(rv).H3 = interp1(oco.(rv).H3(:,1),oco.(rv).H3(:,2),d.press); end
+        d.(ov) = mcoxyhyst_reverse(d.(ov), d.time, d.press, oco.(rv).H1, oco.(rv).H2, oco.(rv).H3);
+        hnew.comment = [hnew.comment '\nreversed oxygen hysteresis on ov'];
     end
-    hnew.comment = [hnew.comment '\n reversed oxygen hysteresis'];
-    revstring = '_rev'; %if dooxyhyst will apply to _rev variables
-else
-    revstring = '';
-end
-
-if co.dooxyhyst
-    for no = 1:length(ovars)
-        on = ['oxyhyst' osns{no}];
-        if ~isfield(co,on)
-            on = 'oxyhyst';
-        end
-        vin = [ovars{no} revstring];
-        vot = ovars{no};
-        if size(co.(on).H3,2)==2
-            co.(on).H3 = interp1(co.(on).H3(:,1),co.(on).H3(:,2),d.press);
-        end
-        dnew.(vot) = mcoxyhyst(d.(vin), d.time, d.press, co.(on).H1, co.(on).H2, co.(on).H3);
-        hnew.fldnam = [hnew.fldnam vot];
-        hnew.fldunt = [hnew.fldunt ounts{no}];
-        hnew.fldserial = [hnew.fldserial osns{no}];
-        %record whether a non-default calibration is set, for mstar comment
-        if length(co.(on).H1)>1 || length(co.(on).H2)>1 || length(co.(on).H3)>1
-            ohtyp(no) = 2;
-        elseif max(abs(co.H_0-[co.(on).H1 co.(on).H2 co.(on).H3]))>0
-            ohtyp(no) = 1;
-        else
-            ohtyp(no) = 0;
-        end
+    %now apply (new) hyst
+    if size(oco.(hv).H3,2)==2; oco.(hv).H3 = interp1(oco.(hv).H3(:,1),oco.(hv).H3(:,2),d.press); end
+    dnew.(ov) = mcoxyhyst(d.(ov), d.time, d.press, oco.(hv).H1, oco.(hv).H2, oco.(hv).H3);
+    %record whether a non-default calibration is set, for mstar comment
+    if length(co.(hv).H1)>1 || length(co.(hv).H2)>1 || length(co.(hv).H3)>1
+        ohtyp(no) = 2;
+    elseif max(abs(co.H_0-[co.(hv).H1 co.(hv).H2 co.(hv).H3]))>0
+        ohtyp(no) = 1;
+    else
+        ohtyp(no) = 0;
     end
     ohtyp = max(ohtyp);
     if ohtyp>0
         %and add comments to file
-        hnew.comment = [hnew.comment '\n oxygen hysteresis correction different from SBE default applied'];
+        hnew.comment = [hnew.comment '\noxygen hysteresis correction different from SBE default applied'];
         if ohtyp == 2
             hnew.comment = [hnew.comment ' (depth-varying)'];
         end
+    else
+        hnew.comment = [hnew.comment '\nSBE default oxygen hysteresis applied'];
     end
+    hnew.fldnam{vno} = ov;
+    m = strcmp(h.fldnam,ov);
+    hnew.fldunt{vno} = h.fldunt{m};
+    hnew.fldserial{vno} = h.fldserial{m};
 end

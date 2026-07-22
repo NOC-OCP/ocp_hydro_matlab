@@ -1,5 +1,4 @@
-
-function mdcs_03g(stn)
+function mdcs_03g_gui(stn)
 % mdcs_03g: graphical user interface to check scan numbers corresponding to
 % start, bottom, and end of cast (estimated in mdcs_01, or selected in a
 % previous call to mdcs_03g) and modify if necessary
@@ -18,17 +17,14 @@ opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 fprintf(1,'interactively select (or confirm) start, bottom, and end of cast,\n written to dcs_%s_%s.nc.',mcruise,stn_string)
 opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
 
-root_ctd = mgetdir('M_CTD'); % change working directory
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
 
-infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
-infile0 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_24hz']);
-otfile = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
-
-[d, h] = mloadq(infile1,'/');
+[d, h] = mloadq(ctdfile1,'/');
 if ~sum(strcmp('press',h.fldnam))
     error('press not found in 1hz file')
 end
-d24 = mloadq(infile0, 'scan', 'time', 'press', ' ');
+d24 = mloadq(ctdfile24, 'scan', 'time', 'press', ' ');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
 
@@ -47,7 +43,7 @@ pw = .8;
 ph = .13;
 
 %initial estimates
-[dd,hd] = mloadq(otfile, '/');
+[dd,hd] = mloadq(dcsfile, '/');
 opt1 = 'mstar'; get_cropt
 if isfield(dd, 'dc_start')
     k_start = dd.dc_start;
@@ -143,8 +139,8 @@ while 1
             ylabel('temp')
             
             ha(5) = subplot('position',[pl pb pw ph]);
-            if isfield(d,'oxygen2'); plot(d.scan,d.oxygen1,'k+-',d.scan,d.oxygen2,'r+-');
-            else; plot(d.scan,d.oxygen1,'k+-'); end
+            if isfield(d,'oxy2'); plot(d.scan,d.oxy1,'k+-',d.scan,d.oxy2,'r+-');
+            else; plot(d.scan,d.oxy1,'k+-'); end
             hold on; grid on
             xlim(d.scan([1 end]))
             ylabel('oxygen')
@@ -238,8 +234,8 @@ while 1
             ylabel('temp')
             
             ha(5) = subplot('position',[pl pb pw ph]);
-            if isfield(d,'oxygen2'); plot(d.scan(kok),d.oxygen1(kok),'k+-',d.scan(kok),d.oxygen2(kok),'r+-');
-            else; plot(d.scan(kok),d.oxygen1(kok),'k+-'); end
+            if isfield(d,'oxy2'); plot(d.scan(kok),d.oxy1(kok),'k+-',d.scan(kok),d.oxy2(kok),'r+-');
+            else; plot(d.scan(kok),d.oxy1(kok),'k+-'); end
             hold on ;grid on
             xlim(d.scan(kok([1 end])))
             ylabel('oxygen')

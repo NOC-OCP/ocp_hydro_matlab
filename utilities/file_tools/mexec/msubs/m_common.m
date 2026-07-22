@@ -12,3 +12,7 @@ m_global_args;
 if isfield(MEXEC_G,'MSCRIPT_CRUISE_STRING')
     mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 end
+
+if exist('stn','var')
+    opt1 = 'setup'; opt2 = 'minit'; get_cropt
+end

@@ -26,23 +26,23 @@ function [dcal, hcal] = apply_calibrations(d0, h0, calstr, varargin)
 %   >>  calstr.temp.pl2.msg = 'from SBE35 comparison stations 1-30';
 %   >>  calstr.cond.pl1.jc200 = 'dcal.cond = d0.cond.*(1+2.5e-3)/35;'
 %   >>  calstr.cond.pl1.msg = 'from bottle salinity stations 1-22';
-%   >>  calstr.oxygen.pl1.jc200 = 'dcal.oxygen = d0.oxygen.*(1.005+1e-2*dcal.temp)+d0.statnum/5;';
+%   >>  calstr.oxy.pl1.jc200 = 'dcal.oxy = d0.oxy.*(1.005+1e-2*dcal.temp)+d0.statnum/5;';
 % or
 %   >>  calstr.temp.sn1234.jc200 = 'dcal.temp = d0.temp+1e-3;'
 %  ...
-%   >>  calstr.oxygen.sn203.jc200 = 'dcal.oxygen = d0.oxygen.*(1.005+1e-2*dcal.temp)+d0.statnum/5;';
+%   >>  calstr.oxy.sn203.jc200 = 'dcal.oxy = d0.oxy.*(1.005+1e-2*dcal.temp)+d0.statnum/5;';
 %
 % then
 %
 %   >>  [dcal, hcal] = ctd_apply_cals(d0, h0, calstr);
 %
 % would output dcal containing adjusted variables (here temp1, temp2,
-%   cond1, and oxygen1) only, and hcal containing fldnam, fldunt, and (if
+%   cond1, and oxy1) only, and hcal containing fldnam, fldunt, and (if
 %   in h0) fldserial matching the fields of dcal, plus a comment field
 %   incorporating the msg information from all these sensors
-% note that in the above example the oxygen calibration depends on
+% note that in the above example the oxy calibration depends on
 %   *calibrated* temperature; to do this it is necessary that temp.pl1
-%   comes before oxygen.pl1 in calstr, as calibrations will be applied and
+%   comes before oxy.pl1 in calstr, as calibrations will be applied and
 %   fields of dcal created sequentially
 %
 % if optional input docal (structure) is included, only parameters set to 1
@@ -84,7 +84,7 @@ end
 
 hcal.fldnam = {}; hcal.fldunt = {}; hcal.comment = '';
 
-hasnums = {'temp' 'cond' 'oxygen'};
+hasnums = {'temp' 'cond' 'oxy'};
 
 for pno = 1:length(params)
     param = params{pno}; %e.g. cond

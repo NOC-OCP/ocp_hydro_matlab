@@ -27,17 +27,13 @@ function m_setup(varargin)
 %        file_tools/mexec programs verbose, 1 to make only
 %        mexec_processing_scripts verbose, 2 to minimise intermediate
 %        output to screen
-%      ix_ladcp (no default) 1 to add LDEO IX LADCP processing scripts to
+%      ladcp ('no') 'ix' to add LDEO IX LADCP processing scripts to
 %        path; 0 to not add them -- this is to avoid interference between
 %        scripts with the same names (e.g. 'julian.m') in different
-%        toolboxes -- for example, ix_ladcp should be set to 0 for any
+%        toolboxes -- for example, ladcp should be set to 'no' for any
 %        Matlab session where you want to process moored data using rodb
 %        tools (as for RAPID and OSNAP/m_moorproc_toolbox)
-%      external_sw.force_vers = []
-%      external_sw.programs_root (e.g. '~/programs/others/')
-%
-%  optional output path_choose specifies whether LADCP programs have been
-%    added to the path or not
+%      sw location for programs like gsw (e.g. '~/programs/others/')
 %
 %  note: m_setup is not necessary if you only want to use mexec tools to
 %    read/parse mexec-format files (e.g. use mload or mloadq, m_commontime
@@ -49,34 +45,37 @@ function m_setup(varargin)
 clear MEXEC_G
 global MEXEC_G
 
-%defaults: what are we processing and where?
-MEXEC_G.MSCRIPT_CRUISE_STRING='dy180';
-MEXEC_G.ix_ladcp = 1; %set to 0 to not add ldeo_ix paths (for instance if processing mooring data)
-MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
+%defaults that can be overwritten by input structure: what are we
+%processing, and where?
+MEXEC_G.MSCRIPT_CRUISE_STRING='ce26008';
+MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
+MEXEC_G.mexec_data_root = '/data/pstar/projects/goship/cruises/ce26008/data'; %if empty, will search for cruise directory near current directory and near home directory
+MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/';
+MEXEC_G.sw = '/data/pstar/programs';
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
-MEXEC_G.mexec_data_root = '/Users/yfiring/cruises/dy180/mcruise/data'; %if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.mexec_shell_scripts = '/data/pstar/repos/NOC-OCP/mexec_exec/';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-MEXEC_G.raw_underway = 2; %if 0, skip the rvdas setup
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
-exsw_force_vers = []; %or this can be a structure e.g. force_swvers.gamma_n = 'eos80_legacy_gamma_n'; force_swvers.LDEO_IX = 'LDEO_IX_13';
-exsw_rootdir = {'/Users/yfiring/programs/others/';'/Users/yfiring/repos/athurnherr/'}; %where do gsw etc. toolboxes live?
+MEXEC_G.datatypes.ctd = 'sbe'; %currently the only option
+MEXEC_G.datatypes.uway = 'auto'; %auto sets to rvdas, techsas, or scs depending on ship
+MEXEC_G.datatypes.sadcp = 'uhdas'; %or vmdas
+MEXEC_G.datatypes.ladcp = 'ix'; %or ix to process LADCP data with LDEO_IX
+MEXEC_G.datatypes.moor = 'no'; %or yes (affects what is added to path)
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
-    MEXEC_G_user = varargin{1};
-    fn = fieldnames(MEXEC_G_user);
+    MGu = varargin{1};
+    fn = fieldnames(MGu);
     fn0 = fieldnames(MEXEC_G);
     for fno = 1:length(fn)
         if ~ismember(fn{fno},fn0)
-            warning('setting unset %s in MEXEC_G; may be overwritten below',fn{fno})
+            MG0.(fn{fno}) = MGu.(fn{fno}); %store in case these are overwritten (test at end***)
         end
-        MEXEC_G.(fn{fno}) = MEXEC_G_user.(fn{fno});
+        MEXEC_G.(fn{fno}) = MGu.(fn{fno});
     end
 else
     disp('no input arguments to m_setup; using defaults')
 end
-clear MEXEC_G_user
+clear MGu
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
 %%%%% (or it can be edited in opt_{cruise}.m instead) %%%%%
@@ -108,171 +107,42 @@ end
 
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
+MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
-% including some specific to the cruise
+if strcmp(MEXEC_G.datatypes.uway,'auto')
+    %look up which underway data system to use based on ship -- this is
+    %required for creating the cruise options file so here
+    %mexec_defaults_all is called directly rather than through get_cropt
+    opt1 = 'ship'; mexec_defaults_all
+    MEXEC_G.datatypes.uway = MEXEC_G.Mshipdatasystem;
+elseif strcmp(MEXEC_G.datatypes.uway,'no')
+    MEXEC_G.datatypes = rmfield(MEXEC_G.datatypes,'uway');
+end
+
+% cruise-specific settings
 opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
 if ~isfield(MEXEC_G,'MDEFAULT_DATA_TIME_ORIGIN')
     error('you must set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN in opt_{cruise}.m under opt1=''setup''; opt2=''time_origin''')
 end
 opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt
 
-% find and add (append) paths to other useful libraries
-if exist('exsw_rootdir','var') && ~isempty(exsw_rootdir)
-    ld = {'seawater', '';...
-        'gsw_matlab', '';...
-        'gamma_n', '';...
-        'm_map', '';...
-        'LDEO_IX', ''};
-    ns = size(ld,1);
-    if iscell(exsw_rootdir)
-        if length(exsw_rootdir)==ns
-            ld = [ld exsw_rootdir];
-        else
-            ld = [ld repmat(exsw_rootdir(1),ns,1)];
-            if length(exsw_rootdir)==2
-                ld(end,3) = exsw_rootdir(2);
-            end
-        end
-    else
-        ld = [ld repmat({exsw_rootdir},ns,1)];
-    end
-    if ~MEXEC_G.ix_ladcp
-        ld(end,:) = [];
-    end
-    ld = cell2table(ld,'VariableNames',{'lib','vers','predir'});
-    esw = sw_addpath(ld, exsw_force_vers);
-    if isfield(MEXEC_G,'exsw_paths') && ~isempty(MEXEC_G.exsw_paths)
-        MEXEC_G.exsw_paths = union(MEXEC_G.exsw_paths, esw);
-    else
-        MEXEC_G.exsw_paths = esw;
-    end
-end
+% find and add (append) paths to other libraries used in processing; also
+% checks if processing ladcp or moored (if relevant) to avoid conflicts
+sw_addpath
 
 % location processing and writing mexec files
-if isempty(MEXEC_G.mexec_data_root)
-    %look for base directory for this cruise: first in path of current
-    %directory, then in home directory
-    d = pwd;
-    cd('~'); hd = pwd; cd(d);
-    ii = strfind(d, MEXEC_G.MSCRIPT_CRUISE_STRING);
-    if ~isempty(ii)
-        d = d(1:ii-1);
-        mpath = {fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
-            fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
-            fullfile(d,MEXEC_G.MSCRIPT_CRUISE_STRING)};
-    else
-        mpath = {};
-    end
-    mpath = [mpath;
-        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data');
-        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING,'data')
-        fullfile(hd,MEXEC_G.MSCRIPT_CRUISE_STRING)
-        fullfile(hd,'cruises',MEXEC_G.MSCRIPT_CRUISE_STRING,'mcruise','data')];
-    fp = 0; n=1;
-    while fp==0 && n<=length(mpath)
-        if exist(mpath{n},'dir')==7
-            MEXEC_G.mexec_data_root = mpath{n};
-            fp = 1;
-        end
-        n=n+1;
-    end
-    if fp==0 %none found; query
-        disp('enter full path of cruise data processing directory')
-        disp('e.g. /local/users/pstar/jc238/mcruise/data')
-        MEXEC_G.mexec_data_root = input('  ', 's');
-        disp('if you want, you can modify m_setup.m to hard-code this directory into MEXEC_G.mexec_data_root')
-    else
-        disp(['MEXEC data root: ' MEXEC_G.mexec_data_root])
-    end
-    clear mpath d fp n ii
+if isempty(MEXEC_G.mexec_data_root) || ~exist(MEXEC_G.mexec_data_root,'dir')
+    MEXEC_G.mexec_data_root = input('input path to data directory (e.g. ~/cruises/ce26008/data/) where processed data will be written   ','s');
+else
+    fprintf(1,'working in %s\n',MEXEC_G.mexec_data_root)
 end
-fprintf(1,'working in %s\n',MEXEC_G.mexec_data_root)
 
 % Set path for directory with housekeeping files (in subdirectories version and history)
 housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
 
-% set data directories within MEXEC_G.mexec_data_root
-MEXEC_G.MDIRLIST = {
-    'M_CTD' 'ctd'
-    'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
-    'M_CTD_BOT' fullfile('ctd','ASCII_FILES')
-    'M_CTD_WIN' fullfile('ctd','WINCH')
-    'M_CTD_DEP' 'station_information'
-    'M_BOT'     'bottle_samples'
-    'M_BOT_SAL' fullfile('bottle_samples','BOTTLE_SAL')
-    'M_BOT_OXY' fullfile('bottle_samples','BOTTLE_OXY')
-    'M_BOT_NUT' fullfile('bottle_samples','BOTTLE_NUT')
-    'M_BOT_PIG' fullfile('bottle_samples','BOTTLE_PIG')
-    'M_BOT_CO2' fullfile('bottle_samples','BOTTLE_CO2')
-    'M_BOT_CFC' fullfile('bottle_samples','BOTTLE_CFC')
-    'M_BOT_CH4' fullfile('bottle_samples','BOTTLE_CH4')
-    'M_BOT_CHL' fullfile('bottle_samples','BOTTLE_PIG')
-    'M_BOT_ISO' fullfile('bottle_samples','BOTTLE_SHORE')
-    'M_SAM' 'ctd'
-    'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
-    'M_SUM' 'collected_files'
-    'M_VMADCP' 'vmadcp'
-    }; %***change how MDIRLIST is used and move to cruise options (defaults)
-if MEXEC_G.ix_ladcp
-    MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST;
-        {'M_LADCP' 'ladcp'
-        'M_IX' fullfile('ladcp','ix')}];
-end
-opt1 = 'setup'; opt2 = 'mdirlist'; get_cropt
-
-% set things about the ship
-MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];
-switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
-    case {'di' 'dy'}
-        MEXEC_G.Mship = 'discovery';
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
-    case 'jc'
-        MEXEC_G.Mship = 'cook';
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
-    case 'sd'
-        MEXEC_G.Mship = 'sda';
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
-    case 'jr'
-        MEXEC_G.Mship = 'jcr';
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
-        MEXEC_G.Mrsh_machine = 'jruj';  % remote machine for rvs datapup command
-    case 'kn'
-        MEXEC_G.Mship = 'knorr';
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
-    case 'en'
-        MEXEC_G.Mship = 'endeavor';
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
-    otherwise
-        merr = ['Ship ''' MEXEC_G.MSCRIPT_CRUISE_STRING(1:2) ''' not recognised, underway system will not be set up'];
-        %fprintf(2,'%s\n',merr);
-        %return
-        warning(merr)
-        MEXEC_G.Mship = '';
-        MEXEC_G.PLATFORM_IDENTIFIER = '';
-end
-
-switch MEXEC_G.Mship
-    case 'sda'
-        MEXEC_G.Mshipdatasystem = 'rvdas';
-    case {'cook','discovery'}
-        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
-            MEXEC_G.Mshipdatasystem = 'rvdas';
-        else
-            MEXEC_G.Mshipdatasystem = 'techsas';
-        end
-    case {'di'}
-        MEXEC_G.Mshipdatasystem = 'techsas';
-    case {'jcr','knorr','endeavor'}
-        MEXEC_G.Mshipdatasystem = 'scs';
-    otherwise
-        warning('ship underway data system not set')
-        MEXEC_G.Mshipdatasystem = '';
-end
-
-
-if MEXEC_G.raw_underway
+if ~strcmp(MEXEC_G.datatypes.uway,'no')
     %***still need to configure where directories are for some applications***
     try
         switch MEXEC_G.Mshipdatasystem
@@ -285,31 +155,25 @@ if MEXEC_G.raw_underway
         end
         fprintf(1,'using cached %s table list / mstar lookup\n',MEXEC_G.Mshipdatasystem)
     catch
-        if MEXEC_G.raw_underway==1
-            try
-                fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')')
-                switch MEXEC_G.Mshipdatasystem
-                    case 'rvdas'
-                        mrtv = mrdefine('redo');
-                    case 'scs'
-                        mrtv = msdefine('redo');
-                    case 'techsas'
-                        mrtv = mtdefine('redo');
-                end
-                fprintf(1,'reloaded table definitions\n')
-            catch
-                warning('skipping underway data setup')
+        try
+            fprintf(1,'regenerating mstar-table lookup by running mrdefine(''redo'')\n')
+            switch MEXEC_G.Mshipdatasystem
+                case 'rvdas'
+                    mrtv = mrdefine('redo');
+                case 'scs'
+                    mrtv = msdefine('redo');
+                case 'techsas'
+                    mrtv = mtdefine('redo');
             end
+            fprintf(1,'reloaded table definitions\n')
+        catch
+            warning('skipping underway data setup')
         end
     end
-    if exist('mrtv','var')
-        MEXEC_G.MDIRLIST = [MEXEC_G.MDIRLIST; ...
-            [cellfun(@(x) ['M_' upper(x)], mrtv.mstarpre, 'UniformOutput', false), ...
-            mrtv.mstardir]];
-        [~,ii] = unique(MEXEC_G.MDIRLIST(:,1),'stable');
-        MEXEC_G.MDIRLIST = MEXEC_G.MDIRLIST(ii,:);
-    end
 end
+
+% set data directories within MEXEC_G.mexec_data_root
+opt1 = 'setup'; opt2 = 'mdirlist'; get_cropt
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -350,7 +214,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
         datanames = {};
         versions = [];
         save(MEXEC_G.VERSION_FILE,'datanames','versions'); mfixperms(MEXEC_G.VERSION_FILE);
-        [us,ur] = system(['touch ''' MEXEC.simplelockfile '''']); mfixperms(MEXEC.simplelockfile);
+        [us,~] = system(['touch ''' MEXEC.simplelockfile '''']); mfixperms(MEXEC.simplelockfile);
         if us == 0 && exist(MEXEC.simplelockfile,'file') == 2 % seems to be a successful create of lock file
             m = 'Version lock file touched successfully';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m)
@@ -411,108 +275,109 @@ if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     mkdir(MEXEC_G.HISTORY_DIRECTORY); mfixperms(MEXEC_G.HISTORY_DIRECTORY,'dir');
 end
 
-function mpath = sw_addpath(ld, force_vers)
+function sw_addpath
 %
 % add external software toolboxes specified by table ld to path
 %
-% defaults to finding the highest version available in swroot,
-%   unless force_vers is a structure 
+% defaults to finding the highest version available under swroot,
+%   unless force_vers is a structure
 %     (e.g. force_vers.gsw_matlab = 'gsw_matlab_v3_06_16';),
 %   in which case uses any hard-coded versions listed there
 
-if isstruct(force_vers)
-    % replace empty vers with force_vers
-    fn = fieldnames(force_vers);
-    for no = 1:length(fn)
-        m = strcmp(fn{no},ld.lib);
-        ld.vers(m) = replace(force_vers.(fn{no}),ld.lib{no},'');
+m_common
+
+slibs.seawater = 'sw_svel';
+slibs.gsw_matlab = 'gsw_CT_from_t';
+if strcmp(MEXEC_G.datatypes.ladcp,'ix')
+    l = 1;
+    if strcmp(MEXEC_G.datatypes.moor,'yes')
+        l = input('processing ladcp (1) or moored (2) data this session?  ');
+    end
+    if l==1
+        %add paths for LDEO_IX below
+        slibs.LDEO_IX = 'getinv';
+    else
+        %if LDEO_IX is on path, remove because there are conflicts with
+        %names of functions in mooring toolbox
+        prm = which('getinv');
+        if ~isempty(prm)
+            rmpath(genpath(prm))
+        end
     end
 end
+slibs.gamma_n = 'eos80_legacy_gamma_n';
+%slibs.m_map = 'm_coast';
 
-% find highest version available for the rest
-ld = sw_vers_parse(ld);
-
-% add to path where not already on path
-mpath = cellfun(@(x,y,z) fullfile(x,[y z]),...
-    ld.predir, ld.lib, ld.vers,...
-    'UniformOutput',false);
-isnew = ~ismember(mpath,split(path,':'));
-for lno = 1:length(mpath)
-    if exist(mpath{lno},'dir')==7 %presume subdirectories will also be present     
-        if isnew(lno)
-            fprintf(1,'adding to path: %s\n',mpath{lno})
-            addpath(genpath(mpath{lno}), '-end')
+ls = fieldnames(slibs);
+for no = 1:length(ls)
+    w = which(slibs.(ls{no}));
+    if isempty(w)
+        ld = sw_vers_parse(ls{no}, slibs.(ls{no}), MEXEC_G.sw);
+        if ~isempty(ld) && exist(ld,'dir')
+            addpath(genpath(ld))
+            fprintf(1,'added to path: %s\n',ld)
+        else
+            keyboard
+            warning('%s not found',ls{no})
         end
     else
-        warning([mpath{lno} ' not found'])
-        mpath{lno} = '';
+        w = fileparts(w);
+        fprintf(1,'%s already on path\n',w)
     end
 end
-mpath = setdiff(mpath,{''},'stable');
 
-
-function lib_tab = sw_vers_parse(lib_tab)
-% lib_tab = sw_vers_parse(lib_tab)
-%
+function ld = sw_vers_parse(l, f, rootdir)
 % find highest version of a library in a given directory
-%
-% verstr: Nx1 cell array
-%
-% lib_tab is a table with fields:
-%     predir (where to look),
-%     lib (library name),
-%     vers (empty string to search)
 
-notfound = [];
+%find candidates
+d = dir(fullfile(rootdir,[l '*/' f '.m']));
+if isempty(d)
+    [s,d] = system(sprintf('find %s/ -name ''%s.m''',rootdir,f));
+    if s==0 && ~isempty(d)
+        d = cellfun(@(x) fileparts(x), strsplit(d,'\n'), 'UniformOutput', false);
+        d = d(~cellfun('isempty',d));
+    end
+else
+    d = {d.folder};
+end
 
-for lno = find(cellfun('isempty',lib_tab.vers))'
-    
-    %get list of matching directory names
-    d = dir(fullfile(lib_tab.predir{lno}, [lib_tab.lib{lno} '*']));
-    a = {d.name};
-    a = a(cell2mat({d.isdir}));
-        
-    if isempty(a)
-        notfound = [notfound; lno];
-    else
-        if isscalar(a)
-            ind = 1;
-        else
-            %get version numbers
-            b0 = replace(a,{[lib_tab.lib{lno} '_ver'];[lib_tab.lib{lno} '_v'];[lib_tab.lib{lno} '_'];lib_tab.lib{lno}},''); %remove initial part
-            b = replace(replace(b0,'_',' '),'.',' '); %so we can compare numbers
-            c = cellfun(@(x) str2num(x), b, 'UniformOutput', false); %a cell array of numeric vectors of different lengths
-            l = cellfun(@(x) length(x), c);
-            ii = find(l>0);
-            if isempty(ii) %all contain letters, so do alphanumeric sort
-                [~,ind] = sort(b); ind = ind(end);
-            else %ignore any letters and sort by numbers
-                if max(l)==1 %single level
-                    [~,ii1] = max(cell2mat(c(ii)));
-                    ind = ii(ii1);
-                else %put levels into matrix to find highest version
-                    d = zeros(max(l),length(c));
-                    for n = 1:max(l)
-                        d(n,ii) = cellfun(@(x) [x(n)], c(ii));
-                        n = n+1;
-                        ii = find(l>=n);
-                    end
-                    n = 1; ind = 1:length(c);
-                    while n<=size(d,1) && length(ind)>1
-                        ii = find(d(n,:)==max(d(n,:)));
-                        ind = ind(ii); d = d(:,ii);
-                        n = n+1;
-                    end
-                end
+if isempty(d)
+    ld = [];
+elseif isscalar(d)
+    ld = d{1};
+else
+    [lp,ln,~] = fileparts(d);
+    %get version numbers to find the most recent
+    b = cellfun(@(x) replace(replace(x,{l;'_ver';'_v'},''),{'_';'.'},' '), ln, 'UniformOutput', false);
+    c = cellfun(@(x) str2num(x), b, 'UniformOutput', false); %a cell array of numeric vectors of different lengths
+    l = cellfun(@(x) length(x), c);
+    ii = find(l>0);
+    if isempty(ii) %all contain letters, so do alphanumeric sort
+        [~,ind] = sort(b); ind = ind(end);
+    else %ignore any letters and sort by numbers
+        if max(l)==1 %single level
+            [~,ii1] = max(cell2mat(c(ii)));
+            ind = ii(ii1);
+        else %put levels into matrix to find highest version
+            g = zeros(max(l),length(c));
+            for n = 1:max(l)
+                g(n,ii) = cellfun(@(x) [x(n)], c(ii));
+                n = n+1;
+                ii = find(l>=n);
+            end
+            n = 1; ind = 1:length(c);
+            while n<=size(g,1) && length(ind)>1
+                ii = find(g(n,:)==max(g(n,:)));
+                ind = ind(ii); g = g(:,ii);
+                n = n+1;
             end
         end
-           
-        %save string corresponding to highest version
-        lib_tab.vers{lno} = replace(a{ind},lib_tab.lib{lno},'');
-        
     end
-    
+
+    %use highest version
+    if ~isscalar(ind)
+        ind = ind(end);
+    end
+    ld = fullfile(lp{ind},ln{ind});
+
 end
-
-lib_tab(notfound,:) = [];
-

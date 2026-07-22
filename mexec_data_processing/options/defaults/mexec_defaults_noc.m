@@ -11,10 +11,7 @@ switch opt1
             case 'minit'
                 stn_string = sprintf('%03d',stn); %for file names
             case 'oxy_align'
-                %name in raw file, name in 24 hz file (don't change the 2nd
-                %column!)
-                oxyvars = {'oxygen_sbe1', 'oxygen1'; 'oxygen_sbe2', 'oxygen2'};
-                oxyunit = 'umol/kg';
+                oxyunit = 'umol/kg'; %***get from 
             case 'redoctm'
             case '1hz_interp'
                 maxfill24 = 0; maxfill1 = 2;

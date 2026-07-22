@@ -1,16 +1,13 @@
-function mctd_01(stn)
-% mctd_01:
+function msbe_01_load(stn)
+% msbe_01_load(stn)
 %
-% read in ctd data from SBE .cnv file (either _align_ctm version, or _noctm);
+% read in ctd data from SBE .cnv file (specified in opt_cruise),
 % rename variables based on cruise options, and add units if not present,
 % add NaN fields for variables that are not present on this cast (as set in
 % opt_cruise)
-% add position at bottom of cast to header (formerly done by mctd_02a)
+% add position at bottom of cast to header
 %
-% output: _raw.nc or _raw_noctm.nc (write-protected***)
-%
-% Use: mctd_01        and then respond with station number, or for station 16
-%      stn = 16; mctd_01;
+% output: _cnv.nc
 %
 % calls:
 %     msbe_to_mstar
@@ -21,31 +18,15 @@ function mctd_01(stn)
 %%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1,'converting .cnv to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
+if MEXEC_G.quiet<=1; fprintf(1,'converting %s to %s\n',cnvfile,rawfile); end
 
-% resolve root directories for various file types
-redoctm = 0; opt1 = 'ctd_proc'; opt2 = 'redoctm'; get_cropt
-root_ctd = mgetdir('M_CTD');
-cdir = mgetdir('M_CTD_CNV');
+% input and output files
 dataname = ['ctd_' mcruise '_' stn_string];
-if ~redoctm %default: operate on file which had the cell thermal mass correction applied in SBE Processing
-    otfile = fullfile(root_ctd, [dataname '_raw.nc']);
-    cnvfile = fullfile(cdir, sprintf('%s_%03d_align_ctm.cnv',upper(mcruise),stn));
-else %in some cases, operate on original file (e.g. to remove large spikes), then apply align and CTM
-    otfile = fullfile(root_ctd, [dataname '_raw_noctm.nc']);
-    cnvfile = fullfile(cdir, sprintf('%s_%03d.cnv',upper(mcruise),stn));
-    disp('starting from noctm file')
-end
-%now overwrite defaults if relevant
-opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt %set cnvfile (in) and rawfile (out)
 if ~exist(cnvfile,'file') && isfield(MEXEC_G,'mexec_shell_scripts')
-    css = fullfile(MEXEC_G.mexec_shell_scripts,'ctd_syncscript');
+    css = fullfile(MEXEC_G.mexec_shell_scripts,'ctd_syncscript.sh');
     if exist(css,'file')
         system(css);
-        if exist(cnvfile,'file')
-            warn = 0;
-        end
     end
 end
 if ~exist(cnvfile,'file')
@@ -57,21 +38,21 @@ end
 %%%%% convert to mstar %%%%%
 
 %generate file
-otfile = m_add_nc(otfile);
-if exist(otfile,'file')
-    delete(otfile)
+rawfile = m_add_nc(rawfile);
+if exist(rawfile,'file')
+    delete(rawfile)
 end
 MEXEC_A.MARGS_IN = {
     cnvfile
     'y'
     'y'
-    otfile
+    rawfile
     };
 msbe_to_mstar;
 
 %modify header platform information***
 MEXEC_A.MARGS_IN = {
-    otfile
+    rawfile
     'y'
     '1'
     dataname
@@ -90,7 +71,16 @@ mheadr
 
 %%%%% rename variables, and add units where necessary %%%%%
 
-h = m_read_header(otfile);
+h = m_read_header(rawfile);
+if ~ismember(h.fldnam,'timeS')
+    warning('you are missing time variable from %s, \ndid you forget to run DatCNV with time elapsed?',cnvfilename)
+end
+if ~ismember(h.fldnam,'scan')
+    error('scan is required for processing %s',cnvfilename)
+end
+if ~isempty(setdiff({'pumps','latitude','longitude'},h.fldnam))
+    warning('you are missing pump status, latitude, and/or longitude from %s, \ndid you forget to export them in DatCnv?',cnvfilename)
+end
 ctdvarmap = {'prDM','press','dbar'
     't090C','temp1','degc90'
     't190C','temp2','degc90'
@@ -104,9 +94,9 @@ ctdvarmap = {'prDM','press','dbar'
     'c0mS_slash_cm','cond1','mS/cm'
     'c1mS_slash_cm','cond2','mS/cm'
     'sbeox0V','sbeoxyV1','volts'
-    'sbox0Mm_slash_Kg','oxygen_sbe1','umol/kg'
+    'sbox0Mm_slash_Kg','oxy1','umol/kg'
     'sbeox1V','sbeoxyV2','volts'
-    'sbox1Mm_slash_Kg','oxygen_sbe2','umol/kg'
+    'sbox1Mm_slash_Kg','oxy2','umol/kg'
     'T2_minus_T190C','t2_minus_t1','degc90'
     'C2_minus_C1mS_slash_cm','c2_minus_c1','mS/cm'
     'flECO_minus_AFL','fluor','mg/m^3'
@@ -138,7 +128,7 @@ for no = 1:length(h.fldnam)
                 error('more than one SBE variable with the same mstar name %s; edit ctdvarmap',newname);
             end
             names_new{no} = newname;
-            nc_varrename(otfile,h.fldnam{no},newname);
+            nc_varrename(rawfile,h.fldnam{no},newname);
         end
     end
 
@@ -156,7 +146,7 @@ for no = 1:length(h.fldnam)
         newunits = 'percent';
     end
     if ~isempty(newunits)
-        nc_attput(otfile,names_new{no},'units',newunits);
+        nc_attput(rawfile,names_new{no},'units',newunits);
     end
 
 end
@@ -164,7 +154,7 @@ end
 % create NaN variables that are in mcvars_list but not present for this station
 absentvars = {}; opt1 = 'ctd_proc'; opt2 = 'absentvars'; get_cropt
 if ~isempty(absentvars)
-    MEXEC_A.MARGS_IN = {otfile; 'y'};
+    MEXEC_A.MARGS_IN = {rawfile; 'y'};
     for kabs = 1:length(absentvars)
         MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
             absentvars{kabs}
@@ -179,16 +169,17 @@ end
 % in special cases, read extra/new variables from a different set of files
 % (e.g. if a variable was mistakenly not exported in initial conversion to
 % .cnv, and has been exported on its own later); merge on scan
-extracnv = {}; extravars = {}; opt1 = 'ctd_proc'; opt2 = 'extracnv'; get_cropt
+extracnv = {}; extravars = {}; opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; get_cropt
 if ~isempty(extracnv) && ~isempty(extravars)
-    mctd_extra_cnv
+    if MEXEC_G.quiet<=1; fprintf(1,'adding selected variables from extra .cnv to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
+    mctd_extra_cnv(rawfile, extracnv, extravars)
 end
 
 % in special cases (i.e. yo-yo or tow-yo casts), split file into multiple
 % files, or append file to existing (if data acquisition was
 % stopped/restarted mid-cast)***
-otfile0 = otfile;
-otfiles = {otfile};
+otfile0 = rawfile;
+otfiles = {rawfile};
 opt1 = 'ctd_proc'; opt2 = 'cast_split_comb'; get_cropt
 
 if length(otfiles)>1 && exist('cast_scan_ranges','var')
@@ -208,7 +199,7 @@ if length(otfiles)>1 && exist('cast_scan_ranges','var')
     end
 
 elseif exist('otfile_appendto','var') && exist('cast_scan_offset','var') && cast_scan_offset(1)==stnlocal
-    [d,h] = mload(otfile,'/');
+    [d,h] = mload(rawfile,'/');
     %put into time base of other file
     h0 = m_read_header(otfile_appendto);
     d.time = m_commontime(d,'time',h,h0);
@@ -231,7 +222,39 @@ opt1 = 'ctd_proc'; opt2 = 'header_edits'; get_cropt
 % Get position at bottom of cast either from ctd-logged nmea lat, lon or
 % from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
 for fno = 1:length(otfiles)
-    otfile = otfiles{fno};
-    [botlon, botlat] = getpos_for_ctd(otfile, 'write');
+    rawfile = otfiles{fno};
+    [botlon, botlat] = getpos_for_ctd(rawfile, 'write');
 end
+
+function mctd_extra_cnv(rawfile, extracnv, extravars)
+
+m_common
+
+[d0, h0] = mloadq(rawfile,'/');
+ow = intersect(h0.fldnam,extravars);
+if ~isempty(ow) && MEXEC_G.quiet<=1
+    warning('overwriting variables %s,',ow{:});
+end
+for fno = 1:length(extracnv)
+    if exist(extracnv{fno},'file')
+        [dn, hn] = msbe_to_mstar(extracnv{fno},'y','y');
+        clear d h
+        d.scan = d0.scan;
+        h.fldnam = {'scan'}; h.fldunt = {'number'};
+        %don't use mfsave merge because it might keep some old data;
+        %instead, merge here
+        [~,i0,in] = intersect(d0.scan, dn.scan, 'stable');
+        for vno = 1:length(extravars)
+            d.(extravars{vno}) = NaN+d.scan;
+            d.(extravars{vno})(i0) = dn.(extravars{vno})(in);
+        end
+        extravars = [extravars 'scan'];
+        [h.fldnam,~,ib] = intersect(extravars,hn.fldnam,'stable');
+        h.fldunt = hn.fldunt(ib);
+        h.comment = sprintf('with parameters added from sbe file %s',extracnv{fno});
+        mfsave(orawfile, d, h, '-addvars');
+    end
+end
+
+
 

@@ -69,20 +69,20 @@ if length(ylist)>1
     mplotxy(pshow1);
 end
 
-% raw data oxygen
+% raw data oxy
 clear pshow2
 pshow2.ncfile.name = infile1;
 pshow2.xlist = 'time';
 if nox>1
-    ylist = {'pressure_temp' 'press' 'oxygen_sbe1' 'oxygen_sbe2'};
+    ylist = {'pressure_temp' 'press' 'oxy_sbe1' 'oxy_sbe2'};
     if oxy_end
-        pshow2.stopdcv.oxygen_sbe1 = stopdco;
-        pshow2.stopdcv.oxygen_sbe2 = stopdco;
+        pshow2.stopdcv.oxy_sbe1 = stopdco;
+        pshow2.stopdcv.oxy_sbe2 = stopdco;
     end
 else
-    ylist = {'pressure_temp' 'press' 'oxygen_sbe1' 'sbeoxyV1'};
+    ylist = {'pressure_temp' 'press' 'oxy_sbe1' 'sbeoxyV1'};
     if oxy_end
-        pshow2.stopdcv.oxygen_sbe1 = stopdco;
+        pshow2.stopdcv.oxy_sbe1 = stopdco;
         pshow2.stopdcv.sbeoxyV1 = stopdco;
     end
 end
@@ -91,7 +91,7 @@ ylist = intersect(ylist, rawplotvars, 'stable');
 if length(ylist)>1
     pshow2.startdc = startdc;
     pshow2.stopdc = stopdc;
-    pshow2.cols = 'kgrbmcy'; % so raw oxygen in this plot matches 1 hz trace in figure 1.
+    pshow2.cols = 'kgrbmcy'; % so raw oxy in this plot matches 1 hz trace in figure 1.
     mplotxy(pshow2);
 end
 

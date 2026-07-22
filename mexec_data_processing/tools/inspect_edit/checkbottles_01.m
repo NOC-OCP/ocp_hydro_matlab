@@ -118,7 +118,7 @@ switch varname
     case 'botpsal'
         vanom = v - dsam.upsal;
     case {'botoxy', 'botoxya', 'botoxyb'}
-        vanom = v - dsam.uoxygen;
+        vanom = v - dsam.uoxy;
     otherwise % expect to find the variable in both sam and grid
         if exist('dg','var') ~= 1
             fprintf(2,'\n%s\n\n','Gridded data have not been loaded; anomalies will be set to zero');

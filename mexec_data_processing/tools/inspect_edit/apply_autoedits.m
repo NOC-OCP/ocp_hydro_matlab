@@ -10,7 +10,7 @@ function [d, comment] = apply_autoedits(d, castopts)
 %     could be used for another series if a variable pumps were present
 %     e.g. for 24 Hz CTD data,
 %       castopts.pumpsNaN.temp1 = 12; % 0.5 s
-%       castopts.pumpsNaN.oxygen_sbe1 = 8*24; % 8 s
+%       castopts.pumpsNaN.oxy_sbe1 = 8*24; % 8 s
 %       etc.
 %   
 %   rangelim -- for each parameter which is a field of castopts.rangelim,
@@ -28,11 +28,11 @@ function [d, comment] = apply_autoedits(d, castopts)
 %     or by rangelim) for either CTD: 
 %     castopts.badscan.temp1 = [7380 7890; 11500 13020];
 %     castopts.badscan.cond1 = castopts.badscan.temp1;
-%     castopts.badscan.oxygen_sbe1 = castopts.badscan.temp1; 
+%     castopts.badscan.oxy_sbe1 = castopts.badscan.temp1; 
 %     castopts.badtemp1.cond1 = [NaN NaN];
-%     castopts.badtemp1.oxygen_sbe1 = [NaN NaN];
+%     castopts.badtemp1.oxy_sbe1 = [NaN NaN];
 %     castopts.badtemp2.cond2 = [NaN NaN];
-%     castopts.badtemp2.oxygen_sbe2 = [NaN NaN];
+%     castopts.badtemp2.oxy_sbe2 = [NaN NaN];
 %    
 %   despike -- for each parameter which is a field of castopts.despike,
 %     data are masked using a 5-point median despiker with the threshold
@@ -99,7 +99,7 @@ end
 % any edits (automatic or manual) already made to temp1 to the other CTD1
 % variables:  
 %    castopts.badtemp1.cond1 = [NaN NaN];
-%    castopts.badtemp1.oxygen_sbe1 = [NaN NaN];
+%    castopts.badtemp1.oxy_sbe1 = [NaN NaN];
 cfn = fieldnames(castopts);
 iibp = find(strncmp('bad',cfn,3));
 for bpno = 1:length(iibp)

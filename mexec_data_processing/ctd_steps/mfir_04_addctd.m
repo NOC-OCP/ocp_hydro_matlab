@@ -1,10 +1,6 @@
-function mfir_03(stn)
-% mfir_03: merge ctd upcast data including time onto fir file
-%
-% Use: mfir_03        and then respond with station number, or for station 16
-%      stn = 16; mfir_03;
-%
-% Optionally, if set in opt_cruise,
+function mfir_04_addctd(stn)
+% mfir_04_addctd: merge ctd upcast data including time onto fir file
+%   and optionally, if set in opt_cruise,
 %     merge additional information onto fir file:
 %       1) standard deviation during the bottle stop (p within 1 m of
 %         firing-time p) from psal file
@@ -17,11 +13,10 @@ function mfir_03(stn)
 m_common
 opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
-root_ctd = mgetdir('M_CTD');
-infilef = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
-otfilef = infilef;
-if ~exist(m_add_nc(infilef),'file')
-    infilef = [infilef '_ctd'];
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+opt1 = 'nisk_proc'; opt2 = 'blfilename'; get_cropt
+if ~exist(m_add_nc(firfile),'file')
+    firfile = [replace(firfile,'.nc','') '_ctd.nc'];
     if ~exist(m_add_nc(infilef),'file')
         warning('station %s fir file not found; skipping',stn_string)
         return
@@ -29,11 +24,10 @@ if ~exist(m_add_nc(infilef),'file')
 end
 if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to fir_%s_%s.nc\n', mcruise, stn_string); end
 %not using 24hz because we want at least some averaging
-infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal']);
 
 var_copycell = mcvars_list(2); %which variables to copy from 24hz CTD file
 % remove any vars from copy list that aren't available in the input file
-[var_copycell, var_copystr] = mvars_in_file(var_copycell, infile1);
+[var_copycell, var_copystr] = mvars_in_file(var_copycell, ctdfile1);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
 %load and average data
@@ -42,8 +36,8 @@ clear firopts;
 firopts.int = [-1 120]; %average over 5 s, like in .ros file
 firopts.prefill = 24*5; %fill gaps up to 5 s first
 opt1 = 'nisk_proc'; opt2 = 'fir_fill'; get_cropt
-[dfir, hfir] = mload(infilef,'scan',' ');
-[dc, hc] = mload(infile1, var_copystr);
+[dfir, hfir] = mload(firfile,'scan',' ');
+[dc, hc] = mload(ctdfile1, var_copystr);
 dc = grid_profile(dc, 'scan', dfir.scan, firmethod, firopts);
 
 %this will go into sam_all file, so use cruise time origin, not cast time origin
@@ -73,21 +67,18 @@ end
 hnew.comment = hc.comment;
 
 MEXEC_A.Mprog = mfilename;
-mfsave(otfilef, dnew, hnew, '-addvars');
+mfsave(firfile, dnew, hnew, '-addvars');
 
 opt1 = 'nisk_proc'; opt2 = 'fir_extra'; get_cropt
 if fir_extra
     if MEXEC_G.quiet<=1; fprintf(1,'adds bottle stop background gradient, standard deviation, and gamma_n-matched downcast data to fir_%s_%s.nc\n', mcruise, stn_string); end
 
-    infile1 = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_psal.nc']);
-    infiled = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2db.nc']);
-    infileu = fullfile(root_ctd, ['ctd_' mcruise '_' stn_string '_2up.nc']);
-    if ~exist(infile1,'file') || ~exist(infileu,'file')
+    if ~exist(ctdfile1,'file') || ~exist(ctdfileu,'file')
         warning('missing psal or 2up file for cast %s',stn_string)
         return
     end
-    [d1,~] = mloadq(infile1,'/');
-    [up,~] = mloadq(infileu,'/');
+    [d1,~] = mloadq(ctdfile1,'/');
+    [up,~] = mloadq(ctdfileu,'/');
 
     clear dnew hnew
     hnew.fldnam = {}; hnew.fldunt = {};
@@ -125,9 +116,9 @@ if fir_extra
     hnew.comment = [hnew.comment '\n stdev at bottle stops from psal (1hz) file'];
 
     var_copycell = mcvars_list(2);
-    if exist(infiled,'file')
+    if exist(ctdfiled,'file')
         [dn,hd] = mloadq(infiled,'/');
-        [var_copycell, var_copystr] = mvars_in_file(var_copycell, infiled);
+        [var_copycell, var_copystr] = mvars_in_file(var_copycell, ctdfiled);
 
         %get down and up T and S on common pressure grid (from 2 dbar data)
         iigd = find(~isnan(dn.temp+dn.psal));
@@ -159,7 +150,7 @@ if fir_extra
         hnew.comment = [hnew.comment '\n downcast data matched on neutral density (smoothed using heaveND.m)'];
 
         %save
-        mfsave(otfilef, dnew, hnew, '-addvars');
+        mfsave(firfile, dnew, hnew, '-addvars');
     end
 end
 

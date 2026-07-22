@@ -7,23 +7,14 @@ function mfir_to_sam(stn)
 % formerly mfir_04
 
 m_common
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
-root_ctd = mgetdir('M_CTD'); % change working directory
-infile = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
-if ~exist(m_add_nc(infile), 'file')
-    infile = [infile '_ctd'];
-    if ~exist(m_add_nc(infile),'file')
-        warning('station %s fir file not found; skipping',stn_string)
-        return
-    end
-end
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+opt1 = 'nisk_proc'; opt2 = 'blfilename'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'pasting CTD data at bottle firing times from fir_%s_%s.nc to sam_%s_all.nc\n',mcruise,stn_string,mcruise); end
-otfile = fullfile(root_ctd, ['sam_' mcruise '_all']);
 
 opt1 = 'mstar'; get_cropt
-if exist(otfile,'file')
-    h0 = m_read_header(otfile);
+if exist(samfile,'file')
+    h0 = m_read_header(samfile);
 else
     clear h0
     if docf
@@ -33,8 +24,8 @@ else
     end
 end
 
-if exist(m_add_nc(infile),'file') == 2
-    [d,h] = mloadq(infile,'/');
+if exist(m_add_nc(firfile),'file') == 2
+    [d,h] = mloadq(firfile,'/');
     d.statnum = repmat(stn,size(d.position));
     d.sampnum = stn*100+d.position;
     h.fldnam = [h.fldnam 'statnum' 'sampnum']; h.fldunt = [h.fldunt 'number' 'number'];
@@ -53,6 +44,6 @@ if exist(m_add_nc(infile),'file') == 2
         h.comment = sprintf('CTD data from station %03d added',stn); 
         h.dataname = ['sam_' mcruise '_all'];
         MEXEC_A.Mprog = mfilename;
-        mfsave(otfile, d, h, '-merge', 'sampnum');
+        mfsave(samfile, d, h, '-merge', 'sampnum');
     end
 end

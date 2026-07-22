@@ -9,7 +9,7 @@ function mctd_rawedit(stn, varargin)
 % output: _raw_cleaned.nc
 %
 % Use: mctd_rawedit(stn) %to edit T or C
-%      mctd_rawedit(stn,'oxy') %to edit oxygen
+%      mctd_rawedit(stn,'oxy') %to edit oxy
 
 m_common; MEXEC_A.mprog = mfilename;
 opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
@@ -55,7 +55,7 @@ else
     end
     for no = 1:nox
         pshow0.ylist = [pshow0.ylist ' ' oxyvars{no,1}];
-        if oxy_end %truncate extra oxy_align seconds from end of oxygen variables shown
+        if oxy_end %truncate extra oxy_align seconds from end of oxy variables shown
             pshow0.stopdcv.(oxyvars{no,1}) = datevec(datenum(pshow0.stopdc)-oxy_align/3600/24);
         end
     end

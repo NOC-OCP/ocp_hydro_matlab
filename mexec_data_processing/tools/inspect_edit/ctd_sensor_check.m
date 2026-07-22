@@ -10,10 +10,10 @@ function ctd_sensor_check(varargin)
 %   select a linear or piecewise linear fit from the plots; optionally
 %   generate a second set of plots with CTD profile data ***
 %
-% sensors_to_check is cell array, options are 'temp', 'cond', 'oxygen',
-%   'oxygen_diff'
-% temp is always compared as a difference, cond always as a ratio, oxygen
-%   can be a ratio or a difference (if input as 'oxygen_diff')
+% sensors_to_check is cell array, options are 'temp', 'cond', 'oxy',
+%   'oxy_diff'
+% temp is always compared as a difference, cond always as a ratio, oxy
+%   can be a ratio or a difference (if input as 'oxy_diff')
 %
 %
 % optional parameter-value pairs include:
@@ -41,16 +41,16 @@ if nargin>0
         sensors_to_check = varargin(1);
     end
 else
-    sensors_to_check = {'temp' 'cond' 'oxygen'};
+    sensors_to_check = {'temp' 'cond' 'oxy'};
 end
 for no = 2:2:length(varargin)-1
     varargin{no} = eval(varargin{no+1});
 end
 
-m = strcmp('oxygen_diff',sensors_to_check);
+m = strcmp('oxy_diff',sensors_to_check);
 if sum(m)
     oxydiff = 1;
-    sensors_to_check{m} = 'oxygen';
+    sensors_to_check{m} = 'oxy';
 else
     oxydiff = 0;
 end
@@ -61,8 +61,8 @@ if exist(sgfile,'file')
 end
 [ds, ~] = mload(fullfile(mgetdir('sam'),['sam_' mcruise '_all']),'/');
 
-ds.uoxygen1(isnan(ds.utemp1)) = NaN;
-ds.uoxygen2(isnan(ds.utemp2)) = NaN;
+ds.uoxy1(isnan(ds.utemp1)) = NaN;
+ds.uoxy2(isnan(ds.utemp2)) = NaN;
 
 fn = fieldnames(sng);
 
@@ -74,7 +74,7 @@ for pno = 1:length(sensors_to_check)
         ii1 = find(ismember(ds.statnum,sng.(sens{sno})(sng.(sens{sno})(:,2)==1,1)));
         ii2 = find(ismember(ds.statnum,sng.(sens{sno})(sng.(sens{sno})(:,2)==2,1)));
         snstr = sens{sno}; snstr = snstr(findstr(snstr,'_')+1:end);
-        if oxydiff && strcmp(parameter,'oxygen')
+        if oxydiff && strcmp(parameter,'oxy')
             [dc, p, mod] = sensor_cal_comparisons(ds, [parameter '_diff'], snstr, udstr, ii1, ii2, okf, p);
         else
             [dc, p, mod] = sensor_cal_comparisons(ds, parameter, snstr, udstr, ii1, ii2, okf, p);

@@ -1,9 +1,10 @@
 % this script is called by get_cropt to set defaults for
 % parameters/variables used by multiple scripts (those used in only one
-% script are set in situ), before calling opt_{cruise} to set
-% cruise-specific parameters if applicable. note opt_{cruise} may also call
-% mexec_defaults_sbe or mexec_defaults_noc to set some CTD processing
-% parameters, while this script contains ship- or underway data system
+% script are set in situ). it may call mexec_defaults_sbe,
+% mexec_defaults_uway to set some parameters for CTD and underway data.
+% get_cropt then calls opt_{cruise} to set cruise-specific parameters if
+% applicable. note opt_{cruise} may also call e.g. mexec_defaults_noc 
+% this script contains ship- or underway data system
 % specific parameters as well as generally applicable defaults (e.g. broad
 % acceptable range of atmospheric variables, default directory tree for
 % output data, etc.***)
@@ -16,6 +17,7 @@
 %     opt2 (another string, which for ease of searching should be
 %         kept unique, not reused under different opt1s)
 
+mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 switch opt1
 
@@ -23,8 +25,46 @@ switch opt1
         switch opt2
             case 'time_origin'
                 %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
-                %case 'use_ix_ladcp'
-                %    use_ix_ladcp = 'query'; %'query' means ask each time; or set to 'no' or 'yes'
+            case 'mdirlist'
+                dirs = {
+                    'M_CTD' 'ctd'
+                    'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
+                    'M_CTD_BOT' fullfile('ctd','ASCII_FILES')
+                    'M_CTD_WIN' fullfile('ctd','WINCH')
+                    'M_CTD_DEP' 'station_information'
+                    'M_BOT'     'bottle_samples'
+                    'M_BOT_SAL' fullfile('bottle_samples','SAL')
+                    'M_BOT_OXY' fullfile('bottle_samples','OXY')
+                    'M_BOT_NUT' fullfile('bottle_samples','NUT')
+                    'M_BOT_PIG' fullfile('bottle_samples','PIG')
+                    'M_BOT_CO2' fullfile('bottle_samples','CO2')
+                    'M_BOT_CFC' fullfile('bottle_samples','CFC')
+                    'M_BOT_CH4' fullfile('bottle_samples','CH4')
+                    'M_BOT_CHL' fullfile('bottle_samples','PIG')
+                    'M_BOT_ISO' fullfile('bottle_samples','LOGS')
+                    'M_SAM' 'ctd'
+                    'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
+                    'M_SUM' 'collected_files'
+                    'M_VMADCP' 'vmadcp'
+                    }; %***change how MDIRLIST is used?
+                if strcmp(MEXEC_G.datatypes.ladcp,'ix')
+                    dirs = [dirs;
+                        {'M_LADCP' 'ladcp'
+                        'M_IX' fullfile('ladcp','ix')}];
+                end
+                if exist('mrtv','var')
+                    dirs = [dirs; ...
+                        [cellfun(@(x) ['M_' upper(x)], mrtv.mstarpre, 'UniformOutput', false), ...
+                        mrtv.mstardir]];
+                    [~,ii] = unique(dirs(:,1),'stable');
+                    dirs = dirs(ii,:);
+                end
+                MEXEC_G.MDIRLIST = cell2struct(dirs(:,2),dirs(:,1));    
+            case 'minit'
+                %station naming convention
+                if ~exist('stn', 'var'); stn = input('type stn number '); end
+                stn_string = sprintf('%03d',stn); %used for file names
+                stnlocal = stn;
         end
 
     case 'mstar'
@@ -37,93 +77,100 @@ switch opt1
 
     case 'ship'
         %parameters related to ship underway data
-        switch opt2
-            case 'datasys_best'
-                switch MEXEC_G.Mshipdatasystem
-                    case 'techsas'
-                        uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
-                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
-                        if ismac; uway_root = [uway_root '_mac']; end
-                    case 'scs'
-                        uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
-                        uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_raw'); % scs raw data on logger machine
-                        uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_sed'); % scs raw data on logger machine
-                        uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_mat'); % local directory for scs converted to matlab
-                    case 'rvdas'
-                        uway_torg = 0; % mrvdas parsing returns matlab dnum. No offset required.
+        switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
+            case {'di' 'dy'}
+                MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
+                    MEXEC_G.Mshipdatasystem = 'rvdas';
+                else
+                    MEXEC_G.Mshipdatasystem = 'techsas';
                 end
-            case 'ship_data_sys_names'
-                switch MEXEC_G.Mshipdatasystem
-                    case 'rvdas'
-                        tsgpre = 'tsg';
-                        metpre = 'surfmet';
-                    case 'techsas'
-                        tsgpre = 'tsg';
-                        metpre = 'met';
-                    case 'scs'
-                        tsgpre = 'oceanlogger';
-                        metpre = 'met';
+            case 'jc'
+                MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
+                    MEXEC_G.Mshipdatasystem = 'rvdas';
+                else
+                    MEXEC_G.Mshipdatasystem = 'techsas';
                 end
-            case 'rvdas_database'
-                RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-                %RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
-                RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
-            case 'rvdas_form'
-                switch MEXEC_G.Mship
-                    case 'sda'
-                        use_cruise_views = 1; %prepend string view_name to names from json files
-                        view_name = lower(MEXEC_G.MSCRIPT_CRUISE_STRING);
-                        npre = 1; %table names start with an extra prefix before the instrument make/model e.g. anemometer_ft_technologies_etc
-                    otherwise
-                        npre = 0; %table names start with instrument name
-                        use_cruise_views = 0;
-                end
-            case 'rvdas_skip'
-                %see opt_dy181
+            case 'sd'
+                MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
+                MEXEC_G.Mshipdatasystem = 'rvdas';
+            case 'jr'
+                MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
+                MEXEC_G.Mshipdatasystem = 'scs';
+            case 'kn'
+                MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
+                MEXEC_G.Mshipdatasystem = 'scs';
+            case 'en'
+                MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
+                MEXEC_G.Mshipdatasystem = 'scs';
+            case 'ce'
+                MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
+                MEXEC_G.Mshipdatasystem = 'scs';
+            otherwise
+                merr = ['Ship ''' MEXEC_G.MSCRIPT_CRUISE_STRING(1:2) ''' not recognised, underway system will not be set up'];
+                %fprintf(2,'%s\n',merr);
+                %return
+                warning(merr)
+                MEXEC_G.Mship = '';
+                MEXEC_G.PLATFORM_IDENTIFIER = '';
         end
 
     case 'ctd_proc'
+        if strcmp(MEXEC_G.datatypes.ctd,'sbe')
+            mexec_defaults_sbe %rawedit_auto, raw_corrs
+        end
         switch opt2
-            %multiple files
-            case 'minit'
-                if ~exist('stn', 'var'); stn = input('type stn number '); end
-                stn_string = sprintf('%03d',stn); %used for file names
-                stnlocal = stn;
-            case 'redoctm'
-            case 'cnvfilename'
+            case 'ctdfiles'
+                %.nc files for different processing stages
+                dataname = ['ctd_' mcruise '_' stn_string];
+                rawfile = fullfile(MEXEC_G.MDIRLIST.M_CTD, [dataname '_cnv.nc']);
+                cleanfile = [rawfile(1:end-6) '_raw_cleaned.nc'];
+                ctdfile24 = [rawfile(1:end-6) '_24hz.nc'];
+                ctdfile1 = [rawfile(1:end-6) '_psal.nc'];
+                ctdfiled = [rawfile(1:end-6) '_2db.nc'];
+                ctdfileu = [rawfile(1:end-6) '_2up.nc'];
             case 'cast_split_comb'
+                %no defaults
             case 'ctd_raw_extra'
                 clear ctd_raw_extra
+                %no other defaults
             case 'header_edits'
-                %mctd_02
+                %mctd_02          
             case 'ctd_cals'
                 %remove any co.calstr; must be set by opt_{cruise}
                 co.docal.temp = 0; %do not apply any user calibration to temp
                 co.docal.cond = 0; %do not apply any user calibration to cond
-                co.docal.oxygen = 0; %do not apply any user calibration to oxy
+                co.docal.oxy = 0; %do not apply any user calibration to oxy
                 co.docal.fluor = 0; %etc
                 co.docal.transmittance = 0; %etc
                 if isfield(co,'calstr')
                     co = rmfield(co,'calstr');
                 end
-                %mctd_03
             case 'sensor_choice'
                 s_choice = 1; %CTD1 is primary
                 stns_alternate_s = []; %on these stations it's the other one
-                o_choice = 1; %oxygen1 is primary
+                o_choice = 1; %oxy1 is primary
                 stns_alternate_o = []; %on these stations it's the other one
+            case 'cast_divide'
+                dataname = ['dcs_' mcruise '_' stn_string];
+                dcsfile = fullfile(MEXEC_G.MDIRLIST.M_CTD, [dataname '.nc']);
             case 'ctdsens_groups'
                 sgfile = fullfile(mgetdir('ctd'),'sensor_groups.mat'); %generated by get_sensor_groups, contains sg, sng
             case 'rawshow'
                 %by default, do not plot press_temp, turb, xmiss, fluor,
                 %lat, lon in mctd_rawshow
-                rawplotvars = {'temp1','temp2','cond1','cond2','press','oxygen_sbe1','oxygen_sbe2'};
+                rawplotvars = {'temp1','temp2','cond1','cond2','press','oxy1','oxy2'};
                 show1 = 1; %do plot 1 hz also
         end
 
     case 'nisk_proc'
         switch opt2
             case 'blfilename'
+                %no default for blinfile
+                dataname = ['fir_' mcruise '_' stn_string];
+                firfile = fullfile(MEXEC_G.MDIRLIST.M_CTD, dataname);
+                samfile = fullfile(MEXEC_G.MDIRLIST.M_CTD,['sam_' mcruise '_all.nc']);
             case 'botflags'
                 ft = {'1 no info';
                     '2 no problems noted';
@@ -136,7 +183,7 @@ switch opt1
                     fprintf(1,'using WOCE Niskin flags: \n%s',ft{:})
                 end
             case 'niskins'
-                niskin_number = [1:24]'; %replace with S/N
+                niskin_number = [1:24]'; %replace with S/N, bedford number, etc.
                 niskin_pos = [1:24]'; %position (firing number)
             case 'fir_fill'
             case 'fir_extra'
@@ -144,6 +191,7 @@ switch opt1
         end
 
     case 'uway_proc'
+            mexec_defaults_uway %rawedit_auto, raw_corrs
         switch opt2
             case 'tstep_save'
                 %subsample high-frequency streams and match up different
@@ -253,44 +301,14 @@ switch opt1
         min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
         root_vmadcp = mgetdir('M_VMADCP');
         avfile = fullfile(root_vmadcp, 'mproc', [dataname '_ave.nc']);
-        if MEXEC_G.ix_ladcp
-            %for ladcp, using vmadcp
-            ladfile = fullfile(root_vmadcp, 'mproc', [dataname '_forladcp.mat']);
-            cfg.f.sadcp = ladfile;
-            %and ctd: set file location and format for ascii file of 1hz ctd
-            %data and nmea nav data, which will be used in ladcp LDEO_IX processing
-            cfg.f.ctd = fullfile(mgetdir('ladcp'), 'ctd', ['ctd.' stn_string '.02.asc']);
-            cfg.f.ctd_header_lines      = 1;
-            cfg.f.ctd_fields_per_line	= 6;
-            cfg.f.ctd_time_base = 1; %year-day
-            cfg.f.ctd_time_field = 1;
-            cfg.f.ctd_pressure_field	= 2;
-            cfg.f.ctd_temperature_field = 3;
-            cfg.f.ctd_salinity_field	= 4;
-            cfg.f.nav                   = cfg.f.ctd;
-            cfg.f.nav_header_lines	= cfg.f.ctd_header_lines;
-            cfg.f.nav_fields_per_line	= cfg.f.ctd_fields_per_line;
-            cfg.f.nav_time_base = cfg.f.ctd_time_base;
-            cfg.f.nav_time_field	= cfg.f.ctd_time_field;
-            cfg.f.nav_lat_field 	= 5;
-            cfg.f.nav_lon_field 	= 6;
-            %parameters for LADCP processing
-            cfg.p.magdec_source = 1;
-            %cfg.p.edit_mask_dn_bins = 1;
-            %cfg.p.edit_mask_up_bins = 1;
-            cfg.p.orig = 0; % save original data or not
-            isul = 1; %is there an uplooker? process it first on its own
-            cfg.rawdir = fullfile(mgetdir('ladcp'),'rawdata',cfg.stnstr);
-            cfg.pdir_root = fullfile(mgetdir('ladcp'),'ix');
-            cfg.p.ambiguity = 4.0; %this one is not used?
-            SADCP_inst = 'os75nb';
-            %cfg.p.vlim = 4.0; %this one is***require setting in opt_cruise
+        if strcmp(MEXEC_G.datatypes.ladcp,'ix')
+            mexec_defaults_ixladcp
         end
 
     case 'outputs'
         switch opt2
             case 'grid'
-                ctd_regridlist  = {'temp' 'psal' 'potemp' 'oxygen'}; %grid these variables
+                ctd_regridlist  = {'temp' 'psal' 'potemp' 'oxy'}; %grid these variables
                 sam_gridlist = {'botpsal' 'botoxy'}; %grid these variables
             case 'exch'
                 expocode = 'unknown';

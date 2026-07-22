@@ -7,7 +7,7 @@ function [dc, p, mod] = sensor_cal_comparisons(d, parameter, snstr, udstr, iis1,
 % d is a structure (e.g. from sam_{cruise}_all.nc) containing ctd and
 %   sample data as well as sensor serial numbers 
 %   sam_{cruise}_all.nc) as well as sensor serial numbers
-% parameter is 'temp', 'cond', 'oxygen', or 'oxygen_diff'
+% parameter is 'temp', 'cond', 'oxy', or 'oxy_diff'
 % snstr is sensor serial number (string)
 % udstr is 'u' or 'd' depending on whether to use upcast or downcast
 %   data from d
@@ -26,9 +26,9 @@ function [dc, p, mod] = sensor_cal_comparisons(d, parameter, snstr, udstr, iis1,
 % mod contains a model of form form, with vectors r and coefficients b
 %   (i.e. ctddata_cal = r*b)
 
-if strcmp(parameter,'oxygen_diff')
+if strcmp(parameter,'oxy_diff')
     useoxyratio = 0;
-    parameter = 'oxygen';
+    parameter = 'oxy';
 else
     useoxyratio = 1;
 end
@@ -85,7 +85,7 @@ switch parameter
             p.rlim = [-1 1]*1e-2;
         end
 
-    case 'oxygen'
+    case 'oxy'
         dc.caldata = d.botoxy(iig0);
         dc.calflag = d.botoxy_flag(iig0);
         if isempty(p.rlim)
@@ -159,7 +159,7 @@ switch parameter
         mod.form = ['condcal = cond*(C1 + C2(press) + C3(' p.xvar '))'];
         mod.b = regress(dc.caldata(iigc),mod.r);
 
-    case 'oxygen'
+    case 'oxy'
         if useoxyratio
             dc.res = dc.caldata./dc.ctddata;
             p.cclabel = ['bottle O / ctd O s/n ' snstr];
@@ -168,9 +168,9 @@ switch parameter
 
         else
             dc.res = (dc.caldata - dc.ctddata);
-            p.cclabel = ['bottle oxygen - ctd oxygen s/n ' snstr ' (umol/kg)'];
+            p.cclabel = ['bottle oxy - ctd oxy s/n ' snstr ' (umol/kg)'];
             dc.ctdres = dc.ctdother - dc.ctddata;
-            p.colabel = ['ctd oxygen alternate - ctd oxygen s/n ' snstr ' (umol/kg)'];
+            p.colabel = ['ctd oxy alternate - ctd oxy s/n ' snstr ' (umol/kg)'];
 
         end
         %mod.r = [ones(length(iigc),1) dc.press(iigc) dc.press(iigc).^2 dc.ctddata(iigc) dc.ctddata(iigc).*dc.press(iigc) dc.ctddata(iigc).*dc.press(iigc).^2];

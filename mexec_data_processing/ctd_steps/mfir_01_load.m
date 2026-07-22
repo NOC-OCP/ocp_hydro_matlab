@@ -1,19 +1,12 @@
-function mfir_01(stn)
+function mfir_01_load(stn)
 % mfir_01: read in .bl file and create fir file
 %
 % Use: mfir_01        and then respond with station number, or for station 16
 %      stn = 16; mfir_01;
 
 m_common
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 
 % input file names
-root_botraw = mgetdir('M_CTD_BOT');
-root_ctd = mgetdir('M_CTD');
-blinfile = fullfile(root_botraw,sprintf('%s_%03d.bl', upper(mcruise), stn));
-if ~exist(blinfile,'file')
-    blinfile = fullfile(root_botraw, sprintf('%s_%03d.bl', mcruise, stn));
-end
 opt1 = 'nisk_proc'; opt2 = 'blfilename'; get_cropt
 if ~exist(blinfile,'file')
     fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stn);
@@ -23,9 +16,7 @@ if ~exist(blinfile,'file')
         return
     end
 end
-if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to fir_%s_%s.nc\n',mcruise,stn_string); end
-dataname = ['fir_' mcruise '_' stn_string];
-blotfile = fullfile(root_ctd, dataname);
+if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to %s.nc\n',dataname); end
 
 %load scan and position for each rosette firing, from .bl or .btl file
 if contains(blinfile,'.bl')
@@ -115,7 +106,7 @@ if exist('cast_scan_offset','var') && cast_scan_offset(1)==stnlocal
         if exist(m_add_nc(blotfile_appendto),'file')
             blappend = 1;
         else
-            blotfile = blotfile_appendto;
+            firfile = blotfile_appendto;
         end
     end
 end
@@ -136,7 +127,7 @@ else
 
     timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
     MEXEC_A.MARGS_IN = {
-        blotfile
+        firfile
         'scan'
         'position'
         'niskin'
