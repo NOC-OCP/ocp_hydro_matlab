@@ -30,11 +30,52 @@ m_common; MEXEC_A.mprog = mfilename;
 if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hysteresis), as set in get_cropt and opt_%s\n',mcruise); end
 
 % input and output files
-opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+dataname = sprintf(ctdfile.dataname,stn_string);
+rawfile = sprintf(ctdfile.raw,stn_string);
+[d, h] = mloadq(rawfile,'/');
+
+% what steps have been done
+doneco.oxytau = contains(h.comment, '# datcnv_ox_tau_correction = yes');
+doneco.oxy1hyst = contains(h.comment, '# datcnv_ox_hysteresis_correction = yes');
+doneco.oxy2hyst = doneco.oxy1hyst;
+doneco.alignctd = contains(h.comment, '# alignctd_date');
+doneco.celltm = contains(h.comment, '# celltm_date');
+%***filtering? wildedit? loopedit?
+
+
+% what corrections, edits, and calibrations will we do
+opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
+
+
+%%%%% apply linear corrections
+
+%fill in some fields we may be missing
+if ~isfield(d, 'statnum')
+    d.statnum = repmat(stn, size(d.scan));
+    h.fldnam = [h.fldnam 'statnum']; h.fldunt = [h.fldunt 'number'];
+    h.fldserial = [h.fldserial 'n/a'];
+end
+ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00'];
+d.dday = m_commontime(d,'time',h,ddu);
+h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldserial ' '];
+
+%pressure offset***
+
+%oxygen alignment
+if ~doneco.alignctd
+    oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
+    for no = 1:length(oxyvars)
+        d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+co.oxy_align);
+    end
+    h.comment = [h.comment '\n oxygen shifted by ' num2str(co.oxy_align) ' s'];
+    didedits = 1;
+end
+
 
 %%%% edit out bad points
-opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt
-[d, h] = mloadq(rawfile,'/');
 
 %automatic edits
 [d, comment] = apply_autoedits(d, co);
@@ -46,7 +87,7 @@ end
 
 %reapply hand edits
 edfilepat = fullfile(MEXEC_G.MDIRLIST.M_CTD,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stn));
-[d, comment] = apply_guiedits(d, 'scan', edfilepat, [co.redoctm stn]);
+[d, comment] = apply_guiedits(d, 'scan', edfilepat);
 if ~isempty(comment)
     h.comment = [h.comment comment];
     didedits = 1;
@@ -54,31 +95,16 @@ end
 
 %save as cleaned
 if didedits
-    if exist(m_add_nc(cleanfile),'file')
+    cleanfile = m_add_nc(sprintf(ctdfile.clean,stn_string));
+    if exist(cleanfile,'file')
         delete(cleanfile)
     end
     mfsave(cleanfile, d, h);
 end
 
 
-%%%%% apply corrections
-doneco.oxytau = contains(h.comment, '# datcnv_ox_tau_correction = yes');
-doneco.oxy1hyst = contains(h.comment, '# datcnv_ox_hysteresis_correction = yes');
-doneco.oxy2hyst = doneco.oxy1hyst;
-doneco.alignctd = contains(h.comment, '# alignctd_date');
-doneco.celltm = contains(h.comment, '# celltm_date');
-opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
 
-%fill in some fields we may be missing
-if ~isfield(d, 'statnum')
-    d.statnum = repmat(stn, size(d.scan));
-end
-ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00'];
-d.dday = m_commontime(d,'time',h,ddu); keyboard
-h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldserial ' '];
-
-%pressure offset***
-
+%%%%% apply nonlinear corrections/recalculations
 
 %oxygen recalculation (with alternate temperature sensor). uncommon. 
 if co.dooxy1V>0 && isfield(co,'oxy1Vcoefs')
@@ -136,15 +162,6 @@ if ~doneco.celltm
     h.comment = [h.comment '\n cond corrected for cell thermal mass by ctd_apply_celltm'];
 end
 
-%oxygen alignment
-if ~doneco.alignctd
-    for no = 1:size(oxyvars,1)
-        d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+oxy_align);
-    end
-    h.comment = [h.comment '\n oxygen shifted by ' num2str(oxy_align) ' s'];
-    didedits = 1;
-end
-
 % turbidity conversion from turbidity volts
 if co.doturbV
     d.turbidity = (d.turbidityV-co.turbVpars(2))*co.turbVpars(1);
@@ -156,7 +173,7 @@ end
 
 
 %%%%% sensor calibrations %%%%%
-opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
+file24 = sprintf(ctdfile.p24,stn_string);
 if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
     %apply calibrations
     [dcal, hcal] = apply_calibrations(d, h, co.calstr, co.docal, 'q');
@@ -166,34 +183,33 @@ if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
     %24hz file (overwriting uncalibrated versions)
     if ~isempty(hcal.fldnam)
         d = dcal; h = hcal;
-        mfsave(otfile24, d, h, '-addvars');
+        mfsave(file24, d, h, '-addvars');
     end
 
 else
     %just save to 24 hz file
-    mfsave(ctdfile24, d, h);
+    mfsave(file24, d, h);
 
 end
 
 %%%%% check and warn
 opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
-if exist(dcsfile,'file')
-    [ddc,~] = mload(dcsfile,'/');
+dfile = sprintf(dcsfile.dcs,stn_string);
+if exist(dfile,'file')
+    [ddc,~] = mload(dfile,'/');
     m = d.scan>=ddc.scan_start & d.scan<=ddc.scan_end;
 else
     m = true(size(d.scan));
 end
-if min(d.press(m))<=-10 && (~isfield(co,'badpress') || ((isfield(co,'badtemp1') || isfield(co,'badtemp2'))))
-    msg = {['negative pressures <-10 in ' rawfile ' may be a problem for GSW functions.']};
-    if ~co.redoctm
-        msg = [msg;
-            'check d.press; if there are large spikes also affecting temperature, Ctrl-C'
-            'here, edit ctd_proc, redoctm case in opt_' mcruise ', and reprocess this station from _noctm; otherwise,'];
+if min(d.press(m))<=-3 && (~isfield(co,'badpress') || ((isfield(co,'badtemp1') || isfield(co,'badtemp2'))))
+    msg = ['negative pressures in ' file24 ' may indicate you should apply a deck ' ...
+        '\npressure offset and/or apply range editing, despiking, or hand edits to remove '...
+        '\noutliers. if large spikes also affect temperature, you should reprocess this station,'...
+        '\nloading data to which the cell thermal mass correction has not yet been applied, '...
+        '\nso you can edit out T spikes before the correction is applied in this function'];
+    sprintf(msg)
+    k = input('k for keyboard or enter to continue   ','s');
+    if strcmp(k,'k')
+        keyboard
     end
-    msg = [msg;
-        'you may want to edit ctd_proc, rawedit_auto case of opt_' mcruise ' to remove large'
-        'outlier values in pressure (and other variables) before the mctd_rawedit gui stage.'
-        'Enter to continue.'];
-    fprintf(1,'%s\n',msg{:})
-    pause
 end

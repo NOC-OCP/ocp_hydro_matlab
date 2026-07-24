@@ -18,15 +18,17 @@ function msbe_01_load(stn)
 %%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
-if MEXEC_G.quiet<=1; fprintf(1,'converting %s to %s\n',cnvfile,rawfile); end
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+dataname = sprintf(ctdfile.dataname,stn_string);
+rawfile = sprintf(ctdfile.raw,stn_string);
+if MEXEC_G.quiet<=1; fprintf(1,'converting %s to %s\n',cnvfile,rawfile)); end
 
 % input and output files
-dataname = ['ctd_' mcruise '_' stn_string];
-opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt %set cnvfile (in) and rawfile (out)
 if ~exist(cnvfile,'file') && isfield(MEXEC_G,'mexec_shell_scripts')
-    css = fullfile(MEXEC_G.mexec_shell_scripts,'ctd_syncscript.sh');
+    css = fullfile(MEXEC_G.mexec_shell_scripts,'data_to_ws','ctd_syncscript.sh');
     if exist(css,'file')
-        system(css);
+        system(['bash ' css]);
     end
 end
 if ~exist(cnvfile,'file')
@@ -72,8 +74,8 @@ mheadr
 %%%%% rename variables, and add units where necessary %%%%%
 
 h = m_read_header(rawfile);
-if ~ismember(h.fldnam,'timeS')
-    warning('you are missing time variable from %s, \ndid you forget to run DatCNV with time elapsed?',cnvfilename)
+if ~ismember(h.fldnam,'time')
+    warning('you are missing time variable from %s, \ndid you forget to run DatCNV with time elapsed?',cnvfile)
 end
 if ~ismember(h.fldnam,'scan')
     error('scan is required for processing %s',cnvfilename)
@@ -81,77 +83,9 @@ end
 if ~isempty(setdiff({'pumps','latitude','longitude'},h.fldnam))
     warning('you are missing pump status, latitude, and/or longitude from %s, \ndid you forget to export them in DatCnv?',cnvfilename)
 end
-ctdvarmap = {'prDM','press','dbar'
-    't090C','temp1','degc90'
-    't190C','temp2','degc90'
-    'altM','altimeter','meters'
-    'ptempC','pressure_temp','degc90'
-    'timeS','time','seconds'
-    'scan','scan','number'
-    'pumps','pumps','pump_status'
-    'latitude','latitude','degrees'
-    'longitude','longitude','degrees'
-    'c0mS_slash_cm','cond1','mS/cm'
-    'c1mS_slash_cm','cond2','mS/cm'
-    'sbeox0V','sbeoxyV1','volts'
-    'sbox0Mm_slash_Kg','oxy1','umol/kg'
-    'sbeox1V','sbeoxyV2','volts'
-    'sbox1Mm_slash_Kg','oxy2','umol/kg'
-    'T2_minus_T190C','t2_minus_t1','degc90'
-    'C2_minus_C1mS_slash_cm','c2_minus_c1','mS/cm'
-    'flECO_minus_AFL','fluor','mg/m^3'
-    'flC','fluor','ug/l'
-    'wetStar','fluor','mg/m^3'
-    'wetCDOM','fluor_cdom','mg/m^3'
-    'xmiss','transmittance','percent'
-    'CStarTr0','transmittance','percent'
-    'transmittance','transmittance','percent'
-    'CStarAt0','attenuation','1/m'
-    'turbWETbb0','turbidity','m^-1/sr'
-    'turbWETntu0','turbidity','NTU'
-    'par','par','umol photons/m^2/sec'
-    'par_slash_sat_slash_log','par','umol photons/m^2/sec'
-    'par1','par_downlook','umol photons/m^2/sec'};
-opt1 = 'ctd_proc'; opt2 = 'ctdvars'; get_cropt
-names_new = h.fldnam; 
-for no = 1:length(h.fldnam)
-    iis = find(strcmp(h.fldnam{no},ctdvarmap(:,1)));
-    if ~isempty(iis)
-        if length(iis)>1
-            warning('more than one mstar name listed for variable %s; using first',h.fldnam{no})
-        end
-        iis = iis(1);
-        newname = ctdvarmap{iis,2};
-        if ~strcmp(h.fldnam{no},newname)
-            mm = strcmp(newname,names_new([1:no-1 no+1:end]));
-            if sum(mm)
-                error('more than one SBE variable with the same mstar name %s; edit ctdvarmap',newname);
-            end
-            names_new{no} = newname;
-            nc_varrename(rawfile,h.fldnam{no},newname);
-        end
-    end
 
-    %units
-    newunits = [];
-    if isempty(h.fldunt{no})
-        newunits = m_remove_outside_spaces(ctdvarmap{iis(1),3});
-    elseif strcmpi(h.fldunt{no},'ITS-90, deg C') || strcmpi(h.fldunt{no},'deg C')
-        newunits = 'degc90';
-    elseif strcmpi(h.fldunt{no},'deg')
-        newunits = 'degrees';
-    elseif strcmpi(h.fldunt{no},'db')
-        newunits = 'dbar';
-    elseif strcmp(h.fldunt{no},'%')
-        newunits = 'percent';
-    end
-    if ~isempty(newunits)
-        nc_attput(rawfile,names_new{no},'units',newunits);
-    end
-
-end
-
-% create NaN variables that are in mcvars_list but not present for this station
+% create NaN variables that are in mcvars_list but not present for this
+% station***?
 absentvars = {}; opt1 = 'ctd_proc'; opt2 = 'absentvars'; get_cropt
 if ~isempty(absentvars)
     MEXEC_A.MARGS_IN = {rawfile; 'y'};
@@ -189,7 +123,7 @@ if length(otfiles)>1 && exist('cast_scan_ranges','var')
         m = d.scan>=cast_scan_ranges(fno,1) & d.scan<=cast_scan_ranges(fno,2);
         dnew = table2struct(t(m,:),'ToScalar',true);
         [~,dataname,~] = fileparts(otfiles{fno});
-        dataname = dataname(1:strfind(dataname,'_raw')-1);
+        dataname = dataname(1:strfind(dataname,'_raw')-1); %***
         if isempty(dataname)
             error('otfiles %d must contain ''_raw''',fno)
         end
@@ -252,7 +186,7 @@ for fno = 1:length(extracnv)
         [h.fldnam,~,ib] = intersect(extravars,hn.fldnam,'stable');
         h.fldunt = hn.fldunt(ib);
         h.comment = sprintf('with parameters added from sbe file %s',extracnv{fno});
-        mfsave(orawfile, d, h, '-addvars');
+        mfsave(rawfile, d, h, '-addvars');
     end
 end
 

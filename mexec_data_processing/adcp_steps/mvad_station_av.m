@@ -55,17 +55,12 @@ if strcmp(cast_select,'list')
 end
 
 m_common
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
-
-%paths and filenames
-root_ctd = mgetdir('M_CTD');
-
-dataname = [inst '_' mcruise '_' cast_select '_' stn_string];
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 opt1 = 'adcp_proc'; get_cropt
 
 %get start and end times
 if strcmp(cast_select,'ctd')
-    [dd, hd] = mloadq(fullfile(root_ctd,['dcs_' mcruise '_' stn_string]),'/');
+    [dd, hd] = mloadq(dcsfile.file,'/');
     tstart = m_commontime(dd,'time_start',hd,'datenum');
     tend = m_commontime(dd,'time_end',hd,'datenum');
 else
@@ -156,7 +151,7 @@ for no = 1:length(h.fldnam)
     da.(h.fldnam{no}) = m_nanmean(d.(h.fldnam{no})(:,mt),2);
 end
 ha = h;
-ha.dataname = dataname;
+ha.dataname = sadcpfile.dataname;
 ha.latitude = da.lat(1); ha.lon = da.lon(1);
 %ha.instrument_depth_metres = 5; %***
 if strcmp(cast_select,'ctd')
@@ -166,7 +161,7 @@ else
 end
 
 %check dims
-mfsave(avfile,da,ha); 
+mfsave(sadcpfile.av,da,ha); 
 
 opt1 = 'mstar'; get_cropt
 if docf

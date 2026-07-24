@@ -1,35 +1,22 @@
-function mwin_to_fir(stn)
-% mwin_to_fir: merge winch wireout onto fir file
+function mfir_02_addwin(stn)
+% mfir_02_addwin: merge winch wireout onto fir file
 %
-% Use: mwin_to_fir        and then respond with station number, or for station 16
-%      stn = 16; mwin_to_fir;
-%
-% formerly mwin_03
 
 m_common
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 
-% resolve root directories for various file types
-root_win = mgetdir('M_CTD_WIN');
-root_ctd = mgetdir('M_CTD');
-
-winfile = fullfile(root_win, ['win_' mcruise '_' stn_string]);
-firfile = fullfile(root_ctd, ['fir_' mcruise '_' stn_string]);
-if ~exist(m_add_nc(firfile),'file')
-    firfile = [firfile '_ctd']; %backwards compatibility
-    if ~exist(m_add_nc(firfile),'file')
-        warning('station %s fir file not found; skipping',stn_string)
-        return
-    end
+f = sprintf(firfile.fir,stn_string);
+if ~exist(m_add_nc(f),'file')
+    warning('station %s fir file not found; skipping',stn_string)
 end
-if MEXEC_G.quiet<=1; fprintf(1,'adding winch data from bottle firing times to fir_%s_%s.nc\n',mcruise,stn_string); end
+if MEXEC_G.quiet<=1; fprintf(1,'adding winch data from bottle firing times to %s\n',f); end
 
 clear d h
 
-[df,hf] = mloadq(firfile,'/');
+[df,hf] = mloadq(f,'/');
 if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     
-    [dwin, hwin] = mloadq(winfile,'/');
+    [dwin, hwin] = mloadq(sprintf(winfile.win,stn_string),'/');
     opt1 = 'mstar'; get_cropt
     if docf
         dwin.time = m_commontime(dwin,'time',hwin,hf.fldunt{strcmp(hf.fldnam,'utime')});
@@ -58,7 +45,7 @@ if isfield(df, 'utime') && sum(isfinite(df.utime))>0
         h.fldnam = {'utime' 'wireout'}; h.fldunt = {hf.fldunt{strcmp('utime',hf.fldnam)} 'metres'};
         h.dataname = hwin.dataname; h.mstar_string = hwin.mstar_string;
         MEXEC_A.Mprog = mfilename;
-        mfsave(firfile, d, h, '-merge', 'utime')
+        mfsave(f, d, h, '-merge', 'utime')
     end
     
 end

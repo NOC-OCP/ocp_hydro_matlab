@@ -43,7 +43,7 @@ function mvad_list_station(stn, inst)
 % tbuffer = 3600/86400; % days
 
 m_common
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 %reset constants, just in case
 i = sqrt(-1);
 pi = 4*atan(1);
@@ -53,19 +53,14 @@ spdmin = 1; % m/s
 levsvad = 3:6; % levels for reducing adcp velocity for display
 tbuffer = 3600/86400; % days
 
-root_nav = mgetdir('M_POS');  
-fn_nav = fullfile(root_nav, ['bst_' mcruise '_01.nc']);
-[dnav, hnav] = mloadq(fn_nav,'/');
+[dnav, hnav] = mloadq(bestnavfile.file,'/');
 dnav.dnum = m_commontime(dnav,'time',hnav,'datenum');
 dnav.chead =  exp(i*(90-dnav.heading_av_corrected)*degrad);
 
-root_ctd = mgetdir('M_CTD');  
-fn_dcs = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string '.nc']);
-[ddcs, hdcs] = mloadq(fn_dcs,'/');
+[ddcs, hdcs] = mloadq(dcsfile.dcs,'/');
 ddcs.dnum_start = m_commontime(ddcs,'time_start',hdcs,'datenum');
 ddcs.dnum_end = m_commontime(ddcs,'time_end',hdcs,'datenum');
 
-root_vmad = mgetdir('M_VMADCP');
 [dvad, hvad] = codas_to_mstar(inst);
 dvad.dnum = m_commontime(dvad,'time',hvad,'datenum');
 

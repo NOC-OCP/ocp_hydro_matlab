@@ -38,7 +38,7 @@ ihi = up_nd > max(dn_nd);  up_nd(ihi) = max(dn_nd);
 [~,isort] = sort(dn_nd); isort = isort(~isnan(dn_nd(isort)));
 if ~isempty(isort)
     pup = interp1(dn_nd(isort),pdn(isort),up_nd);
-    dp0 = pup-pdn(isort); 
+    dp0 = pup-pdn;
 else
     dp = nan(size(pdn));
     return
@@ -78,7 +78,7 @@ dp = w1.*dp1 + w2.*dp2;
 % Hope it is all ok ! but let's check there is no absent data
 icheck = sum(isnan(dp));
 if icheck > 0
-	fprintf(1,'Somethings wrong in heaveND %d NaNs \n',icheck)
+	fprintf(1,'Something wrong in heaveND %d NaNs \n',icheck)
 end
 
 if idebug == 1

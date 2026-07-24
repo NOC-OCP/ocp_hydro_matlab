@@ -12,12 +12,13 @@ function get_sensor_groups(klist,varargin)
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 
 st = {'Temperature','Conductivity','Oxygen'};
-sa = {'temp','cond','oxygen'};
+sa = {'temp','cond','oxy'};
 
 opt1 = 'ctd_proc'; opt2 = 'ctdsens_groups'; get_cropt
-if (nargin>1 && strcmp(varargin{1},'restart')) || ~exist(sgfile,'file')
+if (nargin>1 && strcmp(varargin{1},'restart')) || ~exist(ctdfile.sg,'file')
     %initialise empty
     for sno = 1:length(sa)
         sg.([sa{sno} '1']) = {};
@@ -27,25 +28,18 @@ if (nargin>1 && strcmp(varargin{1},'restart')) || ~exist(sgfile,'file')
     sng = struct();
 else
     %load existing, either to use or to modify/append to
-    load(sgfile,'sg','sng','sn_list')
+    load(ctdfile.sg,'sg','sng','sn_list')
 end
 
 if nargin==1 || ~strcmp(varargin{1},'samonly')
     %get serial numbers from raw ctd file headers
-    root_ctd = mgetdir('ctd');
     for stn = klist
+        opt1 = 'setup'; opt2 = 'minit'; get_cropt
+        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
         if ~isempty(sg.temp1) && sum(cell2mat(sg.temp1(:,1))==stn)>0
             continue %don't redo
         end
-
-        rfile = sprintf('%s/ctd_%s_%03d_raw.nc',root_ctd,mcruise,stn);
-        if ~exist(rfile,'file')
-            rfile = [rfile(1:end-3) '_noctm.nc'];
-            if ~exist(rfile,'file')
-                continue
-            end
-        end
-        h = m_read_header(rfile);
+        h = m_read_header(sprintf(ctdfile.raw,stn_string));
         [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn);
     end
 
@@ -60,11 +54,10 @@ if nargin==1 || ~strcmp(varargin{1},'samonly')
     readme = {'sg has lists of stations and serial numbers for each sensor-position (e.g. temp1, cond1, temp2);'
         'sng has lists of stations and sensor-positions for each serial number';
         'sn_list has lists of serial numbers for each sensor (e.g. temp)'};
-    save(sgfile,'sg','sng','sn_list','readme'); mfixperms(sgfile);
+    save(ctdfile.sg,'sg','sng','sn_list','readme'); mfixperms(ctdfile.sg);
 end
 
 %now save data from sgfile to sam_*_all file
-samfile = fullfile(mgetdir('sam'),['sam_' mcruise '_all']);
 if ~exist(m_add_nc(samfile),'file')
     return
 end
@@ -109,7 +102,7 @@ for sno = 1:length(st)
     if ~isempty(ii)
         n1 = [sa{sno} '1'];
         if isfield(h,'fldserial')
-            sn1 = h.fldserial{contains(h.fldnam,sa{sno}) & contains(h.fldnam,'1')};
+            sn1 = h.fldserial{strncmp(h.fldnam,sa{sno},length(sa{sno})) & contains(h.fldnam,'1')};
         else
             ii1 = min(iisns(iisns>ii(1)))+14:min(iisne(iisne>ii(1)))-1;
             sn1 = h.comment(ii1);
@@ -132,7 +125,7 @@ for sno = 1:length(st)
         if length(ii)>1
             n2 = [sa{sno} '2'];
             if isfield(h,'fldserial')
-                sn2 = h.fldserial{contains(h.fldnam,sa{sno}) & contains(h.fldnam,'2')};
+                sn2 = h.fldserial{strncmp(h.fldnam,sa{sno},length(sa{sno})) & contains(h.fldnam,'2')};
             else
                 ii2 = min(iisns(iisns>ii(2)))+14:min(iisne(iisne>ii(2)))-1;
                 sn2 = h.comment(ii2);

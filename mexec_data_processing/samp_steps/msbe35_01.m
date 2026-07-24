@@ -13,28 +13,23 @@ function msbe35_01(varargin)
 m_common
 if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
 
-root_sbe35 = mgetdir('M_SBE35');
-dataname = ['sbe35_' mcruise '_01'];
-otfile1 = m_add_nc(fullfile(mgetdir('M_SBE35'), dataname));
-if nargin>0 && ~isempty(varargin{1}) && exist(otfile1,'file')
-    h = m_read_header(otfile1);
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+opt1 = 'sbe35'; opt2 = 'sbe35files'; get_cropt
+outfile = sprintf(sbe35file.sbe35,sbe35file.dataname);
+if nargin>0 && ~isempty(varargin{1}) && exist(ofile,'file')
+    h = m_read_header(ofile);
     if h.uprlim(strcmp('statnum',h.fldnam))>=varargin{1}
         %we've already read in as far as this station, no need to redo
         return
     end
 end
+
 % load sbe35 data
-sbe35file = sprintf('%s_SBE35_CTD*.asc', upper(mcruise));
-%stnind is indices in filename sbe35file containing the station number
-%use negative to indicate distance from end e.g. [-6:-4] for
-%dy113_SBE35_CTD_010.asc
-stnind = -6:-4;
-opt1 = 'sbe35'; opt2 = 'sbe35file'; get_cropt
-if strcmp(sbe35file,'none')
+if strcmp(sbe35in,'none')
     return
 end
-
-d = dir(fullfile(root_sbe35, sbe35file));
+d = dir(sbe35in);
+p = fileparts(sbe35in);
 file_list = {d.name};
 if isempty(file_list)
     warning('no sbe35 files found; skipping')
@@ -50,7 +45,7 @@ clear flag
 
 kount = 1;
 for kf = 1:length(file_list)
-    fn = fullfile(root_sbe35, file_list{kf});
+    fn = fullfile(p, file_list{kf});
     if stnind(1)<0
         iis = length(file_list{kf})+stnind; 
     else
@@ -104,11 +99,11 @@ opt1 = 'sbe35'; opt2 = 'sbe35_flags'; get_cropt
 
 %get station start and end times from station_summary file, and use to
 %match station numbers and discard duplicate (likely spurious) sampnums
-[dsum, hsum] = mloadq(fullfile(mgetdir('sum'),['station_summary_' mcruise '_all.nc']),'/');
-dsum.time_start = m_commontime(dsum,'time_start',hsum,'datenum');
-dsum.time_end = m_commontime(dsum,'time_end',hsum,'datenum');
-opt1 = 'check_sams'; get_cropt
-if check_sbe35
+opt1 = 'samp_proc'; opt2 = 'replcheck'; get_cropt
+if checksam.sbe35
+    [dsum, hsum] = mloadq(sumfile,'/');
+    dsum.time_start = m_commontime(dsum,'time_start',hsum,'datenum');
+    dsum.time_end = m_commontime(dsum,'time_end',hsum,'datenum');
     statnumc = NaN+t.statnum;
     m = repmat(dsum.statnum',length(t.datnum),1);
     tm = t.datnum>=dsum.time_start'-15/1440 & t.datnum<=dsum.time_end'+15/1440;
@@ -124,7 +119,7 @@ if check_sbe35
     for no = 1:length(iic)
         if ~ismember(iic(no),ii_did)
             ii = find(t.sampnum==t.sampnum(iic(no)));
-            if length(unique(t.files(ii)))==1 && isunix
+            if isscalar(unique(t.files(ii))) && isunix
                 system(['cat ' fullfile(root_sbe35,t.files{iic(no)})])
                 sprintf('sampnum %d on multiple lines (above)\n',t.sampnum(iic(no)))
             else
@@ -153,7 +148,7 @@ if docf
 else
     hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 end
-hnew.dataname = dataname;
+hnew.dataname = sbe35file.dataname;
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; 
 
 t.position = t.bn;
@@ -171,7 +166,7 @@ end
 d = rmfield(d,'junk');
 
 MEXEC_A.Mprog = mfilename;
-mfsave(otfile1, d, hnew);
+mfsave(outfile, d, hnew);
 
 %and update sam_cruise_all file
-msbe35_to_sam
+msam_merge('sbe35')

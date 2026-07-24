@@ -12,25 +12,20 @@ function mctd_rawedit(stn, varargin)
 %      mctd_rawedit(stn,'oxy') %to edit oxy
 
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
-if MEXEC_G.quiet<=1; fprintf(1,'calling mplxyed for GUI editing of raw data, saving to ctd_%s_%s_raw_cleaned.nc\n',mcruise,stn_string); end
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+infile = sprintf(ctdfile.clean,stn_string);
+otfile = infile;
+if ~exist(m_add_nc(infile),'file')
+    infile = sprintf(ctdfile.raw,stn_string);
+end
+infiled = sprintf(dcsfile.dcs,stn_string);
+if MEXEC_G.quiet<=1; fprintf(1,'calling mplxyed for GUI editing of raw data, saving to %s\n',otfile); end
 dooxy = 0;
 if nargin>1; dooxy = strcmp(varargin{1},'oxy'); end
-
-% resolve root directories for various file types
-root_ctd = mgetdir('M_CTD');
-
-prefix1 = ['ctd_' mcruise '_' stn_string];
-prefix2 = ['dcs_' mcruise '_' stn_string];
-
-otfile = fullfile(root_ctd, [prefix1 '_raw_cleaned.nc']);
-infile = fullfile(root_ctd, [prefix1 '_raw.nc']);
-infiled = fullfile(root_ctd, [prefix2 '.nc']); % dcs file
 
 if ~exist(m_add_nc(otfile), 'file')
     copyfile(m_add_nc(infile), m_add_nc(otfile)); mfixperms(m_add_nc(otfile));
 end
-
 
 %only plot the good part of the cast, chosen in mdcs_03g (not the on-deck or soak periods)
 if ~exist(m_add_nc(infiled), 'file')

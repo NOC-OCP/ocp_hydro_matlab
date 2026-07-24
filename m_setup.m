@@ -108,14 +108,12 @@ end
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];
+opt1 = 'ship'; mexec_defaults_all
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 if strcmp(MEXEC_G.datatypes.uway,'auto')
-    %look up which underway data system to use based on ship -- this is
-    %required for creating the cruise options file so here
-    %mexec_defaults_all is called directly rather than through get_cropt
-    opt1 = 'ship'; mexec_defaults_all
+    %look up which underway data system to use based on ship
     MEXEC_G.datatypes.uway = MEXEC_G.Mshipdatasystem;
 elseif strcmp(MEXEC_G.datatypes.uway,'no')
     MEXEC_G.datatypes = rmfield(MEXEC_G.datatypes,'uway');

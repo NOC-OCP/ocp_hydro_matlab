@@ -150,7 +150,7 @@ for fno = 1:length(infiles)
             %first read header
             [opts, hdr] = load_samdata_getopts(infiles{fno}, iopts, sheetsl{sno});
             if ~isempty(hdr)
-                samhead(fno,sno) = hdr;
+                samhead{fno,sno} = hdr;
             end
             %next read data
             dat = readtable(infiles{fno}, opts);
@@ -173,6 +173,11 @@ for fno = 1:length(infiles)
             %add to samdata
             if exist('samdata', 'var')
                 %append, matching variables and adding new ones as necessary
+                [~,ia,ib] = intersect(samdata.Properties.VariableNames,dat.Properties.VariableNames);
+                if sum(~strcmp(samdata.Properties.VariableTypes(ia),dat.Properties.VariableTypes(ib)))
+                    warning('incompatible variable types on sheet %d',sno)
+                    keyboard
+                end
                 samdata = load_samdata_combine_tables(samdata, dat);
             else
                 samdata = dat;
@@ -212,7 +217,7 @@ if isempty(iopts.hcpat)
     if ~isfield(iopts,'numhead')
         iopts.numhead = 0; %can't set this before because it overrides hcpat
     end
-elseif iopts.icolhead==1 && isempty(iopts.icolunits) && length(iopts.hcpat)>1
+elseif isscalar(iopts.icolhead) && iopts.icolhead==1 && isempty(iopts.icolunits) && length(iopts.hcpat)>1
     iopts.icolhead = 1:length(iopts.hcpat); %all lines given in hcpat form column header
 end
 
@@ -270,7 +275,7 @@ if isfield(iopts,'numhead') && isfinite(iopts.numhead)
         opts.(vnn) = iopts.numhead;
         nd = iopts.numhead+1;
     else
-        opts.(vnn) = iopts.numhead + iopts.icolhead;
+        opts.(vnn) = iopts.numhead + iopts.icolhead(1);
         if ~isempty(iopts.icolunits)
             opts.(vun) = iopts.numhead + iopts.icolunits;
         end
@@ -302,7 +307,7 @@ if isfield(iopts,'numhead')
     if iopts.numhead==0
         hdr = {};
     else
-        hdr = hdr{1:iopts.numhead,:};
+        hdr = hdr(1:iopts.numhead,:);
     end
 elseif searchhead
     %search for hcpat to find end of header
@@ -332,6 +337,9 @@ if ~isfield(iopts,'DateLocale') || isempty(iopts.DateLocale)
     %let user parse datetimes as we may not have information on locale in file
     m = strcmp('datetime',opts.VariableTypes);
     opts.VariableTypes(m) = {'char'};
+end
+if isfield(iopts,'VariableTypes')
+    opts.VariableTypes = iopts.VariableTypes;
 end
 
 

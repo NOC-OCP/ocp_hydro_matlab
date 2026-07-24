@@ -34,14 +34,14 @@ for no = 1:length(uvars)
     iiv = find(strcmp(uvars{no},fn));
     if ~isempty(iiv)
         if isempty(un{iiv})
-        warning('assigning default units for %s',uvars{no})
-        un{iiv} = units_expected.(uvars{no});
-    elseif ~sum(strcmp(un{iiv}, units_expected.(uvars{no})))
-        if ~quiet_flag
-            warning('unit corresponding to %s, %s, does not match expected:',uvars{no},un{iiv})
-        end
-        disp(units_expected.(uvars{no}))
-        vars_wrong_units = [vars_wrong_units; uvars{no}];
+            warning('assigning default units for %s',uvars{no})
+            un{iiv} = units_expected.(uvars{no}){1};
+        elseif ~sum(strcmp(un{iiv}, units_expected.(uvars{no})))
+            if ~quiet_flag
+                warning('unit corresponding to %s, %s, does not match expected:',uvars{no},un{iiv})
+            end
+            disp(units_expected.(uvars{no}))
+            vars_wrong_units = [vars_wrong_units; uvars{no}];
         end
     end
 end

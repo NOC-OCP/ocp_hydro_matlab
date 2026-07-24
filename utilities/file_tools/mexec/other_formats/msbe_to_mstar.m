@@ -114,7 +114,6 @@ else
     h.platform_number =  [];
 end
 
-
 % BAK & GDM on JC032 29 March 2009; parse NMEA positions if present
 index = strncmp('* NMEA Latitude',head,15);
 if sum(index)
@@ -260,10 +259,8 @@ end
 index = strncmp('# span ',head,6);
 head(index) = [];
 
-
 h.instrument_identifier = 'ctd';
 h.dataname = 'sbe_ctd_rawdata';
-
 
 
 opt1 = 'mstar'; get_cropt %use cf-compliant units or not?
@@ -275,7 +272,7 @@ if savefile
     
     nc_attput(ncfile.name,nc_global,'dataname',h.dataname); %set the dataname
     nc_attput(ncfile.name,nc_global,'instrument_identifier',h.instrument_identifier);
-    
+
     %write header variables
     if ~isempty(h.platform_type); nc_attput(ncfile.name,nc_global,'platform_type',h.platform_type); end
     if ~isempty(h.platform_identifier); nc_attput(ncfile.name,nc_global,'platform_identifier',h.platform_identifier); end
@@ -289,12 +286,12 @@ if savefile
     else
         nc_attput(ncfile.name,nc_global,'data_time_origin',h.data_time_origin);
     end
-    
+
 else
-    h.fldnam = {}; h.fldunt = {}; h.fldser = {};
-    h.comment = [];
+    h.fldnam = {}; h.fldunt = {}; h.fldser = {}; h.longname = {};
     clear d %unnecessary? but acts as marker
 end
+h.comment = [];
 
 % get data
 
@@ -310,29 +307,69 @@ if numcycles ~= num_expected
     fprintf(MEXEC_A.Mfider,'%s\n',m,m2)
 end
 
-%parse (some) sensor serial numbers from header and store temporarily
-sa = {'t090C' 't190C'; 'c0mS/cm' 'c1mS/cm'; 'sbox0Mm/Kg' 'sbox1Mm/Kg'};
-st = {'#     <TemperatureSensor'; '#     <ConductivitySensor'; '#     <OxygenSensor'};
+% separate names and units where necessary, rename to standard variable
+% names, and add list of renamed variables and list of discarded variables
+% to comment
+opt1 = 'ctd_proc'; opt2 = 'ctdvarsunits'; get_cropt
+names_new = varname; 
+for no = 1:size(nu,1)
+    m = cellfun(@(x) contains(x,nu{no,1}), varname);
+    varunits(m) = nu(no,2);
+    names_new(m) = cellfun(@(x) replace(x,nu{no,1},''), varname(m), 'UniformOutput', false);
+end
+for no = 1:size(ut,1)
+    m = strcmp(varunits, ut{no,1});
+    varunits(m) = ut(no,2);
+end
+[~,ia,ib] = intersect(nn(:,1),names_new,'stable');
+disc = varname(setdiff(1:length(names_new),ib));
+comment = ['not saving variables ' sprintf('%s, ',disc{:})]; comment(end-1) = [];
+names_new = names_new(ib); varname = varname(ib);
+varunits = varunits(ib); varname_long = varname_long(ib);
+data1 = data1(ib,:);
+names_new = nn(ia,2)';
+m = strcmp(varname,names_new);
+if sum(m)
+    vr = cellfun(@(x,y) sprintf('%s (%s),',x,y),varname(m),names_new(m),'UniformOutput',false);
+    comment = [comment '\nrenamed ' sprintf('renamed %s ',vr{:})]; comment(end-1) = [];
+end
+varname = names_new;
+h.comment = [h.comment comment];
+
+%parse sensor serial numbers from header
+st = {'#     <TemperatureSensor', 'temp1', 'temp2';
+    '#     <ConductivitySensor', 'cond1', 'cond2'
+    '#     <OxygenSensor', 'oxy1', 'oxy2'
+    '#     <PressureSensor', 'press', 'junk'
+    '#     <PAR_Biospherical', 'par', 'junk'
+    '#     <Fluoro', 'fluor', 'junk'
+    '#     <Turbidity', 'turbidity', 'junk'
+    '#     <Altimeter', 'altimeter', 'junk'
+    '#     <WET_LabsCStar', 'transmissivity', 'junk'
+    '#     <SPAR_Sensor', 'spar', 'junk'    
+    };
 opt1 = 'ctd_proc'; opt2 = 'track_serials'; get_cropt
 sns = {};
 for sno = 1:length(st)
-    ii = find(strncmp(st{sno},head,length(st{sno})));
+    ii = find(strncmp(st{sno,1},head,length(st{sno,1})));
     if ~isempty(ii)
         sn = cellfun(@(x) x(findstr('<SerialNumber>',x)+14:findstr('</Serial',x)-1),head(ii+1),'UniformOutput',false);
         %sn = regexprep(sn,'[^a-zA-Z0-9]','_');
         %later will need use numeric values so remove characters and
         %leading 0s
-        sns = [sns; [sa(sno,1) regexprep(sn(1), '[^0-9]', '')]];
+        sns = [sns; [st(sno,2) regexprep(sn(1), '[^0-9]', '')]];
         if length(sn)>1
-            sns = [sns; [sa(sno,2) regexprep(sn(2), '[^0-9]', '')]];
+            sns = [sns; [st(sno,3) regexprep(sn(2), '[^0-9]', '')]];
         end
         sns(:,2) = cellfun(@(x) num2str(str2num(x)), sns(:,2), 'UniformOutput', false);
     end
 end
+sns(cellfun('isempty',sns(:,2)),:) = [];
 
-for k = 1:noflds
+for k = 1:length(varname)
     clear v
     v.name = m_check_nc_varname(varname{k});
+    v.longname = varname_long{k};
     v.data = data1(k,:)';
     v.data(v.data == sbe_bad_flag) = nan; % set sbe bad data to nan
     if docf && strcmp(varunits{k},'seconds')
@@ -343,6 +380,8 @@ for k = 1:noflds
     m = strcmp(varname{k},sns(:,1));
     if sum(m)
         v.serial = num2str(str2double(sns{m,2}));
+    else
+        v.serial = 'n/a';
     end
     if savefile
         m = ['writing data for variable ' v.name];
@@ -351,19 +390,15 @@ for k = 1:noflds
     else
         h.fldnam = [h.fldnam v.name];
         h.fldunt = [h.fldunt v.units];
-        if isfield(v,'serial')
-            h.fldser = [h.fldser v.serial];
-        else
-            h.fldser = [h.fldser ' '];
-        end
+        h.fldser = [h.fldser v.serial];
+        h.longname = [h.longname v.longname];
         d.(v.name) = v.data;
     end
 end
 
-
+tic
 %pack remainder of header in comments
 while ~isempty(head)
-    clear c;
     c = [];
     for k = 1:min(4,length(head))
         c = [c sprintf('%s',head{1}) ' | '];
@@ -372,13 +407,12 @@ while ~isempty(head)
     inl = strfind(c,newline);
     c(inl) = []; % strip out the newline chars that were read in with fgets
     c = strrep(c,'\','\\');
-    if savefile
-        m_add_comment(ncfile,c);
-    else
-        h.comment = [h.comment c];
-    end
+    h.comment = [h.comment c];
 end
-
+if savefile
+    m_add_comment(ncfile,h.comment);
+end
+toc
 
 nowstring = datestr(now,31);
 if savefile
@@ -387,11 +421,9 @@ if savefile
     m_add_comment(ncfile,['at ' nowstring]);
     
     
-    % finish up
-    
-    
+    % finish up    
     m_finis(ncfile);
-    
+
     h = m_read_header(ncfile);
     if ~MEXEC_G.quiet; m_print_header(h); end
     
@@ -406,6 +438,7 @@ if savefile
     histin.mstar_site = [];
     MEXEC_A.Mhistory_in{1} = histin;
     m_write_history;
+
 end
 
 if nargout==1

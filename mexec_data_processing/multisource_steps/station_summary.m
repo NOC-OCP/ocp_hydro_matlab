@@ -70,12 +70,9 @@ for no = 1:length(snames)
     end
 end
 %find list of processed stations
-root_ctd = mgetdir('ctd');
-root_sum = mgetdir('sum');
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 dataname = ['station_summary_' mcruise '_all'];
-otfile2 = fullfile(root_sum, dataname);
-
-d = dir(fullfile(root_ctd, ['ctd_' mcruise '_*_psal.nc'])); d = {d.name}; d = cell2mat(d(:));
+d = dir(replace(ctdfile.p1,'%s','*')); d = {d.name}; d = cell2mat(d(:));
 
 %which stations
 stnall = str2num(d(:,length(mcruise)+[6:8]));
@@ -103,16 +100,15 @@ if ~isempty(stnall)
 
     %get information from files
     disp('loading')
-    fnsam = fullfile(root_ctd, ['sam_' mcruise '_all']);
-    clear dsam
-    if exist(m_add_nc(fnsam),'file') == 2
-        dsam0 = mloadq(fnsam,'/');
+    if exist(m_add_nc(samfile),'file') == 2
+        dsam0 = mloadq(samfile,'/');
     end
     for k = 1:length(statnum)
-        stnstr = sprintf('%03d',statnum(k));
 
+        stn = statnum(k); opt1 = 'setup'; opt2 = 'minit'; get_cropt
+        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
         %lat, lon, ctd depths
-        fnsal = fullfile(root_ctd, ['ctd_' mcruise '_' stnstr '_psal']);
+        fnsal = sprintf(ctdfile.p1,ctdfile.dataname);
         if exist(m_add_nc(fnsal),'file')
             [dpsal, hpsal] = mloadq(fnsal,'/');
             lat(k) = hpsal.latitude;
@@ -123,7 +119,7 @@ if ~isempty(stnall)
 
         %winch
         root_win = mgetdir('M_CTD_WIN');
-        fnwin = fullfile(root_win, ['win_' mcruise '_' stnstr]);
+        fnwin = fullfile(root_win, ['win_' mcruise '_' stn_string]);
         if exist(m_add_nc(fnwin),'file') == 2
             h3 = m_read_header(fnwin);
             cabname = munderway_varname('cabvar',h3.fldnam,1,'s');
@@ -132,7 +128,7 @@ if ~isempty(stnall)
         end
 
         %cast start, bottom, end times
-        fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' stnstr]);
+        fndcs = sprintf(dcsfile.dcs,dcsfile.dataname);
         if exist(m_add_nc(fndcs),'file')
             [ddcs, h4] = mloadq(fndcs,'/');
             time_start(k) = m_commontime(ddcs.time_start,'time_start',h4,timestring);
@@ -209,7 +205,7 @@ if ~isempty(stnall)
     else
         hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
     end
-    mfsave(otfile2, ds, hnew, '-merge', 'statnum');
+    mfsave(sumfile, ds, hnew, '-merge', 'statnum');
 
 else
 
@@ -230,14 +226,14 @@ opt1 = mfilename; opt2 = 'sum_extras'; get_cropt
 %%%%% write to ascii file %%%%%
 
 %reload file in case we only added some stations in workspace
-[ds, ~] = mloadq(otfile2,'/');
+[ds, ~] = mloadq(sumfile,'/');
 ds.time_start = m_commontime(ds.time_start,timestring,'datenum');
 ds.time_bottom = m_commontime(ds.time_bottom,timestring,'datenum');
 ds.time_end = m_commontime(ds.time_end,timestring,'datenum');
 stnall = unique(ds.statnum);
 
-stnlistname = fullfile(root_sum, ['station_summary_' mcruise '_all.csv']);
-fid = fopen(stnlistname,'w'); mfixperms(stnlistname);
+sumcsv = replace(sumfile,'.nc','.csv');
+fid = fopen(sumcsv,'w'); mfixperms(sumcsv);
 
 % list headings
 for cno = 1:length(vars)
@@ -291,7 +287,7 @@ for k = 1:length(stnall)
 
 end
 
-fclose(fid); mfixperms(stnlistname);
+fclose(fid); mfixperms(sumcsv);
 
 function svar = special_print(ds,vars,cno,k)
 switch vars{cno,1}

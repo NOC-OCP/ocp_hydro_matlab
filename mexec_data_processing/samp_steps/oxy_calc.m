@@ -4,7 +4,7 @@
 
 function ds_oxy = oxy_calc(ds_oxy)
 
-ds_oxy(isnan(ds_oxy.position),:) = [];
+ds_oxy(isnan(ds_oxy.sampnum),:) = [];
 
 %check units
 clear oxyunits
@@ -42,5 +42,6 @@ ds_oxy.(dname)(~bd & bt) = NaN;
 %neither oxy nor temp: 9
 ds_oxy.flag(bd & bt) = 9;
 
-opt1 = 'samp_proc'; opt2 = 'oxy_calc'; get_cropt
-ds_oxy = oxy_from_titre(ds_oxy,'vol_std',vol_std,'vol_reag_tot',vol_reag_tot);
+samtyp = 'oxy'; opt1 = 'samp_proc'; opt2 = 'calc'; get_cropt
+ds_oxy = oxy_from_titre(ds_oxy);
+

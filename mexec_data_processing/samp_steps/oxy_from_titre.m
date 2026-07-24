@@ -19,7 +19,7 @@ function [odat, varargout] = oxy_from_titre(odat, varargin)
 % titration parameters
 tpar.std_react_ratio = 6;       % # Na2S2O3/ KIO3 (mol/mol)
 tpar.sample_react_ratio = 1./4; % # O2/Na2S2O3 (mol/mol)
-tpar.molar_std = 1.667*1e6; % molarity (mol/mL) of standard KIO3
+tpar.molar_std = 1.667*1e-6; % molarity (mol/mL) of standard KIO3
 tpar.molar_o2_reag = 0.5*7.6e-8; %mol/mL of dissolved oxygen in pickling reagents
 tpar.vol_reag_tot = 2; %total volume of reagents (mL) added before closing bottle
 tpar.vol_std = 5; %volume of standard added in standardisation
@@ -47,7 +47,7 @@ if isempty(odat)
     return
 else
     ov = odat.Properties.VariableNames;
-    rv = {'titre_std','titre_blank','titre_samp'};
+    rv = {'std_titre','blank_titre','sample_titre'};
     if ~isempty(setdiff(rv,ov))
         warning('required variables not in od, no calculation')
         return

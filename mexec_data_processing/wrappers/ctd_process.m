@@ -22,7 +22,7 @@ function ctd_process(stns, varargin)
 %   to run only the steps necessary for processing mooring caldips based on
 %   comparison with 1 Hz data
 % OR
-% ctd_process(stns, 'part1', 'forladcp')
+% ctd_process(stns, 'part1', 'for_ladcp')
 %   to run only the steps necessary for processing LADCP data using the
 %   LDEO IX software
 % OR
@@ -119,6 +119,13 @@ end
 
 %***rawedit?
 
+if dostep.checkplots
+    for stn = stns
+        mctd_checkplots
+        pause
+    end
+end
+
 if dostep.part2 || dostep.postedit
     %***check we already have the preliminary files?
     for stn = stns
@@ -130,21 +137,16 @@ end
 if dostep.part2 || dostep.postedit || dostep.nisk_fir
     for stn = stns
         %bottle firing data into .fir file, if there is one
-        infile2 = fullfile(root_ctd, sprintf('fir_%s_%03d',mcruise,stn));
-        if exist(m_add_nc(infile2),'file') ==2
-            mfir_04_addctd(stn)
-            mfir_to_sam(stn)
-        else
-            warning('File %s not found, skipping',m_add_nc(infile2))
-        end
+        mfir_04_addctd(stn)
+        mfir_to_sam(stn)
     end
-    if dostep.part2
-        %add serial numbers to sam_ file
-        if dostep.reload_sns
-            get_sensor_groups(stns,'restart','samonly')
-        else
-            get_sensor_groups(stns,'samonly')
-        end
+end
+if dostep.part2
+    %add serial numbers to sam_ file
+    if dostep.reload_sns
+        get_sensor_groups(stns,'restart','samonly')
+    else
+        get_sensor_groups(stns,'samonly')
     end
 end
 

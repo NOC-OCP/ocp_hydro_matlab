@@ -7,22 +7,24 @@ function mdcs_01_auto(stn)
 % dy146 ylf added start of cast estimate; sd025 ylf added end of cast
 % estimate
 
-m_common; opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
+m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'finding scan numbers corresponding to cast segments for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
-opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
-h1 = m_read_header(ctdfile1);
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+file1 = sprintf(ctdfile.p1,stn_string);
+h1 = m_read_header(file1);
 if ~isempty(intersect(h1.fldnam,'pumps'))
-    [d1, ~] = mloadq(infile1,'time','scan','press','pumps',' ');
+    [d1, ~] = mloadq(file1,'time','scan','press','pumps',' ');
 else
-    [d1, ~] = mloadq(infile1,'time','scan','press',' ');
+    [d1, ~] = mloadq(file1,'time','scan','press',' ');
 end
 
 auto_start = 0; auto_bot = 0; auto_end = 0; kstart = []; kbot = []; kend = []; 
 opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
 
-if exist(m_add_nc(otfile),'file')
-    [ds, hnew] = mloadq(otfile,'/');
+dfile = sprintf(dcsfile.dcs,stn_string);
+if exist(m_add_nc(dfile),'file')
+    [ds, hnew] = mloadq(dfile,'/');
 else
     clear ds hnew
     ds.statnum = stn;
@@ -97,7 +99,7 @@ if ~isfield(ds,'dc_end') || auto_end
 end
 
 %corresponding indices in 24hz file
-d24 = mloadq(ctdfile24,'scan',' ');
+d24 = mloadq(sprintf(ctdfile.p24,stn_string),'scan',' ');
 [~,ds.dc24_bot] = min(abs(d24.scan-ds.scan_bot));
 [~,ds.dc24_start] = min(abs(d24.scan-ds.scan_start));
 [~,ds.dc24_end] = min(abs(d24.scan-ds.scan_end));
@@ -118,4 +120,4 @@ varunits(ispress) = {'dbar'};
 
 MEXEC_A.Mprog = mfilename;
 hnew.fldnam = varnames; hnew.fldunt = varunits;
-mfsave(dcsfile, ds, hnew);
+mfsave(dcsfile.dcs, ds, hnew);

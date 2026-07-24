@@ -16,7 +16,9 @@ if ~exist(blinfile,'file')
         return
     end
 end
-if MEXEC_G.quiet<=1; fprintf(1,'reading in .bl file to %s.nc\n',dataname); end
+if MEXEC_G.quiet<=1; fprintf(1,['reading in .bl file to ' dataname '.nc\n'],stn_string); end
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+f = sprintf(firfile.fir,stn_string);
 
 %load scan and position for each rosette firing, from .bl or .btl file
 if contains(blinfile,'.bl')
@@ -101,12 +103,10 @@ if exist('cast_scan_offset','var') && cast_scan_offset(1)==stnlocal
         warning('not applying NaN offset to .bl scan number for %s',stn_string)
     else
         scan = scan + cast_scan_offset(3);
-        opt1 = 'ctd_proc'; opt2 = 'minit'; stn = floor(stn); get_cropt
-        blotfile_appendto = fullfile(root_ctd, sprintf('fir_%s_%s',mcruise,stn_string));
-        if exist(m_add_nc(blotfile_appendto),'file')
+        opt1 = 'setup'; opt2 = 'minit'; stn = floor(stn); get_cropt
+        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+        if exist(m_add_nc(f),'file')
             blappend = 1;
-        else
-            firfile = blotfile_appendto;
         end
     end
 end
@@ -116,18 +116,18 @@ comment = ['input data from ' blinfile];
 if blappend
     d.scan = scan; d.position = position;
     d.niskin = niskin; d.niskin_flag = niskin_flag;
-    h = m_read_header(blotfile_appendto);
+    h = m_read_header(f);
     [h.fldnam,~,ib] = intersect(fieldnames(d),h.fldnam,'stable');
     h.fldunt = h.fldunt(ib); h.fldserial = h.fldserial(ib);
     h = rmfield(h,{'alrlim','uprlim','absent','num_absent','dimrows','dimcols','dimsset'});
     h.comment = [h.comment '\n' comment];
-    mfsave(blotfile_appendto, d, h, '-merge', 'scan')
+    mfsave(f, d, h, '-merge', 'scan')
 
 else
 
     timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
     MEXEC_A.MARGS_IN = {
-        firfile
+        f
         'scan'
         'position'
         'niskin'
@@ -135,7 +135,7 @@ else
         ' '
         ' '
         '1'
-        dataname
+        firfile.dataname
         '/'
         '2'
         MEXEC_G.PLATFORM_TYPE

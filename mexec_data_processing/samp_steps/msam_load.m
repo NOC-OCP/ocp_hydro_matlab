@@ -55,9 +55,8 @@ if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle/calibration %s from file(s) spec
 if nargin==0
     samtyp = input('what type of sample (sal, oxy, nut, chl, co2, etc.)?  ','s');
 end
-root_in = mgetdir(['bot_' samtyp]);
-npat = ''; files = {};
 clear sopts
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 opt1 = 'samp_proc'; opt2 = 'files'; get_cropt
 if isempty(files)
     warning('no %s files found in %s; check opt_%s', samtyp, root_in, mcruise)
@@ -107,6 +106,12 @@ switch samtyp
         sdata = oxy_calc(sdata); %***output is per_l or per_kg? 
         mt = cellfun(@(x) contains(x, '_temp'), sdata.Properties.VariableNames);
         if sum(mt); sdata.Properties.VariableUnits(mt) = {'degC'}; end %***overwrite?
+        %rename and keep only some variables
+sdata.botoxy = sdata.conc_o2;
+sdata.botoxy_flag = sdata.flag;
+sdata.botoxy_temp = sdata.fix_temp;
+vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
+sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
     case 'sal'
         %e.g. average conductivity from 3 readings, and salinity from that
         sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
@@ -129,11 +134,10 @@ dnew = table2struct(dnew,'ToScalar',true);
 hnew.fldnam = dbot.Properties.VariableNames;
 hnew.fldunt = dbot.Properties.VariableUnits;
 %save to param_cruise_01.nc file
-hnew.dataname = sprintf('bot%s_%s_01',samtyp,mcruise);
-hnew.comment = sprintf('variables loaded from files %s in %s%s',npat,root_in,addcomment);
-root_out = fullfile(MEXEC_G.mgetdir(['bot_' samtyp]);
-otfile = fullfile(root_out, [hnew.dataname '.nc']);
-mfsave(otfile, dnew, hnew);
+hnew.dataname = sampfile.dataname;
+indir = fileparts(files{1});
+hnew.comment = sprintf('variables loaded from files in %s%s',indir,addcomment);
+mfsave(sampfile.(samtyp), dnew, hnew);
 
 
 function gs = msam_replicates(ds, samtyp)

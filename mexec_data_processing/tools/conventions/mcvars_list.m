@@ -24,7 +24,7 @@ if typ==1 % this is for ctd profiles
         'pumps' ... % on jr306, added back jc159
         %'ph' ...
         };
-    
+
 elseif typ==2 % this is for comparing with bottle samples
     
     var_copycell = {...
@@ -44,7 +44,7 @@ elseif typ==2 % this is for comparing with bottle samples
         
 else
     
-    error('pick variable list type 1, 2, or 3')
+    error('pick variable list type 1 or 2')
     
 end
 

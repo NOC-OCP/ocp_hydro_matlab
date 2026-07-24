@@ -28,6 +28,7 @@ function ctd_sensor_check(varargin)
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 
 setlims = 0;
 okf = [2 3 6];
@@ -55,9 +56,8 @@ else
     oxydiff = 0;
 end
 
-opt1 = 'ctd_proc'; opt2 = 'ctdsens_groups'; get_cropt
-if exist(sgfile,'file')
-    load(sgfile)
+if exist(ctdfile.sg,'file')
+    load(ctdfile.sg)
 end
 [ds, ~] = mload(fullfile(mgetdir('sam'),['sam_' mcruise '_all']),'/');
 

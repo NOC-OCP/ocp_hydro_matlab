@@ -7,9 +7,9 @@ function msbe_03_1hz(stn)
 %   calculate psal, asal, potemp using GSW;
 %   average to 1 hz and fill gaps as set in opt_cruise
 %
-% outputs: _psal (1 hz, used for plots and ladcp)
-%          wk_dvars_ (24 hz, used by mctd_04 to average to 2 dbar)
-%
+% outputs: _24hz with added variables
+%          _1hz (1 hz, used for plots and ladcp)
+%          
 % Use: mctd_03        and then respond with station number, or for station 16
 %      stn = 16; mctd_03;
 %
@@ -24,10 +24,11 @@ function msbe_03_1hz(stn)
 m_common; MEXEC_A.mprog = mfilename;
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
 
-opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 
 %calculate derived variables
-[d, h] = mloadq(ctdfile24,'/');
+file24 = sprintf(ctdfile.p24,stn_string);
+[d, h] = mloadq(file24,'/');
 iig = find(d.press>-1.495); %gsw won't work on p<=-1.495
 if length(iig)<length(d.press)
     m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points'};
@@ -37,12 +38,16 @@ if length(iig)<length(d.press)
         warning('%s\n',m{:});
     end
 end
-if ~strcmp('mS/cm',h.fldunt{strcmp('cond1',h.fldnam)})
-    warning('cond units should be mS/cm for psal calc, they are %s',h.fldunt(strcmp('cond1',h.fldnam)))
-    keyboard
+cu = {'S/m', 'mS/cm'; 10, 1};
+m = strcmp(cu(1,:),h.fldunt{strcmp(h.fldnam,'cond1')});
+if sum(m)
+    csc = cu{2,m};
+else
+    warning('conductivity units not recognised, should be S/m or mS/cm')
+    csc = NaN;
 end
-d.psal1 = NaN+d.cond1; d.psal1(iig) = gsw_SP_from_C(d.cond1(iig),d.temp1(iig),d.press(iig));
-d.psal2 = NaN+d.cond2; d.psal2(iig) = gsw_SP_from_C(d.cond2(iig),d.temp2(iig),d.press(iig));
+d.psal1 = NaN+d.cond1; d.psal1(iig) = gsw_SP_from_C(d.cond1(iig)*csc,d.temp1(iig),d.press(iig));
+d.psal2 = NaN+d.cond2; d.psal2(iig) = gsw_SP_from_C(d.cond2(iig)*csc,d.temp2(iig),d.press(iig));
 d.asal1 = NaN+d.cond1; d.asal1(iig) = gsw_SA_from_SP(d.psal1(iig),d.press(iig),h.longitude,h.latitude);
 d.asal2 = NaN+d.cond2; d.asal2(iig) = gsw_SA_from_SP(d.psal2(iig),d.press(iig),h.longitude,h.latitude);
 d.potemp1 = NaN+d.cond1; d.potemp1(iig) = gsw_pt0_from_t(d.asal1(iig),d.temp1(iig),d.press(iig));
@@ -61,7 +66,7 @@ if ~contains(h.comment, cstr)
 end
 
 %save to _24hz file
-mfsave(ctdfile24, d, h);
+mfsave(file24, d, h);
 
 %identify and copy preferred sensor (for this station) to variable without
 %sensor number (e.g. psal = psal1)
@@ -91,4 +96,4 @@ opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt
 tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew.time,1)>1; tg = tg'; end
 dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_ends', [0 0], 'postfill', maxfill1);
-mfsave(ctdfile1, dnew, hnew);
+mfsave(sprintf(ctdfile.p1,stn_string), dnew, hnew);

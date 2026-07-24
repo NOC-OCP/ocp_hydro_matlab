@@ -32,7 +32,7 @@ end
 if nargin>1
     depth_source = varargin{1};
 else
-    if MEXEC_G.ix_ladcp
+    if strcmp(MEXEC_G.datatypes.ladcp, 'ix')
         depth_source = {'ctd','ladcp'}; %first ctd, so we have an altimeter column as well, then fill with ladcp
     else
         depth_source = {'ctd'};

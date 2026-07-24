@@ -79,14 +79,8 @@ clear nump msg1
 % stnlocal is now the local station number
 % slist is the list of previous stations
 
-root_ctd = mgetdir('M_CTD');
-
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 % load data
-prefix1 = ['ctd_' mcruise '_'];
-prefix2 = ['dcs_' mcruise '_'];
-
-% load data
-
 klist = [slist(:)' stnlocal];
 sused = false(size(klist));
 infiles = cell(4,length(klist));
@@ -105,7 +99,7 @@ for no = 1:length(klist)
         infiles{2,no} = infile2;
         infiles{3,no} = infile3;
         infiles{4,no} = infile4;
-        [d2db{no}, ~] = mloadq(infile1,'/');
+        [d2db{no}, h] = mloadq(infile1,'/');
         [d2up{no}, ~] = mloadq(infile2,'/');
         [dpsal{no}, ~] = mloadq(infile3,'/');
         [ddcs{no}, ~] = mloadq(infile4,'/');
@@ -156,7 +150,7 @@ cklist = cklist(:)'; % force to row
 
 saltype = 'psal';
 opt1 = mfilename; opt2 = 'plot_saltype'; get_cropt
-opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
+oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
 nox = size(oxyvars,1);
 
 for plotlist = cklist

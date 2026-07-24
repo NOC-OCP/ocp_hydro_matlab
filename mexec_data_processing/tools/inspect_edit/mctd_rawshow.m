@@ -4,21 +4,16 @@
 % Use: mctd_rawshow        and then respond with station number, or for station 16
 %      stn = 16; mctd_rawshow;
 
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
+m_common
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'plotting 24 hz and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
 
-% resolve root directories for various file types
-root_ctd = mgetdir('M_CTD');
-prefix1 = ['ctd_' mcruise '_'];
-infile1 = fullfile(root_ctd, [prefix1 stn_string '_raw_cleaned']);
+infile1 = sprintf(ctdfile.clean,stn_string);
 if ~exist(m_add_nc(infile1),'file')
-    infile1 = fullfile(root_ctd, [prefix1 stn_string '_raw']);
-    if ~exist(m_add_nc(infile1),'file')
-        infile1 = fullfile(root_ctd, [prefix1 stn_string '_raw_noctm']);
-    end
+    infile1 = sprintf(ctdfile.raw,stn_string);
 end
-infile2 = fullfile(root_ctd, ['dcs_' mcruise '_' stn_string]);
-infile3 = fullfile(root_ctd, [prefix1 stn_string '_psal']);
+infile2 = sprintf(dcsfile.dcs,stn_string);
+infile3 = sprintf(ctdfile.p1,stn_string);
 
 hraw = m_read_header(infile1);
 [ddcs, hdcs]  = mloadq(infile2,'/');
@@ -27,14 +22,12 @@ dn_end = m_commontime(ddcs.time_end(1),'time_end',hdcs,'datenum');
 startdc = datevec(dn_start);
 stopdc = datevec(dn_end);
 opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
-if oxy_end
-    stopdco = stopdc; 
-    stopdco = datevec(datenum(stopdc)-oxy_align/3600/24);
+if isfield(co,'oxy_align') && ~isnan(co.oxy_align)
+    stopdco = datevec(datenum(stopdc)-co.oxy_align/3600/24);
 end
 
-close all
-
-nox = size(oxyvars,1);
+m = strncmp('oxy',hraw.fldnam,3); oxyvars = hraw.fldnam(m);
+nox = length(oxyvars);
 % limit variables to plot
 opt1 = 'ctd_proc'; opt2 = 'rawshow'; get_cropt
 

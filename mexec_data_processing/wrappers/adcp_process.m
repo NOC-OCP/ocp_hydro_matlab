@@ -1,5 +1,13 @@
-function adcp_process(klist,constraints_try,varargin)
+function adcp_process(klist, types, varargin)
 %
+% wrapper script for processing LADCP and/or SADCP for stations in klist
+% types is {'ladcp', 'sadcp'} or a subset
+% optional arguments are parameter-value pairs:
+%   'ladcp_constraints' is {'GPS', 'BT', 'SADCP'} (default) or a subset
+%   'ladcp_pause' is 0 (default) or 1 to pause after each version of ladcp
+%     processing
+%
+% adcp_process(klist, {'ladcp'})
 % to run with all available constraints:
 % run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'})
 % if sadcp not available
@@ -22,123 +30,135 @@ function adcp_process(klist,constraints_try,varargin)
 
 %add option to call mvad_station_av***
 
-if nargin>4 && strcmp(varargin{3},'pause')
-    dopause = 1;
-else
-    dopause = 0;
+m_common
+ladcp_pause = 0;
+ladcp_constraints = {'GPS','BT','SADCP'};
+for no = 1:2:nargin-2
+    eval([varargin{no} ' = varargin{no+1};'])
 end
 
-if isempty(which('getinv'))
-    error('LADCP processing functions not on path; try running m_setup again')
-end
-cdir = pwd;
-m_common; mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-if isfield(MEXEC_G,'mexec_shell_scripts')
-    css = fullfile(MEXEC_G.mexec_shell_scripts,'lad_syncscript');
-    if exist(css,'file'); dosync = 1; else; dosync = 0; end
+%first vmadcp
+if ismember('sadcp',types)
+
+
 end
 
-klist = klist(:)';
-for no = 1:14
-    cfg0.figh(no) = figure(no);
-end
-doincr = 0; dosep = 0;
-if nargin>2
-    if strcmp(varargin{1},'incr')
-        doincr = 1;
+
+%then ladcp
+if ismember('ladcp',types) 
+    if isempty(which('getinv'))
+        error('LADCP processing functions not on path; try running m_setup again')
     end
-    if nargin>3
-        if strcmp(varargin{2},'sepdlul')
-            dosep = 1;
+
+    cdir = pwd;
+    if isfield(MEXEC_G,'mexec_shell_scripts')
+        css = fullfile(MEXEC_G.mexec_shell_scripts,'data_to_ws','lad_syncscript.sh');
+        if exist(css,'file'); dosync = 1; else; dosync = 0; end
+    end
+
+    klist = klist(:)';
+    for no = 1:14
+        cfg0.figh(no) = figure(no);
+    end
+    doincr = 0; dosep = 0;
+    if nargin>2
+        if strcmp(varargin{1},'incr')
+            doincr = 1;
+        end
+        if nargin>3
+            if strcmp(varargin{2},'sepdlul')
+                dosep = 1;
+            end
         end
     end
-end
 
-for stn = klist
+    for stn = klist
 
-    % configuration defaults and cruise-specific options
-    cfg = cfg0;
-    opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
-    cfg.stnstr = stn_string;
-    cfg.p.cruise_id = mcruise;
-    cfg.p.ladcp_station = stnlocal;
-    if exist('shortcasts','var') && ismember(stnlocal,shortcasts)
-        cfg.p.btrk_mode = 0;
-        cfg.p.getdepth = 1;
-        couldbt = 0;
-    else
-        couldbt = 1;
-        cfg.p.btrk_mode = 2;
-        %cfg.p.btrk_ts = 30;
-    end
-    opt1 = 'adcp_proc'; get_cropt %cfg and set pattern for down- and up-looker files
-    infiled = fullfile(cfg.rawdir,cfg.dnpat);
-    infileu = fullfile(cfg.rawdir,cfg.uppat);
-    %stn = stnlocal;
-    % first sync (if lad_syncscript found) -- just once per call
-    if dosync; system(css); dosync = 0; end
-
-    % find out which raw files we have
-    if isul
-        if isempty(dir(infileu))
-            warning('opt_%s says there should be an uplooker but file\n %s\n not found; maybe not yet synced?',mcruise,infileu)
-            isul = 0;
+        % configuration defaults and cruise-specific options
+        cfg = cfg0;
+        opt1 = 'setup'; opt2 = 'minit'; get_cropt
+        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+        cfg.stnstr = stn_string;
+        cfg.p.cruise_id = mcruise;
+        cfg.p.ladcp_station = stnlocal;
+        if exist('shortcasts','var') && ismember(stnlocal,shortcasts)
+            cfg.p.btrk_mode = 0;
+            cfg.p.getdepth = 1;
+            couldbt = 0;
+        else
+            couldbt = 1;
+            cfg.p.btrk_mode = 2;
+            %cfg.p.btrk_ts = 30;
         end
-    end
-    if isempty(dir(infiled))
-        warning('no downlooker file %s\n maybe not yet synced?',infiled)
-        isdl = 0;
-        couldbt = 0;
-    else
-        isdl = 1;
-    end
-    if ~isdl && ~isul; continue; end
+        opt1 = 'adcp_proc'; get_cropt %cfg and set pattern for down- and up-looker files
+        infiled = fullfile(cfg.rawdir,cfg.dnpat);
+        infileu = fullfile(cfg.rawdir,cfg.uppat);
+        %stn = stnlocal;
+        % first sync (if lad_syncscript found) -- just once per call
+        if dosync; system(['bash ' css]); dosync = 0; end
 
-    %limit constraints
-    cfg.constraints = constraints_try;
-    if ~isdl || ~couldbt
-        cfg.constraints = setdiff(cfg.constraints,'BT');
-    end
-    if ~isfield(cfg.f,'sadcp') || ~exist(cfg.f.sadcp,'file')
-        cfg.constraints = setdiff(cfg.constraints,'SADCP');
-    else
-        cfg.SADCP_inst = SADCP_inst;
-    end
-
-    %first run with all
-    if isul && isdl
-        cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
-    elseif isdl
-        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
-    else
-        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
-    end
-
-    if doincr
-        %now run with one less
-        cfg.constraints(end) = [];
-        if isfield(cfg,'SADCP_inst') && ~sum(ismember(cfg.constraints,'SADCP'))
-            cfg = rmfield(cfg,'SADCP_inst');
-            cfg.f = rmfield(cfg.f,'sadcp');
+        % find out which raw files we have
+        if isul
+            if isempty(dir(infileu))
+                warning('opt_%s says there should be an uplooker but file\n %s\n not found; maybe not yet synced?',mcruise,infileu)
+                isul = 0;
+            end
         end
-        while ~isempty(cfg.constraints)
-            process_cast_cfgstr(stn, cfg); lpause(cfg,dopause)
+        if isempty(dir(infiled))
+            warning('no downlooker file %s\n maybe not yet synced?',infiled)
+            isdl = 0;
+            couldbt = 0;
+        else
+            isdl = 1;
+        end
+        if ~isdl && ~isul; continue; end
+
+        %limit constraints
+        cfg.constraints = ladcp_constraints;
+        if ~isdl || ~couldbt
+            cfg.constraints = setdiff(cfg.constraints,'BT');
+        end
+        if ~isfield(cfg.f,'sadcp') || ~exist(cfg.f.sadcp,'file')
+            cfg.constraints = setdiff(cfg.constraints,'SADCP');
+        else
+            cfg.SADCP_inst = SADCP_inst;
+        end
+
+        %first run with all
+        if isul && isdl
+            cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
+        elseif isdl
+            cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
+        else
+            cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
+        end
+
+        if doincr
+            %now run with one less
             cfg.constraints(end) = [];
+            if isfield(cfg,'SADCP_inst') && ~sum(ismember(cfg.constraints,'SADCP'))
+                cfg = rmfield(cfg,'SADCP_inst');
+                cfg.f = rmfield(cfg.f,'sadcp');
+            end
+            while ~isempty(cfg.constraints)
+                process_cast_cfgstr(stn, cfg); lpause(cfg,ladcp_pause)
+                cfg.constraints(end) = [];
+            end
         end
-    end
 
-    if dosep && isdl && isul
-        %run last (least) set of constraints with dl and ul separately (if
-        %both aren't present for this cast, this is unnecessary)
-        cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
-        cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, dopause);
-    end
+        if dosep && isdl && isul
+            %run last (least) set of constraints with dl and ul separately (if
+            %both aren't present for this cast, this is unnecessary)
+            cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
+            cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
+        end
 
+    end
+    cd(cdir)
 end
-cd(cdir)
 
-function lpause(cfg, dopause)
-if dopause
+function lpause(cfg, ladcp_pause)
+if ladcp_pause
     fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cell2mat(cfg.constraints));
     pause
 end

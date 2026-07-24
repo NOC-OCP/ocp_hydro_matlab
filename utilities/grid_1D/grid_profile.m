@@ -154,10 +154,10 @@ end
 
 %convert data to be gridded to matrix
 gridin = d.(gridvar); 
-if ~ismember(method, calcgms)
-    %don't grid, assign as gridvec later
-    d.(gridvar) = [];
-end
+% if ~ismember(method, calcgms)
+%     %don't grid, assign as gridvec later
+%     d.(gridvar) = [];
+% end
 data = d{:,:};
 
 %fill NaNs if specified

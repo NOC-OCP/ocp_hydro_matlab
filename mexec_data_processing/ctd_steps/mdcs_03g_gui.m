@@ -13,18 +13,17 @@ function mdcs_03g_gui(stn)
 % sd025 ylf also end
 
 m_common
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
 fprintf(1,'interactively select (or confirm) start, bottom, and end of cast,\n written to dcs_%s_%s.nc.',mcruise,stn_string)
 opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
 
-opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
 
-[d, h] = mloadq(ctdfile1,'/');
+[d, h] = mloadq(sprintf(ctdfile.p1,stn_string),'/');
 if ~sum(strcmp('press',h.fldnam))
     error('press not found in 1hz file')
 end
-d24 = mloadq(ctdfile24, 'scan', 'time', 'press', ' ');
+d24 = mloadq(sprintf(ctdfile.p24,stn_string), 'scan', 'time', 'press', ' ');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% start graphical part
 
@@ -43,7 +42,7 @@ pw = .8;
 ph = .13;
 
 %initial estimates
-[dd,hd] = mloadq(dcsfile, '/');
+[dd,hd] = mloadq(dcsfile.dcs, '/');
 opt1 = 'mstar'; get_cropt
 if isfield(dd, 'dc_start')
     k_start = dd.dc_start;
@@ -296,8 +295,8 @@ if exist('ds','var')
     hnew.comment = [hnew.comment 'of cast overwritten with manual selections\n'];
 
     MEXEC_A.Mprog = mfilename;
-    mfsave(otfile, ds, hnew, '-addvars');
+    mfsave(dcsfile.dcs, ds, hnew, '-addvars');
 else
-    h = m_read_header(otfile); h.comment = [h.comment ' cast start/bottom/end inspected but not changed\n'];
-    ncfile.name = m_add_nc(otfile); m_write_header(ncfile,h);
+    h = m_read_header(dcsfile.dcs); h.comment = [h.comment ' cast start/bottom/end inspected but not changed\n'];
+    ncfile.name = m_add_nc(dcsfile.dcs); m_write_header(dcsfile.dcs,h);
 end

@@ -23,13 +23,13 @@ function mctd_04_profile(stn)
 m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from 24 hz to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
-opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 
 MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[dd, hd] = mload(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
+[dd, hd] = mload(dcsfile.dcs,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
 if isempty(strfind(hd.comment,'manual')) && isempty(strfind(hd.comment,'inspected'))
     warning('using automatically detected cast start/bottom/end')
 end
@@ -53,18 +53,19 @@ end
 %%%%% determine what variables will go in 2 dbar averaged files %%%%%
 %%%%% copy for downcast and upcast %%%%%
 
-[d, h] = mload(ctdfile24, '/');
+[d, h] = mload(sprintf(ctdfile.p24,stn_string), '/');
 [var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
 
 %use oxy_end to NaN that many seconds before dcs scan_start
-opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
-if oxy_end==1
-    oe = d.scan>=dd.scan_end-24*oxy_align;
+opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
+if co.oxy_align>0
+    oe = d.scan>=dd.scan_end-24*co.oxy_align;
+    oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
     for no = 1:size(oxyvars,1)
         d.(oxyvars{no})(oe) = NaN;
     end
     d.oxygen(oe) = NaN;
-    commentstr = ['edited out last ' num2str(oxy_align*24) ' scans from oxygen'];
+    commentstr = ['edited out last ' num2str(co.oxy_align*24) ' scans from oxygen'];
     if ~contains(h.comment, commentstr); h.comment = [h.comment '\n ' commentstr]; end
 end
 
@@ -179,60 +180,10 @@ if ~contains(hn.comment, commentstr); hn.comment = [hn.comment commentstr]; end
 if isdown
     hnd = hn;
     if ~contains(hnd.comment,commentd); hnd.comment = [commentd; '\n '; hnd.comment]; end
-    mfsave(ctdfiled, dn2, hnd);
+    mfsave(sprintf(ctdfile.d,stn_string), dn2, hnd);
 end
 
 if isup
     hnu = hn;
-    mfsave(ctdfileu, up2, hnu);
+    mfsave(sprintf(ctdfile.u,stn_string), up2, hnu);
 end
-
-function [d, h] = copy_sensor(d, h, stn)
-
-m_common
-
-%identify preferred sensors for (T,C) and O on this station
-opt1 = 'ctd_proc'; opt2 = 'sensor_choice'; get_cropt 
-if ismember(stn, stns_alternate_s)
-    s_choice = setdiff([1 2], s_choice);
-end
-if ismember(stn, stns_alternate_o)
-   o_choice = setdiff([1 2],o_choice);
-end
-if o_choice == 2 && ~sum(strcmp('oxygen2', h.fldnam))
-   error(['no oxygen2 found; edit opt_' mcruise ' mctd_01 and try again'])
-end
-
-%copy selected sensor to new names without sensor number
-h0 = h;
-vars = {'temp' 'cond' 'psal' 'potemp' 'asal'};
-for vno = 1:length(vars)
-    name0 = [vars{vno} num2str(s_choice)];
-    ii = find(strcmp(name0,h.fldnam));
-    if ~isempty(ii)
-        d.(vars{vno}) = d.(name0);
-        if ~sum(strcmp(vars{vno},h.fldnam))
-            h.fldnam = [h.fldnam vars{vno}];
-            h.fldunt = [h.fldunt h.fldunt{ii}];
-            h.fldserial = [h.fldserial h.fldserial{ii}];
-        end
-        h0.fldnam{ii} = vars{vno};
-    end
-end
-h = keep_hvatts(h, h0);
-h0 = h;
-vars = {'oxygen'};
-for vno = 1:length(vars)
-    name0 = [vars{vno} num2str(o_choice)];
-    ii = find(strcmp(name0,h.fldnam));
-    if ~isempty(ii)
-        d.(vars{vno}) = d.(name0);
-        if ~sum(strcmp(vars{vno},h.fldnam))
-            h.fldnam = [h.fldnam vars{vno}];
-            h.fldunt = [h.fldunt h.fldunt{ii}];
-            h.fldserial = [h.fldserial h.fldserial{ii}];
-        end
-        h0.fldnam{ii} = vars{vno};
-    end
-end
-h = keep_hvatts(h, h0);

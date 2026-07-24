@@ -14,28 +14,24 @@ function msam_merge(samtyp)
 % called by samp_process.m
 
 m_common
-samcfile = fullfile(mgetdir('M_CTD'), ['sam_' mcruise '_all.nc']);
-samufile = fullfile(mgetdir('M_BOT'), ['ucsw_' mcruise '_all.nc']); %save underway data here
-samusrcfile = fullfile(mgetdir('M_TSG'), ['surface_ocean_' mcruise '_all.nc']);
-if MEXEC_G.quiet<1; fprintf(1, 'loading bottle %s from %s_%s_01.nc, saving to %s and %s',samtyp,samtyp,samcfile,samufile); end
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+if MEXEC_G.quiet<1; fprintf(1, 'loading bottle %s from %s_%s_01.nc, saving to %s and %s',samtyp,sampfile.(samtyp),samufile); end
 
 %defaults
-dataname = [samtyp '_' mcruise '_01'];
-pointfile = fullfile(mgetdir('bot'),[dataname '.nc']); %input file
 svars = {'sampnum','niskin_flag'}; %variables to load from sample file (already matched to Niskin firings)
 uvars = {'dday','flow'}; %variables to load from underway time series file (and interpolate)
 pvars = 1; %1 to save all variables from paramfile to sam*file, otherwise list specific variables (using names after convs.rename has been applied)
 %modify defaults
 switch samtyp
     case 'chl'
-        hnew.comment = ['chlorophyll data from ' dataname '.nc'];
+        hnew.comment = ['chlorophyll data from ' sampfile.dataname '.nc'];
         uvars = [uvars, 'fluo'];
     case 'oxy'
         %rename for backwards compatibility?***
         convs.umol_per_l_to_per_kg.temp = 'botoxy_temp'; %convert using oxygen draw temperature from each sample if recorded
         svars = [svars, 'uasal'];
         pvars = {'botoxy','botoxy_temp','botoxy_flag'};
-        hnew.comment = ['oxygen data from ' dataname '.nc'];
+        hnew.comment = ['oxygen data from ' sampfile.dataname '.nc'];
         opt1 = 'samp_proc'; opt2 = 'oxy_to_sam'; get_cropt %could set to not avg, or could set to not convert units if they were already reported in /kg
         %losing backwards compatibility to make an appended oxy file
         %first***
@@ -44,7 +40,7 @@ switch samtyp
         svars = [svars, 'uasal'];
         uvars = [uvars, 'salinity']; %***
         opt1 = 'samp_proc'; opt2 = 'nut_to_sam'; get_cropt %could set to not avg, or change the lab temp***
-        hnew.comment = ['nutrient data from ' dataname '.nc']; %***overwrite comment or add comment?
+        hnew.comment = ['nutrient data from ' sampfile.dataname '.nc']; %***overwrite comment or add comment?
     case 'sal'
 %        convs.rename = {'botpsal', {'salinity_adj','salinity'};... %by
 %        default this should be in mexec_defaults samp_proc parse as
@@ -52,27 +48,27 @@ switch samtyp
 %            'botpsal_flag', {'flag'}}; %backwards compatibility
         pvars = {'botpsal','botpsal_flag'};
         uvars = [uvars, 'salinity'];
-        hnew.comment = ['salinity data from ' dataname '.nc'];
+        hnew.comment = ['salinity data from ' sampfile.dataname '.nc'];
     case 'sbe35'
-        pointfile = fullfile(mgetdir('M_SBE35'), dataname);
         pvars = {'sbe35temp'; 'sbe35temp_flag'}; %list which to copy because we don't need to copy tdiff etc.***
-        hnew.comment = ['SBE35 data from ' dataname '.nc'];
+        hnew.comment = ['SBE35 data from ' sampfile.dataname '.nc'];
     case 'iso'
         %***just default?
     otherwise
 end
 
 %load data saved by msam_load in pointfile, along with CTD/underway
-%parameters required to convert from samcfile and samusrcfile 
-[dp, hp] = mloadq(pointfile, '/');
+%parameters required to convert from samufile and ucfiles.ocean 
+pointfile = sprintf(sampfile.(samtyp),sampfile.dataname);
+[dp, hp] = mloadq(pointfile,'/');
 if sum(dp.sampnum>0 & dp.sampnum<1e6)
     %there are CTD samples
     [dc, hc] = mloadq(samcfile, strjoin(svars, ' ')); %***
     [dp, hp] = merge_mvars(dp, hp, dc, hc, 'sampnum', 1);
 end
-if sum(dp.sampnum<0 | dp.sampnum>1e9)
+if sum(dp.sampnum<0 | dp.sampnum>1e9) && exist(ucfiles.ocean,'file')
     %there are underway samples; interpolate from surface_ocean file
-    [du, hu] = mloadq(samusrcfile, strjoin(uvars, ' '));
+    [du, hu] = mloadq(ucfiles.ocean, strjoin(uvars, ' '));
     dnum = m_commontime(du,'dday',hu,'datenum');
     sampnump = str2num(datestr(dnum,'yyyymmddHHMM'));
     sampnumn = -floor(du.dday)*1e4 - str2num(datestr(dnum,'HHMM'));
