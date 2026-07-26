@@ -2,7 +2,7 @@ function mout_uway_avgd_combined
 
 m_common
 
-opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 
 %make sure 60-s ocean data is first, then nearest-neighbor interpolate 30-s
 %atmos and nav data to its times

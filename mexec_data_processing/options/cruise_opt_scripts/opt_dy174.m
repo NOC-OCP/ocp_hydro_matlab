@@ -135,6 +135,10 @@ switch opt1
 
     case 'ship'
         switch opt2
+            case 'datasys_best'
+                default_navstream = 'posmv_gpgga';
+                default_hedstream = 'posmv_pashr';
+                default_attstream = 'posmv_pashr';
             case 'rvdas_database'
                 RVDAS.machine = '192.168.65.51';
                 RVDAS.jsondir = '/data/pstar/mounts/mnt_cruise_data/Ship_Systems/Data/RVDAS/Sensorfiles/'; %original

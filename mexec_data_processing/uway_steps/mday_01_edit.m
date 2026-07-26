@@ -200,7 +200,7 @@ depvar = munderway_varname('depvar', h.fldnam, 's');
 depvars = union(union(depbtvar,depsfvar),depvar);
 
 %find positions to use for carter correction
-opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
 m = strcmp(default_navstream,mtable.tablenames);
 navfile = fullfile(mgetdir(''), mtable.mstardir{m}, [mtable.mstarpre{m} '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
 if exist(navfile,'file')

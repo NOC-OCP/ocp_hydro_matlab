@@ -29,7 +29,7 @@ else
     dd.dnum = m_commontime(dd,'time',dh,'datenum');
     dv1 = datevec(dd.dnum(1)-1/24);
     dv2 = datevec(dd.dnum(end)+1/24);
-    opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+    opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
     switch MEXEC_G.Mshipdatasystem
         case 'rvdas'
             try
@@ -68,7 +68,7 @@ dd.yearday = m_commontime(dd,'time',dh,sprintf('days since %d 1 1 0 0 0',y0));
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
 cfg.stnstr = stn_string;
-opt1 = 'adcp_proc'; opt2 = 'ctdin'; get_cropt
+opt1 = 'adcp_proc'; get_cropt
 fid = fopen(cfg.f.ctd,'w'); mfixperms(cfg.f.ctd);
 %fprintf(fid,'%s\n',ctdh);
 for kl = 1:length(kok)

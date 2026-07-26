@@ -190,7 +190,7 @@ end
 if isup
     hnu = hn;
     mfsave(otfile1u, up2, hnu);
-end
+endfunction [d, h] = copy_sensor(d, h, stn)
 
 m_common
 

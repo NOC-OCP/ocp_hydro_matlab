@@ -122,7 +122,7 @@ if isstruct(d)
         intype = 'colstr';
         for fno = 1:length(fn)
             if size(d.(fn{fno}),1)==s(1) && isnumeric(d.(fn{fno}))
-                %d.(fn{fno}) = d.(fn{fno});
+                d.(fn{fno}) = d.(fn{fno});
             else
                 d0.(fn{fno}) = d.(fn{fno});
                 d = rmfield(d,fn{fno});

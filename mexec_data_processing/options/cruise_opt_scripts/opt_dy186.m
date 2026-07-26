@@ -9,16 +9,23 @@ switch opt1
                 use_ix_ladcp = 'no';
         end
 
-
-
-        %%%%%%%%%%%%%%%%%%%%%%%% basic processing %%%%%%%%%%%%%%%%%%%%%%
-    case 'uway_proc' 
+    case 'ship'
         switch opt2
+            case 'datasys_best'
+                default_navstream = 'posmv_gpgga';
+                default_hedstream = 'posmv_pashr';
+                default_attstream = 'posmv_pashr';
             case 'rvdas_database'
                 RVDAS.jsondir = ''; %no "original" on shared drive, copy is already in cruise/data/rvdas/json_files
                 RVDAS.loginfile = '/data/pstar/plocal/rvdas_addr'; %contains credentials, address, and database, e.g. postgresql://user:passwd@ip.ad.re.ss/DY186
             case 'rvdas_skip'
                 %skips.sentence = [skips.sentence, 'surfmet_gpxsm', 'ranger2usbl_psonlld'];
+        end
+
+
+        %%%%%%%%%%%%%%%%%%%%%%%% basic processing %%%%%%%%%%%%%%%%%%%%%%
+    case 'uway_proc' 
+        switch opt2
             case 'sensor_unit_conversions'
                 %manufacturer/factory cals
                 switch abbrev

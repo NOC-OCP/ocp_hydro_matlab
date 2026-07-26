@@ -13,7 +13,7 @@ switch opt1
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2023 1 1 0 0 0];
         end
 
-    case 'uway_proc'
+    case 'ship'
         switch opt2
             case 'rvdas_database'
                 RVDAS.machine = 'sdl-rvdas-s1.sda.bas.ac.uk';

@@ -6,11 +6,6 @@
 
 switch opt1
 
-    case 'setup'
-        switch opt2
-            case 'mdirlist'
-        end
-
     case 'ctd_proc'
         switch opt2
             case 'minit'

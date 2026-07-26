@@ -20,7 +20,7 @@ gvars = {}; %by default grid all other variables
 %define input and output files
 switch datatype
     case 'nav'
-        opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+        opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
         source = {'position'; 'heading'; 'attitude'};
         streams = {default_navstream; default_hedstream; default_attstream};
         required = [1 1 0];
@@ -44,7 +44,7 @@ switch datatype
         tavp_s = 60; % 1 min
         gmethod = 'meannum';
     case 'atmos'
-        opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+        opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
         source = {'surfmet'; 'windsonic'; 'position'};
         streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'};
         required = [0 1 1];
