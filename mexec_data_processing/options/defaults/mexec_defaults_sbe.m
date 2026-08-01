@@ -25,7 +25,6 @@ else
                 '%', 'percent'
                 };
             %names (after applying nu) to change to standard names for
-            %further processing. derived variables discarded at this stage
             %(but listed in header)
             nn = {'pumps', 'pumps'
                 'latitude', 'latitude'

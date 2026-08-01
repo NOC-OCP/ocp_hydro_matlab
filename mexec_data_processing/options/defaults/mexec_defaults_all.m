@@ -184,11 +184,20 @@ switch opt1
             case 'cast_divide'
                 %
             case 'rawshow'
-                %by default, do not plot press_temp, turb, xmiss, fluor,
-                %lat, lon in mctd_rawshow
-                rawplotvars = {'temp1','temp2','cond1','cond2','press','oxy1','oxy2'};
-                show1 = 1; %do plot 1 hz also
+                %two groupings to show
+                rppars = {{'temp','cond','press','oxy'}
+                    {'fluor','turbidity','transmittance'}};
+                yl.temp = [-2 40]; 
+                if strcmp(h.fldunt{strcmp(h.fldnam,'cond1')},'S/m')
+                    yl.cond = [20 40]; 
+                else
+                    yl.cond = [2 4];
+                end
+                yl.press = [-1 6000]; yl.oxy = [100 400];
+                yl.fluor = [0 8]; 
+                yl.turbidity = [0 1]; yl.transmittance = [60 101]; 
         end
+    
 
     case 'nisk_proc'
         switch opt2

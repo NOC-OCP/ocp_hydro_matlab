@@ -6,23 +6,13 @@ function adcp_process(klist, types, varargin)
 %   'ladcp_constraints' is {'GPS', 'BT', 'SADCP'} (default) or a subset
 %   'ladcp_pause' is 0 (default) or 1 to pause after each version of ladcp
 %     processing
+%   'ladcp_incr' is 1 (default) to apply each constraint incrementally
+%     (i.e. in example above run process_cast with 'GPS', with 'GPS' &
+%     'BT', and with 'GPS', 'BT', & 'SADCP')
+%    'ladcp_sepud' is 1 (default) to process the up- and down-looker
+%      separately *as well as together* (ignored if there is only one
+%      instrument)
 %
-% adcp_process(klist, {'ladcp'})
-% to run with all available constraints:
-% run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'})
-% if sadcp not available
-% run_proc_ladcp(stn,{'GPS' 'BT'})
-%
-% to run each intermediate step (gps-only, gps+bt, then all 3):
-% run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'},'incr')
-%
-% to also run dl and ul separately with gps constraints:
-% run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'},'incr','sepdlul')
-%
-% or to run all constraints but also separate dl and ul:
-% run_proc_ladcp(stn,{'GPS' 'BT' 'SADCP'},'','sepdlul')
-%
-%wrapper script for LADCP IX processing with different constraints
 %always process up and downlooker separately to check beam
 %quality***(though does this work for really shallow cast?)
 %but only process together if it's deep enough***, otherwise DL is version
@@ -33,6 +23,8 @@ function adcp_process(klist, types, varargin)
 m_common
 ladcp_pause = 0;
 ladcp_constraints = {'GPS','BT','SADCP'};
+ladcp_incr = 1;
+ladc_sepud = 1;
 for no = 1:2:nargin-2
     eval([varargin{no} ' = varargin{no+1};'])
 end
@@ -59,17 +51,6 @@ if ismember('ladcp',types)
     klist = klist(:)';
     for no = 1:14
         cfg0.figh(no) = figure(no);
-    end
-    doincr = 0; dosep = 0;
-    if nargin>2
-        if strcmp(varargin{1},'incr')
-            doincr = 1;
-        end
-        if nargin>3
-            if strcmp(varargin{2},'sepdlul')
-                dosep = 1;
-            end
-        end
     end
 
     for stn = klist
@@ -133,7 +114,7 @@ if ismember('ladcp',types)
             cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
         end
 
-        if doincr
+        if ladcp_incr
             %now run with one less
             cfg.constraints(end) = [];
             if isfield(cfg,'SADCP_inst') && ~sum(ismember(cfg.constraints,'SADCP'))
@@ -146,7 +127,7 @@ if ismember('ladcp',types)
             end
         end
 
-        if dosep && isdl && isul
+        if ladcp_sepud && isdl && isul
             %run last (least) set of constraints with dl and ul separately (if
             %both aren't present for this cast, this is unnecessary)
             cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);

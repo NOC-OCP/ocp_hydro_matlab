@@ -7,6 +7,7 @@ function params = mout_columns_defaults(params)
 % where available, and defaults set below otherwise
 
 m_common
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 if ~isfield(params,'vars_exclude'); params.vars_exclude = {}; end
 opt1 = 'outputs'; opt2 = params.out; get_cropt %vars_exclude, header, etc.
 
@@ -113,7 +114,7 @@ if ~isfield(params,'stnlist')
             params.stnlist = -1; %all come from sam_all file
         case 'ctd'
             %all available stations
-            d = dir(fullfile(mgetdir(params.in),sprintf('%s_%s_*%s.nc',params.in,mcruise,params.suf)));
+            d = dir(fullfile(MEXEC_G.MDIRLIST.M_CTD,sprintf('%s_%s_*%s.nc',params.in,mcruise,params.suf)));
             d = replace({d.name},[params.in '_' mcruise '_'],'');
             d = cell2mat(d(:));
             params.stnlist = str2num(d(:,1:3))';
@@ -181,7 +182,7 @@ end
 
 % defaults about filenames
 if ~isfield(params,'ddir')
-    params.ddir = mgetdir(params.in);
+    params.ddir = MEXEC_G.MDIRLIST.(['M_' upper(params.in)]);
 end
 switch params.out
     case 'exch'

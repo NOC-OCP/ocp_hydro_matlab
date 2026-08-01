@@ -15,6 +15,7 @@ opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 f = sprintf(firfile.fir,stn_string);
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)
+    return
 end
 if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to %s\n', f); end
 %not using 24hz because we want at least some averaging

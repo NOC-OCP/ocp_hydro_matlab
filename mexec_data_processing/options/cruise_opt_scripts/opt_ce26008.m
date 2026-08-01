@@ -15,10 +15,17 @@ switch opt1
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,[upper(mcruise) '_' stn_string '.cnv']);
             case 'rawedit_auto'
-                co.rangelim.press = [-1.25 4000]; %edit out larger spikes
-                co.rangelim.cond = [0 100];
-                co.rangelim.temp = [0 100];
-                co.rangelim.oxy = [0 500];
+                %use rangelim first
+                co.rangelim.press = [-1.25 3300]; 
+                co.rangelim.cond = [3 5];
+                co.rangelim.temp = [-2 18];
+                co.rangelim.oxy = [120 300];
+                co.rangelim.turbidity = [0 1];
+                co.rangelim.fluor = [0 8];
+                %then despike
+                co.despike.press = [10 10];
+                co.despike.temp1 = [1 1]; co.despike.cond1 = [0.2 0.2]; co.despike.oxy1 = [10 10];
+                co.despike.temp2 = [1 1]; co.despike.cond2 = [0.2 0.2]; co.despike.oxy2 = [10 10];
             case 'cast_split_comb'
                 if stn==25.1
                     otfile_appendto = fullfile(MEXEC_G.MDIRLIST.M_CTD,'ctd_ce26008_025_cnv.nc');
@@ -34,12 +41,17 @@ switch opt1
                     getpos_for_ctd(otfile, 1, 'write');
                     mfir_01_load(25.1);
                 end
+            case 'rawshow'
+                yl.temp = [-2 18]; yl.cond = [3 5]; yl.oxy = [120 300];
+                yl.press = [-1 3200];
+                yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
+                yl.fluor = [0 8];
         end
 
     case 'nisk_proc'
         switch opt2
             case 'blfilename'
-                if stn==65.1
+                if stn==25.1
                     blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_025b.bl',upper(mcruise)));
                 else
                     blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_%s.bl',upper(mcruise),stn_string));
@@ -157,7 +169,70 @@ switch opt1
         if stnlocal==6
             cfg.uppat = sprintf('UL%s00*m.000',cfg.stnstr);
             cfg.dnpat = sprintf('DL%s00*s.000',cfg.stnstr);
-        end            
+        end         
+
+    case 'outputs'
+        switch opt2
+            case 'summary'
+                snames = {'nsal' 'noxy' 'nnut' 'nco2'};
+                sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'totnit'} {'dic' 'talk' 'ph'}};
+            % case 'sam_shore'
+            %     fnin = fullfile(mgetdir('M_CTD'),'BOTTLE_SHORE', 'DY181 Samples for Onshore Analysis - DIC.xlsx');
+            %     varmap.statnum = {'CTDNumber'};
+            %     varmap.position = {'Niskin'};
+            %     varmap.dic = {'N_DICSamples'};
+            %     varmap.talk = {'N_DICSamples'};
+            case 'exch'
+                ns = 35;
+                expocode = '54CE20260723';
+                sect_id = 'AR7E; AR07E';
+                submitter = 'OCPNOCYLF'; %group institution person
+                common_headstr = {'#SHIP: RV Celtic Explorer';...
+                    '#Cruise CE26008; GO-SHIP AR7E 2026';...
+                    '#Region: subpolar north Atlantic';...
+                    ['#EXPOCODE: ' expocode];...
+                    '#DATES: 20260723 - 20260811';...
+                    '#Chief Scientist: Y. Firing (NOC); Co-Chief Scientist: M. Clark (NOC)';...
+                    '#Supported by ...'};
+                    if strcmp(params.in,'ctd')
+                    headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
+                    headstring = [headstring; common_headstr;
+                        {sprintf('#%d stations with 24-place rosette',ns);...
+                        % '#CTD: Who - Y. Firing (NOC); Status - final.';...
+                        % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        % '# DEPTH_TYPE   : COR';...
+                        % '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
+                        }];
+                    else
+                        headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
+                        headstring = [headstring; common_headstr;
+                            {sprintf('#%d stations with 24-place rosette',ns);...
+                        % '#CTD: Who - Y. Firing (NOC); Status - final';...
+                        % '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
+                        % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        % '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom';...
+                        % '#Salinity: Who - Y. Firing (NOC); Status - final; SSW batch P168.';...
+                        % '#Oxygen: Who - R. Abell (SAMS); Status - final.';...
+                        % '#Nutrients: Who - R. Abell (SAMS); Status - preliminary.';...
+                        % '#DIC and Talk: Who - C. Johnson (SAMS); Status - not yet analysed.';...
+                        }];
+                end
+            case 'section_for_station'
+                if stnlocal>=4 && stnlocal<88
+                    sections = {'ar7e'};
+                end
+            case 'grid'
+                sam_gridlist = {'botoxy' 'silc' 'phos' 'totnit' 'botpsal'};
+                mgrid.sdata_flag_accept = [2 3]; %***or just 2
+                if contains(section,'ar7e')
+                    kstns = [4:35];
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                else
+                    section = 'profiles_only';
+                    kstns = 1:999; %useful to do profiles_only for all stations anyway (smooth in vertical)
+                end
+        end
+
 
 end
 

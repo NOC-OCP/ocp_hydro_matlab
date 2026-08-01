@@ -200,7 +200,7 @@ switch opt1
         %%%%%%%%%% end mctd_02 %%%%%%%%%%
 
         %%%%%%%%%% mctd_03 %%%%%%%%%%
-    case 'mctd_03'
+    case 'msbe_03_'
         switch opt2
             case '1hz_interp'
                 crhelp_str = {'maxfill24 sets maximum gap time (seconds, default: 0) to be filled by linear'
@@ -217,8 +217,8 @@ switch opt1
                     'any values for cast start, bottom, end already in dcs file (if it exists);'
                     'optionally set kstart, kbot, kend (default []), indices in 1 hz file, to use those'
                     'instead of automatically detected values. The defaults mean that the first time'
-                    'through all will be automatically detected, but if rerun after mdcs_03g, manual'
-                    'selections for start and end will not be overwritten (change auto_bot to 0 too if'
+                    'through all will be automatically detected, but if rerun after mctd_raw_show_check_edit'
+                    'manual selections for start and end will not be overwritten (change auto_bot to 0 too if'
                     'necessary to manually select cast bottom).'};
         end
         %%%%%%%%%% end mdcs_01 %%%%%%%%%%

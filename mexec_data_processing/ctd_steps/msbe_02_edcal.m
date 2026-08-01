@@ -130,7 +130,7 @@ end
 
 %oxygen tau and hysteresis, including first reversing default hysteresis if
 %required
-if ~doneco.oxytau
+if ~doneco.oxytau %is this likely to happen?***
 end
 if co.redooxyhyst
     %set up a new structure
@@ -156,7 +156,7 @@ if co.redooxyhyst
 end
 
 %cell thermal mass
-if ~doneco.celltm
+if ~doneco.celltm % | co.redoctm (do we have a way to undo or does this require going back to the .hex or pre-ctm .cnv file?)***
     d.cond1 = apply_ctd_celltm(d.time, d.temp1, d.cond1);
     d.cond2 = apply_ctd_celltm(d.time, d.temp2, d.cond2);
     h.comment = [h.comment '\n cond corrected for cell thermal mass by ctd_apply_celltm'];

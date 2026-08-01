@@ -11,10 +11,11 @@ function ctd_process(stns, varargin)
 %     and give a preliminary view of oxygen hysteresis
 %
 % if you want to run the complete set of steps from the start:
-% ctd_process(stns, 'part1', 'cast_cut_gui', 'part2', 'checkplots', 'sbe35', 'sum')
-%   or you can leave out 'cast_cut_gui' if running without a display / to
-%   accept the default selections made automatically by mdcs_01, leave out
-%   'sbe35' if those data are not available, leave out 'sum' to skip ***
+% ctd_process(stns, 'part1', 'clean_cut', 'part2', 'checkplots', 'sbe35', 'sum')
+%   or you can leave out 'clean_cut' if running without a display / to
+%   accept the default selections made automatically by mdcs_01 and the
+%   automatic edits, or leave out 'sbe35' if those data are not available,
+%   or leave out 'sum' to skip creating the station summary file etc.
 %
 % if you need to run preliminary steps first (e.g. to prepare data for
 %   other users) and additional steps later:
@@ -30,7 +31,7 @@ function ctd_process(stns, varargin)
 %   to run preliminary processing steps and compare two sensors' and up-
 %   and downcast data at 1 Hz to help highlight any sensor problems
 % AND THEN LATER
-% ctd_process(stns, 'cast_cut_gui', 'part2', 'sbe35', 'checkplots')
+% ctd_process(stns, 'clean_cut', 'part2', 'sbe35', 'checkplots')
 %   to continue through to the end of the processing (add 'sbe35' if
 %   relevant) including plots comparing 2 dbar data as well as 1 Hz data
 %
@@ -44,7 +45,7 @@ function ctd_process(stns, varargin)
 
 m_common
 stns = stns(:)'; %row vector needed to loop
-steps = {'part1','part2','postedit','nisk_fir','reload_sns','for_ladcp','cast_cut_gui','winch','sbe35','checkplots','out_ctdcolumns','out_samcolumns'};
+steps = {'part1','part2','postedit','nisk_fir','reload_sns','for_ladcp','clean_cut','winch','sbe35','checkplots','out_ctdcolumns','out_samcolumns'};
 if nargin==1
     warning('specify one or more steps from this list:')
     disp(steps)
@@ -76,13 +77,15 @@ if dostep.part1 || dostep.nisk_fir
     for stn = stns
         %read in sbe .bl file to mstar
         mfir_01_load(stn)
-        try
-            %extract and add winch data
-            mwin_01_load(stn);
-            mfir_02_addwin(stn);
-        catch me
-            warning('could not get or add winch data for station %d',stn)
-            warning(me.message)
+        if dostep.winch
+            try
+                %extract and add winch data
+                mwin_01_load(stn);
+                mfir_02_addwin(stn);
+            catch me
+                warning('could not get or add winch data for station %d',stn)
+                warning(me.message)
+            end
         end
     end
 end
@@ -110,10 +113,10 @@ if dostep.part1
     end
 end
 
-if dostep.cast_cut_gui
+if dostep.clean_cut
     for stn = stns
-        %call gui to check/select cast start, bottom, and end
-        mdcs_03g_gui(stn)
+        %call gui to check raw or cleaned data and check/select cast start, bottom, and end
+        mctd_raw_show_check_edit(stn)
     end
 end
 

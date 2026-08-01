@@ -5,18 +5,20 @@ function [dtab, params] = mout_columns_prepare_data(params, kloop)
 % 
 
 m_common
+opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 
 % load input file
 switch params.in
     case 'ctd'
         stn = params.stnlist{kloop};
-        opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
+        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
         fname = sprintf('%s_%s_%s%s.nc',params.in,mcruise,stn_string,params.suf);
+        infile = fullfile(params.ddir,fname);
         params.stn_string = stn_string;
     case 'sam'
-        fname = sprintf('%s_%s_all.nc',params.in,mcruise);
+        infile = samfile;
 end
-infile = fullfile(params.ddir,fname);
+
 if ~exist(infile,'file')
     warning('skipping %s',fname)
     d = []; return
@@ -55,7 +57,7 @@ else
             [d.(timvar),h.fldunt{iit}] = m_commontime(d,timvar,h,params.time_units);
         end
     end
-    params.time_units = h.fldunt{m};
+    params.time_units = h.fldunt{iit};
 end
 if isfield(params,'varsh') && ~isempty(params.varsh)
     if sum(strcmp('date',params.varsh(:,3))) && (~isfield(h,'date') && (~isfield(params,'extrah') || ~isfield(params.extrah,'date')))
@@ -250,7 +252,9 @@ end
 if isfield(params,'extras')
     fn = fieldnames(params.extras);
     for fno = 1:length(fn)
-        dtab.(fn{fno}) = repmat(params.extras.(fn{fno}),params.nr,1);
+        if ~isempty(params.extras.(fn{fno}))
+            dtab.(fn{fno}) = repmat(params.extras.(fn{fno}),params.nr,1);
+        end
     end
 end
 

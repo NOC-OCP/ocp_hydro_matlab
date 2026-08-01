@@ -29,7 +29,7 @@ MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[dd, hd] = mload(dcsfile.dcs,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
+[dd, hd] = mload(sprintf(dcsfile.dcs,stn_string),'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
 if isempty(strfind(hd.comment,'manual')) && isempty(strfind(hd.comment,'inspected'))
     warning('using automatically detected cast start/bottom/end')
 end

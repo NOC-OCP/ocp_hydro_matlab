@@ -18,6 +18,10 @@ root_ctd = mgetdir('M_CTD');
 root_sum = mgetdir('sum');
 
 deps_fn = fullfile(root_sum, ['station_summary_' mcruise '_all.nc']);
+if ~exist(deps_fn,'file')
+    warning('no summary file found, not adding depths')
+    return
+end
 [d,~] = mloadq(deps_fn,'/');
 iis = find(d.statnum==stn & ~isnan(d.cordep));
 
