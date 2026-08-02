@@ -1,3 +1,5 @@
+%cast 42 aborted and not converted or processed
+
 switch opt1
     
     case 'setup'
@@ -6,7 +8,7 @@ switch opt1
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2026 1 1 0 0 0];
             case 'minit'
                 if stn == 25.1
-                    stn_string = '025';
+                    stn_string = '025b';
                 end
         end
 
@@ -14,6 +16,14 @@ switch opt1
         switch opt2
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,[upper(mcruise) '_' stn_string '.cnv']);
+            case 'ctd_raw_extra'
+                if stn==22
+                    %add time since it was not exported
+                    extravars = {'time'; 'seconds since 2026-07-28 15:41:17'};
+                    extrasource = {'d.time = d0.scan/24+0;'};
+                end
+            case 'cast_split_comb'
+                comb_stns = [25.1 25 154152];
             case 'rawedit_auto'
                 %use rangelim first
                 co.rangelim.press = [-1.25 3300]; 
@@ -26,38 +36,56 @@ switch opt1
                 co.despike.press = [10 10];
                 co.despike.temp1 = [1 1]; co.despike.cond1 = [0.2 0.2]; co.despike.oxy1 = [10 10];
                 co.despike.temp2 = [1 1]; co.despike.cond2 = [0.2 0.2]; co.despike.oxy2 = [10 10];
-            case 'cast_split_comb'
-                if stn==25.1
-                    otfile_appendto = fullfile(MEXEC_G.MDIRLIST.M_CTD,'ctd_ce26008_025_cnv.nc');
-                    %cast_scan_offset = [65.1 65 81192]; %this cast, cast to append to, scan offset
+            case 'raw_corrs'
+                a = {dbstack(2).file};
+                if strcmp(a{1},'msbe_02_edcal.m')
+                    %apply here, don't need otherwise
+                    %CTD is switched on while on deck for the
+                    %transmissivity blanking exercise
+                    iid = 1:60*24;
+                    checked = [6 1];
+                    if max(d.press(iid))>0.3 && ~checked(checked(:,1)==stnlocal)
+                        keyboard
+                    else
+                        co.dpoff = -median(d.press(iid),'omitnan');
+                        fprintf(1,'pre-cast p offset: %f\n',co.dpoff)
+                    end
                 end
-            case 'ctd_raw_extra'
-                if stn==25
-                    %data from cast 25 in two cnv files, so ctd_process
-                    %runs this after msbe_01_load(25) to combine before the rest of
-                    %processing
-                    msbe_01_load(25.1);
-                    otfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,'ctd_ce26008_025_cnv.nc'); 
-                    getpos_for_ctd(otfile, 1, 'write');
-                    mfir_01_load(25.1);
-                end
+            case 'cast_divide'
+                force_auto.end = 1;
             case 'rawshow'
                 yl.temp = [-2 18]; yl.cond = [3 5]; yl.oxy = [120 300];
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
                 yl.fluor = [0 8];
-        end
-
-    case 'nisk_proc'
-        switch opt2
-            case 'blfilename'
-                if stn==25.1
-                    blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_025b.bl',upper(mcruise)));
-                else
-                    blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_%s.bl',upper(mcruise),stn_string));
+            case 'niskfilename'
+                blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_%s.bl',upper(mcruise),stn_string));
+            case 'botflags'
+                niskin_flag(position==3) = 4; %latch does not release
+                if stnlocal==2
+                    niskin_flag(ismember(position,[17 23])) = 3; %leaked
+                elseif stnlocal==6
+                    niskin_flag(position==16) = 3; %leaked
+                elseif stnlocal==7
+                    niskin_flag(position==16) = 3; %leaked
+                    %niskin 17 chl & hplc sampled before nuts, doc, salt
+                elseif stnlocal==10
+                    niskin_flag(position==5) = 3; %leaked? dnf? %note on n17 but still sampled for everything?
+                elseif stnlocal==18
+                    niskin_flag(position==16) = 3; %leaked
+                elseif stnlocal>=24 && stnlocal<=26
+                    niskin_flag(position==13) = 4; %didn't close
+                elseif stnlocal==12
+                    niskin_flag(position==12) = 3; %leaking
+                elseif stnlocal==30
+                    niskin_flag(position==13 | position==14) = 3; %didn't close fully (bottom) but still sampled?
+                elseif stnlocal==37
+                    niskin_flag(position==11 | position==17) = 3; %leaking a little? not enough water for last planned samples
+                elseif stnlocal==41
+                    niskin_flag(ismember(position,[6 14 16 20])) = 3; %possibly leaking, check
                 end
-
         end
+
 
     case 'sbe35'
         switch opt2
@@ -169,7 +197,26 @@ switch opt1
         if stnlocal==6
             cfg.uppat = sprintf('UL%s00*m.000',cfg.stnstr);
             cfg.dnpat = sprintf('DL%s00*s.000',cfg.stnstr);
-        end         
+        end
+        %set magnetic declination here, rather than using either of the two
+        %options built in to LDEO_IX/loadnav
+        %[p, f, ext] = fileparts(cfg.f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
+        a = {dbstack(2).file};
+        if ~strcmp(a{1},'mout_1hzasc.m')
+            mdfile = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'magdec.txt');
+            if ~exist(mdfile,'file')
+                fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
+                pause
+            end
+            md = load(mdfile);
+            if ~sum(md==stnlocal)
+                fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
+                pause
+                md = load(mdfile);
+            end
+            ii = find(md==stnlocal); ii = ii(1);
+            cfg.p.drot = md(ii+1);
+        end
 
     case 'outputs'
         switch opt2

@@ -94,16 +94,6 @@ for gno = 1:ng
 
 end
 
-if warn
-m = {'To edit out spikes or bad points manually, run mctd_rawedit. If you need';
-    'to remove a range of scans or many out-of-range values or large spikes from'
-    'several parameters, use cruise options file ctd_proc, rawedit_auto case first'
-    'before manual despiking/outlier removal. If there are large spikes in temperature'
-    'you should remove them before applying cell thermal mass correction, and if '
-    'there are large spikes in oxygen. Enter to continue.'};
-fprintf(1,'%s\n',m{:}); pause
-end
-
 figure(1)
 a = 'p';
 while ~isempty(a)
@@ -193,8 +183,9 @@ if exist('ds','var')
     hnew.fldunt(strncmp('dc',hnew.fldnam,2)) = {'number'};
     hnew.fldunt(strncmp('scan',hnew.fldnam,2)) = {'number'};
     hnew.fldunt(strncmp('press',hnew.fldnam,5)) = {'dbar'};
+    opt1 = 'mstar'; get_cropt
     if docf
-        hnew.fldunt(strncmp('time',hnew.fldnam,4)) = tun;
+        hnew.fldunt(strncmp('time',hnew.fldnam,4)) = h.fldunt(strcmp('time',h.fldnam));
     else
         hnew.fldunt(strncmp('time',hnew.fldnam,4)) = {'seconds'};
     end
@@ -212,5 +203,19 @@ else
 end
 end
 
-
-%mctd_rawedit***
+if warn
+    m = {'To edit out spikes or bad points manually, run mctd_rawedit. If you need';
+        'to remove a range of scans or many out-of-range values or large spikes from'
+        'several parameters, use cruise options file ctd_proc, rawedit_auto case first'
+        'before manual despiking/outlier removal. If there are large spikes in temperature'
+        'you should remove them before applying cell thermal mass correction, and if '
+        'there are large spikes in oxygen. Enter to continue.'};
+    fprintf(1,'%s\n',m{:});
+end
+if warn || doed
+    ed = input('run mctd_rawedit now?   ','s');
+    if strcmp(ed,'y')
+        mctd_rawedit(stn)
+        close all
+    end
+end

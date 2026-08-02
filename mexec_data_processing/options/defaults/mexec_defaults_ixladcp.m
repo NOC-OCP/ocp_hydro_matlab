@@ -22,7 +22,8 @@ cfg.f.nav_lat_field 	= 5;
 cfg.f.nav_lon_field 	= 6;
 
 %parameters for LADCP processing
-cfg.p.magdec_source = 1;
+%cfg.p.magdec_source = 1;
+%cfg.p.drot = system()
 %cfg.p.edit_mask_dn_bins = 1;
 %cfg.p.edit_mask_up_bins = 1;
 cfg.p.orig = 0; % save original data or not

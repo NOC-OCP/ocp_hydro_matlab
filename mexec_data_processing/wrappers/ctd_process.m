@@ -53,8 +53,8 @@ if nargin==1
 end
 
 dostep = array2table(ismember(steps,varargin),'VariableNames',steps);
-if ~dostep.for_ladcp && (isfield(MEXEC_G,'ladcp') && strcmp(MEXEC_G.ladcp,'ix')) && (dostep.part1 || dostep.postedit)
-    %overwrite forladcp and output 1 Hz data anyway
+if ~dostep.for_ladcp && strcmp(MEXEC_G.datatypes.ladcp,'ix') && (dostep.part1 || dostep.postedit)
+    %output 1 Hz data even if for_ladcp not set
     dostep.for_ladcp = true;
 end
 if dostep.part2 || dostep.postedit || dostep.nisk_fir || dostep.sbe35
@@ -66,6 +66,7 @@ if dostep.part2 || dostep.postedit || dostep.nisk_fir || dostep.sbe35
     end
 end
 
+opt1 = 'ctd_proc'; opt2 = 'cast_split_comb'; get_cropt
 if dostep.part1
     for stn = stns
         %read in sbe .cnv data to mstar
@@ -77,6 +78,11 @@ if dostep.part1 || dostep.nisk_fir
     for stn = stns
         %read in sbe .bl file to mstar
         mfir_01_load(stn)
+        if ismember(stn,comb_stns(:,1))
+            %now it should have been 
+            stns = setdiff(stns,stn);
+            continue
+        end
         if dostep.winch
             try
                 %extract and add winch data
@@ -122,13 +128,6 @@ end
 
 %***rawedit?
 
-if dostep.checkplots
-    for stn = stns
-        mctd_checkplots
-        pause
-    end
-end
-
 if dostep.part2 || dostep.postedit
     %***check we already have the preliminary files?
     for stn = stns
@@ -150,6 +149,13 @@ if dostep.part2
         get_sensor_groups(stns,'restart','samonly')
     else
         get_sensor_groups(stns,'samonly')
+    end
+end
+
+if dostep.checkplots
+    for stn = stns
+        mctd_checkplots
+        pause
     end
 end
 

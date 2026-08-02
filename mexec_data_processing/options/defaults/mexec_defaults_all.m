@@ -158,13 +158,19 @@ switch opt1
         switch opt2
             case 'ctdfiles'
                 %input .cnv file set by cruise
+            case 'absentvars'
+                %if a sensor was missing for only some stations, can add it
+                %as NaNs. this is also the place to create time variable if
+                %not present
             case 'cast_split_comb'
                 %no defaults
             case 'ctd_raw_extra'
-                clear ctd_raw_extra
-                %no other defaults
+                extrasource = {}; extravars = {};
             case 'header_edits'
-                %mctd_02          
+                %mctd_02
+            case 'raw_corrs'
+                co.oxy_align = 0;
+                co.dpoff = 0;
             case 'ctd_cals'
                 %remove any co.calstr; must be set by opt_{cruise}
                 co.docal.temp = 0; %do not apply any user calibration to temp
@@ -182,7 +188,7 @@ switch opt1
                 maxfill24 = 24;
                 maxfill1 = 1;
             case 'cast_divide'
-                %
+                force_auto.start = 0; force_auto.bot = 0; force_auto.end = 0;
             case 'rawshow'
                 %two groupings to show
                 rppars = {{'temp','cond','press','oxy'}
@@ -193,16 +199,12 @@ switch opt1
                 else
                     yl.cond = [2 4];
                 end
-                yl.press = [-1 6000]; yl.oxy = [100 400];
+                yl.press = [-2 6000]; yl.oxy = [100 400];
                 yl.fluor = [0 8]; 
-                yl.turbidity = [0 1]; yl.transmittance = [60 101]; 
-        end
-    
-
-    case 'nisk_proc'
-        switch opt2
-            case 'blfilename'
-                %no default for blinfile
+                yl.turbidity = [0 1]; yl.transmittance = [60 101];
+                doed = 1; %always end mctd_raw_show_check by running mctd_rawedit (can turn this off in opt_cruise)
+            case 'niskfilename'
+                %no default for .bl file
             case 'botflags'
                 ft = {'1 no info';
                     '2 no problems noted';
@@ -218,10 +220,14 @@ switch opt1
                 niskin_number = [1:24]'; %replace with S/N, bedford number, etc.
                 niskin_pos = [1:24]'; %position (firing number)
             case 'fir_fill'
+                firmethod = 'medint';
+                clear firopts;
+                firopts.int = [-1 120]; %average over 5 s, like in .ros file
+                firopts.prefill = 24*5; %fill gaps up to 5 s first
             case 'fir_extra'
                 fir_extra = true; %do also add background gradient and variance, and density-matched downcast data, to fir_ (and sam_) file
         end
-
+    
     case 'uway_proc'
             mexec_defaults_uway %rawedit_auto, raw_corrs
         switch opt2

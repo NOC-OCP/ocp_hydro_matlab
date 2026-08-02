@@ -1,8 +1,10 @@
 function mdcs_01_auto(stn)
-% mdcs_01: find bottom of cast
+% mdcs_01: use the 1 hz averaged file to find start (near surface after 10
+%   m soak, just before heading down), 
+% bottom (first deepest pressure), 
+% and end (pumps off or p<0) of case
 %
-% Use: mdcs_01        and then respond with station number, or for station 16
-%      stn = 16; mdcs_01;
+% also suggest a deck pressure offset?
 %
 % dy146 ylf added start of cast estimate; sd025 ylf added end of cast
 % estimate
@@ -19,9 +21,9 @@ else
     [d1, ~] = mloadq(file1,'time','scan','press',' ');
 end
 
-auto_start = 0; auto_bot = 0; auto_end = 0; kstart = []; kbot = []; kend = []; 
 opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
 
+kstart = []; kbot = []; kend = []; 
 dfile = sprintf(dcsfile.dcs,stn_string);
 if exist(m_add_nc(dfile),'file')
     [ds, hnew] = mloadq(dfile,'/');
@@ -32,7 +34,7 @@ else
     hnew.comment = '';
 end
 
-if ~isfield(ds,'dc_bot') || auto_bot
+if ~isfield(ds,'dc_bot') || force_auto.bot
     if isempty(kbot)
         % guess bottom index: first time pressure is within 0.5 dbar of max
         mp = max(d1.press);
@@ -48,11 +50,11 @@ if ~isfield(ds,'dc_bot') || auto_bot
     fprintf(MEXEC_A.Mfidterm,'Bottom of cast is at dc %d, pressure %6.1f\n',ds.dc_bot,ds.press_bot);
 end
 
-if ~isfield(ds,'dc_start') || auto_start
+if ~isfield(ds,'dc_start') || force_auto.start
     if isempty(kstart)
         % guess start index: point within the top 100 m / first 40 min which is farthest above (lower pressure than)
         % previous max pressure
-        tm = min(kbot,2400);
+        tm = min(ds.dc_bot,2400);
         pressd = d1.press(1:tm); %for deep casts, square matrix for whole downcast would be too big, so limit search
         pressd = pressd(:);
         pressd(pressd>100) = NaN;
@@ -69,21 +71,21 @@ if ~isfield(ds,'dc_start') || auto_start
     fprintf(MEXEC_A.Mfidterm,'Start of cast is at dc %d, pressure %6.1f\n',ds.dc_start,ds.press_start);
 end
 
-if ~isfield(ds,'dc_end') || auto_end
+if ~isfield(ds,'dc_end') || force_auto.end
     if isempty(kend)
         % guess end index: when pumps go off finally with p<2, or just before p<0, whichever is first
         if isfield(d1,'pumps')
-            kend = find(d1.pumps(kbot+1:end)<1 & d1.pumps(kbot:end-1)==1 & d1.press(kbot+1:end)<2, 1, 'last') + kbot - 2;
+            kend = find(d1.pumps(ds.dc_bot+1:end)<1 & d1.pumps(ds.dc_bot:end-1)==1 & d1.press(ds.dc_bot+1:end)<2, 1, 'last') + ds.dc_bot - 2;
         else
             kend = [];
         end
         if isempty(kend); kend = length(d1.scan); end
-        ksurf2 = find(d1.press(kbot:end)<0, 1, 'first') + kbot - 2;
+        ksurf2 = find(d1.press(ds.dc_bot:end)<0, 1, 'first') + ds.dc_bot - 2;
         if ~isempty(ksurf2)
             kend = min(kend, ksurf2);
         end
         %or when min p is reached for yo-yo cast with separate files
-        kmin = find(d1.press(kbot:end)==min(d1.press(kbot:end))) + kbot -1;
+        kmin = find(d1.press(ds.dc_bot:end)==min(d1.press(ds.dc_bot:end))) + ds.dc_bot -1;
         kmin = kmin(1);
         kend = min(kend, kmin);
         hnew.comment = [hnew.comment ' auto detected end time'];
@@ -120,4 +122,4 @@ varunits(ispress) = {'dbar'};
 
 MEXEC_A.Mprog = mfilename;
 hnew.fldnam = varnames; hnew.fldunt = varunits;
-mfsave(dcsfile.dcs, ds, hnew);
+mfsave(dfile, ds, hnew);

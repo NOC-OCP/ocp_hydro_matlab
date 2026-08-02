@@ -7,7 +7,7 @@ function mfir_01_load(stn)
 m_common
 
 % input file names
-opt1 = 'nisk_proc'; opt2 = 'blfilename'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'niskfilename'; get_cropt
 if ~exist(blinfile,'file')
     fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stn);
     pause
@@ -73,7 +73,7 @@ pos = pos(:);
 scn = scn(:);
 
 %add (from defaults) corresponding information like bottle S/N, bottle flag
-opt1 = 'nisk_proc'; opt2 = 'niskins'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'niskins'; get_cropt
 niskin_number = niskin_number(:);
 niskin_pos = niskin_pos(:);
 [~,ia,ib] = intersect(pos,niskin_pos);
@@ -88,7 +88,7 @@ position = position(m);
 niskin = niskin_number(m);
 niskin_flag = niskin_flag(m);
 clear m ia ib
-opt1 = 'nisk_proc'; opt2 = 'botflags'; get_cropt %change flags here
+opt1 = 'ctd_proc'; opt2 = 'botflags'; get_cropt %change flags here
 %check that possible bad code in opt file hasn't added dimensions
 if size(niskin)==size(niskin_flag)
 else
@@ -98,13 +98,13 @@ end
 %in case cast was stitched together by offsetting scan
 opt1 = 'ctd_proc'; opt2 = 'cast_split_comb'; get_cropt
 blappend = 0;
-if exist('cast_scan_offset','var') && cast_scan_offset(1)==stnlocal
-    if isnan(cast_scan_offset(3))
+if exist('comb_stns','var') && comb_stns(1)==stnlocal
+    if isnan(comb_stns(3))
         warning('not applying NaN offset to .bl scan number for %s',stn_string)
     else
-        scan = scan + cast_scan_offset(3);
-        opt1 = 'setup'; opt2 = 'minit'; stn = floor(stn); get_cropt
-        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+        scan = scan + comb_stns(3);
+        stn = comb_stns(2); opt1 = 'setup'; opt2 = 'minit'; get_cropt
+        f = sprintf(firfile.fir,stn_string);
         if exist(m_add_nc(f),'file')
             blappend = 1;
         end
@@ -118,7 +118,11 @@ if blappend
     d.niskin = niskin; d.niskin_flag = niskin_flag;
     h = m_read_header(f);
     [h.fldnam,~,ib] = intersect(fieldnames(d),h.fldnam,'stable');
-    h.fldunt = h.fldunt(ib); h.fldserial = h.fldserial(ib);
+    h.fldunt = h.fldunt(ib); 
+    if isfield(h,'fldserial')
+        h.fldserial = h.fldserial(ib);
+    else
+        h.fldserial = repmat({'n/a'},length(h.fldnam),1);
     h = rmfield(h,{'alrlim','uprlim','absent','num_absent','dimrows','dimcols','dimsset'});
     h.comment = [h.comment '\n' comment];
     mfsave(f, d, h, '-merge', 'scan')
@@ -135,7 +139,7 @@ else
         ' '
         ' '
         '1'
-        firfile.dataname
+        sprintf(firfile.dataname,stn_string)
         '/'
         '2'
         MEXEC_G.PLATFORM_TYPE

@@ -68,7 +68,7 @@ else
             co.pumpsNaN.oxy2 = 8*24;
 
         case 'raw_corrs'
-            co.oxy_align = 6; %number of seconds to shift oxygen earlier
+            co.oxy_align = 0; %number of seconds to shift oxygen earlier
             co.doturbV = 0;
             co.dooxy1V = 0; co.dooxy2V = 0; %make 1 or 2 to recalculate using temp1 or temp2
             co.redooxyhyst = 0;

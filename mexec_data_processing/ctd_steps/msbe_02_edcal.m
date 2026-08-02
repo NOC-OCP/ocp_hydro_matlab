@@ -50,7 +50,22 @@ opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt
 opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
 
 
-%%%%% apply linear corrections
+%%%% edit out bad points
+
+%automatic edits
+[d, comment] = apply_autoedits(d, co);
+if ~isempty(comment)
+    h.comment = [h.comment comment];
+end
+
+%reapply hand edits
+edfilepat = fullfile(MEXEC_G.MDIRLIST.M_CTD,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stn));
+[d, comment] = apply_guiedits(d, 'scan', edfilepat);
+if ~isempty(comment)
+    h.comment = [h.comment comment];
+end
+
+%%%%% apply linear corrections %%%%%
 
 %fill in some fields we may be missing
 if ~isfield(d, 'statnum')
@@ -62,49 +77,22 @@ ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00
 d.dday = m_commontime(d,'time',h,ddu);
 h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldserial ' '];
 
-%pressure offset***
+%pressure offset (deck pressure)
+if co.dpoff
+    d.press = d.press + co.dpoff;
+    h.comment = [h.comment '\npressure offset by ' num2str(co.dpoff) ' dbar'];
+end
 
-%oxygen alignment
-if ~doneco.alignctd
+%alignment in time
+if ~doneco.alignctd && co.oxy_align>0
     oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
     for no = 1:length(oxyvars)
         d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+co.oxy_align);
     end
-    h.comment = [h.comment '\n oxygen shifted by ' num2str(co.oxy_align) ' s'];
-    didedits = 1;
+    h.comment = [h.comment '\noxygen shifted by ' num2str(co.oxy_align) ' s'];
 end
 
-
-%%%% edit out bad points
-
-%automatic edits
-[d, comment] = apply_autoedits(d, co);
-didedits = 0;
-if ~isempty(comment)
-    h.comment = [h.comment comment];
-    didedits = 1;
-end
-
-%reapply hand edits
-edfilepat = fullfile(MEXEC_G.MDIRLIST.M_CTD,'editlogs',sprintf('mplxyed_*_ctd_%s_%03d',mcruise,stn));
-[d, comment] = apply_guiedits(d, 'scan', edfilepat);
-if ~isempty(comment)
-    h.comment = [h.comment comment];
-    didedits = 1;
-end
-
-%save as cleaned
-if didedits
-    cleanfile = m_add_nc(sprintf(ctdfile.clean,stn_string));
-    if exist(cleanfile,'file')
-        delete(cleanfile)
-    end
-    mfsave(cleanfile, d, h);
-end
-
-
-
-%%%%% apply nonlinear corrections/recalculations
+%%%%% apply nonlinear corrections/recalculations %%%%%
 
 %oxygen recalculation (with alternate temperature sensor). uncommon. 
 if co.dooxy1V>0 && isfield(co,'oxy1Vcoefs')
@@ -172,7 +160,15 @@ if co.doturbV
 end
 
 
-%%%%% sensor calibrations %%%%%
+%%%%% save as cleaned %%%%%
+cleanfile = m_add_nc(sprintf(ctdfile.clean,stn_string));
+if exist(cleanfile,'file')
+    delete(cleanfile)
+end
+mfsave(cleanfile, d, h);
+
+
+%%%%% user sensor calibrations (based on discrete sample data) %%%%%
 file24 = sprintf(ctdfile.p24,stn_string);
 if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
     %apply calibrations

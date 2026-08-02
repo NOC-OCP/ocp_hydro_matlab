@@ -27,11 +27,7 @@ file1 = sprintf(ctdfile.p1,stn_string);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
 %load and average data
-firmethod = 'medint';
-clear firopts;
-firopts.int = [-1 120]; %average over 5 s, like in .ros file
-firopts.prefill = 24*5; %fill gaps up to 5 s first
-opt1 = 'nisk_proc'; opt2 = 'fir_fill'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'fir_fill'; get_cropt
 [dfir, hfir] = mload(f,'scan',' ');
 [dc, hc] = mload(file1, var_copystr);
 dc = grid_profile(dc, 'scan', dfir.scan, firmethod, firopts);
@@ -65,7 +61,7 @@ hnew.comment = hc.comment;
 MEXEC_A.Mprog = mfilename;
 mfsave(f, dnew, hnew, '-addvars');
 
-opt1 = 'nisk_proc'; opt2 = 'fir_extra'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'fir_extra'; get_cropt
 if fir_extra
     if MEXEC_G.quiet<=1; fprintf(1,'adds bottle stop background gradient, standard deviation, and gamma_n-matched downcast data to fir_%s_%s.nc\n', mcruise, stn_string); end
 
