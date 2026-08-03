@@ -39,7 +39,11 @@ elseif strcmp(MEXEC_G.uway,'scs')
         case 'ship_data_sys_names'
             tsgpre = 'oceanlogger';
             metpre = 'met';
-    end
+   end
+
+elseif strcmp(MEXEC_G.uway,'scs_nc')
+
+elseif strcmp(MEXEC_G.uway,'scs_nmea')
 
 elseif ~strcmp(MEXEC_G.uway,'techsas')
     switch opt2

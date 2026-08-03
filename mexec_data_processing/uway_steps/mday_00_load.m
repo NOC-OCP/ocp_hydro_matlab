@@ -18,8 +18,6 @@ function status = mday_00_load(streamname, yday, mtable)
 m_common
 m_margslocal
 m_varargs
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
 
 %lookup for this stream
 m = strcmp(streamname,mtable.tablenames);

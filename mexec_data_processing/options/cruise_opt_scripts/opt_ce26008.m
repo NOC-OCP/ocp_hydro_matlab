@@ -201,8 +201,8 @@ switch opt1
         %set magnetic declination here, rather than using either of the two
         %options built in to LDEO_IX/loadnav
         %[p, f, ext] = fileparts(cfg.f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
-        a = {dbstack(2).file};
-        if ~strcmp(a{1},'mout_1hzasc.m')
+        a = {dbstack(2).file}; 
+        if ~strcmp(a{1},'mout_1hzasc.m') %bash script uses the output of mout_1hzasc so don't want to try to call this before that
             mdfile = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'magdec.txt');
             if ~exist(mdfile,'file')
                 fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
@@ -214,8 +214,14 @@ switch opt1
                 pause
                 md = load(mdfile);
             end
-            ii = find(md==stnlocal); ii = ii(1);
-            cfg.p.drot = md(ii+1);
+            ii = find(md==stnlocal); 
+            if isempty(ii)
+                warning('no mag dec for %s',stn_string)
+            else
+                ii = ii(1);
+                cfg.p.drot = md(ii+1);
+                fprintf(1,'using mag dec %f for %s',cfg.p.drot,stn_string)
+            end
         end
 
     case 'outputs'

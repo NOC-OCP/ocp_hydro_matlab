@@ -25,6 +25,11 @@ switch opt1
         switch opt2
             case 'time_origin'
                 %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
+            case 'minit'
+                %station naming convention
+                if ~exist('stn', 'var'); stn = input('type stn number '); end
+                stn_string = sprintf('%03d',stn); %used for file names
+                stnlocal = stn;
             case 'mdirlist'
                 dirs = {
                     'M_CTD' 'ctd'
@@ -95,11 +100,6 @@ switch opt1
                     ucfiles.nav = fullfile(MEXEC_G.MDIRLIST.M_POS,['bst_' mcruise '_01.nc']);
                     ucfiles.ocean = fullfile(MEXEC_G.MDIRLIST.M_TSG,['surface_ocean_' mcruise '_all.nc']);
                 end
-            case 'minit'
-                %station naming convention
-                if ~exist('stn', 'var'); stn = input('type stn number '); end
-                stn_string = sprintf('%03d',stn); %used for file names
-                stnlocal = stn;
         end
 
     case 'mstar'
@@ -135,13 +135,13 @@ switch opt1
                 MEXEC_G.Mshipdatasystem = 'scs';
             case 'kn'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
-                MEXEC_G.Mshipdatasystem = 'scs';
+                MEXEC_G.Mshipdatasystem = 'scs'; %***update to scs_nc?
             case 'en'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
-                MEXEC_G.Mshipdatasystem = 'scs';
+                MEXEC_G.Mshipdatasystem = 'scs_nc';
             case 'ce'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
-                MEXEC_G.Mshipdatasystem = 'scs';
+                MEXEC_G.Mshipdatasystem = 'scs_nmea';
             otherwise
                 merr = ['Ship ''' MEXEC_G.MSCRIPT_CRUISE_STRING(1:2) ''' not recognised, underway system will not be set up'];
                 %fprintf(2,'%s\n',merr);
