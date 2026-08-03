@@ -45,7 +45,7 @@ function ctd_process(stns, varargin)
 
 m_common
 stns = stns(:)'; %row vector needed to loop
-steps = {'part1','part2','postedit','nisk_fir','reload_sns','for_ladcp','clean_cut','winch','sbe35','checkplots','out_ctdcolumns','out_samcolumns'};
+steps = {'part1','part2','postedit','reload_sns','for_ladcp','clean_cut','winch','sbe35','checkplots','out_ctdcolumns','out_samcolumns'};
 if nargin==1
     warning('specify one or more steps from this list:')
     disp(steps)
@@ -57,7 +57,7 @@ if ~dostep.for_ladcp && strcmp(MEXEC_G.datatypes.ladcp,'ix') && (dostep.part1 ||
     %output 1 Hz data even if for_ladcp not set
     dostep.for_ladcp = true;
 end
-if dostep.part2 || dostep.postedit || dostep.nisk_fir || dostep.sbe35
+if dostep.part2 || dostep.postedit || dostep.sbe35
     %have updated sam file, write to .csv if specified in opt_cruise
     dostep.out_samcolumns = true;
     if dostep.part2 || dostep.postedit
@@ -74,7 +74,7 @@ if dostep.part1
     end
 end
 
-if dostep.part1 || dostep.nisk_fir
+if dostep.part1
     for stn = stns
         %read in sbe .bl file to mstar
         mfir_01_load(stn)
@@ -136,7 +136,7 @@ if dostep.part2 || dostep.postedit
     end
 end
 
-if dostep.part2 || dostep.postedit || dostep.nisk_fir
+if dostep.part2 || dostep.postedit
     for stn = stns
         %bottle firing data into .fir file, if there is one
         mfir_04_addctd(stn)

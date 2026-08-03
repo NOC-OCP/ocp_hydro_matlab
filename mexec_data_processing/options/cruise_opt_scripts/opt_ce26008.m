@@ -83,6 +83,11 @@ switch opt1
                     niskin_flag(position==11 | position==17) = 3; %leaking a little? not enough water for last planned samples
                 elseif stnlocal==41
                     niskin_flag(ismember(position,[6 14 16 20])) = 3; %possibly leaking, check
+                elseif stnlocal==43
+                    niskin_flag(position==7) = 3; %possibly leaking from spigot, check
+                elseif stnlocal==45
+                    niskin_flag(position==16) = 4; %"failed"
+                    niskin_flag(position==10) = 3; %leaking
                 end
         end
 

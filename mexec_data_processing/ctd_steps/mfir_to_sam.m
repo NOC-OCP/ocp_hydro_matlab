@@ -9,7 +9,7 @@ function mfir_to_sam(stn)
 m_common
 
 opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-f = m_add_nc(sprintf(firfile.fir,firfile.dataname));
+f = m_add_nc(sprintf(firfile.fir,stn_string));
 if ~exist(f,'file')
     warning('no bottle firing file for %s',f)
     return

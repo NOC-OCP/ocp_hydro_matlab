@@ -123,6 +123,7 @@ if blappend
         h.fldserial = h.fldserial(ib);
     else
         h.fldserial = repmat({'n/a'},length(h.fldnam),1);
+    end
     h = rmfield(h,{'alrlim','uprlim','absent','num_absent','dimrows','dimcols','dimsset'});
     h.comment = [h.comment '\n' comment];
     mfsave(f, d, h, '-merge', 'scan')
