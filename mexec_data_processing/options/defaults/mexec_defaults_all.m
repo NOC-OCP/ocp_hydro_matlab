@@ -52,15 +52,19 @@ switch opt1
                     'M_SUM' 'collected_files'
                     'M_VMADCP' 'vmadcp'
                     }; %***change how MDIRLIST is used?
+                if ~strcmp(MEXEC_G.Mshipdatasystem,'auto')
+                    dirs = [dirs;
+                        {'M_UWAY_RAW' fullfile(MEXEC_G.Mshipdatasystem,'raw_local')}];
+                end
                 if strcmp(MEXEC_G.datatypes.ladcp,'ix')
                     dirs = [dirs;
                         {'M_LADCP' 'ladcp'
                         'M_IX' fullfile('ladcp','ix')}];
                 end
-                if exist('mrtv','var')
+                if exist('mutv','var')
                     dirs = [dirs; ...
-                        [cellfun(@(x) ['M_' upper(x)], mrtv.mstarpre, 'UniformOutput', false), ...
-                        mrtv.mstardir]];
+                        [cellfun(@(x) ['M_' upper(x)], mutv.mstarpre, 'UniformOutput', false), ...
+                        mutv.mstardir]];
                     [~,ii] = unique(dirs(:,1),'stable');
                     dirs = dirs(ii,:);
                 end

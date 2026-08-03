@@ -59,6 +59,34 @@ if nargin>0 && strcmp(varargin{1},'redo')
                 };
 
         case 'scs_nmea'
+            f = dir('MEXEC_G.MDIRLIST.M_UWAY_RAW/*.Raw');
+            for no = 1:length(f)
+                if strncmp(f,'USBL',4); continue; end
+                if contains(f{no}.name,'GGA')
+                    cols = {'date','time','msg','timestamp','latgga','latdir','longga','londir','ggaqual','sats','hdop','alt','altval','geosep','geoval','dgpsage','dgpsref_checksum'};
+                elseif contains(f{no}.name,'HDT') %THS replaces this?
+                    cols = {'date','time','msg','head (relative to true north)','checksum'};
+                elseif contains(f{no}.name,'HDG')
+                    cols = {'date','time','msg','degrees (magnetic)','deviation (degrees magnetic)','devdir (E/W)','variation (degrees magnetic)','vardir (E/W)','checksum'};
+                elseif contains(f{no}.name,'ROT') %GPhve, GPatt
+                    cols = {'date','time','msg','rate of turn (degrees/minute)'}
+                elseif contains(f{no}.name,'VTG')
+                    cols = {'date','time','msg','tmg (degrees true)','T','tmgm (degrees magnetic)','M','speed (kt)','N','sog (kph)','K','mode (A autonomous D differential E estimated M manual S simulator N not valid)'};
+                elseif contains(f{no}.name,'ZDA')
+                    cols = {'date','time','msg','utc','day','month','year','tzoffhrs','tzoffmins','checksum'};
+                elseif contains(f{no}.name,'GLL')
+                    cols = {'date','time','msg','lat (dd mm,mmmm)','latdir','lon (ddd mm,mmmm)','londir','utc (hhmmss.ss)','status (A valid V not valid)','checksum'};
+                elseif contains(f{no}.name,'DBT')
+                    cols = {'date','time','msg','depthft','feet','depth_below_transducer (m)','metres','depthfa','fathoms','checksum'};
+                elseif contains(f{no}.name,'DBS')
+                    cols = {'date','time','msg','depthft','feet','depth_below_surface (m)','metres','depthfa','fathoms','checksum'};
+                elseif contains(f{no}.name,'DPT')
+                    cols = {'date','time','msg','depth_below_transducer (m)','offset relative to transducer (metres)','max_range_scale','checksum'};
+                elseif contains(f{no}.name,'VHW')
+                    cols = {'date','time','msg','heading (nm)','T','heading (degrees magnetic)','M','speed relative to water (kt)'}
+                end %VBW 
+            end
+            %bathy xyz files?***
     end
 
     %write to .csv file
@@ -72,17 +100,17 @@ if nargin>0 && strcmp(varargin{1},'redo')
     %save to .mat file
     save(tabledefmat, 'mutv', 'header')
 
-        else
+else
 
-            df = dir(tabledefmat);
-            if isempty(df)
-                fprintf(2,'no %s found; try running with input argument ''redo''\n',tabledefmat)
-            else
-                fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
-                load(tabledefmat,'mutv')
-            end
+    df = dir(tabledefmat);
+    if isempty(df)
+        fprintf(2,'no %s found; try running with input argument ''redo''\n',tabledefmat)
+    else
+        fprintf(1,'loading %s last saved on %s\n',tabledefmat,df.date)
+        load(tabledefmat,'mutv')
+    end
 
-        end
+end
 
-        %***write something to parse .csv file correctly later? .mat is kept with
-        %the backup of the raw data though
+%***write something to parse .csv file correctly later? .mat is kept with
+%the backup of the raw data though

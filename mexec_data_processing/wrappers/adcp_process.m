@@ -24,7 +24,7 @@ m_common
 ladcp_pause = 0;
 ladcp_constraints = {'GPS','BT','SADCP'};
 ladcp_incr = 1;
-ladc_sepud = 1;
+ladcp_sepud = 1;
 for no = 1:2:nargin-2
     eval([varargin{no} ' = varargin{no+1};'])
 end

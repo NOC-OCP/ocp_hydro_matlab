@@ -202,6 +202,10 @@ switch opt1
         if stnlocal==6
             cfg.uppat = sprintf('UL%s00*m.000',cfg.stnstr);
             cfg.dnpat = sprintf('DL%s00*s.000',cfg.stnstr);
+        %elseif stnlocal==2
+        %    cfg.uppat = 'UL001001s.000';
+        %    cfg.dnpat = 'DL001001m.000';
+        %    cfg.f.ctd = fullfile(MEXEC_G.MDIRLIST.M_LADCP, 'ctd', ['ctd.' stn_string '.02.asc']);
         end
         %set magnetic declination here, rather than using either of the two
         %options built in to LDEO_IX/loadnav
