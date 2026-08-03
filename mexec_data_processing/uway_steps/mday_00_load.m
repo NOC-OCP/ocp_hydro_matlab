@@ -11,15 +11,13 @@ function status = mday_00_load(streamname, yday, mtable)
 % numeric: day is the day number
 % numeric: year is the year in which day falls
 %
-% eg mday_00_load('gps_nmea',mrtv,33)
+% eg mday_00_load('gps_nmea',mutv,33)
 % or
 %
 
 m_common
 m_margslocal
 m_varargs
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-
 
 %lookup for this stream
 m = strcmp(streamname,mtable.tablenames);
@@ -53,7 +51,7 @@ switch MEXEC_G.Mshipdatasystem
         argot.dnums = [dn1 dn2]; 
         argot.otfile = otfile2;
         argot.dataname = dataname;
-        argot.mrtv = mtable;
+        argot.mutv = mtable;
         status = mrrvdas2mstar('noparse',argot);
     case 'scs'
         status = scs_to_mstar2(streamname,mstarprefix,dn1,dn2,otfile2,dataname);

@@ -117,12 +117,12 @@ if blappend
     d.scan = scan; d.position = position;
     d.niskin = niskin; d.niskin_flag = niskin_flag;
     h = m_read_header(f);
-    [h.fldnam,~,ib] = intersect(fieldnames(d),h.fldnam,'stable');
+    [h.fldnam,~,ib] = intersect(fieldnames(d)',h.fldnam,'stable');
     h.fldunt = h.fldunt(ib); 
     if isfield(h,'fldserial')
         h.fldserial = h.fldserial(ib);
     else
-        h.fldserial = repmat({'n/a'},length(h.fldnam),1);
+        h.fldserial = repmat({'n/a'},1,length(h.fldnam));
     end
     h = rmfield(h,{'alrlim','uprlim','absent','num_absent','dimrows','dimcols','dimsset'});
     h.comment = [h.comment '\n' comment];
