@@ -143,12 +143,12 @@ housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
 if ~strcmp(MEXEC_G.datatypes.uway,'no')
     %***still need to configure where directories are for some applications***
     try
-        mrtv = mudefine(MEXEC_G.Mshipdatasystem);
+        mutv = mudefine(MEXEC_G.Mshipdatasystem);
         fprintf(1,'using cached %s stream/table list & mstar lookup\n',MEXEC_G.Mshipdatasystem)
     catch
         try
             fprintf(1,'regenerating mstar-stream/table lookup by running mudefine(''redo'')\n')
-            mrtv = mudefine(MEXEC_G.Mshipdatasystem,'redo');
+            mutv = mudefine(MEXEC_G.Mshipdatasystem,'redo');
             fprintf(1,'reloaded underway stream/table definitions\n')
         catch
             warning('skipping underway data setup')
