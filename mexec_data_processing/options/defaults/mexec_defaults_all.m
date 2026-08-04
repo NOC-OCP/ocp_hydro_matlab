@@ -82,6 +82,7 @@ switch opt1
                 ctdfile.p1 = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_1hz.nc']);
                 ctdfile.d = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_2db.nc']);
                 ctdfile.u = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_2up.nc']);
+                edfiles.ctd = fullfile(MEXEC_G.MDIRLIST.M_CTD,'editlogs','ctd_%s_editpoints_');
                 firfile.fir = fullfile(MEXEC_G.MDIRLIST.M_CTD, [firfile.dataname '.nc']);
                 dcsfile.dcs = fullfile(MEXEC_G.MDIRLIST.M_CTD, [dcsfile.dataname '.nc']);
                 winfile.win = fullfile(MEXEC_G.MDIRLIST.M_CTD_WIN, [winfile.dataname '.nc']);
@@ -136,7 +137,7 @@ switch opt1
                 MEXEC_G.Mshipdatasystem = 'rvdas';
             case 'jr'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
-                MEXEC_G.Mshipdatasystem = 'scs';
+                MEXEC_G.Mshipdatasystem = 'scs_ascii';
             case 'kn'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
                 MEXEC_G.Mshipdatasystem = 'scs'; %***update to scs_nc?
@@ -145,7 +146,7 @@ switch opt1
                 MEXEC_G.Mshipdatasystem = 'scs_nc';
             case 'ce'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
-                MEXEC_G.Mshipdatasystem = 'scs_nmea';
+                MEXEC_G.Mshipdatasystem = 'scs_ascii';
             otherwise
                 merr = ['Ship ''' MEXEC_G.MSCRIPT_CRUISE_STRING(1:2) ''' not recognised, underway system will not be set up'];
                 %fprintf(2,'%s\n',merr);

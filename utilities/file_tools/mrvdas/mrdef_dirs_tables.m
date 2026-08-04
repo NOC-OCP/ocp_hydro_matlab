@@ -139,7 +139,7 @@ if nargout>1
                 'sd025_transmissometer_wetlabs_cstar_ucsw1_pwltran1_signal', 'sd025_transmissometer_wetlabs_cstar_ucsw1_pwltran1_correctedsignal'];
         otherwise
     end
-    opt1 = 'ship'; opt2 = 'rvdas_skip'; get_cropt
+    opt1 = 'uway_proc'; opt2 = 'rvdas_skip'; get_cropt
 
     varargout{1} = skips;
 end

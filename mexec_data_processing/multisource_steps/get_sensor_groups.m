@@ -17,7 +17,6 @@ opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 st = {'Temperature','Conductivity','Oxygen'};
 sa = {'temp','cond','oxy'};
 
-opt1 = 'ctd_proc'; opt2 = 'ctdsens_groups'; get_cropt
 if (nargin>1 && strcmp(varargin{1},'restart')) || ~exist(ctdfile.sg,'file')
     %initialise empty
     for sno = 1:length(sa)
@@ -39,8 +38,12 @@ if nargin==1 || ~strcmp(varargin{1},'samonly')
         if ~isempty(sg.temp1) && sum(cell2mat(sg.temp1(:,1))==stn)>0
             continue %don't redo
         end
-        h = m_read_header(sprintf(ctdfile.raw,stn_string));
-        [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn);
+        if exist(sprintf(ctdfile.raw,stn_string),'file')
+            h = m_read_header(sprintf(ctdfile.raw,stn_string));
+            [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn);
+        else
+            warning('no %s, skipping S/Ns from %s',sprintf(ctdfile.raw,stn_string),stn_string)
+        end
     end
 
     fn = fieldnames(sg);

@@ -11,7 +11,7 @@ if ~exist(jsondir,'dir')
     mkdir(jsondir); mfixperms(jsondir, 'dir');
 end
 RVDAS.jsondir = '';
-opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'rvdas_database'; get_cropt
 switch MEXEC_G.Mship
     case 'sda'
         system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);
@@ -26,7 +26,7 @@ switch MEXEC_G.Mship
 end
 
 %list of instruments
-opt1 = 'ship'; opt2 = 'rvdas_form'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'rvdas_form'; get_cropt
 if use_cruise_views
     sqlpre = [view_name '_'];
     instpos = 2;

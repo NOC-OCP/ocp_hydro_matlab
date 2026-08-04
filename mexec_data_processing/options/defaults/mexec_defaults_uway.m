@@ -6,8 +6,6 @@ if ~strcmp(opt1,'uway_proc')
 
 elseif strcmp(MEXEC_G.datatypes.uway,'rvdas')
     switch opt2
-        case 'datasys_best'
-            uway_torg = 0; %mrvdas parsing returns matlab datenum, no offset required
         case 'ship_data_sys_names'
             tsgpre = 'tsg';
             metpre = 'surfmet';
@@ -29,28 +27,25 @@ elseif strcmp(MEXEC_G.datatypes.uway,'rvdas')
             %see opt_dy181
     end
 
-elseif strcmp(MEXEC_G.uway,'scs')
+elseif strcmp(MEXEC_G.datatypes.uway,'scs_ascii')
    switch opt2
-        case 'datasys_best'
-            uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
-            uway_root = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_raw'); % scs raw data on logger machine
-            uway_sed = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_sed'); % scs raw data on logger machine
-            uway_mat = fullfile(MEXEC_G.mexec_data_root, 'scs', 'scs_mat'); % local directory for scs converted to matlab
         case 'ship_data_sys_names'
             tsgpre = 'oceanlogger';
             metpre = 'met';
-   end
+        case 'scs_skip'
+            skip = {'USBL'};
+        case 'scs_nmea_form'
+            uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
+            colsi = {}; colsf = {};
+            untsi = {}; untsf = {};
+            colsi = {'date','time'};
+            untsi = {'mm/dd/yyyy','HH:MM:SS.SSS'};
+    end
 
-elseif strcmp(MEXEC_G.uway,'scs_nc')
-
-elseif strcmp(MEXEC_G.uway,'scs_nmea')
-
-elseif ~strcmp(MEXEC_G.uway,'techsas')
+elseif ~strcmp(MEXEC_G.datatypes.uway,'techsas')
     switch opt2
-        case 'datasys_best'
+        case 'techsas_form'
             uway_torg = datenum([1899 12 30 0 0 0]); % techsas time origin as a matlab datenum
-            uway_root = fullfile(MEXEC_G.mexec_data_root, 'techsas', 'netcdf_files_links');
-            if ismac; uway_root = [uway_root '_mac']; end
         case 'ship_data_sys_names'
             tsgpre = 'tsg';
             metpre = 'met';

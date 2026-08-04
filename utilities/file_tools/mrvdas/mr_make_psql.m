@@ -43,7 +43,7 @@ function sqltext = mr_make_psql(varargin)
 
 
 m_common
-opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'rvdas_database'; get_cropt
 
 if nargin>0 && strcmp('noparse',varargin{1})
     argot = varargin{2};

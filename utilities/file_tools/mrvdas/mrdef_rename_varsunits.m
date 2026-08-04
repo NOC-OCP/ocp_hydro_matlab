@@ -99,7 +99,7 @@ for no = 1:length(mrtables.tablenames)
     m = strcmp(' ', munts) & contains(mvars, 'cab');
     munts(m) = {'m_per_second'};
 
-    opt1 = 'ship'; opt2 = 'rvdas_units'; get_cropt
+    opt1 = 'uway_proc'; opt2 = 'rvdas_units'; get_cropt
 
     %reassign
     mrtables.mstarvars{no} = mvars;

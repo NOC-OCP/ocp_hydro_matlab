@@ -9,7 +9,7 @@ function [csvname, result, psql_string] = mr_try_psql(sqltext,varargin)
 %
 
 m_common
-opt1 = 'ship'; opt2 = 'rvdas_database'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'rvdas_database'; get_cropt
 quiet = 1; if nargin>1; quiet = varargin{1}; end
 
 %if we haven't checked before in this session, first see if we have the

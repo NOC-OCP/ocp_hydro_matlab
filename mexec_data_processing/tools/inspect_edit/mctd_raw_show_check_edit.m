@@ -1,13 +1,15 @@
-function mctd_raw_show_check_edit(stn, varargin)
+function ed = mctd_raw_show_check_edit(stn, varargin)
 % mctd_raw_show_check_edit: display raw or cleaned 24 hz ctd data along
 % with 1 hz data to check for spikes, check and modify the cast start,
-% bottom, and end, and select/apply edits***
+% bottom, and end, and select/apply edits by calling mctd_rawedit
 %
 % mctd_rawshow(stn) displays data from the cleaned, corrected
 %   (*_cleaned.nc) file, if it exists, the raw (*_cnv.nc) file if not
 % mctd_rawshow(stn, 'raw') always displays data from the raw file
 % mctd_rawshow(stn, 'cleaned') displays data from the cleaned file if it
 %   exists and exits if not
+%
+% asks if edits were made and outputs this as ed
 
 m_common
 opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
@@ -204,8 +206,7 @@ end
 end
 
 if warn
-    m = {'To edit out spikes or bad points manually, run mctd_rawedit. If you need';
-        'to remove a range of scans or many out-of-range values or large spikes from'
+    m = {'If you need to remove a range of scans or many out-of-range values or large spikes from'
         'several parameters, use cruise options file ctd_proc, rawedit_auto case first'
         'before manual despiking/outlier removal. If there are large spikes in temperature'
         'you should remove them before applying cell thermal mass correction, and if '
@@ -213,9 +214,13 @@ if warn
     fprintf(1,'%s\n',m{:});
 end
 if warn || doed
-    ed = input('run mctd_rawedit now?   ','s');
+    ed = input('run gui_editpoints now?   ','s');
     if strcmp(ed,'y')
-        mctd_rawedit(stn)
+        bads = gui_editpoints(d, 'scan', 'edfilepat', sprintf(edfiles.ctd,stn_string));
         close all
+        msg = sprintf('did you make any manual edits or change any automatic editing/correction settings in opt_%s?   ',mcruise);
+        ed = strcmp(input(msg,'s'),'y');
     end
+else
+    ed = false;
 end

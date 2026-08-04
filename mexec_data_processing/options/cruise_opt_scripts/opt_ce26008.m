@@ -54,10 +54,14 @@ switch opt1
             case 'cast_divide'
                 force_auto.end = 1;
             case 'rawshow'
-                yl.temp = [-2 18]; yl.cond = [3 5]; yl.oxy = [120 300];
+                yl.temp = [0 18]; yl.cond = [3 5]; yl.oxy = [120 300];
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
                 yl.fluor = [0 8];
+                if stnlocal>40
+                    yl.temp = [-2 10]; yl.cond = [2.5 4.5]; yl.oxy = [200 380];
+                    yl.fluor = [0 4];
+                end
             case 'niskfilename'
                 blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_%s.bl',upper(mcruise),stn_string));
             case 'botflags'

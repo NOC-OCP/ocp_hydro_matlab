@@ -65,7 +65,7 @@ function [latout,lonout] = mrposinfo(varargin)
 m_common
 
 if ~exist('rtable','var') || isempty(rtable)
-    opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+    opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
     rtable = default_navstream;
 end
 [rtable, mtable] = mrresolve_table(rtable); %make it an rvdas table name
