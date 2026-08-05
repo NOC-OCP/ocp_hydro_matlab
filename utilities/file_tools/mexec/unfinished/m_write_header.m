@@ -14,6 +14,11 @@ end
 hatt = m_default_attributes;
 hatt_names = fieldnames(hatt);
 
+if ~isstruct(ncfile)
+    a.name = ncfile;
+    ncfile = a;
+end
+
 for k = 1:length(hatt_names)
     gattnam = hatt_names{k};
     cmd = ['gattval = h.' gattnam ';'];

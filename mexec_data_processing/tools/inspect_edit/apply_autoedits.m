@@ -35,14 +35,14 @@ function [d, comment] = apply_autoedits(d, castopts)
 %     castopts.badtemp2.oxy_sbe2 = [NaN NaN];
 %    
 %   despike -- for each parameter which is a field of castopts.despike,
-%     data are masked using a 5-point median despiker with the threshold
-%     (or succession of thresholds) given by castopts.despike.(parameter);
-%     if length(castopts.despike.(parameter))>1 the thresholds are applied
-%     iteratively; note thresholds are absolute, not relative
+%     each row in castopts.despike.{parameter}, [threshold length],
+%     successively applies median_despike to remove points that deviate
+%     from the length-points median over neighbouring non-NaN points by
+%     more than threshold; note thresholds are absolute, not relative
 %     e.g.
-%     castopts.despike.cond1 = [0.01 0.01];
-%     to iterate twice with the same threshold of 0.01 mS/cm deviation from
-%     the 5-point median
+%     castopts.despike.temp1 = [0.01 5; 0.01 5];
+%       to edit temp1 by iterating twice with the same threshold of 0.01
+%       degrees C deviation from the 5-point median
 %
 % also see ctd_proc, rawedit_auto and uway_proc, mday_01_clean_av cases for
 %   information on castopts 
@@ -133,8 +133,8 @@ if isfield(castopts,'despike')
         end
         t = castopts.despike.(fn{no});
         comment = [comment '\n despiked ' fn{no} ' using median_despike with successive thresholds '];
-        for dno = 1:length(t)
-            d.(fn{no}) = median_despike(d.(fn{no}), t(dno));
+        for dno = 1:size(t,1)
+            d.(fn{no}) = median_despike(d.(fn{no}), t(dno,1), t(dno,2));
             comment = [comment num2str(t(dno)) ' '];
         end
     end

@@ -36,10 +36,7 @@ end
 % %     eval(com)
 % % end
 
-torg = datenum(h.mstar_time_origin);
-% h.last_update_string = datestr(torg+h.date_file_updated,31);
 h.last_update_string = datestr(h.date_file_updated,31);
-% h.data_time_origin_string = datestr(torg+h.data_time_origin,31);
 if isempty(h.data_time_origin)
     h.data_time_origin_string = '';
 else

@@ -1,3 +1,4 @@
+function mctd_checkplots(stnlocal, varargin)
 % mctd_checkplots: read in ctd data
 %
 % Use: mctd_checkplots        and then respond with station number, or for station 16
@@ -49,7 +50,7 @@
 %
 % The selection and order of plots can be controlled by the variable named
 % ctd_cklist. ctd_cklist is an array that will control which
-% plots are produced and the order they appear in.
+% plots are produced and the prev_stnsorder they appear in.
 % eg
 %
 % ctd_cklist = [2 3 7 10 6]; mctd_checkplots
@@ -60,13 +61,15 @@
 m_common
 if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD data from station %s along with data from selected previous stations',stn_string);end
 
-msg1 = '\n Type number of previous stations to view, a list of at least two station numbers, or return to quit\n';
-nump = input(msg1);
+if nargin>1
+    nump = varargin{1};
+else
+    msg1 = '\n Type number of previous stations to view, a list of at least two station numbers, or return to quit\n';
+    nump = input(msg1);
+end
 
 if numel(nump)>1
     slist = nump; 
-%     slist = slist(slist<stnlocal); % bak en705 19 july 2023; no reason why
-%     we should only display earlier stations
 elseif isscalar(nump)
     slist = stnlocal-nump:stnlocal-1;
     slist(slist<0) = []; % bak en705 19 july 2023 : allow station number zero
@@ -89,10 +92,10 @@ d2up = d2db; dpsal = d2db; ddcs = d2db;
 for no = 1:length(klist)
     ks = klist(no);
     sstring = sprintf('%03d',ks);
-    infile1 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2db']));
-    infile2 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_2up']));
-    infile3 = m_add_nc(fullfile(root_ctd, [prefix1 sstring '_psal']));
-    infile4 = m_add_nc(fullfile(root_ctd, [prefix2 sstring]));
+    infile1 = m_add_nc(sprintf(ctdfile.d,sstring));
+    infile2 = m_add_nc(sprintf(ctdfile.u,sstring));
+    infile3 = m_add_nc(sprintf(ctdfile.p1,sstring));
+    infile4 = m_add_nc(sprintf(dcsfile.dcs,sstring));
     % skip stations that don't have a complete set of files
     if exist(infile1,'file') && exist(infile2,'file') && exist(infile3,'file') && exist(infile4,'file')
         infiles{1,no} = infile1;
@@ -160,7 +163,7 @@ for plotlist = cklist
             
             % figure 1
             % mplotxy first
-            
+            figure(101); clf
             clear pf1;
             pf1.xlist = 'time';
             pf1.ylist = ['press temp ' saltype ' oxy'];
@@ -168,8 +171,9 @@ for plotlist = cklist
             last = find(dpsal{end}.scan < ddcs{end}.scan_end, 1, 'last' );
             pf1.startdc = first; % good data only
             pf1.stopdc = last;
-            if oxy_end
-                pf1.stopdcv.oxy = pf1.stopdc-oxy_align;
+            opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
+            if isfield(co,'oxy_align')
+                pf1.stopdcv.oxy = pf1.stopdc-co.oxy_align;
             end
             pf1.ncfile.name = infiles{3,end}; % psal file
             
@@ -297,9 +301,9 @@ for plotlist = cklist
                 plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
                 subplot(223)
-                if oxy_end
+                if isfield(co,'oxy_align') && co.oxy_align
                     kokdo = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    kokuo = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
+                    kokuo = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-co.oxy_align*24);
                 else
                     kokdo = kokd;
                     kokuo = koku;
@@ -355,9 +359,9 @@ for plotlist = cklist
                 plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
                 subplot(223)
-                if oxy_end
+                if isfield(co,'oxy_align') && co.oxy_align
                     kokdo = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    kokuo = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
+                    kokuo = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-co.oxy_align*24);
                 else
                     kokdo = kokd;
                     kokuo = koku;
@@ -527,9 +531,9 @@ for plotlist = cklist
             
             subplot(223)
             for ks = numused
-                if oxy_end
+                if isfield(co,'oxy_align') && co.oxy_align
                     kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
+                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-co.oxy_align*24);
                 else
                     kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                     koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
@@ -681,8 +685,8 @@ for plotlist = cklist
                 plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 
-                if oxy_end
-                    kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end-oxy_align*24);
+                if isfield(co,'oxy_align') && co.oxy_align
+                    kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end-co.oxy_align*24);
                 end
                 if nox>1
                     subplot(325)

@@ -1,0 +1,16 @@
+ 
+
+mstarpre, mstardir, paramtype, scsfilepat
+seapath,nav,pos,Seapath*.Raw
+simrad,nav,pos,Simrad*.Raw
+mru,nav,att,MRU*.Raw
+gyro,nav,head,Gyro*.Raw
+es18,bathy,sbm,*ES18*.XYZ
+es38,bathy,sbm,*ES38*.XYZ
+em2040,bathy,mbm,*EM2040*.XYZ
+em340,bathy,mbm,*EM340*.XYZ
+fluor,ocean,tsg,Fluorometer*.Raw
+sbe21,ocean,tsg,SBE21*.Raw
+smartguard,ocean,tsg,SooGuard*.Raw
+windtrue,met,wind,Gill-WindDir*.Raw
+met,met,met,CR6*.Raw

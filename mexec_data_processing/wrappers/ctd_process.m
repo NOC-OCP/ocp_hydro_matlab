@@ -114,7 +114,7 @@ if dostep.guisteps && (dostep.edit || dostep.part1)
     for stn = stns
         %call gui to check raw or cleaned data and check/select cast start, bottom, and end
         ed = mctd_raw_show_check_edit(stn);
-        if ed && (dostep.part2 || dostep.postedit)
+        if strcmp(ed,'y') && (dostep.part2 || dostep.postedit)
             %first need to rerun the edit steps up to now to
             %apply/propagate the edits
             msbe_02_edcal(stn)
@@ -149,7 +149,7 @@ end
 
 if dostep.guisteps && (dostep.part2 || dostep.postedit)
     for stn = stns
-        mctd_checkplots
+        mctd_checkplots(stn,3)
         pause
     end
 end

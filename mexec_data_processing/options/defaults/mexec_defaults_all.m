@@ -82,7 +82,7 @@ switch opt1
                 ctdfile.p1 = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_1hz.nc']);
                 ctdfile.d = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_2db.nc']);
                 ctdfile.u = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_2up.nc']);
-                edfiles.ctd = fullfile(MEXEC_G.MDIRLIST.M_CTD,'editlogs','ctd_%s_editpoints_');
+                edfiles.ctd24 = fullfile(MEXEC_G.MDIRLIST.M_CTD,'editlogs','ctd_%s_editpoints');
                 firfile.fir = fullfile(MEXEC_G.MDIRLIST.M_CTD, [firfile.dataname '.nc']);
                 dcsfile.dcs = fullfile(MEXEC_G.MDIRLIST.M_CTD, [dcsfile.dataname '.nc']);
                 winfile.win = fullfile(MEXEC_G.MDIRLIST.M_CTD_WIN, [winfile.dataname '.nc']);
@@ -97,12 +97,18 @@ switch opt1
                 samfile = fullfile(MEXEC_G.MDIRLIST.M_CTD,['sam_' mcruise '_all.nc']);
                 samufile = fullfile(MEXEC_G.MDIRLIST.M_BOT,['ucsw_' mcruise '_all.nc']);
                 sumfile = fullfile(MEXEC_G.MDIRLIST.M_SUM,['station_summary_' mcruise '_all.nc']);
+                sbe35file.dataname = ['sbe35_' mcruise '_all'];
+                sbe35file.sbe35 = fullfile(MEXEC_G.MDIRLIST.M_SBE35, [sbe35file.dataname '.nc']);
                 if exist('samtyp','var')
-                    sampfile.dataname = [samtyp '_' mcruise '_01'];
-                    sampfile.(samtyp) = fullfile(MEXEC_G.MDIRLIST.(['M_BOT_' upper(samtyp)]),[sampfile.dataname '.nc']);
+                    sampfile.dataname = [samtyp '_' mcruise '_all'];
+                    if strcmp(samtyp,'sbe35')
+                        sampfile.(samtyp) = fullfile(MEXEC_G.MDIRLIST.M_SBE35,[sampfile.dataname '.nc']);
+                    else
+                        sampfile.(samtyp) = fullfile(MEXEC_G.MDIRLIST.(['M_BOT_' upper(samtyp)]),[sampfile.dataname '.nc']);
+                    end
                 end
                 if isfield(MEXEC_G.MDIRLIST,'M_POS')
-                    ucfiles.nav = fullfile(MEXEC_G.MDIRLIST.M_POS,['bst_' mcruise '_01.nc']);
+                    ucfiles.nav = fullfile(MEXEC_G.MDIRLIST.M_POS,['bestnav_' mcruise '_all.nc']);
                     ucfiles.ocean = fullfile(MEXEC_G.MDIRLIST.M_TSG,['surface_ocean_' mcruise '_all.nc']);
                 end
         end
@@ -172,7 +178,6 @@ switch opt1
             case 'ctd_raw_extra'
                 extrasource = {}; extravars = {};
             case 'header_edits'
-                %mctd_02
             case 'raw_corrs'
                 co.oxy_align = 0;
                 co.dpoff = 0;
@@ -198,13 +203,17 @@ switch opt1
                 %two groupings to show
                 rppars = {{'temp','cond','press','oxy'}
                     {'fluor','turbidity','transmittance'}};
-                yl.temp = [-2 40]; 
+                repars.g1 = {{'press'}, {'temp1','temp2'}, {'cond1','cond2'},{'oxy1','oxy2'}};
+                repars.g2 = {{'press'},{'fluor'},{'turbidity'},{'transmittance'}};
+                yl.temp = [-2 40]; yl.temp1 = yl.temp; yl.temp2 = yl.temp;
                 if strcmp(h.fldunt{strcmp(h.fldnam,'cond1')},'S/m')
-                    yl.cond = [20 40]; 
+                    yl.cond = [20 40];
                 else
                     yl.cond = [2 4];
                 end
-                yl.press = [-2 6000]; yl.oxy = [100 400];
+                yl.cond1 = yl.cond; yl.cond2 = yl.cond;
+                yl.press = [-2 6000]; 
+                yl.oxy = [100 400]; yl.oxy1 = yl.oxy; yl.oxy2 = yl.oxy;
                 yl.fluor = [0 8]; 
                 yl.turbidity = [0 1]; yl.transmittance = [60 101];
                 doed = 1; %always end mctd_raw_show_check by running mctd_rawedit (can turn this off in opt_cruise)
@@ -259,7 +268,7 @@ switch opt1
                 uopts = struct();
                 tvars = fieldnames(dg)';
                 tvars = [tvars(cellfun(@(x) contains(x,'time'),tvars)) 'dday'];
-                vars_to_ed = setdiff(fieldnames(dg)',tvars);
+                vars_to_ed.g1 = {setdiff(fieldnames(dg)',tvars)};
                 switch datatype
                     case 'bathy'
                         handedit = 1;
@@ -275,20 +284,20 @@ switch opt1
                         %conductivity and salinity depend on housing temp
                         uopts.badtemph.cond = [NaN NaN];
                         uopts.badtemph.salinity = [NaN NaN];
-                        vars_offset_scale.trans = [-95; 0.1];
+                        yl.trans = [-95; 0.1];
                     case 'atmos'
                         handedit = 1;
                         wvars = {'truwind_e','truwind_n','truwind_dir'};
                         for no = 1:length(wvars)
                             uopts.badtruwind_spd.(wvars{no}) = [NaN NaN];
                         end
-                        vars_to_ed = setdiff(vars_to_ed,wvars); %just edit speed and apply to other wind vars (by re-running after editing)
-                        vars_offset_scale.airpressure = [-1000; 1];
-                        vars_offset_scale.humidity = [-80; 0.5];
-                        vars_offset_scale.parport = [0; 1e-7];
-                        vars_offset_scale.parstarboard = vars_offset_scale.parport;
-                        vars_offset_scale.tirport = vars_offset_scale.parport;
-                        vars_offset_scale.tirstarboard = vars_offset_scale.parport;
+                        vars_to_ed.g1 = {setdiff(vars_to_ed.g1{1},wvars)}; %just edit speed and apply to other wind vars (by re-running after editing)
+                        yl.airpressure = [500 1500];
+                        yl.humidity = [0 100];
+                        yl.parport = [0 1e7];
+                        yl.parstarboard = yl.parport;
+                        yl.tirport = yl.parport;
+                        yl.tirstarboard = yl.parport;
                     case 'nav'
                         handedit = 0;
                 end

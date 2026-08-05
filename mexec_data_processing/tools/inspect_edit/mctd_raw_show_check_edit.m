@@ -199,6 +199,7 @@ if exist('ds','var')
 
     MEXEC_A.Mprog = mfilename;
     mfsave(infiled, ds, hnew, '-addvars');
+    [ddcs, hdcs]  = mloadq(infiled,'/');
 else
     h = m_read_header(infiled); h.comment = [h.comment ' cast start/bottom/end inspected but not changed\n'];
     ncfile.name = m_add_nc(infiled); m_write_header(infiled,h);
@@ -216,11 +217,14 @@ end
 if warn || doed
     ed = input('run gui_editpoints now?   ','s');
     if strcmp(ed,'y')
-        bads = gui_editpoints(d, 'scan', 'edfilepat', sprintf(edfiles.ctd,stn_string));
-        close all
+        scans_use = {find(d.scan>=ddcs.scan_start & d.scan<=ddcs.scan_end)};
+        bads = gui_editpoints(struct2table(d), 'scan', scans_use, repars,...
+            'yl', struct2table(yl), 'ti', stn_string, ...
+            'markers', repmat({'o','<'},1,4), 'markersize', 3, 'lines', repmat({'-',':'},1,4), ...
+            'edfilepre', sprintf(edfiles.ctd24,stn_string));
         msg = sprintf('did you make any manual edits or change any automatic editing/correction settings in opt_%s?   ',mcruise);
-        ed = strcmp(input(msg,'s'),'y');
+        ed = input(msg,'s');
     end
 else
-    ed = false;
+    ed = 'n';
 end

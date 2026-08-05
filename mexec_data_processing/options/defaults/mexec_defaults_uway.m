@@ -28,18 +28,36 @@ elseif strcmp(MEXEC_G.datatypes.uway,'rvdas')
     end
 
 elseif strcmp(MEXEC_G.datatypes.uway,'scs_ascii')
-   switch opt2
-        case 'ship_data_sys_names'
+    switch opt2
+        case 'ship_data_sys_names' %***used? should be ship-specific not default if so
             tsgpre = 'oceanlogger';
             metpre = 'met';
         case 'scs_skip'
             skip = {'USBL'};
         case 'scs_nmea_form'
-            uway_torg = 0; % mexec parsing of SCS files converts matlab datenum, so no offset required
             colsi = {}; colsf = {};
             untsi = {}; untsf = {};
             colsi = {'date','time'};
             untsi = {'mm/dd/yyyy','HH:MM:SS.SSS'};
+        case 'uway_ascii_parse'
+            if sum(strcmp(t.Properties.VariableNames,'datetime'))
+                t.dday = datenum(t.datetime)-dd0;
+            else
+                md = strcmp(t.Properties.VariableNames,'date');
+                mt = strcmp(t.Properties.VariableNames,'time');
+                dd0 = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1);
+                if strcmp(t.Properties.VariableTypes(md),'datetime') && strcmp(t.Properties.VariableTypes(mt),'duration')
+                    t.dday = datenum(t.date+t.time)-dd0;
+                else
+                    t.dday = datenum(datetime(sprintf('%08d %08d\n',[t.date';round(t.time)'])))-dd0;
+                end
+            end
+            t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'dday')} = sprintf('days since %d-01-01 00:00:00',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
+            if sum(strcmp(t.Properties.VariableNames','msg')) && strcmp(t.msg(1),'PSXN')
+                t = t(t.linetype==23,:);
+            end
+            nuo = {{'latitudens','ns'} 'cdegrees', @(x,y) (strcmp(y,'N')*2-1)*x/100, 'latitude', 'degrees N';...
+                {'longitudeew','ew'} 'cdegrees', @(x) (strcmp(y,'E')*2-1)*x/100, 'longitude', 'degrees E'};
     end
 
 elseif ~strcmp(MEXEC_G.datatypes.uway,'techsas')

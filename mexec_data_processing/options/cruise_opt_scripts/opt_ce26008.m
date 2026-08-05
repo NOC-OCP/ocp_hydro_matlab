@@ -24,6 +24,9 @@ switch opt1
                 end
             case 'cast_split_comb'
                 comb_stns = [25.1 25 154152];
+            case 'header_edits'
+                h.comment = replace(h.comment,'PSO: Caroline Cusack','PSO: Yvonne Firing');
+                m_write_header(otfiles{1},h);
             case 'rawedit_auto'
                 %use rangelim first
                 co.rangelim.press = [-1.25 3300]; 
@@ -32,10 +35,21 @@ switch opt1
                 co.rangelim.oxy = [120 300];
                 co.rangelim.turbidity = [0 1];
                 co.rangelim.fluor = [0 8];
+                %then mask all on CTD whenever P is bad
+                co.badpress.temp1 = [NaN NaN];
+                co.badpress.temp2 = [NaN NaN];
+                co.badpress.cond1 = [NaN NaN];
+                co.badpress.cond2 = [NaN NaN];
+                co.badpress.oxy1 = [NaN NaN];
+                co.badpress.oxy2 = [NaN NaN];
                 %then despike
-                co.despike.press = [10 10];
-                co.despike.temp1 = [1 1]; co.despike.cond1 = [0.2 0.2]; co.despike.oxy1 = [10 10];
-                co.despike.temp2 = [1 1]; co.despike.cond2 = [0.2 0.2]; co.despike.oxy2 = [10 10];
+                co.despike.press = [5 12; 5 12];
+                co.despike.temp1 = [1 12; 1 12];
+                co.despike.cond1 = [0.2 12; 0.2 12]; 
+                co.despike.oxy1 = [4 12; 4 12];
+                co.despike.temp2 = [1 12; 1 12];
+                co.despike.cond2 = [0.2 12; 0.2 12]; 
+                co.despike.oxy2 = [4 12; 4 12];
             case 'raw_corrs'
                 a = {dbstack(2).file};
                 if strcmp(a{1},'msbe_02_edcal.m')
@@ -51,8 +65,6 @@ switch opt1
                         fprintf(1,'pre-cast p offset: %f\n',co.dpoff)
                     end
                 end
-            case 'cast_divide'
-                force_auto.end = 1;
             case 'rawshow'
                 yl.temp = [0 18]; yl.cond = [3 5]; yl.oxy = [120 300];
                 yl.press = [-1 3200];
@@ -62,37 +74,20 @@ switch opt1
                     yl.temp = [-2 10]; yl.cond = [2.5 4.5]; yl.oxy = [200 380];
                     yl.fluor = [0 4];
                 end
+                yl.temp1 = yl.temp; yl.temp2 = yl.temp; 
+                yl.cond1 = yl.cond; yl.cond2 = yl.cond;
+                yl.oxy1 = yl.oxy; yl.oxy2 = yl.oxy;
+            case 'sensor_choice'
+                ts_choice = 2;
+                o_choice = 2;
             case 'niskfilename'
                 blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_%s.bl',upper(mcruise),stn_string));
             case 'botflags'
                 niskin_flag(position==3) = 4; %latch does not release
-                if stnlocal==2
-                    niskin_flag(ismember(position,[17 23])) = 3; %leaked
-                elseif stnlocal==6
-                    niskin_flag(position==16) = 3; %leaked
-                elseif stnlocal==7
-                    niskin_flag(position==16) = 3; %leaked
-                    %niskin 17 chl & hplc sampled before nuts, doc, salt
-                elseif stnlocal==10
-                    niskin_flag(position==5) = 3; %leaked? dnf? %note on n17 but still sampled for everything?
-                elseif stnlocal==18
-                    niskin_flag(position==16) = 3; %leaked
-                elseif stnlocal>=24 && stnlocal<=26
-                    niskin_flag(position==13) = 4; %didn't close
-                elseif stnlocal==12
-                    niskin_flag(position==12) = 3; %leaking
-                elseif stnlocal==30
-                    niskin_flag(position==13 | position==14) = 3; %didn't close fully (bottom) but still sampled?
-                elseif stnlocal==37
-                    niskin_flag(position==11 | position==17) = 3; %leaking a little? not enough water for last planned samples
-                elseif stnlocal==41
-                    niskin_flag(ismember(position,[6 14 16 20])) = 3; %possibly leaking, check
-                elseif stnlocal==43
-                    niskin_flag(position==7) = 3; %possibly leaking from spigot, check
-                elseif stnlocal==45
-                    niskin_flag(position==16) = 4; %"failed"
-                    niskin_flag(position==10) = 3; %leaking
-                end
+                f = readtable(fullfile(MEXEC_G.MDIRLIST.M_CTD,'niskin_flags_logged_ce26008.csv'),'Delimiter',',');
+                f = f(f.statnum==stnlocal,:);
+                [~,ia,ib] = intersect(position,f.position,'stable');
+                niskin_flag(ia) = f.niskin_flag(ib);
         end
 
 
@@ -235,6 +230,28 @@ switch opt1
                 cfg.p.drot = md(ii+1);
                 fprintf(1,'using mag dec %f for %s',cfg.p.drot,stn_string)
             end
+        end
+
+    case 'uway_proc'
+        switch opt2
+            case 'scs_skip'
+                skip = [skip, {'elg','ZDA','VBW','Ship-Speed-Log','uway.csv'}];%***need to add VBW to nmea and nmeau in load_uway_ascii.m (also for ship-speed-log)
+            case 'scs_nmea_custom'
+                if isempty(msg)
+                    if strncmp(files{no},'Fluor',5)
+                        vn = {'date','time','fluo_msg'};
+                        vu = {'mm/dd/yyyy','HH:MM:SS.SSS','special'};
+                        delim = ',';
+                    elseif strncmp(files{no},'SBE21',5)
+                        vn = {'datetime','psal','temp','fluo','m1','sspd'};
+                        vu = {'mm/dd/yyyy,HH:MM:SS.SSS,','psu','degrees C','unknown','unknown','m/s'};
+                        delim = ' ';
+                    end
+                end
+            case 'uway_ascii_parse'
+                nuo = [nuo;...
+                    {{'fluo_msg'}, 'special', @(x) str2double(x(strfind(x,'=')+1:end)), 'fluo', 'unknown';...
+                    {'psxn_heave'}, 'm_checksum', @(x) str2double(x(1:4)), 'heave', 'm'}];
         end
 
     case 'outputs'

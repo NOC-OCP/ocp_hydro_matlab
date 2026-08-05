@@ -16,8 +16,8 @@ if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s
 opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 opt1 = 'sbe35'; opt2 = 'sbe35files'; get_cropt
 outfile = sprintf(sbe35file.sbe35,sbe35file.dataname);
-if nargin>0 && ~isempty(varargin{1}) && exist(ofile,'file')
-    h = m_read_header(ofile);
+if nargin>0 && ~isempty(varargin{1}) && exist(outfile,'file')
+    h = m_read_header(outfile);
     if h.uprlim(strcmp('statnum',h.fldnam))>=varargin{1}
         %we've already read in as far as this station, no need to redo
         return
