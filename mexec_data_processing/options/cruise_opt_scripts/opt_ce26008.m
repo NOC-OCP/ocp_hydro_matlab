@@ -237,21 +237,39 @@ switch opt1
             case 'scs_skip'
                 skip = [skip, {'elg','ZDA','VBW','Ship-Speed-Log','uway.csv'}];%***need to add VBW to nmea and nmeau in load_uway_ascii.m (also for ship-speed-log)
             case 'scs_nmea_custom'
-                if isempty(msg)
-                    if strncmp(files{no},'Fluor',5)
-                        vn = {'date','time','fluo_msg'};
-                        vu = {'mm/dd/yyyy','HH:MM:SS.SSS','special'};
-                        delim = ',';
-                    elseif strncmp(files{no},'SBE21',5)
-                        vn = {'datetime','psal','temp','fluo','m1','sspd'};
-                        vu = {'mm/dd/yyyy,HH:MM:SS.SSS,','psu','degrees C','unknown','unknown','m/s'};
-                        delim = ' ';
-                    end
+                if strncmp(files{fno},'Fluor',5)
+                    vn = {'date','time','fluo_msg'};
+                    vu = {'mm/dd/yyyy','HH:MM:SS.SSS','special'};
+                    delim = ',';
+                    inform = 'ddMMyyyy HHmmss';
+                elseif strncmp(files{fno},'SBE21',5)
+                    vn = {'datetime','psal','temp','m0','m1','sspd'};
+                    vu = {'MM/dd/yyyy,HH:mm:ss.SSS,','psu','degrees C','unknown','unknown','m/s'};
+                    delim = []; %fixed width, no delim
+                    inform = 'MM/dd/yyyy,HH:mm:ss.SSS,';
                 end
             case 'uway_ascii_parse'
-                nuo = [nuo;...
-                    {{'fluo_msg'}, 'special', @(x) str2double(x(strfind(x,'=')+1:end)), 'fluo', 'unknown';...
-                    {'psxn_heave'}, 'm_checksum', @(x) str2double(x(1:4)), 'heave', 'm'}];
+                m = strcmp(t.Properties.VariableNames,'fluo_msg');
+                if sum(m)
+                    t.fluo = cellfun(@(x) str2double(x(strfind(x,'=')+1:end)), t.fluo_msg);
+                    t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'fluo')} = 'unknown';
+                end
+            case 'tstep_save'
+                stepfreq_force = 1; %subsample to 1 Hz before saving
+            case 'uway_load_extra'
+                disp('loading the CE_DefaultUnderwayLog*.elg files')
+                f = dir(fullfile(MEXEC_G.mexec_data_root,'scs_ascii','scs_events_descriptions','CE_DefaultUnderwayLog*.elg'));
+                d = {f(cellfun(@(x) x>153,{f.bytes})).folder};
+                f = {f(cellfun(@(x) x>153,{f.bytes})).name};
+                uway_extra = readtable(fullfile(d{1},f{1}),'FileType','delimitedtext');
+                for no = 2:length(f)
+                    uway_extra = [uway_extra; readtable(fullfile(d{no},f{no}),'FileType','delimitedtext')];
+                end
+                uway_extra.DateTime = uway_extra.Date+uway_extra.Time; uway_extra = uway_extra(:,3:end);
+                uway_extra.SeapathLatitude = cellfun(@(x) str2double(x(1:end-1)),uway_extra.SeapathLatitude);
+                uway_extra.SeapathLongitude = cellfun(@(x) -str2double(x(1:end-1)),uway_extra.SeapathLongitude);
+                save(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,'..','uway_scs_10s'),'uway_extra')
+     
         end
 
     case 'outputs'

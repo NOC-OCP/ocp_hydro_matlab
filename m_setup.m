@@ -124,6 +124,7 @@ opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
 if ~isfield(MEXEC_G,'MDEFAULT_DATA_TIME_ORIGIN')
     error('you must set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN in opt_{cruise}.m under opt1=''setup''; opt2=''time_origin''')
 end
+MEXEC_G.data_time_origin_string = sprintf('%04d-%02d-%02d %02d:%02d:%02d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
 opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt
 
 % find and add (append) paths to other libraries used in processing; also

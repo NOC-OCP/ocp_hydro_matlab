@@ -90,23 +90,9 @@ units = units(ia);
 %also remove duplicate times, after (if set in opt_cruise) subsampling
 %and/or rounding times
 opt1 = 'uway_proc'; opt2 = 'tstep_save'; get_cropt
-tstep = 1;
-if ~isempty(tstep_force)
-    dt = diff(dd.time); dt = dt(dt>0); 
-    dt = mode(dt);
-    tstep = max(round(1/dt),1); 
-end
-if ~isempty(tstep_resol)
-    dd.time = round(dd.time/tstep_resol)*tstep_resol;
-end
-if tstep>1
-    iits = 1:tstep:length(dd.time);
-    [~,iit] = unique(dd.time(iits),'stable');
-    iit = iits(iit);
-else
-    [~,iit] = unique(dd.time,'stable');
-end
-iit = iit(~isnan(dd.time(iit)));
+dd = struct2table(dd);
+dd = times_subsample(dd,'time',tstep_force,tstep_resol);
+dd = table2struct(dd,'ToScalar',true);
 
 clear hnew
 hnew.fldnam = names(:)';

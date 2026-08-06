@@ -1,0 +1,50 @@
+function nmeas = nmea_sentences
+% nmeas = nmea_sentences
+% conventional and custom sentences divided into variable names and units
+% (where possible) corresponding to columns produced by readtable with , as
+% delimiter
+
+nmeas.GGA = {'msg', 'timestamp', 'nslatitude', 'ns', 'ewlongitude', 'ew', 'ggaqual',   'sats',   'hdop', 'alt', 'altval', 'geosep', 'geoval', 'dgpsage', 'dgpsref_checksum';
+               ' ',         ' ',   'cdegrees', 'ns',    'cdegrees', 'ew',  'number', 'number', 'number',   ' ',      ' ',      ' ',      ' ',       ' ',                ' '};
+
+nmea.GLL = {'msg','nslatitude','ns','ewlongitude','ew','timestamp','status (A valid V not valid)','checksum';
+nmeau.GLL = {' ', 'dd mm,mmmm','ns','dddd mm,mmmm','ew','utc hhmmss.ss','flag',' '};
+
+% nmea.ZDA = {'msg','utc','day','month','year','tzoff','tzoff','checksum';
+% nmeau.ZDA = {' ', ' ', ' ', ' ', ' ', 'hours', 'mins', ' '};
+
+nmea.VTG = {'msg','tmg (degrees true)','T','tmgm (degrees magnetic)','M','speed','N','sog','K','mode';% (A autonomous D differential E estimated M manual S simulator N not valid);
+nmeau.VTG = {' ','degrees true',' ','degrees magnetic',' ','kt',' ','km/hour',' ',' '};
+
+nmea.VHW = {'msg','heading_true','T','heading_mag','M','speed relative to water'; %VBW
+nmeau.VHW = {' ', 'nm', ' ','degrees magnetic',' ','kt'};
+
+nmea.HDT = {'msg','head (relative to true north)','checksum'; %THS replaces this?
+nmeau.HDT = {' ','true',' '};
+
+nmea.HDG = {'msg','head','deviation','devdir (E/W)','variation','vardir (E/W)','checksum';
+nmeau.HDG = {' ','degrees magnetic','degrees magnetic','ew','degrees magnetic','ew',' '};
+
+nmea.ROT = {'msg','rate_of_turn';
+nmeau.ROT = {' ','degrees/minute'};
+
+nmea.DBT = {'msg','depthft','feet','depth_below_transducer','metres','depthfa','fathomschecksum';
+nmeau.DBT = {' ',' ',' ','m',' ',' ',' '};
+
+nmea.DBS = {'msg','depthft','feet','depth_below_surface','metres','depthfa','fathomschecksum';
+nmeau.DBS = {' ',' ',' ','m',' ',' ',' '};
+
+nmea.DPT = {'msg','depth_below_transducer','offset_relative_to_transducer','max_range_scale','checksum';
+' ','m','m',' ',' '};
+
+nmea.CR6 = {'msg','latitude','longitude','airtemp','airpress','m0','humid','winddir_true','windspd_true','m1','m2','m3','m4','m5','timestamp';
+' ','degrees N','degrees E','degrees C','Pa','unknown','unknown','degrees relative to true N','m/s','unknown','unknown','unknown','unknown','unknown',' '};
+
+nmea.PASHR = {'msg','timestamp','head','T','roll','pitch','heave','roll_accuracy','pitch_accuracy','heading_accuracy','qual','alignment_status','checksum';
+' ',' ','true','degrees','degrees','m',' ',' ',' ','number','number',' '};
+
+nmea.PSXN = {'msg','linetype','roll','pitch','heading','psxn_heave';
+' ',' ','degrees','degrees','degrees','m_checksum'};
+
+nmea.WIMWD = {'msg','winddir','T','m1','m2','windspd','N','m3','checksum'};
+nmeau.WIMWD = {' ','degrees true',' ',' ',' ','m/s',' ',' ',' '};

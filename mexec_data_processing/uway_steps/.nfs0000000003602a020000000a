@@ -1,7 +1,0 @@
-using default directories
-
-mstarpre, mstardir
-bathy,/data/pstar/projects/goship/cruises/ce26008/data/bathy
-met,/data/pstar/projects/goship/cruises/ce26008/data/met
-nav,/data/pstar/projects/goship/cruises/ce26008/data/nav
-ocean,/data/pstar/projects/goship/cruises/ce26008/data/ocean

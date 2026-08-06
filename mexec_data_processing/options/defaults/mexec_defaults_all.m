@@ -243,16 +243,16 @@ switch opt1
         end
     
     case 'uway_proc'
-            mexec_defaults_uway %rawedit_auto, raw_corrs
+            mexec_defaults_uway %rawedit_auto, raw_corrs; things that are system dependent
         switch opt2
             case 'tstep_save'
                 %subsample high-frequency streams and match up different
                 %messages from the same system by rounding timestamp
                 %if your samples are coming in at a *regular* high
-                %frequency (e.g. 40Hz on the SDA), set tstep_force to
+                %frequency (e.g. 40Hz on the SDA), set stepfreq_force to
                 %subsample to (approximately) 1/tstep_force hz before
                 %saving
-                tstep_force = [];
+                stepfreq_force = [];
                 %round time to nearest tstep_resol s before saving
                 tstep_resol = 1;
             case 'time_problems'

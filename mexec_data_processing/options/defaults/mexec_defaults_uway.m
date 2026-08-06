@@ -39,25 +39,30 @@ elseif strcmp(MEXEC_G.datatypes.uway,'scs_ascii')
             untsi = {}; untsf = {};
             colsi = {'date','time'};
             untsi = {'mm/dd/yyyy','HH:MM:SS.SSS'};
+        case 'scs_nmea_custom'
+            inform = '';
         case 'uway_ascii_parse'
-            if sum(strcmp(t.Properties.VariableNames,'datetime'))
-                t.dday = datenum(t.datetime)-dd0;
-            else
-                md = strcmp(t.Properties.VariableNames,'date');
-                mt = strcmp(t.Properties.VariableNames,'time');
-                dd0 = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1);
-                if strcmp(t.Properties.VariableTypes(md),'datetime') && strcmp(t.Properties.VariableTypes(mt),'duration')
-                    t.dday = datenum(t.date+t.time)-dd0;
-                else
-                    t.dday = datenum(datetime(sprintf('%08d %08d\n',[t.date';round(t.time)'])))-dd0;
-                end
-            end
-            t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'dday')} = sprintf('days since %d-01-01 00:00:00',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
+            t = ua_times_parse(t, MEXEC_G.data_time_origin_string, 'inform', inform);
             if sum(strcmp(t.Properties.VariableNames','msg')) && strcmp(t.msg(1),'PSXN')
                 t = t(t.linetype==23,:);
             end
-            nuo = {{'latitudens','ns'} 'cdegrees', @(x,y) (strcmp(y,'N')*2-1)*x/100, 'latitude', 'degrees N';...
-                {'longitudeew','ew'} 'cdegrees', @(x) (strcmp(y,'E')*2-1)*x/100, 'longitude', 'degrees E'};
+            m = strcmp(t.Properties.VariableNames,'nslatitude');
+            if sum(m)
+                t.latitude = t.nslatitude;
+                t.latitude(strcmp(t.ns,'S')) = -t.latitude(strcmp(t.ns,'S'));
+                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'latitude')} = 'degrees N';
+            end
+            m = strcmp(t.Properties.VariableNames,'ewlongitude');
+            if sum(m)
+                t.longitude = t.ewlongitude;
+                t.longitude(strcmp(t.ew,'W')) = -t.longitude(strcmp(t.ew,'W'));
+                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'longitude')} = 'degrees E';
+            end
+            m = strcmp(t.Properties.VariableNames,'psxn_heave');
+            if sum(m)
+                t.heave = cellfun(@(x) str2double(x(1:end-3)), t.psxn_heave);
+                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'heave')} = 'm';
+            end
     end
 
 elseif ~strcmp(MEXEC_G.datatypes.uway,'techsas')
