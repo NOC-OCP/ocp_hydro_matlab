@@ -158,7 +158,7 @@ if ~strcmp(MEXEC_G.datatypes.uway,'no')
 end
 
 % set data directories within MEXEC_G.mexec_data_root
-opt1 = 'setup'; opt2 = 'mdirlist'; get_cropt
+mexec_file_locations('mdirlist');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
