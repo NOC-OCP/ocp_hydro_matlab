@@ -153,11 +153,14 @@ for vgno = 1:length(gs)
 
             %chose something to edit
             set(hl(edno),'color',[0 0 0],'marker','x')
-            disp(['select bottom left and top right corners of box around bad data from variable ' num2str(edno) ' (black xes)']);
-            [x,y] = ginput(2); if isempty(x); continue; elseif x(1)>x(2); x = flipud(x(:)); y = flipud(y(:)); end
+            disp(['select bottom left and top right corners of one or more boxes around bad data from variable ' num2str(edno) ' (black xes); enter to continue']);
+            [x,y] = ginput(50); if isempty(x); continue; elseif x(1)>x(2); x = flipud(x(:)); y = flipud(y(:)); end
 
             %check edits
-            bad = data.(xvar)>=x(1) & data.(xvar)<=x(2) & data.(vused{edno})>=y(1) & data.(vused{edno})<=y(2);
+            bad = false(size(data.(xvar)));
+            for no = 1:2:length(x)
+                bad = bad | data.(xvar)>=x(no) & data.(xvar)<=x(no+1) & data.(vused{edno})>=y(no) & data.(vused{edno})<=y(no+1);
+            end
             if sum(bad)
                 hle = plot(ha(1), data.(xvar)(bad),data.(vused{edno})(bad),'s','color',[.5 .5 .5]);
                 confirm = input(['delete ' num2str(sum(bad)) ' selected points (y/n)?\n'],'s');

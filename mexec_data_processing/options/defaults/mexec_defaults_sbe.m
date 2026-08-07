@@ -51,10 +51,13 @@ else
                 'wetCDOM', 'fluor_cdom'
                 'xmiss', 'transmittance'
                 'CStarTr0', 'transmittance'
-                'CstarAt0', 'attenuation'
+                'CStarAt0', 'attenuation'
                 'turbWETbb0', 'turbidity' %m^-1/sr
                 'turbWETntu0', 'turbidity' %NTU
                 'par/sat/log', 'par' %umol photons/m^2/sec
+                'par', 'par'
+                'cpar', 'par_corrected'
+                'spar', 'surface_irradiance'
                 %'par1', 'par_downlook'
                 };
             
@@ -68,10 +71,11 @@ else
             co.pumpsNaN.oxy2 = 8*24;
 
         case 'raw_corrs'
-            co.oxy_align = 0; %number of seconds to shift oxygen earlier
-            co.doturbV = 0;
-            co.dooxy1V = 0; co.dooxy2V = 0; %make 1 or 2 to recalculate using temp1 or temp2
-            co.redooxyhyst = 0;
+            co.dpoff_calc = 1; %try to calculate deck pressure from start of record
+            co.oxy_align = 2; %number of seconds to shift oxygen earlier
+            co.doturbV = 0; %don't recalculate turbidity from V
+            co.dooxy1V = 0; co.dooxy2V = 0; %set to 1 or 2 to recalculate using temp1 or temp2
+            co.re_dooxyhyst = 1; %apply if not already applied; if already applied, undo and redo
             %SBE defaults
             co.hyst_oxy0.H1 = -0.033;
             co.hyst_oxy0.H2 = 5000;

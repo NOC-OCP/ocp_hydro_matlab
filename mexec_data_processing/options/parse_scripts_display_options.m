@@ -826,7 +826,7 @@ switch opt1
     case 'castpars'
         %parameters (often used by multiple scripts), related to CTD/LADCP casts
         switch opt2
-            case 'minit'
+            case 'm_stn_string'
                 crhelp_str = {'queries for stn if not set, makes stn_string (default: 3-digit form of stn)'
                     'for filenames and moves stn to stnlocal'};
                 if ~exist('stn', 'var')

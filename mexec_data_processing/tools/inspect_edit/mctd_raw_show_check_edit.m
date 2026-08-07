@@ -12,11 +12,16 @@ function ed = mctd_raw_show_check_edit(stn, varargin)
 % asks if edits were made and outputs this as ed
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'plotting 24 hz and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
 
-cfile = m_add_nc(sprintf(ctdfile.clean,stn_string));
-rfile = m_add_nc(sprintf(ctdfile.raw,stn_string));
+pd = mexec_file_locations('procfiles','ctd');
+cfile = m_add_nc(sprintf(pd.ctdclean,stn_string));
+rfile = m_add_nc(sprintf(pd.ctdraw,stn_string));
+efile = sprintf(pd.edctd24,stn_string);
+infile1 = sprintf(pd.ctd1,stn_string);
+pdd = mexec_file_locations('procfiles','dcs');
+infiled = sprintf(pdd.dcsfile,stn_string);
+
 if nargin>1
     rt = varargin{1};
     if strcmp(rt,'raw') && exist(rfile,'file')
@@ -41,11 +46,9 @@ else
         error('neither %s nor %s found',rfile,cfile)
     end
 end
-infiled = sprintf(dcsfile.dcs,stn_string);
-infile1 = sprintf(ctdfile.p1,stn_string);
 
 [d,h] = mload(infiler,'/');
-[d1,h1] = mload(infile1,'/');
+[d1,~] = mload(infile1,'/');
 [ddcs, hdcs]  = mloadq(infiled,'/');
 dn_start = m_commontime(ddcs.time_start(1),'time_start',hdcs,'datenum');
 dn_end = m_commontime(ddcs.time_end(1),'time_end',hdcs,'datenum');
@@ -79,13 +82,15 @@ for gno = 1:ng
             end
             plot(repmat([ddcs.scan_start ddcs.scan_bot scan_end],2,1),yl.(p),'--','color',[.5 .5 .5]); hold on
             for sno = 1:length(v)
-                plot(d.scan, d.(v{sno}), d1.scan, d1.(v{sno}), ':');
-                m = d.scan>=ddcs.scan_start & d.scan<=ddcs.scan_end;
-                if max(d.(v{sno}))>yl.(p)(2) || min(d.(v{sno}))<yl.(p)(1)
-                    warn = 1;
+                if ~endsWith(v{sno},'_flag')
+                    plot(d.scan, d.(v{sno}), d1.scan, d1.(v{sno}), ':');
+                    m = d.scan>=ddcs.scan_start & d.scan<=ddcs.scan_end;
+                    if max(d.(v{sno}))>yl.(p)(2) || min(d.(v{sno}))<yl.(p)(1)
+                        warn = 1;
+                    end
+                    ylabel([p ' (' h.fldunt{strcmp(h.fldnam,v{sno})} ')']);
                 end
             end
-            ylabel([p ' (' h.fldunt{strcmp(h.fldnam,v{sno})} ')']);
             xlim(d.scan([1 end])); ylim(yl.(p)); 
         end
     end
@@ -221,7 +226,7 @@ if warn || doed
         bads = gui_editpoints(struct2table(d), 'scan', scans_use, repars,...
             'yl', struct2table(yl), 'ti', stn_string, ...
             'markers', repmat({'o','<'},1,4), 'markersize', 3, 'lines', repmat({'-',':'},1,4), ...
-            'edfilepre', sprintf(edfiles.ctd24,stn_string));
+            'edfilepre', efile);
         msg = sprintf('did you make any manual edits or change any automatic editing/correction settings in opt_%s?   ',mcruise);
         ed = input(msg,'s');
     end

@@ -17,8 +17,8 @@ if ~exist(blinfile,'file')
     end
 end
 if MEXEC_G.quiet<=1; fprintf(1,['reading in .bl file to ' dataname '.nc\n'],stn_string); end
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-f = sprintf(firfile.fir,stn_string);
+pd = mexec_file_locations('procfiles','fir');
+firot = sprintf(pd.firfile,stn_string);
 
 %load scan and position for each rosette firing, from .bl or .btl file
 if contains(blinfile,'.bl')
@@ -103,9 +103,9 @@ if exist('comb_stns','var') && comb_stns(1)==stnlocal
         warning('not applying NaN offset to .bl scan number for %s',stn_string)
     else
         scan = scan + comb_stns(3);
-        stn = comb_stns(2); opt1 = 'setup'; opt2 = 'minit'; get_cropt
-        f = sprintf(firfile.fir,stn_string);
-        if exist(m_add_nc(f),'file')
+        stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+        firot = sprintf(firfile.fir,stn_string);
+        if exist(m_add_nc(firot),'file')
             blappend = 1;
         end
     end
@@ -116,23 +116,21 @@ comment = ['input data from ' blinfile];
 if blappend
     d.scan = scan; d.position = position;
     d.niskin = niskin; d.niskin_flag = niskin_flag;
-    h = m_read_header(f);
+    h = m_read_header(firot);
     [h.fldnam,~,ib] = intersect(fieldnames(d)',h.fldnam,'stable');
     h.fldunt = h.fldunt(ib); 
     if isfield(h,'fldserial')
         h.fldserial = h.fldserial(ib);
-    else
-        h.fldserial = repmat({'n/a'},1,length(h.fldnam));
     end
     h = rmfield(h,{'alrlim','uprlim','absent','num_absent','dimrows','dimcols','dimsset'});
     h.comment = [h.comment '\n' comment];
-    mfsave(f, d, h, '-merge', 'scan')
+    mfsave(firot, d, h, '-merge', 'scan')
 
 else
 
     timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
     MEXEC_A.MARGS_IN = {
-        f
+        firot
         'scan'
         'position'
         'niskin'

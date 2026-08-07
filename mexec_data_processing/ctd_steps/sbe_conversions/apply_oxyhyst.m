@@ -18,32 +18,32 @@ for vno = 1:length(hvar)
     hv = hvar{vno};
     rv = replace(hv,'hyst','hrev');
     ov = replace(hvar{vno},'hyst_','');
-    if isemember(rvar,rv)
+    if ismember(rvar,rv)
         %first reverse
         if size(oco.(rv).H3,2)==2; oco.(rv).H3 = interp1(oco.(rv).H3(:,1),oco.(rv).H3(:,2),d.press); end
         d.(ov) = mcoxyhyst_reverse(d.(ov), d.time, d.press, oco.(rv).H1, oco.(rv).H2, oco.(rv).H3);
-        hnew.comment = [hnew.comment '\nreversed oxygen hysteresis on ov'];
+        hnew.comment = [hnew.comment '\nreversed oxygen hysteresis on ' ov];
     end
     %now apply (new) hyst
     if size(oco.(hv).H3,2)==2; oco.(hv).H3 = interp1(oco.(hv).H3(:,1),oco.(hv).H3(:,2),d.press); end
     dnew.(ov) = mcoxyhyst(d.(ov), d.time, d.press, oco.(hv).H1, oco.(hv).H2, oco.(hv).H3);
     %record whether a non-default calibration is set, for mstar comment
-    if length(co.(hv).H1)>1 || length(co.(hv).H2)>1 || length(co.(hv).H3)>1
-        ohtyp(no) = 2;
-    elseif max(abs(co.H_0-[co.(hv).H1 co.(hv).H2 co.(hv).H3]))>0
-        ohtyp(no) = 1;
+    if length(oco.(hv).H1)>1 || length(oco.(hv).H2)>1 || length(oco.(hv).H3)>1
+        ohtyp(vno) = 2;
+    elseif max(abs(oco.H_0-[oco.(hv).H1 oco.(hv).H2 oco.(hv).H3]))>0
+        ohtyp(vno) = 1;
     else
-        ohtyp(no) = 0;
+        ohtyp(vno) = 0;
     end
     ohtyp = max(ohtyp);
     if ohtyp>0
         %and add comments to file
-        hnew.comment = [hnew.comment '\noxygen hysteresis correction different from SBE default applied'];
+        hnew.comment = [hnew.comment '\noxygen hysteresis correction different from SBE default applied to ' hv];
         if ohtyp == 2
             hnew.comment = [hnew.comment ' (depth-varying)'];
         end
     else
-        hnew.comment = [hnew.comment '\nSBE default oxygen hysteresis applied'];
+        hnew.comment = [hnew.comment '\nSBE default oxygen hysteresis applied to ' hv];
     end
     hnew.fldnam{vno} = ov;
     m = strcmp(h.fldnam,ov);

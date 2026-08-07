@@ -30,9 +30,15 @@ m_common; MEXEC_A.mprog = mfilename;
 if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hysteresis), as set in get_cropt and opt_%s\n',mcruise); end
 
 % input and output files
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-dataname = sprintf(ctdfile.dataname,stn_string);
-rawfile = sprintf(ctdfile.raw,stn_string);
+pd = mexec_file_locations('procfiles','ctd');
+rawfile = sprintf(pd.ctdraw,stn_string);
+cleanfile = m_add_nc(sprintf(pd.ctdclean,stn_string));
+file24 = sprintf(pd.ctd24,stn_string);
+edfilepre = sprintf(pd.edctd24, stn_string);
+pd = mexec_file_locations('procfiles','dcs');
+dfile = sprintf(pd.dcsfile,stn_string);
+
+% start from the raw (cnv) file
 [d, h] = mloadq(rawfile,'/');
 
 % what steps have been done
@@ -53,20 +59,23 @@ opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
 %%%% edit out bad points
 
 %automatic edits
-d0 = d;
+fn = setdiff(fieldnames(d),{'statnum','latitude','longitude','altimeter','scan','pumps','time'});
+for fno = 1:length(fn)
+    d.([fn{fno} '_flag']) = 2+zeros(size(d.scan));
+    h.fldnam = [h.fldnam [fn{fno} '_flag']];
+    h.fldunt = [h.fldunt 'woce'];
+    h.fldserial = [h.fldserial 'n/a'];
+end
 [d, comment] = apply_autoedits(d, co);
 if ~isempty(comment)
     h.comment = [h.comment comment];
 end
 
-%reapply hand edits
-edfilepre = sprintf(edfiles.ctd24, stn_string);
-[d, comment] = apply_guiedits(d, 'scan', edfilepre, 0.1);
+%reapply hand edits, adding a flag of 7 (despiked) where points are removed
+[d, comment] = apply_guiedits(d, 'scan', edfilepre, 0.1, [2 7]);
 if ~isempty(comment)
     h.comment = [h.comment comment];
 end
-
-%%%%% apply linear corrections %%%%%
 
 %fill in some fields we may be missing
 if ~isfield(d, 'statnum')
@@ -78,24 +87,24 @@ ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00
 d.dday = m_commontime(d,'time',h,ddu);
 h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldserial ' '];
 
+
+%%%%% apply corrections %%%%%
+
 %pressure offset (deck pressure)
-if co.dpoff
+if co.dpoff_calc
+    iid = 1:60*24;
+    if max(d.press(iid))>0.3 %&& checked = [6 1]; ~checked(checked(:,1)==stnlocal)
+        keyboard
+    else
+        co.dpoff = -median(d.press(iid),'omitnan');
+        fprintf(1,'pre-cast p offset: %f\n',co.dpoff)
+    end
     d.press = d.press + co.dpoff;
     h.comment = [h.comment '\npressure offset by ' num2str(co.dpoff) ' dbar'];
+    doneco.dpoff = 1;
 end
 
-%alignment in time
-if ~doneco.alignctd && co.oxy_align>0
-    oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
-    for no = 1:length(oxyvars)
-        d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+co.oxy_align);
-    end
-    h.comment = [h.comment '\noxygen shifted by ' num2str(co.oxy_align) ' s'];
-end
-
-%%%%% apply nonlinear corrections/recalculations %%%%%
-
-%oxygen recalculation (with alternate temperature sensor). uncommon. 
+%oxygen recalculation from V (with alternate temperature sensor). uncommon. 
 if co.dooxy1V>0 && isfield(co,'oxy1Vcoefs')
     warning('be cautious with oxygen calculated with alternate temperature sensor')
     t = d.(['temp' num2str(co.dooxy1V)]);
@@ -115,40 +124,59 @@ if co.dooxy2V>0 && isfield(co,'oxy2Vcoefs')
     d.oxy2 = calculate_oxy_from_V(d.sbeoxyV2, d.time, d.press, t, s, co.oxy2Vcoefs);
     h.comment = [h.comment '\n oxy2 recalculated from sbeoxyV2 using CTD' num2str(co.dooxy2V) ' '];
     doneco.oxy2hyst = 0;
+else
+    co.dooxy2V = 0;
 end
 
 %oxygen tau and hysteresis, including first reversing default hysteresis if
 %required
 if ~doneco.oxytau %is this likely to happen?***
 end
-if co.redooxyhyst
+if co.re_dooxyhyst
     %set up a new structure
-    oco.hyst_oxy1 = co.hyst_oxy1; %sensor 1 new params
-    oco.hyst_oxy2 = co.hyst_oxy2; %sensor 2 new params
-    oco.H_0 = [co.hyst_oxy0.H1 co.hyst_oxy0_H2 co.hyst_oxy0_H3];
+    oco.H_0 = [co.hyst_oxy0.H1 co.hyst_oxy0.H2 co.hyst_oxy0.H3];
     if doneco.oxy1hyst
         %reverse first, then apply new
         oco.hrev_oxy1 = co.hyst_oxy0;
-    else
-        oco.hrev_oxy1 = [];
     end
     if doneco.oxy2hyst
         oco.hrev_oxy2 = co.hyst_oxy0;
+    end
+    if isfield(co,'hyst_oxy1')
+        oco.hyst_oxy1 = co.hyst_oxy1;
     else
-        oco.hrev_oxy2 = [];
+        oco.hyst_oxy1 = co.hyst_oxy0;
+    end
+    if isfield(co,'hyst_oxy2')
+        oco.hyst_oxy2 = co.hyst_oxy2;
+    else
+        oco.hyst_oxy2 = co.hyst_oxy0;
     end
     [dnew, hnew] = apply_oxyhyst(d, h, oco);
     fn = fieldnames(dnew);
     for no = 1:length(fn)
         d.(fn{no}) = dnew.(fn{no});
+        doneco.([fn{no} 'hyst']) = 1;
     end
+    h.comment = [h.comment hnew.comment];
+end
+
+%alignment in time, for oxygen only
+if ~doneco.alignctd && co.oxy_align>0 %sbe says between 3 and 7
+    oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
+    for no = 1:length(oxyvars)
+        d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+co.oxy_align);
+    end
+    h.comment = [h.comment '\nalign: oxygen shifted by ' num2str(co.oxy_align) ' s'];
+    doneco.alignctd = 1;
 end
 
 %cell thermal mass
 if ~doneco.celltm % | co.redoctm (do we have a way to undo or does this require going back to the .hex or pre-ctm .cnv file?)***
     d.cond1 = apply_ctd_celltm(d.time, d.temp1, d.cond1);
     d.cond2 = apply_ctd_celltm(d.time, d.temp2, d.cond2);
-    h.comment = [h.comment '\n cond corrected for cell thermal mass by ctd_apply_celltm'];
+    h.comment = [h.comment '\n celltm: cond corrected for cell thermal mass by ctd_apply_celltm'];
+    doneco.ctm = 1;
 end
 
 % turbidity conversion from turbidity volts
@@ -160,9 +188,12 @@ if co.doturbV
     d = orderfields(d,h.fldnam);
 end
 
+%save record of corrections applied, so we don't have to parse it from the
+%comment string each time
+MEXEC_G.doneco(stnlocal) = doneco;
+
 
 %%%%% save as cleaned %%%%%
-cleanfile = m_add_nc(sprintf(ctdfile.clean,stn_string));
 if exist(cleanfile,'file')
     delete(cleanfile)
 end
@@ -170,7 +201,6 @@ mfsave(cleanfile, d, h);
 
 
 %%%%% user sensor calibrations (based on discrete sample data) %%%%%
-file24 = sprintf(ctdfile.p24,stn_string);
 if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
     %apply calibrations
     [dcal, hcal] = apply_calibrations(d, h, co.calstr, co.docal, 'q');
@@ -191,7 +221,6 @@ end
 
 %%%%% check and warn
 opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
-dfile = sprintf(dcsfile.dcs,stn_string);
 if exist(dfile,'file')
     [ddc,~] = mload(dfile,'/');
     m = d.scan>=ddc.scan_start & d.scan<=ddc.scan_end;

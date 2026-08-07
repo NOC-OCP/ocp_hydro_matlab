@@ -7,16 +7,18 @@ function mfir_to_sam(stn)
 % formerly mfir_04
 
 m_common
+opt1 = 'mstar'; get_cropt
 
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-f = m_add_nc(sprintf(firfile.fir,stn_string));
+pd = mexec_file_locations('procfiles','fir');
+f = m_add_nc(sprintf(pd.firfile,stn_string));
+pd = mexec_file_locations('procfiles','samp');
+samfile = pd.samc;
 if ~exist(f,'file')
     warning('no bottle firing file for %s',f)
     return
 end
 if MEXEC_G.quiet<=1; fprintf(1,'pasting CTD data at bottle firing times from fir_%s_%s.nc to sam_%s_all.nc\n',mcruise,stn_string,mcruise); end
 
-opt1 = 'mstar'; get_cropt
 if exist(samfile,'file')
     h0 = m_read_header(samfile);
 else

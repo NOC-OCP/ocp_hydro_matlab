@@ -5,18 +5,18 @@ function [dtab, params] = mout_columns_prepare_data(params, kloop)
 % 
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 
 % load input file
 switch params.in
     case 'ctd'
-        stn = params.stnlist{kloop};
-        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-        fname = sprintf('%s_%s_%s%s.nc',params.in,mcruise,stn_string,params.suf);
-        infile = fullfile(params.ddir,fname);
+        stn = params.stnlist{kloop}; 
+        opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+        pd = mexec_file_locations('procfiles','ctd');
+        infile = sprintf(pd.(['ctd' params.suf]),stn_string);
         params.stn_string = stn_string;
     case 'sam'
-        infile = samfile;
+        pd = mexec_file_locations('procfiles','samp');
+        infile = pd.samc;
 end
 
 if ~exist(infile,'file')

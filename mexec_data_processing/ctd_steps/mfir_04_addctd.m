@@ -11,18 +11,21 @@ function mfir_04_addctd(stn)
 %         pressures
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+pd = mexec_file_locations('procfiles','fir');
 f = sprintf(firfile.fir,stn_string);
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)
     return
 end
+pd = mexec_file_locations('procfiles','ctd');
+file1 = sprintf(pd.ctd1,stn_string);
+dfile = sprintf(pd.ctd2d,stn_string);
+ufile = sprintf(pd.ctd2u,stn_string);
 if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to %s\n', f); end
 %not using 24hz because we want at least some averaging
 
 var_copycell = mcvars_list(2); %which variables to copy from 24hz CTD file
 % remove any vars from copy list that aren't available in the input file
-file1 = sprintf(ctdfile.p1,stn_string);
 [var_copycell, var_copystr] = mvars_in_file(var_copycell, file1);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
@@ -65,7 +68,6 @@ opt1 = 'ctd_proc'; opt2 = 'fir_extra'; get_cropt
 if fir_extra
     if MEXEC_G.quiet<=1; fprintf(1,'adds bottle stop background gradient, standard deviation, and gamma_n-matched downcast data to fir_%s_%s.nc\n', mcruise, stn_string); end
 
-    ufile = sprintf(ctdfile.u,stn_string);
     if ~exist(file1,'file') || ~exist(ufile,'file')
         warning('missing psal or 2up file for cast %s',stn_string)
         return
@@ -110,10 +112,9 @@ if fir_extra
     hnew.comment = [hnew.comment '\n stdev at bottle stops from psal (1hz) file'];
 
     var_copycell = mcvars_list(2);
-    dfile = sprintf(ctdfile.d,stn_string);
     if exist(dfile,'file')
         [dn,hd] = mloadq(dfile,'/');
-        [var_copycell, var_copystr] = mvars_in_file(var_copycell, dfile);
+        [var_copycell, ~] = mvars_in_file(var_copycell, dfile);
 
         %get down and up T and S on common pressure grid (from 2 dbar data)
         iigd = find(~isnan(dn.temp+dn.psal));

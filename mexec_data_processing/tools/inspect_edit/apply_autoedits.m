@@ -19,6 +19,16 @@ function [d, comment] = apply_autoedits(d, castopts)
 %     e.g. 
 %     castopts.rangelim.temp1 = [-2 40];
 %
+%   despike -- for each parameter which is a field of castopts.despike,
+%     each row in castopts.despike.{parameter}, [threshold length],
+%     successively applies median_despike to remove points that deviate
+%     from the length-points median over neighbouring non-NaN points by
+%     more than threshold; note thresholds are absolute, not relative
+%     e.g.
+%     castopts.despike.temp1 = [0.01 5; 0.01 5];
+%       to edit temp1 by iterating twice with the same threshold of 0.01
+%       degrees C deviation from the 5-point median
+%
 %   bad(var) -- for each parameter which is a field of castopts.bad(var),
 %     data are masked where (var) is within the range(s) given by the rows
 %     of castopts.bad(var).(parameter); in addition, if one of the rows is
@@ -34,16 +44,6 @@ function [d, comment] = apply_autoedits(d, castopts)
 %     castopts.badtemp2.cond2 = [NaN NaN];
 %     castopts.badtemp2.oxy_sbe2 = [NaN NaN];
 %    
-%   despike -- for each parameter which is a field of castopts.despike,
-%     each row in castopts.despike.{parameter}, [threshold length],
-%     successively applies median_despike to remove points that deviate
-%     from the length-points median over neighbouring non-NaN points by
-%     more than threshold; note thresholds are absolute, not relative
-%     e.g.
-%     castopts.despike.temp1 = [0.01 5; 0.01 5];
-%       to edit temp1 by iterating twice with the same threshold of 0.01
-%       degrees C deviation from the 5-point median
-%
 % also see ctd_proc, rawedit_auto and uway_proc, mday_01_clean_av cases for
 %   information on castopts 
 % 
@@ -80,7 +80,27 @@ if isfield(castopts,'rangelim')
         iir = find(d.(fn{no})<r(1) | d.(fn{no})>r(2));
         if ~isempty(iir)
             d.(fn{no})(iir) = NaN;
+            d.([fn{no} '_flag'])(iir) = 7;
             comment = [comment '\n edited ' fn{no} ' values outside range [' num2str(r(1)) ' ' num2str(r(2)) ']'];
+        end
+    end
+end
+
+
+%despike
+if isfield(castopts,'despike')
+    fn = intersect(fieldnames(castopts.despike),fnd);
+    for no = 1:length(fn)
+        if strncmp(fn{no},'temp',4) && isfield(castopts,'redoctm') && ~castopts.redoctm
+            warning('editing temperature in mctd_02 is risky; are you sure spikes are not large enough to need to redo CTM?')
+        end
+        t = castopts.despike.(fn{no});
+        comment = [comment '\n despiked ' fn{no} ' using median_despike with successive thresholds '];
+        for dno = 1:size(t,1)
+            d0 = d.(fn{no});
+            d.(fn{no}) = median_despike(d.(fn{no}), t(dno,1), t(dno,2));
+            comment = [comment num2str(t(dno)) ' '];
+            d.([fn{no} '_flag'])(isnan(d.(fn{no})) & ~isnan(d0)) = 7;             
         end
     end
 end
@@ -124,19 +144,3 @@ for bpno = 1:length(iibp)
     end
 end
     
-%despike
-if isfield(castopts,'despike')
-    fn = intersect(fieldnames(castopts.despike),fnd);
-    for no = 1:length(fn)
-        if strncmp(fn{no},'temp',4) && isfield(castopts,'redoctm') && ~castopts.redoctm
-            warning('editing temperature in mctd_02 is risky; are you sure spikes are not large enough to need to redo CTM?')
-        end
-        t = castopts.despike.(fn{no});
-        comment = [comment '\n despiked ' fn{no} ' using median_despike with successive thresholds '];
-        for dno = 1:size(t,1)
-            d.(fn{no}) = median_despike(d.(fn{no}), t(dno,1), t(dno,2));
-            comment = [comment num2str(t(dno)) ' '];
-        end
-    end
-end
-

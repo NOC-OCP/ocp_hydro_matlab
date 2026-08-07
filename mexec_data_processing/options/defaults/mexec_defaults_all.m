@@ -25,109 +25,30 @@ switch opt1
         switch opt2
             case 'time_origin'
                 %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
-            case 'minit'
+            case 'm_stn_string'
                 %station naming convention
-                if ~exist('stn', 'var'); stn = input('type stn number '); end
-                stn_string = sprintf('%03d',stn); %used for file names
+                if ~exist('stn', 'var')
+                    stn = input('type stn number '); 
+                end
+                stn_string = sprintf('%03d',stn); %used for file names, default: 001, 002, etc.
                 stnlocal = stn;
-            case 'mdirlist'
-                dirs = {
-                    'M_CTD' 'ctd'
-                    'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
-                    'M_CTD_BOT' fullfile('ctd','ASCII_FILES')
-                    'M_CTD_WIN' fullfile('ctd','WINCH')
-                    'M_CTD_DEP' 'station_information'
-                    'M_BOT'     'bottle_samples'
-                    'M_BOT_SAL' fullfile('bottle_samples','SAL')
-                    'M_BOT_OXY' fullfile('bottle_samples','OXY')
-                    'M_BOT_NUT' fullfile('bottle_samples','NUT')
-                    'M_BOT_PIG' fullfile('bottle_samples','PIG')
-                    'M_BOT_CO2' fullfile('bottle_samples','CO2')
-                    'M_BOT_CFC' fullfile('bottle_samples','CFC')
-                    'M_BOT_CH4' fullfile('bottle_samples','CH4')
-                    'M_BOT_CHL' fullfile('bottle_samples','PIG')
-                    'M_BOT_ISO' fullfile('bottle_samples','LOGS')
-                    'M_SAM' 'ctd'
-                    'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
-                    'M_SUM' 'collected_files'
-                    'M_VMADCP' 'vmadcp'
-                    }; %***change how MDIRLIST is used?
-                if ~strcmp(MEXEC_G.Mshipdatasystem,'auto')
-                    dirs = [dirs;
-                        {'M_UWAY_RAW' fullfile(MEXEC_G.Mshipdatasystem,'raw_local')}];
+            case 'mstar'
+                %things about mstar file format
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024
+                    docf = 1; %cf-compliant time units
+                else
+                    docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
                 end
-                if strcmp(MEXEC_G.datatypes.ladcp,'ix')
-                    dirs = [dirs;
-                        {'M_LADCP' 'ladcp'
-                        'M_IX' fullfile('ladcp','ix')}];
-                end
-                if exist('mutv','var')
-                    dirs = [dirs; ...
-                        [cellfun(@(x) ['M_' upper(x)], mutv.mstarpre, 'UniformOutput', false), ...
-                        mutv.mstardir]];
-                    [~,ii] = unique(dirs(:,1),'stable');
-                    dirs = dirs(ii,:);
-                end
-                dirs(:,2) = cellfun(@(x) fullfile(MEXEC_G.mexec_data_root,x),dirs(:,2),'UniformOutput',false);
-                MEXEC_G.MDIRLIST = cell2struct(dirs(:,2),dirs(:,1));
-            case 'procfiles'
-                %.nc files for different processing stages
-                ctdfile.dataname = ['ctd_' mcruise '_%s'];
-                firfile.dataname = ['fir_' mcruise '_%s'];
-                dcsfile.dataname = ['dcs_' mcruise '_%s'];
-                winfile.dataname = ['win_' mcruise '_%s'];
-                ctdfile.raw = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_cnv.nc']);
-                ctdfile.clean = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_cleaned.nc']);
-                ctdfile.p24 = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_24hz.nc']);
-                ctdfile.p1 = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_1hz.nc']);
-                ctdfile.d = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_2db.nc']);
-                ctdfile.u = fullfile(MEXEC_G.MDIRLIST.M_CTD, [ctdfile.dataname '_2up.nc']);
-                edfiles.ctd24 = fullfile(MEXEC_G.MDIRLIST.M_CTD,'editlogs','ctd_%s_editpoints');
-                firfile.fir = fullfile(MEXEC_G.MDIRLIST.M_CTD, [firfile.dataname '.nc']);
-                dcsfile.dcs = fullfile(MEXEC_G.MDIRLIST.M_CTD, [dcsfile.dataname '.nc']);
-                winfile.win = fullfile(MEXEC_G.MDIRLIST.M_CTD_WIN, [winfile.dataname '.nc']);
-                if exist('inst','var') 
-                    if exist('cast_select','var') && exist('stn_string', 'var')
-                        sadcpfile.dataname = [inst '_' mcruise '_' cast_select '_' stn_string];
-                        sadcpfile.av = fullfile(MEXEC_G.MDIRLIST.M_VMADCP, 'mproc', '%s_ave.nc');
-                    end
-                    sadcpfile.proc = fullfile(MEXEC_G.MDIRLIST.VMADCP, 'postprocessing', upper(mcruise), 'proc_editing', inst, 'contour', [inst '.nc']);
-                end
-                ctdfile.sg = fullfile(MEXEC_G.MDIRLIST.M_CTD,'sensor_groups.mat'); %generated by get_sensor_groups, contains groups of sensors by serial number, sg, sng
-                samfile = fullfile(MEXEC_G.MDIRLIST.M_CTD,['sam_' mcruise '_all.nc']);
-                samufile = fullfile(MEXEC_G.MDIRLIST.M_BOT,['ucsw_' mcruise '_all.nc']);
-                sumfile = fullfile(MEXEC_G.MDIRLIST.M_SUM,['station_summary_' mcruise '_all.nc']);
-                sbe35file.dataname = ['sbe35_' mcruise '_all'];
-                sbe35file.sbe35 = fullfile(MEXEC_G.MDIRLIST.M_SBE35, [sbe35file.dataname '.nc']);
-                if exist('samtyp','var')
-                    sampfile.dataname = [samtyp '_' mcruise '_all'];
-                    if strcmp(samtyp,'sbe35')
-                        sampfile.(samtyp) = fullfile(MEXEC_G.MDIRLIST.M_SBE35,[sampfile.dataname '.nc']);
-                    else
-                        sampfile.(samtyp) = fullfile(MEXEC_G.MDIRLIST.(['M_BOT_' upper(samtyp)]),[sampfile.dataname '.nc']);
-                    end
-                end
-                if isfield(MEXEC_G.MDIRLIST,'M_POS')
-                    ucfiles.nav = fullfile(MEXEC_G.MDIRLIST.M_POS,['bestnav_' mcruise '_all.nc']);
-                    ucfiles.ocean = fullfile(MEXEC_G.MDIRLIST.M_TSG,['surface_ocean_' mcruise '_all.nc']);
-                end
-        end
-
-    case 'mstar'
-        %things about mstar file format
-        if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024
-            docf = 1; %cf-compliant time units
-        else
-            docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
         end
 
     case 'ship'
-        %parameters related to ship underway data
+        %parameters related to ship: underway data system, vmadcp system
         switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
             case {'di' 'dy'}
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
                 if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
                     MEXEC_G.Mshipdatasystem = 'rvdas';
+                    MEXEC_G.datatype.sadcp = 'uhdas';
                 else
                     MEXEC_G.Mshipdatasystem = 'techsas';
                 end
@@ -135,24 +56,31 @@ switch opt1
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
                 if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
                     MEXEC_G.Mshipdatasystem = 'rvdas';
+                    MEXEC_G.datatype.sadcp = 'uhdas';
                 else
                     MEXEC_G.Mshipdatasystem = 'techsas';
                 end
             case 'sd'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
                 MEXEC_G.Mshipdatasystem = 'rvdas';
+                MEXEC_G.datatype.sadcp = 'uhdas';
             case 'jr'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
                 MEXEC_G.Mshipdatasystem = 'scs_ascii';
             case 'kn'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
                 MEXEC_G.Mshipdatasystem = 'scs'; %***update to scs_nc?
+                MEXEC_G.datatype.sadcp = 'uhdas';
             case 'en'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
                 MEXEC_G.Mshipdatasystem = 'scs_nc';
+                MEXEC_G.datatype.sadcp = 'uhdas';
             case 'ce'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
                 MEXEC_G.Mshipdatasystem = 'scs_ascii';
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2026
+                    MEXEC_G.datatype.sadcp = 'uhdas';
+                end
             otherwise
                 merr = ['Ship ''' MEXEC_G.MSCRIPT_CRUISE_STRING(1:2) ''' not recognised, underway system will not be set up'];
                 %fprintf(2,'%s\n',merr);
@@ -164,23 +92,18 @@ switch opt1
 
     case 'ctd_proc'
         if strcmp(MEXEC_G.datatypes.ctd,'sbe')
-            mexec_defaults_sbe %rawedit_auto, raw_corrs
+            mexec_defaults_sbe %ctdvarsunits, rawedit_auto, raw_corrs
         end
         switch opt2
             case 'ctdfiles'
-                %input .cnv file set by cruise
-            case 'absentvars'
-                %if a sensor was missing for only some stations, can add it
-                %as NaNs. this is also the place to create time variable if
-                %not present
+                helptext = sprintf('input .cnv file, set in opt_%s',mcruise);
+            case 'absentvars' 
+                helptext = sprintf('if necessary, set in opt_%s to create time variable (if missing) or add variables absent for only some stations as NaNs',mcruise);
             case 'cast_split_comb'
-                %no defaults
+                %helptext = sprintf('if nec')
             case 'ctd_raw_extra'
                 extrasource = {}; extravars = {};
             case 'header_edits'
-            case 'raw_corrs'
-                co.oxy_align = 0;
-                co.dpoff = 0;
             case 'ctd_cals'
                 %remove any co.calstr; must be set by opt_{cruise}
                 co.docal.temp = 0; %do not apply any user calibration to temp
@@ -217,6 +140,9 @@ switch opt1
                 yl.fluor = [0 8]; 
                 yl.turbidity = [0 1]; yl.transmittance = [60 101];
                 doed = 1; %always end mctd_raw_show_check by running mctd_rawedit (can turn this off in opt_cruise)
+                %ctd flags: 1 not calibrated, 2 acceptable, 3 questionable
+                %,4 bad, 5 not reported, 6 interpolated over > 2 dbar, 7
+                %despiked
             case 'niskfilename'
                 %no default for .bl file
             case 'botflags'

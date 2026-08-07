@@ -14,5 +14,5 @@ if isfield(MEXEC_G,'MSCRIPT_CRUISE_STRING')
 end
 
 if exist('stn','var')
-    opt1 = 'setup'; opt2 = 'minit'; get_cropt
+    opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
 end

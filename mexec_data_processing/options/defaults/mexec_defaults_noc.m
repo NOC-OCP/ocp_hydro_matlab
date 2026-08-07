@@ -8,7 +8,7 @@ switch opt1
 
     case 'ctd_proc'
         switch opt2
-            case 'minit'
+            case 'm_stn_string'
                 stn_string = sprintf('%03d',stn); %for file names
             case 'oxy_align'
                 oxyunit = 'umol/kg'; %***get from 

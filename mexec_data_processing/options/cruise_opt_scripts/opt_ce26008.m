@@ -1,4 +1,5 @@
 %cast 42 aborted and not converted or processed
+%other aborted casts that can be processed: 1, 
 
 switch opt1
     
@@ -6,7 +7,7 @@ switch opt1
         switch opt2
             case 'time_origin'
                 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2026 1 1 0 0 0];
-            case 'minit'
+            case 'm_stn_string'
                 if stn == 25.1
                     stn_string = '025b';
                 end
@@ -28,13 +29,26 @@ switch opt1
                 h.comment = replace(h.comment,'PSO: Caroline Cusack','PSO: Yvonne Firing');
                 m_write_header(otfiles{1},h);
             case 'rawedit_auto'
-                %use rangelim first
+                %use rangelim first to exclude very large spikes
                 co.rangelim.press = [-1.25 3300]; 
                 co.rangelim.cond = [3 5];
                 co.rangelim.temp = [-2 18];
                 co.rangelim.oxy = [120 300];
                 co.rangelim.turbidity = [0 1];
                 co.rangelim.fluor = [0 8];
+                %then despike with 2 repetitions of a 12-scan median
+                %despiker
+                co.despike.press = [2 12; 2 12]; %avg 1m/s so 2 dbar/0.5 s is large
+                co.despike.temp1 = [0.5 12; 0.5 12];
+                co.despike.cond1 = [0.02 12; 0.02 12]; 
+                co.despike.oxy1 = [3 12; 3 12];
+                co.despike.temp2 = co.despike.temp1;
+                co.despike.cond2 = co.despike.cond1;
+                co.despike.oxy2 = co.despike.oxy1;
+                %mask some bad scan ranges
+                if stnlocal==39
+                    co.badscan.oxy1 = [4.92 17.602]*1e4; 
+                end
                 %then mask all on CTD whenever P is bad
                 co.badpress.temp1 = [NaN NaN];
                 co.badpress.temp2 = [NaN NaN];
@@ -42,29 +56,14 @@ switch opt1
                 co.badpress.cond2 = [NaN NaN];
                 co.badpress.oxy1 = [NaN NaN];
                 co.badpress.oxy2 = [NaN NaN];
-                %then despike
-                co.despike.press = [5 12; 5 12];
-                co.despike.temp1 = [1 12; 1 12];
-                co.despike.cond1 = [0.2 12; 0.2 12]; 
-                co.despike.oxy1 = [4 12; 4 12];
-                co.despike.temp2 = [1 12; 1 12];
-                co.despike.cond2 = [0.2 12; 0.2 12]; 
-                co.despike.oxy2 = [4 12; 4 12];
+                %when there is a pressure spike, everything is likely to be
+                %bad
+                co.badpress.turbidity = [NaN NaN];
+                co.badpress.transmittance = [NaN NaN];
+                co.badpress.fluor = [NaN NaN];
+                co.badpress.par = [NaN NaN];
             case 'raw_corrs'
-                a = {dbstack(2).file};
-                if strcmp(a{1},'msbe_02_edcal.m')
-                    %apply here, don't need otherwise
-                    %CTD is switched on while on deck for the
-                    %transmissivity blanking exercise
-                    iid = 1:60*24;
-                    checked = [6 1];
-                    if max(d.press(iid))>0.3 && ~checked(checked(:,1)==stnlocal)
-                        keyboard
-                    else
-                        co.dpoff = -median(d.press(iid),'omitnan');
-                        fprintf(1,'pre-cast p offset: %f\n',co.dpoff)
-                    end
-                end
+                co.oxy_align = 0; %0 until we check oxygen hysteresis
             case 'rawshow'
                 yl.temp = [0 18]; yl.cond = [3 5]; yl.oxy = [120 300];
                 yl.press = [-1 3200];
@@ -115,7 +114,9 @@ switch opt1
     case 'samp_proc'
         switch opt2
             case 'files'
+                uway_sample_log_file = fullfile(MEXEC_G.MDIRLIST.M_BOT,'uway_sample_log.csv');
                 switch samtyp
+                    case 'ulog'
                     case 'chl'
                     case 'oxy'
                         files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,'20260728_Oxygen_concentration_calculation_worksheet_2025.xlsx')};
@@ -139,7 +140,7 @@ switch opt1
                         sopts.VariableTypes = ct(:,2)';
                         sopts.sheets = 1:15;
                     case 'sal'
-                        salfiles = dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'portasal*.csv'));
+                        files = dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'portasal*.csv'));
                     case 'nut'
                     case 'co2'
                     case 'cfc'
@@ -167,7 +168,7 @@ switch opt1
                     case 'oxy'
                 end
             case 'check'
-                checksam.sbe35 = 1;
+                checksam.sbe35 = 0;
                 checksam.sal = 1; %done
                 checksam.oxy = 1; %done
                 checksam.chl = 0;
@@ -326,7 +327,7 @@ switch opt1
                 sam_gridlist = {'botoxy' 'silc' 'phos' 'totnit' 'botpsal'};
                 mgrid.sdata_flag_accept = [2 3]; %***or just 2
                 if contains(section,'ar7e')
-                    kstns = [4:35];
+                    kstns = [4:50];
                     mgrid.xlim = 2; mgrid.zlim = 4;
                 else
                     section = 'profiles_only';

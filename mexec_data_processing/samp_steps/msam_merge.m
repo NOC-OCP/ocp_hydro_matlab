@@ -14,8 +14,9 @@ function msam_merge(samtyp)
 % called by samp_process.m
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-if MEXEC_G.quiet<1; fprintf(1, 'loading bottle %s from %s_%s_01.nc, saving to %s and %s',samtyp,sampfile.(samtyp),samufile); end
+pd = mexec_file_locations('procfiles','samp',samtyp);
+pdu = mexec_file_locations('procfiles','uway'); %***
+if MEXEC_G.quiet<1; fprintf(1, 'loading bottle %s from %s, saving to %s and %s',pd.(samtyp),pd.samc,pd.samu); end
 
 %defaults
 svars = {'sampnum','niskin_flag'}; %variables to load from sample file (already matched to Niskin firings)
@@ -57,18 +58,17 @@ switch samtyp
     otherwise
 end
 
-%load data saved by msam_load in pointfile, along with CTD/underway
+%load data saved by msam_load, along with CTD/underway
 %parameters required to convert from samufile and ucfiles.ocean 
-pointfile = sprintf(sampfile.(samtyp),sampfile.dataname);
-[dp, hp] = mloadq(pointfile,'/');
+[dp, hp] = mloadq(pd.(samtyp),'/');
 if sum(dp.sampnum>0 & dp.sampnum<1e6)
     %there are CTD samples
-    [dc, hc] = mloadq(samcfile, strjoin(svars, ' ')); %***
+    [dc, hc] = mloadq(pd.samc, strjoin(svars, ' ')); %***
     [dp, hp] = merge_mvars(dp, hp, dc, hc, 'sampnum', 1);
 end
-if sum(dp.sampnum<0 | dp.sampnum>1e9) && exist(ucfiles.ocean,'file')
+if sum(dp.sampnum<0 | dp.sampnum>1e9) && exist(pdu.buocean,'file')
     %there are underway samples; interpolate from surface_ocean file
-    [du, hu] = mloadq(ucfiles.ocean, strjoin(uvars, ' '));
+    [du, hu] = mloadq(pdu.buocean, strjoin(uvars, ' '));
     dnum = m_commontime(du,'dday',hu,'datenum');
     sampnump = str2num(datestr(dnum,'yyyymmddHHMM'));
     sampnumn = -floor(du.dday)*1e4 - str2num(datestr(dnum,'HHMM'));
@@ -128,12 +128,11 @@ dp = hdata_flagnan(dp, 'keepemptyvars', 1);
 dp = rmfield(dp,'niskin_flag');
 
 %save samfile
-mfsave(samcfile, dc, hnew, '-merge', 'sampnum');
+mfsave(pd.samc, dc, hnew, '-merge', 'sampnum');
 
 %underway merged file ***
 switch samtyp
     case 'chl'
-        outu = fullfile(root_in,['ucswchl_' mcruise '_all.nc']);
         tsd_uway = dc(strncmp('UW',dc.cast_number,2),:);
         clear du hu
         to = [MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 1 0 0 0];
@@ -142,7 +141,7 @@ switch samtyp
         hu.fldnam = {'time', 'chl'};
         hu.fldunt = {['days since ' datestr(to,'yyyy-mm-dd HH:MM:SS')], 'ug_per_l'}; %***
         hu.comment = comment;
-        mfsave(outu,du,hu)
+        mfsave(pd.samu,du,hu)
 end
 
 

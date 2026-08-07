@@ -23,13 +23,18 @@ function mctd_04_profile(stn)
 m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from 24 hz to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+pd = mexec_file_locations('procfiles','ctd');
+file24 = sprintf(pd.ctd24,stn_string);
+file2d = sprintf(pd.ctd2d,stn_string);
+file2u = sprintf(pd.ctd2u,stn_string);
+pdd = mexec_file_locations('procfiles','dcs');
+dcsfile = sprintf(pdd.dcsfile,stn_string);
 
 MEXEC_A.Mprog = mfilename;
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[dd, hd] = mload(sprintf(dcsfile.dcs,stn_string),'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
+[dd, hd] = mload(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
 if isempty(strfind(hd.comment,'manual')) && isempty(strfind(hd.comment,'inspected'))
     warning('using automatically detected cast start/bottom/end')
 end
@@ -53,7 +58,7 @@ end
 %%%%% determine what variables will go in 2 dbar averaged files %%%%%
 %%%%% copy for downcast and upcast %%%%%
 
-[d, h] = mload(sprintf(ctdfile.p24,stn_string), '/');
+[d, h] = mload(file24, '/');
 [var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
 
 %use oxy_end to NaN that many seconds before dcs scan_start
@@ -68,7 +73,14 @@ if co.oxy_align>0
     commentstr = ['edited out last ' num2str(co.oxy_align*24) ' scans from oxygen'];
     if ~contains(h.comment, commentstr); h.comment = [h.comment '\n ' commentstr]; end
 end
-
+% d.oxy1_2 = interp1(d.time,d.oxy1,d.time+2);
+% d.oxy1_3 = interp1(d.time,d.oxy1,d.time+3);
+% d.oxy2_2 = interp1(d.time,d.oxy2,d.time+2);
+% d.oxy2_3 = interp1(d.time,d.oxy2,d.time+3);
+% var_copycell = [var_copycell 'oxy1_2' 'oxy1_3' 'oxy2_2' 'oxy2_3'];
+% h.fldnam = [h.fldnam 'oxy1_2' 'oxy1_3' 'oxy2_2' 'oxy2_3'];
+% h.fldunt = [h.fldunt 'umol/kg' 'umol/kg' 'umol/kg' 'umol/kg'];
+% iiv = [iiv' 55:58]';
 
 %%%%% separate downcast and upcast ranges %%%%%
 clear dn up
@@ -108,7 +120,10 @@ end
 
 %%%%% grid to 2 (or other) dbar %%%%%
 clear g2opts
-g2opts.postfill = 0; %fill after gridding?
+%these settings, along with the default of filling up to 1 s in the time
+%series, mean there is not at this stage any interpolation over more than 
+%2 dbar (which would necessitate a woce flag of 6)
+g2opts.postfill = 0; %don't fill after gridding
 g2opts.ignore_nan = 1;
 pg = [0:2:1e4]';
 g2opts.int = [-1 1]; %interval for bins
@@ -180,10 +195,10 @@ if ~contains(hn.comment, commentstr); hn.comment = [hn.comment commentstr]; end
 if isdown
     hnd = hn;
     if ~contains(hnd.comment,commentd); hnd.comment = [commentd; '\n '; hnd.comment]; end
-    mfsave(sprintf(ctdfile.d,stn_string), dn2, hnd);
+    mfsave(file2d, dn2, hnd);
 end
 
 if isup
     hnu = hn;
-    mfsave(sprintf(ctdfile.u,stn_string), up2, hnu);
+    mfsave(file2u, up2, hnu);
 end

@@ -12,12 +12,13 @@ function get_sensor_groups(klist,varargin)
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+pd = mexec_file_locations('procfiles','ctd');
+pds = mexec_file_locations('procfiles','sam');
 
 st = {'Temperature','Conductivity','Oxygen'};
 sa = {'temp','cond','oxy'};
 
-if (nargin>1 && strcmp(varargin{1},'restart')) || ~exist(ctdfile.sg,'file')
+if (nargin>1 && strcmp(varargin{1},'restart')) || ~exist(pd.sg,'file')
     %initialise empty
     for sno = 1:length(sa)
         sg.([sa{sno} '1']) = {};
@@ -27,22 +28,21 @@ if (nargin>1 && strcmp(varargin{1},'restart')) || ~exist(ctdfile.sg,'file')
     sng = struct();
 else
     %load existing, either to use or to modify/append to
-    load(ctdfile.sg,'sg','sng','sn_list')
+    load(pd.sg,'sg','sng','sn_list')
 end
 
 if nargin==1 || ~strcmp(varargin{1},'samonly')
     %get serial numbers from raw ctd file headers
     for stn = klist
-        opt1 = 'setup'; opt2 = 'minit'; get_cropt
-        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+        opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
         if ~isempty(sg.temp1) && sum(cell2mat(sg.temp1(:,1))==stn)>0
             continue %don't redo
         end
-        if exist(sprintf(ctdfile.raw,stn_string),'file')
-            h = m_read_header(sprintf(ctdfile.raw,stn_string));
+        if exist(sprintf(pd.ctdraw,stn_string),'file')
+            h = m_read_header(sprintf(pd.ctdraw,stn_string));
             [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn);
         else
-            warning('no %s, skipping S/Ns from %s',sprintf(ctdfile.raw,stn_string),stn_string)
+            warning('no %s, skipping S/Ns from %s',sprintf(pd.ctdraw,stn_string),stn_string)
         end
     end
 
@@ -57,14 +57,14 @@ if nargin==1 || ~strcmp(varargin{1},'samonly')
     readme = {'sg has lists of stations and serial numbers for each sensor-position (e.g. temp1, cond1, temp2);'
         'sng has lists of stations and sensor-positions for each serial number';
         'sn_list has lists of serial numbers for each sensor (e.g. temp)'};
-    save(ctdfile.sg,'sg','sng','sn_list','readme'); mfixperms(ctdfile.sg);
+    save(pd.sg,'sg','sng','sn_list','readme'); mfixperms(pd.sg);
 end
 
 %now save data from sgfile to sam_*_all file
-if ~exist(m_add_nc(samfile),'file')
+if ~exist(m_add_nc(pds.samc),'file')
     return
 end
-[ds, hs] = mload(samfile,'/');
+[ds, hs] = mload(pds.samc,'/');
 if sum(ismember(ds.statnum,klist)&~isnan(ds.upress))
     fn = fieldnames(sg);
     for fno = 1:length(fn)
@@ -87,7 +87,7 @@ if sum(ismember(ds.statnum,klist)&~isnan(ds.upress))
         end
     end
 end
-mfsave(samfile, ds, hs)
+mfsave(pds.samc, ds, hs)
 
 
 function [sg, sng, sn_list] = sns_from_hdr(h, sg, sng, sn_list, st, sa, stn)

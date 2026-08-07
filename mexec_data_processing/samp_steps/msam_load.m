@@ -56,7 +56,7 @@ if nargin==0
     samtyp = input('what type of sample (sal, oxy, nut, chl, co2, etc.)?  ','s');
 end
 clear sopts
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+pd = mexec_file_locations('procfiles','samp',samtyp);
 opt1 = 'samp_proc'; opt2 = 'files'; get_cropt
 if isempty(files)
     warning('no %s files found in %s; check opt_%s', samtyp, root_in, mcruise)
@@ -137,7 +137,7 @@ hnew.fldunt = dbot.Properties.VariableUnits;
 hnew.dataname = sampfile.dataname;
 indir = fileparts(files{1});
 hnew.comment = sprintf('variables loaded from files in %s%s',indir,addcomment);
-mfsave(sampfile.(samtyp), dnew, hnew);
+mfsave(pd.(samtyp), dnew, hnew);
 
 
 function gs = msam_replicates(ds, samtyp)

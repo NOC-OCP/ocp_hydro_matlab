@@ -20,14 +20,15 @@ function mwin_01_load(stn)
 % case is provided, times are taken from ctd file as usual.
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'adding winch data to %s\n',sprintf(winfile.win,stn_string)); end
 
 % resolve root directories for various file types
-infile1 = sprintf(ctdfile.p1,stn_string);
-winfile = sprintf(winfile.win,stn_string);
+pd = mexec_file_locations('procfiles','ctd');
+infile1 = sprintf(pd.ctd1,stn_string);
+pd = mexec_file_locations('procfiles','win');
+winfile = sprintf(pd.winfile,stn_string);
 wkfile3 = fullfile(MEXEC_G.MDIRLIST.M_CTD_WIN, ['wk_' opt1 '_' datestr(now,30)]);
-dataname = ['win_' mcruise '_' stn_string];
+dataname = pd.winname;
 
 
 %--------------------------------

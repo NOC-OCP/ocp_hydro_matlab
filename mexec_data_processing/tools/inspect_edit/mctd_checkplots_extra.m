@@ -57,7 +57,7 @@
 % will produce plot 6 last and in the front figure window.
 %
 
-opt1 = 'ctd_proc'; opt2 = 'minit'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'm_stn_string'; get_cropt
 if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD data from station %s along with data from selected previous stations',stn_string);end
 
 msg1 = '\n Type number of previous stations to view, a list of at least two station numbers, or return to quit\n';

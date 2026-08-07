@@ -28,7 +28,8 @@ function ctd_sensor_check(varargin)
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+pd = mexec_file_locations('procfiles','ctd');
+pds = mexec_file_locations('procfiles','samp');
 
 setlims = 0;
 okf = [2 3 6];
@@ -56,10 +57,10 @@ else
     oxydiff = 0;
 end
 
-if exist(ctdfile.sg,'file')
-    load(ctdfile.sg)
+if exist(pd.sg,'file')
+    load(pd.sg)
 end
-[ds, ~] = mload(fullfile(mgetdir('sam'),['sam_' mcruise '_all']),'/');
+[ds, ~] = mload(pds.samc,'/');
 
 ds.uoxy1(isnan(ds.utemp1)) = NaN;
 ds.uoxy2(isnan(ds.utemp2)) = NaN;

@@ -131,7 +131,7 @@ switch opt1
 
     case 'castpars'
         switch opt2
-            case 'minit'
+            case 'm_stn_string'
                 %Ti vs SS for stn_string? or don't need this because it's
                 %sequential numbering and handled with cnvfilename? do need
                 %it for e.g. vmadcp station av***

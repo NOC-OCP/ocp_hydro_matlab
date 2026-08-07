@@ -3,9 +3,11 @@ function mfir_02_addwin(stn)
 %
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+pd = mexec_file_locations('procfiles', 'fir');
+f = sprintf(pd.firfile,stn_string);
+pd = mexec_file_locations('procfiles', 'win');
+w = sprintf(pd.winfile,stn_string);
 
-f = sprintf(firfile.fir,stn_string);
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)
 end
@@ -16,7 +18,7 @@ clear d h
 [df,hf] = mloadq(f,'/');
 if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     
-    [dwin, hwin] = mloadq(sprintf(winfile.win,stn_string),'/');
+    [dwin, hwin] = mloadq(w,'/');
     opt1 = 'mstar'; get_cropt
     if docf
         dwin.time = m_commontime(dwin,'time',hwin,hf.fldunt{strcmp(hf.fldnam,'utime')});

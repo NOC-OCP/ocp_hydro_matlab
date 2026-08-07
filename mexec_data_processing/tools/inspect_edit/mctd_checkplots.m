@@ -1,4 +1,4 @@
-function mctd_checkplots(stnlocal, varargin)
+function mctd_checkplots(stn, varargin)
 % mctd_checkplots: read in ctd data
 %
 % Use: mctd_checkplots        and then respond with station number, or for station 16
@@ -82,7 +82,8 @@ clear nump msg1
 % stnlocal is now the local station number
 % slist is the list of previous stations
 
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+pd = mexec_file_locations('procfiles','ctd');
+pdd = mexec_file_locations('procfiles','dcs');
 % load data
 klist = [slist(:)' stnlocal];
 sused = false(size(klist));
@@ -92,10 +93,10 @@ d2up = d2db; dpsal = d2db; ddcs = d2db;
 for no = 1:length(klist)
     ks = klist(no);
     sstring = sprintf('%03d',ks);
-    infile1 = m_add_nc(sprintf(ctdfile.d,sstring));
-    infile2 = m_add_nc(sprintf(ctdfile.u,sstring));
-    infile3 = m_add_nc(sprintf(ctdfile.p1,sstring));
-    infile4 = m_add_nc(sprintf(dcsfile.dcs,sstring));
+    infile1 = m_add_nc(sprintf(pd.ctd2d,sstring));
+    infile2 = m_add_nc(sprintf(pd.ctd2u,sstring));
+    infile3 = m_add_nc(sprintf(pd.ctd1,sstring));
+    infile4 = m_add_nc(sprintf(pdd.dcsfile,sstring));
     % skip stations that don't have a complete set of files
     if exist(infile1,'file') && exist(infile2,'file') && exist(infile3,'file') && exist(infile4,'file')
         infiles{1,no} = infile1;
@@ -154,7 +155,7 @@ cklist = cklist(:)'; % force to row
 saltype = 'psal';
 opt1 = mfilename; opt2 = 'plot_saltype'; get_cropt
 oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
-nox = size(oxyvars,1);
+nox = length(oxyvars,1);
 
 for plotlist = cklist
     

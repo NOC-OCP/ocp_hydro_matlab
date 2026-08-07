@@ -106,7 +106,7 @@ switch opt1
 
     case 'ctd_proc'
         switch opt2
-            case 'minit'
+            case 'm_stn_string'
                 if stn==65.1
                     stn_string = sprintf('%03dA',floor(stn)); %only used in mctd_01
                 elseif stn==84

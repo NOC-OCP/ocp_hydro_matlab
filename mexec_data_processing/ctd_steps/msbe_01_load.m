@@ -18,10 +18,10 @@ function msbe_01_load(stn)
 %%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
 opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
-dataname = sprintf(ctdfile.dataname,stn_string);
-rawfile = sprintf(ctdfile.raw,stn_string);
+pd = mexec_file_locations('procfiles','ctd');
+dataname = sprintf(pd.ctdname,stn_string);
+rawfile = sprintf(pd.ctdraw,stn_string);
 if MEXEC_G.quiet<=1; fprintf(1,'converting %s to %s\n',cnvfile,rawfile); end
 
 % input and output files
@@ -136,7 +136,7 @@ if length(otfiles)>1 && exist('cast_scan_ranges','var')
 elseif ~isempty(comb_stns) && comb_stns(1)==stnlocal
     [d,h] = mload(rawfile,'/');
     %put into time base of other file
-    stn = comb_stns(2); opt1 = 'setup'; opt2 = 'minit'; get_cropt
+    stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
     otfile_appendto = sprintf(ctdfile.raw,stn_string);
     h0 = m_read_header(otfile_appendto);
     d.time = m_commontime(d,'time',h,h0);

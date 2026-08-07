@@ -2,7 +2,7 @@ switch scriptname
 
     case 'castpars'
         switch oopt
-            case 'minit'
+            case 'm_stn_string'
         if stn>0
             stn_string = sprintf('%03dss', stn);
         elseif stn<0

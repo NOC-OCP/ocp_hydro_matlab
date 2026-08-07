@@ -57,8 +57,8 @@ if ismember('ladcp',types)
 
         % configuration defaults and cruise-specific options
         cfg = cfg0;
-        opt1 = 'setup'; opt2 = 'minit'; get_cropt
-        opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+        opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+        pd = mexec_file_locations('procfiles','ctd');
         cfg.stnstr = stn_string;
         cfg.p.cruise_id = mcruise;
         cfg.p.ladcp_station = stnlocal;

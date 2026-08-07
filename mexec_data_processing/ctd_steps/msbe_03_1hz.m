@@ -24,10 +24,11 @@ function msbe_03_1hz(stn)
 m_common; MEXEC_A.mprog = mfilename;
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
 
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
+pd = mexec_file_locations('procfiles','ctd');
+file24 = sprintf(pd.ctd24,stn_string);
+file1 = sprintf(pd.ctd1,stn_string);
 
 %calculate derived variables
-file24 = sprintf(ctdfile.p24,stn_string);
 [d, h] = mloadq(file24,'/');
 iig = find(d.press>-1.495); %gsw won't work on p<=-1.495
 if length(iig)<length(d.press)
@@ -52,10 +53,17 @@ d.asal1 = NaN+d.cond1; d.asal1(iig) = gsw_SA_from_SP(d.psal1(iig),d.press(iig),h
 d.asal2 = NaN+d.cond2; d.asal2(iig) = gsw_SA_from_SP(d.psal2(iig),d.press(iig),h.longitude,h.latitude);
 d.potemp1 = NaN+d.cond1; d.potemp1(iig) = gsw_pt0_from_t(d.asal1(iig),d.temp1(iig),d.press(iig));
 d.potemp2 = NaN+d.cond2; d.potemp2(iig) = gsw_pt0_from_t(d.asal2(iig),d.temp2(iig),d.press(iig));
+d.psal1_flag = max([d.cond1_flag,d.temp1_flag,d.press_flag],2);
+d.psal2_flag = max([d.cond2_flag,d.temp2_flag,d.press_flag],2);
+d.potemp1_flag = d.psal1_flag; d.potemp2_flag = d.psal2_flag;
+d.asal1_flag = d.psal1_flag; d.asal2_flag = d.psal2_flag;
 
 %new variable names and units
 h.fldnam = [h.fldnam 'psal1' 'psal2' 'asal1' 'asal2' 'potemp1' 'potemp2'];
 h.fldunt = [h.fldunt 'pss-78' 'pss-78' 'g/kg' 'g/kg' 'degc90' 'degc90'];
+h.fldserial = [h.fldserial repmat({' '},1,length(h.fldnam)-length(h.fldserial))];
+h.fldnam = [h.fldnam 'psal1_flag' 'psal2_flag' 'asal1_flag' 'asal2_flag' 'potemp1_flag' 'potemp2_flag'];
+h.fldunt = [h.fldunt 'woce' 'woce' 'woce' 'woce' 'woce' 'woce'];
 h.fldserial = [h.fldserial repmat({' '},1,length(h.fldnam)-length(h.fldserial))];
 [h.fldnam, ii] = unique(h.fldnam);
 h.fldunt = h.fldunt(ii);
@@ -80,20 +88,34 @@ hnew.data_time_origin = h.data_time_origin;
 hnew.dataname = h.dataname;
 hnew.latitude = h.latitude;
 hnew.longitude = h.longitude;
-hnew.fldunt = {}; hnew.fldserial = {};
+hnew.fldunt = {}; hnew.fldserial = {}; hnew.fldnam = {};
 for no = 1:length(var_copycell)
-    ii = find(strcmp(var_copycell{no},h.fldnam));
-    hnew.fldunt = [hnew.fldunt h.fldunt{ii}];
-    hnew.fldserial = [hnew.fldserial h.fldserial{ii}];
+    m = strcmp(var_copycell{no},h.fldnam);
+    hnew.fldnam = [hnew.fldnam h.fldnam{m}];
+    hnew.fldunt = [hnew.fldunt h.fldunt{m}];
+    hnew.fldserial = [hnew.fldserial h.fldserial{m}];
     dnew.(var_copycell{no}) = d.(var_copycell{no});
+    m = strcmp([var_copycell{no} '_flag'],h.fldnam);
+    if sum(m)
+        hnew.fldnam = [hnew.fldnam h.fldnam{m}];
+        hnew.fldunt = [hnew.fldunt h.fldunt{m}];
+        hnew.fldserial = [hnew.fldserial h.fldserial{m}];
+        dnew.([var_copycell{no} '_flag']) = d.([var_copycell{no} '_flag']);
+    end
 end
-hnew.fldnam = var_copycell;
 hnew = keep_hvatts(hnew, h);
 hnew.comment = h.comment;
 
-%average to 1hz, output to _psal file
+%average to 1hz, output to _1hz file
 opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt
 tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew.time,1)>1; tg = tg'; end
 dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_ends', [0 0], 'postfill', maxfill1);
-mfsave(sprintf(ctdfile.p1,stn_string), dnew, hnew);
+%at this stage all the input flag fields were either 2 or 7, so anything > 2 becomes 7
+dnew = struct2table(dnew);
+m = cellfun(@(x) endsWith(x,'_flag'),dnew.Properties.VariableNames);
+f = dnew{:,m}; f(f>2) = 7; dnew{:,m} = f;
+dnew = table2struct(dnew,'ToScalar',true);
+
+
+mfsave(file1, dnew, hnew);

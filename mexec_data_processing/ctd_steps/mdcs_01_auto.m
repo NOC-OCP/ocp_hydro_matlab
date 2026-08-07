@@ -12,8 +12,10 @@ function mdcs_01_auto(stn)
 m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'finding scan numbers corresponding to cast segments for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-file1 = sprintf(ctdfile.p1,stn_string);
+pd = mexec_file_locations('procfiles','ctd');
+file1 = sprintf(pd.ctd1,stn_string);
+pdd = mexec_file_locations('procfiles','dcs');
+dfile = sprintf(pdd.dcsfile,stn_string);
 h1 = m_read_header(file1);
 if ~isempty(intersect(h1.fldnam,'pumps'))
     [d1, ~] = mloadq(file1,'time','scan','press','pumps',' ');
@@ -24,7 +26,6 @@ end
 opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
 
 kstart = []; kbot = []; kend = []; 
-dfile = sprintf(dcsfile.dcs,stn_string);
 if exist(m_add_nc(dfile),'file')
     [ds, hnew] = mloadq(dfile,'/');
 else

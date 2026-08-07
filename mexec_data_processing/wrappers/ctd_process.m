@@ -94,10 +94,14 @@ if dostep.part1 || dostep.postedit
         %apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise
         msbe_02_edcal(stn)
         %average to 1 hz, compute salinity from C and T
+    end
+    for stn = stns
         msbe_03_1hz(stn)
     end
     if strcmp(MEXEC_G.datatypes.ladcp,'ix')
-        mout_1hzasc(stn)
+        for stn = stns
+            mout_1hzasc(stn)
+        end
     end
 end
 
@@ -110,7 +114,7 @@ if dostep.part1 || dostep.postedit
     end
 end
 
-if dostep.guisteps && (dostep.edit || dostep.part1)
+if dostep.guisteps && (dostep.edit || dostep.postedit || dostep.part1)
     for stn = stns
         %call gui to check raw or cleaned data and check/select cast start, bottom, and end
         ed = mctd_raw_show_check_edit(stn);
@@ -134,6 +138,8 @@ if dostep.part2 || dostep.postedit
     for stn = stns
         %bottle firing data into .fir file, if there is one
         mfir_04_addctd(stn)
+    end
+    for stn = stns
         mfir_to_sam(stn)
     end
 end

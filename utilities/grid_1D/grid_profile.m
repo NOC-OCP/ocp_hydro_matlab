@@ -263,11 +263,11 @@ d.(gridvar) = gridvec;
 
 
 %put gridded data back into original shape and type
+fn = d.Properties.VariableNames;
 switch intype
     case 'colstr'
         dg = table2struct(d,'ToScalar',true);
     case 'rowstr'
-        fn = d.Properties.VariableNames;
         for fno = 1:length(fn)
             dg.(fn{fno}) = d.(fn{fno}).';
         end
@@ -276,9 +276,9 @@ switch intype
 end
 %put back non-gridded irregular fields
 if exist('d0','var')
-    fn = fieldnames(d0);
+    fn0 = fieldnames(d0);
     for fno = 1:length(fn)
-        dg.(fn{sno}) = d0.(fn{sno});
+        dg.(fn0{sno}) = d0.(fn0{sno});
     end
 end
 

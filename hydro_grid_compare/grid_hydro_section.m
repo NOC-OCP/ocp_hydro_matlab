@@ -1,5 +1,5 @@
-function [mgrid, cdata, sdata] = gridhsec(cruise, varargin)
-% [mgrid, cdata, sdata] = gridhsec(cruise, varargin);
+function [mgrid, cdata, sdata] = grid_hydro_section(cruise, varargin)
+% [mgrid, cdata, sdata] = grid_hydro_section(cruise, varargin);
 %
 % wrapper, calls loadhdata, maphsec
 %
