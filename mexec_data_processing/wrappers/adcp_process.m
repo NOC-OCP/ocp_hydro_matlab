@@ -21,7 +21,7 @@ function adcp_process(klist, types, varargin)
 %add option to call mvad_station_av***
 
 m_common
-ladcp_pause = 0;
+ladcp_pause = 1;
 ladcp_constraints = {'GPS','BT','SADCP'};
 ladcp_incr = 1;
 ladcp_sepud = 1;
@@ -105,7 +105,30 @@ if ismember('ladcp',types)
             cfg.SADCP_inst = SADCP_inst;
         end
 
-        %first run with all
+        %first run with downlooking
+        cfg0 = cfg;
+        if isdl
+            cfg.orient = 'DL'; cfg.constraints = cfg0.constraints(1); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            cfg.orient = 'DL'; cfg.constraints = cfg0.constraints(1:2); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            if length(cfg0.constraints)>2
+                cfg.orient = 'DL'; cfg.constraints = cfg0.constraints(1:end); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            end
+        end
+        if isdl && isul
+            cfg.orient = 'DLUL'; cfg.constraints = cfg0.constraints(1); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            cfg.orient = 'DLUL'; cfg.constraints = cfg0.constraints(1:2); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            if length(cfg0.constraints)>2
+                cfg.orient = 'DLUL'; cfg.constraints = cfg0.constraints(1:end); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            end
+        end
+        if isul
+            cfg.orient = 'UL'; cfg.constraints = cfg0.constraints(1); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            cfg.orient = 'UL'; cfg.constraints = cfg0.constraints(1:2); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            if length(cfg0.constraints)>2
+                cfg.orient = 'UL'; cfg.constraints = cfg0.constraints(1:end); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
+            end
+        end
+        continue
         if isul && isdl
             cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
         elseif isdl
