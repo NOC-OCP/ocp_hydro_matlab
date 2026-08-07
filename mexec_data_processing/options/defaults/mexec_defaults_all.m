@@ -46,20 +46,14 @@ switch opt1
         switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
             case {'di' 'dy'}
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
-                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
-                    MEXEC_G.Mshipdatasystem = 'rvdas';
-                    MEXEC_G.datatype.sadcp = 'uhdas';
-                else
-                    MEXEC_G.Mshipdatasystem = 'techsas';
-                end
+                MEXEC_G.Mshipdatasystem = 'rvdas';
+                MEXEC_G.datatype.sadcp = 'uhdas';
+                % MEXEC_G.Mshipdatasystem = 'techsas';
             case 'jc'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
-                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2021
-                    MEXEC_G.Mshipdatasystem = 'rvdas';
-                    MEXEC_G.datatype.sadcp = 'uhdas';
-                else
-                    MEXEC_G.Mshipdatasystem = 'techsas';
-                end
+                MEXEC_G.Mshipdatasystem = 'rvdas';
+                MEXEC_G.datatype.sadcp = 'uhdas';
+                %MEXEC_G.Mshipdatasystem = 'techsas';
             case 'sd'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
                 MEXEC_G.Mshipdatasystem = 'rvdas';
@@ -78,9 +72,7 @@ switch opt1
             case 'ce'
                 MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
                 MEXEC_G.Mshipdatasystem = 'scs_ascii';
-                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2026
-                    MEXEC_G.datatype.sadcp = 'uhdas';
-                end
+                MEXEC_G.datatype.sadcp = 'uhdas';
             otherwise
                 merr = ['Ship ''' MEXEC_G.MSCRIPT_CRUISE_STRING(1:2) ''' not recognised, underway system will not be set up'];
                 %fprintf(2,'%s\n',merr);
