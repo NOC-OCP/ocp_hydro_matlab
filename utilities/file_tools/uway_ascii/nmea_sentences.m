@@ -4,8 +4,8 @@ function nmeas = nmea_sentences
 % (where possible) corresponding to columns produced by readtable with , as
 % delimiter
 
-nmeas.CR6 = {'msg',  'latitude', 'longitude',   'airtemp', 'airpress',      'm0', 'humidity',                    'winddir', 'windspd',      'm1',      'm2',      'm3',      'm4',      'm5', 'timestamp';
-              ' ', 'degrees N', 'degrees E', 'degrees C',       'Pa', 'unknown',   'unknown', 'degrees relative to true N',     'm/s', 'unknown', 'unknown', 'unknown', 'unknown', 'unknown',         ' '};
+nmeas.CR6 = {'msg',  'latitude', 'longitude',   'airtemp', 'airpress',      'sst', 'humidity',                    'winddir', 'windspdrounded', 'truewindspeed','junk1', 'shipheading',             'junk2',  'junk3', 'timestamp';
+              ' ', 'degrees N', 'degrees E', 'degrees C',       'Pa', 'degrees C',   'unknown', 'degrees relative to true N',     'm/s',        'm/s',       'unknown', 'degrees relative to N', 'unknown', 'unknown',         ' '};
 
 nmeas.DBS = {'msg', 'depthft', 'feet', 'depth_below_surface', 'metres', 'depthfa', 'fathomschecksum';
               ' ',       ' ',    ' ',                   'm',      ' ',       ' ',              ' '};
@@ -28,8 +28,8 @@ nmeas.GGA = {'msg', 'timestamp', 'nslatitude', 'ns', 'ewlongitude', 'ew', 'ggaqu
 nmeas.GLL = {'msg',   'nslatitude', 'ns',   'ewlongitude', 'ew',     'timestamp', 'status (A valid V not valid)', 'checksum';
               ' ',  'dd mm, mmmm', 'ns', 'dddd mm, mmmm', 'ew', 'utc hhmmss.ss',                         'flag',        ' '};
 
-nmeas.PAAI = {'msg', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10', 'a11', 'a12', 'checksum';
-                ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',  ' ',   ' ',   ' ',   ' ',        ' '};
+nmeas.PAAI = {'msg', 'temp1', 'turbidity', 'temp2', 'cond', 'temp3', 'sspd', 'psal', 'dens', 'sys_press', 'temp4', 'oxy', 'a12', 'checksum';
+                ' ',  'degrees C',  'ftu',  'degrees C',  'mS/cm',  'degrees C',  'm/s',  'psu',  'kg/m3',  'kPa',   'degrees C',   'uM/unknown',   ' ',        ' '};
 
 nmeas.PASHR = {'msg', 'timestamp', 'head',       'T',    'roll',   'pitch', 'heave', 'roll_accuracy', 'pitch_accuracy', 'heading_accuracy',   'qual', 'alignment_status', 'checksum';
                 ' ',         ' ', 'true',       'T', 'degrees', 'degrees',     'm',        'number',         'number',           'number', 'number',                ' ',        ' '};
