@@ -72,7 +72,7 @@ for gno = 1:ng
     for vno = 1:nr
         ax(vno) = nexttile(vno);
         p = rppars{gno}{vno};
-        v = h.fldnam(strncmp(h.fldnam,p,length(p)) & ~strcmp(h.fldnam,'pressure_temp'));
+        v = h.fldnam(strncmp(h.fldnam,p,length(p)) & ~ismember(h.fldnam,edit_vars_exclude));
         if ~isempty(v)
             plot(d.scan,d.pumps*(yl.(p)(2)-yl.(p)(1))+yl.(p)(1),'.r','markersize',8); hold on
             if strcmp(p,'oxy')

@@ -59,6 +59,7 @@ opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
 %%%% edit out bad points
 
 %automatic edits
+tic
 fn = setdiff(fieldnames(d),{'statnum','latitude','longitude','altimeter','scan','pumps','time'});
 for fno = 1:length(fn)
     d.([fn{fno} '_flag']) = 2+zeros(size(d.scan));
@@ -69,13 +70,18 @@ end
 [d, comment] = apply_autoedits(d, co);
 if ~isempty(comment)
     h.comment = [h.comment comment];
+    disp('applied automatic edits')
 end
+toc
 
+tic
 %reapply hand edits, adding a flag of 7 (despiked) where points are removed
 [d, comment] = apply_guiedits(d, 'scan', edfilepre, 0.1, [2 7]);
 if ~isempty(comment)
     h.comment = [h.comment comment];
+    disp('re-applied manual edits')
 end
+toc
 
 %fill in some fields we may be missing
 if ~isfield(d, 'statnum')
@@ -133,6 +139,7 @@ end
 if ~doneco.oxytau %is this likely to happen?***
 end
 if co.re_dooxyhyst
+    tic
     %set up a new structure
     oco.H_0 = [co.hyst_oxy0.H1 co.hyst_oxy0.H2 co.hyst_oxy0.H3];
     if doneco.oxy1hyst
@@ -159,24 +166,38 @@ if co.re_dooxyhyst
         doneco.([fn{no} 'hyst']) = 1;
     end
     h.comment = [h.comment hnew.comment];
+    disp('applied oxygen hysteresis')
+    toc
+elseif ~doneco.oxy1hyst
+    warning('no oxygen hysteresis correction has been applied to %s',stn_string)
 end
 
 %alignment in time, for oxygen only
-if ~doneco.alignctd && co.oxy_align>0 %sbe says between 3 and 7
-    oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
-    for no = 1:length(oxyvars)
-        d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+co.oxy_align);
+if ~doneco.alignctd
+    if co.oxy_align>0 %sbe says between 3 and 7
+        tic
+        oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
+        for no = 1:length(oxyvars)
+            d.(oxyvars{no}) = interp1(d.time, d.(oxyvars{no}), d.time+co.oxy_align);
+        end
+        h.comment = [h.comment '\nalign: oxygen shifted by ' num2str(co.oxy_align) ' s'];
+        doneco.alignctd = 1;
+        disp('oxygen aligned')
+        toc
+    else
+        warning('no oxygen alignment applied to %s',stn_string)
     end
-    h.comment = [h.comment '\nalign: oxygen shifted by ' num2str(co.oxy_align) ' s'];
-    doneco.alignctd = 1;
 end
 
 %cell thermal mass
 if ~doneco.celltm % | co.redoctm (do we have a way to undo or does this require going back to the .hex or pre-ctm .cnv file?)***
+    tic
     d.cond1 = apply_ctd_celltm(d.time, d.temp1, d.cond1);
     d.cond2 = apply_ctd_celltm(d.time, d.temp2, d.cond2);
     h.comment = [h.comment '\n celltm: cond corrected for cell thermal mass by ctd_apply_celltm'];
     doneco.ctm = 1;
+    disp('cellTM applied')
+    toc
 end
 
 % turbidity conversion from turbidity volts
@@ -192,13 +213,13 @@ end
 %comment string each time
 MEXEC_G.doneco(stnlocal) = doneco;
 
-
+tic
 %%%%% save as cleaned %%%%%
 if exist(cleanfile,'file')
     delete(cleanfile)
 end
 mfsave(cleanfile, d, h);
-
+toc
 
 %%%%% user sensor calibrations (based on discrete sample data) %%%%%
 if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))

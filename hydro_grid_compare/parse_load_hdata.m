@@ -35,7 +35,7 @@ function data = parse_load_hdata(infile, varnamesunits, varargin)
 
 
 %defaults and optional input arguments
-if length(varargin)==1 && isstruct(varargin{1})
+if isscalar(varargin) && isstruct(varargin{1})
     opts = varargin{1};
     if ~isfield(opts, 'predir')
         opts.predir = './';
@@ -46,7 +46,7 @@ if length(varargin)==1 && isstruct(varargin{1})
 else
     opts.predir = './';
     opts.badflags = [1 9 5];
-    if length(varargin)==1 %supplied single cell array containing par-val pairs
+    if isscalar(varargin) %supplied single cell array containing par-val pairs
         varargin = varargin{:};
     end
     for na = 1:2:length(varargin)
@@ -72,7 +72,7 @@ if ~strcmp('G2',varnamesunits{1,1}(1:2))
     n0 = size(varnamesunits,1); n = n0+1;
     for vno = 1:n0
         ii = strfind(varnamesunits{vno,1},'_flag');
-        if length(ii)==1
+        if isscalar(ii)
             varnamesunits.invar = [varnamesunits.invar; {['G2' varnamesunits{vno,1}(1:end-5) 'f']}];
             varnamesunits.hvar{end} = varnamesunits.hvar{vno};
             varnamesunits.hunt{end} = 'woce_flag';
@@ -101,7 +101,7 @@ for fno = 1:size(infile,1)
             ds = load(fullfile(opts.predir, infile{fno}), '-mat');
         end
         v = fieldnames(ds);
-        if length(v)==1
+        if isscalar(v)
             ds = ds.(v{1});
         end
         %find GLODAP cruise *** this could also come up for csv data
@@ -261,7 +261,12 @@ for fno = 1:size(infile,1)
             data0.statnum = data0.event;
         end
     end
-    if ~isfield(data0, 'statnum')
+    if isfield(data0, 'statnum')
+        if ~ismember(data0.vars, {'statnum'})
+            data0.vars = [data0.vars 'statnum'];
+            data0.unts = [data0.unts 'number'];
+        end
+    else
         %nothing else to try (will error later)
         warning('station number unknown for file')
         disp(infile{fno})
@@ -290,10 +295,10 @@ for fno = 1:size(infile,1)
     else
         error(['must have press, depth, or niskin to merge file ' infile{fno}])
     end
-    if length(data0.statnum)==1 && isfield(data0, 'press')
+    if isscalar(data0.statnum) && isfield(data0, 'press')
         data0.statnum = repmat(data0.statnum,nd,1);
     end
-    if isfield(data0, 'lat') && length(data0.lat)==1
+    if isfield(data0, 'lat') && isscalar(data0.lat)
         data0.lat = repmat(data0.lat,nd,1);
         data0.lon = repmat(data0.lon,nd,1);
     end
@@ -372,13 +377,13 @@ data.unts = data.unts(:)';
 %NaN bad data, apply flags (mask), and make sure they match
 fn0 = fieldnames(data);
 data = hdata_flagnan(data, 'sam_missflags', opts.badflags);
+fn = fieldnames(data);
+fn = setdiff(fn,fn0);
 if ~isfield(data,'niskin_flag')
     %get rid of new (flag) fields because they don't add information
-    fn = fieldnames(data);
-    fn = setdiff(fn,fn0);
     data = rmfield(data, fn);
 else
     %add to list of variables
-    data.vars = [data.vars fn];
+    data.vars = [data.vars fn(:)'];
     data.unts = [data.unts repmat({'woce_flag'},1,length(fn))];
 end

@@ -32,15 +32,16 @@ switch opt1
                 end
                 stn_string = sprintf('%03d',stn); %used for file names, default: 001, 002, etc.
                 stnlocal = stn;
-            case 'mstar'
+        end
+
+    case 'mstar'
                 %things about mstar file format
                 if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024
                     docf = 1; %cf-compliant time units
                 else
                     docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
                 end
-        end
-
+    
     case 'ship'
         %parameters related to ship: underway data system, vmadcp system
         switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
@@ -117,9 +118,9 @@ switch opt1
             case 'rawshow'
                 %two groupings to show
                 rppars = {{'temp','cond','press','oxy'}
-                    {'fluor','turbidity','transmittance'}};
+                    {'fluor','turbidity','transmittance','par'}};
                 repars.g1 = {{'press'}, {'temp1','temp2'}, {'cond1','cond2'},{'oxy1','oxy2'}};
-                repars.g2 = {{'press'},{'fluor'},{'turbidity'},{'transmittance'}};
+                repars.g2 = {{'press'},{'fluor'},{'turbidity'},{'transmittance'},{'par'}};
                 yl.temp = [-2 40]; yl.temp1 = yl.temp; yl.temp2 = yl.temp;
                 if strcmp(h.fldunt{strcmp(h.fldnam,'cond1')},'S/m')
                     yl.cond = [20 40];
@@ -130,11 +131,12 @@ switch opt1
                 yl.press = [-2 6000]; 
                 yl.oxy = [100 400]; yl.oxy1 = yl.oxy; yl.oxy2 = yl.oxy;
                 yl.fluor = [0 8]; 
-                yl.turbidity = [0 1]; yl.transmittance = [60 101];
+                yl.turbidity = [0 1]; yl.transmittance = [60 101]; yl.par = [0 200];
                 doed = 1; %always end mctd_raw_show_check by running mctd_rawedit (can turn this off in opt_cruise)
                 %ctd flags: 1 not calibrated, 2 acceptable, 3 questionable
                 %,4 bad, 5 not reported, 6 interpolated over > 2 dbar, 7
                 %despiked
+                edit_vars_exclude = {'pressure_temp'}; %starts with press but don't plot this
             case 'niskfilename'
                 %no default for .bl file
             case 'botflags'

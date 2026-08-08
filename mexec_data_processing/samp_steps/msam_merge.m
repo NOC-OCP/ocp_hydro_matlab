@@ -25,14 +25,14 @@ pvars = 1; %1 to save all variables from paramfile to sam*file, otherwise list s
 %modify defaults
 switch samtyp
     case 'chl'
-        hnew.comment = ['chlorophyll data from ' sampfile.dataname '.nc'];
+        hnew.comment = ['chlorophyll data from ' pd.(samtyp)];
         uvars = [uvars, 'fluo'];
     case 'oxy'
         %rename for backwards compatibility?***
         convs.umol_per_l_to_per_kg.temp = 'botoxy_temp'; %convert using oxygen draw temperature from each sample if recorded
         svars = [svars, 'uasal'];
         pvars = {'botoxy','botoxy_temp','botoxy_flag'};
-        hnew.comment = ['oxygen data from ' sampfile.dataname '.nc'];
+        hnew.comment = ['oxygen data from ' pd.(samtyp)];
         opt1 = 'samp_proc'; opt2 = 'oxy_to_sam'; get_cropt %could set to not avg, or could set to not convert units if they were already reported in /kg
         %losing backwards compatibility to make an appended oxy file
         %first***
@@ -41,7 +41,7 @@ switch samtyp
         svars = [svars, 'uasal'];
         uvars = [uvars, 'salinity']; %***
         opt1 = 'samp_proc'; opt2 = 'nut_to_sam'; get_cropt %could set to not avg, or change the lab temp***
-        hnew.comment = ['nutrient data from ' sampfile.dataname '.nc']; %***overwrite comment or add comment?
+        hnew.comment = ['nutrient data from ' pd.(samtyp)]; %***overwrite comment or add comment?
     case 'sal'
 %        convs.rename = {'botpsal', {'salinity_adj','salinity'};... %by
 %        default this should be in mexec_defaults samp_proc parse as
@@ -49,10 +49,10 @@ switch samtyp
 %            'botpsal_flag', {'flag'}}; %backwards compatibility
         pvars = {'botpsal','botpsal_flag'};
         uvars = [uvars, 'salinity'];
-        hnew.comment = ['salinity data from ' sampfile.dataname '.nc'];
+        hnew.comment = ['salinity data from ' pd.(samtyp)];
     case 'sbe35'
         pvars = {'sbe35temp'; 'sbe35temp_flag'}; %list which to copy because we don't need to copy tdiff etc.***
-        hnew.comment = ['SBE35 data from ' sampfile.dataname '.nc'];
+        hnew.comment = ['SBE35 data from ' pd.(samtyp)];
     case 'iso'
         %***just default?
     otherwise
@@ -63,8 +63,10 @@ end
 [dp, hp] = mloadq(pd.(samtyp),'/');
 if sum(dp.sampnum>0 & dp.sampnum<1e6)
     %there are CTD samples
-    [dc, hc] = mloadq(pd.samc, strjoin(svars, ' ')); %***
-    [dp, hp] = merge_mvars(dp, hp, dc, hc, 'sampnum', 1);
+    [dc, hc] = mloadq(pd.samc, strjoin(svars, ' ')); 
+    m = ismember(hc.fldnam,fieldnames(dc));
+    hnew.fldnam = hc.fldnam(m); hnew.fldunt = hc.fldunt(m);
+    [dp, hp] = merge_mvars(dp, hp, dc, hnew, 'sampnum', 1);
 end
 if sum(dp.sampnum<0 | dp.sampnum>1e9) && exist(pdu.buocean,'file')
     %there are underway samples; interpolate from surface_ocean file
@@ -87,10 +89,6 @@ end
 %turn into table, add units, and rename variables if specified
 dp = struct2table(dp);
 dp.Properties.VariableUnits = hp.fldunt;
-opt1 = 'samp_proc'; opt2 = 'parse'; get_cropt %for backwards compatibility, do renaming here as well as in msam_load?***
-if exist('varmap','var')
-    dp = var_renamer(dp, varmap, 'keep_othervars', keepothervars);
-end
 hnew.comment = '';
 
 %convert parameter sample data e.g. from umol_per_l to umol_per_kg, as
@@ -100,25 +98,22 @@ hnew.comment = '';
 
 if iscell(pvars)
     %drop variables we don't need
-    mdel = ismember(dp.Properties.VariableNames, [pvars 'sampnum niskin_flag']); %***uway flag var?
-    dp(:,mdel) = [];
+    m = ismember(dp.Properties.VariableNames, [pvars 'sampnum niskin_flag']); %***uway flag var?
+    dp = dp(:,m);
 end
 
 %average replicates 
-[dp, hnew] = repl_avg(dp, hnew);
+[dp, hnew] = repl_avg(dp, hnew, svars);
 
 %***post-averaging conversions/calculations?
 
-%limit variables to save
-if ~isempty(pvars)
-    m = setdiff(dp.Properties.VariableNames,['sampnum ' pvars]);
-    dp(:,m) = [];
-end
-m = cellfun(@(x) contains(x,'_inst_flag'), dp.Properties.VariableNames);
-dp(:,m) = [];
-
-%***eventually put msam_ashore_flag here to just read in sample collection
-%flag data from logs?
+% %limit variables to save
+% if ~isempty(pvars)
+%     m = ismember(dp.Properties.VariableNames,[pvars 'sampnum']);
+%     dp = dp(:,m);
+% end
+% m = cellfun(@(x) contains(x,'_inst_flag'), dp.Properties.VariableNames);
+% dp(:,m) = [];
 
 %apply niskin flags (and also confirm consistency between sample and
 %flag)
@@ -128,7 +123,7 @@ dp = hdata_flagnan(dp, 'keepemptyvars', 1);
 dp = rmfield(dp,'niskin_flag');
 
 %save samfile
-mfsave(pd.samc, dc, hnew, '-merge', 'sampnum');
+mfsave(pd.samc, dp, hnew, '-merge', 'sampnum');
 
 %underway merged file ***
 switch samtyp
@@ -179,7 +174,7 @@ if isfield(convs,'per_l_to_per_kg') && isfield(convs.per_l_to_per_kg,'temp')
     hnew.comment = [hnew.comment ', converted from umol/l to umol/kg using ' c.temp ' and CTD salinity'];
 end
 
-function [dp, hnew] = repl_avg(dp, hnew)
+function [dp, hnew] = repl_avg(dp, hnew, svars)
 %mean and stdev of replicates, with flags
 %different types of parameters
 mf = cellfun(@(x) contains(x,'_flag'),hnew.fldnam); %flags

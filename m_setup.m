@@ -127,9 +127,8 @@ end
 MEXEC_G.data_time_origin_string = sprintf('%04d-%02d-%02d %02d:%02d:%02d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
 opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt
 
-% find and add (append) paths to other libraries used in processing; also
-% checks if processing ladcp or moored (if relevant) to avoid conflicts
-sw_addpath
+% checks if external libraries are on path, and if processing ladcp or moored checks which to avoid conflicts
+sw_checkpath
 
 % location processing and writing mexec files
 if isempty(MEXEC_G.mexec_data_root) || ~exist(MEXEC_G.mexec_data_root,'dir')
@@ -260,14 +259,10 @@ if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
     mkdir(MEXEC_G.HISTORY_DIRECTORY); mfixperms(MEXEC_G.HISTORY_DIRECTORY,'dir');
 end
 
-function sw_addpath
+function sw_checkpath
 %
-% add external software toolboxes specified by table ld to path
+% add external software toolboxes if they are in MEXEC_G.sw
 %
-% defaults to finding the highest version available under swroot,
-%   unless force_vers is a structure
-%     (e.g. force_vers.gsw_matlab = 'gsw_matlab_v3_06_16';),
-%   in which case uses any hard-coded versions listed there
 
 m_common
 
@@ -279,7 +274,7 @@ if strcmp(MEXEC_G.datatypes.ladcp,'ix')
         l = input('processing ladcp (1) or moored (2) data this session?  ');
     end
     if l==1
-        %add paths for LDEO_IX below
+        %check paths for LDEO_IX below
         slibs.LDEO_IX = 'getinv';
     else
         %if LDEO_IX is on path, remove because there are conflicts with
@@ -297,72 +292,7 @@ ls = fieldnames(slibs);
 for no = 1:length(ls)
     w = which(slibs.(ls{no}));
     if isempty(w)
-        ld = sw_vers_parse(ls{no}, slibs.(ls{no}), MEXEC_G.sw);
-        if ~isempty(ld) && exist(ld,'dir')
-            addpath(genpath(ld))
-            fprintf(1,'added to path: %s\n',ld)
-        else
-            keyboard
-            warning('%s not found',ls{no})
-        end
-    else
-        w = fileparts(w);
-        fprintf(1,'%s already on path\n',w)
+        warning('%s not found, add to path',ls{no})
     end
 end
 
-function ld = sw_vers_parse(l, f, rootdir)
-% find highest version of a library in a given directory
-
-%find candidates
-d = dir(fullfile(rootdir,[l '*/' f '.m']));
-if isempty(d)
-    [s,d] = system(sprintf('find %s/ -name ''%s.m''',rootdir,f));
-    if s==0 && ~isempty(d)
-        d = cellfun(@(x) fileparts(x), strsplit(d,'\n'), 'UniformOutput', false);
-        d = d(~cellfun('isempty',d));
-    end
-else
-    d = {d.folder};
-end
-
-if isempty(d)
-    ld = [];
-elseif isscalar(d)
-    ld = d{1};
-else
-    [lp,ln,~] = fileparts(d);
-    %get version numbers to find the most recent
-    b = cellfun(@(x) replace(replace(x,{l;'_ver';'_v'},''),{'_';'.'},' '), ln, 'UniformOutput', false);
-    c = cellfun(@(x) str2num(x), b, 'UniformOutput', false); %a cell array of numeric vectors of different lengths
-    l = cellfun(@(x) length(x), c);
-    ii = find(l>0);
-    if isempty(ii) %all contain letters, so do alphanumeric sort
-        [~,ind] = sort(b); ind = ind(end);
-    else %ignore any letters and sort by numbers
-        if max(l)==1 %single level
-            [~,ii1] = max(cell2mat(c(ii)));
-            ind = ii(ii1);
-        else %put levels into matrix to find highest version
-            g = zeros(max(l),length(c));
-            for n = 1:max(l)
-                g(n,ii) = cellfun(@(x) [x(n)], c(ii));
-                n = n+1;
-                ii = find(l>=n);
-            end
-            n = 1; ind = 1:length(c);
-            while n<=size(g,1) && length(ind)>1
-                ii = find(g(n,:)==max(g(n,:)));
-                ind = ind(ii); g = g(:,ii);
-                n = n+1;
-            end
-        end
-    end
-
-    %use highest version
-    if ~isscalar(ind)
-        ind = ind(end);
-    end
-    ld = fullfile(lp{ind},ln{ind});
-
-end

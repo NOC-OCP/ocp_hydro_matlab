@@ -15,6 +15,7 @@ m_common
 
 switch step
     case 'mdirlist'
+        mutv = mudefine;
         dirs = {
             'M_CTD' 'ctd'
             'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
@@ -35,6 +36,10 @@ switch step
             'M_SBE35' fullfile('ctd','ASCII_FILES','SBE35')
             'M_SUM' 'collected_files'
             'M_VMADCP' 'vmadcp'
+            'M_NAV' 'nav'
+            'M_MET' 'met'
+            'M_BATHY' 'bathy'
+            'M_TSG' 'surface'
             }; %***change how MDIRLIST is used?
         if ~strcmp(MEXEC_G.Mshipdatasystem,'auto')
             dirs = [dirs;
@@ -67,11 +72,14 @@ switch step
                 pd.ctdclean = fullfile(MEXEC_G.MDIRLIST.M_CTD, [pd.ctdname '_cleaned.nc']);
                 pd.ctd24 = fullfile(MEXEC_G.MDIRLIST.M_CTD, [pd.ctdname '_24hz.nc']);
                 pd.ctd1 = fullfile(MEXEC_G.MDIRLIST.M_CTD, [pd.ctdname '_1hz.nc']);
+                pd.ctd10s = fullfile(MEXEC_G.MDIRLIST.M_CTD, [pd.ctdname '_10s.nc']);
                 pd.ctd2d = fullfile(MEXEC_G.MDIRLIST.M_CTD, [pd.ctdname '_2db.nc']);
                 pd.ctd2u = fullfile(MEXEC_G.MDIRLIST.M_CTD, [pd.ctdname '_2up.nc']);
                 pd.edctd24 = fullfile(MEXEC_G.MDIRLIST.M_CTD,'editlogs','ctd_%s_editpoints');
                 pd.sbe35name = ['sbe35_' mcruise '_all'];
                 pd.sbe35 = fullfile(MEXEC_G.MDIRLIST.M_SBE35, [pd.sbe35name '.nc']);
+                pd.svel = fullfile(MEXEC_G.MDIRLIST.M_BATHY, 'svel_for_echosounders', [pd.ctdname '_10s_down_svel.csv']);
+                %pd.asc_forladcp_1hz
             case 'fir'
                 pd.firname = ['fir_' mcruise '_%s'];
                 pd.firfile = fullfile(MEXEC_G.MDIRLIST.M_CTD, [pd.firname '.nc']);
@@ -82,8 +90,8 @@ switch step
                 pd.winname = ['win_' mcruise '_%s'];
                 pd.winfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_WIN, [pd.winname '.nc']);
             case 'samp'
-                pd.samc = fullfile(MEXEC_G.MDIRLIST.M_CTD,['nisks_' mcruise '_all.nc']);
-                pd.samu = fullfile(MEXEC_G.MDIRLIST.M_BOT,['ucsws_' mcruise '_all.nc']);
+                pd.samc = fullfile(MEXEC_G.MDIRLIST.M_CTD,['nisksamp_' mcruise '_all.nc']);
+                pd.samu = fullfile(MEXEC_G.MDIRLIST.M_BOT,['ucswsamp_' mcruise '_all.nc']);
                 if nargin>2
                     pd.([varargin{2} 'name']) = [varargin{2} '_' mcruise '_all'];
                     pd.([varargin{2}]) = fullfile(MEXEC_G.MDIRLIST.(['M_BOT_' upper(varargin{2})]),[pd.([varargin{2} 'name']) '.nc']);
@@ -95,7 +103,7 @@ switch step
                 end
                 pd.sadcpall = fullfile(MEXEC_G.MDIRLIST.VMADCP, 'postprocessing', upper(mcruise), 'proc_editing', varargin{2}, 'contour', [pd.sadcpname '.nc']);
             case 'uway'
-                pd.bunav = fullfile(MEXEC_G.MDIRLIST.M_POS,['bestnav_' mcruise '_all.nc']);
+                pd.bunav = fullfile(MEXEC_G.MDIRLIST.M_NAV,['bestnav_' mcruise '_all.nc']);
                 pd.buocean = fullfile(MEXEC_G.MDIRLIST.M_TSG,['surface_ocean_' mcruise '_all.nc']);
                 pd.bumet = fullfile(MEXEC_G.MDIRLIST.M_MET,['atmos_truwind_' mcruise '_all.nc']);
                 pd.bubathy = fullfile(MEXEC_G.MDIRLIST.M_BATHY,['bathy_' mcruise '_all.nc']);

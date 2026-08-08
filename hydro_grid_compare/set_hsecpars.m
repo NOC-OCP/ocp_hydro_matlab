@@ -148,7 +148,28 @@ switch cruise
             info.statind = [38:67]; %***
         end
         
-    %sr1b only physics
+    case 'ce26008'
+        predir = '/data/pstar/projects/goship/cruises/ce26008/data/';
+        info.ctddir = fullfile(predir,'ctd');
+        info.ctdpat = '*_2db.nc';
+        info.season = '2026';
+        info.samdir = info.ctddir;
+        info.sampat = 'nisksamp_ce26008_all.nc';
+        switch info.section
+            case 'ta'
+            info.statind = [58:63]';
+            case 'kgh'
+                info.statind = [64:69]';
+            case 'km'
+                info.statind = [52:57]';
+            case 'ar7e'
+                info.statind = [4:40 42:51]';
+            otherwise
+                info.statind = [4:40 42:69]';
+        end
+        info.statnum = info.statind;
+
+                %sr1b only physics
     case 'jr0a'
         info.section = 'sr1b';
         info.ctddir = predir3;

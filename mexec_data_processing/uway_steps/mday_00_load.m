@@ -55,6 +55,8 @@ switch MEXEC_G.Mshipdatasystem
         status = mrrvdas2mstar('noparse',argot);
     case 'scs'
         status = scs_to_mstar2(streamname,mstarprefix,dn1,dn2,otfile2,dataname);
+    case 'scs_ascii'
+        load_way_ascii(streamname)
     otherwise
         warning('update for techsas')
 end

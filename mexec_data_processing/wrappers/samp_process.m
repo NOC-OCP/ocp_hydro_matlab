@@ -5,7 +5,7 @@ function samp_process(ptlist, varargin)
 %
 % to load all available data from all available parameter types and add to
 %   existing sam_*_all.nc file, either:  
-% samp_process({'sbe35','sal','oxy','nut','co2','iso','cfc','chl'})
+% samp_process({'sal','oxy','nut','co2','iso','cfc','chl'})
 %   or
 % samp_process('all')
 %

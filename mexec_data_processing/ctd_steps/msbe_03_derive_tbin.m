@@ -1,17 +1,16 @@
-function msbe_03_1hz(stn)
+function msbe_03_derive_tbin(stn)
 % mctd_03:
 %
 % input: _24hz
 %
 %   copy data from sensors chosen in opt_cruise to temp, cond, and oxygen; 
 %   calculate psal, asal, potemp using GSW;
-%   average to 1 hz and fill gaps as set in opt_cruise
+%   average to 1 hz and 0.1 hz and fill gaps as set in opt_cruise
 %
 % outputs: _24hz with added variables
 %          _1hz (1 hz, used for plots and ladcp)
-%          
-% Use: mctd_03        and then respond with station number, or for station 16
-%      stn = 16; mctd_03;
+%          _10s (approx 10 dbar on downcase; used for quick plots to check msbe_02 corrections)
+%
 %
 % calls: 
 %     mloadq
@@ -27,6 +26,8 @@ if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, a
 pd = mexec_file_locations('procfiles','ctd');
 file24 = sprintf(pd.ctd24,stn_string);
 file1 = sprintf(pd.ctd1,stn_string);
+file10 = sprintf(pd.ctd10s,stn_string);
+filesv = sprintf(pd.svel,stn_string);
 
 %calculate derived variables
 [d, h] = mloadq(file24,'/');
@@ -47,6 +48,7 @@ else
     warning('conductivity units not recognised, should be S/m or mS/cm')
     csc = NaN;
 end
+tic
 d.psal1 = NaN+d.cond1; d.psal1(iig) = gsw_SP_from_C(d.cond1(iig)*csc,d.temp1(iig),d.press(iig));
 d.psal2 = NaN+d.cond2; d.psal2(iig) = gsw_SP_from_C(d.cond2(iig)*csc,d.temp2(iig),d.press(iig));
 d.asal1 = NaN+d.cond1; d.asal1(iig) = gsw_SA_from_SP(d.psal1(iig),d.press(iig),h.longitude,h.latitude);
@@ -57,7 +59,9 @@ d.psal1_flag = max([d.cond1_flag,d.temp1_flag,d.press_flag],2);
 d.psal2_flag = max([d.cond2_flag,d.temp2_flag,d.press_flag],2);
 d.potemp1_flag = d.psal1_flag; d.potemp2_flag = d.psal2_flag;
 d.asal1_flag = d.psal1_flag; d.asal2_flag = d.psal2_flag;
+toc
 
+tic
 %new variable names and units
 h.fldnam = [h.fldnam 'psal1' 'psal2' 'asal1' 'asal2' 'potemp1' 'potemp2'];
 h.fldunt = [h.fldunt 'pss-78' 'pss-78' 'g/kg' 'g/kg' 'degc90' 'degc90'];
@@ -72,10 +76,23 @@ cstr = 'psal, asal, potemp, contemp calculated using gsw';
 if ~contains(h.comment, cstr)
     h.comment = [h.comment '\n ' cstr];
 end
+toc
 
+ii = length(h.fldnam)+[-5:0];
+hnew.fldnam = h.fldnam(ii); hnew.fldunt = h.fldunt(ii); hnew.fldserial = h.fldserial(ii);
+hnew.comment = h.comment;
+clear dnew
+for no = 1:length(hnew.fldnam)
+    dnew.(hnew.fldnam{no}) = d.(hnew.fldnam{no});
+end
+d = dnew; h = hnew;
+
+tic
 %save to _24hz file
-mfsave(file24, d, h);
+mfsave(file24, d, h, '');
+toc
 
+tic
 %identify and copy preferred sensor (for this station) to variable without
 %sensor number (e.g. psal = psal1)
 [d, h] = copy_sensor(d, h, stn);
@@ -110,12 +127,29 @@ hnew.comment = h.comment;
 opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt
 tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew.time,1)>1; tg = tg'; end
+dnew0 = dnew;
 dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_ends', [0 0], 'postfill', maxfill1);
 %at this stage all the input flag fields were either 2 or 7, so anything > 2 becomes 7
 dnew = struct2table(dnew);
 m = cellfun(@(x) endsWith(x,'_flag'),dnew.Properties.VariableNames);
 f = dnew{:,m}; f(f>2) = 7; dnew{:,m} = f;
 dnew = table2struct(dnew,'ToScalar',true);
-
-
 mfsave(file1, dnew, hnew);
+
+%average to 0.1hz, output to _10s file and svel file
+tg = [dnew0.time(1):10:dnew0.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
+if size(dnew0.time,1)>1; tg = tg'; end
+dnew = grid_profile(dnew0, 'time', tg, 'meannum', 'num', 240, 'prefill', 240, 'grid_ends', [0 0], 'postfill', 0);
+%at this stage all the input flag fields were either 2 or 7, so anything > 2 becomes 7
+dnew = struct2table(dnew);
+m = cellfun(@(x) endsWith(x,'_flag'),dnew.Properties.VariableNames);
+f = dnew{:,m}; f(f>2) = 7; dnew{:,m} = f;
+md = dnew.press<max(dnew.press);
+ds = [sw_dpth(dnew.press(md),dnew.latitude(md)) sw_svel(dnew.psal(md),dnew.temp(md),dnew.press(md))]';
+dnew = table2struct(dnew,'ToScalar',true);
+mfsave(file10, dnew, hnew);
+fid = fopen(filesv,'w');
+fprintf(fid,'depth (m), sound speed (m/s)\n');
+fprintf(fid, '%f, %f\n', ds(:));
+fclose(fid);
+toc

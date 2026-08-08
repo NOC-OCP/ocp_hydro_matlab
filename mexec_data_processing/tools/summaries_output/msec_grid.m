@@ -16,8 +16,6 @@ function msec_grid(section)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-root_ctd = mgetdir('M_CTD');
-
 clear mgrid
 mgrid.method = 'msec_maptracer';
 mgrid.sam_fill = '';
@@ -50,9 +48,9 @@ if ~isfield(mgrid,'zpressgrid') || isempty(mgrid.zpressgrid) %find defaults by s
             mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=6000);
         case {'sr1b' 'sr1bb' 'orkney' 'a23' 'srp' 'nsra23'}
             mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=5000);
-        case {'osnapwall' 'laball' 'arcall' 'osnapeall' 'lineball' 'linecall' 'eelall' 'nsr'}
+        case {'osnapwall' 'laball' 'arcall' 'osnapeall' 'lineball' 'linecall' 'eelall' 'nsr' 'ar7e'}
             mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=4000);
-        case {'bc' 'ben' 'bc2' 'bc3' 'osnape'}
+        case {'bc' 'ben' 'bc2' 'bc3' 'osnape' 'ta' 'km' 'kgh'}
             mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=3000);
         case {'fs27n' 'fs27n2'}
             mgrid.zpressgrid = zpressgrid_shal(zpressgrid_shal<=1000);
@@ -67,7 +65,9 @@ else
     end
 end
 
-otfile = fullfile(root_ctd, ['grid_' mcruise '_' section '.mat']);
+otfile = fullfile(MEXEC_G.mexec_data_root, 'mapped', ['grid_' mcruise '_' section '.mat']);
+pd = mexec_file_locations('procfiles','ctd');
+pds = mexec_file_locations('procfiles','samp');
 if ~exist(otfile,'file') || ~exist('ctd_regridlist','var')
     ctd_regridlist = {'temp' 'psal' 'oxy'};
 end
@@ -85,7 +85,8 @@ else
         cdata.(ctd_regridlist{vno}) = NaN+zeros(length(cdata.press),length(kstns));
     end
     for kstn = 1:length(kstns)
-        cfile = fullfile(root_ctd,sprintf('ctd_%s_%03d_2db',mcruise,kstns(kstn)));
+        stn = kstns(kstn); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+        cfile = sprintf(pd.ctd2d,stn_string);
         if exist(m_add_nc(cfile),'file')
             [d,h] = mloadq(cfile,'/');
         else
@@ -124,7 +125,7 @@ end
 
 %load the bottle sample data
 clear sdata
-[d,h] = mload(fullfile(root_ctd,sprintf('sam_%s_all',mcruise)),'/');
+[d,h] = mload(pds.samc,'/');
 mstn = ismember(d.statnum,kstns);
 sdata.statnum = d.statnum(mstn);
 sdata.position = d.position(mstn);

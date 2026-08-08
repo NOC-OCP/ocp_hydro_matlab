@@ -6,14 +6,14 @@ function uway_process(dates, varargin)
 %    dates can be either an Nx1 vector of decimal days
 %   (dates since the start of the year in MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)
 %   or a Nx6 vector of [yyyy mm dd HH MM SS]
-% uway_daily_proc(dates, parameter, 'reload_uway', 0); %processes days
-%   %starting from already-loaded raw files and skipping to
-%   %editing and averaging stage (mday_01 and mday_02)
-% uway_daily_proc(dates, parameter, 'reload_uway', 0, 'reload_av', 0);
+% uway_daily_proc(dates, mstar_prefix, 'reload_uway', 0); %processes, for
+%   mstar_prefix files, days starting from already-loaded raw files and
+%   skipping to editing and averaging stage (mday_01 and mday_02)
+% uway_daily_proc(dates, [], 'reload_uway', 0, 'reload_av', 0);
 %   %skips to editing of already-generated merged, averaged files
 %
 % by default it will process all the available techsas/scs/rvdas underway
-% streams (of the set in mtnames/msnames/mrnames), unless you add
+% streams (of the set defined by mudefine), unless you add
 % to the cruise options file list(s) of names (uway_excludes) or patterns
 % (uway_excludep) to exclude
 %
@@ -41,14 +41,7 @@ if nargin>1
 end
 
 %%%%% get list of underway streams to process %%%%%
-switch MEXEC_G.Mshipdatasystem
-    case 'rvdas'
-        mtable = mrdefine;
-    case 'scs'
-        mtable = msdefine; %***
-    case 'techsas'
-        mtable = mtdefine; %***
-end
+mtable = mudefine;
 opt1 = 'uway_proc'; opt2 = 'proc_streams';
 if exist('uway_proc_list','var') %only from this list
     [~,iik,~] = intersect(mtable.mstardir,uway_proc_list,'stable');

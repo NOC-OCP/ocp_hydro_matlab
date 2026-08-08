@@ -104,7 +104,7 @@ if exist('comb_stns','var') && comb_stns(1)==stnlocal
     else
         scan = scan + comb_stns(3);
         stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
-        firot = sprintf(firfile.fir,stn_string);
+        firot = sprintf(pd.firfile,stn_string);
         if exist(m_add_nc(firot),'file')
             blappend = 1;
         end
@@ -138,7 +138,7 @@ else
         ' '
         ' '
         '1'
-        sprintf(firfile.dataname,stn_string)
+        sprintf(pd.firname,stn_string)
         '/'
         '2'
         MEXEC_G.PLATFORM_TYPE

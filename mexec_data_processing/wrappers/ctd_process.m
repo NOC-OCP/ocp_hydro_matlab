@@ -36,7 +36,7 @@ function ctd_process(stns, varargin)
 %
 % after setting new calibration coefficients (using settings in
 %   opt_cruise***) and/or edits for 24-Hz data (using settings in
-%   opt_cruise*** or by running mctd_rawedit):
+%   opt_cruise*** or by running gui_editpoints)):
 % ctd_process(stns, 'edit')
 % OR
 % ctd_process(stns, 'edit', 'guisteps')
@@ -96,7 +96,7 @@ if dostep.part1 || dostep.postedit
         %average to 1 hz, compute salinity from C and T
     end
     for stn = stns
-        msbe_03_1hz(stn)
+        msbe_03_derive_tbin(stn)
     end
     if strcmp(MEXEC_G.datatypes.ladcp,'ix')
         for stn = stns

@@ -42,7 +42,11 @@ elseif strcmp(MEXEC_G.datatypes.uway,'scs_ascii')
         case 'scs_nmea_custom'
             inform = '';
         case 'uway_ascii_parse'
-            t = ua_times_parse(t, MEXEC_G.data_time_origin_string, 'inform', inform);
+            if exist('inform','var') && ~isempty(inform)
+                t = ua_times_parse(t, MEXEC_G.data_time_origin_string, 'inform', inform);
+            else
+                t = ua_times_parse(t, MEXEC_G.data_time_origin_string);
+            end
             if sum(strcmp(t.Properties.VariableNames','msg')) && strcmp(t.msg(1),'PSXN')
                 t = t(t.linetype==23,:);
             end

@@ -11,9 +11,12 @@ opt1 = 'uway_proc'; opt2 = 'scs_skip'; get_cropt
 mutv(ismember(mutv.nmeas_msg,skip),:) = [];
 
 if nargin>0
-    ddays = varargin{1};
-else
-    ddays = [];
+    mutv = mutv(strcmp(mutv.mstarpre,varargin{1}),:);
+    if nargin>1
+        ddays = varargin{2};
+    else
+        ddays = [];
+    end
 end
 
 %get the defined sentences
@@ -21,10 +24,11 @@ nmeas = nmea_sentences;
 %get special patterns (no $MSG in the file) as well as info on e.g. datimestamp columns
 opt1 = 'uway_proc'; opt2 = 'scs_nmea_form'; get_cropt 
 
-for tno = 99:length(mutv.scsfilepat)
+for tno = 1:length(mutv.scsfilepat)
 
     %will we subsample times before saving? e.g. gyro to 1 hz
     opt1 = 'uway_proc'; opt2 = 'tstep_save'; get_cropt
+    clear inform
 
     files = dir(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,mutv.scsfilepat{tno}));
     files = {files(cellfun(@(x) x>153,{files.bytes})).name};
@@ -44,6 +48,7 @@ for tno = 99:length(mutv.scsfilepat)
             delim = ' ';
             vn = {'nslatitude','ns','ewlongitude','ew','depth',    'date',     'time', 'j1'};
             vu = {   'degrees','ns',    'degrees','ew',    'm','yyyymmdd','HHMMSS.SS',  ' '};
+            inform = 'ddMMyyyy HHmmss ';
     
         elseif strcmp(ext,'.ACO')
             h = readtable(fullfile(p,[f '.TPL']),',');

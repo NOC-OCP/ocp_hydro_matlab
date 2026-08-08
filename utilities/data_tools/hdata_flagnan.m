@@ -70,7 +70,13 @@ if istable(d)
     skipvars = [skipvars 'Properties' 'Row' 'Variables'];
 elseif isstruct(d)
     typ = 2;
-    d = struct2table(d);
+    m = structfun(@(x) iscell(x),d); 
+    if sum(m)
+        fn = fieldnames(d);
+        d0 = d;
+        d = rmfield(d,fn(m));
+    end
+    d = struct2table(d); 
 else
     typ = 3;
     d = dataset2table(d);
@@ -254,6 +260,13 @@ end
 
 if typ==2
     d = table2struct(d,'ToScalar',true);
+    if exist('d0','var')
+        fn0 = fieldnames(d0); fn = fieldnames(d);
+        fn0 = setdiff(fn0,fn);
+        for no = 1:length(fn0)
+            d.(fn0{no}) = d0.(fn0{no});
+        end
+    end
 elseif typ==3
     d = table2dataset(d);
 end

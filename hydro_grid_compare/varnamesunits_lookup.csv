@@ -42,6 +42,7 @@ oxygen_umol_kg,      oxygen,    umol/kg
 oxyconc_umol_l,      oxygen,    umol/L
 oxygen,              oxygen,    umol/kg
 oxyg,                oxygen,    umol/kg
+oxy,                 oxygen,    umol/kg
 uoxygen,             ctdoxy,    umol/kg
 ctdoxy,              ctdoxy,    umol/kg
 botoxy,              oxygen,    umol/kg

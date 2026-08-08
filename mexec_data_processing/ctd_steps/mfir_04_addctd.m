@@ -12,7 +12,7 @@ function mfir_04_addctd(stn)
 
 m_common
 pd = mexec_file_locations('procfiles','fir');
-f = sprintf(firfile.fir,stn_string);
+f = sprintf(pd.firfile,stn_string);
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)
     return

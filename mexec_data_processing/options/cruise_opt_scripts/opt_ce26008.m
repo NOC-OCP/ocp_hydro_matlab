@@ -1,5 +1,5 @@
-%cast 42 aborted and not converted or processed
-%other aborted casts that can be processed: 1, 
+%cast 1 and 48 aborted; converted but not processed
+%case 42 aborted, not converted or processed
 
 switch opt1
     
@@ -65,20 +65,29 @@ switch opt1
             case 'raw_corrs'
                 co.oxy_align = 0; %0 until we check oxygen hysteresis
             case 'rawshow'
+                repars.g1 = repars.g1(1:end-1); %at first, don't show oxy on the spike editing plot
                 yl.temp = [0 18]; yl.cond = [3 5]; yl.oxy = [120 300];
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
-                yl.fluor = [0 8];
+                yl.fluor = [0 8]; yl.par = [0 40];
                 if stnlocal>40
                     yl.temp = [-2 10]; yl.cond = [2.5 4.5]; yl.oxy = [200 380];
-                    yl.fluor = [0 4];
+                    yl.fluor = [0 5];
                 end
                 yl.temp1 = yl.temp; yl.temp2 = yl.temp; 
                 yl.cond1 = yl.cond; yl.cond2 = yl.cond;
                 yl.oxy1 = yl.oxy; yl.oxy2 = yl.oxy;
+                edit_vars_exclude = [edit_vars_exclude 'par_corrected']; %this seems to be identically 0 so don't bother
             case 'sensor_choice'
                 ts_choice = 2;
                 o_choice = 2;
+                if stn == 4 %only one oxygen (which others?)
+                    ts_choice = 1;
+                    o_choice = 1;
+                else
+                    ts_choice = 2;
+                    o_choice = 2; %oxygen 1 on bad y-cable (shared with par but par end okay)
+                end
             case 'niskfilename'
                 blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_%s.bl',upper(mcruise),stn_string));
             case 'botflags'
@@ -244,32 +253,32 @@ switch opt1
                     delim = ',';
                     inform = 'ddMMyyyy HHmmss';
                 elseif strncmp(files{fno},'SBE21',5)
-                    vn = {'datetime','psal','temp','m0','m1','sspd'};
-                    vu = {'MM/dd/yyyy,HH:mm:ss.SSS,','psu','degrees C','unknown','unknown','m/s'};
+                    vn = {'datetime','psal','temp_tsg','cond','temp_in','sspd'};
+                    vu = {'MM/dd/yyyy,HH:mm:ss.SSS,','psu','degrees C','S/m','degrees C','m/s'};
                     delim = []; %fixed width, no delim
                     inform = 'MM/dd/yyyy,HH:mm:ss.SSS,';
                 end
             case 'uway_ascii_parse'
                 m = strcmp(t.Properties.VariableNames,'fluo_msg');
                 if sum(m)
-                    t.fluo = cellfun(@(x) str2double(x(strfind(x,'=')+1:end)), t.fluo_msg);
-                    t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'fluo')} = 'unknown';
+                    t.fluor = cellfun(@(x) str2double(x(strfind(x,'=')+1:end)), t.fluo_msg);
+                    t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'fluor')} = 'unknown';
                 end
             case 'tstep_save'
                 stepfreq_force = 1; %subsample to 1 Hz before saving
             case 'uway_load_extra'
-                disp('loading the CE_DefaultUnderwayLog*.elg files')
-                f = dir(fullfile(MEXEC_G.mexec_data_root,'scs_ascii','scs_events_descriptions','CE_DefaultUnderwayLog*.elg'));
-                d = {f(cellfun(@(x) x>153,{f.bytes})).folder};
-                f = {f(cellfun(@(x) x>153,{f.bytes})).name};
-                uway_extra = readtable(fullfile(d{1},f{1}),'FileType','delimitedtext');
-                for no = 2:length(f)
-                    uway_extra = [uway_extra; readtable(fullfile(d{no},f{no}),'FileType','delimitedtext')];
-                end
-                uway_extra.DateTime = uway_extra.Date+uway_extra.Time; uway_extra = uway_extra(:,3:end);
-                uway_extra.SeapathLatitude = cellfun(@(x) str2double(x(1:end-1)),uway_extra.SeapathLatitude);
-                uway_extra.SeapathLongitude = cellfun(@(x) -str2double(x(1:end-1)),uway_extra.SeapathLongitude);
-                save(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,'..','uway_scs_10s'),'uway_extra')
+                % disp('loading the CE_DefaultUnderwayLog*.elg files')
+                % f = dir(fullfile(MEXEC_G.mexec_data_root,'scs_ascii','scs_events_descriptions','CE_DefaultUnderwayLog*.elg'));
+                % d = {f(cellfun(@(x) x>153,{f.bytes})).folder};
+                % f = {f(cellfun(@(x) x>153,{f.bytes})).name};
+                % uway_extra = readtable(fullfile(d{1},f{1}),'FileType','delimitedtext');
+                % for no = 2:length(f)
+                %     uway_extra = [uway_extra; readtable(fullfile(d{no},f{no}),'FileType','delimitedtext')];
+                % end
+                % uway_extra.DateTime = uway_extra.Date+uway_extra.Time; uway_extra = uway_extra(:,3:end);
+                % uway_extra.SeapathLatitude = cellfun(@(x) str2double(x(1:end-1)),uway_extra.SeapathLatitude);
+                % uway_extra.SeapathLongitude = cellfun(@(x) -str2double(x(1:end-1)),uway_extra.SeapathLongitude);
+                % save(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,'..','uway_scs_10s'),'uway_extra')
      
         end
 
@@ -321,14 +330,21 @@ switch opt1
                 end
             case 'section_for_station'
                 if stnlocal>=4 && stnlocal<88
-                    sections = {'ar7e'};
+                    sections = {'ar7e','km','ta','kgh'};
                 end
             case 'grid'
                 sam_gridlist = {'botoxy' 'silc' 'phos' 'totnit' 'botpsal'};
                 mgrid.sdata_flag_accept = [2 3]; %***or just 2
                 if contains(section,'ar7e')
-                    kstns = [4:50];
+                    kstns = [4:51];
                     mgrid.xlim = 2; mgrid.zlim = 4;
+                elseif contains(section,'km')
+                    kstns = 52:57;
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                elseif contains(section,'ta')
+                    kstns = 58:63;
+                elseif contains(section,'kgh')
+                    kstns = 64:69;
                 else
                     section = 'profiles_only';
                     kstns = 1:999; %useful to do profiles_only for all stations anyway (smooth in vertical)

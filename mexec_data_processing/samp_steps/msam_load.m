@@ -134,7 +134,7 @@ dnew = table2struct(dnew,'ToScalar',true);
 hnew.fldnam = dbot.Properties.VariableNames;
 hnew.fldunt = dbot.Properties.VariableUnits;
 %save to param_cruise_01.nc file
-hnew.dataname = sampfile.dataname;
+hnew.dataname = pd.([samtyp 'name']);
 indir = fileparts(files{1});
 hnew.comment = sprintf('variables loaded from files in %s%s',indir,addcomment);
 mfsave(pd.(samtyp), dnew, hnew);
@@ -239,7 +239,7 @@ for varno = find(mv)
 end
 
 %optionally check replicates against each other
-opt1 = 'samp_proc'; opt2 = 'check'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'replcheck'; get_cropt
 if isfield(checksam,samtyp) && (length(checksam.(samtyp))>1) || checksam.(samtyp)
     repl_check(samtyp, gs, checksam.(samtyp)); %***working on this for nut, need to add code for chl as well as sal and sbe35 (sal repls compared earlier? yes, and handled differently, not flagged as mean of replicates because not separate samples exactly)***
 end

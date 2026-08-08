@@ -137,7 +137,7 @@ elseif ~isempty(comb_stns) && comb_stns(1)==stnlocal
     [d,h] = mload(rawfile,'/');
     %put into time base of other file
     stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
-    otfile_appendto = sprintf(ctdfile.raw,stn_string);
+    otfile_appendto = sprintf(pd.ctdraw,stn_string);
     h0 = m_read_header(otfile_appendto);
     d.time = m_commontime(d,'time',h,h0);
     h.fldunt(strcmp('time',h.fldnam)) = h0.fldunt(strcmp('time',h.fldnam));

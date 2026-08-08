@@ -18,7 +18,7 @@ function mfsave(filename, d, varargin)
 %         built-in save -append except the dimensions of variables to be
 %         added must match those in the existing file). variables in d and
 %         already in the file will be overwritten, but variables in the
-%         file and not in d will not be overwritten
+%         file and not in d will be kept as-is
 %     '-merge': use variable indepvar (see below) to place (*not*
 %         interpolate) fields in d into the existing variables in
 %         filename, or for variables not already in file, add them. 

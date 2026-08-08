@@ -278,7 +278,7 @@ end
 if exist('d0','var')
     fn0 = fieldnames(d0);
     for fno = 1:length(fn)
-        dg.(fn0{sno}) = d0.(fn0{sno});
+        dg.(fn0{fno}) = d0.(fn0{fno});
     end
 end
 

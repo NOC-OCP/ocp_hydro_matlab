@@ -61,7 +61,7 @@ for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
 
-if ~isfield(mgrid,'method'); mgrid.method = 'msec_maptracer'; end
+if ~exist('mgrid','var') || ~isfield(mgrid,'method'); mgrid.method = 'msec_maptracer'; end
 if strcmp(mgrid.method,'msec_maptracer')
     readme_g = {'ctd data gridded by linear interpolation in vertical (after filling uniform mixed layer)'};
     readme_g = [readme_g; 'sample data as in m_maptracer, using CTD T,S for sigma'];
@@ -106,7 +106,7 @@ else
     end
 end
 
-%if multiple ctd files, probably by station; if exchange format, try to only load the ones we need
+%if multiple ctd files, probably by station; try to only load the ones we need
 if isfield(info, 'statind') && length(file_listc)>1
     try
         if contains(file_listc(1), '_ct1.csv')
@@ -117,6 +117,10 @@ if isfield(info, 'statind') && length(file_listc)>1
             f = str2num(f(:,iiu(end-1)+1:iiu(end)-1));
         elseif contains(file_listc(1), '_cal.2db.mat')
             ii = strfind(file_listc{1}, '_cal.2db.mat');
+            f = cell2mat(file_listc);
+            f = str2num(f(:,ii-3:ii-1));
+        elseif endsWith(file_listc{1},'_2db.nc')
+            ii = strfind(file_listc{1},'_2db.nc');
             f = cell2mat(file_listc);
             f = str2num(f(:,ii-3:ii-1));
         end

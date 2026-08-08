@@ -2,10 +2,10 @@ function repl_check(samtyp, dbot, compare_params, varargin)
 % repl_check(samtyp, dbot, compare_params)
 % repl_check(samtyp, dbot, compare_params, ctd_compare_params)
 %
-% from table dbot, plot replicate samples and flag deviations over
-% threshold specified in samcth, comparing in terms of ratio (replB/replA,
-% etc.) or difference (replB-replA, etc.) as specified
-% for oxy, sal, chl CTD data from bottle firing times from the sam_ file
+% from grouped table dbot, plot replicate samples and flag deviations over
+% threshold specified in compare_params(2), comparing in terms of ratio
+% (replB/replA, etc.) or difference (replB-replA, etc.) as specified
+% for oxy, sal, chl, CTD data from bottle firing times from the sam_ file
 % will also be compared (ufluor/chla, or upsal-botpsala, etc.)
 % and if mapped data exist ***
 %
@@ -16,7 +16,6 @@ function repl_check(samtyp, dbot, compare_params, varargin)
 % call) to actual replicate sal samples
 
 m_common
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %to determine which variables to check, look for those with corresponding
 %*_flag variables (these were added earlier in msam_load)
@@ -41,16 +40,20 @@ if upl
     %are there *b_per_l variables with corresponding *a_per_l variables?
     mb = cellfun(@(x) contains(x,'b_per_l'), vbot);
     vba = cellfun(@(x) replace(x,'b_per_l','a_per_l'), vbot(mb), 'UniformOutput', false);
+    vbotr = sum(ismember(vba, vbot));
+    if ~vbotr
+        fprintf(1,'no replicates for %s, skipping',samtyp)
+        return
+    end
 else
-    vbases = unique(cellfun(@(x) x(1:end-1),vbot,'UniformOutput',false)); %***upl***
-    %are there *b variables with corresponding *a variables?
-    mb = cellfun(@(x) strcmp(x(end),'b'), vbot);
-    vba = cellfun(@(x) [x(1:end-1) 'a'], vbot(mb), 'UniformOutput', false);
-end
-vbotr = sum(ismember(vba, vbot));
-if ~vbotr
-    fprintf(1,'no replicates for %s, skipping',samtyp)
-    return
+    vbases = vbot;
+    m = ismember(v,vbases);
+    vbotr = varfun(@(x) x(2), varfun(@(x) sum(~isnan(x)), dbot(:,m)));
+    vbotr = sum(vbotr{:,:});
+    if ~vbotr
+        fprintf(1,'no replicates for %s, skipping', samtyp)
+        return
+    end
 end
 
 %cvars and cvar are CTD variables to load from sam_ file
@@ -73,7 +76,8 @@ if ~isempty(cvar) && ~contains(cvars,cvar)
     %need to load svar
     cvars = [cvars ' ' cvar];
 end
-[dctd,hctd] = mloadq(fullfile(mgetdir('ctd'),sprintf('sam_%s_all.nc',mcruise)),cvars);
+pd = mexec_file_locations('procfiles','samp');
+[dctd,hctd] = mloadq(pd.samc,cvars);
 dctd = struct2table(dctd);%,'AsArray',true);
 [~,~,ib] = intersect(dctd.Properties.VariableNames,hctd.fldnam);
 dctd.Properties.VariableUnits = hctd.fldunt(ib);
@@ -81,12 +85,9 @@ dctd.Properties.VariableUnits = hctd.fldunt(ib);
 %uvars and uvar are underway variables to load from ***
 %***
 
-repl_compare(dbot, vbases)
-
-function repl_compare(dbot, vbases)
-
 %plot parameters
 %colors
+th = compare_params(2);
 if useratio
     t = '/bottle A -1';
     ti = ['(bottle B+/-' num2str(th*100) '%)/bottle A -1'];
@@ -102,11 +103,14 @@ for vno = 1:length(vbases)
     m = strncmp(vbase,v,length(vbase));
     mv = m & ismember(v,vbot); %variable names that start with vbase
     mf = m & ismember(v,vflg);
-
     f = dbot{:,mf}; %flags for all replicates -- names are in alphabetical order so this should match
     d = dbot{:,mv}; d(f~=2) = NaN; %all replicates with good data
     d3 = dbot{:,mv}; d3(f~=3) = NaN; %questionable ones
-    nr = sum(mv)-1;
+    if upl
+        nr = sum(mv)-1;
+    else
+        nr = size(dbot.(vbase),2);
+    end
     %compare all other replicates to 'a' replicate
     sama = repmat(d(:,1),1,nr);
     if useratio

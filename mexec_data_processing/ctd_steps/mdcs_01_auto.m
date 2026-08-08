@@ -102,7 +102,7 @@ if ~isfield(ds,'dc_end') || force_auto.end
 end
 
 %corresponding indices in 24hz file
-d24 = mloadq(sprintf(ctdfile.p24,stn_string),'scan',' ');
+d24 = mloadq(sprintf(pd.ctd24,stn_string),'scan',' ');
 [~,ds.dc24_bot] = min(abs(d24.scan-ds.scan_bot));
 [~,ds.dc24_start] = min(abs(d24.scan-ds.scan_start));
 [~,ds.dc24_end] = min(abs(d24.scan-ds.scan_end));
