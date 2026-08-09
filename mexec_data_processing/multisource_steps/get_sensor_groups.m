@@ -13,7 +13,7 @@ function get_sensor_groups(klist,varargin)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 pd = mexec_file_locations('procfiles','ctd');
-pds = mexec_file_locations('procfiles','sam');
+pds = mexec_file_locations('procfiles','samp');
 
 st = {'Temperature','Conductivity','Oxygen'};
 sa = {'temp','cond','oxy'};

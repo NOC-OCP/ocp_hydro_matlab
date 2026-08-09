@@ -56,13 +56,22 @@ end
 
 if reload_uway
     % load one day at a time and append to one file per stream
-    ns = length(mtable.tablenames);
+    ns = length(mtable.mstardir);
     ls = nan+zeros(ns,length(ddays));
-    for yday = ddays
-        for sno = 1:ns
-            ls(sno,yday-ddays(1)+1) = mday_00_load(mtable.tablenames{sno}, yday, mtable);
+    for sno = 1:ns
+        if isfield(mtable,'tablenames')
+            p = mtable.tablenames{sno};
+        else
+            p = mtable.mstarpre{sno};
         end
-        disp(['loaded day ' num2str(yday)]); pause(0.1)
+        if isfield(mtable,'tablenames')
+            for yday = ddays
+                ls(sno,yday-ddays(1)+1) = mday_00_load(p, yday, mtable);
+                 disp(['loaded day ' num2str(yday)]); pause(0.1)
+            end
+        else %scs_ascii
+            ls(sno,1) = mday_00_load(p, [], mtable);
+        end
     end
     ms = logical(sum(ls,2)');
     if sum(ms)>0
@@ -83,7 +92,6 @@ if reload_uway %something new to take through preliminary edits stage
     if exist('never_edit','var')
         mufiles = setdiff(mufiles,never_edit);
     end
-    mufiles = {'surfmet'};
     for sno = 1:length(mufiles)
         de = mday_01_edit(mufiles{sno}, ddays, mtable);
         if de
@@ -92,6 +100,7 @@ if reload_uway %something new to take through preliminary edits stage
     end
 end
 
+return %first examine all the edited data before merging/deciding what to do?***
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
 ctypes = {'nav','bathy','ocean','atmos'}; %important to do nav first

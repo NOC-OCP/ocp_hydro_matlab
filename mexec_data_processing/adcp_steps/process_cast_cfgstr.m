@@ -116,6 +116,7 @@ function [] = process_cast_cfgstr(stn,varargin)
 %                  after loading (rather than failing later)
 %  Feb 20, 2023: - ylf added code after step 1 to optionally limit times
 %                  (for yo-yo cast) 
+%  Jun 25, 2024: - changed Step 4 to discard BT velocities from UL
 
 %----------------------------------------------------------------------
 % STEP 0: EXECUTE ALWAYS
@@ -326,6 +327,12 @@ if pcs.begin_step <= pcs.cur_step
   end
   
   [d,p]=getbtrack(d,p);  
+
+  %from main process_cast.m
+  if d.down.Up
+      disp(' discarding apparent bottom-track velocities from uplookier');
+      d.bevl(find(isfinite(d.bevl))) = NaN;
+  end
 
   end_processing_step;
 end % OF STEP 4: GET BOTTOM-TRACK DATA
@@ -551,9 +558,9 @@ if pcs.begin_step <= pcs.cur_step
   
   if ps.shear>0
    if ps.shear==1
-    [ds,dr,ps,p]=getshear2(d,p,ps,dr);
+    [ds,p,dr]=calc_shear3(d,p,ps,dr); % use all data (d)
    else
-    [ds,dr,ps,p]=getshear2(di,p,ps,dr);
+    [ds,p,dr]=calc_shear3(di,p,ps,dr); % use superensemble data (di)
    end
   end
 

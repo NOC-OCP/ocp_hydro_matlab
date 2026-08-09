@@ -61,8 +61,12 @@ function mctd_checkplots(stn, varargin)
 m_common
 if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD data from station %s along with data from selected previous stations',stn_string);end
 
+quick = 0; %whether to use 10 hz (quick) or 2 dbar
 if nargin>1
     nump = varargin{1};
+    if nargin>2
+        quick = varargin{2};
+    end
 else
     msg1 = '\n Type number of previous stations to view, a list of at least two station numbers, or return to quit\n';
     nump = input(msg1);
@@ -93,6 +97,8 @@ d2up = d2db; dpsal = d2db; ddcs = d2db;
 for no = 1:length(klist)
     ks = klist(no);
     sstring = sprintf('%03d',ks);
+    if quick
+        infile1 = m_add_nc(sprint)
     infile1 = m_add_nc(sprintf(pd.ctd2d,sstring));
     infile2 = m_add_nc(sprintf(pd.ctd2u,sstring));
     infile3 = m_add_nc(sprintf(pd.ctd1,sstring));

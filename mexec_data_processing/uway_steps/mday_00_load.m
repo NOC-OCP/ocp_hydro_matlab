@@ -19,36 +19,37 @@ m_common
 m_margslocal
 m_varargs
 
-%lookup for this stream
-m = strcmp(streamname,mtable.tablenames);
-mstarprefix = mtable.mstarpre{m};
-status = 1;
-if contains(mstarprefix,'not_rvdas')
-    status = 2;
-    return
-end
-root_out = fullfile(MEXEC_G.mexec_data_root,mtable.mstardir{m});
-
-% make output directory if it doesn't exist
-if exist(root_out,'dir') ~= 7
-    mkdir(root_out); mfixperms(root_out, 'dir');
-end
-
-dataname = [mstarprefix '_' mcruise '_all'];
-fnmstar = [dataname '_raw'];
-otfile2 = fullfile(root_out, fnmstar);
-if MEXEC_G.quiet<=1; fprintf(1,'loading underway data stream %s to write to %s\n',streamname,mstarprefix,mcruise,fnmstar); end
-
-y = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
-dn1 = datenum([y 1 1 0 0 0]) + yday - 1;
-dn2 = dn1 + 1 - 1/86400;
-
 switch MEXEC_G.Mshipdatasystem
-    case 'rvdas'                
+    case 'rvdas'
+
+        %lookup for this stream
+        m = strcmp(streamname,mtable.tablenames);
+        mstarprefix = mtable.mstarpre{m};
+        status = 1;
+        if contains(mstarprefix,'not_rvdas')
+            status = 2;
+            return
+        end
+        root_out = fullfile(MEXEC_G.mexec_data_root,mtable.mstardir{m});
+
+        % make output directory if it doesn't exist
+        if exist(root_out,'dir') ~= 7
+            mkdir(root_out); mfixperms(root_out, 'dir');
+        end
+
+        dataname = [mstarprefix '_' mcruise '_all'];
+        fnmstar = [dataname '_raw'];
+        otfile2 = fullfile(root_out, fnmstar);
+        if MEXEC_G.quiet<=1; fprintf(1,'loading underway data stream %s to write to %s\n',streamname,mstarprefix,mcruise,fnmstar); end
+
+        y = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
+        dn1 = datenum([y 1 1 0 0 0]) + yday - 1;
+        dn2 = dn1 + 1 - 1/86400;
+
         %use streamname in case there is more than one streamname that maps
         %to one mstarname
-        argot.table = streamname; 
-        argot.dnums = [dn1 dn2]; 
+        argot.table = streamname;
+        argot.dnums = [dn1 dn2];
         argot.otfile = otfile2;
         argot.dataname = dataname;
         argot.mutv = mtable;
@@ -56,7 +57,8 @@ switch MEXEC_G.Mshipdatasystem
     case 'scs'
         status = scs_to_mstar2(streamname,mstarprefix,dn1,dn2,otfile2,dataname);
     case 'scs_ascii'
-        load_way_ascii(streamname)
+        load_uway_ascii(streamname)
+        status = 0;
     otherwise
         warning('update for techsas')
 end

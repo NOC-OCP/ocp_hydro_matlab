@@ -80,7 +80,10 @@ if isfield(castopts,'rangelim')
         iir = find(d.(fn{no})<r(1) | d.(fn{no})>r(2));
         if ~isempty(iir)
             d.(fn{no})(iir) = NaN;
-            d.([fn{no} '_flag'])(iir) = 7;
+            % if ~isfield(d,[fn{no} '_flag'])
+            %     d.([fn{no} '_flag']) = nan(size(d.(fn{no})));
+            % end
+            % d.([fn{no} '_flag'])(iir) = 7;
             comment = [comment '\n edited ' fn{no} ' values outside range [' num2str(r(1)) ' ' num2str(r(2)) ']'];
         end
     end
@@ -100,7 +103,7 @@ if isfield(castopts,'despike')
             d0 = d.(fn{no});
             d.(fn{no}) = median_despike(d.(fn{no}), t(dno,1), t(dno,2));
             comment = [comment num2str(t(dno)) ' '];
-            d.([fn{no} '_flag'])(isnan(d.(fn{no})) & ~isnan(d0)) = 7;             
+            % d.([fn{no} '_flag'])(isnan(d.(fn{no})) & ~isnan(d0)) = 7;             
         end
     end
 end

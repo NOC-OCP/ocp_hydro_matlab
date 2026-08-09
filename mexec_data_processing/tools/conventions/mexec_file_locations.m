@@ -37,9 +37,8 @@ switch step
             'M_SUM' 'collected_files'
             'M_VMADCP' 'vmadcp'
             'M_NAV' 'nav'
-            'M_MET' 'met'
+            'M_SURFMET' 'surfmet'
             'M_BATHY' 'bathy'
-            'M_TSG' 'surface'
             }; %***change how MDIRLIST is used?
         if ~strcmp(MEXEC_G.Mshipdatasystem,'auto')
             dirs = [dirs;
@@ -90,7 +89,7 @@ switch step
                 pd.winname = ['win_' mcruise '_%s'];
                 pd.winfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_WIN, [pd.winname '.nc']);
             case 'samp'
-                pd.samc = fullfile(MEXEC_G.MDIRLIST.M_CTD,['nisksamp_' mcruise '_all.nc']);
+                pd.samc = fullfile(MEXEC_G.MDIRLIST.M_BOT,['nisksamp_' mcruise '_all.nc']);
                 pd.samu = fullfile(MEXEC_G.MDIRLIST.M_BOT,['ucswsamp_' mcruise '_all.nc']);
                 if nargin>2
                     pd.([varargin{2} 'name']) = [varargin{2} '_' mcruise '_all'];
@@ -104,8 +103,8 @@ switch step
                 pd.sadcpall = fullfile(MEXEC_G.MDIRLIST.VMADCP, 'postprocessing', upper(mcruise), 'proc_editing', varargin{2}, 'contour', [pd.sadcpname '.nc']);
             case 'uway'
                 pd.bunav = fullfile(MEXEC_G.MDIRLIST.M_NAV,['bestnav_' mcruise '_all.nc']);
-                pd.buocean = fullfile(MEXEC_G.MDIRLIST.M_TSG,['surface_ocean_' mcruise '_all.nc']);
-                pd.bumet = fullfile(MEXEC_G.MDIRLIST.M_MET,['atmos_truwind_' mcruise '_all.nc']);
+                pd.buocean = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['surface_ocean_' mcruise '_all.nc']);
+                pd.bumet = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['atmos_truwind_' mcruise '_all.nc']);
                 pd.bubathy = fullfile(MEXEC_G.MDIRLIST.M_BATHY,['bathy_' mcruise '_all.nc']);
         end
 

@@ -60,17 +60,17 @@ if restartsam
     %add serial numbers (already saved in .mat file)
     get_sensor_groups(stns,'samonly')
 end
-% if restartusam
-%     %delete sam_ucsw file
-%     if exist(pd.samu,'file')
-%         warning('deleting underway sam file: %s in 1 s',pd.samu)
-%         pause(1)
-%         delete(pd.samu)
-%     end
-% opt1 = 'samp_proc'; opt2 = 'files'; samtyp = 'ulog'; get_cropt
-% s = readtable(uway_sample_log_file);
-% %rename, merge on data from surface_ocean*
-% end
+if restartusam
+     %delete sam_ucsw file
+     if exist(pd.samu,'file')
+         warning('deleting underway sam file: %s in 1 s',pd.samu)
+         pause(1)
+         delete(pd.samu)
+     end
+     opt1 = 'samp_proc'; opt2 = 'files'; samtyp = 'ulog'; get_cropt
+     s = readtable(uway_sample_log_file); %the equivalent of a .bl file
+%rename, merge on data from surface_ocean*
+ end
 
 %now start loading parameter data
 for pno = 1:length(ptlist)

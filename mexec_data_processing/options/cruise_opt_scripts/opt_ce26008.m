@@ -36,6 +36,9 @@ switch opt1
                 co.rangelim.oxy = [120 300];
                 co.rangelim.turbidity = [0 1];
                 co.rangelim.fluor = [0 8];
+                co.rangelim.transmittance = [0 100];
+                co.rangelim.turbidity = [0 1];
+                %co.rangelim.par = [0 100];
                 %then despike with 2 repetitions of a 12-scan median
                 %despiker
                 co.despike.press = [2 12; 2 12]; %avg 1m/s so 2 dbar/0.5 s is large
@@ -128,7 +131,7 @@ switch opt1
                     case 'ulog'
                     case 'chl'
                     case 'oxy'
-                        files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,'20260728_Oxygen_concentration_calculation_worksheet_2025.xlsx')};
+                        files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,'20260805_Oxygen_concentration_calculation_worksheet_2025.xlsx')};
                         sopts.numhead = 9; 
                         ct = {'statnum','double';...
                             'position','double';...
@@ -149,7 +152,8 @@ switch opt1
                         sopts.VariableTypes = ct(:,2)';
                         sopts.sheets = 1:15;
                     case 'sal'
-                        files = dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'portasal*.csv'));
+                        files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'portasal*.csv')).name};
+                        files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
                     case 'nut'
                     case 'co2'
                     case 'cfc'
@@ -244,6 +248,10 @@ switch opt1
 
     case 'uway_proc'
         switch opt2
+            case 'datasys_best'
+                default_navstream = 'simrad'; %more complete record? 
+                default_hedstream = 'gyro';
+                default_attstream = 'mru'; %?
             case 'scs_skip'
                 skip = [skip, {'elg','ZDA','VBW','Ship-Speed-Log','uway.csv'}];%***need to add VBW to nmea and nmeau in load_uway_ascii.m (also for ship-speed-log)
             case 'scs_nmea_custom'
@@ -279,6 +287,9 @@ switch opt1
                 % uway_extra.SeapathLatitude = cellfun(@(x) str2double(x(1:end-1)),uway_extra.SeapathLatitude);
                 % uway_extra.SeapathLongitude = cellfun(@(x) -str2double(x(1:end-1)),uway_extra.SeapathLongitude);
                 % save(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,'..','uway_scs_10s'),'uway_extra')
+            case 'rawedit'
+                %define badtimes and tsgpumpvars
+                %set handedit
      
         end
 

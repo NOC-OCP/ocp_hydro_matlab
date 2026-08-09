@@ -284,6 +284,7 @@ if ~isempty(isnew)
     end
 end
 
+
 %%%%% edit header, attributes, comments, history %%%%%
 
 % global attributes
@@ -331,6 +332,7 @@ if isfield(h, 'mstar_site')
 end
 m_add_comment(ncfile,comstring)
 
+
 % history
 if writenew
     %fake input file details for write_history
@@ -363,5 +365,4 @@ MEXEC_A.Mprog = 'mfsave';
 m_finis(ncfile); % need mfinis after setting MEXEC_A.Mhistory_in
 m_write_history;
 MEXEC_A.MARGS_OT = {};
-
 

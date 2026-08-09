@@ -57,10 +57,18 @@ for vno = 1:length(vars)
         data = NaN+a;
     end
     if isfield(d0, varname)
-        data(iico,:) = d0.(varname)(iio,:);
+        if s(1)==1
+            data(:,iico) = d0.(varname)(:,iio);
+        else
+            data(iico,:) = d0.(varname)(iio,:);
+        end
     end
     if isfield(d, varname)
-        data(iicn,:) = d.(varname)(iin,:);
+        if s(1)==1
+            data(:,iicn) = d.(varname)(:,iin);
+        else
+            data(iicn,:) = d.(varname)(iin,:);
+        end
         if ~isfield(d0, varname)
             nvno = strcmp(varname,h.fldnam);
             hnew.fldnam = [hnew.fldnam h.fldnam{nvno}];

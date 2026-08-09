@@ -101,8 +101,10 @@ end
 %***xducer offset?
 timestring = sprintf('days since %d-01-01 00:00:00',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1));
 d.dday = m_commontime(d, 'time', h, timestring);
-h.fldnam = [h.fldnam 'dday'];
-h.fldunt = [h.fldunt timestring];
+if ~sum(strcmp(h.fldnam,'dday'))
+    h.fldnam = [h.fldnam 'dday'];
+    h.fldunt = [h.fldunt timestring];
+end
 if isfield(h,'fldserial')
     h.fldserial = [h.fldserial ' '];
 end
@@ -111,6 +113,9 @@ if ~isempty(uopts)
     if ~isempty(comment)
         h.comment = [h.comment comment];
         didedits = 1;
+        ff = setdiff(fieldnames(d),h.fldnam);
+        h.fldnam = [h.fldnam ff']; h.fldunt = [h.fldunt repmat({'flag'},1,length(ff))];
+        if isfield(h,'fldserial'); h.fldserial = [h.fldserial repmat({' '},1,length(ff))]; end
         fprintf(1,'cleaned in %s\n',abbrev)
     end
 end
@@ -200,9 +205,14 @@ depvar = munderway_varname('depvar', h.fldnam, 's');
 depvars = union(union(depbtvar,depsfvar),depvar);
 
 %find positions to use for carter correction
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
-m = strcmp(default_navstream,mtable.tablenames);
-navfile = fullfile(mgetdir(''), mtable.mstardir{m}, [mtable.mstarpre{m} '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
+opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+if isfield(mtable,'tablenames')
+    ii = find(strcmp(default_navstream,mtable.tablenames));
+else
+    ii = find(strcmp(default_navstream,mtable.mstarpre));
+end
+ii = ii(1);
+navfile = fullfile(MEXEC_G.mexec_data_root, mtable.mstardir{ii}, [mtable.mstarpre{ii} '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
 if exist(navfile,'file')
     [dn,hn] = mload(navfile,'/');
     latstr = munderway_varname('latvar', hn.fldnam, 1, 's');

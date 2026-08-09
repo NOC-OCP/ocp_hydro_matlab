@@ -118,15 +118,18 @@ if dostep.guisteps && (dostep.edit || dostep.postedit || dostep.part1)
     for stn = stns
         %call gui to check raw or cleaned data and check/select cast start, bottom, and end
         ed = mctd_raw_show_check_edit(stn);
-        if strcmp(ed,'y') && (dostep.part2 || dostep.postedit)
+        if strcmp(ed,'y')
             %first need to rerun the edit steps up to now to
             %apply/propagate the edits
             msbe_02_edcal(stn)
-            msbe_03_1hz(stn)
+            msbe_03_derive_tbin(stn)
             if strcmp(MEXEC_G.datatypes.ladcp,'ix')
                 mout_1hzasc(stn)
             end
         end
+    if ~dostep.part2
+        mctd_checkplots(stn,3,'quick')
+    end
     end
 end
 

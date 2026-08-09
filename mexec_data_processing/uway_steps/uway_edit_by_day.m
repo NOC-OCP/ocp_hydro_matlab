@@ -36,7 +36,7 @@ if nargin>6
 else
     yl = [];
 end
-bads = gui_editpoints(dt, 'dday', edgrp_all, [], 'edfilepat', edfile, 'yl', yl);
+bads = gui_editpoints(dt, 'dday', edgrp_all, [], 'edfilepre', edfile, 'yl', yl);
 
 %and apply them again
 [d, comment] = apply_guiedits(d, 'dday', [edfile '*'], 0, btol);
