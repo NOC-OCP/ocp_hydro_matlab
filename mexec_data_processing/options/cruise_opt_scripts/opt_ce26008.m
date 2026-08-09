@@ -68,7 +68,8 @@ switch opt1
             case 'raw_corrs'
                 co.oxy_align = 0; %0 until we check oxygen hysteresis
             case 'rawshow'
-                repars.g1 = repars.g1(1:end-1); %at first, don't show oxy on the spike editing plot
+                %repars.g1 = repars.g1(1:end-1); %at first, don't show oxy on the spike editing plot
+                repars = rmfield(repars,'g2'); %don't edit fluo etc.
                 yl.temp = [0 18]; yl.cond = [3 5]; yl.oxy = [120 300];
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
@@ -356,9 +357,6 @@ switch opt1
                     kstns = 58:63;
                 elseif contains(section,'kgh')
                     kstns = 64:69;
-                else
-                    section = 'profiles_only';
-                    kstns = 1:999; %useful to do profiles_only for all stations anyway (smooth in vertical)
                 end
         end
 

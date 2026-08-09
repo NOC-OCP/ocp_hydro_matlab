@@ -127,9 +127,9 @@ if dostep.guisteps && (dostep.edit || dostep.postedit || dostep.part1)
                 mout_1hzasc(stn)
             end
         end
-    if ~dostep.part2
-        mctd_checkplots(stn,3,'quick')
-    end
+    % if ~dostep.part2
+    %     mctd_checkplots(stn,3,'quick')
+    % end
     end
 end
 
