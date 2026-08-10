@@ -30,10 +30,21 @@ switch opt1
                 m_write_header(otfiles{1},h);
             case 'rawedit_auto'
                 %use rangelim first to exclude very large spikes
-                co.rangelim.press = [-1.25 3300]; 
-                co.rangelim.cond = [3 5];
-                co.rangelim.temp = [-2 18];
-                co.rangelim.oxy = [120 300];
+                co.rangelim.press = [-1.25 3300];
+                co.rangelim.cond1 = [3 5];
+                if stnlocal>45
+                    co.rangelim.cond1 = [2.5 5];
+                end
+                co.rangelim.cond2 = co.rangelim.cond1;
+                co.rangelim.temp1 = [-2 18]; co.rangelim.temp2 = co.rangelim.temp1;
+                if stnlocal<=34
+                    co.rangelim.oxy2 = [160, 290];
+                elseif stnlocal>=35 && stnlocal<=45
+                    co.rangelim.oxy2 = [220 320];
+                elseif stnlocal>45
+                    co.rangelim.oxy2 = [230 390];
+                end
+                co.rangelim.oxy1 = co.rangelim.oxy2;
                 co.rangelim.turbidity = [0 1];
                 co.rangelim.fluor = [0 8];
                 co.rangelim.transmittance = [0 100];
@@ -49,9 +60,11 @@ switch opt1
                 co.despike.cond2 = co.despike.cond1;
                 co.despike.oxy2 = co.despike.oxy1;
                 %mask some bad scan ranges
-                if stnlocal==39
-                    co.badscan.oxy1 = [4.92 17.602]*1e4; 
-                end
+                % if stnlocal==39
+                %     co.badscan.oxy1 = [4.92 17.602]*1e4; 
+                % end
+                %if ismember(stnlocal,[17:22 24:32 34:43 45:47 51:53 55:59 63:])
+                %co.badscan.oxy1 = [-inf inf]; %so many spikes it's not worth cleaning
                 %then mask all on CTD whenever P is bad
                 co.badpress.temp1 = [NaN NaN];
                 co.badpress.temp2 = [NaN NaN];
@@ -68,7 +81,8 @@ switch opt1
             case 'raw_corrs'
                 co.oxy_align = 0; %0 until we check oxygen hysteresis
             case 'rawshow'
-                repars.g1 = repars.g1(1:end-1); %at first, don't show oxy on the spike editing plot
+                repars.g1 = setdiff(repars.g1,{'oxy1'}); %at first, don't show oxy on the spike editing plot
+                repars = rmfield(repars,'g2'); %don't edit fluo etc.
                 yl.temp = [0 18]; yl.cond = [3 5]; yl.oxy = [120 300];
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
@@ -367,9 +381,6 @@ switch opt1
                     kstns = 58:63;
                 elseif contains(section,'kgh')
                     kstns = 64:69;
-                else
-                    section = 'profiles_only';
-                    kstns = 1:999; %useful to do profiles_only for all stations anyway (smooth in vertical)
                 end
         end
 

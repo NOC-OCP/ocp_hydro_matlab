@@ -33,7 +33,10 @@ zpressgrid_shal = [0 5 25 50 75 100 125 150 175 200 225 250 ...
 if strcmp(section,'profiles_only')
     mgrid.xlim = 0.01; %each station effectively independent
     mgrid.zpressgrid = zpressgrid_deep; %***
-    kstns = 1:200;
+    kstns = 1:500;
+elseif ismember(section,{'ungridded','quick'}) %compile all the 10 s files
+    kstns = 1:500;
+    ms = true(size(kstns));
 else
     clear kstns
 end
@@ -65,11 +68,20 @@ else
     end
 end
 
-otfile = fullfile(MEXEC_G.mexec_data_root, 'mapped', ['grid_' mcruise '_' section '.mat']);
+if strcmp(section,'ungridded')
+    otfile = fullfile(MEXEC_G.mexec_data_root,'ctd',['allctd_' mcruise '_2db.mat']);
+elseif strcmp(section,'quick')
+    otfile = fullfile(MEXEC_G.mexec_data_root,'ctd',['allctd_' mcruise '_quick.mat']);
+else
+    otfile = fullfile(MEXEC_G.mexec_data_root, 'mapped', ['grid_' mcruise '_' section '.mat']);
+end
 pd = mexec_file_locations('procfiles','ctd');
 pds = mexec_file_locations('procfiles','samp');
 if ~exist(otfile,'file') || ~exist('ctd_regridlist','var')
     ctd_regridlist = {'temp' 'psal' 'oxy'};
+    if strcmp('section','quick')
+        ctd_regridlist = {'temp','psal','oxy','fluor','turbidity','transmissivity','par'};
+    end
 end
 %load the ctd data
 if isempty(ctd_regridlist)
@@ -84,20 +96,32 @@ else
     for vno = 1:length(ctd_regridlist)
         cdata.(ctd_regridlist{vno}) = NaN+zeros(length(cdata.press),length(kstns));
     end
+    cdata.lat = nan(1,length(kstns)); cdata.lon = cdata.lat; 
     for kstn = 1:length(kstns)
         stn = kstns(kstn); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
-        cfile = sprintf(pd.ctd2d,stn_string);
-        if exist(m_add_nc(cfile),'file')
-            [d,h] = mloadq(cfile,'/');
+        if strcmp(section,'quick')
+            cfile = sprintf(pd.ctd10s,stn_string);
         else
-            %if we get to a station we don't have, assume we haven't
-            %done the rest of the list yet either
-            cdata.statnum(kstn:end) = [];
-            for vno = 1:length(ctd_regridlist)
-                cdata.(ctd_regridlist{vno})(:,kstn:end) = [];
-            end
-            break
+            cfile = sprintf(pd.ctd2d,stn_string);
         end
+        if ~exist(m_add_nc(cfile),'file') 
+            if strcmp(section,'quick')
+                ms(kstn) = false;
+                continue
+            else
+                %if we get to a station we don't have, assume we haven't
+                %done the rest of the list yet either
+                cdata.statnum(kstn:end) = [];
+                for vno = 1:length(ctd_regridlist)
+                    cdata.(ctd_regridlist{vno})(:,kstn:end) = [];
+                end
+                break
+            end
+        end
+        [d,h] = mloadq(cfile,'/');
+        [~,~,ia] = intersect(ctd_regridlist,h.fldnam,'stable');
+        cdata.vars = ctd_regridlist;
+        cdata.unts = h.fldunt(ia);
         if isfield(d,'latitude') && ~isnan(m_nanmean(d.latitude))
             cdata.lat(1,kstn) = m_nanmean(d.latitude);
             cdata.lon(1,kstn) = m_nanmean(d.longitude);
@@ -105,14 +129,21 @@ else
             cdata.lat(1,kstn) = h.latitude;
             cdata.lon(1,kstn) = h.longitude;
         end
-        [~,ii,iic] = intersect(d.press,cdata.press(:,1),'stable');
-        for vno = 1:length(ctd_regridlist)
-            cdata.(ctd_regridlist{vno})(iic,kstn) = d.(ctd_regridlist{vno})(ii);
+        if strcmp(section,'quick')
+            %using 10 s average time series, just cut and interpolate to
+            %consistent 2 dbar grid
+            [~,ii] = unique(d.press);
+            for vno = 1:length(ctd_regridlist)
+                cdata.(ctd_regridlist{vno})(:,kstn) = interp1(d.press(ii),d.(ctd_regridlist{vno})(ii),cdata.press(:,1));
+            end
+        else
+            %already on same 2 dbar grid as output
+            [~,ii,iic] = intersect(d.press,cdata.press(:,1),'stable');
+            for vno = 1:length(ctd_regridlist)
+                cdata.(ctd_regridlist{vno})(iic,kstn) = d.(ctd_regridlist{vno})(ii);
+            end
         end
     end
-    [~,~,ia] = intersect(ctd_regridlist,h.fldnam,'stable');
-    cdata.vars = ctd_regridlist;
-    cdata.unts = h.fldunt(ia);
     m = sum(isnan(cdata.temp),2)==size(cdata.temp,2);
     cdata.press(m) = [];
     for vno = 1:length(ctd_regridlist)
@@ -133,6 +164,7 @@ sdata.press = d.upress(mstn);
 sdata.ctdtmp = d.utemp(mstn);
 sdata.ctdsal = d.upsal(mstn);
 sdata.ctdoxy = d.uoxy(mstn);
+sdata.ctdfluo = d.ufluor(mstn);
 mv = false(1,length(sam_gridlist));
 for vno = 1:length(sam_gridlist)
     if isfield(d,sam_gridlist{vno})
@@ -151,7 +183,13 @@ sdata.vars = sam_gridlist(mv);
 [~,~,ia] = intersect(sam_gridlist(mv),h.fldnam,'stable');
 sdata.unts = h.fldunt(ia);
 
-if strcmp(section,'ungridded') %this is just a way to compile some or all of the stations into a .mat file
+if ismember(section,{'ungridded','quick'}) %this is just a way to compile some or all of the stations into a .mat file
+    fn = fieldnames(cdata);
+    for no = 1:length(fn)
+        if size(cdata.(fn{no}),2) == length(ms)
+            cdata.(fn{no}) = cdata.(fn{no})(:,ms);
+        end
+    end
     save(otfile,'cdata','sdata'); mfixperms(otfile);
 else
     %run the gridding

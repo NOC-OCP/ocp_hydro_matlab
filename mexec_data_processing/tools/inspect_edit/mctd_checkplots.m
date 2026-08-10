@@ -97,23 +97,35 @@ d2up = d2db; dpsal = d2db; ddcs = d2db;
 for no = 1:length(klist)
     ks = klist(no);
     sstring = sprintf('%03d',ks);
-    if quick
-        infile1 = m_add_nc(sprint)
-    infile1 = m_add_nc(sprintf(pd.ctd2d,sstring));
-    infile2 = m_add_nc(sprintf(pd.ctd2u,sstring));
     infile3 = m_add_nc(sprintf(pd.ctd1,sstring));
     infile4 = m_add_nc(sprintf(pdd.dcsfile,sstring));
-    % skip stations that don't have a complete set of files
-    if exist(infile1,'file') && exist(infile2,'file') && exist(infile3,'file') && exist(infile4,'file')
-        infiles{1,no} = infile1;
-        infiles{2,no} = infile2;
-        infiles{3,no} = infile3;
-        infiles{4,no} = infile4;
-        [d2db{no}, h] = mloadq(infile1,'/');
-        [d2up{no}, ~] = mloadq(infile2,'/');
-        [dpsal{no}, ~] = mloadq(infile3,'/');
-        [ddcs{no}, ~] = mloadq(infile4,'/');
-        sused(no) = 1;
+    infiles{3,no} = infile3;
+    infiles{4,no} = infile4;
+    [dpsal{no}, ~] = mloadq(infile3,'/');
+    [ddcs{no}, ~] = mloadq(infile4,'/');
+    if quick
+        infile1 = m_add_nc(sprintf(pd.ctd10s,sstring));
+        if exist(infile1,'file') && exist(infile3,'file') && exist(infile4,'file')
+            infiles{1,no} = infile1; infiles{2,no} = infile1;
+            [d,h] = mloadq(infile1,'/');
+            d = struct2table(d);
+            iib = find(d.press==max(d.press)); iib = iib(1);
+            dd = table2struct(d(1:iib,:),'ToScalar',true);
+            du = table2struct(d(iib:end,:),'ToScalar',true);
+            d2db{no} = dd; d2up{no} = du;
+            sused(no) = 1;
+        end
+    else
+        infile1 = m_add_nc(sprintf(pd.ctd2d,sstring));
+        infile2 = m_add_nc(sprintf(pd.ctd2u,sstring));
+        % skip stations that don't have a complete set of files
+        if exist(infile1,'file') && exist(infile2,'file') && exist(infile3,'file') && exist(infile4,'file')
+            infiles{1,no} = infile1;
+            infiles{2,no} = infile2;
+            [d2db{no}, h] = mloadq(infile1,'/');
+            [d2up{no}, ~] = mloadq(infile2,'/');
+            sused(no) = 1;
+        end
     end
 end
 infiles = infiles(:,sused);
@@ -125,6 +137,7 @@ numused = length(sused);
 if sum(sused==stnlocal)<1
     msg = ['Station ' sprintf('%03d',stnlocal) ' was not loaded. Check all the files are available'];
     fprintf(2,'%s\n',msg)
+    return
 end
 
 lcolors = [0 0 1; 0 .8 0; .85 0 .85; 0 1 1; 1 0 0; 0 0 0];
@@ -160,32 +173,14 @@ cklist = cklist(:)'; % force to row
 
 saltype = 'psal';
 opt1 = mfilename; opt2 = 'plot_saltype'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
 oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
-nox = length(oxyvars,1);
+oxyvars = oxyvars(cellfun(@(x) length(x)>3,oxyvars));
+nox = length(oxyvars);
 
 for plotlist = cklist
     
     switch plotlist
-        case 1
-            
-            % figure 1
-            % mplotxy first
-            figure(101); clf
-            clear pf1;
-            pf1.xlist = 'time';
-            pf1.ylist = ['press temp ' saltype ' oxy'];
-            first = find(dpsal{end}.scan > ddcs{end}.scan_start, 1 );
-            last = find(dpsal{end}.scan < ddcs{end}.scan_end, 1, 'last' );
-            pf1.startdc = first; % good data only
-            pf1.stopdc = last;
-            opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
-            if isfield(co,'oxy_align')
-                pf1.stopdcv.oxy = pf1.stopdc-co.oxy_align;
-            end
-            pf1.ncfile.name = infiles{3,end}; % psal file
-            
-            mplotxy(pf1);
-            
         case 2
             
             % figure 102
@@ -216,7 +211,7 @@ for plotlist = cklist
                 hold on
                 
                 subplot(223)
-                plot(d2db{ks}.press,d2db{ks}.(oxyvars{1,2}),'linewidth',lwid,'color',lcolors(iic,:));
+                plot(d2db{ks}.press,d2db{ks}.(oxyvars{1}),'linewidth',lwid,'color',lcolors(iic,:));
                 hold on
                 
                 subplot(224)
@@ -260,7 +255,7 @@ for plotlist = cklist
                 
                 subplot(223)
                 if nox>1
-                    plot(d2db{ks}.press,d2db{ks}.(oxyvars{2,2}),'linewidth',lwid,'color',lcolors(iic,:));
+                    plot(d2db{ks}.press,d2db{ks}.(oxyvars{2}),'linewidth',lwid,'color',lcolors(iic,:));
                     hold on
                 end
                 
@@ -315,10 +310,10 @@ for plotlist = cklist
                     kokdo = kokd;
                     kokuo = koku;
                 end
-                od = dpsal{ks}.(oxyvars{1,2});
-                plot(dpsal{ks}.press(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
+                od = dpsal{ks}.(oxyvars{1});
+                plot(dpsal{ks}.temp1(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
-                plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
+                plot(dpsal{ks}.temp1(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
                 subplot(224)
                 sd = dpsal{ks}.([saltype '1']);
@@ -374,10 +369,10 @@ for plotlist = cklist
                     kokuo = koku;
                 end
                 if nox>1
-                    od = dpsal{ks}.(oxyvars{2,2});
-                    plot(dpsal{ks}.press(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
+                    od = dpsal{ks}.(oxyvars{2});
+                    plot(dpsal{ks}.temp2(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
                     hold on
-                    plot(dpsal{ks}.press(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
+                    plot(dpsal{ks}.temp2(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 end
                 
                 subplot(224)
@@ -422,12 +417,12 @@ for plotlist = cklist
                 hold on
                 
                 subplot(223)
-                plot(d2db{ks}.(oxyvars{1,2}),d2db{ks}.potemp1,'color',lcolors(iic,:),'linewidth',lwid);
+                plot(d2db{ks}.(oxyvars{1}),d2db{ks}.potemp1,'color',lcolors(iic,:),'linewidth',lwid);
                 hold on
                 
                 if nox>1
                     subplot(224)
-                    plot(d2db{ks}.(oxyvars{2,2}),d2db{ks}.potemp2,'color',lcolors(iic,:),'linewidth',lwid);
+                    plot(d2db{ks}.(oxyvars{2}),d2db{ks}.potemp2,'color',lcolors(iic,:),'linewidth',lwid);
                     hold on
                 end
             end
@@ -474,10 +469,10 @@ for plotlist = cklist
             
             subplot(223)
             for ks = numused
-                plot(d2db{ks}.press,d2db{ks}.(oxyvars{1,2}),['k' '-'],'linewidth',lwid);
+                plot(d2db{ks}.press,d2db{ks}.(oxyvars{1}),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
                 if nox>1
-                    plot(d2db{ks}.press,d2db{ks}.(oxyvars{2,2}),['r' '-'],'linewidth',lwid);
+                    plot(d2db{ks}.press,d2db{ks}.(oxyvars{2}),['r' '-'],'linewidth',lwid);
                 end
             end
             title ('oxy')
@@ -545,12 +540,12 @@ for plotlist = cklist
                     kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
                     koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
                 end
-                od = dpsal{ks}.(oxyvars{1,2});
+                od = dpsal{ks}.(oxyvars{1});
                 plot(dpsal{ks}.press(kokd),od(kokd),['k' '-'],'linewidth',lwid);
                 hold on; grid on;
                 plot(dpsal{ks}.press(koku),od(koku),['k' '--'],'linewidth',lwid);
                 if nox>1
-                    od = dpsal{ks}.(oxyvars{2,2});
+                    od = dpsal{ks}.(oxyvars{2});
                     plot(dpsal{ks}.press(kokd),od(kokd),['r' '-'],'linewidth',lwid);
                     plot(dpsal{ks}.press(koku),od(koku),['r' '--'],'linewidth',lwid);
                 end
@@ -629,8 +624,8 @@ for plotlist = cklist
                 
                 subplot(325)
                 for ks = numused
-                    upintrp = interp1(d2up{ks}.press,d2up{ks}.(oxyvars{1,2}),d2db{ks}.press);
-                    plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{1,2}),['k' '-'],'linewidth',lwid);
+                    upintrp = interp1(d2up{ks}.press,d2up{ks}.(oxyvars{1}),d2db{ks}.press);
+                    plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{1}),['k' '-'],'linewidth',lwid);
                     hold on; grid on;
                 end
                 title ('oxy 1 up minus down diff');
@@ -638,8 +633,8 @@ for plotlist = cklist
                 subplot(326)
                 if nox>1
                     for ks = numused
-                        upintrp = interp1(d2up{ks}.press,d2up{ks}.(oxyvars{2,2}),d2db{ks}.press);
-                        plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{2,2}),['k' '-'],'linewidth',lwid);
+                        upintrp = interp1(d2up{ks}.press,d2up{ks}.(oxyvars{2}),d2db{ks}.press);
+                        plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{2}),['k' '-'],'linewidth',lwid);
                         hold on; grid on;
                     end
                     title ('oxy 2 up minus down diff');
@@ -698,13 +693,13 @@ for plotlist = cklist
                 if nox>1
                     subplot(325)
                     kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                    od1 = dpsal{ks}.(oxyvars{1,2}); od2 = dpsal{ks}.(oxyvars{2,2});
+                    od1 = dpsal{ks}.(oxyvars{1}); od2 = dpsal{ks}.(oxyvars{2});
                     plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),'color',lcolors(iic,:),'linewidth',lwid);
                     hold on
                     
                     subplot(326) %zoomed version of above
                     kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                    od1 = dpsal{ks}.(oxyvars{1,2}); od2 = dpsal{ks}.(oxyvars{2,2});
+                    od1 = dpsal{ks}.(oxyvars{1}); od2 = dpsal{ks}.(oxyvars{2});
                     plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),'color',lcolors(iic,:),'linewidth',lwid);
                     hold on; grid on;
                 end

@@ -14,6 +14,8 @@ function [d, comment] = apply_guiedits(d, xvar, edfilepat, varargin)
 %   apply values to {var}_flag instead of NaNing {var}  
 % 
 
+m_common
+
 tol = 0;
 flag = 0;
 if nargin>3
@@ -38,10 +40,14 @@ for fno = 1:length(edfiles)
     fid = fopen(fullfile(eddir,efname),'r');
     a = textscan(fid,'%s'); a = a{1};
     fclose(fid);
-    ii = find(strcmp(a,'ot_version')) + 3;
-    if isempty(ii)
-        ii = find(strncmp(a,'indepvar',14))+2;
-        if isempty(ii); ii = 1; end
+    if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)<2026
+        ii = find(strcmp(a,'ot_version')) + 3;
+        if isempty(ii)
+            ii = find(strncmp(a,'indepvar',14))+2;
+            if isempty(ii); ii = 1; end
+        end
+    else
+        ii = find(strcmp(a,'xvar'))+2;
     end
     if length(a)>ii
         for lno = ii:length(a)
