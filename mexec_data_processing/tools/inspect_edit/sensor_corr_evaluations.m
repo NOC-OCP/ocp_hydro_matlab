@@ -27,11 +27,8 @@ nstn = length(klist); nsns = length(sn_list); ncols = nstn*nsns;
 pg = [1:2:8000]';
 all2.potemp = nan(length(pg),ncols); 
 all2.psal = all2.potemp; all2.oxy = all2.potemp;
-all.lat = nan(1,ncols); all.lon = all.lat; all.stn = all.lat;
-all.place = all.lat; all.sn_temp = all.lat; all.sn_cond = all.lat; all.sn_oxy = all.oxy;
-all = struct2table(all); all2 = struct2table(all2);
 if strcmp(param,'oxy')
-    sr = [-24*5 24*5];
+    sr = [-24*5:24*5]; lr = length(sr);
     allr.cond = nan+zeros(length(sr),ncols);
     allr.oxy = nan+zeros(length(sr),ncols);
     pg10 = [5:10:8000]';
@@ -39,55 +36,76 @@ if strcmp(param,'oxy')
     all10.potemp = all10.oxyd;
     all10.timed = all10.oxyd; all10.timeu = all10.oxyd; 
     all10.pressd = all10.oxyd; all10.pressu = all10.oxyu;
-    allr = struct2table(allr); all10 = struct2table(all10);
 end
 nc = 1;
-for kloop = klist
-    infile = sprintf(pd.ctd2d,kloop);
+for stn = klist
+    opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+    infile = sprintf(pd.ctd2d,stn_string);
+    if ~exist(infile,'file')
+        continue
+    end
     [d2,h2] = mload(infile,'press oxy1 oxy2 potemp1 potemp2 psal1 psal2');
     if strcmp(param,'oxy')
-        infile = sprintf(pd.ctd10s,kloop);
+        infile = sprintf(pd.ctd10s,stn_string);
         [d10,h10] = mload(infile,'press oxy1 oxy2 potemp1 potemp2 time');
-        infile = sprintf(pd.ctdraw,kloop);
+        infile = sprintf(pd.ctdraw,stn_string);
         [dr,hr] = mload(infile,'scan cond1 cond2 oxy1 oxy2 pumps');
-        [~,ia,ib] = intersect(pg,d.press);
     end
     [~,ia,ib] = intersect(pg,d2.press,'stable');
     v = 'potemp';
-    all2.(v)(ia,nc:nc+1) = [d.([v '1'])(ib) d.([v '2'])(ib)];
-    m1 = strcmp(h.fldnam,[v '1']); m2 = strcmp(h.fldnam,[v '2']);
-    all.(['sn_' v])(nc:nc+1) = [h.fldserial(m1) h.fldserial(m2)];
+    all2.(v)(ia,nc:nc+1) = [d2.([v '1'])(ib) d2.([v '2'])(ib)];
+    m1 = strcmp(h2.fldnam, 'temp1'); m2 = strcmp(h2.fldnam, 'temp2');
+    all.('sn_potemp')(nc:nc+1) = [str2double(h2.fldserial{m1}) str2double(h2.fldserial{m2})];
     v = 'psal';
-    all2.(v)(ia,nc:nc+1) = [d.([v '1'])(ib) d.([v '2'])(ib)];
-    m1 = strcmp(h.fldnam,[v '1']); m2 = strcmp(h.fldnam,[v '2']);
-    all.(['sn_' v])(nc:nc+1) = [h.fldserial(m1) h.fldserial(m2)];
+    all2.(v)(ia,nc:nc+1) = [d2.([v '1'])(ib) d2.([v '2'])(ib)];
+    m1 = strcmp(h2.fldnam,'cond1'); m2 = strcmp(h2.fldnam,'cond2');
+    all.(['sn_' v])(nc:nc+1) = [str2double(h2.fldserial{m1}) str2double(h2.fldserial{m2})];
     v = 'oxy';
-    all2.(v)(ia,nc:nc+1) = [d.([v '1'])(ib) d.([v '2'])(ib)];
-    m1 = strcmp(h.fldnam,[v '1']); m2 = strcmp(h.fldnam,[v '2']);
-    all.(['sn_' v])(nc:nc+1) = [h.fldserial(m1) h.fldserial(m2)];
-    all.place(nc:nc+1) = [1 2]; all.stn(nc:nc+1) = kloop;
+    all2.(v)(ia,nc:nc+1) = [d2.([v '1'])(ib) d2.([v '2'])(ib)];
+    m1 = strcmp(h2.fldnam,[v '1']); m2 = strcmp(h2.fldnam,[v '2']);
+    all.(['sn_' v])(nc:nc+1) = [str2double(h2.fldserial{m1}) str2double(h2.fldserial{m2})];
+    all.place(nc:nc+1) = [1 2]; all.stn(nc:nc+1) = stnlocal;
     %all.lat(nc:nc+1) = h.latitude; all.lon(nc:nc+1) = h.longitude;
     if strcmp(param,'oxy')
-        ii = find(dr.pumps==1); ii = ii(end)+sr;
-        allr.cond(:,nc:nc+1) = [dr.cond1(ii) dr.cond2(ii)];
-        allr.oxy(:,nc:nc+1) = [dr.oxy1(ii) dr.oxy2(ii)];
+        ii0 = find(dr.pumps(1:end-1)==1 & dr.pumps(2:end)==0); 
+        ii = ii0(end)+sr; ii = ii(ii<length(dr.pumps));
+        if length(ii)<length(sr)/2
+            ii = ii0(end-1)+sr; ii = ii(ii<length(dr.pumps));
+        end
+        allr.cond(1:length(ii),nc:nc+1) = [dr.cond1(ii) dr.cond2(ii)];
+        allr.oxy(1:length(ii),nc:nc+1) = [dr.oxy1(ii) dr.oxy2(ii)];
         ii = find(d10.press==max(d10.press)); ii = ii(1);
         ptd = d10.potemp1(1:ii); ptu = d10.potemp1(ii:end);
         [ptd,iid] = sort(ptd,'descend'); iid = iid(~isnan(ptd)); ptd = ptd(~isnan(ptd));
-        [ptu,iid] = sort(ptu,'descend'); iiu = iiu(~isnan(ptu)); ptu = ptu(~isnan(ptu));
-        all10.oxyd(:,nc) = d10.oxy1(iid); all10.oxyu(:,nc) = interp1(ptu,all10.oxyu(iiu),ptd);
-        all10.timed(:,nc) = d10.time(iid); all10.timeu(:,nc) = interp1(ptu,all10.time(iiu),ptd);
-        all10.pressd(:,nc) = d10.press(iid); all10.pressu(:,nc) = interp1(ptu,all10.press(iiu),ptd);
+        [ptu,iiu] = sort(ptu,'descend'); iiu = iiu(~isnan(ptu)); ptu = ptu(~isnan(ptu));
+        nd = length(iid);
+        all10.oxyd(1:nd,nc) = d10.oxy1(iid); all10.oxyu(1:nd,nc) = interp1(ptu,d10.oxy1(iiu),ptd);
+        all10.timed(1:nd,nc) = d10.time(iid); all10.timeu(1:nd,nc) = interp1(ptu,d10.time(iiu),ptd);
+        all10.pressd(1:nd,nc) = d10.press(iid); all10.pressu(1:nd,nc) = interp1(ptu,d10.press(iiu),ptd);
         ptd = d10.potemp2(1:ii); ptu = d10.potemp2(ii:end);
         [ptd,iid] = sort(ptd,'descend'); iid = iid(~isnan(ptd)); ptd = ptd(~isnan(ptd));
-        [ptu,iid] = sort(ptu,'descend'); iiu = iiu(~isnan(ptu)); ptu = ptu(~isnan(ptu));
-        all10.oxyd(:,nc+1) = d10.oxy1(iid); all10.oxyu(:,nc+1) = interp1(ptu,all10.oxyu(iiu),ptd);
-        all10.timed(:,nc+1) = d10.time(iid); all10.timeu(:,nc+1) = interp1(ptu,all10.time(iiu),ptd);
-        all10.pressd(:,nc+1) = d10.press(iid); all10.pressu(:,nc+1) = interp1(ptu,all10.press(iiu),ptd);
+        [ptu,iiu] = sort(ptu,'descend'); iiu = iiu(~isnan(ptu)); ptu = ptu(~isnan(ptu));
+        nd = length(iid);
+        all10.oxyd(1:nd,nc+1) = d10.oxy1(iid); all10.oxyu(1:nd,nc+1) = interp1(ptu,d10.oxy2(iiu),ptd);
+        all10.timed(1:nd,nc+1) = d10.time(iid); all10.timeu(1:nd,nc+1) = interp1(ptu,d10.time(iiu),ptd);
+        all10.pressd(1:nd,nc+1) = d10.press(iid); all10.pressu(1:nd,nc+1) = interp1(ptu,d10.press(iiu),ptd);
     end
     nc = nc+2;
 end
+all = struct2table(all);
+all2 = struct2table(all2);
+all2 = varfun(@(x) x(:,1:nc-1), all2);
+all2.Properties.VariableNames = cellfun(@(x) replace(x,'Fun_',''),all2.Properties.VariableNames,'UniformOutput',false);
+if strcmp(param,'oxy')
+    allr = struct2table(allr);
+    all10 = struct2table(all10);
+    allr = varfun(@(x) x(1:nc-1),allr);
+    all10 = varfun(@(x) x(1:nc-1),all10);
+    allr.Properties.VariableNames = cellfun(@(x) replace(x,'Fun_',''),allr.Properties.VariableNames,'UniformOutput',false);
+    all10.Properties.VariableNames = cellfun(@(x) replace(x,'Fun_',''),all10.Properties.VariableNames,'UniformOutput',false);
+end
 
+keyboard
 iip = find(~isnan(dref.potemp) | ~isnan(dcomp.potemp));
 dref.potemp(:,nref+1:end) = []; dref.psal(:,nref+1:end) = []; dref.oxy(:,nref+1:end) = [];
 dcomp.potemp(:,ncomp+1:end) = []; dcomp.psal(:,ncomp+1:end) = []; dcomp.oxy(:,ncomp+1:end) = [];

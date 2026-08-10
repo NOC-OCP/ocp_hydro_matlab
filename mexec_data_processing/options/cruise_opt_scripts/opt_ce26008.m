@@ -29,7 +29,7 @@ switch opt1
                 h.comment = replace(h.comment,'PSO: Caroline Cusack','PSO: Yvonne Firing');
                 m_write_header(otfiles{1},h);
             case 'rawedit_auto'
-                %use rangelim first to exclude very large spikes
+                %use rangelim first to exclude very large %skspikes
                 co.rangelim.press = [-1.25 3300];
                 co.rangelim.cond1 = [3 5];
                 if stnlocal>45
@@ -54,17 +54,22 @@ switch opt1
                 %despiker
                 co.despike.press = [2 12; 2 12]; %avg 1m/s so 2 dbar/0.5 s is large
                 co.despike.temp1 = [0.5 12; 0.5 12];
-                co.despike.cond1 = [0.02 12; 0.02 12]; 
+                co.despike.cond1 = [0.02 12; 0.02 12];
                 co.despike.oxy1 = [3 12; 3 12];
                 co.despike.temp2 = co.despike.temp1;
                 co.despike.cond2 = co.despike.cond1;
                 co.despike.oxy2 = co.despike.oxy1;
+                % if ismember(stnlocal,[24 34 40 41 43 68 68])
+                %      co.despike.oxy1 = [10,24*20];
+                % end
                 %mask some bad scan ranges
                 % if stnlocal==39
                 %     co.badscan.oxy1 = [4.92 17.602]*1e4; 
                 % end
                 %if ismember(stnlocal,[17:22 24:32 34:43 45:47 51:53 55:59 63:])
-                %co.badscan.oxy1 = [-inf inf]; %so many spikes it's not worth cleaning
+                if ismember(stnlocal,[22:26 27:32 34:38 40:41 43 63 66 68:70])
+                    co.badscan.oxy1 = [-inf inf]; %so many spikes it's not worth cleaning
+                end
                 %then mask all on CTD whenever P is bad
                 co.badpress.temp1 = [NaN NaN];
                 co.badpress.temp2 = [NaN NaN];
@@ -81,7 +86,7 @@ switch opt1
             case 'raw_corrs'
                 co.oxy_align = 0; %0 until we check oxygen hysteresis
             case 'rawshow'
-                repars.g1 = setdiff(repars.g1,{'oxy1'}); %at first, don't show oxy on the spike editing plot
+                %repars.g1 = setdiff(repars.g1,{'oxy1'}); %at first, don't show oxy on the spike editing plot
                 repars = rmfield(repars,'g2'); %don't edit fluo etc.
                 yl.temp = [0 18]; yl.cond = [3 5]; yl.oxy = [120 300];
                 yl.press = [-1 3200];

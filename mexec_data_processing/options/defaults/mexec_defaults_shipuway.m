@@ -45,6 +45,10 @@ switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
         MEXEC_G.PLATFORM_IDENTIFIER = '';
 end
 
+if ~exist('opt2','var')
+    return
+end
+
 if strcmp(MEXEC_G.datatypes.uway,'rvdas')
     switch opt2
         case 'ship_data_sys_names'
