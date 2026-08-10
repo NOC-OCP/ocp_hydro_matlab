@@ -86,7 +86,7 @@ for vgno = 1:length(gs)
                 ytl = {}; yt = {}; 
                 for ano = 1:length(yv)
                     v = yv{ano};
-                    m = ismember(vn,v);
+                    m = ismember(vn,v) & sum(~isnan(data{:,:}));
                     if sum(sum(~isnan(data{iis,m})))
                         ha(ano) = axes('Box','off');
                         l = yl.(v{1}); 

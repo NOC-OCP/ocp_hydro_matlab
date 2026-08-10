@@ -82,16 +82,16 @@ for gno = 1:ng
             end
             plot(repmat([ddcs.scan_start ddcs.scan_bot scan_end],2,1),yl.(p),'--','color',[.5 .5 .5]); hold on
             for sno = 1:length(v)
-                if ~endsWith(v{sno},'_flag')
+                if ~endsWith(v{sno},'_flag') && sum(~isnan(d.(v{sno})))
                     plot(d.scan, d.(v{sno}), d1.scan, d1.(v{sno}), ':');
                     m = d.scan>=ddcs.scan_start & d.scan<=ddcs.scan_end;
-                    if max(d.(v{sno}))>yl.(p)(2) || min(d.(v{sno}))<yl.(p)(1)
+                    if max(d.(v{sno})(m))>yl.(p)(2) || min(d.(v{sno})(m))<yl.(p)(1)
                         warn = 1;
                     end
                     ylabel([p ' (' h.fldunt{strcmp(h.fldnam,v{sno})} ')']);
                 end
             end
-            xlim(d.scan([1 end])); ylim(yl.(p)); 
+            xlim(d.scan([1 end])); ylim(yl.(p)); pause(0.1)
         end
     end
     if gno==1; ax_save = ax; end
