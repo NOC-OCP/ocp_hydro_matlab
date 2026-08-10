@@ -108,7 +108,7 @@ end
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];
-opt1 = 'ship'; mexec_defaults_all
+opt1 = 'ship'; mexec_defaults_shipuway
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed

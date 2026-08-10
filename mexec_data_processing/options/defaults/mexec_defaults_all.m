@@ -42,46 +42,8 @@ switch opt1
                     docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
                 end
     
-    case 'ship'
-        %parameters related to ship: underway data system, vmadcp system
-        switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
-            case {'di' 'dy'}
-                MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
-                MEXEC_G.Mshipdatasystem = 'rvdas';
-                MEXEC_G.datatype.sadcp = 'uhdas';
-                % MEXEC_G.Mshipdatasystem = 'techsas';
-            case 'jc'
-                MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
-                MEXEC_G.Mshipdatasystem = 'rvdas';
-                MEXEC_G.datatype.sadcp = 'uhdas';
-                %MEXEC_G.Mshipdatasystem = 'techsas';
-            case 'sd'
-                MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
-                MEXEC_G.Mshipdatasystem = 'rvdas';
-                MEXEC_G.datatype.sadcp = 'uhdas';
-            case 'jr'
-                MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
-                MEXEC_G.Mshipdatasystem = 'scs_ascii';
-            case 'kn'
-                MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
-                MEXEC_G.Mshipdatasystem = 'scs'; %***update to scs_nc?
-                MEXEC_G.datatype.sadcp = 'uhdas';
-            case 'en'
-                MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
-                MEXEC_G.Mshipdatasystem = 'scs_nc';
-                MEXEC_G.datatype.sadcp = 'uhdas';
-            case 'ce'
-                MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
-                MEXEC_G.Mshipdatasystem = 'scs_ascii';
-                MEXEC_G.datatype.sadcp = 'uhdas';
-            otherwise
-                merr = ['Ship ''' MEXEC_G.MSCRIPT_CRUISE_STRING(1:2) ''' not recognised, underway system will not be set up'];
-                %fprintf(2,'%s\n',merr);
-                %return
-                warning(merr)
-                MEXEC_G.Mship = '';
-                MEXEC_G.PLATFORM_IDENTIFIER = '';
-        end
+    case 'shipuway'
+        mexec_defaults_shipuway
 
     case 'ctd_proc'
         if strcmp(MEXEC_G.datatypes.ctd,'sbe')
@@ -163,8 +125,42 @@ switch opt1
         end
     
     case 'uway_proc'
-            mexec_defaults_uway %rawedit_auto, raw_corrs; things that are system dependent
         switch opt2
+                    case 'scs_skip'
+            skip = {'USBL'};
+        case 'scs_nmea_form'
+            colsi = {}; colsf = {};
+            untsi = {}; untsf = {};
+            colsi = {'date','time'};
+            untsi = {'mm/dd/yyyy','HH:MM:SS.SSS'};
+        case 'scs_nmea_custom'
+            inform = '';
+        case 'uway_ascii_parse'
+            if exist('inform','var') && ~isempty(inform)
+                t = ua_times_parse(t, MEXEC_G.data_time_origin_string, 'inform', inform);
+            else
+                t = ua_times_parse(t, MEXEC_G.data_time_origin_string);
+            end
+            if sum(strcmp(t.Properties.VariableNames','msg')) && strcmp(t.msg(1),'PSXN')
+                t = t(t.linetype==23,:);
+            end
+            m = strcmp(t.Properties.VariableNames,'nslatitude');
+            if sum(m)
+                t.lat = t.nslatitude/100;
+                t.lat(strcmp(t.ns,'S')) = -t.lat(strcmp(t.ns,'S'));
+                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'lat')} = 'degrees N';
+            end
+            m = strcmp(t.Properties.VariableNames,'ewlongitude');
+            if sum(m)
+                t.lon = t.ewlongitude/100;
+                t.lon(strcmp(t.ew,'W')) = -t.lon(strcmp(t.ew,'W'));
+                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'lon')} = 'degrees E';
+            end
+            m = strcmp(t.Properties.VariableNames,'psxn_heave');
+            if sum(m)
+                t.heave = cellfun(@(x) str2double(x(1:end-3)), t.psxn_heave);
+                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'heave')} = 'm';
+            end
             case 'tstep_save'
                 %subsample high-frequency streams and match up different
                 %messages from the same system by rounding timestamp
@@ -195,7 +191,7 @@ switch opt1
                     case 'ocean'
                         handedit = 1;
                         %ucsw system things should be NaNed when pump speed out of range, including remote temp (inside inlet)
-                        fvars = {'temph','temp_remote','fluo','trans','cond','salinity','soundvelocity'};
+                        fvars = {'temph','temp_remote','temp_tsg','temp_in','fluo','fluor','transmissivity','trans','cond','salinity','psal'};
                         for no = 1:length(fvars)
                             uopts.badflow.(fvars{no}) = [-inf 0.6; 2.5 inf];
                         end
@@ -204,7 +200,13 @@ switch opt1
                         %conductivity and salinity depend on housing temp
                         uopts.badtemph.cond = [NaN NaN];
                         uopts.badtemph.salinity = [NaN NaN];
-                        yl.trans = [-95; 0.1];
+                        yl.trans = [-95; 0.1]; %***
+                        yl.cond = [20 40]; yl.psal = [33 38]; yl.salinity = yl.psal;
+                        yl.fluor = [0 12]; yl.fluo = yl.fluor;
+                        yl.turbidity = [0 1]; 
+                        yl.transmittance = [60 101]; 
+                        yl.temph = [-2 30]; yl.temp_remote = yl.temph;
+                        yl.temp_in = yl.temph; yl.temp_tsg = yl.temph;
                     case 'atmos'
                         handedit = 1;
                         wvars = {'truwind_e','truwind_n','truwind_dir'};

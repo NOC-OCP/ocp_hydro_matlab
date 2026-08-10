@@ -4,7 +4,7 @@ function nmeas = nmea_sentences
 % (where possible) corresponding to columns produced by readtable with , as
 % delimiter
 
-nmeas.CR6 = {'msg',  'latitude', 'longitude',   'airtemp', 'airpress',      'sst', 'humidity',                    'winddir', 'windspdrounded', 'truewindspeed','junk1', 'shipheading',             'junk2',  'junk3', 'timestamp';
+nmeas.CR6 = {'msg',  'lat', 'lon',   'airtemp', 'airpress',      'sst', 'humidity',                    'winddir', 'windspdrounded', 'truewindspeed','junk1', 'shipheading',             'junk2',  'junk3', 'timestamp';
               ' ', 'degrees N', 'degrees E', 'degrees C',       'Pa', 'degrees C',   'unknown', 'degrees relative to true N',     'm/s',        'm/s',       'unknown', 'degrees relative to N', 'unknown', 'unknown',         ' '};
 
 nmeas.DBS = {'msg', 'depthft', 'feet', 'depth_below_surface', 'metres', 'depthfa', 'fathomschecksum';
@@ -22,7 +22,7 @@ nmeas.HDG = {'msg',             'head',        'deviation', 'devdir (E/W)',     
 nmeas.HDT = {'msg', 'head_true', 'checksum'; %THS replaces this?
               ' ',       'true',        ' '};
 
-nmeas.GGA = {'msg', 'timeUTC', 'nslatitude', 'ns', 'ewlongitude', 'ew', 'ggaqual',   'sats',   'hdop', 'alt', 'altval', 'geosep', 'geoval', 'dgpsage', 'dgpsref_checksum';
+nmeas.GGA = {'msg', 'utctime', 'nslatitude', 'ns', 'ewlongitude', 'ew', 'ggaqual',   'sats',   'hdop', 'altitude', 'altval', 'geosep', 'geoval', 'dgpsage', 'dgpsref_checksum';
                ' ',       ' ',   'cdegrees', 'ns',    'cdegrees', 'ew',  'number', 'number', 'number',   ' ',      ' ',      ' ',      ' ',       ' ',                ' '};
 
 nmeas.GLL = {'msg',   'nslatitude', 'ns',   'ewlongitude', 'ew',       'timeUTC', 'status (A valid V not valid)', 'checksum';

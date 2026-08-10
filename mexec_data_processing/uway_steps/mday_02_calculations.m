@@ -72,10 +72,12 @@ if strcmp(stage,'pre')
     if ~isempty(headvar)
         %calculate dummy easting and northing in order to vector average
         [d.dum_e, d.dum_n] = uvsd(ones(size(d.(headvar))), d.(headvar), 'sduv');
-        if ~sum(strcmp('dum_e',d.Properties.VariableNames))
-            d.Properties.VariableUnits(end-1:end) = {'easting', 'northing'};
-            d.Properties.CustomProperties.VariableSerials(end-1:end) = d.Properties.CustomProperties.VariableSerials(strcmp(headvar,d.Properties.VariableNames));
-        end
+        m = strcmp(d.Properties.VariableNames,'dum_e');
+        d.Properties.VariableUnits(m) = {'easting'};
+        d.Properties.CustomProperties.VariableSerials(m) = d.Properties.CustomProperties.VariableSerials(strcmp(headvar,d.Properties.VariableNames));
+        m = strcmp(d.Properties.VariableNames,'dum_n');
+        d.Properties.VariableUnits(strcmp(d.Properties.VariableNames,'dum_n')) = {'northing'};
+        d.Properties.CustomProperties.VariableSerials(m) = d.Properties.CustomProperties.VariableSerials(strcmp(headvar,d.Properties.VariableNames));
         comment = 'easting and northing calculated from heading at 1 hz';
         if ~contains(h.comment, comment)
             h.comment = [h.comment '\n ' comment];

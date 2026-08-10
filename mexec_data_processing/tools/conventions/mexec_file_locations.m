@@ -106,6 +106,8 @@ switch step
                 pd.buocean = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['surface_ocean_' mcruise '_all.nc']);
                 pd.bumet = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['atmos_truwind_' mcruise '_all.nc']);
                 pd.bubathy = fullfile(MEXEC_G.MDIRLIST.M_BATHY,['bathy_' mcruise '_all.nc']);
+            case 'sumout'
+                pd.collected = fullfile(MEXEC_G.mexec_data_root,'collected_files');
         end
 
         switch type

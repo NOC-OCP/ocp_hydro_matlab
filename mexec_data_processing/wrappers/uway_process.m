@@ -2,7 +2,9 @@ function uway_process(dates, varargin)
 %
 % wrapper to load and process underway data
 %
-% uway_daily_proc(dates) 
+% uway_daily_proc(dates)
+%   runs through loading, automatic editing of raw data, and averaging,
+%   merging, and editing of combined data, either for all available 
 %    dates can be either an Nx1 vector of decimal days
 %   (dates since the start of the year in MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)
 %   or a Nx6 vector of [yyyy mm dd HH MM SS]
@@ -34,7 +36,7 @@ end
 reload_uway = 1; %load raw data, set to 0 to skip ahead to editing/averaging/merging stage
 reload_av = 1; %set to 0 to just redo edits not averages
 %optional inputs
-if nargin>1
+if nargin>2
     for no = 2:2:length(varargin)
         eval([varargin{no} ' = varargin{no+1};']);
     end
@@ -50,7 +52,10 @@ elseif exist('uway_excludes','var')
     [~,iie,~] = intersect(mtable.mstardir, uway_excludes);
     mtable(iie,:) = [];
 end
-
+if nargin>1 && ~isempty(varargin{1})
+    %only run reload_uway steps for one type, and don't run 
+    mtable = mtable(ismember(mtable.mstarpre,varargin{1}),:);
+end
 
 %%%%% loop through processing steps for list of ddays %%%%%
 
@@ -59,20 +64,17 @@ if reload_uway
     ns = length(mtable.mstardir);
     ls = nan+zeros(ns,length(ddays));
     for sno = 1:ns
-        if isfield(mtable,'tablenames')
             p = mtable.tablenames{sno};
-        else
-            p = mtable.mstarpre{sno};
-        end
-        if isfield(mtable,'tablenames')
-            for yday = ddays
-                ls(sno,yday-ddays(1)+1) = mday_00_load(p, yday, mtable);
-                 disp(['loaded day ' num2str(yday)]); pause(0.1)
-            end
-        else %scs_ascii
+        if strcmp(MEXEC_G.Mshipdatasystem,'scs_ascii')
             ls(sno,1) = mday_00_load(p, [], mtable);
+        else
+            for day = ddays
+                ls(sno,day-ddays(1)+1) = mday_00_load(p, day, mtable);
+                 disp(['loaded day ' num2str(day)]); pause(0.1)
+            end
         end
     end
+    ls(isnan(ls)) = 1;
     ms = logical(sum(ls,2)');
     if sum(ms)>0
         disp('some missing from: ')
@@ -100,11 +102,11 @@ if reload_uway %something new to take through preliminary edits stage
     end
 end
 
-return %first examine all the edited data before merging/deciding what to do?***
+% return %first examine all the edited data before merging/deciding what to do?***
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
 ctypes = {'nav','bathy','ocean','atmos'}; %important to do nav first
-ctypes = ctypes(4); %did ocean, need to redo nav for wind; bathy is a problem, save for later
+%ctypes = ctypes(2); %did ocean, need to redo nav for wind; bathy is a problem, save for later
 for cno = 1:length(ctypes)
     mday_02_merge_av(ctypes{cno}, ddays, mtable, reload_av);
     fprintf(1,'merged %s files\n',ctypes{cno})

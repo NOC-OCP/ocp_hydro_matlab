@@ -206,11 +206,7 @@ depvars = union(union(depbtvar,depsfvar),depvar);
 
 %find positions to use for carter correction
 opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
-if isfield(mtable,'tablenames')
-    ii = find(strcmp(default_navstream,mtable.tablenames));
-else
-    ii = find(strcmp(default_navstream,mtable.mstarpre));
-end
+ii = find(strcmp(default_navstream,mtable.tablenames));
 ii = ii(1);
 navfile = fullfile(MEXEC_G.mexec_data_root, mtable.mstardir{ii}, [mtable.mstarpre{ii} '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list
 if exist(navfile,'file')

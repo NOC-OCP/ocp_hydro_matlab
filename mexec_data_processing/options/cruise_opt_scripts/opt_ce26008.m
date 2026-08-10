@@ -288,9 +288,20 @@ switch opt1
                 % uway_extra.SeapathLongitude = cellfun(@(x) -str2double(x(1:end-1)),uway_extra.SeapathLongitude);
                 % save(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,'..','uway_scs_10s'),'uway_extra')
             case 'rawedit'
+                uopts.rangelim.lat = [50 70];
                 %define badtimes and tsgpumpvars
                 %set handedit
-     
+            case 'merge_av'
+                switch datatype
+                    case 'nav'
+                        streams = [streams; 'seapath']; %load all
+                        required = [1 1 1 1];
+                end
+            case 'avedit'
+                switch datatype
+                    case 'bathy'
+                        vars_to_ed = {'depth_sbm','depth_mbm'};
+                end
         end
 
     case 'outputs'

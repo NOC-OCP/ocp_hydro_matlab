@@ -23,7 +23,7 @@ if nargin>3
     end
 end
 
-edfiles = dir([edfilepat '*']);
+edfiles = dir([edfilepat]);
 if isempty(edfiles)
     comment = '';
     return

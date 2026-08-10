@@ -14,13 +14,13 @@ m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 ddays = ydays-1;
 
-ngvars = {'utctime'}; %never grid this
+ngvars = {'utctime','timeUTC','time','dday'}; %never grid this
 gvars = {}; %by default grid all other variables
 
 %define input and output files
 switch datatype
     case 'nav'
-        opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+        opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
         source = {'position'; 'heading'; 'attitude'};
         streams = {default_navstream; default_hedstream; default_attstream};
         required = [1 1 0];
@@ -28,10 +28,11 @@ switch datatype
         tavp_s = 30; %30 s
         gmethod = 'meannum';
         ngvars = [ngvars 'altitude' 'headingtrue' 'coursetrue'];
-        ngvars = [ngvars 'speedknots' 'speedkmph' 'rollaccuracy' 'pitchaccuracy' 'headingaccuracy'];
+        ngvars = [ngvars 'speedknots' 'speedkmph' 'rollaccuracy' 'pitchaccuracy' 'headingaccuracy' 'ggaqual'];
     case 'bathy'
         source = {'sbm'; 'mbm'};
-        streams = {'ea640_sddpt'; 'em122_kidpt'};
+        %streams = {'ea640_sddpt'; 'em122_kidpt'};
+        streams = {'es18', 'es38'};
         required = [0 0];
         otfile = ['bathy_' mcruise '.nc'];
         tavp_s = 5*60; % 5 min
@@ -52,7 +53,8 @@ switch datatype
         tavp_s = 30; % 30 s
         gmethod = 'meannum';
 end
-otfile = fullfile(mgetdir('sum'),otfile);
+pd = mexec_file_locations('procfiles','sumout');
+otfile = fullfile(pd.collected,otfile);
 opt1 = 'uway_proc'; opt2 = 'merge_av'; get_cropt
 
 %***check for multiple streams from same inst? not important at this
@@ -60,12 +62,8 @@ opt1 = 'uway_proc'; opt2 = 'merge_av'; get_cropt
 if isstruct(mtable) || istable(mtable)
     filepre = cell(size(streams)); filepre_old = filepre;
     for fno = 1:length(streams)
-        m = strcmp(streams{fno},mtable.tablenames);
-        filepre{fno} = fullfile(mgetdir(mtable.mstarpre{m}), mtable.mstarpre{m});
-        d = dir([filepre{fno} '*.nc']);
-        if isempty(d)
-            filepre{fno} = fullfile(MEXEC_G.mexec_data_root,mtable.mstardir{m},mtable.paramtype{m},mtable.mstarpre{m});
-        end
+        ii = find(strcmp(streams{fno},mtable.tablenames),1);
+        filepre{fno} = fullfile(MEXEC_G.MDIRLIST.(['M_' upper(mtable.mstarpre{ii})]), mtable.mstarpre{ii});
     end
 elseif iscell(mtable)
     filepre = mtable;
@@ -160,11 +158,7 @@ if ~isempty(uopts)
 end
 if handedit
     %manual selection of (additional) points to edit
-    if exist('vars_offset_scale','var')
-        [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed, vars_offset_scale);
-    else
-        [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed);
-    end
+    [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed, yl);
 end
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad) again to

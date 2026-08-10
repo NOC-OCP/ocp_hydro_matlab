@@ -1,18 +1,18 @@
  
 
-mstarpre, mstardir, paramtype, nmeas_msg, scsfilepat, mstarvars
-seapath,nav,pos,GGA,Seapath-GGA*.Raw,"timeUTC,latitude,longitude,ggaqual"
-simrad,nav,pos,GGA,Simrad-GGA*.Raw,"timeUTC,latitude,longitude,ggaqual"
-simrad,nav,shipmotion,VTG,Simrad-VTG*.Raw,"tmg,speedkg,sog"
-mru,nav,att,PSXN,MRU*.Raw,"roll,pitch,heading,heave"
-gyro,nav,head,HDT,Gyro-HDT*.Raw,"head_true"
-gyro,nav,shipmotion,ROT,Gyro-ROT*.Raw,"rate_of_turn"
-es18,bathy,sbm,,*ES18*.XYZ,"latitude,longitude,depth"
-es38,bathy,sbm,,*ES38*.XYZ,"latitude,longitude,depth"
-em2040,bathy,mbm,,*EM2040*.XYZ,"latitude,longitude,depth"
-em340,bathy,mbm,,*EM340*.XYZ,"latitude,longitude,depth"
-fluor,ocean,tsg,,Fluorometer*.Raw,"fluor"
-sbe21,ocean,tsg,,SBE21*.Raw,"psal,temp_tsg,cond,temp_in"
-smartguard,ocean,tsg,PAAI,SooGuard*.Raw,"a1,a10,a11,a12,a2,a3,a4,a5,a6,a7,a8,a9"
-windtrue,met,wind,WIMWD,Gill-WindDir*.Raw,"winddir,windspd"
-met,met,met,CR6,CR6*.Raw,"airpress,airtemp,humidity,latitude,longitude,m0,m1,m2,m3,m4,m5,winddir,windspd"
+mstarpre, mstardir, paramtype, nmeas_msg, scsfilepat, mstarvars, tablenames
+seapath,nav,pos,GGA,Seapath-GGA*.Raw,"utctime,lat,lon,ggaqual",seapath
+simrad,nav,pos,GGA,Simrad-GGA*.Raw,"utctime,lat,lon,ggaqual",simrad
+simrad,nav,shipmotion,VTG,Simrad-VTG*.Raw,"tmg,speedkg,sog",simrad
+mru,nav,att,PSXN,MRU*.Raw,"roll,pitch,heading,heave",mru
+gyro,nav,head,HDT,Gyro-HDT*.Raw,"head_true",gyro
+gyro,nav,shipmotion,ROT,Gyro-ROT*.Raw,"rate_of_turn",gyro
+es18,bathy,sbm,,*ES18*.XYZ,"lat,lon,depth",es18
+es38,bathy,sbm,,*ES38*.XYZ,"lat,lon,depth",es38
+em2040,bathy,mbm,,*EM2040*.XYZ,"lat,lon,depth",em2040
+em340,bathy,mbm,,*EM340*.XYZ,"lat,lon,depth",em340
+fluor,ocean,tsg,,Fluorometer*.Raw,"fluor",fluor
+sbe21,ocean,tsg,,SBE21*.Raw,"psal,temp_tsg,cond,temp_in",sbe21
+smartguard,ocean,tsg,PAAI,SooGuard*.Raw,"a12,cond,dens,oxy,psal,sspd,sys_press,temp1,temp2,temp3,temp4,turbidity",smartguard
+windtrue,met,wind,WIMWD,Gill-WindDir*.Raw,"winddir,windspd",windtrue
+met,met,met,CR6,CR6*.Raw,"airpress,airtemp,humidity,junk1,junk2,junk3,lat,lon,shipheading,sst,truewindspeed,winddir,windspdrounded",met
