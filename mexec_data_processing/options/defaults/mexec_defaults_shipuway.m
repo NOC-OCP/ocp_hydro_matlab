@@ -1,7 +1,7 @@
 % sets parameters specific to a given underway data system (ydayrvdas, scs, or techsas)
 % called from mexec_defaults_all in case opt1 = 'uway_proc', 
 
-if strcmp(opt1,'ship')
+if ~strcmp(opt1,'ship')
     error('this file should only be called to get options for ship underway data')
 end
 
