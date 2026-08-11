@@ -24,11 +24,11 @@ nmeas = nmea_sentences;
 %get special patterns (no $MSG in the file) as well as info on e.g. datimestamp columns
 opt1 = 'uway_proc'; opt2 = 'scs_nmea_form'; get_cropt 
 
-for tno = 1:length(mutv.scsfilepat)
+for tno = 8:9%1:length(mutv.scsfilepat)
 
     %will we subsample times before saving? e.g. gyro to 1 hz
     opt1 = 'uway_proc'; opt2 = 'tstep_save'; get_cropt
-    clear inform
+    numhead = 0;
 
     files = dir(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,mutv.scsfilepat{tno}));
     files = {files(cellfun(@(x) x>153,{files.bytes})).name};
@@ -49,7 +49,14 @@ for tno = 1:length(mutv.scsfilepat)
             vn = {'nslatitude','ns','ewlongitude','ew','depth',    'date',     'time', 'j1'};
             vu = {   'degrees','ns',    'degrees','ew',    'm','yyyymmdd','HHMMSS.SS',  ' '};
             inform = 'ddMMyyyy HHmmss ';
-    
+
+        elseif strcmp(ext,'.csv') && strcmp(mutv.paramtype(tno),'mbm')
+            vn = {'lat', 'lon', 'depth', 'flag'};
+            vu = {'degrees N', 'degrees E', 'm', ' '};
+            delim = ',';
+            numhead = 1;
+            inform = 'none';
+
         elseif strcmp(ext,'.ACO')
             h = readtable(fullfile(p,[f '.TPL']),',');
             vn = {'year', 'dday', 'j1', 'j2', h(:,2)'}; %***is it dday or yday?
@@ -63,19 +70,33 @@ for tno = 1:length(mutv.scsfilepat)
                 delim = ',';
             else
                 %custom message string; set delimiter and names in cruise options
-                opt1 = 'uway_proc'; opt2 = 'scs_nmea_custom'; get_cropt                
+                opt1 = 'uway_proc'; opt2 = 'scs_nmea_custom'; get_cropt
             end
         end
 
         %load the file, and add names/units to columns
         if isempty(delim)
             t = readtable(fin,'FileType','fixedwidth');
+        elseif numhead>0
+            fid = fopen(fin,'r'); h = fgetl(fid); fclose(fid);
+            if contains(h,'start_time')
+                h = strsplit(h,','); h = [replace(h{4},'start_date=','') replace(h{5},'start_time=','')];
+            else
+                [~,h,~] = fileparts(fin); h = h([6:13 15:20]);
+            end
+            if ~exist('default_navstream','var')
+                opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+                ii = find(strcmp(mutv.mstarpre,default_navstream)); ii = ii(1);
+                [dn,~] = mload(fullfile(MEXEC_G.mexec_data_root,mutv.mstardir{ii},[mutv.mstarpre{ii} '_' mcruise '_all_raw.nc']),'/');
+                t0 = (datenum(h,'yyyymmddHHMMSS')-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1))*3600*24;
+            end
+            t = readtable(fin,'FileType','delimitedtext','Delimiter',delim,'NumHeaderLines',numhead);
+            t.time = map_ll_to_time(t.lon, t.lat, dn.lon, dn.lat, dn.time, t0);
         else
             t = readtable(fin,'FileType','delimitedtext','Delimiter',delim);
         end
-        t = t(:,1:length(vn));
-        t.Properties.VariableNames = vn;
-        t.Properties.VariableUnits = vu;
+        t.Properties.VariableNames(1:length(vn)) = vn;
+        t.Properties.VariableUnits(1:length(vn)) = vu;
 
         %set up nuo to convert variables
         opt1 = 'uway_proc'; opt2 = 'uway_ascii_parse'; get_cropt
@@ -88,8 +109,10 @@ for tno = 1:length(mutv.scsfilepat)
         %keep only variables listed in mutv
         m = ismember(t.Properties.VariableNames,mutv.mstarvars{tno}) | ismember(t.Properties.VariableNames,{'dday','time'});
         t = t(:,m);
-        
-        %if set in opt_cruise, subsample/remove duplicate times 
+        %discard bad times
+        m = t.dday>-1e4; t = t(m,:);
+
+        %if set in opt_cruise, subsample/remove duplicate times
         t = times_subsample(t, 'time', stepfreq_force, tstep_resol);        
 
         %save, possibly appending (merging on time)

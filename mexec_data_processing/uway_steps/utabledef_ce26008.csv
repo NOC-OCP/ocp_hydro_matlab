@@ -1,18 +1,17 @@
  
 
 mstarpre, mstardir, paramtype, nmeas_msg, scsfilepat, mstarvars, tablenames
-seapath,nav,pos,GGA,Seapath-GGA*.Raw,"utctime,lat,lon,ggaqual",seapath
-simrad,nav,pos,GGA,Simrad-GGA*.Raw,"utctime,lat,lon,ggaqual",simrad
+seapath,nav,pos,GGA,Seapath-GGA*.Raw,"utctime,lat,lon,ggaqual,altitude",seapath
+simrad,nav,pos,GGA,Simrad-GGA*.Raw,"utctime,lat,lon,ggaqual,altitude",simrad
 simrad,nav,shipmotion,VTG,Simrad-VTG*.Raw,"tmg,speedkg,sog",simrad
-mru,nav,att,PSXN,MRU*.Raw,"roll,pitch,heading,heave",mru
 gyro,nav,head,HDT,Gyro-HDT*.Raw,"head_true",gyro
 gyro,nav,shipmotion,ROT,Gyro-ROT*.Raw,"rate_of_turn",gyro
-es18,bathy,sbm,,*ES18*.XYZ,"lat,lon,depth",es18
-es38,bathy,sbm,,*ES38*.XYZ,"lat,lon,depth",es38
-em2040,bathy,mbm,,*EM2040*.XYZ,"lat,lon,depth",em2040
-em340,bathy,mbm,,*EM340*.XYZ,"lat,lon,depth",em340
-fluor,ocean,tsg,,Fluorometer*.Raw,"fluor",fluor
-sbe21,ocean,tsg,,SBE21*.Raw,"psal,temp_tsg,cond,temp_in",sbe21
-smartguard,ocean,tsg,PAAI,SooGuard*.Raw,"a12,cond,dens,oxy,psal,sspd,sys_press,temp1,temp2,temp3,temp4,turbidity",smartguard
-windtrue,met,wind,WIMWD,Gill-WindDir*.Raw,"winddir,windspd",windtrue
-met,met,met,CR6,CR6*.Raw,"airpress,airtemp,humidity,junk1,junk2,junk3,lat,lon,shipheading,sst,truewindspeed,winddir,windspdrounded",met
+es18,bathy,fbm,,*ES18*.XYZ,"lat,lon,depth",es18
+es38,bathy,fbm,,*ES38*.XYZ,"lat,lon,depth",es38
+em2040,bathy,mbm,,*RV_Celtic_Explorer.csv,"lat,lon,depth",em2040
+em340,bathy,mbm,,???_20260???_?????.csv,"lat,lon,depth",em340
+fluor,surfmet,tsg,,Fluorometer*.Raw,"fluor",fluor
+sbe21,surfmet,tsg,,SBE21*.Raw,"psal,temp_tsg,cond,temp_in",sbe21
+smartguard,surfmet,tsg,PAAI,SooGuard*.Raw,"a12,cond,dens,oxy,psal,sspd,sys_press,temp1,temp2,temp3,temp4,turbidity",smartguard
+windtrue,surfmet,wind,WIMWD,Gill-WindDir*.Raw,"winddir,windspd",windtrue
+met,met,surfmet,CR6,CR6*.Raw,"airpress,airtemp,humidity,junk1,junk2,junk3,lat,lon,shipheading,sst,truewindspeed,winddir,windspdrounded",met

@@ -151,7 +151,7 @@ switch opt1
                     case 'ulog'
                     case 'chl'
                     case 'oxy'
-                        files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,'20260805_Oxygen_concentration_calculation_worksheet_2025.xlsx')};
+                        files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,'Oxygen_concentration_calculation_worksheet_final.xlsx')};
                         sopts.numhead = 9; 
                         ct = {'statnum','double';...
                             'position','double';...
@@ -308,7 +308,7 @@ switch opt1
                 % uway_extra.SeapathLongitude = cellfun(@(x) -str2double(x(1:end-1)),uway_extra.SeapathLongitude);
                 % save(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,'..','uway_scs_10s'),'uway_extra')
             case 'rawedit'
-                uopts.rangelim.lat = [50 70];
+                uopts.rangelim.lat = [50 70]; 
                 %define badtimes and tsgpumpvars
                 %set handedit
             case 'merge_av'
@@ -378,7 +378,7 @@ switch opt1
                 sam_gridlist = {'botoxy' 'silc' 'phos' 'totnit' 'botpsal'};
                 mgrid.sdata_flag_accept = [2 3]; %***or just 2
                 if contains(section,'ar7e')
-                    kstns = [4:51];
+                    kstns = [4:41 43:47 49:51];
                     mgrid.xlim = 2; mgrid.zlim = 4;
                 elseif contains(section,'km')
                     kstns = 52:57;
