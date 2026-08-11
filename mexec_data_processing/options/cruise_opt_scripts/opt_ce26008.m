@@ -67,7 +67,8 @@ switch opt1
                 %     co.badscan.oxy1 = [4.92 17.602]*1e4; 
                 % end
                 %if ismember(stnlocal,[17:22 24:32 34:43 45:47 51:53 55:59 63:])
-                if ismember(stnlocal,[22:26 27:32 34:38 40:41 43 63 66 68:70])
+                if ismember(stnlocal,[22:26 27 ...
+                        :32 34:41 43 45:47 52 53 55:57 63 66 68:70]) %54 58 59 60 64 65 67 might need revisiting
                     co.badscan.oxy1 = [-inf inf]; %so many spikes it's not worth cleaning
                 end
                 %then mask all on CTD whenever P is bad
