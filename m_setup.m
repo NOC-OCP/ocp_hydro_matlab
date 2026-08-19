@@ -47,9 +47,9 @@ global MEXEC_G
 
 %defaults that can be overwritten by input structure: what are we
 %processing, and where?
-MEXEC_G.MSCRIPT_CRUISE_STRING='ce26008';
+MEXEC_G.MSCRIPT_CRUISE_STRING='dy214';
 MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
-MEXEC_G.mexec_data_root = '/data/pstar/projects/goship/cruises/ce26008/data'; %if empty, will search for cruise directory near current directory and near home directory
+MEXEC_G.mexec_data_root = '/data/pstar/projects/osnap/cruises/dy214/data'; %if empty, will search for cruise directory near current directory and near home directory
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/';
 MEXEC_G.sw = '/data/pstar/programs';
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
@@ -59,7 +59,7 @@ MEXEC_G.datatypes.ctd = 'sbe'; %currently the only option
 MEXEC_G.datatypes.uway = 'auto'; %auto sets to rvdas, techsas, or scs depending on ship
 MEXEC_G.datatypes.sadcp = 'uhdas'; %or vmdas
 MEXEC_G.datatypes.ladcp = 'ix'; %or ix to process LADCP data with LDEO_IX
-MEXEC_G.datatypes.moor = 'no'; %or yes (affects what is added to path)
+MEXEC_G.datatypes.moor = 'yes'; %or yes (affects what is added to path)
 
 %replace with user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
@@ -108,7 +108,7 @@ end
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];
-opt1 = 'ship'; mexec_defaults_shipuway
+opt1 = 'shipuway'; mexec_defaults_shipuway
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
@@ -158,7 +158,6 @@ end
 
 % set data directories within MEXEC_G.mexec_data_root
 mexec_file_locations('mdirlist');
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%   End of items to be edited on each site/cruise   %%%%%%%%%%%%%%%%

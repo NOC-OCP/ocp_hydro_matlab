@@ -31,10 +31,10 @@ if nargin>0 && strcmp(varargin{1},'redo')
 
     switch MEXEC_G.Mshipdatasystem
         case 'rvdas'
-            mutv = mrdefine;
+            mutv = mrdefine(quiet);
 
             %for writing
-            opt1 = 'uway_proc'; opt2 = 'rvdas_database'; get_cropt
+            opt1 = 'shipuway'; opt2 = 'rvdas_database'; get_cropt
             header = {sprintf('RVDAS info from database %s and .json files in %s',RVDAS.database,RVDAS.jsondir);...
                 sprintf('loaded by mrdefine.m on %s',datestr(now));...
                 sprintf('saved in %s and %s', tabledefmat, tabledefcsv);...

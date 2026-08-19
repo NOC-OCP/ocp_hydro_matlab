@@ -1,7 +1,7 @@
-function mday_02_merge_av(datatype, ydays, mtable, varargin)
-% mday_02_merge_av(datatype, ydays, mtable)
+function mday_02_merge_av(datatype, ddays, mtable, varargin)
+% mday_02_merge_av(datatype, ddays, mtable)
 %
-% ydays is in yearday
+% ddays is decimal days since MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
 % merge data from multiple inputs/instruments
 
 if nargin>3
@@ -12,7 +12,6 @@ end
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-ddays = ydays-1;
 
 ngvars = {'utctime','timeUTC','time','dday'}; %never grid this
 gvars = {}; %by default grid all other variables
@@ -31,8 +30,8 @@ switch datatype
         ngvars = [ngvars 'speedknots' 'speedkmph' 'rollaccuracy' 'pitchaccuracy' 'headingaccuracy' 'ggaqual'];
     case 'bathy'
         source = {'sbm'; 'mbm'};
-        %streams = {'ea640_sddpt'; 'em122_kidpt'};
-        streams = {'es18', 'es38'};
+        streams = {'ea640_sddpt'; 'em122_kidpt'};
+        %streams = {'es18', 'es38'};
         required = [0 0];
         otfile = ['bathy_' mcruise '.nc'];
         tavp_s = 5*60; % 5 min
@@ -53,8 +52,8 @@ switch datatype
         tavp_s = 30; % 30 s
         gmethod = 'meannum';
 end
-pd = mexec_file_locations('procfiles','sumout');
-otfile = fullfile(pd.collected,otfile);
+pd = mexec_file_locations('procfiles','uway');
+otfile = pd.(['bu' datatype]);
 opt1 = 'uway_proc'; opt2 = 'merge_av'; get_cropt
 
 %***check for multiple streams from same inst? not important at this
@@ -63,8 +62,11 @@ if isstruct(mtable) || istable(mtable)
     filepre = cell(size(streams)); filepre_old = filepre;
     for fno = 1:length(streams)
         ii = find(strcmp(streams{fno},mtable.tablenames),1);
-        filepre{fno} = fullfile(MEXEC_G.MDIRLIST.(['M_' upper(mtable.mstarpre{ii})]), mtable.mstarpre{ii});
+        if ~isempty(ii)
+            filepre{fno} = fullfile(MEXEC_G.MDIRLIST.(['M_' upper(mtable.mstarpre{ii})]), mtable.mstarpre{ii});
+        end
     end
+    filepre = filepre(~cellfun('isempty',filepre));
 elseif iscell(mtable)
     filepre = mtable;
 end
@@ -158,7 +160,7 @@ if ~isempty(uopts)
 end
 if handedit
     %manual selection of (additional) points to edit
-    [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed, yl);
+    [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, repars, yl);
 end
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad) again to

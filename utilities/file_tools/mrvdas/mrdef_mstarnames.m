@@ -64,7 +64,7 @@ function mrtables_out = mstar_by_table(mt, mrtables)
 % add mstar prefixes and directories to each table line, and remove lines
 % with no corresponding mstar lookup
 
-opt1 = 'uway_proc'; opt2 = 'rvdas_form'; get_cropt %sets npre?***
+opt1 = 'shipuway'; opt2 = 'rvdas_form'; get_cropt %sets npre?***
 if use_cruise_views
     n0 = length(view_name)+2; %assume it's followed by underscore
 else

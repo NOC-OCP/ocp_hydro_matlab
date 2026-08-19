@@ -135,7 +135,9 @@ if strcmp(stage,'pre')
                     d.Properties.CustomProperties.VariableSerials(end-1:end) = d.Properties.CustomProperties.VariableSerials(strcmp(ws,d.Properties.VariableNames));
                 end
                 %load smoothed bestnav, compute ship heading as a vector
-                [dn, hn] = mload(fullfile(mgetdir('sum'),['bestnav_' MEXEC_G.MSCRIPT_CRUISE_STRING]), '/');
+                pd = mexec_file_locations('procfiles','uway');
+                navfile = pd.bunav;
+                [dn, hn] = mload(navfile, '/');
                 headvar = munderway_varname('headvar', hn.fldnam, 1, 's');
                 [headav_e, headav_n] = uvsd(ones(size(dn.(headvar))), dn.(headvar), 'sduv');
                 %interpolate to wind file times

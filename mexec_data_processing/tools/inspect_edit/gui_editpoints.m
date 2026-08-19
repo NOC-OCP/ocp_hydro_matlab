@@ -64,7 +64,7 @@ for scno = 1:length(yln)
 end
 
 if isempty(ygroups)
-    ygroups.g1 = {{setdiff(vn,xvar)}};
+    ygroups.g1 = {setdiff(vn,xvar)};
 end
 
 gs = fieldnames(ygroups);
@@ -83,14 +83,14 @@ for vgno = 1:length(gs)
                 hasdata = 0; clf; 
                 vused = {}; hl = [];
                 cused = []; cnused = {}; mused = {}; lused = {};
-                ytl = {}; yt = {}; 
-                for ano = 1:length(yv)
-                    v = yv{ano};
+                ytl = {}; yt = {}; ano = 1;
+                for gno = 1:length(yv)
+                    v = yv{gno};
                     m = ismember(vn,v) & sum(~isnan(data{:,:}));
                     if sum(sum(~isnan(data{iis,m})))
                         ha(ano) = axes('Box','off');
                         l = yl.(v{1}); 
-                        set(ha(ano),'ylim',l); axes(ha(ano)); ylabel(sprintf('%s ',v{:}));
+                        set(ha(ano),'ylim',l); 
                         t = get(ha(ano),'ytick'); 
                         if length(t)<10
                             ytl{ano} = t(1):(t(2)-t(1))/5:t(end); %make them closer together
@@ -99,13 +99,14 @@ for vgno = 1:length(gs)
                         end
                         yt{ano} = (ytl{ano}-l(1))/(l(2)-l(1));
                         hl = [hl; plot(ha(1), data.(xvar)(iis), data{iis,m},...
-                            'color', colors(ano,:), 'markersize', markersize)];
+                            'color', colors(gno,:), 'markersize', markersize)];
                         hold on
                         vused = [vused vn(m)]; 
-                        cused = [cused; repmat(colors(ano,:),sum(m),1)];
-                        cnused = [cnused repmat(colornames(ano),1,sum(m))];
+                        cused = [cused; repmat(colors(gno,:),sum(m),1)];
+                        cnused = [cnused repmat(colornames(gno),1,sum(m))];
                         mused = [mused; markers(1:sum(m))];
                         lused = [lused; lines(1:sum(m))];
+                        axes(ha(ano)); ylabel(sprintf('%s ',v{:}));
                         if ano==1
                             ha(ano).YAxisLocation = 'right';
                         else
@@ -116,12 +117,12 @@ for vgno = 1:length(gs)
                             set(ha(ano),'ylim',[0 1],'ytick',yt{ano},'yticklabel',ytl{ano});
                         end
                         set(ha(ano),'position',[axo(ano) .1 1-2*axo(ano)+.1 .8])
-                        hasdata = 1;
+                        hasdata = 1; ano = ano+1;
                     end
                 end
                 linkaxes(ha,'y');
                 set(ha(1),'ylim',[0 1],'ytick',yt{1},'yticklabel',ytl{1});
-                axes(ha(1)); ylabel(sprintf('%s ',yv{1}{:})); title(ti)
+                axes(ha(1)); title(ti)
                 for sno = 1:length(vused)
                     set(hl(sno),'marker',mused{sno},'linestyle',lused{sno})
                 end

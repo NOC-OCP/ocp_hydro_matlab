@@ -91,24 +91,21 @@ units = units(ia);
 %and/or rounding times
 opt1 = 'uway_proc'; opt2 = 'tstep_save'; get_cropt
 dd = struct2table(dd);
-dd = times_subsample(dd,'time',tstep_force,tstep_resol);
+dd = times_subsample(dd,'time',stepfreq_force,tstep_resol);
 dd = table2struct(dd,'ToScalar',true);
 
 clear hnew
 hnew.fldnam = names(:)';
 hnew.fldunt = units(:)';
-m = false(1,length(names));
-for kl = 1:length(names)
-    vname = names{kl};
-    if isnumeric(dd.(vname))
-        m(kl) = true;
-        dd.(vname) = dd.(vname)(iit);
-    else
-        dd = rmfield(dd,vname);
-        warning('skipping non-numeric variable %s from table %s',vname,argot.table)
-    end
+dd = orderfields(dd,hnew.fldnam);
+m = structfun(@(x) ~isnumeric(x), dd);
+if sum(m)
+    dd = rmfield(dd, names(m));
+    hnew.fldunt(m) = []; hnew.fldnam(m) = [];
+    warning('skipping non-numeric variable %s ',names{m})
+    warning('from table %s',argot.table)
 end
-hnew.fldnam = hnew.fldnam(m); hnew.fldunt = hnew.fldunt(m);
+dd = table2struct(times_subsample(struct2table(dd), 'time', stepfreq_force, tstep_resol),'ToScalar',true);
 
 if docf
     hnew.data_time_origin = [];

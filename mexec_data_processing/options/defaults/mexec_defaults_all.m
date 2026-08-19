@@ -218,19 +218,23 @@ switch opt1
                         yl.transmittance = [60 101]; 
                         yl.temph = [-2 30]; yl.temp_remote = yl.temph;
                         yl.temp_in = yl.temph; yl.temp_tsg = yl.temph;
+                        repars.g1 = {{'temph','temp_in','temp_remote','temp_tsg'}, {'cond'}, {'psal'}};
+                        repars.g2 = {{'temph'},{'fluor'},{'turbidity'},{'trans','transmittance'}};
                     case 'atmos'
                         handedit = 1;
                         wvars = {'truwind_e','truwind_n','truwind_dir'};
                         for no = 1:length(wvars)
                             uopts.badtruwind_spd.(wvars{no}) = [NaN NaN];
                         end
-                        vars_to_ed.g1 = {setdiff(vars_to_ed.g1{1},wvars)}; %just edit speed and apply to other wind vars (by re-running after editing)
+                        repars.g1 = {{'airpressure'},{'airtemp'},{'humidity'},{'truwind_spd','truwind_e','truwind_n'},{'parport','parstarboard','tirport','tirstarboard'}};
                         yl.airpressure = [500 1500];
                         yl.humidity = [0 100];
                         yl.parport = [0 1e7];
                         yl.parstarboard = yl.parport;
                         yl.tirport = yl.parport;
                         yl.tirstarboard = yl.parport;
+                        yl.truwind_e = [-50 50]; yl.truwind_n = yl.truwind_e; 
+                        yl.truwind_spd = [0 round(yl.truwind_e(2)*sqrt(2))];
                     case 'nav'
                         handedit = 0;
                 end

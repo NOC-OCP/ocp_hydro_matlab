@@ -1,7 +1,7 @@
 % sets parameters specific to a given underway data system (ydayrvdas, scs, or techsas)
 % called from mexec_defaults_all in case opt1 = 'uway_proc', 
 
-if ~strcmp(opt1,'ship')
+if ~strcmp(opt1,'shipuway')
     error('this file should only be called to get options for ship underway data')
 end
 
@@ -59,8 +59,8 @@ if strcmp(MEXEC_G.datatypes.uway,'rvdas')
             %RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
             RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
         case 'rvdas_form'
-            switch MEXEC_G.Mship
-                case 'sda'
+            switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
+                case 'sd'
                     use_cruise_views = 1; %prepend string view_name to names from json files
                     view_name = lower(MEXEC_G.MSCRIPT_CRUISE_STRING);
                     npre = 1; %table names start with an extra prefix before the instrument make/model e.g. anemometer_ft_technologies_etc

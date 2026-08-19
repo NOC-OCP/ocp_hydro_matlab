@@ -22,8 +22,9 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 didedits = 0;
 
 %definitions
-ii = find(strcmp(abbrev,mtable.mstarpre)); 
-rootdir = fullfile(MEXEC_G.mexec_data_root, mtable.mstardir{ii(1)});
+ii = find(strcmp(abbrev,mtable.mstarpre));
+pd = mexec_file_locations('procfiles','uway');
+rootdir = pd.(['bu' mtable.mstardir{ii(1)}]);
 infile = fullfile(rootdir, sprintf('%s_%s_all_raw.nc', abbrev, mcruise));
 if ~exist(m_add_nc(infile),'file')
     warning('no %s, skipping', infile)

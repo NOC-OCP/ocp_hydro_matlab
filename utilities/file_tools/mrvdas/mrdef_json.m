@@ -9,15 +9,22 @@ m_common
 jsondir = fullfile(MEXEC_G.mexec_data_root,'rvdas','json_files');
 if ~exist(jsondir,'dir')
     mkdir(jsondir); mfixperms(jsondir, 'dir');
+    newdir = 1;
+else
+    newdir = 0;
 end
 RVDAS.jsondir = '';
-opt1 = 'uway_proc'; opt2 = 'rvdas_database'; get_cropt
-switch MEXEC_G.Mship
-    case 'sda'
+opt1 = 'shipuway'; opt2 = 'rvdas_database'; get_cropt
+switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
+    case 'sd'
         system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);
     otherwise
         if isempty(RVDAS.jsondir)
-            warning('relying on .json files already in %s', jsondir)
+            if newdir
+                warning('no json files'); return
+            else
+                warning('relying on .json files already in %s', jsondir)
+            end
         elseif contains(RVDAS.jsondir,'pstar') %this is a link to shared drive mounted on workstation
             system(['rsync -au --delete ' RVDAS.jsondir '/ ' jsondir '/']);
         else %this must be a directory on the RVDAS computer itself
@@ -26,7 +33,7 @@ switch MEXEC_G.Mship
 end
 
 %list of instruments
-opt1 = 'uway_proc'; opt2 = 'rvdas_form'; get_cropt
+opt1 = 'shipuway'; opt2 = 'rvdas_form'; get_cropt
 if use_cruise_views
     sqlpre = [view_name '_'];
     instpos = 2;

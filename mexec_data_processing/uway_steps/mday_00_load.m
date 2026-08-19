@@ -52,7 +52,7 @@ switch MEXEC_G.Mshipdatasystem
         argot.dnums = [dn1 dn2];
         argot.otfile = otfile2;
         argot.dataname = dataname;
-        argot.mutv = mtable;
+        argot.mrtv = mtable;
         status = mrrvdas2mstar('noparse',argot);
     case 'scs'
         status = scs_to_mstar2(streamname,mstarprefix,dn1,dn2,otfile2,dataname);

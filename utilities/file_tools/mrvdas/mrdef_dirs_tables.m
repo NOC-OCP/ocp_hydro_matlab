@@ -23,59 +23,66 @@ function [mt, varargout] = mrdef_dirs_tables
 %
 
 m_common
+[~,dirNAV,~] = fileparts(MEXEC_G.MDIRLIST.M_NAV);
+[~,dirSURFMET,~] = fileparts(MEXEC_G.MDIRLIST.M_SURFMET);
+[~,dirBATHY,~] = fileparts(MEXEC_G.MDIRLIST.M_BATHY);
 
 %%%% define lookup table mt %%%%
 
 n = 0;
 
 % heading
-n = n+1; mt(n).dir = 'nav'; mt(n).typ = 'head'; 
+n = n+1; mt(n).dir = dirNAV; mt(n).typ = 'head'; 
 mt(n).inst = {'phins','posmv','seapathpos','shipsgyro'}; 
 mt(n).msg = {'hehdt','gphdt','inhdt'}; %'pashr'
 % roll, pitch, heave
-n = n+1; mt(n).dir = 'nav'; mt(n).typ = 'att'; 
+n = n+1; mt(n).dir = dirNAV; mt(n).typ = 'att'; 
 mt(n).inst = {'phins','posmv','seapathatt'};
 mt(n).msg = {'pashr','pixseatitud','prdid','psxn23','kmatt','psmcv','psmbc','pixseheave0'}; 
 % lat, lon
-n = n+1; mt(n).dir = 'nav'; mt(n).typ = 'pos';
+n = n+1; mt(n).dir = dirNAV; mt(n).typ = 'pos';
 mt(n).inst = {'cnav','fugro','phins','posmv','seapathpos'}; %seapathatt
 mt(n).msg = {'gpgga','gpggk','gpgll','pixsegpsin0','gngga','ingga','gngll','pixsepositi'};
 % ship speed, course
-n = n+1; mt(n).dir = 'nav'; mt(n).typ = 'shipmov'; 
+n = n+1; mt(n).dir = dirNAV; mt(n).typ = 'shipmov'; 
 mt(n).inst = {'cnav','fugro','posmv','seapathpos'};
 mt(n).msg = {'gpvtg','gnvtg','invtg','pixsespeed0'}; 
 
 % surface ocean remote/drop keel T measurements
-n = n+1; mt(n).dir = 'met'; mt(n).typ = 'sst'; 
+n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = 'sst'; 
 mt(n).inst = {'sbe38','sbe38dk'};
 mt(n).msg = {'sbe38','psbsst1','phsst'}; 
 % UCSW T, C, flow, fluo, trans
-n = n+1; mt(n).dir = 'met'; mt(n).typ = 'tsg'; 
+n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = 'tsg'; 
 mt(n).inst = {'sbe45','surfmet'};
 mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1','sfuwy','pc4rhoist1'};
 % pressure, humidity, air temp
-n = n+1; mt(n).dir = 'met'; mt(n).typ = 'met'; 
+n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = 'met'; 
 mt(n).inst = {'surfmet'};
 mt(n).msg = {'pcfrs','pvtnh2','pvbar','pmdew','sfmet'}; %pressure, humidity, precip n = n+1;
 % radiation
-n = n+1; mt(n).dir = 'met'; mt(n).typ = 'rad'; 
+n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = 'rad'; 
 mt(n).inst = {'surfmet'};
 mt(n).msg = {'pkpyrge','pkpyran','pspar','sflgt'}; %radiometers
+% combined met
+n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = 'met';
+mt(n).inst = {'brainboxmet'};
+mt(n).msg = {'ppmet'}; %air press/temp/humid and radiometers
 % wind
-n = n+1; mt(n).dir = 'met'; mt(n).typ = 'wind'; 
+n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = 'wind'; 
 mt(n).inst = {'surfmet','windsonic','truewind'};
 mt(n).msg = {'iimwv','wimwv','pmwind','gpxsm','truewind'};
 % waves
-% n = n+1; mt(n).dir = 'met'; mt(n).typ = wav; 
+% n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = wav; 
 % mt(n).inst = {'wav'}; 
 % mt(n).msg = {'pwam1','pramr','pwam'}; 
 
 %singlebeam
-n = n+1; mt(n).dir = 'bathy'; mt(n).typ = 'sbm'; 
+n = n+1; mt(n).dir = dirBATHY; mt(n).typ = 'sbm'; 
 mt(n).inst = {'ea640'}; 
 mt(n).msg = {'sddpt','sddbs','sdalr','sddbk','sddbs','sddpt','dbdbt','sddbt'}; %'pskpdpt',
 %multibeam (centre beam)
-n = n+1; mt(n).dir = 'bathy'; mt(n).typ = 'mbm'; 
+n = n+1; mt(n).dir = dirBATHY; mt(n).typ = 'mbm'; 
 mt(n).inst = {'em122'}; 
 mt(n).msg = {'kidpt','kodpt'}; 
 
@@ -128,10 +135,10 @@ if nargout>1
         'selftest' 'testmode' 'spare' 'checksum' 'syncbyte2' ...
         'identity' 'serialnumber' ...
         'flowratedecimals' 'flowratekfactordecimals' 'speedknots' 'speedkmph'};
-    switch MEXEC_G.Mship
-        case {'discovery','cook'} %should now be the same at least by default!
+    switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)
+        case {'dy','jc'} %should now be the same at least by default!
             skips.sentence = [skips.sentence, 'surfmet_gpxsm']; %exists with all the variables but no data?
-        case 'sda'
+        case 'sd'
             %         sentence_skip = [sentence_skip, 'singlebeam_skipper_gds_102_sddpt', 'singlebeam_skipper_gds102_sddbs',...
             %             'singlebeam_skipper_gds102_sddbk', 'singlebeam_skipper_gds102_pskpdpt', 'singlebeam_skipper_gds102_sdalr',...
             %             'gnss_saab_r5_supreme_gnrmc']; %skipped at mrnames stage

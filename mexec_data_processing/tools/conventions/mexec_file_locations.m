@@ -15,7 +15,6 @@ m_common
 
 switch step
     case 'mdirlist'
-        mutv = mudefine;
         dirs = {
             'M_CTD' 'ctd'
             'M_CTD_CNV' fullfile('ctd','ASCII_FILES')
@@ -43,18 +42,19 @@ switch step
         if ~strcmp(MEXEC_G.Mshipdatasystem,'auto')
             dirs = [dirs;
                 {'M_UWAY_RAW' fullfile(MEXEC_G.Mshipdatasystem,'raw_local')}];
+            mutv = mudefine;
+            if exist('mutv','var')
+                dirs = [dirs; ...
+                    [cellfun(@(x) ['M_' upper(x)], mutv.mstarpre, 'UniformOutput', false), ...
+                    mutv.mstardir]];
+                [~,ii] = unique(dirs(:,1),'stable');
+                dirs = dirs(ii,:);
+            end
         end
         if strcmp(MEXEC_G.datatypes.ladcp,'ix')
             dirs = [dirs;
                 {'M_LADCP' 'ladcp'
                 'M_IX' fullfile('ladcp','ix')}];
-        end
-        if exist('mutv','var')
-            dirs = [dirs; ...
-                [cellfun(@(x) ['M_' upper(x)], mutv.mstarpre, 'UniformOutput', false), ...
-                mutv.mstardir]];
-            [~,ii] = unique(dirs(:,1),'stable');
-            dirs = dirs(ii,:);
         end
         dirs(:,2) = cellfun(@(x) fullfile(MEXEC_G.mexec_data_root,x),dirs(:,2),'UniformOutput',false);
         MEXEC_G.MDIRLIST = cell2struct(dirs(:,2),dirs(:,1));
@@ -104,7 +104,7 @@ switch step
             case 'uway'
                 pd.bunav = fullfile(MEXEC_G.MDIRLIST.M_NAV,['bestnav_' mcruise '_all.nc']);
                 pd.buocean = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['surface_ocean_' mcruise '_all.nc']);
-                pd.bumet = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['atmos_truwind_' mcruise '_all.nc']);
+                pd.buatmos = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['atmos_truwind_' mcruise '_all.nc']);
                 pd.bubathy = fullfile(MEXEC_G.MDIRLIST.M_BATHY,['bathy_' mcruise '_all.nc']);
             case 'sumout'
                 pd.collected = fullfile(MEXEC_G.mexec_data_root,'collected_files');
