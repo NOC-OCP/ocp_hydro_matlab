@@ -32,5 +32,11 @@ switch opt1
                 %     'phins_pixsegpsin0', 'pco2_ppco2', ...
                 %     'cnav_gnvtg', 'autosal_autosal'];
         end
-
+    case 'ctd_proc'
+        switch opt2
+            case 'redoctm'
+                redoctm = 1;
+            case 'cnvfilename'
+                cnvfile = fullfile(MEXEC_G.mexec_data_root,'ctd','ASCII_FILES',sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
+        end
 end
