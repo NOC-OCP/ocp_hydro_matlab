@@ -29,6 +29,8 @@ if size(dates,2)==6
     ddays = datenum(dates)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1);
 elseif size(dates,2)==1
     ddays = dates;
+elseif isempty(dates)
+    ddays = datenum(now)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1)-1;
 else
     error('dates must be either Nx1 vector of decimal days or Nx6 vector of [yyyy mm dd HH MM SS]')
 end
