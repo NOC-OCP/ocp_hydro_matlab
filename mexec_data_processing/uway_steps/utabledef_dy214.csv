@@ -1,6 +1,6 @@
 RVDAS info from database "DY214" and .json files in 
-loaded by mrdefine.m on 19-Aug-2026 16:02:02
-saved in /data/pstar/projects/osnap/cruises/dy214/data/rvdas/utabledef_dy214.mat and /data/pstar_kolea/programs/repos_github/ocp_hydro_matlab/mexec_data_processing/uway_steps/utabledef_dy214.csv
+loaded by mrdefine.m on 20-Aug-2026 17:37:12
+saved in /data/pstar/projects/osnap/cruises/dy214/data/rvdas/utabledef_dy214.mat and /data/pstar_kolea/programs/repos_userbranched/ocp_hydro_matlab_kristinb/mexec_data_processing/uway_steps/utabledef_dy214.csv
 csv copy only for information (.mat used by mrdefine)
 
 tablenames, tablevars, mstarpre, mstardir, paramtype, rvdasmsg, tableunts, longnames, mstarvars, mstarunts
