@@ -56,7 +56,7 @@ if strcmp(MEXEC_G.datatypes.uway,'rvdas')
             metpre = 'surfmet';
         case 'rvdas_database'
             RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
-            %RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
+            RVDAS.jsondir = '/data/pstar/links/rvdas/json_files';
             RVDAS.database = ['"' upper(MEXEC_G.MSCRIPT_CRUISE_STRING) '"'];
         case 'rvdas_form'
             switch MEXEC_G.MSCRIPT_CRUISE_STRING(1:2)

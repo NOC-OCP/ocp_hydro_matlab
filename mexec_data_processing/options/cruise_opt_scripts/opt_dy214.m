@@ -11,7 +11,6 @@ switch opt1
         switch opt2
             case 'rvdas_database'
                 RVDAS.loginfile = '/data/plocal/rvdas_addr';
-                RVDAS.jsondir = fullfile(MEXEC_G.mexec_data_root,'rvdas','json_files');
         end
     
     case 'uway_proc'
