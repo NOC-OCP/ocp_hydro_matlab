@@ -94,13 +94,13 @@ h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldser
 
 %pressure offset (deck pressure)
 if co.dpoff_calc
-    iid = 1:60*24;
-    if max(d.press(iid))>0.3 %&& checked = [6 1]; ~checked(checked(:,1)==stnlocal)
-        keyboard
-    else
+    iid = 1:60*24;% first minute on deck
+    %if max(d.press(iid))>0.3 %&& checked = [6 1]; ~checked(checked(:,1)==stnlocal)
+        %keyboard
+    %else
         co.dpoff = -median(d.press(iid),'omitnan');
         fprintf(1,'pre-cast p offset: %f\n',co.dpoff)
-    end
+    %end
     d.press = d.press + co.dpoff;
     h.comment = [h.comment '\npressure offset by ' num2str(co.dpoff) ' dbar'];
     doneco.dpoff = 1;

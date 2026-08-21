@@ -71,7 +71,7 @@ if dostep.part1
     for stn = stns
         %read in sbe .bl file to mstar
         mfir_01_load(stn)
-        if ismember(stn,comb_stns(:,1))
+        if exist('comb_stns','var') && ismember(stn,comb_stns(:,1))
             %now it should have been 
             stns = setdiff(stns,stn);
             continue

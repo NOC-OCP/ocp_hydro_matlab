@@ -7,7 +7,7 @@ function mfir_01_load(stn)
 m_common
 
 % input file names
-opt1 = 'ctd_proc'; opt2 = 'niskfilename'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'niskfilename'; get_cropt %nisk_proc
 if ~exist(blinfile,'file')
     fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stn);
     pause

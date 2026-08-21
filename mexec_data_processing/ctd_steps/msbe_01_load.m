@@ -18,7 +18,7 @@ function msbe_01_load(stn)
 %%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'ctd_proc'; opt2 = 'cnvfilename'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
 pd = mexec_file_locations('procfiles','ctd');
 dataname = sprintf(pd.ctdname,stn_string);
 rawfile = sprintf(pd.ctdraw,stn_string);
@@ -133,7 +133,7 @@ if length(otfiles)>1 && exist('cast_scan_ranges','var')
         mfsave(otfiles{fno},dnew,hnew);
     end
 
-elseif ~isempty(comb_stns) && comb_stns(1)==stnlocal
+elseif exist('comb_stns','var') && comb_stns(1)==stnlocal
     [d,h] = mload(rawfile,'/');
     %put into time base of other file
     stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
@@ -154,7 +154,6 @@ elseif ~isempty(comb_stns) && comb_stns(1)==stnlocal
     d.scan = d.scan+comb_stns(3);
     mfsave(otfile_appendto, d, h, '-merge', 'scan')
     otfiles = {otfile_appendto}; %now add bottom lat, lon to appended file
-
 end
 
 %other special cases e.g. typos in S/Ns
