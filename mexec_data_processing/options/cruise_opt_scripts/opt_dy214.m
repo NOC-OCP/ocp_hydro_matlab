@@ -11,7 +11,7 @@ switch opt1
         switch opt2
             case 'rvdas_database'
                 RVDAS.loginfile = '/data/plocal/rvdas_addr';
-                RVDAS.jsondir = '';%fullfile(MEXEC_G.mexec_data_root,'rvdas','json_files');
+                RVDAS.jsondir = fullfile(MEXEC_G.mexec_data_root,'rvdas','json_files');
         end
     
     case 'uway_proc'
@@ -34,9 +34,13 @@ switch opt1
         end
     case 'ctd_proc'
         switch opt2
+            case 'ctdfiles'
+                cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
             case 'redoctm'
                 redoctm = 1;
-            case 'cnvfilename'
-                cnvfile = fullfile(MEXEC_G.mexec_data_root,'ctd','ASCII_FILES',sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
+            case 'niskfilename'            
+                blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
+        
         end
+    
 end

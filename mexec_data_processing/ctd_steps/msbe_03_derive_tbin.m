@@ -132,6 +132,7 @@ md = dnew.press<max(dnew.press);
 ds = [sw_dpth(dnew.press(md),dnew.latitude(md)) sw_svel(dnew.psal(md),dnew.temp(md),dnew.press(md))]';
 dnew = table2struct(dnew,'ToScalar',true);
 mfsave(file10, dnew, hnew);
+
 fid = fopen(filesv,'w');
 fprintf(fid,'depth (m), sound speed (m/s)\n');
 fprintf(fid, '%f, %f\n', ds(:));
