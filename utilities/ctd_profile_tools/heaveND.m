@@ -29,8 +29,8 @@ if ~isempty(varargin)
 end
 
 % Calculate neutral density
-dn_nd = gamma_n(dn_psal,dn_temp,pdn,lon0,lat0);
-up_nd = gamma_n(up_psal,up_temp,pdn,lon0,lat0);
+dn_nd = eos80_legacy_gamma_n(dn_psal,dn_temp,pdn,lon0,lat0);
+up_nd = eos80_legacy_gamma_n(up_psal,up_temp,pdn,lon0,lat0);
 	
 % Avoid extrapolation or NaNs 
 ilo = up_nd < min(dn_nd);  up_nd(ilo) = min(dn_nd);
