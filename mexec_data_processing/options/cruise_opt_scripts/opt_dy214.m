@@ -26,19 +26,30 @@ switch opt1
                 % skips.sentence_pat = [skips.sentence_pat, ...
                 %     'usbl', 'wamos', 'ctuopd', 'surfmet'];
                 % %below tables are present but have 0 data (return COPY 0)
-                % skips.sentence = [skips.sentence, ...
-                %     'truewind_truewind', 'salrmtemp_salin', ...
-                %     'phins_pixsegpsin0', 'pco2_ppco2', ...
-                %     'cnav_gnvtg', 'autosal_autosal'];
+                skips.sentence = [skips.sentence, ...
+                    'truewind_truewind', ...
+                    'ranger2usbl_psonlld', 'ctd_smctd', ...
+                     ];
         end
     case 'ctd_proc'
         switch opt2
             case 'ctdfiles'
-                cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
+                cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
+                    sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
             case 'redoctm'
                 redoctm = 1;
             case 'niskfilename'            
-                blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
+                blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,...
+                    sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
+            case 'rawshow'
+                if stn==1 
+                    yl.cond = [48 50];
+                    yl.press = [-2 40];
+                    yl.temp = [20.5 21];
+                    yl.fluor = [0 2];
+                    yl.turbidity = [0 0.2];
+                end
+
         
         end
     
