@@ -110,10 +110,10 @@ switch opt1
             case 'sbe35files'
                 sbe35in = fullfile(MEXEC_G.MDIRLIST.M_SBE35,...
                     sprintf('CTD_%s.asc', stn_string));
+                stnind = -6:-4; % index in file name of where the station number can be found.
                 %stnind is indices in filename sbe35file normally
                 %containing the station number; use negative to indicate
                 %distance from end e.g. [-6:-4] for dy113_SBE35_CTD_010.asc
-                % stnind = -6:-4;
             case 'sbe35_parse'
                 %deal with combined file(s)
                 % copied below form opt_ce26008.m
