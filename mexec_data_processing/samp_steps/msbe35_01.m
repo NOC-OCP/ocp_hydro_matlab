@@ -10,7 +10,7 @@ function msbe35_01(varargin)
 % already contains data up to that station number, function returns without
 % (re-)reading files
 
-m_common
+m_common; MEXEC_A.mprog = mfilename;
 if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
 
 pd = mexec_file_locations('procfiles','ctd');
@@ -24,6 +24,7 @@ if nargin>0 && ~isempty(varargin{1}) && exist(outfile,'file')
 end
 
 % load sbe35 data
+opt1='sbe35'; opt2='sbe35files'; get_cropt;
 if strcmp(sbe35in,'none')
     return
 end

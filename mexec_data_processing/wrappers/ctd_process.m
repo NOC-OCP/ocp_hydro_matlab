@@ -159,6 +159,7 @@ end
 if dostep.guisteps && (dostep.part2 || dostep.postedit)
     for stn = stns
         mctd_checkplots(stn,3)
+        disp('Press any key to continue...');
         pause
     end
 end

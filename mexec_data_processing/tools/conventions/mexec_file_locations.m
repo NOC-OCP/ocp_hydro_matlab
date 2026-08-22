@@ -102,10 +102,12 @@ switch step
                 end
                 pd.sadcpall = fullfile(MEXEC_G.MDIRLIST.VMADCP, 'postprocessing', upper(mcruise), 'proc_editing', varargin{2}, 'contour', [pd.sadcpname '.nc']);
             case 'uway'
-                pd.bunav = fullfile(MEXEC_G.MDIRLIST.M_NAV,['bestnav_' mcruise '_all.nc']);
-                pd.buocean = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['surface_ocean_' mcruise '_all.nc']);
-                pd.buatmos = fullfile(MEXEC_G.MDIRLIST.M_SURFMET,['atmos_truwind_' mcruise '_all.nc']);
-                pd.bubathy = fullfile(MEXEC_G.MDIRLIST.M_BATHY,['bathy_' mcruise '_all.nc']);
+                pd.burawform = ['%s_%s_all_raw.nc'];
+                pd.buallform = ['%s_%s_all.nc'];
+                pd.bunav = fullfile(MEXEC_G.MDIRLIST.M_NAV);
+                pd.busurfmet = fullfile(MEXEC_G.MDIRLIST.M_SURFMET);
+                pd.bubathy = fullfile(MEXEC_G.MDIRLIST.M_BATHY);
+                pd.buother = fullfile(MEXEC_G.MDIRLIST.M_AUTOSAL);
             case 'sumout'
                 pd.collected = fullfile(MEXEC_G.mexec_data_root,'collected_files');
         end
