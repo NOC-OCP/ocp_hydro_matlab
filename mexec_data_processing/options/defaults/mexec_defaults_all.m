@@ -85,9 +85,9 @@ switch opt1
                 repars.g2 = {{'press'},{'fluor'},{'turbidity'},{'transmittance'},{'par'}};
                 yl.temp = [-2 40]; yl.temp1 = yl.temp; yl.temp2 = yl.temp;
                 if strcmp(h.fldunt{strcmp(h.fldnam,'cond1')},'S/m')
-                    yl.cond = [20 40];
-                else
                     yl.cond = [2 4];
+                else
+                    yl.cond = [20 40];
                 end
                 yl.cond1 = yl.cond; yl.cond2 = yl.cond;
                 yl.press = [-2 6000]; 
