@@ -17,7 +17,8 @@ function msbe_01_load(stn)
 
 %%%%% setup %%%%%
 
-m_common; MEXEC_A.mprog = mfilename;
+m_common; 
+MEXEC_A.mprog = mfilename;
 opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
 pd = mexec_file_locations('procfiles','ctd');
 dataname = sprintf(pd.ctdname,stn_string);

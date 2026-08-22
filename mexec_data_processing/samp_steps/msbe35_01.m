@@ -24,6 +24,12 @@ if nargin>0 && ~isempty(varargin{1}) && exist(outfile,'file')
 end
 
 % load sbe35 data
+if ~exist('stn_string','var')
+    opt1='setup'; opt2='m_stn_string'; get_cropt; clear opt1 opt2
+    % Change made by sam diabate. mexec_defaults_all within get_cropt sets
+    % stn_string but does not seem to have been called previously when
+    % running ctd_process(001,'sbe35')
+end
 opt1='sbe35'; opt2='sbe35files'; get_cropt;
 if strcmp(sbe35in,'none')
     return
