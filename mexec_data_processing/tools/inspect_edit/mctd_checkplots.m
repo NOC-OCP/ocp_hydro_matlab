@@ -98,6 +98,10 @@ for no = 1:length(klist)
     ks = klist(no);
     sstring = sprintf('%03d',ks);
     infile3 = m_add_nc(sprintf(pd.ctd1,sstring));
+    if ks==0 && ~exist('infile3','file')
+       warning(sprintf('File %s not found. Skipping station %d.',infile3,ks))
+       continue
+    end
     infile4 = m_add_nc(sprintf(pdd.dcsfile,sstring));
     infiles{3,no} = infile3;
     infiles{4,no} = infile4;
@@ -219,10 +223,10 @@ for plotlist = cklist
                 hold on
     
             end
-            subplot(221); grid on; title('temp')
-            subplot(222); grid on; title(saltype)
-            subplot(223); grid on; title ('oxy')
-            subplot(224); grid on; title (['potemp-' saltype])
+            subplot(221); grid on; title('temp'),ylabel('temp'),xlabel('press')
+            subplot(222); grid on; title(saltype),ylabel(saltype),xlabel('press')
+            subplot(223); grid on; title ('oxy'),ylabel('oxy'),xlabel('press')
+            subplot(224); grid on; title (['potemp-' saltype]),ylabel('potemp'),xlabel(saltype)
             
         case 3
             
@@ -264,10 +268,10 @@ for plotlist = cklist
                 hold on
     
             end
-            subplot(221); grid on; title('temp')
-            subplot(222); grid on; title(saltype)
-            subplot(223); grid on; title ('oxy')
-            subplot(224); grid on; title (['potemp-' saltype])
+            subplot(221); grid on; title('temp'),ylabel('temp'),xlabel('press')
+            subplot(222); grid on; title(saltype),ylabel(saltype),xlabel('press')
+            subplot(223); grid on; title ('oxy'),ylabel('oxy'),xlabel('press')
+            subplot(224); grid on; title (['potemp-' saltype]),ylabel('potemp'),xlabel(saltype)
             
         case 4
             
@@ -322,10 +326,10 @@ for plotlist = cklist
                 plot(sd(koku),dpsal{ks}.potemp1(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
             end
-            subplot(221); grid on; title ('temp: dash for upcast')
-            subplot(222); grid on; title ([saltype ': dash for upcast'])
-            subplot(223); grid on; title ('oxy: dash for upcast')
-            subplot(224); grid on; title (['potemp-' saltype ': dash for upcast'])
+            subplot(221); grid on; title ('temp: dash for upcast'),ylabel('temp'),xlabel('press')
+            subplot(222); grid on; title ([saltype ': dash for upcast']),ylabel(saltype),xlabel('press')
+            subplot(223); grid on; title ('oxy: dash for upcast'),ylabel('oxy'),xlabel('temp')
+            subplot(224); grid on; title (['potemp-' saltype ': dash for upcast']),ylabel('potemp'),xlabel(saltype)
             
         case 5
             
@@ -382,10 +386,10 @@ for plotlist = cklist
                 plot(sd(koku),dpsal{ks}.potemp2(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
                 
             end
-            subplot(221); grid on; title ('temp: dash for upcast')
-            subplot(222); grid on; title ([saltype ': dash for upcast'])
-            subplot(223); grid on; title ('oxy: dash for upcast')
-            subplot(224); grid on; title (['potemp-' saltype ': dash for upcast'])
+            subplot(221); grid on; title ('temp: dash for upcast'),ylabel('temp'),xlabel('press')
+            subplot(222); grid on; title ([saltype ': dash for upcast']),ylabel(saltype),xlabel('press')
+            subplot(223); grid on; title ('oxy: dash for upcast'),ylabel('oxy'),xlabel('temp')
+            subplot(224); grid on; title (['potemp-' saltype ': dash for upcast']),ylabel('potemp'),xlabel(saltype)
             
         case 6
             
@@ -428,8 +432,9 @@ for plotlist = cklist
             end
             subplot(221); grid on; title (['theta-' saltype ' primary'])
             subplot(222); grid on; title (['theta-' saltype ' secondary'])
-            subplot(223); grid on; title ('theta-O primary')
-            if nox>1; subplot(224); grid on; title ('theta-O secondary'); end
+            subplot(223); grid on; title ('theta-O primary'),ylabel('temp')
+            if nox>1; subplot(224); grid on; title ('theta-O secondary')
+            end
             
             
         case 7
@@ -457,7 +462,7 @@ for plotlist = cklist
                 hold on; grid on;
                 plot(d2db{ks}.press,d2db{ks}.temp2,['r' '-'],'linewidth',lwid);
             end
-            title ('temp')
+            title ('temp'),ylabel('temp'),xlabel('press');
             
             subplot(222)
             for ks = numused
@@ -465,7 +470,7 @@ for plotlist = cklist
                 hold on; grid on;
                 plot(d2db{ks}.press,d2db{ks}.([saltype '2']),['r' '-'],'linewidth',lwid);
             end
-            title(saltype)
+            title(saltype),ylabel(saltype),xlabel('press');
             
             subplot(223)
             for ks = numused
