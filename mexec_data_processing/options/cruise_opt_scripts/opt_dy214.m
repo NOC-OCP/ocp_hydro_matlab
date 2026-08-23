@@ -46,40 +46,7 @@ switch opt1
 
 %%%%%%%%%%%%%%%%%%%% nisk_proc %%%%%%%%%%%%
     case 'nisk_proc'
-            switch opt2
-                case 'niskins'
-                    niskin_barcodes = [ 
-                         1 2754 %niskin barcode 250003034 
-                         3 2756
-                         5 2758
-                         7 2760
-                         9 2762
-                        11 2764
-                        13 2766
-                        15 2768
-                        17 2770
-                        19 2772
-                        21 2774
-                        23 2777
-                        ];
-                    niskin_pos = niskin_barcodes(:,1);
-                    niskin_number = niskin_barcodes(:,2);
-                case 'botflags'
-                    switch stnlocal
-                        % DY214
-                        % todo: for station example bottle example leaked
-                        % 
-                        % examples from DY204
-                        % case 1
-                        %     niskin_flag(ismember(position,[1 23])) = 4; %not closed correctly
-                        % case 2
-                        %     niskin_flag(ismember(position,[1 9])) = 4; %not closed correctly %1 did not fire/release, 9 did not seal
-                        % case 3
-                        %     niskin_flag(ismember(position,[1 11])) = 3; %too warm, suspect leak
-                        % case 5
-                        %     niskin_flag(ismember(position,[7 13])) = 4; %not closed correctly
-
-                    end
+            
             end
 %%%%%%%%%%%%%%%%%%%% end nisk_proc %%%%%%%%%%%%
 
@@ -88,6 +55,7 @@ switch opt1
         switch opt2
            % to do - station 3 auto de spiking conductivity and 
            % fluorescence
+           % todo: 004 despiking of conductivity and transmittance 
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
@@ -106,7 +74,31 @@ switch opt1
                 else 
                     yl.cond = [25 45];yl.cond1=yl.cond;yl.cond2=yl.cond;
                 end
-
+            case 'niskins'
+                niskin_pos = 1:24;
+                niskin_number = [2754:2775,2777,2779];
+                % double check barcodes of the straight niskin numbers
+                if ismember(stn,[1:4])
+                    niskin_pos = niskin_pos(1:2:end);
+                    niskin_number = niskin_barcodes(1:2:end,2);
+                end
+            case 'botflags'
+                switch stnlocal
+                % DY214
+                % Add a new case for the station if a problem with the
+                % bottle occured after the ctd came up (M3). These are
+                % the bottle flags:
+                % 1: no info; 2: no problems noted; 3: leaking;
+                % 4: did not trip correctly; 5: not reported;
+                % 7: unknown problem; 9: samples not drawn
+                %
+                % If you are unsure about syntax add a comment.
+                % Example:
+                % todo: For station 4, bottle 9 and 11 leaked
+                    case 4
+                        niskin_flag(ismember(position,[9 11])) = 3; % bottles leaked
+                    
+                end
         
         end
 %%%%%%%%%%%%%%%%%%%% end ctd_proc %%%%%%%%%%%%
