@@ -67,8 +67,8 @@ switch opt1
                 case 'botflags'
                     switch stnlocal
                         % DY214
-                        % for station CY bottle Z leaked
-                        %
+                        % todo: for station example bottle example leaked
+                        % 
                         % examples from DY204
                         % case 1
                         %     niskin_flag(ismember(position,[1 23])) = 4; %not closed correctly
@@ -86,6 +86,8 @@ switch opt1
 %%%%%%%%%%%%%%%%%%%% ctd_proc %%%%%%%%%%%%
     case 'ctd_proc'
         switch opt2
+           % to do - station 3 auto de spiking conductivity and 
+           % fluorescence
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
