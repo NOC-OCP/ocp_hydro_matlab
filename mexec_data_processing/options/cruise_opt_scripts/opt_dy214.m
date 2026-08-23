@@ -66,6 +66,9 @@ switch opt1
                     niskin_number = niskin_barcodes(:,2);
                 case 'botflags'
                     switch stnlocal
+                        % DY214
+                        % for station CY bottle Z leaked
+                        %
                         % examples from DY204
                         % case 1
                         %     niskin_flag(ismember(position,[1 23])) = 4; %not closed correctly
@@ -93,16 +96,55 @@ switch opt1
                     sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
             case 'rawshow'
                 if ismember(stn,[1,2])
-                    yl.cond = [40 50];
+                    yl.cond = [40 50];yl.cond1=yl.cond;yl.cond2=yl.cond;
                     yl.press = [-2 150];
                     yl.temp = [15 25];
                     yl.fluor = [0 2];
                     yl.turbidity = [0 0.2];
+                else 
+                    yl.cond = [25 45];yl.cond1=yl.cond;yl.cond2=yl.cond;
                 end
 
         
         end
 %%%%%%%%%%%%%%%%%%%% end ctd_proc %%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%  adcp_proc %%%%%%%%%%%%
+case 'adcp_proc'
+        cfg.rawdir = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'rawdata');
+        cfg.uppat = sprintf('%s_LADCP_%sS.000',upper(mcruise),cfg.stnstr);
+        cfg.dnpat = sprintf('%s_LADCP_%sM.000',upper(mcruise),cfg.stnstr);
+        
+        %set magnetic declination here, rather than using either of the two
+        %options built in to LDEO_IX/loadnav
+        %[p, f, ext] = fileparts(cfg.f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
+
+        %from CE26008 - however pyIGRF is not install - so I do not use it
+        %at the moment
+        %%%
+        % a = {dbstack(2).file}; 
+        % if ~strcmp(a{1},'mout_1hzasc.m') %bash script uses the output of mout_1hzasc so don't want to try to call this before that
+        %     mdfile = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'magdec.txt');
+        %     if ~exist(mdfile,'file')
+        %         fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
+        %         pause
+        %     end
+        %     md = load(mdfile);
+        %     if ~sum(md==stnlocal)
+        %         fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
+        %         pause
+        %         md = load(mdfile);
+        %     end
+        %     ii = find(md==stnlocal); 
+        %     if isempty(ii)
+        %         warning('no mag dec for %s',stn_string)
+        %     else
+        %         ii = ii(1);
+        %         cfg.p.drot = md(ii+1);
+        %         fprintf(1,'using mag dec %f for %s',cfg.p.drot,stn_string)
+        %     end
+        % end
+%%%%%%%%%%%%%%%%%%%%  end adcp_proc %%%%%%%%%%%%        
 
 %%%%%%%%%%%%%%%%%%%%  sbe35 %%%%%%%%%%%%
     case 'sbe35'

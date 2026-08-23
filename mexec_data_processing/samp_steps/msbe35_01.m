@@ -154,8 +154,8 @@ if docf
 else
     hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 end
-hnew.dataname = 'SBE35 MODIFY LATER '; % [!!!!! SAM D EDIT. MODIFY LATER !!!!!] 
-% hnew.dataname = sbe35file.dataname;
+pd=mexec_file_locations('procfiles','ctd');
+hnew.dataname = pd.sbe35name;
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; 
 
 t.position = t.bn;
