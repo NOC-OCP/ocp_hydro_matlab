@@ -10,8 +10,11 @@ function mpath = mgetdir(M_ABBREV)
 %   might give root_sal = '/local/users/pstar/cruise/data/ctd/BOTTLE_SAL';
 
 m_common
+fnames = fieldnames(MEXEC_G.MDIRLIST);
 
-ii = find(strcmp(M_ABBREV, MEXEC_G.MDIRLIST(:,1)) | strcmp(['M_' upper(M_ABBREV)], MEXEC_G.MDIRLIST(:,1)));
+% Find matching rows using the extracted field names
+ii = find(strcmp(M_ABBREV, fnames) | strcmp(['M_' upper(M_ABBREV)], fnames));
+
 if length(ii)>1
     warning('%s set %d times in m_setup', M_ABBREV, length(ii))
 elseif isempty(ii)
@@ -20,4 +23,6 @@ elseif isempty(ii)
     return
 end
 
-mpath = fullfile(MEXEC_G.mexec_data_root, MEXEC_G.MDIRLIST{ii(1),2});
+% Convert the index 'ii(1)' back to a string name, then read the struct dynamically
+targetField = fnames{ii(1)};
+mpath = fullfile(MEXEC_G.mexec_data_root, MEXEC_G.MDIRLIST.(targetField));
