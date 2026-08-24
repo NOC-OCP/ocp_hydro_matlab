@@ -176,7 +176,8 @@ for fno = 1:length(infiles)
                 [~,ia,ib] = intersect(samdata.Properties.VariableNames,dat.Properties.VariableNames);
                 if sum(~strcmp(samdata.Properties.VariableTypes(ia),dat.Properties.VariableTypes(ib)))
                     warning('incompatible variable types on sheet %d',sno)
-                    keyboard
+                    % keyboard
+                    continue
                 end
                 samdata = load_samdata_combine_tables(samdata, dat);
             else

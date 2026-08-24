@@ -139,7 +139,7 @@ case 'adcp_proc'
         switch opt2
             case 'sbe35files'
                 sbe35in = fullfile(MEXEC_G.MDIRLIST.M_SBE35,...
-                    sprintf('CTD_%s.asc', stn_string));
+                    sprintf('CTD_*.asc')); % not station specific
                 stnind = -6:-4; % index in file name of where the station number can be found.
                 %stnind is indices in filename sbe35file normally
                 %containing the station number; use negative to indicate
@@ -159,146 +159,95 @@ case 'adcp_proc'
         end
 %%%%%%%%%%%%%%%%%%%% end sbe35 %%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%% msal_01 %%%%%%%%%%
-    case 'msal_01'
+%%%%%%%%%%%%%%%%%%%% samp_proc %%%%%%%%%%   
+case 'samp_proc'
         switch opt2
-            case 'sal_files'
-                %salfiles is a list of files to load, defaults to 
-                % all sal_cruise_*.csv files in BOTTLE_SAL directory
-            case 'sal_parse'
-                % crhelp_str = {'place to change fieldnames, combine fields, etc. after '
-                %     'loading; also to specify datform (default: ''dd/mm/yyyy'') and timform'
-                %     '(default: ''hh:mm:ss'') for converting date and time strings to datevec.'
-                %     'also a place to add information like cellT (bath temperature) or ssw_k15'
-                %     'if it is not a column in the file (or if it in the header, code to parse'
-                %     'it from salhead).'};
-            case 'sal_flags'
-                % crhelp_str = {'Place to set flags on salinity bottles or readings: for bottles, change ds_sal.flag'
-                %     'based on ds_sal.sampnum. Note: sample flags: 1 not yet analysed, 2 good, 3 questionable,'
-                %     '4 bad, 5 not reported (?), 6 average of replicates, 9 not drawn.'
-                %     'For readings, NaN directly, or (default) search for files in ctd/BOTTLE_SAL/editlogs and apply previously selected'
-                %     'edits (gui to select more runs later in msal_01).'};
-            case 'sal_calc'
-                % crhelp_str = {'sal_off sets salinity standard offsets (autosal units, additive, default []) for ranges'
-                %     'of sampnum, while sal_off_base (default ''sampnum_run'') to specify how to match them to samples.'
-                %     'Optionally, set sal_adj_comment here to give information on how standards offsets were chosen.'};
-            case 'tsg_sampnum'
-                % crhelp_str = {'Place to parse tsg sampnum (default: same as sampnum read in from file'
-                %     'and dnum (datenum) from sampnum (default: either yyyymmddHHMM, or if sampnum<0, -jjjHHMM)'
-                %     'where jjj is yearday)'};
+            case 'files'
+                % uway_sample_log_file = fullfile(MEXEC_G.MDIRLIST.M_BOT,'uway_sample_log.csv');
+                switch samtyp
+                    case 'ulog'
+                    case 'chl'
+                    case 'oxy'
+                        files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,'Winkler Calculation Spreadsheet_DY214- TEST 22-08_update.xlsx')};
+                        iih = 8;
+                        hcpat = {'Longitude'};
+                        chrows = 1; chunits = []; 
+                        % below from CE26008, above not working - need to
+                        % edit, more
+                        % ct = {'statnum','double';...
+                        %     'position','double';...
+                        %     'd','char';...
+                        %     'botno','char';...
+                        %     'botvol25','double';...
+                        %     'blank_titre','double';...
+                        %     'vol_std','double';...
+                        %     'std_titre','double';...
+                        %     'fix_temp','double';...
+                        %     'bot_vol_tfix','double';...
+                        %     'sample_titre','double';...
+                        %     'iodatemol','double';...
+                        %     'n_o2','double';...
+                        %     'conc_o2','double';...
+                        %     'notes','char'};  
+                        % sopts.VariableNames = ct(:,1)';
+                        % sopts.VariableTypes = ct(:,2)';
+                        % sopts.sheets = 1:4;
+                    case 'sal'
+                        % files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'portasal*.csv')).name};
+                        % files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
+                    case 'nut'
+                    case 'co2'
+                    case 'cfc'
+                    case 'doc'
+                    case 'iso'
+                end
+            case 'parse'
+                switch samtyp
+                    case 'sal'
+                        % ssw_k15 = 0.99983;
+                        % ssw_batch = 'P169';
+                    case 'oxy'
+                        % sdata.flag = 1+ones(size(sdata.statnum));
+                        % m = ~cellfun('isempty',sdata.notes);
+                        % sdata.flag(m) = 5; %not reported
+                        % sdata.sample_titre(m) = NaN;
+                        % sdata.conc_o2(m) = NaN;
+                        % sdata.sampnum = sdata.statnum*100+sdata.position;
+                        % sdata(:,ismember(sdata.Properties.VariableNames,{'botno','botvol25','notes','statnum','position'})) = [];
+                end
+            case 'calc'
+                switch samtyp
+                    case 'sal'
+                        %salin_off = -1.5e-5; %constant
+                    case 'oxy'
+                end
+            case 'check'
+                % checksam.sbe35 = 0;
+                % checksam.sal = 1; %done
+                % checksam.oxy = 1; %done
+                % checksam.chl = 0;
+            case 'flags' %flags before replicate averaging and after replicate averaging***
+                switch samtyp
+                    case 'sal'
+                        % m = ismember(ds_sal.sampnum,[1403 1406 1408 1501]);
+                        % ds_sal.flag(m) = 4;
+                    case 'oxy'
+                        %sampnum, a flag, b flag, c flag
+                        % flr = [...
+                        %     %2703 3 3 9; ...
+                        %     ];
+                        % [~,ifl,id] = intersect(flr(:,1),d.sampnum);
+                        % d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
+                        % d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
+                        % d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
+                        % % outliers relative to profile/CTD (not replicates)
+                        % flag4 = [1207 ]';
+                        % d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
+                        % flag4b = [1501 ]; %both a and b high, maybe bad niskin closure
+                        % d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
+                        % d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
+                end
         end
-%%%%%%%%%%%%%%%%%%%% end msal_01 %%%%%%%%%%
-
-
-%%%%%%%%%%%%%%%%%%%% moxy_01 %%%%%%%%%%
-    case 'moxy_01'
-        switch opt2
-            case 'oxy_files'
-                % crhelp_str = {'ofiles is a structure like that generated by dir, with field name listing'
-                %     'csv files (found in root_oxy directory) containing oxygen data to be loaded;'
-                %     'defaults to all oxy_cruise_*.csv files in BOTTLE_OXY directory.'
-                %     'Variables to be passed to load_samdata to identify column headers'
-                %     'and units: '
-                %     'hcpat, cell array (default {''Niskin'' ''Bottle'' ''Number''}) giving the'
-                %     '    contents of the header rows of an indicative column, and '
-                %     'chrows (default 1:2) giving the header rows to combine for variable names,'
-                %     '    (e.g., for the default indicative column, chrows = 1:2 produces ''niskin_bottle'')'
-                %     'chunits (optional, default []), specifying which in any of the header rows contain units'
-                %     '    (e.g. chunits = 3 in the example above gives units of ''number'').'
-                %     'oxyvarmap (no default) is an Nx2 cell array giving mapping from '
-                %     '    oxyfile column headers (as parsed by load_samdata) in column 2 to '
-                %     '    variables used by moxy_01 in column 1: '
-                %     'sampnum, statnum, position (either sampnum or statnum and position '
-                %     '    required)'
-                %     'vol_blank, vol_std, vol_titre_std (optional, may be set in case ''oxy_std'' instead)'
-                %     'fix_temp, sample_titre (required)'
-                %     'botvol_at_tfix or botvol or botnum (at least one; if botvol_at_tfix is not included'
-                %     '    in csv files, include code under opt2 = ''oxy_std'' case to compute from fix_temp and '
-                %     'botvol or botnum and a lookup table of bottle volumes)'
-                %     'n_o2, conc_o2 (optional, only include if you don''t want to recalculate '
-                %     '    from sample_titre)'
-                %     'flag, comment (optional).'};
-            case 'oxy_parse'
-                % crhelp_str = {'Place to parse/store additional info from each file, for instance from header hs,'
-                %     'or to compute things from fields of ds, for instance looking up bottle volumes from bottle '
-                %     'numbers, or to specify mapping between file and mstar variable names in cell array oxyvarmap '
-                %     '(first column: mstar names, second column: names in file), or to set fillstat to call'
-                %     'fill_samdata_statnum to fill in missing station numbers on rows 2:N (default 0).'};
-            case 'oxy_calc'
-                % crhelp_str = {'Place to set oxygen titration parameters required if you want to calculate conc_o2 '
-                %     '(rather than reading it in): '
-                %     'vol_reag_tot (for fixing reagents, no default, set to 0 if your bot_vol_tfix has already accounted for this) '
-                %     'cal_temp (temperature at which flask volumes were calibrated, no default), '
-                %     'mol_std, std_react_ratio, sample_react_ratio, mol_o2_reag (don''t change), '
-                %     'and optionally ds_oxy.vol_blank, ds_oxy.vol_titre_std, ds_oxy.vol_std, and'
-                %     'ds_oxy.bot_vol_tfix or ds_oxy.bot_vol (vol_reag_tot will be subtracted from bot_vol_tfix).'};
-                %below almost certainly won't change
-            case 'oxy_flags'
-                % crhelp_str = {'Place to change flags, ds_oxy.botoxya_flag, ds_oxy.botoxyb_flag.'};
-        end
-%%%%%%%%%%%%%%%%%%%% end moxy_01 %%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%% moxy_to_sam %%%%%%%%%%
-    case 'moxy_to_sam'
-        switch opt2
-            case 'use_oxy_repl'
-                % crhelp_str = {'Set use_oxy_repl (default: 1) to 0 to not average replicates, 1 to average duplicates,'
-                %     'or 2 to average duplicates or triplicates'};
-        end
-%%%%%%%%%%%%%%%%%%%% end moxy_to_sam %%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%% msam_ashore_flag %%%%%%%%%%
-    case 'msam_ashore_flag'
-        switch opt2
-            case 'shore_sam_types'
-                % crhelp_str = {'If not already set in workspace, set samtypes'
-                %     '(default {}), a cell array list of sampletypes collected'
-                %     'for later analysis, e.g. samtypes = {''nut'', ''co2''};'
-                %     'or if there is only one you could instead set e.g. samtype = ''nut'';'
-                %     'If neither is set, script will prompt for a single samtype.'};
-        end
-        % crhelp_str = {'Switching on sam_ashore_{sampletype} (e.g. sam_ashore_nut), set:'
-        %     'fnin, a cell array list of csv or excel file(s) containing lists of '
-        %     '  samples collected for a given sampletype,'
-        %     'varmap, a Mx3 cell array whose first column is mexec names, second is'
-        %     '  the corresponding variable names in the file being read in, and '
-        %     '  third specifies (for flag fields) how to decode them: as ''flag'''
-        %     '  (i.e. no decoding, use as-is) or as ''num_samples'' (i.e. anything >0'
-        %     '  gets a flag of 1).'
-        %     '  the mexec names must include either sampnum or statnum and position,'
-        %     '  as well as the one or more {parameter}_flag variables to be written '
-        %     '  for this sampletype (e.g. silc_flag, phos_flag, totnit_flag), '
-        %     'fillstat (default 0), a flag setting whether statnum is blank in some'
-        %     '  rows and needs to be filled in,'
-        %     'do_empty_vars (default 0), a flag setting whether to also add columns'
-        %     '  of NaNs as parameter (e.g. silc, phos, totnit) placeholders, in '
-        %     'addition to the flags.'};
-%%%%%%%%%%%%%%%%%%%% end msam_ashore_flag %%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%% msam_checkbottles_02 %%%%%%%%%%
-    case 'checkbottles_02'
-        switch opt2
-            case 'section'
-                %set section name corresponding to the gridded file to plot
-                %anomalies from
-            case 'docals'
-        end
-%%%%%%%%%%%%%%%%%%%% end msam_checkbottles_02 %%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%% end sam_all_make %%%%%%%%%%
-    case 'sam_all_make'
-        switch opt2
-            case 'sam_all_restart_steps'
-                % crhelp_str = {'If not already set in workspace, set:'
-                %     'sam_all_restart, a list of steps to be rerun: '
-                %     '  sam to delete sam_cruise_all.nc and start from scratch (default); '
-                %     '  fir to regenerate the fir files by running mfir_01, mfir_03, mwin_to_fir '
-                %     '    (default: skip; just run mfir_to_sam to paste existing into sam_cruise_all.nc);'
-                %     '  one or more parameters (default: ''sbe35'', ''sal'', ''oxy'') for which '
-                %     '    to run the corresponding m{parameter}_01 scripts; '
-                %     '  shore to run msam_ashore_flag (default: skip).'
-                %     'klist, list of stations for which to run fir and sbe35 steps (default [] --> prompt)'};
-        end
-%%%%%%%%%%%%%%%%%%%% end sam_all_make %%%%%%%%%%   
+%%%%%%%%%%%%%%%%%%%% end samp_proc %%%%%%%%%%
 
 end

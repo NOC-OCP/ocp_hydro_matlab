@@ -93,7 +93,11 @@ switch step
                 pd.samu = fullfile(MEXEC_G.MDIRLIST.M_BOT,['ucswsamp_' mcruise '_all.nc']);
                 if nargin>2
                     pd.([varargin{2} 'name']) = [varargin{2} '_' mcruise '_all'];
-                    pd.([varargin{2}]) = fullfile(MEXEC_G.MDIRLIST.(['M_BOT_' upper(varargin{2})]),[pd.([varargin{2} 'name']) '.nc']);
+                    if strcmp(upper(varargin{2}),'SBE35')
+                        pd.([varargin{2}]) = fullfile(MEXEC_G.MDIRLIST.(['M_' upper(varargin{2})]),[pd.([varargin{2} 'name']) '.nc']);
+                    else
+                        pd.([varargin{2}]) = fullfile(MEXEC_G.MDIRLIST.(['M_BOT_' upper(varargin{2})]),[pd.([varargin{2} 'name']) '.nc']);
+                    end
                 end
             case 'sadcp'
                 if nargin>2

@@ -23,6 +23,7 @@ svars = {'sampnum','niskin_flag'}; %variables to load from sample file (already 
 uvars = {'dday','flow'}; %variables to load from underway time series file (and interpolate)
 pvars = 1; %1 to save all variables from paramfile to sam*file, otherwise list specific variables (using names after convs.rename has been applied)
 %modify defaults
+convs = {};
 switch samtyp
     case 'chl'
         hnew.comment = ['chlorophyll data from ' pd.(samtyp)];
@@ -46,13 +47,16 @@ switch samtyp
 %        convs.rename = {'botpsal', {'salinity_adj','salinity'};... %by
 %        default this should be in mexec_defaults samp_proc parse as
 %        varmap***
-%            'botpsal_flag', {'flag'}}; %backwards compatibility
+%            'botpsal_flag'
+% , {'flag'}}; %backwards compatibility
         pvars = {'botpsal','botpsal_flag'};
         uvars = [uvars, 'salinity'];
         hnew.comment = ['salinity data from ' pd.(samtyp)];
     case 'sbe35'
+        warning('msam_merge.m needs to be edited for sbe35 to work')
         pvars = {'sbe35temp'; 'sbe35temp_flag'}; %list which to copy because we don't need to copy tdiff etc.***
         hnew.comment = ['SBE35 data from ' pd.(samtyp)];
+        return
     case 'iso'
         %***just default?
     otherwise
@@ -89,7 +93,7 @@ end
 %turn into table, add units, and rename variables if specified
 dp = struct2table(dp);
 dp.Properties.VariableUnits = hp.fldunt;
-hnew.comment = '';
+% hnew.comment = ''; % seems not logical to overwrite it.
 
 %convert parameter sample data e.g. from umol_per_l to umol_per_kg, as
 %specified in convs  
@@ -98,7 +102,7 @@ hnew.comment = '';
 
 if iscell(pvars)
     %drop variables we don't need
-    m = ismember(dp.Properties.VariableNames, [pvars 'sampnum niskin_flag']); %***uway flag var?
+    m = ismember(dp.Properties.VariableNames, [pvars; {'sampnum'; 'niskin_flag'}]); %***uway flag var?
     dp = dp(:,m);
 end
 

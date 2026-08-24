@@ -15,21 +15,15 @@ if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s
 
 pd = mexec_file_locations('procfiles','ctd');
 outfile = sprintf(pd.sbe35,pd.sbe35name);
-if nargin>0 && ~isempty(varargin{1}) && exist(outfile,'file')
-    h = m_read_header(outfile);
-    if h.uprlim(strcmp('statnum',h.fldnam))>=varargin{1}
-        %we've already read in as far as this station, no need to redo
-        return
-    end
-end
+% if nargin>0 && ~isempty(varargin{1}) && exist(outfile,'file')
+%     h = m_read_header(outfile);
+%     if h.uprlim(strcmp('statnum',h.fldnam))>=varargin{1}
+%         %we've already read in as far as this station, no need to redo
+%         return
+%     end
+% end
 
 % load sbe35 data
-if ~exist('stn_string','var')
-    opt1='setup'; opt2='m_stn_string'; get_cropt; clear opt1 opt2
-    % Change made by sam diabate. mexec_defaults_all within get_cropt sets
-    % stn_string but does not seem to have been called previously when
-    % running ctd_process(001,'sbe35')
-end
 opt1='sbe35'; opt2='sbe35files'; get_cropt;
 if strcmp(sbe35in,'none')
     return

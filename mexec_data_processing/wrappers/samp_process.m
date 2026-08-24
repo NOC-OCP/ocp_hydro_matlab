@@ -73,9 +73,9 @@ if restartusam
  end
 
 %now start loading parameter data
-for pno = 1:length(ptlist)
-    msam_load(ptlist{pno})
-    msam_merge(ptlist{pno})
+for pno = 1:size(ptlist,1)
+    msam_load(ptlist(pno,:))
+    msam_merge(ptlist(pno,:))
 end
 
 opt1 = 'outputs'; opt2 = 'columndata'; get_cropt
