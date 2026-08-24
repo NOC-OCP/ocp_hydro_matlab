@@ -74,7 +74,7 @@ switch opt1
                 % double check barcodes of the straight niskin numbers
                 if ismember(stn,[1:4])
                     niskin_pos = niskin_pos(1:2:end);
-                    niskin_number = niskin_barcodes(1:2:end);
+                    niskin_number = niskin_number(1:2:end);
                 end
             case 'botflags'
                 switch stnlocal
