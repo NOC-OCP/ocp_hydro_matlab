@@ -51,6 +51,7 @@ switch opt1
            % fluorescence
            % todo: 004 despiking of conductivity and transmittance 
            % 005 spikes in cond, trns anf fluor
+           % todo: 009 despiking of conductivity, fluor and transmittance 
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
@@ -78,23 +79,25 @@ switch opt1
                     niskin_number = niskin_number(1:2:end);
                 end
             case 'botflags'
-                switch stnlocal
-                % DY214
-                % Add a new case for the station if a problem with the
-                % bottle occured after the ctd came up (M3). These are
-                % the bottle flags:
-                % 1: no info; 2: no problems noted; 3: leaking;
-                % 4: did not trip correctly; 5: not reported;
-                % 7: unknown problem; 9: samples not drawn
-                %
-                % If you are unsure about syntax add a comment.
-                % Example:
-                % todo: For station 4, bottle 9 and 11 leaked
+                switch stnlocal % station number
+                    % DY214
+                    % Add a new case for the station if a problem with the
+                    % bottle occured after the ctd came up (M3). These are
+                    % the bottle flags:
+                    % 1: no info; 2: no problems noted; 3: leaking;
+                    % 4: did not trip correctly; 5: not reported;
+                    % 7: unknown problem; 9: samples not drawn
+                    %
+                    % If you are unsure about syntax add a comment.
+                    % Example:
+                    % todo: For station 4, bottle 9 and 11 leaked
                     case 4
                         niskin_flag(ismember(position,[9 11])) = 3; % bottles leaked
                     case 6
                         niskin_flag(ismember(position,[3])) = 3; % bottles leaked
-                    
+                    case 9 
+                        niskin_flag(ismember(position,2)) = 9; % bottle leaked and was not sampled              
+                        niskin_flag(ismember(position,18)) = 3; % bottle leaked                    
                 end
         
         end
