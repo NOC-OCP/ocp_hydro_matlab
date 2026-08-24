@@ -50,6 +50,7 @@ switch opt1
            % to do - station 3 auto de spiking conductivity and 
            % fluorescence
            % todo: 004 despiking of conductivity and transmittance 
+           % 005 spikes in cond, trns anf fluor
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
@@ -91,6 +92,8 @@ switch opt1
                 % todo: For station 4, bottle 9 and 11 leaked
                     case 4
                         niskin_flag(ismember(position,[9 11])) = 3; % bottles leaked
+                    case 6
+                        niskin_flag(ismember(position,[3])) = 3; % bottles leaked
                     
                 end
         
