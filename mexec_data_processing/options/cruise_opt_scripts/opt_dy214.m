@@ -44,12 +44,6 @@ switch opt1
     %     end
 %%%%%%%%%%%%%%%%%%%%  end bathy (not a script) %%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%% nisk_proc %%%%%%%%%%%%
-    case 'nisk_proc'
-            
-            end
-%%%%%%%%%%%%%%%%%%%% end nisk_proc %%%%%%%%%%%%
-
 %%%%%%%%%%%%%%%%%%%% ctd_proc %%%%%%%%%%%%
     case 'ctd_proc'
         switch opt2
@@ -76,7 +70,7 @@ switch opt1
                 end
             case 'niskins'
                 niskin_pos = 1:24;
-                niskin_number = [2754:2775,2777,2779];
+                niskin_number = [2754:2774,2776:2778];
                 % double check barcodes of the straight niskin numbers
                 if ismember(stn,[1:4])
                     niskin_pos = niskin_pos(1:2:end);
