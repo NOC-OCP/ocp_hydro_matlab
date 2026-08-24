@@ -52,7 +52,8 @@ switch opt1
            % todo: 004 despiking of conductivity and transmittance 
            % 005 spikes in cond, trns anf fluor
            % todo: 009 despiking of conductivity, fluor and transmittance 
-            case 'ctdfiles'
+           % todo: 011 despiking of transmittance 
+           case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
             case 'redoctm'
@@ -97,7 +98,9 @@ switch opt1
                         niskin_flag(ismember(position,[3])) = 3; % bottles leaked
                     case 9 
                         niskin_flag(ismember(position,2)) = 9; % bottle leaked and was not sampled              
-                        niskin_flag(ismember(position,18)) = 3; % bottle leaked                    
+                        niskin_flag(ismember(position,18)) = 3; % bottle leaked   
+                    case 10
+                        niskin_flag(ismember(position,[1 6])) = 3; % bottle leaked   
                 end
         
         end
