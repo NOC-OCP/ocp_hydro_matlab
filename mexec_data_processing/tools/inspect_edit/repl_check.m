@@ -109,7 +109,7 @@ for vno = 1:length(vbases)
     if upl
         nr = sum(mv)-1;
     else
-        nr = size(dbot.(vbase),2)-1;
+        nr = size(dbot.(vbase),2);
     end
     %compare all other replicates to 'a' replicate
     sama = repmat(d(:,1),1,nr);
@@ -195,10 +195,9 @@ for vno = 1:length(vbases)
     while strcmp(c,'p') || strcmp(c,'k')
         c = input('p to print list of differing replicates, k for keyboard or enter to continue  ','s');
         if strcmp(c,'p')
-            mask = (mchk ~= 0);
             %display mismatched replicates
             disp('sampnum, deviating replicate values, flags')
-            disp([dbot.sampnum(mask) dbot(mask,mv) dbot(mask,mf)])
+            disp([dbot.sampnum(mchk) dbot(:,mv) dbot(:,mf)])
         elseif strcmp(c,'k')
             keyboard
         end
