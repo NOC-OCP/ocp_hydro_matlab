@@ -16,7 +16,7 @@ function [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort)
 %initialise hnew with h0
 hnew.fldnam = h0.fldnam;
 hnew.fldunt = h0.fldunt;
-hnew = keep_hvatts(hnew, h0);
+hnew = keep_hvatts(h0,hnew);
 
 %check indepvars
 mvo = d0.(indepvar);
@@ -48,9 +48,16 @@ end
 [~,iico,iio] = intersect(d.(indepvar), mvo);
 [~,iicn,iin] = intersect(d.(indepvar), mvn);
 vars = setdiff([h0.fldnam h.fldnam], indepvar, 'stable');
-a = zeros(size(d.(indepvar))); %add fill value to pad
+nrows = size(d.(indepvar),1); %add fill value to pad
 for vno = 1:length(vars)
     varname = vars{vno};
+    if isfield(d0, varname)
+        ncols = size(d0.(varname), 2);
+    elseif isfield(d, varname)
+        ncols = size(d.(varname), 2);
+    end
+
+    a = zeros(nrows, ncols); 
     if length(varname)>4 && strcmp(varname(end-3:end),'flag')
         data = 9+a;
     else
@@ -80,7 +87,8 @@ end
 %add (or fill) other variable attributes from h to hnew
 hnew = keep_hvatts(hnew,h); 
 
-%remake fields that shouldn't be filled with NaN or 9
+%remake fields that shouldn't be
+%  filled with NaN or 9
 if strcmp(indepvar,'sampnum') && isfield(d,'sampnum') && isfield(d,'statnum')
     d.statnum = floor(d.sampnum/100); 
     if isfield(d, 'position')
