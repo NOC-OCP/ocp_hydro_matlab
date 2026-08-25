@@ -107,14 +107,13 @@ switch samtyp
         mt = cellfun(@(x) contains(x, '_temp'), sdata.Properties.VariableNames);
         if sum(mt); sdata.Properties.VariableUnits(mt) = {'degC'}; end %***overwrite?
         %rename and keep only some variables
-sdata(:, {'botoxy'}) = sdata(:, {'conc_o2'});
-sdata(:, {'botoxy_flag'}) = sdata(:, {'flag'});
-sdata(:, {'botoxy_temp'}) = sdata(:, {'fix_temp'});
+sdata.botoxy = sdata.conc_o2;
+sdata.botoxy_flag = sdata.flag;
+sdata.botoxy_temp = sdata.fix_temp;
 vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
 sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
     case 'sal'
-        %e.g. average conductivity from 3 readin
-        % gs, and salinity from that
+        %e.g. average conductivity from 3 readings, and salinity from that
         sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
 end
 %***custom code, e.g. average extra readings, ... 

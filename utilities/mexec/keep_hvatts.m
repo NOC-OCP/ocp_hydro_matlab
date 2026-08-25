@@ -3,7 +3,7 @@ function hnew = keep_hvatts(hnew, h)
 % using fldnam to match
 
 hf = fieldnames(h);
-% hf = hf(strncmp('fld',hf,3));
+hf = hf(strncmp('fld',hf,3));
 hf = setdiff(hf,{'fldnam' 'fldunt'});
 
 if ~isempty(hf)
@@ -11,8 +11,8 @@ if ~isempty(hf)
     for fno = 1:length(hf)
         if ~isfield(hnew,hf{fno})
             hnew.(hf{fno}) = repmat({' '},size(hnew.fldnam));
-        elseif ~isempty(hnew.(hf{fno}))
-            warning('may overwrite %s',hf{fno})
+%         elseif ~isempty(hnew.(hf{fno}))
+%             warning('may overwrite %s',hf{fno})
         end
         hnew.(hf{fno})(ia) = h.(hf{fno})(ib);
     end
