@@ -53,6 +53,13 @@ switch opt1
            % 005 spikes in cond, trns anf fluor
            % todo: 009 despiking of conductivity, fluor and transmittance 
            % todo: 011 despiking of transmittance 
+           % todo: 013 despiking of transmittance 
+           % todo: 013 despiking of transmittance. 
+           %           + issue with oxy sensor being very noisy on the way
+           %           up.
+           %           also, one of the oxy sensor was affected when 
+           %           surfacing before the automatically detected time 
+           %           cutoff. 
            case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
