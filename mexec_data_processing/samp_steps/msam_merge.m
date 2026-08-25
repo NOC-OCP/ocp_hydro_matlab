@@ -92,18 +92,33 @@ end
 
 %turn into table, add units, and rename variables if specified
 dp = struct2table(dp);
-dp.Properties.VariableUnits = hp.fldunt;
+
+% map units in correct order
+aligned_units = repmat({''}, 1, length(dp.Properties.VariableNames));
+
+for col = 1:length(dp.Properties.VariableNames)
+    t_name = dp.Properties.VariableNames{col};
+    idx = strcmp(hp.fldnam, t_name);
+    
+    if any(idx)
+        aligned_units{col} = hp.fldunt{idx};
+    end
+end
+
+dp.Properties.VariableUnits = aligned_units;
 % hnew.comment = ''; % seems not logical to overwrite it.
 
 %convert parameter sample data e.g. from umol_per_l to umol_per_kg, as
 %specified in convs  
-[dp, hnew] = samp_units_conv(dp, hnew, convs);
+[dp, hnew] = samp_units_conv(dp, hp, convs);
 %***what about underway data?
 
 if iscell(pvars)
     %drop variables we don't need
-    m = ismember(dp.Properties.VariableNames, [pvars; {'sampnum'; 'niskin_flag'}]); %***uway flag var?
+    m = ismember(dp.Properties.VariableNames, [pvars(:).', {'sampnum' 'niskin_flag'}]); %***uway flag var?
     dp = dp(:,m);
+    hnew.fldnam = dp.Properties.VariableNames;
+    hnew.fldunt = dp.Properties.VariableUnits;
 end
 
 %average replicates 
@@ -125,6 +140,10 @@ dp = table2struct(dp,'ToScalar',true);
 dp.niskin_flag = dc.niskin_flag;
 dp = hdata_flagnan(dp, 'keepemptyvars', 1);
 dp = rmfield(dp,'niskin_flag');
+m_remove = strcmp(hnew.fldnam, 'niskin_flag');
+hnew.fldnam(m_remove) = [];
+hnew.fldunt(m_remove) = [];
+hnew = sync_headers_and_units(dp, hnew);
 
 %save samfile
 mfsave(pd.samc, dp, hnew, '-merge', 'sampnum');
@@ -148,10 +167,10 @@ end
 function [dp, hnew] = samp_units_conv(dp, hnew, convs)
 
 %conversions that use CTD data, before averaging
-if isfield(convs,'per_l_to_per_kg') && isfield(convs.per_l_to_per_kg,'temp')
+if isfield(convs,'umol_per_l_to_per_kg') && isfield(convs.umol_per_l_to_per_kg,'temp')
     %use CTD salinity, but which temperature to use depends on parameter,
     %so must be passed in
-    temp = convs.per_l_to_per_kg.temp;
+    temp = convs.umol_per_l_to_per_kg.temp;
     if isnumeric(temp)
         if isscalar(temp) %e.g., constant lab temp (approx)
             ctemp = repmat(temp,size(dp.sampnum));
@@ -166,16 +185,16 @@ if isfield(convs,'per_l_to_per_kg') && isfield(convs.per_l_to_per_kg,'temp')
         ctemp = dp.(temp); %e.g. botoxy_temp
     end
     nc = size(ctemp,2);
-    dens = gsw_rho(repmat(dp.uasal,1,nc), gsw_CT_from_t(repmat(dp.uasal1,nc), ctemp, 0), 0);
+    dens = gsw_rho(repmat(dp.uasal,1,nc), gsw_CT_from_t(repmat(dp.uasal,1,nc), ctemp, 0), 0);
     %convert all variables whose units are umol_per_l (*** or just
     %*_per_l?)
     m = strcmp('umol_per_l',dp.Properties.VariableUnits);
-    dp(:,m) = dp(:,m)./(repmat(dens,1,sum(m))/1000);
+    dp{:,m} = dp{:,m}./dens/1000;
     %change units
     dp.Properties.VariableUnits(m) = {'umol_per_kg'};
     %if variable names also contained _per_l, change them
     dp.Properties.VariableNames(m) = cellfun(@(x) replace(x,'_per_l',''), dp.Properties.VariableNames(m), 'UniformOutput', false); %***
-    hnew.comment = [hnew.comment ', converted from umol/l to umol/kg using ' c.temp ' and CTD salinity'];
+    hnew.comment = [hnew.comment ', converted from umol/l to umol/kg using ' temp ' and CTD salinity'];
 end
 
 function [dp, hnew] = repl_avg(dp, hnew, svars)
@@ -192,10 +211,11 @@ un = hnew.fldunt(mv);
 %and loop through them to average
 for nno = 1:length(vnames)
     vname = vnames{nno};
+    fname = [vname '_flag'];
     vunit = un{nno};
     data = dp.(vname);
     [nr,nc] = size(data);
-    flag = dp.([vname '_flag']);
+    flag = dp.(fname);
     %find best flag for each sampnum (2 better than 3
     %better than 4, 1 and 9 irrelevant)
     flag(flag==1) = NaN; %1 not yet analysed means we won't have data anyway
@@ -207,41 +227,78 @@ for nno = 1:length(vnames)
     datast = std(data,[],2,'omitnan');
     %but where best was more than one bad value, just keep
     %first***?
-    if isfield(dp,[vname '_inst'])
+    if ismember([vname '_inst'],dp.Properties.VariableNames)
         inst = dp.([vname '_inst']);
         inst(flag~=flag0) = NaN;
         i1 = min(inst,[],2); i2 = max(inst,[],2);
         inst = i1; inst(i1~=i2) = inf; %multiple instruments
     end
-    if isfield(dp,[vname '_temp'])
+    if ismember([vname '_temp'],dp.Properties.VariableNames)
         ind = repmat(1:nc,nr,1);
         ind(flag~=flag0) = NaN;
-        ind = sub2ind([nr nc], 1:nr, min(ind));
-        dp.([vname '_temp']) = dp.([vname '_temp'])
-        temp = mean(temp,2,'omitnan'); %use temp of first recorded good value
+        ind = sub2ind([nr, nc], (1:nr)', min(ind, [], 2));
+        temp = dp.([vname '_temp']);
+        dp.([vname '_temp']) = temp(ind); %use temp of first recorded good value
     end
-    %where two or more points were averaged, set flag to 6,
-    %unless both were flagged bad (4)***what about
-    %questionable (3)?
+    %where two or more points were averaged, set 
+
     flag0(nav>1 & flag0<4) = 6;
     %add new fields
     dp.(vname) = dataav;
-    dp.(fname) = flag0;
-    hnew.fldnam = [hnew.fldnam vname fname];
-    hnew.fldunt = [hnew.fldunt vunit 'woce_4.9'];
+    dp.(fname) = flag0(:, 1);
+    m_remove = strcmp(hnew.fldnam, fname);
+    hnew.fldnam(m_remove) = [];
+    hnew.fldunt(m_remove) = [];
+    hnew.fldnam = [hnew.fldnam fname];
+    hnew.fldunt = [hnew.fldunt {'woce_4.9'}];
     if max(nav)>1
         sname = [vname '_std'];
         nname = [vname '_N'];
         dp.(sname) = datast;
         dp.(nname) = nav;
         hnew.fldnam = [hnew.fldnam sname nname];
-        hnew.fldunt = [hnew.fldunt vunit 'number'];
+        hnew.fldunt = [hnew.fldunt vunit {'number'}];
     end
     if sum(flag0==6)
-        hnew.comment = [hnew.comment ', ' vname ' average of replicates (' strjoin(rname,',') ')'];
+        hnew.comment = [hnew.comment ', ' vname ' average of replicates'];
     end
-    %remove replicate fields
-    m = ismember(hnew.fldnam,[rnames rfnames]);
-    dp(:,m) = []; hnew.fldnam(m) = []; hnew.fldunt(m) = [];
+    
 end
 
+
+function hnew = sync_headers_and_units(dp, hnew)
+% SYNC_HEADERS_AND_UNITS Propagates missing structure fields to hnew headers
+% and updates flag fields to WOCE standard notation.
+%
+% Inputs:
+%   dp   - Structure containing the current data fields
+%   hnew - Structure containing the master tracking cell arrays (fldnam, fldunt)
+%
+% Output:
+%   hnew - Updated header structure
+
+    % 1. Get all current field names from your data structure (dp)
+    dp_fields = fieldnames(dp);
+   
+
+    % 2. Find which fields are missing from hnew.fldnam
+    missing_fields = setdiff(dp_fields, hnew.fldnam, 'stable');
+
+    % 3. Append missing fields and initialize their units to 'number'
+    if ~isempty(missing_fields)
+        hnew.fldnam = [hnew.fldnam missing_fields(:)'];
+        
+        % Create a matching cell array of 'number' units for the new fields
+        missing_units = repmat({'number'}, length(missing_fields), 1);
+        hnew.fldunt = [hnew.fldunt missing_units(:)'];
+    end
+
+    % 4. Loop through and force any field ending in '_flag' to have unit 'woce9.4'
+    for k = 1:length(hnew.fldnam)
+        var_name = hnew.fldnam{k};
+        
+        % Check if the string length is at least 5 and ends with '_flag'
+        if length(var_name) >= 5 && strcmp(var_name(end-4:end), '_flag')
+            hnew.fldunt{k} = 'woce9.4';
+        end
+    end
