@@ -54,13 +54,19 @@ switch opt1
            % todo: 009 despiking of conductivity, fluor and transmittance 
            % todo: 011 despiking of transmittance 
            % todo: 013 despiking of transmittance 
-           % todo: 013 despiking of transmittance. 
+           % todo: 013 despiking of transmittance.  
            %           + issue with oxy sensor being very noisy on the way
            %           up.
            %           also, one of the oxy sensor was affected when 
            %           surfacing before the automatically detected time 
            %           cutoff. 
-           case 'ctdfiles'
+           % todo: 015 oxygen and conductivity on primary sensor affected
+           %           by something during a small bit of the descent
+           %           (around 1000m depth). Correction needed. 
+           %           also, despiking of transmittance needed.
+
+
+            case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
             case 'redoctm'
@@ -108,6 +114,8 @@ switch opt1
                         niskin_flag(ismember(position,18)) = 3; % bottle leaked   
                     case 10
                         niskin_flag(ismember(position,[1 6])) = 3; % bottle leaked   
+                    case 15
+                        niskin_flag(ismember(position,15)) = 3; % bottle leaked   
                 end
         
         end
