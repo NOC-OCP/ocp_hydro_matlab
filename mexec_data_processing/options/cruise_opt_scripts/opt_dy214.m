@@ -103,6 +103,7 @@ switch opt1
            %           (around 1000m depth). Correction needed. 
            %           also, despiking of transmittance needed.
            % todo: 018 transmittance and fluorence needs despiking 
+           % todo: 019 conductivity 1 and transmittance needs despiking
 
 
             case 'ctdfiles'
