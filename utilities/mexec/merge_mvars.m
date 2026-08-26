@@ -71,8 +71,8 @@ for vno = 1:length(vars)
         end
         if ~isfield(d0, varname)
             nvno = strcmp(varname,h.fldnam);
-            hnew.fldnam = [hnew.fldnam h.fldnam{nvno}];
-            hnew.fldunt = [hnew.fldunt h.fldunt{nvno}];
+            hnew.fldnam = [hnew.fldnam {h.fldnam{nvno}}];
+            hnew.fldunt = [hnew.fldunt {h.fldunt{nvno}}];
         end
     end
     d.(varname) = data;

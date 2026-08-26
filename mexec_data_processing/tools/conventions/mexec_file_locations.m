@@ -110,6 +110,8 @@ switch step
                 pd.buallform = ['%s_%s_all.nc'];
                 pd.bunav = fullfile(MEXEC_G.MDIRLIST.M_NAV);
                 pd.busurfmet = fullfile(MEXEC_G.MDIRLIST.M_SURFMET);
+                pd.buatmos = fullfile(MEXEC_G.MDIRLIST.M_SURFMET);
+                pd.buocean = fullfile(MEXEC_G.MDIRLIST.M_SURFMET);
                 pd.bubathy = fullfile(MEXEC_G.MDIRLIST.M_BATHY);
                 pd.buother = fullfile(MEXEC_G.MDIRLIST.M_AUTOSAL);
             case 'sumout'

@@ -2,16 +2,16 @@ function uway_process(dates, varargin)
 %
 % wrapper to load and process underway data
 %
-% uway_daily_proc(dates)
+% uway_process(dates)
 %   runs through loading, automatic editing of raw data, and averaging,
 %   merging, and editing of combined data, either for all available 
 %    dates can be either an Nx1 vector of decimal days
 %   (dates since the start of the year in MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)
 %   or a Nx6 vector of [yyyy mm dd HH MM SS]
-% uway_daily_proc(dates, mstar_prefix, 'reload_uway', 0); %processes, for
+% NOT WORKING: uway_process(dates, mstar_prefix, 'reload_uway', 0); %processes, for
 %   mstar_prefix files, days starting from already-loaded raw files and
 %   skipping to editing and averaging stage (mday_01 and mday_02)
-% uway_daily_proc(dates, [], 'reload_uway', 0, 'reload_av', 0);
+% uway_process(dates,'reload_uway', 0, 'reload_av', 0);
 %   %skips to editing of already-generated merged, averaged files
 %
 % by default it will process all the available techsas/scs/rvdas underway
@@ -113,13 +113,13 @@ end
 ctypes = {'nav','bathy','atmos','ocean'}; %important to do nav first
 %ctypes = ctypes(2); %did ocean, need to redo nav for wind; bathy is a problem, save for later
 for cno = 1:length(ctypes)
-    try
+    % try
         mday_02_merge_av(ctypes{cno}, ddays, mtable, reload_av);
         fprintf(1,'merged %s files\n',ctypes{cno})
-    catch me
-        fprintf(1,'could not merge %s files\n',ctypes{cno})
-        warning(me.message)
-    end
+    % catch me
+    %     fprintf(1,'could not merge %s files\n',ctypes{cno})
+    %     warning(me.message)
+    % end
 end
 
 if ismember(ctypes,'ocean')

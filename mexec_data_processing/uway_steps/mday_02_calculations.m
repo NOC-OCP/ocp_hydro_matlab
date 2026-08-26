@@ -110,7 +110,7 @@ if strcmp(stage,'pre')
                 %variable names
                 m = ismember(d.Properties.VariableNames,depvar);
                 d.Properties.VariableNames(m) = cellfun(@(x) [x '_' source],d.Properties.VariableNames(m),'UniformOutput',false);
-                d(:,strcmp(depvar,d.Properties.VariableNames)) = [];
+                % d(:,strcmp(depvar,d.Properties.VariableNames)) = [];
                 %ngvars = [ngvars xducerdepvar]; %***combine before this to avoid
                 %gridding this too?
             end
@@ -136,7 +136,7 @@ if strcmp(stage,'pre')
                 end
                 %load smoothed bestnav, compute ship heading as a vector
                 pd = mexec_file_locations('procfiles','uway');
-                navfile = pd.bunav;
+                navfile = fullfile(pd.bunav,sprintf(pd.buallform, 'bestnav', mcruise));
                 [dn, hn] = mload(navfile, '/');
                 headvar = munderway_varname('headvar', hn.fldnam, 1, 's');
                 [headav_e, headav_n] = uvsd(ones(size(dn.(headvar))), dn.(headvar), 'sduv');

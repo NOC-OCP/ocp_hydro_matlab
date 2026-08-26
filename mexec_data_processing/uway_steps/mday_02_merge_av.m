@@ -23,7 +23,7 @@ switch datatype
         source = {'position'; 'heading'; 'attitude'};
         streams = {default_navstream; default_hedstream; default_attstream};
         required = [1 1 0];
-        otfile = ['bestnav_' mcruise '.nc'];
+        otfile_pre = 'bestnav';
         tavp_s = 30; %30 s
         gmethod = 'meannum';
         ngvars = [ngvars 'altitude' 'headingtrue' 'coursetrue'];
@@ -33,27 +33,28 @@ switch datatype
         streams = {'ea640_sddpt'; 'em122_kidpt'};
         %streams = {'es18', 'es38'};
         required = [0 0];
-        otfile = ['bathy_' mcruise '.nc'];
+        otfile_pre = 'bathy';
         tavp_s = 5*60; % 5 min
         gmethod = 'medbin';
     case 'ocean'
         source = {'surfmet';'sbe45';'sbe38'};
-        streams = {'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'};
+        streams = {'brainboxuwy_ppuwy';'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'};
         required = [1 1 0]; %***make cruise-specific
-        otfile = ['surface_ocean_' mcruise '.nc'];
+        otfile_pre = 'surface_ocean';
         tavp_s = 60; % 1 min
         gmethod = 'meannum';
     case 'atmos'
         opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
         source = {'surfmet'; 'windsonic'; 'position'};
-        streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'};
+        streams = {'brainboxmet_ppmet'; 'surfmet_sflgt'; 'windsonic_iimwv'};
         required = [0 1 1];
-        otfile = ['atmos_truewind_' mcruise '.nc'];
+        otfile_pre = 'surface_atmos';
+        tavp_s = 'atmos_truewind';
         tavp_s = 30; % 30 s
         gmethod = 'meannum';
 end
 pd = mexec_file_locations('procfiles','uway');
-otfile = pd.(['bu' datatype]);
+otfile = fullfile(pd.(['bu' datatype]),sprintf(pd.buallform, otfile_pre, mcruise));
 opt1 = 'uway_proc'; opt2 = 'merge_av'; get_cropt
 
 %***check for multiple streams from same inst? not important at this
@@ -160,7 +161,7 @@ if ~isempty(uopts)
 end
 if handedit
     %manual selection of (additional) points to edit
-    [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, repars, yl);
+    [dg, hg] = uway_edit_by_day(dg, hg, edfile, ddays, btol, vars_to_ed, yl);
 end
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad) again to

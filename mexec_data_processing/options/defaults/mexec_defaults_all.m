@@ -198,7 +198,7 @@ switch opt1
                 vars_to_ed.g1 = {setdiff(fieldnames(dg)',tvars)};
                 switch datatype
                     case 'bathy'
-                        handedit = 1;
+                        handedit = 1; 
                     case 'ocean'
                         handedit = 1;
                         %ucsw system things should be NaNed when pump speed out of range, including remote temp (inside inlet)
@@ -211,23 +211,24 @@ switch opt1
                         %conductivity and salinity depend on housing temp
                         uopts.badtemph.cond = [NaN NaN];
                         uopts.badtemph.salinity = [NaN NaN];
-                        yl.trans = [-95; 0.1]; %***
+                        yl.trans = [-95 0.1]; %***
                         yl.cond = [20 40]; yl.psal = [33 38]; yl.salinity = yl.psal;
                         yl.fluor = [0 12]; yl.fluo = yl.fluor;
                         yl.turbidity = [0 1]; 
                         yl.transmittance = [60 101]; 
                         yl.temph = [-2 30]; yl.temp_remote = yl.temph;
                         yl.temp_in = yl.temph; yl.temp_tsg = yl.temph;
-                        repars.g1 = {{'temph','temp_in','temp_remote','temp_tsg'}, {'cond'}, {'psal'}};
-                        repars.g2 = {{'temph'},{'fluor'},{'turbidity'},{'trans','transmittance'}};
+                        vars_to_ed.g1 = {{'temph','temp_in','temp_remote','temp_tsg'}, {'cond'}, {'psal'}};
+                        vars_to_ed.g2 = {{'temph'},{'fluor'},{'turbidity'},{'trans','transmittance'}};
                     case 'atmos'
                         handedit = 1;
                         wvars = {'truwind_e','truwind_n','truwind_dir'};
                         for no = 1:length(wvars)
                             uopts.badtruwind_spd.(wvars{no}) = [NaN NaN];
                         end
-                        repars.g1 = {{'airpressure'},{'airtemp'},{'humidity'},{'truwind_spd','truwind_e','truwind_n'},{'parport','parstarboard','tirport','tirstarboard'}};
+                        vars_to_ed.g1 = {{'airpressure'},{'airtemp'},{'humidity'},{'truwind_spd','truwind_e','truwind_n'},{'parport','parstarboard','tirport','tirstarboard'}};
                         yl.airpressure = [500 1500];
+                        yl.airtemp = [0 30];
                         yl.humidity = [0 100];
                         yl.parport = [0 1e7];
                         yl.parstarboard = yl.parport;
@@ -235,6 +236,7 @@ switch opt1
                         yl.tirstarboard = yl.parport;
                         yl.truwind_e = [-50 50]; yl.truwind_n = yl.truwind_e; 
                         yl.truwind_spd = [0 round(yl.truwind_e(2)*sqrt(2))];
+                        yl.truwind_dir = [0 360];
                     case 'nav'
                         handedit = 0;
                 end

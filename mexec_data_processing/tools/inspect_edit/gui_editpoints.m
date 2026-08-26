@@ -67,10 +67,11 @@ if isempty(ygroups)
     ygroups.g1 = {setdiff(vn,xvar)};
 end
 
+
 gs = fieldnames(ygroups);
+
 for vgno = 1:length(gs)
     yv = ygroups.(gs{vgno});
-
     for xrno = 1:length(xgroups)
         done = 0;
         figure(10); clf; clear hl ha vused cused mused cnused
@@ -88,7 +89,7 @@ for vgno = 1:length(gs)
                     v = yv{gno};
                     m = ismember(vn,v) & sum(~isnan(data{:,:}));
                     if sum(sum(~isnan(data{iis,m})))
-                        ha(ano) = axes('Box','off');
+                        ha(ano) = axes('Box','off');                        
                         l = yl.(v{1}); 
                         set(ha(ano),'ylim',l); 
                         t = get(ha(ano),'ytick'); 
@@ -120,11 +121,13 @@ for vgno = 1:length(gs)
                         hasdata = 1; ano = ano+1;
                     end
                 end
+                if exist('ha','var')
                 linkaxes(ha,'y');
                 set(ha(1),'ylim',[0 1],'ytick',yt{1},'yticklabel',ytl{1});
                 axes(ha(1)); title(ti)
                 for sno = 1:length(vused)
                     set(hl(sno),'marker',mused{sno},'linestyle',lused{sno})
+                end
                 end
                 if ~hasdata; done = 1; cont = 1; continue; end %skip days with no data
                 hold on; grid on

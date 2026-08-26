@@ -31,6 +31,31 @@ switch opt1
                     'truewind_truewind', ...
                     'ranger2usbl_psonlld', 'ctd_smctd', ...
                      ];
+            case 'avedit'
+                switch datatype
+                    case 'bathy'
+                        vars_to_ed.g1 = {{'depth_sbm'},{'depth_mbm'}};
+                        yl.depth_sbm = [-2 3000];
+                        yl.depth_mbm = yl.depth_sbm;
+                    case 'atmos'
+                        vars_to_ed.g1={{'press'},{'airtemp'},{'humidity'},...
+                            {'truwind_spd','truwind_e','truwind_n'},...
+                            {'ptir','ppar','stir','spar'}};
+                        yl.press = [500 1500];
+                        yl.ppar = [0 1e5];
+                        yl.spar = yl.ppar;
+                        yl.ptir = yl.ppar;
+                        yl.stir = yl.ppar;
+                    case 'ocean'
+                        yl.tempr = yl.temph;
+                        yl.conductivity = [-5 50];
+                        yl.salinity = yl.psal;
+                        yl.soundvelocity = [0 2000];
+                        yl.trans = [0 50];
+                        yl.flow = [0 2];
+                        vars_to_ed.g1 = {{'temph','tempr','tempdk'}, {'conductivity'}, {'salinity'},{'soundvelocity'}};
+                        vars_to_ed.g2 = {{'temph'},{'fluo'},{'flow'},{'trans','transmittance'}};
+                end
         end
 %%%%%%%%%%%%%%%%%%%% end uwau_proc %%%%%%%%%%
 

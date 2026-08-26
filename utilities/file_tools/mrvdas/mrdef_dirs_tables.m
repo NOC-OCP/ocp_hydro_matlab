@@ -54,8 +54,8 @@ mt(n).inst = {'sbe38','sbe38dk'};
 mt(n).msg = {'sbe38','psbsst1','phsst'}; 
 % UCSW T, C, flow, fluo, trans
 n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = 'tsg'; 
-mt(n).inst = {'sbe45','surfmet'};
-mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1','sfuwy','pc4rhoist1'};
+mt(n).inst = {'sbe45','surfmet','brainboxuwy'};
+mt(n).msg = {'nanan','psbtsg1','pvsv1','pwltran1','pwlfluor1','plmflow1','sfuwy','ppuwy','pc4rhoist1'};
 % pressure, humidity, air temp
 n = n+1; mt(n).dir = dirSURFMET; mt(n).typ = 'met'; 
 mt(n).inst = {'surfmet'};
