@@ -47,6 +47,19 @@ switch opt1
 %%%%%%%%%%%%%%%%%%%% ctd_proc %%%%%%%%%%%%
     case 'ctd_proc'
         switch opt2
+           % oxy sensors - persistent primary-secondary offsets so
+           % regular sensor changes:
+            
+           % Primary (Sensornum CTDnum):
+           % 3836 [1 17];
+
+           % Secondary (Sensornum CTDnum):
+           % 2055 [1 2]; % offset 15
+           % 2575 [3 14]; % Offset 10-15, noisy
+           % 4580 [4:13 15 17]; % offset 15
+           % 2540 [16]; % Offset ~25!
+
+
            % to do - station 3 auto de spiking conductivity and 
            % fluorescence
            % todo: 004 despiking of conductivity and transmittance 
@@ -112,10 +125,22 @@ switch opt1
                     case 9 
                         niskin_flag(ismember(position,2)) = 9; % bottle leaked and was not sampled              
                         niskin_flag(ismember(position,18)) = 3; % bottle leaked   
+                        niskin_flag(ismember(position,[2 6 8 10 18 20 22])) = 9; % samples not drawn; backup bottles
                     case 10
-                        niskin_flag(ismember(position,[1 6])) = 3; % bottle leaked   
+                        niskin_flag(ismember(position,[1 6])) = 3; % bottle leaked
+                    case 12
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16 18 20 22])) = 9; % samples not drawn; backup bottles
+                    case 13
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16 18 20 22 24])) = 9; % samples not drawn; backup bottles
+                    case 14
+                        niskin_flag(ismember(position,[6 8 10 12 14 16])) = 9; % samples not drawn; backup bottles
                     case 15
-                        niskin_flag(ismember(position,15)) = 3; % bottle leaked   
+                        niskin_flag(ismember(position,22)) = 3; % bottle leaked  
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16 18 20 22 24])) = 9; % samples not drawn; backup bottles
+                    case 16
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16 18 20 22 24])) = 9; % samples not drawn; backup bottles
+                    case 17
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16])) = 9; % samples not drawn; backup bottles
                 end
         
         end
