@@ -331,7 +331,7 @@ if pcs.begin_step <= pcs.cur_step
   %from main process_cast.m
   if d.down.Up
       disp(' discarding apparent bottom-track velocities from uplookier');
-      d.bevl(find(isfinite(d.bevl))) = NaN;
+      d.bvel(find(isfinite(d.bvel))) = NaN;
   end
 
   end_processing_step;
