@@ -81,7 +81,7 @@ switch opt1
            % Secondary (Sensornum CTDnum):
            % 2055 [1 2]; % offset 15
            % 2575 [3 14]; % Offset 10-15, noisy
-           % 4580 [4:13 15 17]; % offset 15
+           % 4580 [4:13 15 17 20]; % offset 15
            % 2540 [16]; % Offset ~25!
 
 
@@ -170,6 +170,8 @@ switch opt1
                         niskin_flag(ismember(position,[2 4 6 8 10 12 14 16])) = 9; % samples not drawn; backup bottles
                     case 18 
                         niskin_flag(ismember(position,[3 7 11 15 19])) = 9; % samples not drawn; backup bottles
+                    case 20
+                        niskin_flag(ismember(position,[3 7])) = 9; % samples not drawn; backup bottles
                 end
         
         end
