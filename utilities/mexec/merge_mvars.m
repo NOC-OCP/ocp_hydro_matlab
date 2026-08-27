@@ -34,15 +34,16 @@ if nosort
     mvnsub = mvn(~ismember(mvn, mvo)); %new ones that aren't in old
     d.(indepvar) = [mvo(:); mvnsub(:)]; %append these, no sorting
     s(s>1) = length(d.(indepvar));
-    d.(indepvar) = reshape(d.(indepvar),s); %row vs column vector
+    % d.(indepvar) = reshape(d.(indepvar),s); %row vs column vector
 else
     s = size(mvo);
     d.(indepvar) = unique([mvo(:); mvn(:)]);
     if sum(s)>2
         s(s>1) = length(d.(indepvar));
-        d.(indepvar) = reshape(d.(indepvar),s); %row vs column vector
+        % d.(indepvar) = reshape(d.(indepvar),s); %row vs column vector
     end
 end
+d.(indepvar) = reshape(d.(indepvar),s);
 
 %place combined variables
 [~,iico,iio] = intersect(d.(indepvar), mvo);
