@@ -25,4 +25,4 @@ end
 
 % Convert the index 'ii(1)' back to a string name, then read the struct dynamically
 targetField = fnames{ii(1)};
-mpath = fullfile(MEXEC_G.mexec_data_root, MEXEC_G.MDIRLIST.(targetField));
+mpath = fullfile(MEXEC_G.MDIRLIST.(targetField));
