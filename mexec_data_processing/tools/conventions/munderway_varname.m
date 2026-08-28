@@ -106,8 +106,8 @@ varnames.twindsvar = {'windspeed' 'wind_speed_ms' 'truwind_spd'};
 varnames.twinddvar = {'direct' 'wind_dir' 'truwind_dir' 'winddirection'};
 varnames.twindvvar = {'truwind_e' 'truwind_n' 'truwind_u' 'truwind_v'};
 
-varnames.latvar = {'lat' 'latitude' 'seatex_gll_lat'};
-varnames.lonvar = {'lon' 'long' 'longitude' 'seatex_gll_lon'};
+varnames.latvar = {'lat' 'latitude' 'seatex_gll_lat' 'latitudedd'};
+varnames.lonvar = {'lon' 'long' 'longitude' 'seatex_gll_lon' 'longitudedd'};
 varnames.headvar = {'head' 'heading' 'head_gyr' 'heading_av_corrected' 'heading_av' 'headingtrue'};
 varnames.cogvar = {'course' 'courseoverground' 'coursetrue'};
 
