@@ -78,7 +78,12 @@ switch opt1
         switch opt2
            % oxy sensors - persistent primary-secondary offsets so
            % regular sensor changes:
-            
+           % CTD 25: primary sensor started aligning with secondary sensor
+           % (smaller offset)
+           % CTD 28: secondary showed very little variability on downcast,
+           % primary fine on downcast, but big difference during upcast. 
+           % John and Finn have notes
+        
            % Primary (Sensornum CTDnum):
            % 3836 [1 17];
 
@@ -108,6 +113,7 @@ switch opt1
            %           also, despiking of transmittance needed.
            % todo: 018 transmittance and fluorence needs despiking 
            % todo: 019 conductivity 1 and transmittance needs despiking
+           % todo: 028 spike on transmittance 3.8 
 
 
             case 'ctdfiles'
