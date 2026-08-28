@@ -108,6 +108,8 @@ switch opt1
            %           also, despiking of transmittance needed.
            % todo: 018 transmittance and fluorence needs despiking 
            % todo: 019 conductivity 1 and transmittance needs despiking
+           % todo: 030 spiking in transmittance - unusually large number of
+           % data points, felt weird to remove that many so have left it
 
 
             case 'ctdfiles'
@@ -132,7 +134,7 @@ switch opt1
                 niskin_pos = 1:24;
                 niskin_number = [2754:2774,2776:2778];
                 % double check barcodes of the straight niskin numbers
-                if ismember(stn,[1:4 18:23])
+                if ismember(stn,[1:4 18:30])
                     niskin_pos = niskin_pos(1:2:end);
                     niskin_number = niskin_number(1:2:end);
                 end
