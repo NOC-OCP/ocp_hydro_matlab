@@ -52,10 +52,17 @@ vars = setdiff([h0.fldnam h.fldnam], indepvar, 'stable');
 a = zeros(size(d.(indepvar))); %add fill value to pad
 for vno = 1:length(vars)
     varname = vars{vno};
+    
+    % Determine the maximum number of columns for this variable ---
+    num_cols = 1; % Default to 1 column
+    if isfield(d0, varname), num_cols = max(num_cols, size(d0.(varname), 2)); end
+    if isfield(d, varname),  num_cols = max(num_cols, size(d.(varname), 2));  end
+
+
     if length(varname)>4 && strcmp(varname(end-3:end),'flag')
-        data = 9+a;
+        data = repmat(9 + a, 1, num_cols);
     else
-        data = NaN+a;
+        data = repmat(NaN + a, 1, num_cols);
     end
     if isfield(d0, varname)
         if s(1)==1

@@ -109,7 +109,7 @@ for vno = 1:length(vbases)
     if upl
         nr = sum(mv)-1;
     else
-        nr = size(dbot.(vbase),2);
+        nr = size(dbot.(vbase),2)-1;
     end
     %compare all other replicates to 'a' replicate
     sama = repmat(d(:,1),1,nr);

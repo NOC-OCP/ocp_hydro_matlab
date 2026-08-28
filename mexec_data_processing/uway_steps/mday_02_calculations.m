@@ -110,7 +110,7 @@ if strcmp(stage,'pre')
                 %variable names
                 m = ismember(d.Properties.VariableNames,depvar);
                 d.Properties.VariableNames(m) = cellfun(@(x) [x '_' source],d.Properties.VariableNames(m),'UniformOutput',false);
-                % d(:,strcmp(depvar,d.Properties.VariableNames)) = [];
+                d(:,ismember(depvar,d.Properties.VariableNames)) = [];
                 %ngvars = [ngvars xducerdepvar]; %***combine before this to avoid
                 %gridding this too?
             end

@@ -37,14 +37,15 @@ switch opt1
             case 'avedit'
                 switch datatype
                     case 'bathy'
-                        vars_to_ed.g1 = {{'depth_sbm'},{'depth_mbm'}};
-                        yl.depth_sbm = [-2 3000];
-                        yl.depth_mbm = yl.depth_sbm;
+                        vars_to_ed.g1 = {{'waterdepthfromsurface_sbm'},{'waterdepth_mbm'}};
+                        yl.waterdepthfromsurface_sbm = [-2 3100];
+                        yl.waterdepth_mbm = [-100 3000];
                     case 'atmos'
                         vars_to_ed.g1={{'press'},{'airtemp'},{'humidity'},...
                             {'truwind_spd','truwind_e','truwind_n'},...
                             {'ptir','ppar','stir','spar'}};
-                        yl.press = [500 1500];
+                        yl.press = [0 1050];
+                        yl.airtemp = [-10 30];
                         yl.ppar = [0 1e5];
                         yl.spar = yl.ppar;
                         yl.ptir = yl.ppar;
@@ -53,7 +54,7 @@ switch opt1
                         yl.tempr = yl.temph;
                         yl.conductivity = [-5 50];
                         yl.salinity = yl.psal;
-                        yl.soundvelocity = [0 2000];
+                        yl.soundvelocity = [0 1600];
                         yl.trans = [0 50];
                         yl.flow = [0 2];
                         vars_to_ed.g1 = {{'temph','tempr','tempdk'}, {'conductivity'}, {'salinity'},{'soundvelocity'}};
@@ -260,7 +261,8 @@ case 'samp_proc'
                     case 'ulog'
                     case 'chl'
                     case 'oxy'
-                        files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,'Winkler Calculation Spreadsheet_DY214- 240826.xlsx')};
+                        files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,...
+                        'Winkler Calculation Spreadsheet_DY214- 26_08_26.xlsx')};
                         sopts.numhead = 8;
                         % below from CE26008, above not working - need to
                         % edit, more
@@ -294,8 +296,9 @@ case 'samp_proc'
                         sopts.VariableUnits = ct(:,3)';
                         sopts.sheets = 1;
                     case 'sal'
-                        % files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'portasal*.csv')).name};
-                        % files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
+                        files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv')).name};
+                        files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
+                        opts.NumHeaderLines = 10;
                     case 'nut'
                     case 'co2'
                     case 'cfc'
@@ -306,7 +309,11 @@ case 'samp_proc'
                 switch samtyp
                     case 'sal'
                         % ssw_k15 = 0.99983;
-                        % ssw_batch = 'P169';
+                        % ssw_batch = 'P169';case 'sal_parse'
+                        cellT = 21;
+                        ssw_k15 = 0.99993;
+                        calcsal = 1;
+                        ssw_batch = 'P170';
                     case 'oxy'
                         sdata.flag = 1+ones(size(sdata.statnum));
                         m = isnan(sdata.flag);
@@ -322,6 +329,8 @@ case 'samp_proc'
                         %salin_off = -1.5e-5; %constant
                     case 'oxy'
                 end
+            case 'redoctm'
+                redoctm = 1;
             case 'check'
                 % checksam.sbe35 = 0;
                 % checksam.sal = 1; %done

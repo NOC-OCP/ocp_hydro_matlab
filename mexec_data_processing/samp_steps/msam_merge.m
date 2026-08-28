@@ -102,7 +102,7 @@ dp.Properties.VariableUnits = hp.fldunt;
 
 if iscell(pvars)
     %drop variables we don't need
-    m = ismember(dp.Properties.VariableNames, [pvars; {'sampnum'; 'niskin_flag'}]); %***uway flag var?
+    m = ismember(dp.Properties.VariableNames, [pvars(:); {'sampnum'; 'niskin_flag'}]); %***uway flag var?
     dp = dp(:,m);
 end
 
