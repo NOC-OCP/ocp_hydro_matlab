@@ -17,7 +17,7 @@ switch opt1
     case 'uway_proc'
         switch opt2
             case 'datasys_best'
-                default_navstream = 'posmv_gpgga';
+                default_navstream = 'posmv_pashr';% changed from gpgga
                 default_hedstream = 'posmv_pashr';
                 default_attstream = 'posmv_pashr';
             case 'rvdas_skip'
@@ -36,6 +36,18 @@ switch opt1
                      ];
             case 'avedit'
                 switch datatype
+                    case 'nav'
+                        vars_to_ed.g1 = {{'heading'}};%{{'roll'},{'pitch'},{'heave'},{'dum_e'},...
+                            %{'dum_n'},{'heading'},{'smg'},{'cmg'},{'distrun'}};
+                        %yl.roll = [-5 5];
+                        %yl.pitch = [-5 5];
+                        %yl.heave = [-5 5];
+                        %yl.dum_e = [-5 5];
+                        %yl.dum_n = [-5 5];
+                        yl.heading = [0 360];
+                        %yl.smg = [-5 5];
+                        %yl.cmg = [-5 5];
+                        %yl.distrun = [-5 5];
                     case 'bathy'
                         vars_to_ed.g1 = {{'waterdepthfromsurface_sbm'},{'waterdepth_mbm'}};
                         yl.waterdepthfromsurface_sbm = [-2 3100];
