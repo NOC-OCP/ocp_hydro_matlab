@@ -100,11 +100,11 @@ switch step
                     end
                 end
             case 'sadcp'
-                if nargin>2
+                if length(varargin)>2
                     pd.sadcpname = [varargin{2} '_' mcruise '_' varargin{3} '_%s'];
                     pd.sadcpav = fullfile(MEXEC_G.MDIRLIST.M_VMADCP, 'mproc', [pd.sadcpname '_ave.nc']);
                 end
-                pd.sadcpall = fullfile(MEXEC_G.MDIRLIST.VMADCP, 'postprocessing', upper(mcruise), 'proc_editing', varargin{2}, 'contour', [pd.sadcpname '.nc']);
+                pd.sadcpall = fullfile(MEXEC_G.MDIRLIST.M_VMADCP, 'postprocessing', upper(mcruise), 'proc_editing', varargin{2}, 'contour', [varargin{2} '.nc']);
             case 'uway'
                 pd.burawform = ['%s_%s_all_raw.nc'];
                 pd.buallform = ['%s_%s_all.nc'];

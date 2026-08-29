@@ -14,7 +14,8 @@ function [d, h] = codas_to_mstar(inst)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 opt1 = 'setup'; opt2 = 'procfiles';
-opt1 = mfilename; opt2 = 'codas_file'; get_cropt
+pd = mexec_file_locations('procfiles','sadcp',inst);
+fnin = pd.sadcpall;
 if ~exist(fnin, 'file')
     error(['input file ' fnin ' not found'])
 end
