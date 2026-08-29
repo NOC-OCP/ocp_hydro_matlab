@@ -139,17 +139,30 @@ switch opt1
             case 'niskfilename'            
                 blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,...
                     sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
+            case 'header_edits'
+            h.comment = replace(h.comment,'PSO: Tiago Dotto','PSO: Kristin Burmeister');
+            m_write_header(otfiles{1},h);
+            case 'raw_corrs'
+                co.oxy_align = 0; %0 until we check oxygen hysteresis
             case 'rawshow'
-                %repars = rmfield(repars,'g2') % ingoring fluo, trans, etc.
+                % does not apply already applied flags - need to see how to
+                % do that
+                repars = rmfield(repars,'g2'); %don't edit fluo etc.
+                yl.press = [-1 3200];
+                yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
+                yl.fluor = [0 8]; yl.par = [0 40];
                 if ismember(stn,[1,2])
-                    yl.cond = [40 50];yl.cond1=yl.cond;yl.cond2=yl.cond;
+                    yl.cond = [40 50];
                     yl.press = [-2 150];
                     yl.temp = [15 25];
                     yl.fluor = [0 2];
                     yl.turbidity = [0 0.2];
                 else 
-                    yl.cond = [25 45];yl.cond1=yl.cond;yl.cond2=yl.cond;
+                    yl.cond = [25 45];
                 end
+                yl.temp1 = yl.temp; yl.temp2 = yl.temp; 
+                yl.cond1 = yl.cond; yl.cond2 = yl.cond;
+                yl.oxy1 = yl.oxy; yl.oxy2 = yl.oxy;
             case 'niskins'
                 niskin_pos = 1:24;
                 niskin_number = [2754:2774,2776:2778];
