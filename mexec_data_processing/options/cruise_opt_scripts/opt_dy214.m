@@ -205,6 +205,12 @@ switch opt1
                         niskin_flag(ismember(position,17)) = 9; % bottle leaked (spout not reset); samples not drawn 
                     case 26
                         niskin_flag(ismember(position, [3 7 11 15 19 23])) = 9; % samples not drawn; backup bottles
+                    case 31
+                        niskin_flag(ismember(position, [3 7])) = 9; % samples not drawn; backup bottles
+                    case 32
+                        niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
+                    case 33
+                        niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
                 end
         
         end
