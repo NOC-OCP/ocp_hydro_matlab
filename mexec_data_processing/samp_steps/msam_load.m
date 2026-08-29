@@ -114,7 +114,7 @@ vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
 sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
     case 'sal'
         %e.g. average conductivity from 3 readings, and salinity from that
-        sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
+        % sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
 end
 %***custom code, e.g. average extra readings, ... 
 

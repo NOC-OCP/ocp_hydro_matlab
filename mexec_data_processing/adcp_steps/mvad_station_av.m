@@ -56,11 +56,12 @@ end
 
 m_common
 opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-opt1 = 'adcp_proc'; get_cropt
 
 %get start and end times
 if strcmp(cast_select,'ctd')
-    [dd, hd] = mloadq(dcsfile.file,'/');
+    pd = mexec_file_locations('procfiles','dcs');
+    dcsfile = fullfile(sprintf(pd.dcsfile,stn_string));
+    [dd, hd] = mloadq(dcsfile,'/');
     tstart = m_commontime(dd,'time_start',hd,'datenum');
     tend = m_commontime(dd,'time_end',hd,'datenum');
 else
@@ -108,7 +109,8 @@ else
         end
     end
     % check that the number of vmadcp profiles in ctd cast is not too small
-    opt1 = 'ladcp_proc'; get_cropt
+    cfg.stnstr=stn_string;
+    opt1 = 'adcp_proc'; get_cropt
 
     nvmadcpprf = sum(mt);
     if nvmadcpprf < min_nvmadcpprf
@@ -151,7 +153,10 @@ for no = 1:length(h.fldnam)
     da.(h.fldnam{no}) = m_nanmean(d.(h.fldnam{no})(:,mt),2);
 end
 ha = h;
-ha.dataname = sadcpfile.dataname;
+pd = mexec_file_locations('procfiles','sadcp',inst,cast_select);
+sadcpfile.av = sprintf(pd.sadcpav,stn_string);
+[~, name, ext] = fileparts(pd.sadcpall);
+ha.dataname = [name ext];
 ha.latitude = da.lat(1); ha.lon = da.lon(1);
 %ha.instrument_depth_metres = 5; %***
 if strcmp(cast_select,'ctd')
@@ -170,7 +175,7 @@ else
     to = h.data_time_origin;
 end
 %file for ladcp
-if MEXEC_G.ix_ladcp && sum(mt)>1
+if strcmp(MEXEC_G.datatypes.ladcp,'ix') && sum(mt)>1
     % CV 2018/11/17: edit to get the right variable names and time for LDEO_IX_12
     tim_sadcp = d.decday(1,mt) + julian(to(1),to(2),to(3));
     lat_sadcp = d.lat(1,mt);
@@ -184,5 +189,5 @@ if MEXEC_G.ix_ladcp && sum(mt)>1
         v_sadcp = d.vabs(:,mt)/100;
     end
     z_sadcp   = d.depth(:,1);
-    save(ladfile, 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp'); mfixperms(ladfile);
+    save(cfg.f.sadcp, 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp'); mfixperms(cfg.f.sadcp);
 end

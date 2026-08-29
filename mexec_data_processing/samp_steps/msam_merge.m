@@ -53,10 +53,10 @@ switch samtyp
         uvars = [uvars, 'salinity'];
         hnew.comment = ['salinity data from ' pd.(samtyp)];
     case 'sbe35'
-        warning('msam_merge.m needs to be edited for sbe35 to work')
+        % warning('msam_merge.m needs to be edited for sbe35 to work')
         pvars = {'sbe35temp'; 'sbe35temp_flag'}; %list which to copy because we don't need to copy tdiff etc.***
         hnew.comment = ['SBE35 data from ' pd.(samtyp)];
-        return
+        % return
     case 'iso'
         %***just default?
     otherwise
@@ -92,7 +92,7 @@ end
 
 %turn into table, add units, and rename variables if specified
 dp = struct2table(dp);
-dp.Properties.VariableUnits = hp.fldunt;
+dp = match_table_units(dp, hp);
 % hnew.comment = ''; % seems not logical to overwrite it.
 
 %convert parameter sample data e.g. from umol_per_l to umol_per_kg, as
@@ -104,6 +104,8 @@ if iscell(pvars)
     %drop variables we don't need
     m = ismember(dp.Properties.VariableNames, [pvars(:); {'sampnum'; 'niskin_flag'}]); %***uway flag var?
     dp = dp(:,m);
+    hnew.fldnam = dp.Properties.VariableNames;
+    hnew.fldunt = dp.Properties.VariableUnits;
 end
 
 %average replicates 
@@ -125,6 +127,9 @@ dp = table2struct(dp,'ToScalar',true);
 dp.niskin_flag = dc.niskin_flag;
 dp = hdata_flagnan(dp, 'keepemptyvars', 1);
 dp = rmfield(dp,'niskin_flag');
+m = strcmp('niskin_flag', hnew.fldnam);
+hnew.fldnam(m) = [];
+hnew.fldunt(m) = [];
 
 %save samfile
 mfsave(pd.samc, dp, hnew, '-merge', 'sampnum');
@@ -195,7 +200,8 @@ for nno = 1:length(vnames)
     vunit = un{nno};
     data = dp.(vname);
     [nr,nc] = size(data);
-    flag = dp.([vname '_flag']);
+    fname = [vname '_flag']
+    flag = dp.(fname);
     %find best flag for each sampnum (2 better than 3
     %better than 4, 1 and 9 irrelevant)
     flag(flag==1) = NaN; %1 not yet analysed means we won't have data anyway
@@ -227,8 +233,26 @@ for nno = 1:length(vnames)
     %add new fields
     dp.(vname) = dataav;
     dp.(fname) = flag0;
-    hnew.fldnam = [hnew.fldnam vname fname];
-    hnew.fldunt = [hnew.fldunt vunit 'woce_4.9'];
+    if ismember(vname, hnew.fldnam)
+        % Find exactly where it is and replace the unit
+        idx_v = strcmp(vname, hnew.fldnam);
+        hnew.fldunt(idx_v) = {vunit}; 
+    else
+        % It doesn't exist, so append both name and unit
+        hnew.fldnam = [hnew.fldnam {vname}];
+        hnew.fldunt = [hnew.fldunt {vunit}];
+    end
+    
+    % --- Handle fname & its flag unit ---
+    if ismember(fname, hnew.fldnam)
+        % Find exactly where it is and replace the unit
+        idx_f = strcmp(fname, hnew.fldnam);
+        hnew.fldunt(idx_f) = {'woce_4.9'};
+    else
+        % It doesn't exist, so append both name and unit
+        hnew.fldnam = [hnew.fldnam {fname}];
+        hnew.fldunt = [hnew.fldunt {'woce_4.9'}];
+    end
     if max(nav)>1
         sname = [vname '_std'];
         nname = [vname '_N'];
@@ -238,10 +262,28 @@ for nno = 1:length(vnames)
         hnew.fldunt = [hnew.fldunt vunit 'number'];
     end
     if sum(flag0==6)
-        hnew.comment = [hnew.comment ', ' vname ' average of replicates (' strjoin(rname,',') ')'];
+        hnew.comment = [hnew.comment ', ' vname ' average of replicates (' strjoin(vname,',') ')'];
     end
-    %remove replicate fields
-    m = ismember(hnew.fldnam,[rnames rfnames]);
-    dp(:,m) = []; hnew.fldnam(m) = []; hnew.fldunt(m) = [];
+    
 end
 
+function dp = match_table_units(dp, hp)
+table_vars = dp.Properties.VariableNames;
+num_vars = length(table_vars);
+
+matched_units = cell(1, num_vars);
+
+for idx = 1:num_vars
+    % Find logical index matches (case-sensitive)
+    match_idx = strcmp(table_vars{idx}, hp.fldnam);
+    
+    if any(match_idx)
+        % Grab the first match (safeguards against duplicates in hp.fldnam)
+        first_match = find(match_idx, 1);
+        matched_units{idx} = hp.fldunt{first_match};
+    else
+        % Fallback if a table variable has no matching metadata header entry
+        matched_units{idx} = ''; 
+    end
+end
+dp.Properties.VariableUnits = matched_units;

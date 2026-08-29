@@ -152,7 +152,7 @@ switch opt1
                 niskin_pos = 1:24;
                 niskin_number = [2754:2774,2776:2778];
                 % double check barcodes of the straight niskin numbers
-                if ismember(stn,[1:4 18:30])
+                if ismember(stn,[1:4 18:31])
                     niskin_pos = niskin_pos(1:2:end);
                     niskin_number = niskin_number(1:2:end);
                 end
@@ -221,7 +221,8 @@ case 'adcp_proc'
         cfg.rawdir = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'rawdata');
         cfg.uppat = sprintf('%s_LADCP_%sS.000',upper(mcruise),cfg.stnstr);
         cfg.dnpat = sprintf('%s_LADCP_%sM.000',upper(mcruise),cfg.stnstr);
-        
+        SADCP_inst = 'os75nb';
+        cfg.f.sadcp = fullfile(MEXEC_G.MDIRLIST.M_VMADCP, 'mproc', [SADCP_inst '_' mcruise '_ctd_' stn_string '_forladcp.mat']);
         %set magnetic declination here, rather than using either of the two
         %options built in to LDEO_IX/loadnav
         %[p, f, ext] = fileparts(cfg.f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
@@ -281,6 +282,10 @@ case 'adcp_proc'
 %%%%%%%%%%%%%%%%%%%% samp_proc %%%%%%%%%%   
 case 'samp_proc'
         switch opt2
+            case 'sal_files'
+                    salfiles = dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv'));
+                    % salfiles = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),salfiles,'UniformOutput',false);
+                    sopts.numhead = 10;
             case 'files'
                 % uway_sample_log_file = fullfile(MEXEC_G.MDIRLIST.M_BOT,'uway_sample_log.csv');
                 switch samtyp
@@ -324,7 +329,8 @@ case 'samp_proc'
                     case 'sal'
                         files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv')).name};
                         files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
-                        opts.NumHeaderLines = 10;
+                        sopts.numhead = 10;
+                   
                     case 'nut'
                     case 'co2'
                     case 'cfc'

@@ -29,10 +29,16 @@ for no = 1:2:nargin-2
     eval([varargin{no} ' = varargin{no+1};'])
 end
 
+klist = klist(:)';
+
 %first vmadcp
-if ismember('sadcp',types)
-
-
+if ismember('sadcp',types)    
+    for stn = klist
+        opt1='setup',opt2='m_stn_string';get_cropt
+        cfg.stnstr = stn_string;
+        opt1='adcp_proc';get_cropt
+        mvad_station_av(stn, SADCP_inst, 'ctd')
+    end
 end
 
 
@@ -48,7 +54,7 @@ if ismember('ladcp',types)
         if exist(css,'file'); dosync = 1; else; dosync = 0; end
     end
 
-    klist = klist(:)';
+    
     for no = 1:14
         cfg0.figh(no) = figure(no);
     end

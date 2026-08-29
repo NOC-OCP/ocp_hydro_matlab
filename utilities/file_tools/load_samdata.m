@@ -284,7 +284,9 @@ if isfield(iopts,'numhead') && isfinite(iopts.numhead)
     end
     if sheet==0
         opts.DataLines(1) = nd;
+        if isprop(opts, 'NumHeaderLines') % seems not longer to be available in newer matlab verions
         opts.NumHeaderLines = iopts.numhead;
+        end
     else
         opts.DataRange = ['A' num2str(nd)];
     end
