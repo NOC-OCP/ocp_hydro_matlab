@@ -215,7 +215,8 @@ case 'adcp_proc'
         cfg.rawdir = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'rawdata');
         cfg.uppat = sprintf('%s_LADCP_%sS.000',upper(mcruise),cfg.stnstr);
         cfg.dnpat = sprintf('%s_LADCP_%sM.000',upper(mcruise),cfg.stnstr);
-        
+        SADCP_inst = 'os75nb';
+        cfg.f.sadcp = fullfile(MEXEC_G.MDIRLIST.M_VMADCP, 'mproc', [SADCP_inst '_' mcruise '_ctd_' stn_string '_forladcp.mat']);
         %set magnetic declination here, rather than using either of the two
         %options built in to LDEO_IX/loadnav
         %[p, f, ext] = fileparts(cfg.f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
