@@ -87,6 +87,7 @@ switch opt1
 
 %%%%%%%%%%%%%%%%%%%% ctd_proc %%%%%%%%%%%%
     case 'ctd_proc'
+        % part 1 not printing acdp files
         switch opt2
            % oxy sensors - persistent primary-secondary offsets so
            % regular sensor changes:
@@ -139,6 +140,7 @@ switch opt1
                 blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,...
                     sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
             case 'rawshow'
+                %repars = rmfield(repars,'g2') % ingoring fluo, trans, etc.
                 if ismember(stn,[1,2])
                     yl.cond = [40 50];yl.cond1=yl.cond;yl.cond2=yl.cond;
                     yl.press = [-2 150];
