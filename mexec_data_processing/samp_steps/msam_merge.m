@@ -30,7 +30,7 @@ switch samtyp
         uvars = [uvars, 'fluo'];
     case 'oxy'
         %rename for backwards compatibility?***
-        convs.umol_per_l_to_per_kg.temp = 'botoxy_temp'; %convert using oxygen draw temperature from each sample if recorded
+        convs.per_l_to_per_kg.temp = 'botoxy_temp'; %convert using oxygen draw temperature from each sample if recorded
         svars = [svars, 'uasal'];
         pvars = {'botoxy','botoxy_temp','botoxy_flag'};
         hnew.comment = ['oxygen data from ' pd.(samtyp)];
@@ -38,7 +38,7 @@ switch samtyp
         %losing backwards compatibility to make an appended oxy file
         %first***
     case 'nut'
-        convs.umol_per_l_to_per_kg.temp = 20; %convert using default lab temperature***
+        convs.per_l_to_per_kg.temp = 20; %convert using default lab temperature***
         svars = [svars, 'uasal'];
         uvars = [uvars, 'salinity']; %***
         opt1 = 'samp_proc'; opt2 = 'nut_to_sam'; get_cropt %could set to not avg, or change the lab temp***
@@ -132,9 +132,32 @@ dp = table2struct(dp,'ToScalar',true);
 dp.niskin_flag = dc.niskin_flag;
 dp = hdata_flagnan(dp, 'keepemptyvars', 1);
 dp = rmfield(dp,'niskin_flag');
-m = strcmp('niskin_flag', hnew.fldnam);
-hnew.fldnam(m) = [];
-hnew.fldunt(m) = [];
+target_fields = fieldnames(dp);
+old_fldnam = hnew.fldnam;
+old_fldunt = hnew.fldunt;
+
+hnew.fldnam = target_fields'; % Transposed to match your 1xN row layout
+hnew.fldunt = cell(1, numel(target_fields));
+for k = 1:numel(target_fields)
+    current_field = target_fields{k};
+    
+    if endsWith(current_field, '_flag')
+        % Rule A: Force flag fields to get the exact WOCE format string
+        hnew.fldunt{k} = 'woce_4.8 and 4.9';
+        
+    else
+        % Rule B: Look up if this field already has a unit assigned previously
+        match_idx = strcmp(old_fldnam, current_field);
+        
+        if any(match_idx)
+            % Keep the old unit (e.g., 'umol_per_kg' or 'number')
+            hnew.fldunt{k} = old_fldunt{match_idx};
+        else
+            % Fallback: Provide a default string if it is a brand-new data variable
+            hnew.fldunt{k} = 'unknown'; 
+        end
+    end
+end
 
 %save samfile
 mfsave(pd.samc, dp, hnew, '-merge', 'sampnum');
@@ -176,16 +199,18 @@ if isfield(convs,'per_l_to_per_kg') && isfield(convs.per_l_to_per_kg,'temp')
         ctemp = dp.(temp); %e.g. botoxy_temp
     end
     nc = size(ctemp,2);
-    dens = gsw_rho(repmat(dp.uasal,1,nc), gsw_CT_from_t(repmat(dp.uasal1,nc), ctemp, 0), 0);
+    dens = gsw_rho(repmat(dp.uasal,1,nc), gsw_CT_from_t(repmat(dp.uasal,1,nc), ctemp, 0), 0);
     %convert all variables whose units are umol_per_l (*** or just
     %*_per_l?)
     m = strcmp('umol_per_l',dp.Properties.VariableUnits);
-    dp(:,m) = dp(:,m)./(repmat(dens,1,sum(m))/1000);
+    dp{:,m} = dp{:,m}./(repmat(dens,1,sum(m))/1000);
     %change units
     dp.Properties.VariableUnits(m) = {'umol_per_kg'};
     %if variable names also contained _per_l, change them
     dp.Properties.VariableNames(m) = cellfun(@(x) replace(x,'_per_l',''), dp.Properties.VariableNames(m), 'UniformOutput', false); %***
-    hnew.comment = [hnew.comment ', converted from umol/l to umol/kg using ' c.temp ' and CTD salinity'];
+    hnew.comment = [hnew.comment ', converted from umol/l to umol/kg using ' temp ' and CTD salinity'];
+    hnew.fldnam = dp.Properties.VariableNames;
+    hnew.fldunt = dp.Properties.VariableUnits;
 end
 
 function [dp, hnew] = repl_avg(dp, hnew, svars)
@@ -269,9 +294,20 @@ for nno = 1:length(vnames)
     if sum(flag0==6)
         hnew.comment = [hnew.comment ', ' vname ' average of replicates (' strjoin(vnames,',') ')'];
     end
-    %drop files not averaged
-    
 end
+% drop files not averaged
+all_vars = dp.Properties.VariableNames;
+vars_to_drop = {};
+for i = 1:numel(all_vars)
+    if size(dp.(all_vars{i}), 2) > 1
+        vars_to_drop{end+1} = all_vars{i}; % Add to drop list if multi-column
+    end
+end
+% drop replicates
+dp = removevars(dp, vars_to_drop);
+m = ismember(hnew.fldnam,dp.Properties.VariableNames);
+hnew.fldnam = hnew.fldnam(:,m);
+hnew.fldunt = hnew.fldunt(:,m);
 
 function dp = match_table_units(dp, hp)
 table_vars = dp.Properties.VariableNames;

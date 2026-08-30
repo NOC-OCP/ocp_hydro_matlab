@@ -373,10 +373,11 @@ case 'adcp_proc'
 %%%%%%%%%%%%%%%%%%%% samp_proc %%%%%%%%%%   
 case 'samp_proc'
         switch opt2
-            case 'sal_files'
-                    salfiles = dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv'));
-                    % salfiles = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),salfiles,'UniformOutput',false);
-                    sopts.numhead = 10;
+            % case 'sal_files'
+            %         files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv')).name};
+            %         files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
+            %         sopts.numhead = 9;
+                    
             case 'files'
                 % uway_sample_log_file = fullfile(MEXEC_G.MDIRLIST.M_BOT,'uway_sample_log.csv');
                 switch samtyp
@@ -420,7 +421,7 @@ case 'samp_proc'
                     case 'sal'
                         files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv')).name};
                         files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
-                        sopts.numhead = 10;
+                        sopts.numhead = 9;
                    
                     case 'nut'
                     case 'co2'
@@ -458,12 +459,13 @@ case 'samp_proc'
                 redoctm = 1;
             case 'check'
                 % checksam.sbe35 = 0;
-                % checksam.sal = 1; %done
+                checksam.sal = 1; %done
                 checksam.oxy = 1; %done
                 % checksam.chl = 0;
             case 'flags' %flags before replicate averaging and after replicate averaging***
                 switch samtyp
                     case 'sal'
+                        check_sal=1
                         % m = ismember(ds_sal.sampnum,[1403 1406 1408 1501]);
                         % ds_sal.flag(m) = 4;
                     case 'oxy'
