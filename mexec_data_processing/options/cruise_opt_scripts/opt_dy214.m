@@ -144,6 +144,50 @@ switch opt1
             m_write_header(otfiles{1},h);
             case 'raw_corrs'
                 co.oxy_align = 0; %0 until we check oxygen hysteresis
+            case 'rawedit_auto'
+                %use rangelim first to exclude very large %skspikes
+                % co.rangelim.press = [-1.25 3300];
+                % co.rangelim.cond1 = [30 50]; % our measurements are in mS/cm
+                % co.rangelim.temp1 = [-2 18]; 
+                % if ismember(stnlocal,[1,2]) %
+                %     co.rangelim.temp1 = [-2 25];
+                % end
+                % co.rangelim.oxy2 = [150 350]; % very broad
+                % co.rangelim.temp2 = co.rangelim.temp1;
+                % co.rangelim.cond2 = co.rangelim.cond1;
+                % co.rangelim.oxy1 = co.rangelim.oxy2;
+                % co.rangelim.turbidity = [0 1];
+                % co.rangelim.fluor = [0 8];
+                % co.rangelim.transmittance = [0 100];
+                % co.rangelim.turbidity = [0 1];
+                % %co.rangelim.par = [0 100];
+                % %then despike with 2 repetitions of a 12-scan median
+                % %despiker
+                % co.despike.press = [2 12; 2 12]; %avg 1m/s so 2 dbar/0.5 s is large
+                % co.despike.temp1 = [0.5 12; 0.5 12];
+                % co.despike.cond1 = [0.02 12; 0.02 12];
+                % co.despike.oxy1 = [3 12; 3 12];
+                % co.despike.temp2 = co.despike.temp1;
+                % co.despike.cond2 = co.despike.cond1;
+                % co.despike.oxy2 = co.despike.oxy1;
+                % %so many spikes it's not worth cleaning in some sensore 
+                if ismember(stnlocal,[3]) %
+                    co.badscan.oxy1 = [-inf inf]; %so many spikes it's not worth cleaning
+                end
+                if ismember(stnlocal,[3])
+                    co.badscan.oxy2 = [-inf inf];
+                end
+                % %then mask all on CTD whenever P is bad
+                % co.badpress.temp1 = [NaN NaN];
+                % co.badpress.temp2 = [NaN NaN];
+                % co.badpress.cond1 = [NaN NaN];
+                % co.badpress.cond2 = [NaN NaN];
+                % co.badpress.oxy1 = [NaN NaN];
+                % co.badpress.oxy2 = [NaN NaN];
+                % co.badpress.turbidity = [NaN NaN];
+                % co.badpress.transmittance = [NaN NaN];
+                % co.badpress.fluor = [NaN NaN];
+                % co.badpress.par = [NaN NaN];
             case 'rawshow'
                 % does not apply already applied flags - need to see how to
                 % do that
@@ -151,10 +195,12 @@ switch opt1
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
                 yl.fluor = [0 8]; yl.par = [0 40];
+                if stn==1
+                    yl.temp = [15 25];
+                end
                 if ismember(stn,[1,2])
                     yl.cond = [40 50];
-                    yl.press = [-2 150];
-                    yl.temp = [15 25];
+                    yl.press = [-2 170];
                     yl.fluor = [0 2];
                     yl.turbidity = [0 0.2];
                 else 
@@ -291,6 +337,29 @@ case 'adcp_proc'
                 %     m = t.statnum==7 & t.datnum<datenum(2026,7,25,9,0,0);
                 %     t.statnum(m) = 6;
                 % end
+            % case 'restartsam'
+            % pd = mexec_file_locations('procfiles','samp');    
+            % %delete sam_*_all file
+            % if exist(pd.samc,'file')
+            %     warning('deleting sam file: %s in 1 s',pd.samc)
+            %     pause(1)
+            %     delete(pd.samc)
+            % end
+            % % find which stations have bottle firing files
+            % pfir = mexec_file_locations('procfiles','fir')
+            % d = dir(sprintf(pfir.firfile,'*'));
+            % % Extract 3-digit blocks directly and convert to numbers
+            % [~, namesWithoutExt] = cellfun(@fileparts, {d.name}, 'UniformOutput', false);
+            % stns = cellfun(@(x) split(x, '_'), namesWithoutExt, 'UniformOutput', false);
+            % stns = cellfun(@(x) str2double(x{3}), stns);
+            % stns = stns(:)';
+            % for stn = stns
+            %     %re-run to freshly add CTD data to sam file
+            %     mfir_to_sam(stn)
+            % end
+            % %add serial numbers (already saved in .mat file)
+            % get_sensor_groups(stns,'samonly')
+
         end
 %%%%%%%%%%%%%%%%%%%% end sbe35 %%%%%%%%%%%%
 
@@ -308,7 +377,7 @@ case 'samp_proc'
                     case 'chl'
                     case 'oxy'
                         files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,...
-                        'Winkler Calculation Spreadsheet_DY214- 26_08_26.xlsx')};
+                        'Winkler Calculation Spreadsheet_DY214- 29_08_2026_v3.xlsx')};
                         sopts.numhead = 8;
                         % below from CE26008, above not working - need to
                         % edit, more
