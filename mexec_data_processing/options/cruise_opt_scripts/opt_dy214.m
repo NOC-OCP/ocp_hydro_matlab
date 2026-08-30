@@ -17,7 +17,7 @@ switch opt1
     case 'uway_proc'
         switch opt2
             case 'datasys_best'
-                default_navstream = 'posmv_pashr';% changed from gpgga
+                default_navstream = 'posmv_gpgga';
                 default_hedstream = 'posmv_pashr';
                 default_attstream = 'posmv_pashr';
             case 'rvdas_skip'
@@ -36,15 +36,19 @@ switch opt1
                      ];
             case 'avedit'
                 switch datatype
+                    %tried adding nav data but it's not showing plots yet
                     case 'nav'
-                        vars_to_ed.g1 = {{'heading'}};%{{'roll'},{'pitch'},{'heave'},{'dum_e'},...
+                        %handedit = 1;
+                        vars_to_ed.g1 = {{'heading_av_corrected','heading','head_gyr'}};%{{'roll'},{'pitch'},{'heave'},{'dum_e'},...
                             %{'dum_n'},{'heading'},{'smg'},{'cmg'},{'distrun'}};
                         %yl.roll = [-5 5];
                         %yl.pitch = [-5 5];
                         %yl.heave = [-5 5];
                         %yl.dum_e = [-5 5];
                         %yl.dum_n = [-5 5];
+                        yl.heading_av_corrected = [0 360];
                         yl.heading = [0 360];
+                        yl.head_gyr = [0 360];
                         %yl.smg = [-5 5];
                         %yl.cmg = [-5 5];
                         %yl.distrun = [-5 5];
