@@ -129,6 +129,7 @@ switch opt1
            % todo: 028 spike on transmittance 3.8 
            % todo: 030 spiking in transmittance - unusually large number of
            % data points, felt weird to remove that many so have left it
+           % todo: 030 primary oxygen sensor has a section of bad data
 
 
             case 'ctdfiles'
@@ -171,7 +172,7 @@ switch opt1
                 % co.despike.cond2 = co.despike.cond1;
                 % co.despike.oxy2 = co.despike.oxy1;
                 % %so many spikes it's not worth cleaning in some sensore 
-                if ismember(stnlocal,[3]) %
+                if ismember(stnlocal,[3 28]) %
                     co.badscan.oxy1 = [-inf inf]; %so many spikes it's not worth cleaning
                 end
                 if ismember(stnlocal,[3])
