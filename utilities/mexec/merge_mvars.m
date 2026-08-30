@@ -44,37 +44,45 @@ else
     end
 end
 
-%place combined variables
 [~,iico,iio] = intersect(d.(indepvar), mvo);
 [~,iicn,iin] = intersect(d.(indepvar), mvn);
 vars = setdiff([h0.fldnam h.fldnam], indepvar, 'stable');
 
-a = zeros(size(d.(indepvar))); %add fill value to pad
+% Get the total number of rows from your independent variable
+num_rows = size(d.(indepvar), 1); 
+
 for vno = 1:length(vars)
     varname = vars{vno};
 
-    % Determine the maximum number of columns for this variable ---
-    % num_cols = 1; % Default to 1 column
-    % if isfield(d0, varname), num_cols = max(num_cols, size(d0.(varname), 2)); end
-    % if isfield(d, varname),  num_cols = max(num_cols, size(d.(varname), 2));  end
+    % 1. Determine the maximum number of columns for THIS specific variable
+    num_cols = 1; % Default to 1 column for 1D variables
+    if isfield(d0, varname), num_cols = max(num_cols, size(d0.(varname), 2)); end
+    if isfield(d, varname),  num_cols = max(num_cols, size(d.(varname), 2));  end
 
+    % 2. Initialize 'data' with the correct dynamic shape (num_rows x num_cols)
     if length(varname)>4 && strcmp(varname(end-3:end),'flag')
-        data = 9+a;%repmat(9 + a, 1, num_cols);
+        data = repmat(9, num_rows, num_cols);   % Fill with 9 for flags
     else
-        data = NaN+a;%repmat(NaN + a, 1, num_cols);
+        data = repmat(NaN, num_rows, num_cols); % Fill with NaN for values
     end
+    
+    % 3. Safely insert old data (d0) matching the dimension configuration
     if isfield(d0, varname)
         if s(1)==1
+            % If working across columns, keep all columns (:)
             data(:,iico) = d0.(varname)(:,iio);
         else
-            data(iico,:) = d0.(varname)(iio,:);
+            % If working across rows, match the exact column range explicitly
+            data(iico, 1:size(d0.(varname), 2)) = d0.(varname)(iio,:);
         end
     end
+    
+    % 4. Safely insert new data (d) matching the dimension configuration
     if isfield(d, varname)
         if s(1)==1
             data(:,iicn) = d.(varname)(:,iin);
         else
-            data(iicn,:) = d.(varname)(iin,:);
+            data(iicn, 1:size(d.(varname), 2)) = d.(varname)(iin,:);
         end
         if ~isfield(d0, varname)
             nvno = strcmp(varname,h.fldnam);
@@ -83,9 +91,7 @@ for vno = 1:length(vars)
         end
     end
     d.(varname) = data;
-end
-%add (or fill) other variable attributes from h to hnew
-hnew = keep_hvatts(hnew,h); 
+end 
 
 %remake fields that shouldn't be filled with NaN or 9
 if strcmp(indepvar,'sampnum') && isfield(d,'sampnum') && isfield(d,'statnum')

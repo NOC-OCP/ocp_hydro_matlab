@@ -404,7 +404,7 @@ case 'samp_proc'
                             'n_o2','double','moles';...
                             'conc_o2_ml','double','mg_per_l';...
                             'conc_o2','double','umol_per_l';...
-                            'flag','char','string';...
+                            'flag','double','number';...
                             };  
                         sopts.VariableNames = ct(:,1)';
                         sopts.VariableTypes = ct(:,2)';
@@ -421,6 +421,9 @@ case 'samp_proc'
                     case 'doc'
                     case 'iso'
                 end
+            case 'oxy_to_sam'
+                % dbot = splitvars(dbot, {'botoxy', 'botoxy_flag', 'botoxy_temp'});
+
             case 'parse'
                 switch samtyp
                     case 'sal'
@@ -431,7 +434,6 @@ case 'samp_proc'
                         calcsal = 1;
                         ssw_batch = 'P170';
                     case 'oxy'
-                        sdata.flag = 1+ones(size(sdata.statnum));
                         m = isnan(sdata.flag);
                         sdata.flag(m) = 5; %not reported
                         sdata.sample_titre(m) = NaN;

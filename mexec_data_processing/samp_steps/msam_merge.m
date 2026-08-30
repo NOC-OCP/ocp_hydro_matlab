@@ -65,6 +65,11 @@ end
 %load data saved by msam_load, along with CTD/underway
 %parameters required to convert from samufile and ucfiles.ocean 
 [dp, hp] = mloadq(pd.(samtyp),'/');
+switch samtyp
+    case 'oxy'
+    opt1 = 'samp_proc'; opt2 = 'oxy_to_sam'; get_cropt
+end
+
 if sum(dp.sampnum>0 & dp.sampnum<1e6)
     %there are CTD samples
     [dc, hc] = mloadq(pd.samc, strjoin(svars, ' ')); 
@@ -262,8 +267,9 @@ for nno = 1:length(vnames)
         hnew.fldunt = [hnew.fldunt vunit 'number'];
     end
     if sum(flag0==6)
-        hnew.comment = [hnew.comment ', ' vname ' average of replicates (' strjoin(vname,',') ')'];
+        hnew.comment = [hnew.comment ', ' vname ' average of replicates (' strjoin(vnames,',') ')'];
     end
+    %drop files not averaged
     
 end
 

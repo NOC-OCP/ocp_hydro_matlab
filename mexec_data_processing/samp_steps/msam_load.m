@@ -103,7 +103,7 @@ end
 switch samtyp
     case 'oxy'
         %e.g. oxy concentration from titre, std vol, blank vol
-        sdata = oxy_calc(sdata); %***output is per_l or per_kg? 
+        sdata = oxy_calc(sdata); %***output is per_l or per_kg? - KB seems still to be per_l
         mt = cellfun(@(x) contains(x, '_temp'), sdata.Properties.VariableNames);
         if sum(mt); sdata.Properties.VariableUnits(mt) = {'degC'}; end %***overwrite?
         %rename and keep only some variables
@@ -213,6 +213,13 @@ gs.position = gs.sampnum-gs.statnum*100;
 gs.Properties.VariableUnits(end-1:end) = {'number','on.rosette'};
 
 %add existing flags from editlogs***
+%edits
+% reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
+% opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
+% if reapply_saledits
+%     [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+% end
+
 opt1 = 'samp_proc'; opt2 = 'flag'; get_cropt %apply flags if specified in opt_cruise
 %recalculate mean, stdev, range (or for the first time? or do this after
 %repl_check?)

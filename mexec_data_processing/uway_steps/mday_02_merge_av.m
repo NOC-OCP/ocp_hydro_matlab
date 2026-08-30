@@ -151,7 +151,7 @@ opt1 = 'uway_proc'; opt2 = 'avedit'; get_cropt
 %apply previous manually selected edits
 btol = (tavp_s/2)/86400;
 edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
-[dg, ~] = apply_guiedits(dg, 'dday', [edfile '*'], 0, btol);
+[dg, ~] = apply_guiedits(dg, 'dday',edfile, 0, btol);
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad)
     [dg, comment] = apply_autoedits(dg, uopts);
