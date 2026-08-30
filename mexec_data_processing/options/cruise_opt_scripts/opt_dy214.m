@@ -218,7 +218,7 @@ switch opt1
                 niskin_pos = 1:24;
                 niskin_number = [2754:2774,2776:2778];
                 % double check barcodes of the straight niskin numbers
-                if ismember(stn,[1:4 18:31])
+                if ismember(stn,[1:4 18:40])
                     niskin_pos = niskin_pos(1:2:end);
                     niskin_number = niskin_number(1:2:end);
                 end
@@ -279,6 +279,8 @@ switch opt1
                         niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
                     case 39
                         niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
+                    case 40 
+                        niskin_flag(ismember(position, [1])) = 3; % bottle leaked
                 end
         
         end
