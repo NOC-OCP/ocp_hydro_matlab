@@ -272,6 +272,8 @@ switch opt1
                         niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
                     case 33
                         niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
+                    case 39
+                        niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
                 end
         
         end
