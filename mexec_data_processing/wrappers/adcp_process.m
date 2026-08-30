@@ -34,7 +34,7 @@ klist = klist(:)';
 %first vmadcp
 if ismember('sadcp',types)    
     for stn = klist
-        opt1='setup',opt2='m_stn_string';get_cropt
+        opt1='setup';opt2='m_stn_string';get_cropt
         cfg.stnstr = stn_string;
         opt1='adcp_proc';get_cropt
         mvad_station_av(stn, SADCP_inst, 'ctd')
