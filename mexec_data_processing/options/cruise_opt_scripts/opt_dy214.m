@@ -14,6 +14,23 @@ switch opt1
         end
 
 %%%%%%%%%%%%%%%%%%%% uway_proc %%%%%%%%%%    
+% 31.08.2026: @Kristin, when running uway_process it throws up an error
+% trying to merge the bathy data (error in gui_editpoints and
+% mday_02_merge_av (incompatible dimensions) so the processing is aborted
+% (no plots or edit options for any of the uway data). I tried to just loop
+% through 'atmos' and 'ocean' in uway_process (see line 114 in uway_process.m, 
+% instead of 'nav', 'bathy',
+% 'atmos','ocean' for ctypes I only looped through 'atmos' and 'ocean') 
+% just to see if the function runs fine for 'atmos' and
+% 'ocean'. That worked so it appears the error is only with the bathy
+% data. However, unrelated to that there appears to be a bug when creating
+% the output files (_all.nc); most of the data is NaN, i.e. when trying to
+% plot the processed data (for the cruise report) hardly any data is shown
+% for 'atmos' and virtually no data for 'ocean'. I re-ran the processing
+% for all days without actually editing anything at all (i.e. _all.nc
+% should contain the same data as the input (raw or averaged) data) and
+% still the output file only contains mostly NaNs...I haven't yet tried
+% deleting the _all.nc files again...
     case 'uway_proc'
         switch opt2
             case 'datasys_best'
