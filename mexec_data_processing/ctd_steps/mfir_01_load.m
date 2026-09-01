@@ -170,5 +170,6 @@ else
         '-1'
         };
     msave
+    mfixperms(pd.firname)
     %--------------------------------
 end

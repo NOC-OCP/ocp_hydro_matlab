@@ -332,6 +332,7 @@ if isfield(h, 'mstar_site')
 end
 m_add_comment(ncfile,comstring)
 
+mfixperms(ncfile.name)
 
 % history
 if writenew

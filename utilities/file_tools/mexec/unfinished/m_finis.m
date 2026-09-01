@@ -25,5 +25,6 @@ m_add_history(ncfile);
 m_update_filedate(ncfile); % set the file update variable
 
 nc_attput(ncfile.name,nc_global,'openflag','R'); %set the open/writing attribute
+mfixperms(ncfile.name)
 
 return

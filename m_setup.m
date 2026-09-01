@@ -48,10 +48,10 @@ global MEXEC_G
 %defaults that can be overwritten by input structure: what are we
 %processing, and where?
 MEXEC_G.MSCRIPT_CRUISE_STRING='ce26008';
-MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
-MEXEC_G.mexec_data_root = '/data/pstar/projects/goship/cruises/ce26008/data'; %if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/';
-MEXEC_G.sw = '/data/pstar/programs';
+MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
+MEXEC_G.mexec_data_root = '/noc/mpoc/eurogoship/ce26008/data'; %if empty, will search for cruise directory near current directory and near home directory
+MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/'; %not relevant for post-cruise processing
+MEXEC_G.sw = '/noc/mpoc/eurogoship/programs';
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
