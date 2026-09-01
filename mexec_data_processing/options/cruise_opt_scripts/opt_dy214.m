@@ -248,7 +248,7 @@ switch opt1
                     % 1: no info; 2: no problems noted; 3: leaking;
                     % 4: did not trip correctly; 5: not reported;
                     % 7: unknown problem; 9: samples not drawn
-                    %
+                    % cast 46: bottle 1 (btm) leaked, still drew salt and DO
                     % If you are unsure about syntax add a comment.
                     % Example:
                     % todo: For station 4, bottle 9 and 11 leaked
