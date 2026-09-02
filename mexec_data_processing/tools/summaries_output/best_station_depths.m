@@ -141,9 +141,9 @@ switch depth_source
     case 'ladcp' % load from IX LADCP .mat files
         
         for no = 1:length(iif)
-            lf = fullfile(mgetdir('M_IX'),'DLUL_BT_GPS',sprintf('%03d.mat',bestdeps(iif(no),1)));
+            lf = fullfile(mgetdir('M_IX'),'DLUL_GPS_BT',sprintf('%03d.mat',bestdeps(iif(no),1)));
             if ~exist(lf,'file')
-                lf = fullfile(mgetdir('M_IX'),'DL_BT_GPS',sprintf('%03d.mat',bestdeps(iif(no),1)));
+                lf = fullfile(mgetdir('M_IX'),'DL_GPS_BT',sprintf('%03d.mat',bestdeps(iif(no),1)));
                 if ~exist(lf,'file')
                     lf = fullfile(mgetdir('M_IX'),'DLUL_BT_GPS',sprintf('%03d', bestdeps(iif(no),1)), sprintf('%03d.mat',bestdeps(iif(no),1)));
                     if ~exist(lf, 'file')
