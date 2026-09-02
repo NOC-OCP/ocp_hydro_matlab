@@ -192,7 +192,6 @@ switch opt1
                 % co.badpress.turbidity = [NaN NaN];
                 % co.badpress.transmittance = [NaN NaN];
                 % co.badpress.fluor = [NaN NaN];
-                % co.badpress.par = [NaN NaN];
             case 'rawshow'
                 repars = rmfield(repars,'g2'); %don't edit fluo etc.
                 yl.press = [-1 3200];
