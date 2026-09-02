@@ -197,9 +197,7 @@ switch opt1
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
                 yl.fluor = [0 8]; yl.par = [0 40];
-                if ismember(stn,[1,2])
-                    yl.cond = [40 50];
-                    yl.press = [-2 150];
+		if stn = 1
                     yl.temp = [15 25];
                 end
                 if ismember(stn,[1,2])
