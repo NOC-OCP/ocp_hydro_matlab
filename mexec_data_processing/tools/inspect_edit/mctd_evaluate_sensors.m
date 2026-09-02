@@ -94,8 +94,8 @@ else
 end
 
 %load d
-rootdir = mgetdir('ctd');
-[d, h] = mloadq(fullfile(rootdir, ['sam_' mcruise '_all']), '/');
+pd = mexec_file_locations('procfiles','samp');
+[d, h] = mloadq(pd.samc, '/');
 snfs = h.fldnam(strncmp(h.fldnam,'sn',2));
 for no = 1:length(snfs)
     if sum(isnan(d.(snfs{no})))

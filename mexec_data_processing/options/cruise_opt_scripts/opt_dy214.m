@@ -148,7 +148,36 @@ switch opt1
             h.comment = replace(h.comment,'PSO: Tiago Dotto','PSO: Kristin Burmeister');
             m_write_header(otfiles{1},h);
             case 'raw_corrs'
-                co.oxy_align = 0; %0 until we check oxygen hysteresis
+                co.oxy_align = 0; %0 until we check oxygen hysteresis            
+                %SBE defaults, H1 = -0.033; H2 = 5000; H3 = 1450
+                co.hyst_oxy1.H1 = -0.03;
+                co.hyst_oxy1.H2 = 5000; % pressure
+                co.hyst_oxy1.H3 = [
+                    -10 500
+                    1500 500
+                    1501 1450
+                    2000 1450
+                    2001 2000
+                    9000 2000
+                    ];% time
+                co.hrev_oxy1 = co.hyst_oxy1;
+                co.hyst_oxy2.H1 = -0.028;
+                co.hyst_oxy2.H2 = 5000;
+                co.hyst_oxy2.H3 = [
+                    -10 500
+                    1500 500
+                    1501 1000
+                    2000 1000
+                    2001 2000
+                    9000 2000
+                    ];
+                co.hrev_oxy2 = co.hyst_oxy2;
+                % co.oxyhyst432061.H1 = -0.03;
+                % co.oxyhyst432061.H2 = 7000;
+                % co.oxyhyst432061.H3 = 1450;
+                % co.oxyhyst432068.H1 = -0.033;
+                % co.oxyhyst432068.H2 = 6500;
+                % co.oxyhyst432068.H3 = 1450;
             case 'rawedit_auto'
                 %use rangelim first to exclude very large %skspikes
                 % co.rangelim.press = [-1.25 3300];
@@ -346,27 +375,27 @@ case 'adcp_proc'
                 %     t.statnum(m) = 6;
                 % end
             case 'restartsam'
-            pd = mexec_file_locations('procfiles','samp');    
-            %delete sam_*_all file
-            if exist(pd.samc,'file')
-                warning('deleting sam file: %s in 1 s',pd.samc)
-                pause(1)
-                delete(pd.samc)
-            end
-            % find which stations have bottle firing files
-            pfir = mexec_file_locations('procfiles','fir')
-            d = dir(sprintf(pfir.firfile,'*'));
-            % Extract 3-digit blocks directly and convert to numbers
-            [~, namesWithoutExt] = cellfun(@fileparts, {d.name}, 'UniformOutput', false);
-            stns = cellfun(@(x) split(x, '_'), namesWithoutExt, 'UniformOutput', false);
-            stns = cellfun(@(x) str2double(x{3}), stns);
-            stns = stns(:)';
-            for stn = stns
-                %re-run to freshly add CTD data to sam file
-                mfir_to_sam(stn)
-            end
-            %add serial numbers (already saved in .mat file)
-            get_sensor_groups(stns,'samonly')
+                pd = mexec_file_locations('procfiles','samp');    
+                %delete sam_*_all file
+                if exist(pd.samc,'file')
+                    warning('deleting sam file: %s in 1 s',pd.samc)
+                    pause(1)
+                    delete(pd.samc)
+                end
+                % find which stations have bottle firing files
+                pfir = mexec_file_locations('procfiles','fir')
+                d = dir(sprintf(pfir.firfile,'*'));
+                % Extract 3-digit blocks directly and convert to numbers
+                [~, namesWithoutExt] = cellfun(@fileparts, {d.name}, 'UniformOutput', false);
+                stns = cellfun(@(x) split(x, '_'), namesWithoutExt, 'UniformOutput', false);
+                stns = cellfun(@(x) str2double(x{3}), stns);
+                stns = stns(:)';
+                for stn = stns
+                    %re-run to freshly add CTD data to sam file
+                    mfir_to_sam(stn)
+                end
+                %add serial numbers (already saved in .mat file)
+                get_sensor_groups(stns,'samonly')
 
         end
 %%%%%%%%%%%%%%%%%%%% end sbe35 %%%%%%%%%%%%
@@ -386,7 +415,7 @@ case 'samp_proc'
                     case 'chl'
                     case 'oxy'
                         files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,...
-                        'Winkler Calculation Spreadsheet_DY214- 29_08_2026_v3.xlsx')};
+                        'Winkler Calculation Spreadsheet_DY214- 01_09_2026_v1.xlsx')};
                         sopts.numhead = 8;
                         % below from CE26008, above not working - need to
                         % edit, more
