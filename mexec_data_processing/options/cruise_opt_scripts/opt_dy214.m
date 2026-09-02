@@ -194,13 +194,13 @@ switch opt1
                 % co.badpress.fluor = [NaN NaN];
                 % co.badpress.par = [NaN NaN];
             case 'rawshow'
-                % does not apply already applied flags - need to see how to
-                % do that
                 repars = rmfield(repars,'g2'); %don't edit fluo etc.
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
                 yl.fluor = [0 8]; yl.par = [0 40];
-                if stn==1
+                if ismember(stn,[1,2])
+                    yl.cond = [40 50];
+                    yl.press = [-2 150];
                     yl.temp = [15 25];
                 end
                 if ismember(stn,[1,2])
@@ -281,6 +281,8 @@ switch opt1
                         niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
                     case 40 
                         niskin_flag(ismember(position, [1])) = 3; % bottle leaked
+		    case 46
+		        niskin_flag(ismember(position, [1])) = 3; % bottle leaked, still drew salt and DO
                 end
         
         end
