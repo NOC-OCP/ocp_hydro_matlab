@@ -194,8 +194,6 @@ switch opt1
                 % co.badpress.fluor = [NaN NaN];
                 % co.badpress.par = [NaN NaN];
             case 'rawshow'
-                % does not apply already applied flags - need to see how to
-                % do that
                 repars = rmfield(repars,'g2'); %don't edit fluo etc.
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
@@ -231,7 +229,7 @@ switch opt1
                     % 1: no info; 2: no problems noted; 3: leaking;
                     % 4: did not trip correctly; 5: not reported;
                     % 7: unknown problem; 9: samples not drawn
-                    % cast 46: bottle 1 (btm) leaked, still drew salt and DO
+                    
                     % If you are unsure about syntax add a comment.
                     % Example:
                     % todo: For station 4, bottle 9 and 11 leaked
@@ -281,6 +279,8 @@ switch opt1
                         niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
                     case 40 
                         niskin_flag(ismember(position, [1])) = 3; % bottle leaked
+                    case 46
+                        niskin_flag(ismember(position, [1])) = 3; % bottle leaked, still drew salt and DO
                 end
         
         end
