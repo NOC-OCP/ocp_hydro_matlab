@@ -1,4 +1,4 @@
-function msal_01
+function msal_01(samtyp)
 % msal_01: read in the bottle salinities from digitized autosal log(s)
 % and save to sal_cruise_01.nc, tsgsal_cruise_01.nc
 %
@@ -35,24 +35,25 @@ sub_samp_range = [998000 998999]; %substandards
 
 % find list of files and information on variables
 root_sal = mgetdir('M_BOT_SAL');
-salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); 
+% files = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); 
 hcpat = {'sampnum'}; chrows = 1; chunits = [];
 sheets = 1; iopts = struct([]);
 datform = 'dd/mm/yyyy';
 timform = 'HH:MM:SS';
-opt1 = 'botpsal'; opt2 = 'sal_files'; get_cropt %list of files to load
-if isempty(salfiles)
+opt1 = 'samp_proc'; opt2 = 'files'; get_cropt %list of files to load
+if isempty(files)
     warning(['no salinity data files found in ' root_sal '; skipping']);
     return
 end
-salfiles = fullfile({salfiles.folder}',{salfiles.name}');
+% files = fullfile({files.folder}',{files.name}');
 
 %%%%%% load and parse %%%%%%
 
 %load
 %***datetime format is already read in wrong by default? causes wrong
 %ordering of samples***
-[ds_sal, salhead] = load_samdata(salfiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts); 
+% [ds_sal, salhead] = load_samdata(files, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts); 
+[ds_sal, salhead] = load_samdata(files, sopts);
 if isempty(ds_sal)
     error('no data loaded')
 end
@@ -76,8 +77,9 @@ ds_sal(isnan(ds_sal.sampnum),:) = [];
 %         l = str2num(l(ii:ii+1));
 %     end
 % end
-opt1 = 'botpsal'; opt2 = 'sal_parse'; get_cropt
-opt1 = 'check_sams'; get_cropt
+
+opt1 = 'samp_proc'; opt2 = 'parse'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'check'; get_cropt
 
 if calcsal
     %add option to fill in information about cellt or Bath Temp and k15 from header***
@@ -94,39 +96,39 @@ if calcsal
         ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1);
     end
 
-    %rename
-    clear samevars
-    samevars.sample_1 = {'sample1' 'reading_1' 'reading1' 'r1'};
-    samevars.sample_2 = {'sample2' 'reading_2' 'reading2' 'r2'};
-    samevars.sample_3 = {'sample3' 'reading_3' 'reading3' 'r3'};
-    samevars.sample_4 = {'sample4' 'reading_4' 'reading4' 'r4'};
-    samevars.runavg = {'average'};
-    vars = fieldnames(samevars);
-    fn = ds_sal.Properties.VariableNames;
-    for vno = 1:length(vars)
-        if ~sum(strcmp(vars{vno},fn)) && ~sum(contains(samevars.(vars{vno}),fn))
-            %add this one
-            ds_sal.(vars{vno}) = nan(size(ds_sal,1),1);
-            fn = [fn vars{vno}];
-        end
-    end
-    fn = ds_sal.Properties.VariableNames;
+    % %rename
+    % clear samevars
+    % samevars.Sample1 = {'Sample1' 'sample1' 'reading_1' 'reading1' 'r1'};
+    % samevars.Sample2 = {'Sample2' 'sample2' 'reading_2' 'reading2' 'r2'};
+    % samevars.Sample3 = {'Sample3' 'sample3' 'reading_3' 'reading3' 'r3'};
+    % samevars.sample_4 = {'Sample4' 'sample4' 'reading_4' 'reading4' 'r4'};
+    % samevars.runavg = {'average'};
+    % vars = fieldnames(samevars);
+    % fn = ds_sal.Properties.VariableNames;
+    % for vno = 1:length(vars)
+    %     if ~sum(strcmp(vars{vno},fn)) && ~sum(contains(samevars.(vars{vno}),fn))
+    %         add this one
+    %         ds_sal.(vars{vno}) = nan(size(ds_sal,1),1);
+    %         fn = [fn vars{vno}];
+    %     end
+    % end
+    % fn = ds_sal.Properties.VariableNames;
 
     %deal with time variable(s)
-    md = strcmp('date',fn); mt = strcmp('time',fn);
+    md = strcmp('Date',fn); mt = strcmp('Time',fn);
     if sum(md) && sum(mt)
-        if ischar(ds_sal{:,mt})
+        if ischar(ds_sal(:,mt))
             tim = datevec(ds_sal{:,mt},timform);
         else
             tim = datevec(ds_sal{:,mt});
         end
-        if ischar(ds_sal{:,md})
+        if iscellstr(ds_sal{:, md})
             dat = datevec(ds_sal{:,md},datform);
         else
             dat = datevec(ds_sal{:,md});
         end
         ds_sal.runtime = datenum(dat + tim); %***
-        ds_sal.time = []; ds_sal.date = [];
+        ds_sal.Time = []; ds_sal.Date = [];
         fn = ds_sal.Properties.VariableNames;
     end
 
@@ -136,9 +138,9 @@ if calcsal
         ds_sal.flag(isnan(ds_sal.flag)) = 9;
     end
 
-    if ~ismember('sample_4',fn)
-        ds_sal.sample_4 = NaN+ds_sal.sample_1;
-    end
+    % if ~ismember('sample_4',fn)
+    %     ds_sal.sample_4 = NaN+ds_sal.Sample1;
+    % end
 
     %temporarily shift tsg sampnum times for plotting if using >0 method
     iitsg = find(ds_sal.sampnum>1000e8);
@@ -146,15 +148,16 @@ if calcsal
 
     %edits
     reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
-    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2='flags'; get_cropt
     if reapply_saledits
-        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', edfile);
     end
 
-    ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4],2);
-
+    % ds_sal.runavg = m_nanmean([ds_sal.Sample1 ds_sal.Sample2 ds_sal.Sample3 ds_sal.sample_4],2);
+    ds_sal.runavg = m_nanmean([ds_sal.Sample1 ds_sal.Sample2 ds_sal.Sample3],2);
     %inspect for new edits
-    if check_sal
+    opt1 = 'samp_proc'; opt2='check'; get_cropt
+    if checksam.sal
         %standards and substandards (999NNN and 998NNN): plot together
         iis = find(ds_sal.sampnum>=std_samp_range(1) & ds_sal.sampnum<=std_samp_range(2));
         iis = [iis; find(ds_sal.sampnum>=sub_samp_range(1) & ds_sal.sampnum<=sub_samp_range(2))];
@@ -177,28 +180,33 @@ if calcsal
         if ~isempty(iis); iis_all{n+1} = iis; n = n+1; end
         d = struct();
         d.sampnum = ds_sal.sampnum;
-        d.sample_1 = ds_sal.sample_1-ds_sal.runavg;
-        d.sample_2 = ds_sal.sample_2-ds_sal.runavg;
-        d.sample_3 = ds_sal.sample_3-ds_sal.runavg;
-        d.sample_4 = ds_sal.sample_4-ds_sal.runavg;
+        d.Sample1 = ds_sal.Sample1-ds_sal.Average;
+        d.Sample2 = ds_sal.Sample2-ds_sal.Average;
+        d.Sample3 = ds_sal.Sample3-ds_sal.Average;
+        % d.Sample4 = ds_sal.Sample4-ds_sal.Average;
         d.ref_hi = ones(size(ds_sal.sampnum))*2.5e-5;
         d.ref_low = -d.ref_hi;
-        markers = {'o';'s';'<';'.';'none';'none'};
-        lines = {'none';'none';'none';'none';'-';'-'};
-        bads = gui_editpoints(d,'sampnum','edfilepat',edfile,'markers',markers,'lines',lines,'xgroups',iis_all);
+        yl.Sample1=[-3e-5 3e-5];yl.Sample2=yl.Sample1;yl.Sample3=yl.Sample1;...
+        yl.ref_hi = yl.Sample1; yl.ref_low = yl.Sample1;
+        markers = {'o';'s';'<';'none';'none'};
+        lines = {'none';'none';'none';'-';'-'};
+        dnew = struct2table(d);
+        bads = gui_editpoints(dnew,'sampnum',iis_all,[],'edfilepre',edfile,...
+            'markers',markers,'lines',lines,...
+            'yl', struct2table(yl));
         clear d
     end
     if exist('bads','var') && ~isempty(bads) %new edits to apply
-        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', edfile );
     
     end
 
     %put year back on to tsg samples
     ds_sal.sampnum(iitsg) = ds_sal.sampnum(iitsg) + MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
 
-    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'flags'; get_cropt
     %recalculate mean
-    a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
+    a = [ds_sal.Sample1 ds_sal.Sample2 ds_sal.Sample3];
     ds_sal.runavg = m_nanmean(a,2);
     %flag based on stdev and number of remaining points
     s3 = 3e-5; s4 = 5e-5;
@@ -213,7 +221,7 @@ if calcsal
 
     %%%%%% standards offsets %%%%%%
 
-    opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'calc'; get_cropt
     if ~strcmp(salin_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
         [~,ii] = sort(ds_sal.runtime);
         ds_sal = ds_sal(ii,:);
@@ -253,20 +261,22 @@ if calcsal
             end
             ist = 0;
         end
-        plot(x(iistd),st(iistd)-ds_sal.sample_1(iistd),'kx', ...
-            x(iistd),st(iistd)-ds_sal.sample_2(iistd),'r+', ...
-            x(iistd),st(iistd)-ds_sal.sample_3(iistd),'m.', ...
-            x(iistd),st(iistd)-ds_sal.sample_4(iistd),'go', ...
+        plot(x(iistd),st(iistd)-ds_sal.Sample1(iistd),'kx', ...
+            x(iistd),st(iistd)-ds_sal.Sample2(iistd),'r+', ...
+            x(iistd),st(iistd)-ds_sal.Sample3(iistd),'m.', ... %x(iistd),st(iistd)-ds_sal.sample_4(iistd),'go', ...
             x(iistd),st(iistd)-ds_sal.runavg(iistd),'sb');
         if ist
             s = ds_sal.sampnum(iistd)-std_samp_range(1);
-            text(x(iistd),zeros(1,length(iistd)),num2str(s(:)));
+            N = length(iistd);
+            alt_offset = -0.8e-4 + mod(0:N-1, 4) * 2e-5/4;
+            text(x(iistd),alt_offset,num2str(s(:)));
             disp('labels: sequential standard number'); xlabel('day')
         else
             xlabel('index')
             if sum(strcmp('runtime',ds_sal.Properties.VariableNames))
-            text(x(iistd),zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'dd'));
-            text(x(iistd),-5e-6+zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'HH:MM'));
+            
+            text(x(iistd),alt_offset,datestr(ds_sal.runtime(iistd),'dd'));
+            text(x(iistd),-5e-6+alt_offset,datestr(ds_sal.runtime(iistd),'HH:MM'));
             disp('labels: dd;HH:MM of standard');
             end
         end
@@ -301,7 +311,7 @@ if calcsal
                 iiw = (min(dt1,dt2)>1/24 | max(dt1,dt2)>3/24); %***
                 if sum(iiw)
                     warning('%s\n %s\n','these samples are an hour or more from any standard; if a standard was not run','on either side of each crate, sampnum_run may not be the best method:');
-                    disp(ds_sal.sampnum(iis(iiw)))
+                    disp(int64(ds_sal.sampnum(iis(iiw))))
                 end
                 [c,ia,ib] = intersect(salin_off(:,1),ds_sal.sampnum);
                 ds_sal.salin_off = NaN+zeros(size(ds_sal.sampnum));
@@ -340,9 +350,9 @@ if calcsal
     %check or add units
     salunits.sampnum = {'number'};
     salunits.runtime = {'MATLAB_datenum'};
-    salunits.sample_1 = {'2Rt'};
-    salunits.sample_2 = {'2Rt'};
-    salunits.sample_3 = {'2Rt'};
+    salunits.Sample1 = {'2Rt'};
+    salunits.Sample2 = {'2Rt'};
+    salunits.Sample3 = {'2Rt'};
     mctd_evaluate_salunits.runavg = {'2Rt'};
     salunits.cellt = {'degC'};
     salunits.k15 = {'2Rt'};
@@ -359,7 +369,7 @@ else
     salunits.flag = {'woce_9.4'};
     salunits.salinity = {'psu'};
 end
-opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
+opt1 = 'samp_proc'; opt2='flags'; get_cropt
 
 %%%%%% save %%%%%%
 
@@ -388,17 +398,15 @@ end
 hc.comment = [sal_adj_comment];
 mfsave(salfile, d, hc);
 
-%plot CTD samples
-opt1 = 'check_sams'; get_cropt
-if check_sal
-    figure(10); subplot(223)
-    ii = find(d.sampnum>0 & d.sampnum<9e5);
-    plot(d.sampnum(ii),d.salinity(ii),'o',d.sampnum(ii),d.salinity_adj(ii),'s')
-    title('CTD'); xlabel('sampnum'); legend('sal', 'sal adj')
-end
+
+figure(10); subplot(223)
+ii = find(d.sampnum>0 & d.sampnum<9e5);
+plot(d.sampnum(ii),d.salinity(ii),'o',d.sampnum(ii),d.salinity_adj(ii),'s')
+title('CTD'); xlabel('sampnum'); legend('sal', 'sal adj')
+
 
 %write some fields for CTD samples to sam_ file
-msal_to_sam
+msam_merge(samtyp)
 
 %get TSG samples, figure out times: either -dddhhmm (where ddd is
 %year-day starting at 1), or yyyymmddhhmm, or mmddhhmm
@@ -426,7 +434,7 @@ if ~isempty(iiu)
         MM = str2num(s(:,6:7));
         tsg.dnum(ii) = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1) + jjj-1 + (HH+MM/60)/24;
     end
-    opt1 = 'botpsal'; opt2 = 'tsg_sampnum'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'tsg_sampnum'; get_cropt
     [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
     dsu.time = NaN+dsu.sampnum;
     opt1 = 'mstar'; get_cropt
