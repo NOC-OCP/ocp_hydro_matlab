@@ -113,6 +113,8 @@ sdata(:,'botoxy_temp') = sdata(:,'fix_temp');
 vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
 sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
     case 'sal'
+        warning('msam_load cannot process salinity bottle sample yet. Please use msal_01 as standalone function for this')
+        return
         %e.g. average conductivity from 3 readings, and salinity from that
         % sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
 %         sdata(:, 'botoxy') = sdata(:, 'conc_o2');
