@@ -186,7 +186,7 @@ for no = 1:length(skipvars)
 end
 
 %apply niskin_flags to samples and their flags
-if isfield(d, 'niskin_flag')
+if ismember('niskin_flag', d.Properties.VariableNames)
     niskbad = ismember(d.niskin_flag, nisk_badflags);
     fnames = setdiff(fnames, {'niskin_flag'});
     

@@ -30,6 +30,7 @@ switch samtyp
         uvars = [uvars, 'fluo'];
     case 'oxy'
         %rename for backwards compatibility?***
+        apply_repl_ave=1;
         convs.per_l_to_per_kg.temp = 'botoxy_temp'; %convert using oxygen draw temperature from each sample if recorded
         svars = [svars, 'uasal'];
         pvars = {'botoxy','botoxy_temp','botoxy_flag'};
@@ -44,16 +45,18 @@ switch samtyp
         opt1 = 'samp_proc'; opt2 = 'nut_to_sam'; get_cropt %could set to not avg, or change the lab temp***
         hnew.comment = ['nutrient data from ' pd.(samtyp)]; %***overwrite comment or add comment?
     case 'sal'
-%        convs.rename = {'botpsal', {'salinity_adj','salinity'};... %by
+       apply_repl_ave=0;
+ %by
 %        default this should be in mexec_defaults samp_proc parse as
 %        varmap***
 %            'botpsal_flag'
 % , {'flag'}}; %backwards compatibility
-        pvars = {'botpsal','botpsal_flag'};
         uvars = [uvars, 'salinity'];
+        pvars = [{'botpsal';'botpsal_flag'}; uvars(:)];
         hnew.comment = ['salinity data from ' pd.(samtyp)];
     case 'sbe35'
         % warning('msam_merge.m needs to be edited for sbe35 to work')
+        apply_repl_ave=1;
         pvars = {'sbe35temp'; 'sbe35temp_flag'}; %list which to copy because we don't need to copy tdiff etc.***
         hnew.comment = ['SBE35 data from ' pd.(samtyp)];
         % return
@@ -65,10 +68,7 @@ end
 %load data saved by msam_load, along with CTD/underway
 %parameters required to convert from samufile and ucfiles.ocean 
 [dp, hp] = mloadq(pd.(samtyp),'/');
-switch samtyp
-    case 'oxy'
-    opt1 = 'samp_proc'; opt2 = 'oxy_to_sam'; get_cropt
-end
+opt1 = 'samp_proc'; opt2 = 'bot_to_sam'; get_cropt
 
 if sum(dp.sampnum>0 & dp.sampnum<1e6)
     %there are CTD samples
@@ -79,19 +79,33 @@ if sum(dp.sampnum>0 & dp.sampnum<1e6)
 end
 if sum(dp.sampnum<0 | dp.sampnum>1e9) && exist(pdu.buocean,'file')
     %there are underway samples; interpolate from surface_ocean file
-    [du, hu] = mloadq(pdu.buocean, strjoin(uvars, ' '));
+    otfile = fullfile(pdu.buocean,sprintf(pdu.buallform, 'surface_ocean', mcruise));
+    [du, hu] = mloadq(otfile,strjoin(uvars, ' '));
     dnum = m_commontime(du,'dday',hu,'datenum');
     sampnump = str2num(datestr(dnum,'yyyymmddHHMM'));
     sampnumn = -floor(du.dday)*1e4 - str2num(datestr(dnum,'HHMM'));
     flds = setdiff(uvars, {'dday','times'});
     for no = 1:length(flds)
+        dp.(flds{no}) = NaN(size(dp.sampnum));
         m = dp.sampnum>1e9;
+        if length(sampnump) > length(unique(sampnump))
+        [sampnump_unique, ~, uii] = unique(sampnump);
+        data_averaged = accumarray(uii, du.(flds{no}), [], @(x) mean(x, 'omitnan'));
+        dp.(flds{no})(m) = interp1(sampnump_unique, data_averaged, dp.sampnum(m));
+        else
         dp.(flds{no})(m) = interp1(sampnump,du.(flds{no}),dp.sampnum(m));
+        end
         m = dp.sampnum<0;
+        if length(sampnumn) > length(unique(sampnumn))
+        [sampnumn_unique, ~, uii] = unique(sampnumn);
+        data_averaged = accumarray(uii, du.(flds{no}), [], @(x) mean(x, 'omitnan'));
+        dp.(flds{no})(m) = interp1(sampnumn_unique, data_averaged, dp.sampnum(m));
+        else
         dp.(flds{no})(m) = interp1(sampnumn,du.(flds{no}),dp.sampnum(m));
+        end
         m = strcmp(flds{no},hu.fldnam);
-        hp.fldnam = [hp.fldnam flds{no}];
-        hp.fldunt = [hp.fldunt hu.fldunt{m}];
+        hp.fldnam = [hp.fldnam {flds{no}}];
+        hp.fldunt = [hp.fldunt {hu.fldunt{m}}];
     end
 end
 
@@ -102,7 +116,9 @@ dp = match_table_units(dp, hp);
 
 %convert parameter sample data e.g. from umol_per_l to umol_per_kg, as
 %specified in convs  
-[dp, hnew] = samp_units_conv(dp, hnew, convs);
+if ~isempty(convs)
+    [dp, hnew] = samp_units_conv(dp, hnew, convs);
+end
 %***what about underway data?
 
 if iscell(pvars)
@@ -114,7 +130,9 @@ if iscell(pvars)
 end
 
 %average replicates 
+if apply_repl_ave
 [dp, hnew] = repl_avg(dp, hnew, svars);
+end
 
 %***post-averaging conversions/calculations?
 
@@ -130,6 +148,7 @@ end
 %flag)
 dp = table2struct(dp,'ToScalar',true);
 dp.niskin_flag = dc.niskin_flag;
+
 dp = hdata_flagnan(dp, 'keepemptyvars', 1);
 dp = rmfield(dp,'niskin_flag');
 target_fields = fieldnames(dp);
@@ -230,7 +249,7 @@ for nno = 1:length(vnames)
     vunit = un{nno};
     data = dp.(vname);
     [nr,nc] = size(data);
-    fname = [vname '_flag']
+    fname = [vname '_flag'];
     flag = dp.(fname);
     %find best flag for each sampnum (2 better than 3
     %better than 4, 1 and 9 irrelevant)

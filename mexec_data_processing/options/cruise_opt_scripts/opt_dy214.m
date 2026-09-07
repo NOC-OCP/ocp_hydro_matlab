@@ -10,7 +10,16 @@ switch opt1
     case 'shipuway'
         switch opt2
             case 'rvdas_database'
+                % Data is on two data bases however server adress it saved 
+                % in MXEC_G.RVDAS_check for the first successfull stream
+                % resetting it for each variabel so it gets the second
+                % server adress for salrmtemp
+                MEXEC_G.RVDAS_checked = [];
                 RVDAS.loginfile = '/data/plocal/rvdas_addr';
+                if exist('sqltext','var') && ~isempty(strfind(sqltext, 'salrmtemp_salin'))
+                    MEXEC_G.RVDAS_checked = [];
+                    RVDAS.loginfile = '/data/plocal/rvdas_addr_base2';
+                end
         end
 
 %%%%%%%%%%%%%%%%%%%% uway_proc %%%%%%%%%%    
@@ -134,8 +143,38 @@ switch opt1
            % todo: 030 spiking in transmittance - unusually large number of
            % data points, felt weird to remove that many so have left it
            % todo: 030 primary oxygen sensor has a section of bad data
-
-
+            case 'ctd_cals'
+                %  co.docal.temp = 1;
+                % co.docal.cond = 1;
+                % co.docal.oxygen = 1;
+                % %stainless
+                % co.calstr.temp.sn2191.dy214 = 'dcal.temp = d0.temp + interp1([0 6000],[-1.1e-3 -2.3e-3],d0.press) - 3e-4;';
+                % co.calstr.temp.sn2191.msg = 'temp s/n 2191 calibrated based on comparison with 489/960 SBE35 measurements';
+                % co.calstr.temp.sn5649.dy214 = 'dcal.temp = d0.temp + interp1([0 6000],[0.2e-3 -0.9e-3],d0.press) - 2e-4;';
+                % co.calstr.temp.sn5649.msg = 'temp s/n 5649 calibrated based on comparison with 489/960 SBE35 measurements';
+                % co.calstr.cond.sn3248.dy214 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.5e-3 1e-3],d0.press)/35);';
+                % co.calstr.cond.sn3248.msg = 'cond s/n 3248 calibrated based on comparison with 41/51 bottle samples';
+                % co.calstr.cond.sn3488.dy214 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.2e-3 -4.4e-3],d0.press)/35);';
+                % co.calstr.cond.sn3488.msg = 'cond s/n 3488 calibrated based on comparison with 122/189 bottle samples';
+                % co.calstr.cond.sn3491.dy214 = 'dcal.cond = d0.cond.*(1 + interp1([0 4000 6000],[-4e-3 -5e-3 -3e-3],d0.press)/35);';
+                % co.calstr.cond.sn3491.msg = 'cond s/n 3491 calibrated based on comparison with 188/269 bottle samples';
+                % %oxygen.sn0619 3 comparison points - only one during test
+                % ctd - reject?
+                % oxycal = C1 + C2(press) + C3(statnum) + (C4 + C5(press) + C6(statnum))(oxy)
+                % 0.000000, 0.116048, 0.000000, 0.000000, -0.000477, 0.052087,
+                % co.calstr.oxygen.sn0619.dy214 = 'dcal.oxygen = d0.oxygen.*(interp1([0 1000 6000],[0.875 0.887 0.90],d0.press) + interp1([30 70],[-8e-3 8e-3],d0.dday));';
+                % co.calstr.oxygen.sn0619.msg = 'oxygen s/n ??? calibrated based on comparison between 3/5 bottle samples and gamma_n-matched downcast';
+                % % oxygen.sn2055 - only during test ctd - reject?
+                % co.calstr.oxygen.sn2055.dy214 = 'dcal.oxygen = d0.oxygen.*(1.22 + interp1([0 500 4000 6000],[0e-2 0.5e-2 2e-2 1e-2],d0.press));';
+                % co.calstr.oxygen.sn2055.msg = 'oxygen s/n 2291 calibrated based on comparison with 95/145 bottle samples and gamma_n-matched downcast';
+                % %oxygen.sn2540 
+                % co.calstr.oxygen.sn2540.dy214 = 'dcal.oxygen = d0.oxygen.*(interp1([0 6000],[1.03 1.07],d0.press));';
+                % co.calstr.oxygen.sn2540.msg = 'oxygen s/n 4250 calibrated based on comparison with 39/61 bottle samples and gamma_n-matched downcast';
+                % % oxygen.sn2575
+                % co.calstr.oxygen.sn2575.dy214 = 'dcal.oxygen = d0.oxygen.*(interp1([-2 3 20],[1.085 1.055 1.03],d0.temp)) ;' ;
+                % co.calstr.oxygen.sn2575.msg = 'oxygen s/n 4252 calibrated based on comparison with 53/89 bottle samples and gamma_n-matched downcast';
+                % % oxygen.sn 3836 - oxy1 for most of time but for CTD28 or so
+                % % oxygen.sn 4580 - oxy2 for most of time but for CTD28 or so
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
@@ -288,6 +327,8 @@ switch opt1
                         niskin_flag(ismember(position,[3 7 11 15 19])) = 9; % samples not drawn; backup bottles
                     case 20
                         niskin_flag(ismember(position,[3 7])) = 9; % samples not drawn; backup bottles
+                    case 21
+                        niskin_flag(21) = 7; % looks like nisking was closed at 1492m but stop was at 1520m
                     case 23
                         niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
                     case 24
@@ -403,11 +444,6 @@ case 'adcp_proc'
 %%%%%%%%%%%%%%%%%%%% samp_proc %%%%%%%%%%   
 case 'samp_proc'
         switch opt2
-            % case 'sal_files'
-            %         files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv')).name};
-            %         files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
-            %         sopts.numhead = 9;
-                    
             case 'files'
                 % uway_sample_log_file = fullfile(MEXEC_G.MDIRLIST.M_BOT,'uway_sample_log.csv');
                 switch samtyp
@@ -415,7 +451,7 @@ case 'samp_proc'
                     case 'chl'
                     case 'oxy'
                         files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,...
-                        'Winkler Calculation Spreadsheet_DY214- 01_09_2026_v1.xlsx')};
+                        'Winkler Calculation Spreadsheet_DY214_FINAL.xlsx')};
                         sopts.numhead = 8;
                         % below from CE26008, above not working - need to
                         % edit, more
@@ -451,6 +487,8 @@ case 'samp_proc'
                     case 'sal'
                         files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv')).name};
                         files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
+                        % files = {'/data/pstar/cruise/data/bottle_samples/SAL/DY214_CTD_03_26_Aug_2026.csv'
+                        %     '/data/pstar/cruise/data/bottle_samples/SAL/DY214_CTD_04_26_Aug_2026.csv'};
                         sopts.numhead = 9;
                    
                     case 'nut'
@@ -459,9 +497,49 @@ case 'samp_proc'
                     case 'doc'
                     case 'iso'
                 end
-            case 'oxy_to_sam'
-                % dbot = splitvars(dbot, {'botoxy', 'botoxy_flag', 'botoxy_temp'});
-
+            case 'mctd_evaluate_sensors'
+                switch parameter
+                    case 'oxy'
+                        p.rlim=1+[-.15 .15];
+                        p.edges = [p.rlim(1):.005:p.rlim(2)];
+                end
+            case 'restartsam'
+                restartsam = 0;
+                restartusam = 0; %that seems not to be a thing
+            case 'bot_to_sam';
+                switch samtyp
+                    case 'sal'
+                      mapping = {'botpsal', 'salinity_adj';...
+                                  'botpsal_flag','flag';...
+                                'botpsal_uncor', 'salinity'};
+                        for i = 1:size(mapping, 1)
+                        new_name = mapping{i, 1}; % 'botpsal' or 'botpsal_uncor'
+                        old_name = mapping{i, 2}; % 'salinity_adj' or 'salinity'
+                        
+                        if isfield(dp, old_name)
+                            dp.(new_name) = dp.(old_name);
+                            dp = rmfield(dp, old_name);
+                            hp.fldnam = strrep(hp.fldnam, old_name,new_name);
+                            fprintf('Successfully renamed "%s" to "%s"\n', old_name, new_name);
+                        else
+                            warning('Could not find field "%s" in your dp structure.', old_name);
+                        end
+                        end
+                        vars_to_remove = {'Sample1', 'Sample2', 'Sample3', 'k15', 'cellt'};
+                        dp = rmfield(dp, vars_to_remove);
+                        remove_mask = ismember(hp.fldnam, vars_to_remove);
+                        hp.fldnam(remove_mask) = [];
+                        hp.fldunt(remove_mask) = [];
+                        % remove tsg and stds
+                        ii = find(dp.sampnum>0 & dp.sampnum<9e5);
+                        fnames = fieldnames(dp);
+                        for i = 1:length(fnames)
+                            dp.(fnames{i}) = dp.(fnames{i})(ii, :);
+                        end
+      
+               case 'oxy'
+                        % dbot = splitvars(dbot, {'botoxy', 'botoxy_flag', 'botoxy_temp'});
+                end
             case 'parse'
                 switch samtyp
                     case 'sal'
@@ -473,9 +551,7 @@ case 'samp_proc'
                         ssw_batch = 'P170';
                     case 'oxy'
                         m = isnan(sdata.flag);
-                        sdata.flag(m) = 5; %not reported
-                        sdata.sample_titre(m) = NaN;
-                        sdata.conc_o2(m) = NaN;
+                        sdata.flag(m) = 2; %no problems noted
                         sdata.sampnum = sdata.statnum*100+sdata.position;
                         sdata(:,ismember(sdata.Properties.VariableNames,{'botno','botvol20','flags','statnum','position'})) = [];
                 end
@@ -484,20 +560,40 @@ case 'samp_proc'
                     case 'sal'
                         %salin_off = -1.5e-5; %constant
                     case 'oxy'
+                        calcoxyfromtitre=0; % use the calculation from the spreadsheet, it is otherwise not working for me...
                 end
             case 'redoctm'
                 redoctm = 1;
             case 'check'
                 % checksam.sbe35 = 0;
-                checksam.sal = 1; %done
+                checksam.sal = 0; %done
                 checksam.oxy = 1; %done
                 % checksam.chl = 0;
             case 'flags' %flags before replicate averaging and after replicate averaging***
                 switch samtyp
                     case 'sal'
-                        check_sal=1
-                        % m = ismember(ds_sal.sampnum,[1403 1406 1408 1501]);
-                        % ds_sal.flag(m) = 4;
+                        sal_adj_comment = [];
+                        salin_off = [ 
+                       1 +6.2; 2 +5.2; 3 +4.0; 4 +0.5; 5 -1.5; 6 -3.4
+                       7 -0.1; 8 -0.7; 9 -1.6
+                       10 -0.9;11 -0.9;12 -0.9;13 -0.9;14 -0.9;15 -0.9
+                       16 -1.3;17 -1.3;18 -1.3;19 -1.3;20 -1.3;21 -1.3
+                       22 +2.0;23 +0.7;24 -0.1;25 -0.7
+                       26 +2.2 ;27 +2.2;28 +2.2
+                       29 +2.5;30 +2.5; 31 +2.5
+                    ];
+                salin_off(:,1) = salin_off(:,1)+999e3;
+                salin_off(:,2) = salin_off(:,2)*1e-5;
+                salin_off_base = 'sampnum_run'; %'sampnum_list';
+                        
+                % one sample far off: 
+                % 411, 413, 804, 2317 2505 2809 4207
+                % wide spread: 
+                % 1405 1513 2313 2801 3113 3305 3815 3615 4105 4107
+                % 4305 4405 4407
+                % 
+                % m = ismember(ds_sal.sampnum,[1403 1406 1408 1501]);
+                % ds_sal.flag(m) = 4;
                     case 'oxy'
                         %sampnum, a flag, b flag, c flag
                         % flr = [...
@@ -513,8 +609,62 @@ case 'samp_proc'
                         % flag4b = [1501 ]; %both a and b high, maybe bad niskin closure
                         % d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
                         % d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
+   
                 end
         end
 %%%%%%%%%%%%%%%%%%%% end samp_proc %%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%% outputs and summaries %%%%%%%%%%%%%%%%%%%%%%
+    case 'outputs'
+        switch opt2
+            case 'summary'
+                snames = {'nsal' 'noxy'};
+                sgrps = {{'botpsal'} {'botoxy'}};
+            case 'exch'
+                % n12 = 8; or ns = 35 % ??? not sure what this is
+                expocode = '74EQ20260820'; %{shipcode}{start YYYYMMDD}
+                sect_id = 'Ellett Array';
+                submitter = 'SCISAMSKB'; %group institution person
+                common_headstr = {'#SHIP: RRS Discovery';...
+                    '#Cruise DY214; Ellett Array';...
+                    '#Region: Eastern North Atlantic (subpolar)';...
+                    ['#EXPOCODE: ' expocode];...
+                    '#DATES: 20260820 - 20260909';...
+                    '#Chief Scientist: T. S. Dotto (NOC) and K. Burmeister (SAMS)';...
+                    '#Supported by AtlantiS (grant ???) from the UK Natural Environment Research Council.'};
+                if strcmp(params.in,'ctd')
+                    headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
+                    headstring = [headstring; common_headstr;
+                        {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',n12);...
+                        %'#CTD: Who - T. Petit (NOC); Status - work in progress.';...
+                        %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        %'# DEPTH_TYPE   : COR';...
+                        %# DEPTH_TYPE   : water depth from CTDPRS + CTD altimeter range to bottom (station 6), or speed of sound-corrected ship-mounted bathymetric echosounder'...
+                        }];
+                else
+                    headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
+                    headstring = [headstring; common_headstr;
+                        {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',n12);...
+                        % '#CTD: Who - T. Petit (NOC); Status - work in progress';...
+                        % '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
+                        % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        % '# DEPTH_TYPE   : COR';...
+                        % '# DEPTH_TYPE   : water depth from CTDPRS + CTD altimeter range to bottom (station 6), or speed of sound-corrected ship-mounted bathymetric echosounder';...
+                        % '#Salinity: Who - T. Petit (NOC); Status - final; SSW batch P167.';...
+                        % '#Oxygen: Who - C. Johnson (SAMS); Status - final.';...
+                        }];
+                end
+                case 'section_for_station'
+                if stnlocal>=4 && stnlocal<88
+                    sections = {'ellett'};
+                end
+            case 'grid'
+                sam_gridlist = {'botoxy' 'botpsal'};
+                mgrid.sdata_flag_accept = [2 3]; %***or just 2
+                if contains(section,'ellett')
+                    kstns = [4:28 30:48];
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                end
+        end
+   
 end

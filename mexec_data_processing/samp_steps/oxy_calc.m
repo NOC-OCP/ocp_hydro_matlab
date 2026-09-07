@@ -41,7 +41,9 @@ ds_oxy.flag(~bd & bt) = 5;
 ds_oxy.(dname)(~bd & bt) = NaN;
 %neither oxy nor temp: 9
 ds_oxy.flag(bd & bt) = 9;
-
+calcoxyfromtitre = 1;
 samtyp = 'oxy'; opt1 = 'samp_proc'; opt2 = 'calc'; get_cropt
-ds_oxy = oxy_from_titre(ds_oxy);
+if calcoxyfromtitre
+    ds_oxy = oxy_from_titre(ds_oxy);
+end
 

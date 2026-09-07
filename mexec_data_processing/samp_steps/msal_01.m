@@ -28,14 +28,14 @@ function msal_01(samtyp)
 
 m_common
 if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
+
 std_samp_range = [999000 1e6]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
 sub_samp_range = [998000 998999]; %substandards
 %ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
 
-clear sopts
 % find list of files and information on variables
 root_sal = mgetdir('M_BOT_SAL');
-% salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); 
+% files = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); 
 hcpat = {'sampnum'}; chrows = 1; chunits = [];
 sheets = 1; iopts = struct([]);
 datform = 'dd/mm/yyyy';
@@ -45,17 +45,14 @@ if isempty(files)
     warning(['no salinity data files found in ' root_sal '; skipping']);
     return
 end
-% salfiles = fullfile({salfiles.folder}',{salfiles.name}');
+% files = fullfile({files.folder}',{files.name}');
 
 %%%%%% load and parse %%%%%%
 
 %load
 %***datetime format is already read in wrong by default? causes wrong
 %ordering of samples***
-% [ds_sal, salhead] = load_samdata(salfiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts); 
-% clear sopts
-% opt1 = 'samp_proc'; opt2 = 'sal_files'; get_cropt
-
+% [ds_sal, salhead] = load_samdata(files, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts); 
 [ds_sal, salhead] = load_samdata(files, sopts);
 if isempty(ds_sal)
     error('no data loaded')
@@ -65,6 +62,8 @@ if isfield(ds_sal,'sampnum') && sum(isnan(ds_sal.sampnum))
     %filled in for the first (average) line, for example
     ds_sal = fill_samdata_statnum(ds_sal, 'sampnum');
 end
+%remove NaN sampnum lines
+ds_sal(isnan(ds_sal.sampnum),:) = [];
 
 %parse, for instance getting information from header
 % for no = 1:length(salhead)
@@ -78,10 +77,9 @@ end
 %         l = str2num(l(ii:ii+1));
 %     end
 % end
+
 opt1 = 'samp_proc'; opt2 = 'parse'; get_cropt
 opt1 = 'samp_proc'; opt2 = 'check'; get_cropt
-m = ~isfinite(ds_sal.sampnum);
-ds_sal(m,:) = [];
 
 if calcsal
     %add option to fill in information about cellt or Bath Temp and k15 from header***
@@ -98,26 +96,23 @@ if calcsal
         ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1);
     end
 
-    %rename
-    clear samevars
-    samevars.Sample1 = {'sample1' 'reading_1' 'reading1' 'r1'};
-    samevars.Sample2 = {'sample2' 'reading_2' 'reading2' 'r2'};
-    samevars.Sample3 = {'sample3' 'reading_3' 'reading3' 'r3'};
-    samevars.Sample4 = {'sample4' 'reading_4' 'reading4' 'r4'};
-    samevars.runavg = {'average'};
-    vars = fieldnames(samevars);
-    fn = ds_sal.Properties.VariableNames;
-    for vno = 1:length(vars)
-        ii0 = strcmp(vars{vno},fn);
-        iid = find(contains(samevars.(vars{vno}),fn));
-        if ~sum(ii0) && ~isempty(iid)
-            %add this one
-            ds_sal.(vars{vno}) = nan(size(ds_sal,1),1);
-            fn = [fn vars{vno}];
-            ii0 = strcmp(vars{vno},fn);
-        end
-    end
-    fn = ds_sal.Properties.VariableNames;
+    % %rename
+    % clear samevars
+    % samevars.sample_1 = {'Sample1' 'sample1' 'reading_1' 'reading1' 'r1'};
+    % samevars.sample_2 = {'Sample2' 'sample2' 'reading_2' 'reading2' 'r2'};
+    % samevars.sample_3 = {'Sample3' 'sample3' 'reading_3' 'reading3' 'r3'};
+    % samevars.sample_4 = {'Sample4' 'sample4' 'reading_4' 'reading4' 'r4'};
+    % samevars.runavg = {'average'};
+    % vars = fieldnames(samevars);
+    % fn = ds_sal.Properties.VariableNames;
+    % for vno = 1:length(vars)
+    %     if ~sum(strcmp(vars{vno},fn)) && ~sum(contains(samevars.(vars{vno}),fn))
+    %         add this one
+    %         ds_sal.(vars{vno}) = nan(size(ds_sal,1),1);
+    %         fn = [fn vars{vno}];
+    %     end
+    % end
+    % fn = ds_sal.Properties.VariableNames;
 
     %deal with time variable(s)
     md = strcmp('date',fn); mt = strcmp('time',fn);
@@ -143,31 +138,23 @@ if calcsal
         ds_sal.flag(isnan(ds_sal.flag)) = 9;
     end
 
-    if 0 %***
-        if sum(strcmp('comment',fn))
-            ds_sal.comment(iid,1) = ds.comment;
-        else
-            ds_sal.comment(iid,1) = repmat(' ',size(a0));
-        end
-    end
+    % if ~ismember('sample_4',fn)
+    %     ds_sal.sample_4 = NaN+ds_sal.sample_1;
+    % end
 
-    if ~ismember('Sample4',fn)
-        ds_sal.Sample4 = NaN+ds_sal.Sample1;
-    end
-
-    %shift tsg sampnum times if using >0 method
-    ii = find(ds_sal.sampnum>1000e8);
-    ds_sal.sampnum(ii) = ds_sal.sampnum(ii)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
+    %temporarily shift tsg sampnum times for plotting if using >0 method
+    iitsg = find(ds_sal.sampnum>1000e8);
+    ds_sal.sampnum(iitsg) = ds_sal.sampnum(iitsg)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
 
     %edits
     reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
-    opt1 = 'samp_proc'; opt2 = 'flags'; get_cropt
+    opt1 = 'samp_proc'; opt2='flags'; get_cropt
     if reapply_saledits
-        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile]);
+        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', edfile);
     end
 
-    ds_sal.runavg = m_nanmean([ds_sal.Sample1 ds_sal.Sample2 ds_sal.Sample3 ds_sal.Sample4],2);
-    
+    % ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4],2);
+    % ds_sal.runavg = m_nanmean([ds_sal.Sample1 ds_sal.Sample2 ds_sal.Sample3],2);
     %inspect for new edits
     if check_sal
         %standards and substandards (999NNN and 998NNN): plot together
@@ -192,25 +179,33 @@ if calcsal
         if ~isempty(iis); iis_all{n+1} = iis; n = n+1; end
         d = struct();
         d.sampnum = ds_sal.sampnum;
-        d.Sample1 = ds_sal.Sample1-ds_sal.runavg;
-        d.Sample2 = ds_sal.Sample2-ds_sal.runavg;
-        d.Sample3 = ds_sal.Sample3-ds_sal.runavg;
-        d.Sample4 = ds_sal.Sample4-ds_sal.runavg;
+        d.Sample1 = ds_sal.Sample1-ds_sal.Average;
+        d.Sample2 = ds_sal.Sample2-ds_sal.Average;
+        d.Sample3 = ds_sal.Sample3-ds_sal.Average;
+        % d.Sample4 = ds_sal.Sample4-ds_sal.Average;
         d.ref_hi = ones(size(ds_sal.sampnum))*2.5e-5;
         d.ref_low = -d.ref_hi;
-        markers = {'o';'s';'<';'.';'none';'none'};
-        lines = {'none';'none';'none';'none';'-';'-'};
-        d = msam_replicates(d, samtyp);
-        dnew = table2struct(d,'ToScalar',true);
-        bads = gui_editpoints(d,'sampnum','edfilepat',edfile,'markers',markers,'lines',lines,'xgroups',iis_all);
+        yl.Sample1=[-3e-5 3e-5];yl.Sample2=yl.Sample1;yl.Sample3=yl.Sample1;...
+        yl.ref_hi = yl.Sample1; yl.ref_low = yl.Sample1;
+        markers = {'o';'s';'<';'none';'none'};
+        lines = {'none';'none';'none';'-';'-'};
+        dnew = struct2table(d);
+        bads = gui_editpoints(dnew,'sampnum',iis_all,[],'edfilepre',edfile,...
+            'markers',markers,'lines',lines,...
+            'yl', struct2table(yl));
         clear d
     end
     if exist('bads','var') && ~isempty(bads) %new edits to apply
-        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', edfile );
+    
     end
-    opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
+
+    %put year back on to tsg samples
+    ds_sal.sampnum(iitsg) = ds_sal.sampnum(iitsg) + MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
+
+    opt1 = 'botpsal'; opt2 = 'sal_flags'; get_cropt
     %recalculate mean
-    a = [ds_sal.Sample1 ds_sal.Sample2 ds_sal.Sample3 ds_sal.Sample4];
+    a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
     ds_sal.runavg = m_nanmean(a,2);
     %flag based on stdev and number of remaining points
     s3 = 3e-5; s4 = 5e-5;
@@ -225,8 +220,7 @@ if calcsal
 
     %%%%%% standards offsets %%%%%%
 
-    salin_off = []; salin_off_base = 'sampnum_run'; sal_adj_comment = '';
-    opt1 = 'samp_proc'; opt2 = 'sal_calc'; get_cropt
+    opt1 = 'botpsal'; opt2 = 'sal_calc'; get_cropt
     if ~strcmp(salin_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
         [~,ii] = sort(ds_sal.runtime);
         ds_sal = ds_sal(ii,:);
@@ -248,7 +242,7 @@ if calcsal
         figure(10); clf
         subplot(211)
         st = ds_sal.k15*2;
-        if sum(strcmp(salin_off_base,'sampnum_run'))
+        if strcmp(salin_off_base,'sampnum_run')
             x = ds_sal.runtime - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
             plot(x,st-ds_sal.runavg,'oc'); hold on
             disp('cyan o: all sample averages recorded')
@@ -266,10 +260,10 @@ if calcsal
             end
             ist = 0;
         end
-        plot(x(iistd),st(iistd)-ds_sal.Sample1(iistd),'kx', ...
-            x(iistd),st(iistd)-ds_sal.Sample2(iistd),'r+', ...
-            x(iistd),st(iistd)-ds_sal.Sample3(iistd),'m.', ...
-            x(iistd),st(iistd)-ds_sal.Sample4(iistd),'go', ...
+        plot(x(iistd),st(iistd)-ds_sal.sample_1(iistd),'kx', ...
+            x(iistd),st(iistd)-ds_sal.sample_2(iistd),'r+', ...
+            x(iistd),st(iistd)-ds_sal.sample_3(iistd),'m.', ...
+            x(iistd),st(iistd)-ds_sal.sample_4(iistd),'go', ...
             x(iistd),st(iistd)-ds_sal.runavg(iistd),'sb');
         if ist
             s = ds_sal.sampnum(iistd)-std_samp_range(1);
@@ -353,9 +347,9 @@ if calcsal
     %check or add units
     salunits.sampnum = {'number'};
     salunits.runtime = {'MATLAB_datenum'};
-    salunits.Sample1 = {'2Rt'};
-    salunits.Sample2 = {'2Rt'};
-    salunits.Sample3 = {'2Rt'};
+    salunits.sample_1 = {'2Rt'};
+    salunits.sample_2 = {'2Rt'};
+    salunits.sample_3 = {'2Rt'};
     mctd_evaluate_salunits.runavg = {'2Rt'};
     salunits.cellt = {'degC'};
     salunits.k15 = {'2Rt'};
@@ -372,7 +366,7 @@ else
     salunits.flag = {'woce_9.4'};
     salunits.salinity = {'psu'};
 end
-opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
+opt1 = 'samp_proc'; opt2='flags'; get_cropt
 
 %%%%%% save %%%%%%
 
@@ -402,7 +396,7 @@ hc.comment = [sal_adj_comment];
 mfsave(salfile, d, hc);
 
 %plot CTD samples
-opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
+opt1 = 'samp_proc'; opt2='flags'; get_cropt
 if check_sal
     figure(10); subplot(223)
     ii = find(d.sampnum>0 & d.sampnum<9e5);
@@ -411,7 +405,7 @@ if check_sal
 end
 
 %write some fields for CTD samples to sam_ file
-msam_add_to_samfile('sal')
+msal_to_sam
 
 %get TSG samples, figure out times: either -dddhhmm (where ddd is
 %year-day starting at 1), or yyyymmddhhmm, or mmddhhmm
@@ -439,7 +433,7 @@ if ~isempty(iiu)
         MM = str2num(s(:,6:7));
         tsg.dnum(ii) = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1) + jjj-1 + (HH+MM/60)/24;
     end
-    opt1 = 'samp_proc'; opt2 = 'tsg_sampnum'; get_cropt
+    opt1 = 'botpsal'; opt2 = 'tsg_sampnum'; get_cropt
     [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
     dsu.time = NaN+dsu.sampnum;
     opt1 = 'mstar'; get_cropt
@@ -466,279 +460,4 @@ if ~isempty(iiu)
     plot(x,dsu.salinity,'o',x,dsu.salinity_adj,'s')
     title('TSG'); xlabel('yearday');
 
-end
-% miso_01: read in bottle isotope data from csv file or files
-%
-% Use: miso_01
-%
-% The input iso data, example filename jc159_13ctdic.csv
-%    is a comma-delimited list of isotope data, with a single header line
-%    containing fields
-%    Station, Niskin, d13C DIC PDB
-%    or otherwise as specified in opt_cruise file
-
-opt1 = 'miso_01';
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-if MEXEC_G.quiet<=1; fprintf(1, 'reading bottle del13C, Del14C, del18O data from .csv files into iso_%s_01.nc',mcruise); end
-
-% find list of files
-root_iso = mgetdir('M_BOT_ISO');
-dataname = ['iso_' mcruise '_01'];
-otfile2 = fullfile(root_iso, dataname);
-opt1 = mfilename; opt2 = 'iso_files'; get_cropt
-
-%load data
-if ~iscell(isofiles); isofiles = {isofiles}; end
-[ds_iso, isohead] = load_samdata(isofiles, hcpat, 'chrows', 1, 'chunits', 2);
-
-%parse (rename variables)
-opt1 = mfilename; opt2 = 'iso_parse'; get_cropt %***what about file-dependent parsing, like if we have multiple sources of 13c to rename?
-if ~isempty(isovarmap)
-    ds_iso_fn = ds_iso.Properties.VariableNames;
-    [~,ia,ib] = intersect(isovarmap(:,2)',ds_iso_fn);
-    ds_iso_fn(ib) = isovarmap(ia,1)';
-    ds_iso.Properties.VariableNames = ds_iso_fn;
-end
-
-%compute sampnum
-ds_iso.sampnum = 100*ds_iso.statnum + ds_iso.position; 
-%add flags if not present? ***
-
-%now put into structure and output
-
-%adjust for replicates and flags, and exclude station numbers with no data
-statnum = floor(iso.sampnum/100); sg = [];
-fn = fieldnames(iso);
-kvar = 2;
-while kvar < length(fn)
-    
-    %average replicate measurements (depending on flag. this should work if flags are 2,3,4,9)
-    iir = find(strcmp([fn{kvar} '_rpt'], fn) | strcmp([fn{kvar} '_repl'], fn));
-    if ~isempty(iir)
-        d = getfield(iso, fn{kvar});
-        dr = getfield(iso, fn{iir});
-        iif = find(strcmp([fn{kvar} '_flag'], fn));
-        iirf = find(strcmp([fn{iir} '_flag'], fn));
-        f = getfield(iso, fn{iif});
-        fr = getfield(iso, fn{iirf});
-        iig = find(f==2 & fr==2); ii2 = find(fr<f);
-        %both good: average (what about both flagged 3?)
-        d(iig) = .5*(d(iig)+dr(iig));
-        f(iig) = 6; %flag for average of repeat measurements
-        %second measurement better than first: use that
-        d(ii2) = dr(ii2);
-        f(ii2) = fr(ii2);
-        %now can replace with averaged values, and discard replicates and their flags
-        iso = setfield(iso, fn{kvar}, d);
-        iso = setfield(iso, fn{iif}, f);
-        iso = rmfield(iso, fn([iir iirf]));
-        isou = rmfield(isou, fn([iir iirf]));
-        fn([iir iirf]) = [];
-    end
-    
-    %make sure NaNs have flag 9 not 2 (or NaN)
-    iif = find(strcmp([fn{kvar} '_flag'], fn));
-    if ~isempty(iif)
-        d = iso.(fn{kvar});
-        df = iso.(fn{iif});
-        df(isnan(d)) = 9;
-        df(isnan(df)) = 9;
-    end
-    
-    %add statnums with data to list
-    iif = strfind(fn{kvar}, '_flag');
-    if ~isempty(iif)
-        sg = [sg; statnum(iso.(fn{kvar})<9)];
-    else
-        sg = [sg; statnum(~isnan(iso.(fn{kvar})))];
-    end
-    
-    %move on to next variable
-    kvar = kvar + 1;
-end
-sg = unique(sg);
-iisg = ismember(statnum, sg);
-
-opt2 = 'iso_flags'; get_cropt %additional modifications to flags if required
-
-%prepare for writing mstar file
-varnames = {'sampnum';'statnum';'position'};
-varnames_units = {'sampnum';'/';'number';'statnum';'/';'number';'position';'/';'number'};
-sampnum = iso.sampnum; position = sampnum-statnum*100;
-sampnum = sampnum(iisg); statnum = statnum(iisg); position = position(iisg);
-fn = fieldnames(iso);
-for kvar = 2:length(fn)
-    d = iso.(fn{kvar}); d = d(iisg);
-    eval([fn{kvar} ' = d;'])
-    varnames = [varnames; fn{kvar}];
-    varnames_units = [varnames_units; fn{kvar}; {'/'}; getfield(isou, fn{kvar})];
-end
-
-%write
-timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
-%--------------------------------
-MEXEC_A.MARGS_IN_1 = {
-    otfile2
-    };
-MEXEC_A.MARGS_IN_2 = varnames(:);
-MEXEC_A.MARGS_IN_3 = {
-    ' '
-    ' '
-    '1'
-    dataname
-    '/'
-    '2'
-    MEXEC_G.PLATFORM_TYPE
-    MEXEC_G.PLATFORM_IDENTIFIER
-    MEXEC_G.PLATFORM_NUMBER
-    '/'
-    '4'
-    timestring
-    '/'
-    '8'
-    };
-MEXEC_A.MARGS_IN_4 = varnames_units(:);
-MEXEC_A.MARGS_IN_5 = {
-    '-1'
-    '-1'
-    };
-MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN_1; MEXEC_A.MARGS_IN_2; MEXEC_A.MARGS_IN_3; MEXEC_A.MARGS_IN_4; MEXEC_A.MARGS_IN_5];
-msave
-%--------------------------------
-
-
-
-
-%nut replicates
-if 0
-        %***
-        %***subplots for different variables below?
-        dnew.press = nan+dnew.sampnum; [~,ia,ictd] = intersect(dnew.sampnum,dbot.sampnum);
-        dnew.press(ia) = dbot.upress(ictd);
-        vars = fieldnames(dnew);
-        vars = vars(contains(vars,'_flag'));
-        vars = cellfun(@(x) x(1:end-6),vars,'UniformOutput',false);
-        vars = unique(vars);
-        figure(1); clf
-        for vno = 1:length(vars)
-            sa = [vars{vno} 'a_per_l'];
-            sb = [vars{vno} 'b_per_l'];
-            iiq = find(abs(dnew.(sa)./dnew.(sb)-1)>orth);
-            subplot(1,length(vars),vno)
-            plot(dnew.(sa),-dnew.press,'.',dnew.(sa)(~isnan(dnew.(sb))),-dnew.press(~isnan(dnew.(sb))),'o',dnew.(sb),-dnew.press,'s',dnew.(sa)(iiq),-dnew.press(iiq),'x',dnew.(sb)(iiq),-dnew.press(iiq),'+')
-        end
-        dnew = rmfield(dnew,'press');
-end
-function gs = msam_replicates(ds, samtyp)
-% gs = msam_replicates(ds, samtyp)
-% arrange sample data into sampnum x replicate number 
-%
-% ds is a structure or table including columns sampnum, (tabdatavar), and
-% flag 
-%
-% for each tabdatavar, adds units, separates and renames replicates, makes
-% flags consistent, and outputs in table gs
-%
-
-if isstruct(ds)
-    ds = struct2table(ds);
-end
-
-%masks for different types of fields (only want to look for main sample
-%data)
-names0 = ds.Properties.VariableNames;
-mx = ismember(names0,{'sampnum'}); %everything in ~mx will be replicated where sampnum is repeated, and given alphabetic suffixes
-mf = ~mx & cellfun(@(x) contains(x,'_flag'),names0);
-if strcmp(samtyp, 'oxy')
-    mt = ~mx & ~mf & cellfun(@(x) contains(x, '_temp'), names0); %botoxy_temp is an auxilliary variable to botoxy
-else
-    mt = false(size(names0));
-end
-mi = ~mx & ~mf & cellfun(@(x) contains(x, '_inst'), names0);
-mv = ~mx & ~mf & ~mt & ~mi; %"normal" variables
-
-%turn names of different analysing instruments into numbers***why?
-for varno = find(mi)
-    gi = findgroups(ds.(names0{varno}));
-    gis = groupsummary(ds,names0{varno});
-    ds.(names0{varno}) = gi;
-    ds.Properties.VariableUnits{varno} = strjoin(gis.(names0{varno}),' / ');
-end
-
-%fill missing sampnums with unique values (so as not to group)
-mjunk = ~isfinite(ds.sampnum);
-ds.sampnum(mjunk) = [0:sum(mjunk)-1]-1e10; %these sampnums aren't used for anything even TSG times so safe to use here
-%***get rid of later? why not now? 
-
-%initialise a table for the grouped replicates
-g = findgroups(ds.sampnum);
-gs = groupsummary(ds,"sampnum","sum",names0(mv));
-mr = max(gs.GroupCount);
-m = strcmp('sampnum',gs.Properties.VariableNames);
-gs = gs(:,m);
-gs.Properties.VariableUnits(1) = {'number'};
-
-%arrange replicates into matrices [sampnum, replicate index]
-for varno = find(~mx)
-    %loop through ds variables other than sampnum
-    varnam = names0{varno};
-    
-    %***if replicates are already called {param}a, {param}b or {param}1,
-    %{param}2, etc., rearrange in to matrix***
-
-    %replicates are on different lines; put into padded array for each sampnum
-    a = splitapply(@(x) [x(:)' nan(1,mr-length(x))], ds.(varnam), g);
-    %remove any all-nan columns for this variable (in case some variables
-    %had more replicates than others)
-    a(:,sum(~isnan(a))==0) = [];
-    %append to table gs as matrix
-    gs.(varnam) = a;
-    if isprop(ds.Properties, 'VariableUnits') && ~isempty(ds.Properties.VariableUnits)
-    gs.Properties.VariableUnits(strcmp(varnam,gs.Properties.VariableNames)) = ds.Properties.VariableUnits(varno);
-    end
-
-
-end
-%recalculate statnum and position
-gs.statnum = floor(gs.sampnum/100);
-gs.position = gs.sampnum-gs.statnum*100;
-gs.Properties.VariableUnits(end-1:end) = {'number','on.rosette'};
-
-% add existing flags from editlogs***
-root_sal = mgetdir('M_BOT_SAL');
-reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
-opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
-if reapply_saledits
-    [gs, ~] = apply_guiedits(gs, 'sampnum', [edfile]);
-end
-
-opt1 = 'samp_proc'; opt2 = 'flag'; get_cropt %apply flags if specified in opt_cruise
-%recalculate mean, stdev, range (or for the first time? or do this after
-%repl_check?)
-okf = [2 3];
-stlev = 2; %flag as outlier repls > stlev*stdev diff from mean for this sampnum
-nrepstats = 2; %only when there are more than nrepstats replicates at this sampnum
-nit = 2;
-for varno = find(mv)
-    varnam = names0{varno};
-    d = gs.(varnam); f = gs.([varnam '_flag']); f(isnan(f)) = 9;
-    d(~ismember(f,okf)) = NaN;
-    m = false(size(d));
-    for itno = 1:nit
-        mn = mean(d,2,'omitnan');
-        st = std(d,[],2,'omitnan');
-        %outliers
-        nc = size(d,2); nr = sum(~isnan(d),2);
-        prmsa = abs(gs.(varnam)-repmat(mn,1,nc))./repmat(st,1,nc);
-        m = m | (prmsa>stlev & repmat(nr,1,nc)>nrepstats);
-        d(m) = NaN;
-    end
-    gs.(varnam) = d;
-    gs.([varnam '_flag']) = max(f,double(m)+2); %false --> 2, true --> 3
-end
-
-%optionally check replicates against each other
-opt1 = 'samp_proc'; opt2 = 'replcheck'; get_cropt
-if isfield(checksam,samtyp) && (length(checksam.(samtyp))>1) || checksam.(samtyp)
-    repl_check(samtyp, gs, checksam.(samtyp)); %***working on this for nut, need to add code for chl as well as sal and sbe35 (sal repls compared earlier? yes, and handled differently, not flagged as mean of replicates because not separate samples exactly)***
 end

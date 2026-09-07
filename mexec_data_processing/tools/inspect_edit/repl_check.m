@@ -147,7 +147,7 @@ for vno = 1:length(vbases)
     x = dbot.sampnum;
     [mc, mu, ms] = m_sampnum(x);
 
-    if sum(mc)
+    if any(mc==1)
         figure(1); clf
         if isempty(cvar)
             hl0 = plot(NaN,NaN);
@@ -166,7 +166,7 @@ for vno = 1:length(vbases)
         legend([hl0; hli(1); hl])
         grid on; title(['Niskin ' samtyp])
     end
-    if sum(mu)
+    if any(mu==1)
         figure(2); clf
         hli = plot([x(mu) x(mu)]', eint(mu,:)', 'color', [.3 .3 .3], 'DisplayName', ti); hold on
         hl3 = plot(x(mu), dbc3(mu,:), 'o');
@@ -179,7 +179,7 @@ for vno = 1:length(vbases)
         legend([hli; hl])
         grid on; title(['USW ' samtyp])
     end
-    if sum(ms)
+    if any(ms==1)
         figure(3); clf
         hli = plot([x(ms) x(ms)]', eint(ms,:)', 'color', [.3 .3 .3], 'DisplayName', ti); hold on
         hl = plot(x(ms), dbc(ms,:), 'o');
@@ -196,8 +196,12 @@ for vno = 1:length(vbases)
         c = input('p to print list of differing replicates, k for keyboard or enter to continue  ','s');
         if strcmp(c,'p')
             %display mismatched replicates
-            disp('sampnum, deviating replicate values, flags')
-            disp([dbot.sampnum(mchk) dbot(:,mv) dbot(:,mf)])
+            idx_samp = find(strcmp(dbot.Properties.VariableNames, 'sampnum'));
+            idx_v = find(mv);
+            idx_f = find(mf);
+            disp(dbot(mchk>0, [idx_samp, idx_v, idx_f]))
+            % disp('sampnum, deviating replicate values, flags')
+            % disp([dbot.sampnum(mchk>0), dbot{mchk>0, mv}, dbot{mchk>0, mf}])
         elseif strcmp(c,'k')
             keyboard
         end
