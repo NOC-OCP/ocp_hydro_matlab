@@ -490,6 +490,7 @@ case 'samp_proc'
                         % files = {'/data/pstar/cruise/data/bottle_samples/SAL/DY214_CTD_03_26_Aug_2026.csv'
                         %     '/data/pstar/cruise/data/bottle_samples/SAL/DY214_CTD_04_26_Aug_2026.csv'};
                         sopts.numhead = 9;
+                        sopts.numhead = 9;
                    
                     case 'nut'
                     case 'co2'
@@ -566,21 +567,23 @@ case 'samp_proc'
                 redoctm = 1;
             case 'check'
                 % checksam.sbe35 = 0;
-                checksam.sal = 0; %done
-                checksam.oxy = 1; %done
+                checksam.sal = 0; %0 for done: done 18/09/2026 KB
+                checksam.oxy = 1; %0 for done
                 % checksam.chl = 0;
             case 'flags' %flags before replicate averaging and after replicate averaging***
                 switch samtyp
                     case 'sal'
                         sal_adj_comment = [];
                         salin_off = [ 
-                       1 +6.2; 2 +5.2; 3 +4.0; 4 +0.5; 5 -1.5; 6 -3.4
+                       1 +6.2; 2 +5.2; 3 +3.9; 4 +0.3; 5 -1.7; 6 -3.7
                        7 -0.1; 8 -0.7; 9 -1.6
                        10 -0.9;11 -0.9;12 -0.9;13 -0.9;14 -0.9;15 -0.9
                        16 -1.3;17 -1.3;18 -1.3;19 -1.3;20 -1.3;21 -1.3
-                       22 +2.0;23 +0.7;24 -0.1;25 -0.7
+                       22 +2.2;23 +0.5;24 -0.7;25 -1.5
                        26 +2.2 ;27 +2.2;28 +2.2
-                       29 +2.5;30 +2.5; 31 +2.5
+                       29 +2.9;30 +2.9; 31 +2.9
+                       32 +15.7; 33 +14.8 %suspicious, needs investigating
+                       34 +5.1; 35 1.6
                     ];
                 salin_off(:,1) = salin_off(:,1)+999e3;
                 salin_off(:,2) = salin_off(:,2)*1e-5;

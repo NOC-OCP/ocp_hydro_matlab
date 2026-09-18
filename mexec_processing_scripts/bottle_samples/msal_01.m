@@ -164,7 +164,7 @@ if calcsal
         iis_all = {iis};
         %regular stations (including test casts)
         maxstsam = 99936;
-        stns = check_sal:max(floor(ds_sal.sampnum(ds_sal.sampnum<=maxstsam)/100));
+        stns = checksam.sal:max(floor(ds_sal.sampnum(ds_sal.sampnum<=maxstsam)/100));
         n = 1;
         for no = stns
             iis_all{n+1} = find(floor(ds_sal.sampnum/100)==no); n = n+1;
