@@ -46,7 +46,7 @@ function ctd_process(stns, varargin)
 
 m_common
 stns = stns(:)'; %row vector needed to loop
-steps = {'part1','part2','edit','postedit','guisteps','reload_sns','winch','sbe35','output'};
+steps = {'part1','part2','edit','postedit','guisteps','reload_sns','winch','sbe35','sum','output'};
 if nargin==1
     warning('specify one or more steps from this list:')
     disp(steps)
@@ -89,7 +89,7 @@ if dostep.part1
     end
 end
 
-if dostep.part1 || dostep.postedit
+if dostep.part1 || dostep.edit || dostep.postedit
     for stn = stns
         %apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise
         msbe_02_edcal(stn)
