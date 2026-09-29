@@ -206,8 +206,8 @@ switch opt1
            % data points, felt weird to remove that many so have left it
            % todo: 030 primary oxygen sensor has a section of bad data,
            % also salinity: reject all?: scan 23700.5-22628.5
-           %
-           %Does oxygen get spikier towards the end?
+           % todo: 012 spike in u[cast primary
+           %check: Does oxygen get spikier towards the end?
 
                 %use rangelim first to exclude very large %skspikes
                 co.rangelim.press = [-1.25 3300];
@@ -244,9 +244,19 @@ switch opt1
                 if ismember(stnlocal,[9]) % sudden increase/decrease at start/end not visible in oxy2
                     co.badscan.oxy1 = [-inf 19767];
                     co.badscan.oxy1 = [175993 inf];
+                elseif stnlocal==11 %between 300-320m up data looks suspicous, exp sens 2
+                    co.badscan.cond2=[47633 49160]; %cond1 spkiky as well but less suspcious
+                    co.badscan.oxy2=[47633 49160];
+                    co.badscan.tmep2=[47633 49160];
+                elseif stnlocal==12 %cond 1 and 2 sometimes different, cond1 looks a bit suspicious,
+                    co.badscan.temp1 = [14365 14434;
+                                        15920 15975]; %suspicious spikes- 
+                    % large variabilty also in 40-45m up, all sens1:
+                    % [132024 136412]
                 elseif ismember(stnlocal,15)
                     co.badscan.oxy1 = [37600 39961];
                     co.badscan.cond1 = [37884 39550];
+                    co.badscan.temp1 = [37884 39550];
                 elseif stnlocal==25
                     co.badscan.oxy1 = [69932 inf];
                 elseif ismember(stnlocal,30) % all three sensor1 suspicious
