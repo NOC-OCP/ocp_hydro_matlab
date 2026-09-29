@@ -146,7 +146,7 @@ switch opt1
             h.comment = replace(h.comment,'PSO: Tiago Dotto','PSO: Kristin Burmeister');
             m_write_header(otfiles{1},h);
             case 'raw_corrs'
-                co.oxy_align = 1; %0 until we check oxygen hysteresis            
+                co.oxy_align = 1; %0 until we check oxygen hysteresis, done            
 
                 % before jump
                 oxy3836_1.H1 = -0.033; oxy3836_1.H2 = 5000; % pressure
@@ -172,13 +172,14 @@ switch opt1
                 elseif ismember(stnlocal,22)
                     co.hyst_oxy2 = oxy3836_1;
                 else
-                    %SBE defaults, for sensors that cannot be calibrated as
-                    %only used once/twice: 2055; 2575; 2540; 0619 - set as
-                    %badoxyscan
+                    % SBE defaults, for sensors that cannot be calibrated as
+                    % only used once/twice: 2
+                    % spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
+                    % ok-offset: 2540 [16]; 0619 [21] - oxy sample avail
                     co.hyst_oxy2.H1=-0.033;co.hyst_oxy2.H2=5000;co.hyst_oxy2.H3=1450;
                 end
             case 'rawedit_auto'
-                           % oxy sensors - persistent primary-secondary offsets so
+           % oxy sensors - persistent primary-secondary offsets so
            % regular sensor changes:
            % CTD 25: primary sensor started aligning with secondary sensor
            % (smaller offset)
@@ -186,36 +187,21 @@ switch opt1
            % primary fine on downcast, but big difference during upcast. 
            % John and Finn have notes
         
-           % Primary (Sensornum CTDnum):
-           % 3836 [1 17];
-
-           % Secondary (Sensornum CTDnum):
-           % 2055 [1 2]; % offset 15
-           % 2575 [3 14]; % Offset 10-15, noisy
-           % 4580 [4:13 15 17 20 24]; % offset 15
-           % 2540 [16]; % Offset ~25!
-
 
            % to do - station 3 auto de spiking conductivity and 
            % fluorescence
-           % todo: 004 despiking of conductivity and transmittance 
-           % 005 spikes in cond, trns anf fluor
-           % todo: 009 despiking of conductivity, fluor and transmittance 
-           % todo: 011 despiking of transmittance 
-           % todo: 013 despiking of transmittance 
-           % todo: 013 despiking of transmittance.  
+           % done: 004 despiking of conductivity - not seen after autospike
+           % done: 005 spikes in cond - not seen after autospike
+           % done: 009 despiking of conductivity, 
            %           + issue with oxy sensor being very noisy on the way
            %           up.
            %           also, one of the oxy sensor was affected when 
            %           surfacing before the automatically detected time 
            %           cutoff. 
-           % todo: 015 oxygen and conductivity on primary sensor affected
+           % done: 015 oxygen and conductivity on primary sensor affected
            %           by something during a small bit of the descent
-           %           (around 1000m depth). Correction needed. 
-           %           also, despiking of transmittance needed.
-           % todo: 018 transmittance and fluorence needs despiking 
-           % todo: 019 conductivity 1 and transmittance needs despiking
-           % todo: 028 spike on transmittance 3.8 
+           %           (around 1000m depth). Correction needed.
+           % done: 019 conductivity 1 needs despiking
            % todo: 030 spiking in transmittance - unusually large number of
            % data points, felt weird to remove that many so have left it
            % todo: 030 primary oxygen sensor has a section of bad data,
@@ -238,24 +224,55 @@ switch opt1
                 co.rangelim.fluor = [0 8];
                 co.rangelim.transmittance = [0 100];
                 co.rangelim.turbidity = [0 1];
-                % %co.rangelim.par = [0 100];
+                co.rangelim.par = [0 100];
                 % %then despike with 2 repetitions of a 12-scan median
                 % %despiker
                 co.despike.press = [2 12; 2 12]; %avg 1m/s so 2 dbar/0.5 s is large
                 co.despike.temp1 = [0.5 12; 0.5 12];
-                co.despike.cond1 = [0.02 12; 0.02 12];
+                co.despike.cond1 = [0.02 12; 0.02 12]; 
                 co.despike.oxy1 = [3 12; 3 12];
                 co.despike.temp2 = co.despike.temp1;
                 co.despike.cond2 = co.despike.cond1;
                 co.despike.oxy2 = co.despike.oxy1;
                 % %so many spikes it's not worth cleaning in some sensore 
-                if ismember(stnlocal,[3 28]) % 25 suspicious - jumpts at end - delete the whole profile?
+                if ismember(stnlocal,[3 28]) % 
                     co.badscan.oxy1 = [-inf inf]; %so many spikes it's not worth cleaning
                 end
-                if ismember(stnlocal,[3, 14, 16, 21]) % 3,14,16,21: tried different oxy sensor
+                if ismember(stnlocal,[3, 14]) % 3,14,16,21: tried different oxy sensor
                     co.badscan.oxy2 = [-inf inf];
                 end
-                if ismember(stnlocal,[1,2]) %remove test ctds
+                if ismember(stnlocal,[9]) % sudden increase/decrease at start/end not visible in oxy2
+                    co.badscan.oxy1 = [-inf 19767];
+                    co.badscan.oxy1 = [175993 inf];
+                elseif ismember(stnlocal,15)
+                    co.badscan.oxy1 = [37600 39961];
+                    co.badscan.cond1 = [37884 39550];
+                elseif stnlocal==25
+                    co.badscan.oxy1 = [69932 inf];
+                elseif ismember(stnlocal,30) % all three sensor1 suspicious
+                    co.badscan.cond1 = [23700.5 27247];
+                    co.badscan.temp1 = [23700.5 27247];
+                    co.badscan.oxy1 = [23700.5 28805;65283 inf];
+                % elseif ismember(stnlocal,32) # could be true signal
+                %     co.badscan.cond2 = [41200 42400];
+                %     co.badscan.temp2 = [41200 42400];
+                %     co.badscan.oxy2 = [41200 42400];
+                elseif ismember(stnlocal,44)
+                    co.badscan.cond1 = [68280 68350];
+                    co.badscan.temp1 = [68280 68350];
+                    co.badscan.oxy1 = [68280 68350];
+                elseif ismember(stnlocal,46)
+                co.badscan.cond1 = [31670 31710];
+                co.badscan.temp1 = [31670 31710];
+                co.badscan.oxy1 = [31670 31710];
+                elseif ismember(stnlocal,48)
+                co.badscan.cond1 = [12920 12960;13099 13130];
+                co.badscan.temp1 = [12920 12960;13099 13130];
+                co.badscan.oxy1 = [12920 12960; 13099 13130];
+                elseif stnlocal==49
+                co.badscan.oxy1 = [-inf 11998];
+                end
+                if ismember(stnlocal,[1,2,29]) %remove test ctds, and 29 which was aborted, no samples
                     co.badscan.oxy1 = [-inf inf];
                     co.badscan.oxy2 = [-inf inf];
                     co.badscan.temp1 = [-inf inf];
@@ -277,7 +294,7 @@ switch opt1
                 co.badpress.transmittance = [NaN NaN];
                 co.badpress.fluor = [NaN NaN];
             case 'rawshow'
-                % repars = rmfield(repars,'g2'); %don't edit fluo etc.
+                repars = rmfield(repars,'g2'); %don't edit fluo etc.
                 yl.press = [-1 3200];
                 yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
                 yl.fluor = [0 8]; yl.par = [0 40];
@@ -344,7 +361,7 @@ switch opt1
                     case 20
                         niskin_flag(ismember(position,[3 7])) = 9; % samples not drawn; backup bottles
                     case 21
-                        niskin_flag(21) = 7; % looks like nisking was closed at 1492m but stop was at 1520m
+                        niskin_flag(ismember(position,[3])) = 7; % looks like nisking was closed at 1492m but stop was at 1520m
                     case 23
                         niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
                     case 24
