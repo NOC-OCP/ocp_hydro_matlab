@@ -168,7 +168,7 @@ if dostep.sbe35
     msbe35_01(max(stns)) %read sbe35 data for stations up to max(stns)
 end
 
-if dostep.sum && (dostep.part2 || dostep.postedit)
+if dostep.sum %&& (dostep.part2 || dostep.postedit)
     %calculate depths and other info for a range of stations
     station_summary(stns)
     for stn = stns
