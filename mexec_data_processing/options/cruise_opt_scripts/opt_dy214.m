@@ -1,4 +1,4 @@
-
+e
 switch opt1
 
     case 'setup'
@@ -148,7 +148,7 @@ switch opt1
             case 'raw_corrs'
                 co.oxy_align = 1; %0 until we check oxygen hysteresis, done            
 
-                % before jump
+                % before jump 
                 oxy3836_1.H1 = -0.033; oxy3836_1.H2 = 5000; % pressure
                 oxy3836_1.H3 = [-10 500;1000 500;1001 1800;1300 1800;1301 2100;9000 2100];% time
                 
@@ -169,13 +169,17 @@ switch opt1
 
                 if ismember(stnlocal,[4:13 15 17:20 23:53])
                     co.hyst_oxy2 = oxy4580;
-                elseif ismember(stnlocal,22)
+                elseif ismember(stnlocal,[16,21])
+                    co.hyst_oxy2.H1=-0.028;
+                    co.hyst_oxy2.H2=9000;
+                    co.hyst_oxy2.H3 = 1450;     
+                elseif stnlocal==22
                     co.hyst_oxy2 = oxy3836_1;
                 else
                     % SBE defaults, for sensors that cannot be calibrated as
                     % only used once/twice: 2
                     % spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
-                    % ok-offset: 2540 [16]; 0619 [21] - oxy sample avail
+                    % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
                     co.hyst_oxy2.H1=-0.033;co.hyst_oxy2.H2=5000;co.hyst_oxy2.H3=1450;
                 end
             case 'rawedit_auto'
@@ -257,8 +261,14 @@ switch opt1
                     co.badscan.oxy1 = [37600 39961];
                     co.badscan.cond1 = [37884 39550];
                     co.badscan.temp1 = [37884 39550];
+                % elseif stnlocal==18
+                %     co.badscan.oxy1 = [-inf inf]; suspicious in plots
                 elseif stnlocal==25
                     co.badscan.oxy1 = [69932 inf];
+                    co.badscan.cond2 = [9257 9838]; %maybe suspicous
+                    co.badscan.temp2 = [9257 9838];
+                elseif stnlocal==28
+                    co.badscan.cond1 = [-inf inf]; %bad
                 elseif ismember(stnlocal,30) % all three sensor1 suspicious
                     co.badscan.cond1 = [23700.5 27247];
                     co.badscan.temp1 = [23700.5 27247];
@@ -269,8 +279,10 @@ switch opt1
                 %     co.badscan.oxy2 = [41200 42400];
                 elseif ismember(stnlocal,44)
                     co.badscan.cond1 = [68280 68350];
-                    co.badscan.temp1 = [68280 68350];
-                    co.badscan.oxy1 = [68280 68350];
+                    % co.badscan.temp1 = [68280 68350]; suspicous in
+                    % cond/temp 2 - there is a stop and ens 1 is more
+                    % stable
+                    % co.badscan.oxy1 = [68280 68350];
                 elseif ismember(stnlocal,46)
                 co.badscan.cond1 = [31670 31710];
                 co.badscan.temp1 = [31670 31710];
@@ -281,6 +293,9 @@ switch opt1
                 co.badscan.oxy1 = [12920 12960; 13099 13130];
                 elseif stnlocal==49
                 co.badscan.oxy1 = [-inf 11998];
+                % elseif stnlocal ==49/50 oxy 1 seems suspicous, noisier
+                % then befor and differes on o-theta despite in same
+                % location, maybe set it nan?
                 end
                 if ismember(stnlocal,[1,2,29]) %remove test ctds, and 29 which was aborted, no samples
                     co.badscan.oxy1 = [-inf inf];
