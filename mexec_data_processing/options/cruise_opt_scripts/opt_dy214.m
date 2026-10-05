@@ -1,4 +1,4 @@
-e
+
 switch opt1
 
     case 'setup'
@@ -159,7 +159,7 @@ switch opt1
                 oxy4580.H1 = -0.028;oxy4580.H2 = 5000;
                 oxy4580.H3 = [-10 500;1500 500;1501 1000;2000 1000;2001 2000;9000 2000]; %time
 
-                if ismember(stnlocal,[1:22,24:25])
+                if ismember(stnlocal,[1:21,24:25])
                     co.hyst_oxy1 = oxy3836_1;
                 elseif stnlocal==22
                     co.hyst_oxy1 = oxy4580;
@@ -261,8 +261,8 @@ switch opt1
                     co.badscan.oxy1 = [37600 39961];
                     co.badscan.cond1 = [37884 39550];
                     co.badscan.temp1 = [37884 39550];
-                % elseif stnlocal==18
-                %     co.badscan.oxy1 = [-inf inf]; suspicious in plots
+                elseif stnlocal==18
+                    co.badscan.oxy1 = [-inf inf]; %suspicious in plots, espcieally theto-o characteristics
                 elseif stnlocal==25
                     co.badscan.oxy1 = [69932 inf];
                     co.badscan.cond2 = [9257 9838]; %maybe suspicous
