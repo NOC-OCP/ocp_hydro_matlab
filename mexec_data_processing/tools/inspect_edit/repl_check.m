@@ -61,17 +61,18 @@ cvars = 'sampnum statnum position upress';
 switch samtyp
     case 'sal'
         cvar = 'upsal';
-        useratio = 0;
+        useratio = compare_params(1); % as set in default or opt_cruise: 0=difference
     case 'oxy'
         cvar = 'uoxy';
-        useratio = 1;
+        useratio = compare_params(1); % as set in default of opt_cruise: 1=ratio 
     case 'chl'
         cvar = 'ufluor';
-        useratio = 1; %***
+        useratio = compare_params(1); %***
     case 'nut'
         cvar = '';
-        useratio = 1; %***
+        useratio = compare_params(1); %***
 end
+
 if ~isempty(cvar) && ~contains(cvars,cvar)
     %need to load svar
     cvars = [cvars ' ' cvar];
