@@ -145,6 +145,15 @@ switch opt1
             case 'header_edits'
             h.comment = replace(h.comment,'PSO: Tiago Dotto','PSO: Kristin Burmeister');
             m_write_header(otfiles{1},h);
+            case 'sensor_choice'
+                ts_choice = 2;
+                o_choice = 2;
+                if ismember(stnlocal,[14,22]) % other sensors, to spiky - CTD 16/21 maybe too? however we have oxy avail to calib those
+                    o_choice = 1;
+                else
+                    ts_choice = 2;
+                    o_choice = 2; %oxygen 1 on bad y-cable (shared with par but par end okay)
+                end
             case 'raw_corrs'
                 co.oxy_align = 1; %0 until we check oxygen hysteresis, done            
 
@@ -409,7 +418,7 @@ switch opt1
                     case 46
                         niskin_flag(ismember(position, [1])) = 3; % bottle leaked, still drew salt and DO
                 end
-        
+
         end
 %%%%%%%%%%%%%%%%%%%% end ctd_proc %%%%%%%%%%%%
 
@@ -556,6 +565,8 @@ case 'samp_proc'
                     case 'doc'
                     case 'iso'
                 end
+            case 'replcheck'
+                checksam.oxy = [0 1]; %compare by difference (0), highlight differences over +/- 1mumol/kg     
             case 'mctd_evaluate_sensors'
                 switch parameter
                     case 'oxy'
@@ -677,14 +688,16 @@ case 'samp_proc'
 %%%%%%%%%%%%%%%%%%%%%% outputs and summaries %%%%%%%%%%%%%%%%%%%%%%
     case 'outputs'
         switch opt2
+            case 'columndata'
+                outtypes = {'bodc','exch'}; 
             case 'summary'
                 snames = {'nsal' 'noxy'};
                 sgrps = {{'botpsal'} {'botoxy'}};
             case 'exch'
-                % n12 = 8; or ns = 35 % ??? not sure what this is
+                ns = 53; % ??? not sure what this is
                 expocode = '74EQ20260820'; %{shipcode}{start YYYYMMDD}
                 sect_id = 'Ellett Array';
-                submitter = 'SCISAMSKB'; %group institution person
+                submitter = 'NASAMSKB'; %group institution person
                 common_headstr = {'#SHIP: RRS Discovery';...
                     '#Cruise DY214; Ellett Array';...
                     '#Region: Eastern North Atlantic (subpolar)';...
@@ -695,8 +708,8 @@ case 'samp_proc'
                 if strcmp(params.in,'ctd')
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',n12);...
-                        %'#CTD: Who - T. Petit (NOC); Status - work in progress.';...
+                        {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',ns);...
+                        '#CTD: Who - K. Burmeister; Status - work in progress.';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         %'# DEPTH_TYPE   : COR';...
                         %# DEPTH_TYPE   : water depth from CTDPRS + CTD altimeter range to bottom (station 6), or speed of sound-corrected ship-mounted bathymetric echosounder'...
@@ -704,8 +717,8 @@ case 'samp_proc'
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
-                        {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',n12);...
-                        % '#CTD: Who - T. Petit (NOC); Status - work in progress';...
+                        {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',ns);...
+                        '#CTD: Who - K. Burmeister (SAMS); Status - work in progress';...
                         % '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                         % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         % '# DEPTH_TYPE   : COR';...
