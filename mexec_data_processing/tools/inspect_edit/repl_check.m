@@ -116,15 +116,18 @@ for vno = 1:length(vbases)
     if useratio
         dbc = d(:,2:end)./sama-1;
         dbc3 = d3(:,2:end)./sama-1;
+        dbc_med = median(d(:,2:end),2,'omitnan');
+        dbc_med3 = median(d3(:,2:end),2,'omitnan');
         if th<1
-            eint = [d(:,2)*(1-th) d(:,2)*(1+th)]./repmat(sama(:,1),1,2)-1;
+            eint = [dbc_med*(1-th) dbc_med*(1+th)]./repmat(sama(:,1),1,2)-1;
         else
-            eint = [d(:,1)/th d(:,2)*th]./repmat(sama(:,1),1,2)-1;
+            eint = [dbc_med3/th dbc_med3*th]./repmat(sama(:,1),1,2)-1;
         end
     else
         dbc = d(:,2:end) - sama;
         dbc3 = d3(:,2:end) - sama;
-        eint = [d(:,2)-th d(:,2)+th] - repmat(sama(:,1),1,2);
+        dbc_med = median(d(:,2:end),2,'omitnan');
+        eint = [dbc_med-th dbc_med+th] - repmat(sama(:,1),1,2);
     end
     mchk = sum(dbc<eint(:,1) | dbc>eint(:,2), 2);
 
