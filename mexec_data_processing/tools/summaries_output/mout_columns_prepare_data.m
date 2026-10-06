@@ -244,6 +244,7 @@ if strcmp(params.in,'ctd')
     end
 end
 
+params.nr = size(dtab,1);
 
 %tile extra variables
 if isfield(params,'vars_units') && sum(strcmp('blank',params.vars_units(:,1))) && (~isfield(params,'extras') || ~isfield(params.extras,'blank'))
