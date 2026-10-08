@@ -91,7 +91,7 @@ sdata.Properties.VariableUnits(m) = {'umol_per_l'}; %***what if not umol?
 sdata.Properties.VariableNames(m) = cellfun(@(x) replace(x,'_per_l',''), sdata.Properties.VariableNames(m), 'UniformOutput', false);
 sdata.Properties.VariableUnits(strcmp('sampnum',sdata.Properties.VariableNames)) = {'number'};
 %assign units to flags, and replace NaN flags with 9s
-mf = cellfun(@(x) contains(x,'_flag'),sdata.Properties.VariableNames);
+mf = cellfun(@(x) contains(x,'flag'),sdata.Properties.VariableNames);
 if sum(mf)
     sdata.Properties.VariableUnits(mf) = {'woce_4.9'}; %***overwrite?
     dat = sdata{:,mf}; dat(isnan(dat)) = 9; sdata{:,mf} = dat;
@@ -106,22 +106,23 @@ switch samtyp
         sdata = oxy_calc(sdata); %***output is per_l or per_kg? - KB seems still to be per_l
         mt = cellfun(@(x) contains(x, '_temp'), sdata.Properties.VariableNames);
         if sum(mt); sdata.Properties.VariableUnits(mt) = {'degC'}; end %***overwrite?
-        %rename and keep only some variables
-sdata(:, 'botoxy') = sdata(:, 'conc_o2');
-sdata(:,'botoxy_flag') = sdata(:,'flag');
-sdata(:,'botoxy_temp') = sdata(:,'fix_temp');
-vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
-sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
+        % rename and keep only some variables
+        sdata(:, 'botoxy') = sdata(:, 'conc_o2');
+        sdata(:,'botoxy_flag') = sdata(:,'flag');
+        sdata(:,'botoxy_temp') = sdata(:,'fix_temp');
+        vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
+        sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
     case 'sal'
         warning('msam_load cannot process salinity bottle sample yet. Please use msal_01 as standalone function for this')
         return
         %e.g. average conductivity from 3 readings, and salinity from that
         % sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
-%         sdata(:, 'botoxy') = sdata(:, 'conc_o2');
-% sdata(:,'botoxy_flag') = sdata(:,'flag');
-% sdata(:,'botoxy_temp') = sdata(:,'fix_temp');
-% vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
-% sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
+        % edit below to match whatever is called for in msam_merge?
+        % sdata(:, 'botoxy') = sdata(:, 'conc_o2');
+        % sdata(:,'botoxy_flag') = sdata(:,'flag');
+        % sdata(:,'botoxy_temp') = sdata(:,'fix_temp');
+        % vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
+        % sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
 end
 %***custom code, e.g. average extra readings, ... 
 

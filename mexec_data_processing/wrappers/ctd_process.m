@@ -11,7 +11,7 @@ function ctd_process(stns, varargin)
 %     and give a preliminary view of oxygen hysteresis
 %
 % if you want to run the complete set of steps from the start:
-% ctd_process(stns, 'part1', 'guisteps', 'part2', 'sbe35', 'outputs')
+% ctd_process(stns, 'part1', 'guisteps', 'part2', 'sbe35','sum','outputs')
 %   or you can leave out 'guisteps' if running without a display / to
 %   accept the default selections made automatically by mdcs_01 and the
 %   automatic edits, or leave out 'sbe35' if those data are not available,
@@ -46,7 +46,7 @@ function ctd_process(stns, varargin)
 
 m_common
 stns = stns(:)'; %row vector needed to loop
-steps = {'part1','part2','edit','postedit','guisteps','reload_sns','winch','sbe35','output'};
+steps = {'part1','part2','edit','postedit','guisteps','reload_sns','winch','sbe35','sum','output'};
 if nargin==1
     warning('specify one or more steps from this list:')
     disp(steps)
@@ -89,7 +89,7 @@ if dostep.part1
     end
 end
 
-if dostep.part1 || dostep.postedit
+if dostep.part1 || dostep.edit || dostep.postedit
     for stn = stns
         %apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise
         msbe_02_edcal(stn)
@@ -168,7 +168,7 @@ if dostep.sbe35
     msbe35_01(max(stns)) %read sbe35 data for stations up to max(stns)
 end
 
-if dostep.part2 || dostep.postedit
+if dostep.sum %&& (dostep.part2 || dostep.postedit)
     %calculate depths and other info for a range of stations
     station_summary(stns)
     for stn = stns

@@ -61,17 +61,18 @@ cvars = 'sampnum statnum position upress';
 switch samtyp
     case 'sal'
         cvar = 'upsal';
-        useratio = 0;
+        useratio = compare_params(1); % as set in default or opt_cruise: 0=difference
     case 'oxy'
         cvar = 'uoxy';
-        useratio = 1;
+        useratio = compare_params(1); % as set in default of opt_cruise: 1=ratio 
     case 'chl'
         cvar = 'ufluor';
-        useratio = 1; %***
+        useratio = compare_params(1); %***
     case 'nut'
         cvar = '';
-        useratio = 1; %***
+        useratio = compare_params(1); %***
 end
+
 if ~isempty(cvar) && ~contains(cvars,cvar)
     %need to load svar
     cvars = [cvars ' ' cvar];
@@ -116,15 +117,18 @@ for vno = 1:length(vbases)
     if useratio
         dbc = d(:,2:end)./sama-1;
         dbc3 = d3(:,2:end)./sama-1;
+        dbc_med = median(d(:,2:end),2,'omitnan');
+        dbc_med3 = median(d3(:,2:end),2,'omitnan');
         if th<1
-            eint = [d(:,2)*(1-th) d(:,2)*(1+th)]./repmat(sama(:,1),1,2)-1;
+            eint = [dbc_med*(1-th) dbc_med*(1+th)]./repmat(sama(:,1),1,2)-1;
         else
-            eint = [d(:,1)/th d(:,2)*th]./repmat(sama(:,1),1,2)-1;
+            eint = [dbc_med3/th dbc_med3*th]./repmat(sama(:,1),1,2)-1;
         end
     else
         dbc = d(:,2:end) - sama;
         dbc3 = d3(:,2:end) - sama;
-        eint = [d(:,2)-th d(:,2)+th] - repmat(sama(:,1),1,2);
+        dbc_med = median(d(:,2:end),2,'omitnan');
+        eint = [dbc_med-th dbc_med+th] - repmat(sama(:,1),1,2);
     end
     mchk = sum(dbc<eint(:,1) | dbc>eint(:,2), 2);
 
