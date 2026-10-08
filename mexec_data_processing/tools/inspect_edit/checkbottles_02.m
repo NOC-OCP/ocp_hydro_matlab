@@ -37,8 +37,9 @@ nsubs = length(vnams)+3; % = length(varargin)+3
 
 root_ctd = mgetdir('M_CTD');
 
-fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal']);
-fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
+fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_1hz']);
+pd = mexec_file_locations('procfiles','samp');
+fnsamall = fullfile(pd.samc);
 opt1 = 'outputs'; opt2 = 'section_for_station'; get_cropt
 if exist('sections','var')
     section = sections{1}; 
