@@ -686,7 +686,7 @@ case 'samp_proc'
     case 'outputs'
         switch opt2
             case 'columndata'
-                outtypes = {'bodc','exch'}; 
+                outtypes = {'bodc','exch','mstar'}; 
             case 'summary'
                 snames = {'nsal' 'noxy'};
                 sgrps = {{'botpsal'} {'botoxy'}};
@@ -725,14 +725,21 @@ case 'samp_proc'
                         }];
                 end
                 case 'section_for_station'
-                if stnlocal>=4 && stnlocal<88
-                    sections = {'ellett'};
+                if stnlocal>=3 && stnlocal<49 %49 SUNA @ Darwin Mounds, 48: 2nd OSNAP 26 caldip, OSNAP 27/28 not done bc weather
+                    sections = {'osnape_plus'};
+                elseif ismember(sntlocal,[49,50])
+                    sections = {'darwin_mounds'};
+                elseif ismember(sntlocal,[51,52,53])
+                    sections = {'inner_shelf'};
                 end
             case 'grid'
                 sam_gridlist = {'botoxy' 'botpsal'};
                 mgrid.sdata_flag_accept = [2 3]; %***or just 2
-                if contains(section,'ellett')
-                    kstns = [4:28 30:48];
+                if contains(section,'osnape')
+                    kstns = [4:13 15:28 30:43 45:48];
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                elseif contains(section,'inner_shelf')
+                    kstns = [51:53];
                     mgrid.xlim = 2; mgrid.zlim = 4;
                 end
         end
