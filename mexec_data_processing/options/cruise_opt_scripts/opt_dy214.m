@@ -103,14 +103,14 @@ switch opt1
         % part 1 not printing acdp files
         switch opt2
             case 'ctd_cals'
-                % co.docal.temp = 1;
+                co.docal.temp = 1;
                 % co.docal.cond = 1;
                 % co.docal.oxygen = 1;
                 % %stainless
-                % co.calstr.temp.sn2191.dy214 = 'dcal.temp = d0.temp + interp1([0 6000],[-1.1e-3 -2.3e-3],d0.press) - 3e-4;';
-                % co.calstr.temp.sn2191.msg = 'temp s/n 2191 calibrated based on comparison with 489/960 SBE35 measurements';
-                % co.calstr.temp.sn5649.dy214 = 'dcal.temp = d0.temp + interp1([0 6000],[0.2e-3 -0.9e-3],d0.press) - 2e-4;';
-                % co.calstr.temp.sn5649.msg = 'temp s/n 5649 calibrated based on comparison with 489/960 SBE35 measurements';
+                co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp + interp1([0 3100],[-.5e-3 -3.e-3],d0.press) + 5.2e-4;';
+                co.calstr.temp.sn5785.msg = 'temp s/n 5785 calibrated based on comparison with 78/546 SBE35 measurements';
+                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + interp1([0 2000 3100],[0 -1.2e-3 -1.8e-3],d0.press) + 5e-4;';
+                co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
                 % co.calstr.cond.sn3248.dy214 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.5e-3 1e-3],d0.press)/35);';
                 % co.calstr.cond.sn3248.msg = 'cond s/n 3248 calibrated based on comparison with 41/51 bottle samples';
                 % co.calstr.cond.sn3488.dy214 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.2e-3 -4.4e-3],d0.press)/35);';
@@ -470,18 +470,11 @@ case 'adcp_proc'
                 %stnind is indices in filename sbe35file normally
                 %containing the station number; use negative to indicate
                 %distance from end e.g. [-6:-4] for dy113_SBE35_CTD_010.asc
-            case 'sbe35_parse'
-                %deal with combined file(s)
-                % copied below form opt_ce26008.m
-                % if strcmp(file_list{kf},'CE26008_002_003.txt')
-                %     m = t.datnum<datenum(2026,7,24,10,0,0);
-                %     t.statnum(m) = 2;
-                % elseif strcmp(file_list{kf},'CE26008_005_006_007.txt')
-                %     m = t.datnum<datenum(2026,7,25,5,0,0);
-                %     t.statnum(m) = 5;
-                %     m = t.statnum==7 & t.datnum<datenum(2026,7,25,9,0,0);
-                %     t.statnum(m) = 6;
-                % end
+            case 'sbe35_flags'
+                 % bad_samnum = [1406 1408 1413 1414];
+                 % bad_idx = ismember(t.statnum, bad_stations);
+                 % t.flag(bad_idx) = 4;
+                 
             case 'restartsam'
                 pd = mexec_file_locations('procfiles','samp');    
                 %delete sam_*_all file
@@ -658,13 +651,17 @@ case 'samp_proc'
                        32 +15.7; 33 +14.8 %suspicious, needs investigating
                        34 +5.1; 35 1.6
                     ];
-                salin_off(:,1) = salin_off(:,1)+999e3;
-                salin_off(:,2) = salin_off(:,2)*1e-5;
-                salin_off_base = 'sampnum_run'; %'sampnum_list';
-                        
-                % CTD 1 and 2 were the test stations - i.e. bad sample
-                m = ismember(ds_sal.sampnum,[109,111,113,115,117,201,203,205,209,211]);
-                ds_sal.flag(m) = 4;
+                    salin_off(:,1) = salin_off(:,1)+999e3;
+                    salin_off(:,2) = salin_off(:,2)*1e-5;
+                    salin_off_base = 'sampnum_run'; %'sampnum_list';
+                    
+                    % %% FLAGS
+                    % CTD 1 and 2 were the test stations - i.e. bad sample
+                    m = ismember(ds_sal.sampnum,[109,111,113,115,117,201,203,205,209,211]);
+                    ds_sal.flag(m) = 4;
+                    % questionable compared to ctd profile
+                    m3 = ismember(ds_sal.sampnum,[409,411,2201,4001,4207,4309,4601]);
+                    ds_sal.flag(m3) = 3;
                     case 'oxy'
                         %sampnum, a flag, b flag, c flag
                         % flr = [...
