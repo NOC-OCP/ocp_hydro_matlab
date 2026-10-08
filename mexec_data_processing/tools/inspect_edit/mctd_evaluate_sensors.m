@@ -149,8 +149,8 @@ for ks = 1:length(sn)
         [dc, p, mod] = sensor_cal_comparisons(d, parameter, num2str(sn(ks)), udstr, iis1, iis2, okf, p);
     end
     if isempty(dc)
-        keyboard
-        % continue
+        % keyboard
+        continue
     end
     if strcmp(parameter,'oxy') && useoxyratio
         p.edges = [.9:.005:1.1];
