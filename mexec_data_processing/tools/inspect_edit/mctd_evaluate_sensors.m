@@ -194,6 +194,12 @@ if ~isempty(printform)
     if ~exist(printdir, 'dir')
         mkdir(printdir)
     end
+    fig = gcf; fig.Units = 'centimeters';fig.PaperUnits = 'centimeters';
+    figWidth = 25; figHeight = 21; 
+    fig.Position = [2, 2, figWidth, figHeight];       % [left, bottom, width, height]
+    fig.PaperSize = [figWidth, figHeight];            % Tells the PDF exactly how big it is
+    fig.PaperPosition = [0, 0, figWidth, figHeight];  % Ensures the plot fills the PDF canvas
+
     print(printform, fullfile(printdir, ['ctd_eval_' parameter '_' num2str(sn(ks)) '_hist' dirstr '_' datestr(now,'yyyymmddHHMM')]))
 end
 cont = input('k for keyboard prompt, enter to continue to next\n','s');
