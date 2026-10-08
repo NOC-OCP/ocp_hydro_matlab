@@ -104,23 +104,30 @@ switch opt1
         switch opt2
             case 'ctd_cals'
                 co.docal.temp = 1;
-                % co.docal.cond = 1;
+                co.docal.cond = 1;
                 % co.docal.oxygen = 1;
-                % %stainless
+                
+                %stainless
                 co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp + interp1([0 3100],[-.5e-3 -3.e-3],d0.press) + 5.2e-4;';
                 co.calstr.temp.sn5785.msg = 'temp s/n 5785 calibrated based on comparison with 78/546 SBE35 measurements';
                 co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + interp1([0 2000 3100],[0 -1.2e-3 -1.8e-3],d0.press) + 5e-4;';
                 co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
-                % co.calstr.cond.sn3248.dy214 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.5e-3 1e-3],d0.press)/35);';
-                % co.calstr.cond.sn3248.msg = 'cond s/n 3248 calibrated based on comparison with 41/51 bottle samples';
-                % co.calstr.cond.sn3488.dy214 = 'dcal.cond = d0.cond.*(1 + interp1([0 6000],[0.2e-3 -4.4e-3],d0.press)/35);';
-                % co.calstr.cond.sn3488.msg = 'cond s/n 3488 calibrated based on comparison with 122/189 bottle samples';
-                % co.calstr.cond.sn3491.dy214 = 'dcal.cond = d0.cond.*(1 + interp1([0 4000 6000],[-4e-3 -5e-3 -3e-3],d0.press)/35);';
-                % co.calstr.cond.sn3491.msg = 'cond s/n 3491 calibrated based on comparison with 188/269 bottle samples';
-                % %oxygen.sn0619 3 comparison points - only one during test
-                % ctd - reject?
+                
+                co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 1000 3100],[-1e-3 -1.5e-3 -2e-3],d0.press)/35);';
+                co.calstr.cond.sn2231.msg = 'cond s/n 2231 calibrated based on comparison with 110/290 bottle samples';
+                co.calstr.cond.sn2841.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 2500 3100],[-1.1e-3 -2e-3 -2.6e-3],d0.press)/35);';
+                co.calstr.cond.sn2841.msg = 'cond s/n 2841 calibrated based on comparison with 111/293 bottle samples';
+    
+                % oxy spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
+                % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
+                % mainly oxy1: 3836
+                % mainly oxy2: 4580
+
+                % %oxygen.sn0619 4/5 comparison points - too few to
+                % calibrate? reject? However, might better then 3836?
                 % oxycal = C1 + C2(press) + C3(statnum) + (C4 + C5(press) + C6(statnum))(oxy)
-                % 0.000000, 0.116048, 0.000000, 0.000000, -0.000477, 0.052087,
+                % 0.000000, 0.091526, -3.418406, 0.000000, -0.000383, 0.067082, 
+                
                 % co.calstr.oxygen.sn0619.dy214 = 'dcal.oxygen = d0.oxygen.*(interp1([0 1000 6000],[0.875 0.887 0.90],d0.press) + interp1([30 70],[-8e-3 8e-3],d0.dday));';
                 % co.calstr.oxygen.sn0619.msg = 'oxygen s/n ??? calibrated based on comparison between 3/5 bottle samples and gamma_n-matched downcast';
                 % % oxygen.sn2055 - only during test ctd - reject?
@@ -685,8 +692,8 @@ case 'samp_proc'
 %%%%%%%%%%%%%%%%%%%%%% outputs and summaries %%%%%%%%%%%%%%%%%%%%%%
     case 'outputs'
         switch opt2
-            case 'columndata'
-                outtypes = {'bodc','exch','mstar'}; 
+            % case 'columndata'
+            %     outtypes = {'bodc','exch'}; 
             case 'summary'
                 snames = {'nsal' 'noxy'};
                 sgrps = {{'botpsal'} {'botoxy'}};
