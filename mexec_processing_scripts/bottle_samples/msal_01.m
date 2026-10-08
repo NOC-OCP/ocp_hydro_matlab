@@ -1,6 +1,6 @@
 function msal_01(samtyp)
 % msal_01: read in the bottle salinities from digitized autosal log(s)
-% and save to sal_cruise_01.nc, tsgsal_cruise_01.nc
+% and save to sal_cruise_all.nc, tsgsal_cruise_all.nc
 %
 % Use: msal_01 
 %
@@ -27,7 +27,7 @@ function msal_01(samtyp)
 % non-empty sampnum above 
 
 m_common
-if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
+if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_all.nc and sam_%s_all.nc, and underway samples to tsg_%s_all.nc',mcruise,mcruise,mcruise,mcruise); end
 
 std_samp_range = [999000 1e6]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
 sub_samp_range = [998000 998999]; %substandards
@@ -283,6 +283,7 @@ if calcsal
         ylim([-1 1]*1e-4); ylabel('nominal (2xK15) - recorded value')
         grid on
         disp('(k,r,m): reading1, 2, 3 of standards; blue squares: average of standards. (fixed scale.)');
+        
         cont = input('examine standards, ''k'' for keyboard prompt, enter to continue\n','s');
         if strcmp(cont,'k'); keyboard; end
     else
@@ -373,7 +374,7 @@ opt1 = 'samp_proc'; opt2='flags'; get_cropt
 
 %%%%%% save %%%%%%
 
-dataname = ['sal_' mcruise '_01'];
+dataname = ['sal_' mcruise '_all'];
 salfile = fullfile(root_sal, [dataname '.nc']);
 opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
 tsgfile = fullfile(root_sal, ['tsgsal_' mcruise '_all.nc']);
