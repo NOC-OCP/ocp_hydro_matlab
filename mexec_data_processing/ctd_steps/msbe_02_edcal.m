@@ -219,11 +219,16 @@ if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
 
     %if there were calibrations applied to any variables, save those to
     %24hz file (overwriting uncalibrated versions)
-    if ~isempty(hcal.fldnam)
-        d = dcal; h = hcal;
-        mfsave(file24, d, h, '-addvars');
-    end
+    cal_fields = intersect(fieldnames(dcal), fieldnames(d));
 
+    if ~isempty(hcal.fldnam)
+        for f = 1:length(cal_fields)
+            calfldnam = cal_fields{f};
+            d.(calfldnam) = dcal.(calfldnam); 
+        end
+        h.comment = [h.comment, hcal.comment];
+    end
+    mfsave(file24, d, h, '-addvars');
 else
     %just save to 24 hz file
     copyfile(cleanfile, file24);
