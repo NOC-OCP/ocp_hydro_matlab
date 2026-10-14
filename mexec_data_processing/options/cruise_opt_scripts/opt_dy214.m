@@ -1,3 +1,6 @@
+% Todo
+% add DIC for onshore analysis
+% add nutrients for onshore analysis
 
 switch opt1
 
@@ -85,8 +88,10 @@ switch opt1
                         vars_to_ed.g1 = {{'temph','tempr','tempdk'}, {'conductivity'}, {'salinity'},{'soundvelocity'}};
                         vars_to_ed.g2 = {{'temph'},{'fluo'},{'flow'},{'trans','transmittance'}};
                 end
+            case 'tsg_ddaybreaks'
+                % tbreaks = which format???
         end
-%%%%%%%%%%%%%%%%%%%% end uwau_proc %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%% end uway_proc %%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%% bathy (not a script) %%%%%%%%%%
         % not sure if needed for DY214
@@ -105,42 +110,38 @@ switch opt1
             case 'ctd_cals'
                 co.docal.temp = 1;
                 co.docal.cond = 1;
-                % co.docal.oxygen = 1;
+                co.docal.oxygen = 1;
                 
                 %stainless
-                co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp + interp1([0 3100],[-.5e-3 -3.e-3],d0.press) + 5.2e-4;';
+                co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp + interp1([0 2400 3100],[-.5e-3 -2.e-3 -3.e-3],d0.press) + 5.2e-4;';
                 co.calstr.temp.sn5785.msg = 'temp s/n 5785 calibrated based on comparison with 78/546 SBE35 measurements';
-                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + interp1([0 2000 3100],[0 -1.2e-3 -1.8e-3],d0.press) + 5e-4;';
+                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + interp1([0 2500 3100],[0 -1.2e-3 -1.8e-3],d0.press) + 5e-4;';
                 co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
                 
                 co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 1000 3100],[-1e-3 -1.5e-3 -2e-3],d0.press)/35);';
                 co.calstr.cond.sn2231.msg = 'cond s/n 2231 calibrated based on comparison with 110/290 bottle samples';
                 co.calstr.cond.sn2841.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 2500 3100],[-1.1e-3 -2e-3 -2.6e-3],d0.press)/35);';
                 co.calstr.cond.sn2841.msg = 'cond s/n 2841 calibrated based on comparison with 111/293 bottle samples';
-    
+                 
                 % oxy spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
                 % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
                 % mainly oxy1: 3836
                 % mainly oxy2: 4580
-
-                % %oxygen.sn0619 4/5 comparison points - too few to
-                % calibrate? reject? However, might better then 3836?
-                % oxycal = C1 + C2(press) + C3(statnum) + (C4 + C5(press) + C6(statnum))(oxy)
-                % 0.000000, 0.091526, -3.418406, 0.000000, -0.000383, 0.067082, 
+                co.calstr.oxy.sn0619.dy214 = 'dcal.oxy = d0.oxy.*(1.1+interp1([0 3100],[0 2e-2],d0.press));'; 
+                co.calstr.oxy.sn0619.msg = 'oxygen s/n 0619 calibrated based on comparison between 4/5 bottle samples and gamma_n-matched downcast';
+                co.calstr.oxy.sn2540.dy214 = 'dcal.oxy = d0.oxy.*(1.115+interp1([0 3100],[-4e-2 0],d0.press));'; 
+                co.calstr.oxy.sn2540.msg = 'oxygen s/n 2540 calibrated based on comparison between 10/12 bottle samples and gamma_n-matched downcast';
                 
-                % co.calstr.oxygen.sn0619.dy214 = 'dcal.oxygen = d0.oxygen.*(interp1([0 1000 6000],[0.875 0.887 0.90],d0.press) + interp1([30 70],[-8e-3 8e-3],d0.dday));';
-                % co.calstr.oxygen.sn0619.msg = 'oxygen s/n ??? calibrated based on comparison between 3/5 bottle samples and gamma_n-matched downcast';
-                % % oxygen.sn2055 - only during test ctd - reject?
-                % co.calstr.oxygen.sn2055.dy214 = 'dcal.oxygen = d0.oxygen.*(1.22 + interp1([0 500 4000 6000],[0e-2 0.5e-2 2e-2 1e-2],d0.press));';
-                % co.calstr.oxygen.sn2055.msg = 'oxygen s/n 2291 calibrated based on comparison with 95/145 bottle samples and gamma_n-matched downcast';
-                % %oxygen.sn2540 
-                % co.calstr.oxygen.sn2540.dy214 = 'dcal.oxygen = d0.oxygen.*(interp1([0 6000],[1.03 1.07],d0.press));';
-                % co.calstr.oxygen.sn2540.msg = 'oxygen s/n 4250 calibrated based on comparison with 39/61 bottle samples and gamma_n-matched downcast';
-                % % oxygen.sn2575
-                % co.calstr.oxygen.sn2575.dy214 = 'dcal.oxygen = d0.oxygen.*(interp1([-2 3 20],[1.085 1.055 1.03],d0.temp)) ;' ;
-                % co.calstr.oxygen.sn2575.msg = 'oxygen s/n 4252 calibrated based on comparison with 53/89 bottle samples and gamma_n-matched downcast';
-                % % oxygen.sn 3836 - oxy1 for most of time but for CTD28 or so
-                % % oxygen.sn 4580 - oxy2 for most of time but for CTD28 or so
+                co.calstr.oxy.sn3836.dy214 = ['dcal.oxy = d0.oxy .* ( ' ...
+                    '((d0.statnum<25).*(1+interp1([0 3100],[-2e-2 8e-3],d0.press)' ...
+                    '+interp1([1 25 26 53],[6e-3 -3e-3 0 0],d0.statnum)))' ...
+                    '+ ' ...
+                    '((d0.statnum >= 25).*(1.06 + interp1([0 3100],[-6e-3 2e-2],d0.press)))' ...
+                    ');'];
+                co.calstr.oxy.sn3836.msg = 'oxygen s/n 3836 calibrated based on comparison between 144/173 bottle samples and gamma_n-matched downcast';
+                
+                co.calstr.oxy.sn4580.dy214 = 'dcal.oxy = d0.oxy.*(1.04+interp1([0 1800 3100],[-9e-4 1.4e-2 1.5e-2],d0.press));'; 
+                co.calstr.oxy.sn4580.msg = 'oxygen s/n 4580 calibrated based on comparison between 131/155 bottle samples and gamma_n-matched downcast';
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
@@ -159,7 +160,7 @@ switch opt1
                     o_choice = 1;
                 else
                     ts_choice = 2;
-                    o_choice = 2; %oxygen 1 on bad y-cable (shared with par but par end okay)
+                    o_choice = 2; 
                 end
             case 'raw_corrs'
                 co.oxy_align = 1; %0 until we check oxygen hysteresis, done            
@@ -554,8 +555,6 @@ case 'samp_proc'
                     case 'sal'
                         files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv')).name};
                         files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
-                        % files = {'/data/pstar/cruise/data/bottle_samples/SAL/DY214_CTD_03_26_Aug_2026.csv'
-                        %     '/data/pstar/cruise/data/bottle_samples/SAL/DY214_CTD_04_26_Aug_2026.csv'};
                         sopts.numhead = 9;
                         sopts.numhead = 9;
                    
@@ -613,8 +612,6 @@ case 'samp_proc'
             case 'parse'
                 switch samtyp
                     case 'sal'
-                        % ssw_k15 = 0.99983;
-                        % ssw_batch = 'P169';case 'sal_parse'
                         cellT = 21;
                         ssw_k15 = 0.99993;
                         calcsal = 1;
@@ -630,15 +627,14 @@ case 'samp_proc'
                     case 'sal'
                         %salin_off = -1.5e-5; %constant
                     case 'oxy'
-                        calcoxyfromtitre=0; % use the calculation from the spreadsheet, it is otherwise not working for me...
+                        calcoxyfromtitre=0; % use the calculation from the spreadsheet, it is otherwise not working for dy214...
                 end
             case 'redoctm'
                 redoctm = 1;
             case 'check'
-                % checksam.sbe35 = 0;
+                checksam.sbe35 = 0;
                 checksam.sal = 0; %0 for done: done 18/09/2026 KB
-                checksam.oxy = 1; %0 for done
-                % checksam.chl = 0;
+                checksam.oxy = 0; %0 for done
             case 'flags' %flags before replicate averaging and after replicate averaging***
             % not yet received (1), acceptable (2), questionable (3), ...
             % bad (4) measurements, values not reported (5), replicate means (6), ...
@@ -678,9 +674,9 @@ case 'samp_proc'
                         % d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
                         % d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
                         % d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
-                        % % outliers relative to profile/CTD (not replicates)
-                        % flag4 = [1207 ]';
-                        % d.botoxya_flag(ismember(d.sampnum,flag4)) = 4;
+                        % outliers relative to profile/CTD (not replicates)
+                        flag4 = [36]'; % this seems not to be applied
+                        gs.botoxy_flag(ismember(gs.statnum,flag4)) = 4;
                         % flag4b = [1501 ]; %both a and b high, maybe bad niskin closure
                         % d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
                         % d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
@@ -695,40 +691,67 @@ case 'samp_proc'
             % case 'columndata'
             %     outtypes = {'bodc','exch'}; 
             case 'summary'
-                snames = {'nsal' 'noxy'};
-                sgrps = {{'botpsal'} {'botoxy'}};
+                snames = {'nsal' 'noxy'}; % add nuts samples and DIC samples to be used onshore?
+                sgrps = {{'botpsal'} {'botoxy'} };
+                % snames = {'nsal' 'noxy' 'nnut_shore' 'nco2_shore'}; % add nuts samples and DIC samples to be used onshore?
+                % sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'totnit'} {'dic' 'talk'}};
+            % case 'sam_shore'
+            %    fnin = fullfile(mgetdir('M_CTD'),'BOTTLE_SHORE', 'DY181 Samples for Onshore Analysis - DIC.xlsx');
+            %    varmap.statnum = {'CTDNumber'};
+            %    varmap.position = {'Niskin'};
+            %    varmap.dic = {'N_DICSamples'};
+            %    varmap.talk = {'N_DICSamples'};
+                % case 'sam_ashore_nut'
+            %     fnin = {fullfile(mgetdir('M_BOT_ISO'),'Nutrient_Tube_Numbers.xlsx')};
+            %     varmap = {'statnum' 'CTDCastNo_' ' '
+            %         'position' 'NiskinBottleNo_' ' '
+            %         'silc_flag' 'No_OfNutrientSamples' 'num_samples'
+            %         'phos_flag' 'No_OfNutrientSamples' 'num_samples'
+            %         'totnit_flag' 'No_OfNutrientSamples' 'num_samples'};
+            %     do_empty_vars = 1;
+            %     fillstat = 1;
+            % case 'sam_ashore_co2'
+            %     fnin = {fullfile(mgetdir('M_BOT_ISO'),'Carbon_Bottle_Names.xlsx')};
+            %     varmap = {'statnum' 'CTDCastNo_' ' '
+            %         'position' 'NiskinBottleNo_' ' '
+            %         'dic_flag' 'CarbonSamplesNo_' 'num_samples'
+            %         'alk_flag' 'CarbonSamplesNo_' 'num_samples'};
+                % do_empty_vars = 1;
+                % fillstat = 1;
             case 'exch'
-                ns = 53; % ??? not sure what this is
+                ns = 53; % Number of stations? not sure what this is
                 expocode = '74EQ20260820'; %{shipcode}{start YYYYMMDD}
-                sect_id = 'Ellett Array';
+                sect_id = 'OSNAPe-Ellet Array';
                 submitter = 'NASAMSKB'; %group institution person
                 common_headstr = {'#SHIP: RRS Discovery';...
-                    '#Cruise DY214; Ellett Array';...
+                    '#Cruise DY214; UK-OSNAP/Ellett Array 2026';...
                     '#Region: Eastern North Atlantic (subpolar)';...
                     ['#EXPOCODE: ' expocode];...
                     '#DATES: 20260820 - 20260909';...
                     '#Chief Scientist: T. S. Dotto (NOC) and K. Burmeister (SAMS)';...
-                    '#Supported by AtlantiS (grant ???) from the UK Natural Environment Research Council.'};
+                    '#Supported by grants NE/K010700/1 and NE/Y005473/1 (UK OSNAP), NE/T00858X/1 (UK OSNAP Decade), and NE/Y005589/1 (AtlantiS) from the UK Natural Environment Research Council.'};
                 if strcmp(params.in,'ctd')
                     headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',ns);...
-                        '#CTD: Who - K. Burmeister; Status - work in progress.';...
+                        '#CTD: Who - K. Burmeister (SAMS) & Yvonne Firing (NOC); Status - work in progress.';...
                         %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         %'# DEPTH_TYPE   : COR';...
-                        %# DEPTH_TYPE   : water depth from CTDPRS + CTD altimeter range to bottom (station 6), or speed of sound-corrected ship-mounted bathymetric echosounder'...
+                        %'# DEPTH_TYPE   : water depth from CTDPRS + CTD altimeter range to bottom (station 6), or speed of sound-corrected ship-mounted bathymetric echosounder'...
                         }];
                 else
                     headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
                     headstring = [headstring; common_headstr;
                         {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',ns);...
-                        '#CTD: Who - K. Burmeister (SAMS); Status - work in progress';...
-                        % '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
+                        '#CTD: Who - K. Burmeister (SAMS) & Yvonne Firing (NOC); Status - work in progress';...
+                        '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
                         % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
                         % '# DEPTH_TYPE   : COR';...
                         % '# DEPTH_TYPE   : water depth from CTDPRS + CTD altimeter range to bottom (station 6), or speed of sound-corrected ship-mounted bathymetric echosounder';...
-                        % '#Salinity: Who - T. Petit (NOC); Status - final; SSW batch P167.';...
-                        % '#Oxygen: Who - C. Johnson (SAMS); Status - final.';...
+                        '#Salinity: Who - K. Burmeister (SAMS) & Yvonne Firing (NOC); Status - work in progress; SSW batch P170.';...
+                        '#Oxygen: Who - R. Abell  (SAMS); Status - final.';...
+                        '#Nutrients: Who - R. Abell (SAMS); Status - not yet analysed.';...
+                        '#DIC and Talk: Who - C. Johnson (SAMS); Status - not yet analysed.';...
                         }];
                 end
                 case 'section_for_station'
@@ -737,7 +760,7 @@ case 'samp_proc'
                 elseif ismember(sntlocal,[49,50])
                     sections = {'darwin_mounds'};
                 elseif ismember(sntlocal,[51,52,53])
-                    sections = {'inner_shelf'};
+                    sections = {'scotshelf'};
                 end
             case 'grid'
                 sam_gridlist = {'botoxy' 'botpsal'};
@@ -745,9 +768,13 @@ case 'samp_proc'
                 if contains(section,'osnape')
                     kstns = [4:13 15:28 30:43 45:48];
                     mgrid.xlim = 2; mgrid.zlim = 4;
-                elseif contains(section,'inner_shelf')
+                elseif contains(section,'scotshelf')
                     kstns = [51:53];
                     mgrid.xlim = 2; mgrid.zlim = 4;
+                else
+                    section = 'profiles_only';
+                    %kstns = [1 2 10:33 3 4 5 40 41 66 70 100]; %test, dm, yo-yo, caldip, cal profile, argo 60N
+                    kstns = 1:999; %useful to do profiles_only for all stations anyway (smooth in vertical)
                 end
         end
    
