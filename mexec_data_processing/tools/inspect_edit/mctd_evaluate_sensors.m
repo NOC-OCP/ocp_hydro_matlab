@@ -170,7 +170,7 @@ for ks = 1:length(sn)
 
     %stats
     p.deep = dc.press>=pdeep;
-    if length(p.iigc)<10
+    if length(p.iigc)<3
         p.md = NaN; p.iqrd = NaN;
         disp('too few comparison points'); continue
     else
