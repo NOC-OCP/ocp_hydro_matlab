@@ -228,7 +228,7 @@ gs.Properties.VariableUnits(end-1:end) = {'number','on.rosette'};
 %     [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
 % end
 
-opt1 = 'samp_proc'; opt2 = 'flag'; get_cropt %apply flags if specified in opt_cruise
+opt1 = 'samp_proc'; opt2 = 'flags'; get_cropt %apply flags if specified in opt_cruise
 %recalculate mean, stdev, range (or for the first time? or do this after
 %repl_check?)
 okf = [2 3];
