@@ -180,7 +180,11 @@ switch opt1
                 %subsample to (approximately) 1/tstep_force hz before
                 %saving
                 stepfreq_force = [];
-                %round time to nearest tstep_resol s before saving
+                %round time to nearest tstep_resol s before saving, note
+                %this probably should not have been done for dy214
+                %for every stream, many are coming in at just under 1 hz,
+                %sbe45 has about 25 samples per 26 seconds. revisit what
+                %this is for when stepfreq_force is not used
                 tstep_resol = 1;
             case 'time_problems'
                 fixtimes = 0; check_mono = 0; %assume no repeated or backwards times at edit stage
@@ -202,7 +206,7 @@ switch opt1
                     case 'ocean'
                         handedit = 1;
                         %ucsw system things should be NaNed when pump speed out of range, including remote temp (inside inlet)
-                        fvars = {'temph','temp_remote','temp_tsg','temp_in','fluo','fluor','transmissivity','trans','cond','salinity','psal'};
+                        fvars = {'temph','temp_remote','temp_tsg','temp_in','fluo','fluor','transmissivity','trans','cond','salinity','psal','conductivity'};
                         for no = 1:length(fvars)
                             uopts.badflow.(fvars{no}) = [-inf 0.6; 2.5 inf];
                         end
@@ -218,7 +222,7 @@ switch opt1
                         yl.transmittance = [60 101]; 
                         yl.temph = [-2 30]; yl.temp_remote = yl.temph;
                         yl.temp_in = yl.temph; yl.temp_tsg = yl.temph;
-                        vars_to_ed.g1 = {{'temph','temp_in','temp_remote','temp_tsg'}, {'cond'}, {'psal'}};
+                        vars_to_ed.g1 = {{'temph','temp_in','temp_remote','temp_tsg'}, {'cond','conductivity'}, {'psal'}};
                         vars_to_ed.g2 = {{'temph'},{'fluor'},{'turbidity'},{'trans','transmittance'}};
                     case 'atmos'
                         handedit = 1;

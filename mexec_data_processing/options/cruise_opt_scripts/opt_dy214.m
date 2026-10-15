@@ -80,12 +80,12 @@ switch opt1
                         yl.stir = yl.ppar;
                     case 'ocean'
                         yl.tempr = yl.temph;
-                        yl.conductivity = [-5 50];
+                        yl.conductivity = [0 5.5];
                         yl.salinity = yl.psal;
-                        yl.soundvelocity = [0 1600];
+                        yl.soundvelocity = [1000 1600];
                         yl.trans = [0 50];
-                        yl.flow = [0 2];
-                        vars_to_ed.g1 = {{'temph','tempr','tempdk'}, {'conductivity'}, {'salinity'},{'soundvelocity'}};
+                        yl.flow = [0.5 1.8];
+                        vars_to_ed.g1 = {{'temph','tempr','tempdk'}, {'conductivity'}, {'salinity'},{'flow'}};
                         vars_to_ed.g2 = {{'temph'},{'fluo'},{'flow'},{'trans','transmittance'}};
                 end
             case 'tsg_ddaybreaks'
@@ -110,7 +110,7 @@ switch opt1
             case 'ctd_cals'
                 co.docal.temp = 1;
                 co.docal.cond = 1;
-                co.docal.oxygen = 1;
+                co.docal.oxy = 1;
                 
                 %stainless
                 co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp + interp1([0 2400 3100],[-.5e-3 -2.e-3 -3.e-3],d0.press) + 5.2e-4;';
@@ -127,8 +127,8 @@ switch opt1
                 % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
                 % mainly oxy1: 3836
                 % mainly oxy2: 4580
-                co.calstr.oxy.sn0619.dy214 = 'dcal.oxy = d0.oxy.*(1.1+interp1([0 3100],[0 2e-2],d0.press));'; 
-                co.calstr.oxy.sn0619.msg = 'oxygen s/n 0619 calibrated based on comparison between 4/5 bottle samples and gamma_n-matched downcast';
+                co.calstr.oxy.sn619.dy214 = 'dcal.oxy = d0.oxy.*(1.1+interp1([0 3100],[0 2e-2],d0.press));'; 
+                co.calstr.oxy.sn619.msg = 'oxygen s/n 0619 calibrated based on comparison between 4/5 bottle samples and gamma_n-matched downcast';
                 co.calstr.oxy.sn2540.dy214 = 'dcal.oxy = d0.oxy.*(1.115+interp1([0 3100],[-4e-2 0],d0.press));'; 
                 co.calstr.oxy.sn2540.msg = 'oxygen s/n 2540 calibrated based on comparison between 10/12 bottle samples and gamma_n-matched downcast';
                 
@@ -156,7 +156,7 @@ switch opt1
             case 'sensor_choice'
                 ts_choice = 2;
                 o_choice = 2;
-                if ismember(stnlocal,[14,22]) % other sensors, to spiky - CTD 16/21 maybe too? however we have oxy avail to calib those
+                if ismember(stnlocal,[14,21,22]) % other sensors, to spiky - CTD 21/0: oxy-hyst off in shallow; /21 maybe too? however we have oxy avail to calib those
                     o_choice = 1;
                 else
                     ts_choice = 2;
@@ -180,24 +180,13 @@ switch opt1
                     co.hyst_oxy1 = oxy3836_1;
                 elseif stnlocal==22
                     co.hyst_oxy1 = oxy4580;
+                    co.hyst_oxy2 = oxy3836_1;
                 elseif stnlocal>25
                     co.hyst_oxy1 = oxy3836_2; %need to double check if oxy sensor aligns here
                 end
 
                 if ismember(stnlocal,[4:13 15 17:20 23:53])
                     co.hyst_oxy2 = oxy4580;
-                elseif ismember(stnlocal,[16,21])
-                    co.hyst_oxy2.H1=-0.028;
-                    co.hyst_oxy2.H2=9000;
-                    co.hyst_oxy2.H3 = 1450;     
-                elseif stnlocal==22
-                    co.hyst_oxy2 = oxy3836_1;
-                else
-                    % SBE defaults, for sensors that cannot be calibrated as
-                    % only used once/twice: 2
-                    % spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
-                    % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
-                    co.hyst_oxy2.H1=-0.033;co.hyst_oxy2.H2=5000;co.hyst_oxy2.H3=1450;
                 end
             case 'rawedit_auto'
            % oxy sensors - persistent primary-secondary offsets so
@@ -246,6 +235,15 @@ switch opt1
                 co.rangelim.transmittance = [0 100];
                 co.rangelim.turbidity = [0 1];
                 co.rangelim.par = [0 100];
+                % oxygen s/n 3836 has odd response in top 40 m of downcast
+                % for stations up to and including ***
+                m = strncmp(h.fldnam,'oxy',3) & strcmp(h.fldserial,'3836');
+                if sum(m)
+                    ov = h.fldnam{m};
+                    d.(ov)(d.press<40 & d.scan<d.scan(round(length(d.scan)/2))) = NaN;
+                    d.(ov)(d.press<10 & d.scan>d.scan(round(length(d.scan)/2))) = NaN;
+                    h.comment = [h.comment '\ninitial part of oxygen s/n 3836 profile removed as bad.']; 
+                end
                 % %then despike with 2 repetitions of a 12-scan median
                 % %despiker
                 co.despike.press = [2 12; 2 12]; %avg 1m/s so 2 dbar/0.5 s is large
@@ -402,8 +400,9 @@ switch opt1
                         niskin_flag(ismember(position,[3 7 11 15 19])) = 9; % samples not drawn; backup bottles
                     case 20
                         niskin_flag(ismember(position,[3 7])) = 9; % samples not drawn; backup bottles
+                        niskin_flag(ismember(position,[5]))=5; % not reporting because it appears to be fired on the fly
                     case 21
-                        niskin_flag(ismember(position,[3])) = 7; % looks like nisking was closed at 1492m but stop was at 1520m
+                        niskin_flag(ismember(position,[3])) = 5; % looks like nisking was closed at 1492m but stop was at 1520m
                     case 23
                         niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
                     case 24
@@ -479,9 +478,9 @@ case 'adcp_proc'
                 %containing the station number; use negative to indicate
                 %distance from end e.g. [-6:-4] for dy113_SBE35_CTD_010.asc
             case 'sbe35_flags'
-                 % bad_samnum = [1406 1408 1413 1414];
-                 % bad_idx = ismember(t.statnum, bad_stations);
-                 % t.flag(bad_idx) = 4;
+                 bad_sampnum = [2005 2007];
+                 bad_idx = ismember(t.sampnum, bad_sampnum);
+                 t.flag(bad_idx) = 3;
                  
             case 'restartsam'
                 pd = mexec_file_locations('procfiles','samp');    
@@ -663,7 +662,7 @@ case 'samp_proc'
                     m = ismember(ds_sal.sampnum,[109,111,113,115,117,201,203,205,209,211]);
                     ds_sal.flag(m) = 4;
                     % questionable compared to ctd profile
-                    m3 = ismember(ds_sal.sampnum,[409,411,2201,4001,4207,4309,4601]);
+                    m3 = ismember(ds_sal.sampnum,[409,411,2201,4001,4207,4309,4601,202608281716]);
                     ds_sal.flag(m3) = 3;
                     case 'oxy'
                         %sampnum, a flag, b flag, c flag
@@ -774,7 +773,7 @@ case 'samp_proc'
                 else
                     section = 'profiles_only';
                     %kstns = [1 2 10:33 3 4 5 40 41 66 70 100]; %test, dm, yo-yo, caldip, cal profile, argo 60N
-                    kstns = 1:999; %useful to do profiles_only for all stations anyway (smooth in vertical)
+                    kstns = 1:53; %useful to do profiles_only for all stations anyway (smooth in vertical)
                 end
         end
    

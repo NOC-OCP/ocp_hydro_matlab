@@ -144,17 +144,17 @@ if regrid
 end
 
 % load and QC combined data (all?***)
-[dg, hg] = mload(otfile,'/');
+[dg, hg] = mload(otfile,'/'); %***are there lots of nans in gridded data still? ***dy214***y
 
 %edit
 opt1 = 'uway_proc'; opt2 = 'avedit'; get_cropt
 %apply previous manually selected edits
 btol = (tavp_s/2)/86400;
 edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
-[dg, ~] = apply_guiedits(dg, 'dday',edfile, 0, btol);
+[dg, ~] = apply_guiedits(dg, 'dday', edfile, btol);
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad)
-    [dg, comment] = apply_autoedits(dg, uopts);
+    [dg, comment] = apply_autoedits(dg, uopts); %not editing out all badflow in conductivity even where it is in temph?***dy214***y 
     if ~isempty(comment)
         hg.comment = [hg.comment comment];
     end

@@ -35,7 +35,7 @@ function bads = gui_editpoints(data, xvar, xgroups, ygroups, varargin)
 %parameter-value inputs for plot
 colors = [0 0 0; 1 .5 1; 1 0 0; 1 .5 0; 0 .5 0; 0 1 1; 0 0 1; .5 0 .5];
 colornames = {'black';'pink';'red';'orange';'green';'cyan';'blue';'purple'}';
-markers = repmat({'o','<','.'},1,3);
+markers = repmat({'o','<','x'},1,3);
 markersize = 8;
 lines = repmat({'-','--',':'},1,3);
 ti = '';

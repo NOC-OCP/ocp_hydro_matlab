@@ -111,7 +111,7 @@ end
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
 ctypes = {'nav','bathy','atmos','ocean'}; %important to do nav first
-%ctypes = {'atmos','ocean'}; %uway_process throws up error when trying to merge 
+ctypes = {'ocean'};%ctypes = {'atmos','ocean'}; %uway_process throws up error when trying to merge 
 % bathy data so tried to see if 'atmos' and 'ocean' are running by
 % excluding nav and bathy (which works but is obviously not the aim)
 %ctypes = ctypes(2); %did ocean, need to redo nav for wind; bathy is a problem, save for later
