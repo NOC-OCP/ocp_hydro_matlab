@@ -19,7 +19,7 @@ ofiles = dir(fullfile(root_oxy, ['oxy_' mcruise '_*.csv']));
 hcpat = {'Niskin' 'Bottle' 'Number'}; chrows = 1:2; chunits = 3;
 clear iopts numhead
 % change defaults in opt_cruise
-opt1 = 'samp_proc'; opt2 = 'oxy_files'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'oxy_files'; run(MEXEC_G.opt_cruise)
 if ~exist('sheets','var')
     sheets = 1:99;
 end
@@ -130,14 +130,14 @@ if ~isempty(iib)
     end
 end
 
-opt1 = 'samp_proc'; opt2 = 'oxy_flags'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'oxy_flags'; run(MEXEC_G.opt_cruise)
 
 orth = 0.01; %ratio threshold for replicate agreement to be examined
-opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'check_sams'; run(MEXEC_G.opt_cruise)
 if check_oxy
     oxy_repl_check(d, mcruise, orth, check_oxy)
     %get flags again in case changed (does this update?)
-    opt1 = 'samp_proc'; opt2 = 'oxy_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'oxy_flags'; run(MEXEC_G.opt_cruise)
 end
 
 mfsave(fullfile(root_oxy, ['oxy_' mcruise '_01.nc']), d, hnew);

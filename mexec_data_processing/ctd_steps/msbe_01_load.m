@@ -1,5 +1,6 @@
-function msbe_01_load(stn)
+function varargout = msbe_01_load(stn)
 % msbe_01_load(stn)
+% stns = msbe_01_load(stn)
 %
 % read in ctd data from SBE .cnv file (specified in opt_cruise),
 % rename variables based on cruise options, and add units if not present,
@@ -7,7 +8,8 @@ function msbe_01_load(stn)
 % opt_cruise)
 % add position at bottom of cast to header
 %
-% output: _cnv.nc
+% output: _cnv.nc and (optionally) stns, list of stns from one yo-yo cast
+% (if split_castnos_scans set in opt_cruise, ctd_proc, ctd_raw_extra)
 %
 % calls:
 %     msbe_to_mstar
@@ -17,8 +19,8 @@ function msbe_01_load(stn)
 
 %%%%% setup %%%%%
 
-m_common; MEXEC_A.mprog = mfilename;
-opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; get_cropt
+m_common; 
+opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; run(MEXEC_G.opt_cruise)
 pd = mexec_file_locations('procfiles','ctd');
 dataname = sprintf(pd.ctdname,stn_string);
 rawfile = sprintf(pd.ctdraw,stn_string);
@@ -39,139 +41,107 @@ end
 
 %%%%% convert to mstar %%%%%
 
-%generate file
-rawfile = m_add_nc(rawfile);
-if exist(rawfile,'file')
-    delete(rawfile)
-end
-MEXEC_A.MARGS_IN = {
-    cnvfile
-    'y'
-    'y'
-    rawfile
-    };
-msbe_to_mstar;
-
-%modify header platform information***
-MEXEC_A.MARGS_IN = {
-    rawfile
-    'y'
-    '1'
-    dataname
-    ' '
-    '2'
-    MEXEC_G.PLATFORM_TYPE
-    MEXEC_G.PLATFORM_IDENTIFIER
-    MEXEC_G.PLATFORM_NUMBER
-    '/'
-    '8'
-    '-1'
-    '-1'
-    };
-mheadr
-
-
-%%%%% rename variables, and add units where necessary %%%%%
-
-h = m_read_header(rawfile);
-if ~ismember(h.fldnam,'time')
-    warning('you are missing time variable from %s, \ndid you forget to run DatCNV with time elapsed?',cnvfile)
-end
+%load data
+[d,h] = msbe_to_mstar(cnvfile,'y','y');
 if ~ismember(h.fldnam,'scan')
     error('scan is required for processing %s',cnvfilename)
+end
+if ~ismember(h.fldnam,'time')
+    warning('you are missing time variable from %s, \ndid you forget to run DatCNV with time elapsed?',cnvfile)
 end
 if ~isempty(setdiff({'pumps','latitude','longitude'},h.fldnam))
     warning('you are missing pump status, latitude, and/or longitude from %s, \ndid you forget to export them in DatCnv?',cnvfile)
 end
 
-% create NaN variables that are missing on this station
-absentvars = {}; opt1 = 'ctd_proc'; opt2 = 'absentvars'; get_cropt
-if ~isempty(absentvars)
-    MEXEC_A.MARGS_IN = {rawfile; 'y'};
-    for kabs = 1:length(absentvars)
-        MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN;
-            absentvars{kabs}
-            'y = x+nan'
-            ' '
-            ' '];
-    end
-    MEXEC_A.MARGS_IN = [MEXEC_A.MARGS_IN; ' '];
-    mcalib
-end
+% extra steps for special cases:
+% - different variables for this cast are in different files, but all files
+%   contain the same scans; use extrasource to list files and extravars to
+%   list the variables to add
+% - one variable such as time elapsed needs to be calculated from another
+%   such as scan; use extrasource to give the expression to be evaluated
+%   and extravars to specify the new names and units
+% - the cast is split across more than one file (e.g. data acquisition was
+%   stopped and restarted during the cast); use append_stn_strings to
+%   specify the additional files to combine, and append_scan_offsets to
+%   specify the number to add to scan in each to match up 
+%  - more than one cast is contained in a single file (e.g. yo-yo casts
+%   where acquisition was not stopped and restarted at each shallow
+%   turnaround point); use 
 
-% in special cases, either read extra/new variables from a different set of files
-% (e.g. if a variable was mistakenly not exported in initial conversion to
-% .cnv, and has been exported on its own later), merging on scan, or add
-% NaNs for variables that are usually present but are missing on this
-% station, or if time was not exported,
-opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; run(MEXEC_G.opt_cruise)
+
 if ~isempty(extrasource) && ~isempty(extravars)
+    %evaluate extrasource to calculate or change variables
     if MEXEC_G.quiet<=1; fprintf(1,'adding selected variables to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
-    mctd_extra(rawfile, extravars, extrasource)
+    [d, h] = mctd_extra(d, h, extravars, extrasource);
 end
 
-% in special cases (i.e. yo-yo or tow-yo casts), split file into multiple
-% files, or append file to existing (if data acquisition was
-% stopped/restarted mid-cast)***
-otfile0 = rawfile;
-otfiles = {rawfile};
-opt1 = 'ctd_proc'; opt2 = 'cast_split_comb'; get_cropt
-
-if length(otfiles)>1 && exist('cast_scan_ranges','var')
-    [d,h] = mload(otfile0,'/');
-    t = struct2table(d);
-    for fno = 1:length(otfiles)
-        m = d.scan>=cast_scan_ranges(fno,1) & d.scan<=cast_scan_ranges(fno,2);
-        dnew = table2struct(t(m,:),'ToScalar',true);
-        [~,dataname,~] = fileparts(otfiles{fno});
-        dataname = dataname(1:strfind(dataname,'_raw')-1); %***
-        if isempty(dataname)
-            error('otfiles %d must contain ''_raw''',fno)
+if ~isempty(append_stn_strings)
+    %load additional files, and append
+    for fno = 1:length(append_stn_strings)
+        addfile = sprintf(pd.ctdraw,append_stn_strings{fno});
+        [dn, hn] = msbe_to_mstar(addfile,'y','y');
+        if length(append_scan_offset)<fno || isnan(append_scan_offset(fno))
+            %calculate from times
+            append_scan_offsets(fno) = round((dn.time(1)-d.time(1))*24)+(d.scan(1)-dn.scan(1));
+            warning('update comb_scan_off in opt_%s ctd_proc, ctd_raw_extra case to %d (it is also used by mfir_01_load)',mcruise,comb_scan_off(fno));
         end
-        hnew = h; hnew.dataname = dataname;
-        hnew.comment = [hnew.comment '\n split from original ' h.dataname ' using scan range in opt_' mcruise '.m'];
-        mfsave(otfiles{fno},dnew,hnew);
+        dn.scan = dn.scan + append_scan_offsets(fno);
+        h.comment = [h.comment sprintf('\noffsetting ctd file %s by %d scans%s and appending to ctd file %s',append_stn_strings{fno},append_scan_offsets(fno),stn_string)];
+        [d, h] = merge_mvars(d, h, dn, hn, 'scan', 1); %***no sort?
     end
+end
 
-elseif ~isempty(comb_stns) && comb_stns(1)==stnlocal
-    [d,h] = mload(rawfile,'/');
-    %put into time base of other file
-    stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
-    otfile_appendto = sprintf(pd.ctdraw,stn_string);
-    h0 = m_read_header(otfile_appendto);
-    d.time = m_commontime(d,'time',h,h0);
-    h.fldunt(strcmp('time',h.fldnam)) = h0.fldunt(strcmp('time',h.fldnam));
-    if isnan(comb_stns(3))
-        %calculate from times
-        d0 = mload(otfile_appendto,'scan','time','press',' ');
-        comb_stns(3) = round((d.time(1)-d0.time(1))*24)+(d0.scan(1)-d.scan(1));
-        warn = ' (update in opt_cruise for use by mfir_01)';
-    else
-        warn = '';
+if isempty(split_castnos_scans)
+    % position at bottom of cast (estimate; can update at mdcs stage***)
+    [botlon, botlat] = getpos_for_ctd(h);
+    %used to write to file using %14.8f string, keep this level of rounding
+    h.longitude = round(botlon*1e8)/1e8;
+    h.latitude = round(botlat*1e8)/1e8;
+    %write file
+    mfsave(rawfile, d, h)
+    varargout{1} = [];
+
+else
+
+    d0 = d; h0 = h;
+    keyboard
+    for fno = 1:size(split_castnos_scans,1)
+        rawfile = sprintf(pd.ctdraw,sprintf('%03d',split_castnos_scans(fno,1)));
+        m = d0.scan>=split_castnos_scans(fno,2) & d0.scan<=split_castnos_scans(fno,3);
+        keyboard %structfun?
+        d = structfun(@(x) x(m), d);
+        h = h0; h.comment = [h.comment '\n split from original ' h.dataname ' using scan range in opt_' mcruise '.m ctd_proc, ctd_raw_extra'];
+        %position at bottom of cast (estimate; can update at mdcs stage***)
+        [botlon, botlat] = getpos_for_ctd(h);
+        %used to write to file using %14.8f string, keep this level of rounding
+        h.longitude = round(botlon*1e8)/1e8;
+        h.latitude = round(botlat*1e8)/1e8;
+        %write file
+        mfsave(rawfile, d, h)
     end
-    fprintf(1,'offsetting cast %s by %d scans%s',stn_string,comb_stns(3),warn)
-    if ~isempty(warn); pause; end
-    d.scan = d.scan+comb_stns(3);
-    mfsave(otfile_appendto, d, h, '-merge', 'scan')
-    otfiles = {otfile_appendto}; %now add bottom lat, lon to appended file
+    varargout{1} = split_castnos_scans(:,1);
 
 end
 
 %other special cases e.g. typos in S/Ns
-opt1 = 'ctd_proc'; opt2 = 'header_edits'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'header_edits'; run(MEXEC_G.opt_cruise)
 
 % Get position at bottom of cast either from ctd-logged nmea lat, lon or
 % from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
 for fno = 1:length(otfiles)
     rawfile = otfiles{fno};
-    [~, ~] = getpos_for_ctd(rawfile, 'write');
+    [botlon, botlat] = getpos_for_ctd(h);
+    %used to write to file using %14.8f string, keep this level of rounding
+    h.longitude = round(botlon*1e8)/1e8; 
+    h.latitude = round(botlat*1e8)/1e8;
 end
 
-function mctd_extra(rawfile, extravars, extrasource)
+function [d, h] = mctd_extra(d, h, extravars, extrasource)
 
 m_common
 
-[d0, h0] = mloadq(rawfile,'/');
+d0 = d; h0 = h;
 ow = intersect(h0.fldnam,extravars);
 if ~isempty(ow) && MEXEC_G.quiet<=1
     warning('overwriting variables %s,',ow{:});
@@ -179,29 +149,39 @@ end
 for fno = 1:length(extrasource)
     if exist(extrasource{fno},'file')
         [dn, hn] = msbe_to_mstar(extracnv{fno},'y','y');
-        clear d h
-        d.scan = d0.scan;
-        h.fldnam = {'scan'}; h.fldunt = {'number'};
-        %don't use mfsave merge because it might keep some old data;
+        %don't use merge_mvars because it might keep some old data;
         %instead, merge here
-        [~,i0,in] = intersect(d0.scan, dn.scan, 'stable');
+        [~,i0,in] = intersect(d.scan, dn.scan, 'stable');
         for vno = 1:length(extravars)
             d.(extravars{vno}) = NaN+d.scan;
             d.(extravars{vno})(i0) = dn.(extravars{vno})(in);
+            h.fldnam = [h.fldnam extravars{vno}];
         end
-        extravars = [extravars 'scan'];
         [h.fldnam,~,ib] = intersect(extravars,hn.fldnam,'stable');
         h.fldunt = hn.fldunt(ib);
-        h.comment = sprintf('with parameters added from sbe file %s',extracnv{fno});
-        mfsave(rawfile, d, h, '-addvars');
+        if isfield(h,'fldserial')
+            h.fldserial = hn.fldserial(ib);
+        end
+        h.comment = [h0.comment sprintf('\nwith parameters added from sbe file %s',extracnv{fno})];
     else
-        clear d h
         eval(extrasource{fno})
-        h.fldnam = extravars(1,fno); 
-        h.fldunt = extravars(2,fno);
-        h.fldserial = {'n/a'};
-        h.comment = sprintf('added parameter %s',extrasource{fno});
-        mfsave(rawfile, d, h, '-addvars');
+        m = strcmp(extravars{1,fno},h.fldnam);
+        if sum(m)
+            h.fldunt{m} = extravars{2,fno};
+            if size(extravars,1)>2
+                h.fldserial{m} = extravars{3,fno};
+            end
+            h.comment = [h0.comment sprintf('\nrecalculated parameter %s',extrasource{fno})];
+        else
+            h.fldnam = [h.fldnam extravars(1,fno)];
+            h.fldunt = [h.fldunt extravars(2,fno)];
+            if size(extravars,1)>2
+                h.fldserial = [h.fldserial extravars{3,fno}];
+            else
+                h.fldserial = [h.fldserial 'n/a'];
+            end
+            h.comment = [h0.comment sprintf('\nadded parameter %s',extrasource{fno})];
+        end
     end
 end
 

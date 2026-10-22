@@ -28,7 +28,7 @@ function [lat lon] = msposinfo_noup(dn1,navstream)
 
 m_common
 
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 
 if ~exist('navstream','var'); navstream = default_navstream; end  % use default nav stream name
 

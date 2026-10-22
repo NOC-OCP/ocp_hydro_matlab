@@ -16,7 +16,7 @@ function [dc1 dc2 timem] = msgetdcrange(techsasfn,dn1,dn2)
 
 m_common
 
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 fullfn = [uway_sed '/' techsasfn];
 
 dns = sort([dn1 dn2]); % just in case user reverses order

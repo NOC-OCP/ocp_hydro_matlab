@@ -1,62 +1,65 @@
-function [d, comment] = apply_autoedits(d, castopts)
-% function [d, comment] = apply_autoedits(d, castopts)
+function [d, comment] = apply_autoedits(d, edopts)
+% function [d, comment] = apply_autoedits(d, edopts)
 %
-% apply edits specified in castops structure to data in structure d
+% apply edits specified in edopts structure to data in structure d
 % 
 %
-%   pumpsNaN -- for each parameter which is a field of castopts.pumpsNaN,
-%     data are NaNed up to castopts.pumpsNaN.(parameter) time points after
+%   pumpsNaN -- for each parameter which is a field of edopts.pumpsNaN,
+%     data are NaNed up to edopts.pumpsNaN.(parameter) time points after
 %     pumps come (back) on -- this is mostly specific to the CTD, though
 %     could be used for another series if a variable pumps were present
 %     e.g. for 24 Hz CTD data,
-%       castopts.pumpsNaN.temp1 = 12; % 0.5 s
-%       castopts.pumpsNaN.oxy_sbe1 = 8*24; % 8 s
+%       edopts.pumpsNaN.temp1 = 12; % 0.5 s
+%       edopts.pumpsNaN.oxy_sbe1 = 8*24; % 8 s
 %       etc.
 %   
-%   rangelim -- for each parameter which is a field of castopts.rangelim,
+%   rangelim -- for each parameter which is a field of edopts.rangelim,
 %     data are NaNed outside of the range given by
-%     castopts.rangelim.(parameter)
+%     edopts.rangelim.(parameter)
 %     e.g. 
-%     castopts.rangelim.temp1 = [-2 40];
+%     edopts.rangelim.temp1 = [-2 40];
 %
-%   despike -- for each parameter which is a field of castopts.despike,
-%     each row in castopts.despike.{parameter}, [threshold length],
-%     successively applies median_despike to remove points that deviate
-%     from the length-points median over neighbouring non-NaN points by
-%     more than threshold; note thresholds are absolute, not relative
-%     e.g.
-%     castopts.despike.temp1 = [0.01 5; 0.01 5];
+%   despike -- for each parameter which is a field of edopts.despike,
+%     each row in edopts.despike.{parameter}, [TH LEN],
+%     successively applies median_despike to remove points that deviate by
+%     more than TH from the median over LEN neighbouring non-NaN points
+%     note this is not a standard deviation filter, instead TH is absolute,
+%     e.g. 
+%     edopts.despike.temp1 = [0.01 5; 0.01 5];
 %       to edit temp1 by iterating twice with the same threshold of 0.01
 %       degrees C deviation from the 5-point median
 %
-%   bad(var) -- for each parameter which is a field of castopts.bad(var),
+%   bad(var) -- for each parameter which is a field of edopts.bad(var),
 %     data are masked where (var) is within the range(s) given by the rows
-%     of castopts.bad(var).(parameter); in addition, if one of the rows is
+%     of edopts.bad(var).(parameter); in addition, if one of the rows is
 %     [NaN NaN], parameter data are masked where (var) is NaN
-%     e.g. to mask selected ranges of scans where CTD1 was blocked, and to
-%     also mask C and O wherever else T has been edited out (e.g. by hand,
-%     or by rangelim) for either CTD: 
-%     castopts.badscan.temp1 = [7380 7890; 11500 13020];
-%     castopts.badscan.cond1 = castopts.badscan.temp1;
-%     castopts.badscan.oxy_sbe1 = castopts.badscan.temp1; 
-%     castopts.badtemp1.cond1 = [NaN NaN];
-%     castopts.badtemp1.oxy_sbe1 = [NaN NaN];
-%     castopts.badtemp2.cond2 = [NaN NaN];
-%     castopts.badtemp2.oxy_sbe2 = [NaN NaN];
+%     in this example, CTD1 was blocked from scan 7380 to 7890 and 11500 to
+%     13020, and in addition any time a T was marked as bad (by hand, or by
+%     rangelim or despike above) the corresponding C and O should be NaNed 
+%     too: 
+%     also mask C and O wherever else T has been edited out (this could be 
+%     by hand, or by rangelim above) for either CTD:  
+%     edopts.badscan.temp1 = [7380 7890; 11500 13020];
+%     edopts.badscan.cond1 = edopts.badscan.temp1;
+%     edopts.badscan.oxy_sbe1 = edopts.badscan.temp1; 
+%     edopts.badtemp1.cond1 = [NaN NaN];
+%     edopts.badtemp1.oxy_sbe1 = [NaN NaN];
+%     edopts.badtemp2.cond2 = [NaN NaN];
+%     edopts.badtemp2.oxy_sbe2 = [NaN NaN];
 %    
 % also see ctd_proc, rawedit_auto and uway_proc, mday_01_clean_av cases for
-%   information on castopts 
+%   information on edopts 
 % 
 
 comment = [];
 fnd = fieldnames(d);
 
 %edit out scans when pumps are off, plus expected recovery times
-if isfield(castopts,'pumpsNaN') && isfield(d,'pumps')
+if isfield(edopts,'pumpsNaN') && isfield(d,'pumps')
     iip = find(d.pumps<1); n = length(d.pumps);
-    fn = intersect(fieldnames(castopts.pumpsNaN),fnd);
+    fn = intersect(fieldnames(edopts.pumpsNaN),fnd);
     for no = 1:length(fn)
-        delay = castopts.pumpsNaN.(fn{no});
+        delay = edopts.pumpsNaN.(fn{no});
         if delay>0 && round(delay)==delay
             iib = repmat(iip(:),1,delay+1) + repmat(0:delay,length(iip),1);
             iib = unique(iib(:));
@@ -73,10 +76,10 @@ if isfield(castopts,'pumpsNaN') && isfield(d,'pumps')
 end
 
 %remove out of range values
-if isfield(castopts,'rangelim')
-    fn = intersect(fieldnames(castopts.rangelim),fnd);
+if isfield(edopts,'rangelim')
+    fn = intersect(fieldnames(edopts.rangelim),fnd);
     for no = 1:length(fn)
-        r = castopts.rangelim.(fn{no});
+        r = edopts.rangelim.(fn{no});
         iir = find(d.(fn{no})<r(1) | d.(fn{no})>r(2));
         if ~isempty(iir)
             d.(fn{no})(iir) = NaN;
@@ -91,17 +94,17 @@ end
 
 
 %despike
-if isfield(castopts,'despike')
-    fn = intersect(fieldnames(castopts.despike),fnd);
+if isfield(edopts,'despike')
+    fn = intersect(fieldnames(edopts.despike),fnd);
     for no = 1:length(fn)
-        if strncmp(fn{no},'temp',4) && isfield(castopts,'redoctm') && ~castopts.redoctm
+        if strncmp(fn{no},'temp',4) && isfield(edopts,'redoctm') && ~edopts.redoctm
             warning('editing temperature in mctd_02 is risky; are you sure spikes are not large enough to need to redo CTM?')
         end
-        t = castopts.despike.(fn{no});
+        t = edopts.despike.(fn{no});
         comment = [comment '\n despiked ' fn{no} ' using median_despike with successive thresholds '];
         for dno = 1:size(t,1)
             d0 = d.(fn{no});
-            d.(fn{no}) = median_despike(d.(fn{no}), t(dno,1), t(dno,2));
+            d.(fn{no}) = median_despike(d.(fn{no}), t(dno,2), t(dno,1), []);
             comment = [comment num2str(t(dno)) ' '];
             % d.([fn{no} '_flag'])(isnan(d.(fn{no})) & ~isnan(d0)) = 7;             
         end
@@ -115,23 +118,23 @@ end
 %   time is in datenum form):                 
 %   badtimes = [datenum(2022,7,1) datenum(2022,7,12,14,6,0); ...
 %               datenum(2022,7,28,12,28,0) datenum(2022,7,28,17,20,0)];
-%   castopts.badtime.conductivity_raw = badtimes;
-%   castopts.badtime.salinity_raw = badtimes;
-%   castopts.badtime.temph_raw = badtimes;
+%   edopts.badtime.conductivity_raw = badtimes;
+%   edopts.badtime.salinity_raw = badtimes;
+%   edopts.badtime.temph_raw = badtimes;
 % can also be used to NaN one variable where another is NaN, e.g. to apply
 % any edits (automatic or manual) already made to temp1 to the other CTD1
 % variables:  
-%    castopts.badtemp1.cond1 = [NaN NaN];
-%    castopts.badtemp1.oxy_sbe1 = [NaN NaN];
-cfn = fieldnames(castopts);
+%    edopts.badtemp1.cond1 = [NaN NaN];
+%    edopts.badtemp1.oxy_sbe1 = [NaN NaN];
+cfn = fieldnames(edopts);
 iibp = find(strncmp('bad',cfn,3));
 for bpno = 1:length(iibp)
     xvar = cfn{iibp(bpno)};
     if isfield(d,xvar(4:end))
         x = d.(xvar(4:end))(:).'; %badscan --> scan, etc.
-        vars = intersect(fieldnames(castopts.(xvar)),fnd); %e.g. temp1, temp2,
+        vars = intersect(fieldnames(edopts.(xvar)),fnd); %e.g. temp1, temp2,
         for vno = 1:length(vars)
-            badranges = castopts.(xvar).(vars{vno});
+            badranges = edopts.(xvar).(vars{vno});
             mn = isnan(badranges(:,1)); %handle NaNs separately
             badranges(mn,:) = [];
             mb = sum(x>=badranges(:,1) & x<=badranges(:,2), 1)>0;

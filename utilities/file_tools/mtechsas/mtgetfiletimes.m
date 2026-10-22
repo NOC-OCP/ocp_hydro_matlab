@@ -18,7 +18,7 @@ function [firstm lastm numdc] = mgetfiletimes(fname)
 
 m_common
 
-scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+scriptname = 'ship'; oopt = 'datasys_best'; MEXEC_G.mcruise
 fullfn = [uway_root '/' fname];
 
 techsas_time_dim = nc_getdiminfo(fullfn,'time'); % bak jc032 need to know present number of records in growing techsas file

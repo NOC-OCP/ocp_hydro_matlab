@@ -7,7 +7,7 @@ function mfir_to_sam(stn)
 % formerly mfir_04
 
 m_common
-opt1 = 'mstar'; get_cropt
+opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 
 pd = mexec_file_locations('procfiles','fir');
 f = m_add_nc(sprintf(pd.firfile,stn_string));

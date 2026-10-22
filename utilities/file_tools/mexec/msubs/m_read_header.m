@@ -95,7 +95,7 @@ for k = 1:h.noflds
     h.uprlim(k) = nc_attget(ncfile.name,h.fldnam{k},'max_value');
     h.absent(k) = nc_attget(ncfile.name,h.fldnam{k},'_FillValue');
     h.num_absent(k) = nc_attget(ncfile.name,h.fldnam{k},'number_fillvalue');
-    %and any other "extra" attributes
+    %and any other "extra" attributes such as fldserial
     a = nc_getvarinfo(ncfile.name, h.fldnam{k}); a = {a.Attribute.Name};
     a = setdiff(a,{'long_name' 'units' 'min_value' 'max_value' '_FillValue' 'missing_value' 'number_fillvalue'});
     for ano = 1:length(a)

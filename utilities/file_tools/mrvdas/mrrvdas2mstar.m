@@ -76,7 +76,7 @@ end
 to = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
 dd.time = m_commontime(dd.dnum,'datenum',to);
 names = [names; 'time'];
-opt1 = 'mstar'; get_cropt
+opt1 = 'mstar'; MEXEC_G.mcruise
 if docf
     units = [units; to];
 else
@@ -89,7 +89,7 @@ units = units(ia);
 %add variable names and units to hnew, or remove from dd
 %also remove duplicate times, after (if set in opt_cruise) subsampling
 %and/or rounding times
-opt1 = 'uway_proc'; opt2 = 'tstep_save'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'tstep_save'; MEXEC_G.mcruise
 dd = struct2table(dd);
 dd = times_subsample(dd,'time',tstep_force,tstep_resol);
 dd = table2struct(dd,'ToScalar',true);

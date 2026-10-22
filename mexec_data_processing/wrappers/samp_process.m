@@ -22,12 +22,22 @@ function samp_process(ptlist, varargin)
 %   and get_sensor_groups 
 
 m_common
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 %parameters to try if paramlist is 'all'
 params = {'sal','oxy','nut','co2','iso','cfc','chl'};
-if ~iscell(ptlist) && strcmp(ptlist,'all')
-    ptlist = params;
+if ~iscell(ptlist)
+    if strcmp(ptlist,'all')
+        ptlist = params;
+    else
+        ptlist = {ptlist};
+    end
+end
+a = setdiff(ptlist,params);
+if ~isempty(a)
+    warning('bottle sample params not recognised: ')
+    fprintf(1,'%s ',a{:})
+    fprintf(1,'\n')
+    ptlist = intersect(params,ptlist);
 end
 
 pd = mexec_file_locations('procfiles','samp');
@@ -67,7 +77,7 @@ if restartusam
          pause(1)
          delete(pd.samu)
      end
-     opt1 = 'samp_proc'; opt2 = 'files'; samtyp = 'ulog'; get_cropt
+     opt1 = 'samp_proc'; opt2 = 'files'; samtyp = 'ulog'; run(MEXEC_G.opt_cruise)
      s = readtable(uway_sample_log_file); %the equivalent of a .bl file
 %rename, merge on data from surface_ocean*
  end
@@ -78,7 +88,7 @@ for pno = 1:length(ptlist)
     msam_merge(ptlist{pno})
 end
 
-opt1 = 'outputs'; opt2 = 'columndata'; get_cropt
+opt1 = 'outputs'; opt2 = 'columndata'; run(MEXEC_G.opt_cruise)
 if exist('outtypes','var')
     for ono = 1:length(outtypes)
         if exist('outparams','var') && isfield(outparams,outtypes{ono})

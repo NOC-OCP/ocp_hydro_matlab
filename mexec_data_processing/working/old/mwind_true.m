@@ -8,7 +8,7 @@ function mwind_true(ydays,mtable)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; run(MEXEC_G.opt_cruise)
 infilen = fullfile(MEXEC_G.mexec_data_root, 'nav', ['bestnav_' mcruise '.nc']);
 iiw = find(strcmp('wind',mtable.paramtype));
 if isempty(iiw)
@@ -20,7 +20,7 @@ end
 [dn, hn] = mload(infilen, '/');
 
 avmet = 30;
-opt1 = 'uway_proc'; opt2 = 'avtime'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'avtime'; run(MEXEC_G.opt_cruise)
 tave_period = round(avmet); tav2 = round(tave_period/2);
 
 %loop through wind from different instruments

@@ -57,7 +57,7 @@ cpstr = '';
 %%%%%%%%% correct and calibrate raw data %%%%%%%%%
 
 % fix timestamp problems if known to occur with stream/data system 
-opt1 = 'uway_proc'; opt2 = 'time_problems'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'uway_raw_edit'; run(MEXEC_G.opt_cruise)
 if fixtimes
     [d, h, comment] = mday_01_fixtimes(d, h, check_mono);
     if ~isempty(comment)
@@ -68,7 +68,7 @@ end
 
 % factory/laboratory equations and coefficients for calibration/conversion
 % from V/counts to physical units, where not already applied
-opt1 = 'uway_proc'; opt2 = 'sensor_unit_conversions'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'uway_sensor_unit_conversions'; run(MEXEC_G.opt_cruise)
 if isfield(so, 'calstr') && sum(cell2mat(struct2cell(so.docal)))
     [dcal, hcal] = apply_calibrations(d, h, so.calstr, so.docal, 'q');
     for no = 1:length(hcal.fldnam)
@@ -91,7 +91,8 @@ if isfield(so, 'calstr') && sum(cell2mat(struct2cell(so.docal)))
 end
 
 % remove bad times, despike, remove out-of-range values, etc.
-opt1 = 'uway_proc'; opt2 = 'rawedit'; get_cropt
+uopts = struct();
+
 %deal with common edits
 if exist('badtimes','var') && exist('tsgpumpvars','var') && ~isempty(badtimes) && ~isempty(tsgpumpvars)
     for vno = 1:length(tsgpumpvars)
@@ -205,7 +206,7 @@ depvar = munderway_varname('depvar', h.fldnam, 's');
 depvars = union(union(depbtvar,depsfvar),depvar);
 
 %find positions to use for carter correction
-opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'datasys_best'; run(MEXEC_G.opt_cruise)
 ii = find(strcmp(default_navstream,mtable.tablenames));
 ii = ii(1);
 navfile = fullfile(MEXEC_G.mexec_data_root, mtable.mstardir{ii}, [mtable.mstarpre{ii} '_' mcruise '_all_raw.nc']); %in case edt is not made yet, depending on order in list

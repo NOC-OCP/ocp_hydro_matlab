@@ -2,8 +2,8 @@ function [data, unfound] = var_renamer(data, varmap, varargin)
 % [data, unfound] = var_renamer(data, varmap)
 % [data, unfound] = var_renamer(data, varmap, 'copyvar', copyvar, 'keep_othervars', keep_othervars)
 %
-% rename variables in table (or fields in structure) data
-% using the mapping in structure varmap
+% to standardise variable names, rename variables in table (or fields in
+%   structure) data using the mapping in structure varmap
 %
 % the fieldnames of varmap are the new variable names
 %

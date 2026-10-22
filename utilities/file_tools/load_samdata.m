@@ -2,62 +2,106 @@ function [samdata, samhead] = load_samdata(infiles, varargin)
 % function [samdata, samhead] = load_samdata(infiles, 'parameter', value)
 % function [samdata, samhead] = load_samdata(infiles, iopts)
 %
-% reads in sample data from spreadsheet or comma delimited files,
-% parses into header, column headers, column units, and data, 
-% outputs data as concatenated table samdata and header in cell array
-%   samhead
+% reads in sample data and header information from files listed in cell
+%   array infiles; elements of infiles may be spreadsheet (.xls, .xlsx)
+%   files containing one or more sheets, and/or comma-delimited (.csv)
+%   files containing one or more segments (e.g. concatenations of multiple
+%   files) 
+% stores headers in cell array samhead; combines (concatenating where
+%   variables are the same, filling where they are not) data from multiple
+%   files/sheets/segments into table samdata
 %
-% data are read from from one or more single and/or concatenated (see
-%   below) csv files, and/or one or more sheets of one or more spreadsheet
-%   files
-% infiles is a cell array list of filenames. without other input arguments,
-%   data will be read using readtable. 
-%
-% optional inputs can be specified as a scalar structure or as
-%   parameter-value pairs (if all inputs are laid out the same), or as a
-%   vector structure (same length as infiles)
-%
-% infiles is a cell array list
+% if each [sheet/segment of each] input file starts with a single header
+%   line giving the variable names, and there is no ambiguity about 
+%   variable types (as can happen if e.g. a flag column is empty in the
+%   first file but then has numeric values in a later file), or about
+%   datetimes, then no additional input arguments are required
 % 
+% otherwise, optional inputs determine how to parse the files to extract
+%   variable names, variable units, additional header lines, and data. if
+%   format is the same for all files in files, optional inputs may be
+%   supplied as parameter-value pairs, as fields of a structure, or both.
+%   if file layout varies, use a vector structure with the same length as
+%   infiles. 
 %
-% concatenated csv files, see b  for concatenated csv files, calls mtextdload. 
-%     requires: 
-%       hcpat, the contents of an indicative column header over one or more
-%         rows, to be searched for (default: {}, don't search). 
-%     optional:
-%       icolhead and icolunits, giving the indices from the start of the
-%         first ocurrence of hcpat which correspond to variable names and
-%         variable units, respectively.  
-%     variable names line(s) will be parsed to Matlab variable names
-%       (removing leading and trailing whitespace, replacing special
-%       characters with '_')
-%     e.g., for a file like: 
-%       Cruise,JC211,,,,,,,,,,,,,
-%       Cast,3,,,Analysis Set,,,,,,,Volume (ml),,,
-%       Sampler,EPA,,,Analyst,YF,,,,Manganese Chloride,,1,,,
-%       Sample Date,05/02/2021,,,Analysis Date,06/02/2021,,,,Alkaline Iodide ,,0.99,,,
-%       Sample Time,2224,,,Analysis Time,1550,,,,Total,,1.99,,,
-%       ,,,,,,,,,,,,,,
-%       ,,,,,,,,,,,,,,
-%       Cast,Niskin ,Depth,Bottle ,Bottle ,Blank,Std,Standard,Fixing,Botvol,Sample,Iodate,n(O2),C(O2),Notes
-%       Number,Bottle,(m),No.,vol (25C),titre,vol,titre,temp,at Tfix,titre,molarity,,,
-%       ,Number,,,mls,mls,mls,mls,C,mls,mls,M,moles,umol/l,
-%       3,1,,1013,139.8594804,0.01394,5,0.4619,0.8,137.835634405743,1.445,0.001667,3.99406814224484E-05,289.218978780914,
-%       3,5,,25,137.8955138,0.01394,5,0.4619,0.8,135.87214308566,1.5295,0.001667,4.22990644253951E-05,310.755858165685,
-%       Cast,4,,,Analysis Set,,,,,,,Volume (ml),,,
-%       Sample Date,05/02/2021,,,Analysis Date,06/02/2021,,,,Alkaline Iodide ,,0.99,,,
-%       Sample Time,2224,,,Analysis Time,1550,,,,Total,,1.99,,,
-%       Cast,Niskin ,Depth,Bottle ,Bottle ,Blank,Std,Standard,Fixing,Botvol,Sample,Iodate,n(O2),C(O2),Notes
-%       Number,Bottle,(m),No.,vol (25C),titre,vol,titre,temp,at Tfix,titre,molarity,,,
-%       ,Number,,,mls,mls,mls,mls,C,mls,mls,M,moles,umol/l,
-%       4,2,,1013,139.8594804,0.01394,5,0.4619,0.8,137.835634405743,1.445,0.001667,3.99406814224484E-05,289.218978780914,
-%       4,11,,25,137.8955138,0.01394,5,0.4619,0.8,135.87214308566,1.5295,0.001667,4.22990644253951E-05,310.755858165685,
-%     [ds, hs] = load_samdata(infiles, 'hcpat', {'Niksin'; 'Bottle'; 'Number'}, 'icolhead', [1 2], 'icolunits', 3);
-%     will return hs containing the lines 1-7 and first 7 lines, and table ds with
-%     ds.Properties.VariableNames = {'cast_number', 'niskin_bottle', 'depth__m_', ...}
+% for spreadsheet files, optional input sheets gives the sheets to read in
+%   (default: all sheets); for .csv files this is ignored. 
+%
+% for a concatentated .csv file with multiple data segments each with their
+% own column header line(s) (and possibly their own 
+%
+% specify one of the following sets of inputs: 
+%
+%   numhead (scalar), icolhead (vector), icolunits (vector):
+%     (for each sheet in sheets) keep lines 1:numhead as header, read
+%     data starting at max([numhead;icolhead;icolunits])+1, and assign
+%     variable names and units automatically parsed from lines in icolhead
+%     and icolunits 
+%   
+%   numhead (scalar), VariableNames (1xN cell array), and optionally: 
+%   VariableUnits (1xN cell array), VariableTypes (1xN cell array)
+%     (for each sheet in sheets) keep lines 1:numhead as header, read N
+%     columns of data starting at line numhead+1 using VariableTypes
+%     (optional; values can be 'double', 'char', or 'datetime'; defaults to
+%     autodetect, but see note above about type ambiguity, this is not
+%     recommended) and assign variable names and units as per input
+%  
+%   hcpat (Mx1 cell array), rcolhead (Nx1), rcolunits (Lx1)
+%     (for each sheet in sheets) search for hcpat over M successive lines,
+%     and for each such set (x_i+[1:M]), read data from x_i+M+1 up until
+%     x_(i+1) or the end of the file, parsing variable names and units from
+%     rcolhead+x_i and rcolunits+x_i 
+%
+%
+%   where variable names are automatically parsed, leading and trailing
+%     whitespace will be removed and special characters replaced with '_'
+%     *** always or only in hcpat/mtextdload case?
+%
+%
+% example: infile looks like:
+%
+%       Cruise,JC211,,,,,,,,,
+%       Cast,3,,Analysis Set,,,,,,Volume (ml),
+%       Sampler,EPA,,Analyst,YF,,,Manganese Chloride,1,,
+%       Sample Date,05/02/2021,,Analysis Date,06/02/2021,,Alkaline Iodide ,,0.99,,
+%       Sample Time,2224,,Analysis Time,1550,,,Total,1.99,,
+%       ,,,,,,,,,,
+%       ,,,,,,,,,,
+%       Cast,Niskin ,Bottle ,Blank,Standard,Fixing,Botvol,Sample,n(O2),C(O2),Notes
+%       Number,Bottle,No.,,titre,temp,at Tfix,titre,,,
+%       ,Number,,mls,mls,C,mls,mls,moles,umol/l,
+%       3,1,1013,0.01394,0.4619,0.8,137.835634405743,1.445,3.99406814224484E-05,289.218978780914,
+%       3,5,25,0.01394,0.4619,0.8,135.87214308566,1.5295,4.22990644253951E-05,310.755858165685,
+%       ,,,,,,,,,,
+%       Cast,4,,Analysis Set,,,Volume (ml),,,,
+%       Sample Date,05/02/2021,,Analysis Date,06/02/2021,,Alkaline Iodide ,,0.99,,
+%       Sample Time,2224,,Analysis Time,1550,,Total,,1.99,,
+%       Cast,Niskin ,Bottle ,Blank,Standard,Fixing,Botvol,Sample,n(O2),C(O2),Notes
+%       Number,Bottle,No.,,titre,temp,at Tfix,titre,,,
+%       ,Number,,mls,mls,C,mls,mls,moles,umol/l,
+%       4,2,1013,0.01394,0.4619,0.8,137.835634405743,1.445,3.99406814224484E-05,289.218978780914,bubbles
+%       4,11,25,0.01394,0.4619,0.8,135.87214308566,1.5295,4.22990644253951E-05,310.755858165685,
+
+%     [ds, hs] = load_samdata(infile, 'hcpat', {'Niksin'; 'Bottle'; 'Number'}, 'rcolhead', [1 2], 'rcolunits', 3);
+%     will return hs containing lines 1-7 and 14-16, and table ds with
+%     ds.Properties.VariableNames = {'cast_number', 'niskin_bottle', ...}
 %     ds.Properties.VariableUnits = {'', 'number', '', ...}
 %
-%   for other files, calls readtable.
+%     [ds, hs] = load_samdata(infile, 'numhead', 7, 'icolhead', [8 9], 'icolunits', 10);
+%     will return the same ds with the same variable names and units, but
+%     hs will contain only the initial set of header lines
+%
+%     [ds, hs] = load_samdata(infiles, 'numhead', 10, ...
+%                'VariableNames',...
+%                {'cast','niskin','bottle','blank','std_titre','tfix','botvol','sample_titre','n_o2','conc_o2','notes'},...
+%                'VariableTypes',...
+%                {'double','double','double','double','double','double','double','double','double','double','double','char'});
+%     will return hs containing lines 1-10, ds containing the remaining
+%     lines (with all but the last column containing NaNs corresponding to
+%     original lines 14-16), variable names as input, and no variable
+%     units.
+%
+%   calls readtable unless file type is  
 %   requires: 
 %     numhead, how many lines to skip before column headers start
 %   optional: 
@@ -131,7 +175,7 @@ for fno = 1:length(infiles)
         iopts = load_samdata_iopts([]);
     end
 
-    %can we use readtable? 
+    %can we use readtable? should we use readtable? 
     [domtl, sheetsl] = load_samdata_checkrt(infiles{fno}, iopts);  
 
     if domtl
@@ -283,7 +327,9 @@ if isfield(iopts,'numhead') && isfinite(iopts.numhead)
     end
     if sheet==0
         opts.DataLines(1) = nd;
-        opts.NumHeaderLines = iopts.numhead;
+        if isfield(opts,'NumHeaderLines')
+            opts.NumHeaderLines = iopts.numhead;
+        end
     else
         opts.DataRange = ['A' num2str(nd)];
     end

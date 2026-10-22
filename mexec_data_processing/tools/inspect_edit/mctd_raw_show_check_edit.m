@@ -53,11 +53,11 @@ end
 dn_start = m_commontime(ddcs.time_start(1),'time_start',hdcs,'datenum');
 dn_end = m_commontime(ddcs.time_end(1),'time_end',hdcs,'datenum');
 if strcmp(rt,'cleaned')
-    opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
+    opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
 end
 
 % which variables to plot
-opt1 = 'ctd_proc'; opt2 = 'rawshow'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'rawshow'; run(MEXEC_G.opt_cruise)
 ng = length(rppars);
 warn = 0;
 
@@ -190,7 +190,7 @@ if exist('ds','var')
     hnew.fldunt(strncmp('dc',hnew.fldnam,2)) = {'number'};
     hnew.fldunt(strncmp('scan',hnew.fldnam,2)) = {'number'};
     hnew.fldunt(strncmp('press',hnew.fldnam,5)) = {'dbar'};
-    opt1 = 'mstar'; get_cropt
+    opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
     if docf
         hnew.fldunt(strncmp('time',hnew.fldnam,4)) = h.fldunt(strcmp('time',h.fldnam));
     else
@@ -223,7 +223,7 @@ if warn || doed
     ed = input('run gui_editpoints now?   ','s');
     if strcmp(ed,'y')
         scans_use = {find(d.scan>=ddcs.scan_start & d.scan<=ddcs.scan_end)};
-        bads = gui_editpoints(struct2table(d), 'scan', scans_use, repars,...
+        gui_editpoints(struct2table(d), 'scan', scans_use, repars,...
             'yl', struct2table(yl), 'ti', stn_string, ...
             'markers', repmat({'o','<'},1,4), 'markersize', 3, 'lines', repmat({'-',':'},1,4), ...
             'edfilepre', efile);

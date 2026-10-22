@@ -24,6 +24,7 @@ if nargin>0 && ~isempty(varargin{1}) && exist(outfile,'file')
 end
 
 % load sbe35 data
+opt1 = 'sbe35'; opt2 = 'sbe35files'; eval(['opt_' mcruise]);
 if strcmp(sbe35in,'none')
     return
 end
@@ -75,7 +76,7 @@ for kf = 1:length(file_list)
     end
     fclose(fid2);
     %make any adjustments to statnum/bn for files with wrong name/combined casts, etc.
-    opt1 = 'sbe35'; opt2 = 'sbe35_parse'; get_cropt 
+    opt1 = 'sbe35'; opt2 = 'sbe35_parse'; run(MEXEC_G.opt_cruise) 
 end
 t.sampnum = t.statnum*100+t.bn;
 t(isnan(t.sampnum),:) = [];
@@ -88,17 +89,17 @@ if ~isempty(jfiles)
     sprintf('%s\n',jfiles{:})
 end
 
-opt1 = 'sbe35'; opt2 = 'sbe35_datetime_adj'; get_cropt
+opt1 = 'sbe35'; opt2 = 'sbe35_datetime_adj'; run(MEXEC_G.opt_cruise)
 %remove duplicate times (in case recorder not erased)
 [~,ii] = unique(t.datnum,'stable');
 t = t(ii,:);
 
 %modify flags or remove some erroneous lines 
-opt1 = 'sbe35'; opt2 = 'sbe35_flags'; get_cropt
+opt1 = 'sbe35'; opt2 = 'sbe35_flags'; run(MEXEC_G.opt_cruise)
 
 %get station start and end times from station_summary file, and use to
 %match station numbers and discard duplicate (likely spurious) sampnums
-opt1 = 'samp_proc'; opt2 = 'replcheck'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'replcheck'; run(MEXEC_G.opt_cruise)
 if checksam.sbe35
     [dsum, hsum] = mloadq(sumfile,'/');
     dsum.time_start = m_commontime(dsum,'time_start',hsum,'datenum');
@@ -140,21 +141,21 @@ end
 clear hnew
 hnew.fldnam = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag' 'statnum'};
 hnew.fldunt = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_4.9' 'number'};
-opt1 = 'mstar'; get_cropt
+opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf
     hnew.fldunt{1} = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
     hnew.data_time_origin = [];
 else
     hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 end
-hnew.dataname = sbe35file.dataname;
+hnew.dataname = pd.sbe35name;
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; 
 
 t.position = t.bn;
 t.time = m_commontime(t.datnum,'time','datenum',hnew);
 t.sbe35temp = t.t90;
 t.sbe35temp_flag = t.flag;
-opt1 = mfilename; opt2 = 'sbe35flag'; get_cropt
+opt1 = mfilename; opt2 = 'sbe35flag'; eval(['opt_' mcruise]);
 %bottle not fired won't be in list, so nan must be bad
 t.sbe35temp_flag(isnan(t.sbe35temp) & t.sbe35temp_flag<4) = 4;
 clear d %rather than using table2struct, loop so they'll be in same order as hnew.fldnam

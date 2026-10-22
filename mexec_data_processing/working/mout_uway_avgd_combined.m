@@ -2,7 +2,7 @@ function mout_uway_avgd_combined
 
 m_common
 
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; run(MEXEC_G.opt_cruise)
 
 %make sure 60-s ocean data is first, then nearest-neighbor interpolate 30-s
 %atmos and nav data to its times
@@ -13,7 +13,7 @@ files = {'ocean' fullfile(mgetdir('surfmet'),sprintf('surface_ocean_%s.nc',mcrui
 if ~exist(files{end,2},'file')
     files{end,2} = fullfile(MEXEC_G.mexec_data_root,'nav',sprintf('bestnav_%s.nc',mcruise));
 end
-opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'tsg_cals'; run(MEXEC_G.opt_cruise)
 tcstr = sprintf('temp_remote_cal (measured inlet %s [%s])', uo.calstr.temp_remote.pl.msg, uo.calstr.temp_remote.pl.(mcruise));
 scstr = sprintf('salinity_cal (measured %s [%s])', uo.calstr.salinity.pl.msg, uo.calstr.salinity.pl.(mcruise));
 hd = {

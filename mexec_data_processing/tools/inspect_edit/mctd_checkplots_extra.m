@@ -57,7 +57,7 @@
 % will produce plot 6 last and in the front figure window.
 %
 
-opt1 = 'ctd_proc'; opt2 = 'm_stn_string'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
 if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD data from station %s along with data from selected previous stations',stn_string);end
 
 msg1 = '\n Type number of previous stations to view, a list of at least two station numbers, or return to quit\n';
@@ -155,8 +155,8 @@ end
 cklist = cklist(:)'; % force to row
 
 saltype = 'psal';
-opt1 = mfilename; opt2 = 'plot_saltype'; get_cropt
-opt1 = 'ctd_proc'; opt2 = 'oxy_align'; get_cropt
+opt1 = mfilename; opt2 = 'plot_saltype'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'oxy_align'; run(MEXEC_G.opt_cruise)
 nox = size(oxyvars,1);
 
 for plotlist = cklist

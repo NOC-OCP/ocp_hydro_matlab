@@ -7,7 +7,7 @@ function varargout = load_uway_ascii(varargin)
 
 m_common
 mutv = mudefine;
-opt1 = 'uway_proc'; opt2 = 'scs_skip'; get_cropt 
+opt1 = 'uway_proc'; opt2 = 'scs_skip'; MEXEC_G.mcruise 
 mutv(ismember(mutv.nmeas_msg,skip),:) = [];
 
 if nargin>0
@@ -22,12 +22,12 @@ end
 %get the defined sentences
 nmeas = nmea_sentences; 
 %get special patterns (no $MSG in the file) as well as info on e.g. datimestamp columns
-opt1 = 'uway_proc'; opt2 = 'scs_nmea_form'; get_cropt 
+opt1 = 'uway_proc'; opt2 = 'scs_nmea_form'; MEXEC_G.mcruise 
 
 for tno = 8:9%1:length(mutv.scsfilepat)
 
     %will we subsample times before saving? e.g. gyro to 1 hz
-    opt1 = 'uway_proc'; opt2 = 'tstep_save'; get_cropt
+    opt1 = 'uway_proc'; opt2 = 'tstep_save'; MEXEC_G.mcruise
     numhead = 0;
 
     files = dir(fullfile(MEXEC_G.MDIRLIST.M_UWAY_RAW,mutv.scsfilepat{tno}));
@@ -70,7 +70,7 @@ for tno = 8:9%1:length(mutv.scsfilepat)
                 delim = ',';
             else
                 %custom message string; set delimiter and names in cruise options
-                opt1 = 'uway_proc'; opt2 = 'scs_nmea_custom'; get_cropt
+                opt1 = 'uway_proc'; opt2 = 'scs_nmea_custom'; MEXEC_G.mcruise
             end
         end
 
@@ -85,7 +85,7 @@ for tno = 8:9%1:length(mutv.scsfilepat)
                 [~,h,~] = fileparts(fin); h = h([6:13 15:20]);
             end
             if ~exist('default_navstream','var')
-                opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+                opt1 = 'uway_proc'; opt2 = 'datasys_best'; MEXEC_G.mcruise
                 ii = find(strcmp(mutv.mstarpre,default_navstream)); ii = ii(1);
                 [dn,~] = mload(fullfile(MEXEC_G.mexec_data_root,mutv.mstardir{ii},[mutv.mstarpre{ii} '_' mcruise '_all_raw.nc']),'/');
                 t0 = (datenum(h,'yyyymmddHHMMSS')-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1))*3600*24;
@@ -99,7 +99,7 @@ for tno = 8:9%1:length(mutv.scsfilepat)
         t.Properties.VariableUnits(1:length(vn)) = vu;
 
         %set up nuo to convert variables
-        opt1 = 'uway_proc'; opt2 = 'uway_ascii_parse'; get_cropt
+        opt1 = 'uway_proc'; opt2 = 'uway_ascii_parse'; MEXEC_G.mcruise
 
         if exist('ddays','var') && ~isempty(ddays)
             %only concerned with some ddays
@@ -131,7 +131,7 @@ for tno = 8:9%1:length(mutv.scsfilepat)
 
 end
 
-opt1 = 'uway_proc'; opt2 = 'uway_load_extra'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'uway_load_extra'; MEXEC_G.mcruise
 if nargout>0
     varargout{1} = ds;
     if nargout>1

@@ -14,7 +14,7 @@ function d = apply_cal_samfile(d, h, udstr, testcal, calstr)
 % returns d, same structure with calibrated fields (where indicated by
 %   testcal)
 %
-% calls m_common, get_cropt (ctd_proc, ctd_cals), and apply_calibrations
+% calls m_common, run(MEXEC_G.opt_cruise) (ctd_proc, ctd_cals), and apply_calibrations
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
@@ -35,7 +35,7 @@ for sno = stns(:)'
     stnlocal = sno;
     %get only the calibration functions we want to test here
     if cropt_cal
-        opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
+        opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; run(MEXEC_G.opt_cruise)
         if exist('co','var') && isfield(co,'calstr')
             calstr = co.calstr;
         else

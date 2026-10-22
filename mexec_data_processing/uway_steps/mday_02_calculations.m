@@ -214,7 +214,7 @@ elseif strcmp(stage, 'post')
             end
 
         case 'bathy'
-            opt1 = 'uway_proc'; opt2 = 'bathy_grid'; get_cropt
+            opt1 = 'uway_proc'; opt2 = 'bathy_grid'; run(MEXEC_G.opt_cruise)
             if exist('zbathy','var') && ~isempty(zbathy)
                 [dn, h] =  mloadq(fullfile(mgetdir(default_navstream),sprintf('bestnav_%s',mcruise)),'/');
                 %dn.time = m_commontime(dn, 'time', h, timestring); %already the same
@@ -294,7 +294,7 @@ elseif strcmp(stage, 'post')
                 warning('cond found but no temp to calculate psal in %s combined file',datatype)
             end
             %calibrate
-            opt1 = 'uway_proc'; opt2 = 'tsg_cals'; get_cropt
+            opt1 = 'uway_proc'; opt2 = 'tsg_cals'; run(MEXEC_G.opt_cruise)
             if isfield(uo, 'calstr') && sum(cell2mat(struct2cell(uo.docal)))
                 [dcal, hcal] = apply_calibrations(d, h, uo.calstr, uo.docal, 'q');
                 for no = 1:length(hcal.fldnam)

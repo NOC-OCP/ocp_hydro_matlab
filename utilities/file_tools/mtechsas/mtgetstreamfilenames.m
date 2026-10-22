@@ -22,7 +22,7 @@ m_common
 tstream = mtresolve_stream(instream);
 
 
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 files = dir(fullfile(uway_root, ['*' tstream]));
 
 if ~isempty(files)

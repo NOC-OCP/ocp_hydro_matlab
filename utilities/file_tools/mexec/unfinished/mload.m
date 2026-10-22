@@ -35,9 +35,9 @@ while endflag == 0
         if ~MEXEC_G.quiet
             m = 'All variables now loaded';
             fprintf(MEXEC_A.Mfidterm,'\n%s\n',m);
-    	end
+        end
         endflag = 1;
-        continue;
+        continue
     end % h.noflds vars have been loaded so we assume that's all of them. No point asking for more names
     m = sprintf('%s\n','Type variable names or numbers to load (0 or return to finish, ''/'' for all):');
     var = m_getinput(m,'s');

@@ -1,63 +1,45 @@
-% this script is called by get_cropt to set defaults for
-% parameters/variables used by multiple scripts (those used in only one
-% script are set in situ). it may call mexec_defaults_sbe,
-% mexec_defaults_uway to set some parameters for CTD and underway data.
-% get_cropt then calls opt_{cruise} to set cruise-specific parameters if
-% applicable. note opt_{cruise} may also call e.g. mexec_defaults_noc 
-% this script contains ship- or underway data system
-% specific parameters as well as generally applicable defaults (e.g. broad
-% acceptable range of atmospheric variables, default directory tree for
-% output data, etc.***)
-%
-% see get_cropt help
-%
-% options are specified by switch-case through two
-% variables:
-%     opt1 (usually the name of the calling script)
-%     opt2 (another string, which for ease of searching should be
-%         kept unique, not reused under different opt1s)
-
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
+% this file is not meant to be run directly, instead, lines below these
+% comments are added to the opt_cruise file (MEXEC_G.opt_cruise) by
+% create_opt_cruise, with placeholder_datatypes_* replaced by lines from 
+% mexec_defaults_*_* based on values of MEXEC_G.datatypes (set in m_setup)
 
 switch opt1
 
     case 'setup'
         switch opt2
-            case 'time_origin'
-                %no default, set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
+            case 'mstar'
+                %times in mstar files changed in 2024 to CF-compliant, and
+                %to using a constant base
+                %(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) for every file on a
+                %cruise
+                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024
+                    docf = 1; %units are cf-compliant and include the base, e.g. 'seconds since 2024-01-01 00:00:00'
+                else
+                    docf = 0; %time base is given by h.data_time_origin (e.g. [2024 1 1 0 0 0]) and often differs from file to file, units are just e.g. 'seconds'
+                end
             case 'm_stn_string'
-                %station naming convention
+                %CTD station/cast naming convention
                 if ~exist('stn', 'var')
-                    stn = input('type stn number '); 
+                    stn = input('type stn number ');
                 end
                 stn_string = sprintf('%03d',stn); %used for file names, default: 001, 002, etc.
                 stnlocal = stn;
         end
 
-    case 'mstar'
-                %things about mstar file format
-                if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024
-                    docf = 1; %cf-compliant time units
-                else
-                    docf = 0; %use seconds since h.data_time_origin, units called 'seconds'
-                end
-    
-    case 'shipuway'
-        mexec_defaults_shipuway
+    case 'adcp_proc'
+        placeholder_datatypes_sadcp
+        placeholder_datatypes_ladcp
 
     case 'ctd_proc'
-        if strcmp(MEXEC_G.datatypes.ctd,'sbe')
-            mexec_defaults_sbe %ctdvarsunits, rawedit_auto, raw_corrs
-        end
+        placeholder_datatypes_ctd
         switch opt2
             case 'ctdfiles'
-                helptext = sprintf('input .cnv file, set in opt_%s',mcruise);
-            case 'absentvars' 
-                helptext = sprintf('if necessary, set in opt_%s to create time variable (if missing) or add variables absent for only some stations as NaNs',mcruise);
-            case 'cast_split_comb'
-                %helptext = sprintf('if nec')
+                helptext = 'specify input .cnv file using stn_string';
             case 'ctd_raw_extra'
+                helptext = 'if necessary, set to create time variable (if missing) or add variables absent for only some stations as NaNs';
                 extrasource = {}; extravars = {};
+                append_stn_strings = {}; append_scan_offsets = [];
+                split_castnos_scans = [];
             case 'header_edits'
             case 'ctd_cals'
                 %remove any co.calstr; must be set by opt_{cruise}
@@ -70,8 +52,15 @@ switch opt1
                     co = rmfield(co,'calstr');
                 end
             case 'sensor_choice'
-                ts_choice = 1; %CTD1 is primary, temp1 will be copied to temp, etc.
-                o_choice = 1; %CTDO1 is primary, oxy1 will be copied to oxy, etc.
+                %we often have a pair of CT sensors (temp1, cond1 and
+                %temp2, cond2) and sometimes a pair of DO sensors
+                %(oxy1, oxy2); the preferred sensor (can vary by cast) will
+                %be copied to suffix-less temp, cond and oxy
+                %ts_choice and o_choice are not required to be the same,
+                %but it may be preferrable as temp1 will have been used to
+                %calculate oxy1 from volts, and temp2 to calculate oxy2
+                ts_choice = 1; %CTD1 is preferred; temp = temp1; cond = cond1
+                o_choice = 1; %CTD-DO1 is preferred; oxy = oxy1
             case '1hz_interp'
                 maxfill24 = 24;
                 maxfill1 = 1;
@@ -90,9 +79,9 @@ switch opt1
                     yl.cond = [2 4];
                 end
                 yl.cond1 = yl.cond; yl.cond2 = yl.cond;
-                yl.press = [-2 6000]; 
+                yl.press = [-2 6000];
                 yl.oxy = [100 400]; yl.oxy1 = yl.oxy; yl.oxy2 = yl.oxy;
-                yl.fluor = [0 8]; 
+                yl.fluor = [0 8];
                 yl.turbidity = [0 1]; yl.transmittance = [60 101]; yl.par = [0 200];
                 doed = 1; %always end mctd_raw_show_check by running mctd_rawedit (can turn this off in opt_cruise)
                 %ctd flags: 1 not calibrated, 2 acceptable, 3 questionable
@@ -123,56 +112,46 @@ switch opt1
             case 'fir_extra'
                 fir_extra = true; %do also add background gradient and variance, and density-matched downcast data, to fir_ (and sam_) file
         end
-    
-    case 'uway_proc'
+
+    case 'samp_proc'
         switch opt2
-                    case 'scs_skip'
-            skip = {'USBL'};
-        case 'scs_nmea_form'
-            colsi = {}; colsf = {};
-            untsi = {}; untsf = {};
-            colsi = {'date','time'};
-            untsi = {'mm/dd/yyyy','HH:MM:SS.SSS'};
-        case 'scs_nmea_custom'
-            inform = '';
-        case 'uway_ascii_parse'
-            if exist('inform','var') && ~isempty(inform) && ~strcmp(inform,'none')
-                t = ua_times_parse(t, MEXEC_G.data_time_origin_string, 'inform', inform);
-            elseif strcmp(inform,'none')
-                t.time = [1:length(t.lat)]'+t0; t.Properties.VariableUnits(end) = {'temporary invented seconds'};
-                t.dday = t.time/86400; t.Properties.VariableUnits(end) = {'temporary invented days'};
-            else
-                t = ua_times_parse(t, MEXEC_G.data_time_origin_string);
-            end
-            if sum(strcmp(t.Properties.VariableNames','msg')) && strcmp(t.msg(1),'$PSXN')
-                t = t(t.linetype==23,:);
-            end
-            m = strcmp(t.Properties.VariableNames,'nslatitude');
-            if sum(m)
-                if strcmp(t.Properties.VariableUnits(m),'cdegrees')
-                    t.lat = t.nslatitude/100;
-                else
-                    t.lat = t.nslatitude;
+            case 'files'
+                sopts.remove_empty_cols = 1;
+            case 'parse'
+                clear varmap
+                %keepothervars, varmap
+                addcomment = '';
+            case 'replcheck'
+                %threshold to use to check replicate agreement (set to 0 to
+                %skip checking that sample type)
+                checksam.chl = [1 2]; %compare by ratio, highlight differences over factor of 2
+                checksam.oxy = [2 0.01]; %compare by ratio, highlight differences over +/- 1%
+                checksam.nut = [2 0.05]; %compare by ratio, highlight differences over +/- 5%
+                checksam.sal = [0 1e-5]; %compare (salinometer reading) by difference, highlight differences over +/- 1e-5
+                checksam.co2 = [2 0.05]; %***confirm default
+                checksam.sbe35 = 0; %no threshold but if set to 1, check ascii file download quality (rarely necessary)
+            case 'flags'
+                ft = {'1 = sample drawn but analysis not received';
+                    '2 = acceptable';
+                    '3 = questionable';
+                    '4 = bad';
+                    '5 = not reported';
+                    '6 = mean of duplicates';
+                    '9 = sample not drawn'};
+                if ~MEXEC_G.quiet || (exist('helpmode','var') && helpmode)
+                    fprintf(1,'WOCE flags: \n%s', ft{:})
                 end
-                t.lat(strcmp(t.ns,'S')) = -t.lat(strcmp(t.ns,'S'));
-                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'lat')} = 'degrees N';
-            end
-            m = strcmp(t.Properties.VariableNames,'ewlongitude');
-            if sum(m)
-                if strcmp(t.Properties.VariableUnits(m),'cdegrees')
-                    t.lon = t.ewlongitude/100;
-                else
-                    t.lon = t.ewlongitude;
-                end
-                t.lon(strcmp(t.ew,'W')) = -t.lon(strcmp(t.ew,'W'));
-                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'lon')} = 'degrees E';
-            end
-            m = strcmp(t.Properties.VariableNames,'psxn_heave');
-            if sum(m)
-                t.heave = cellfun(@(x) str2double(x(1:end-3)), t.psxn_heave);
-                t.Properties.VariableUnits{strcmp(t.Properties.VariableNames,'heave')} = 'm';
-            end
-            case 'tstep_save'
+                %***these should be set using gui and editlogs and
+                %apply_edits, so record is all in one place. only niskin
+                %flags should be set in opt_cruise*** also data file
+                %metadata should list location/name pattern of editlogs
+                %files (when they exist/have been applied)
+        end
+
+    case 'uway_proc'
+        placeholder_datatypes_uway
+        switch opt2
+            case 'uway_raw_tstep_save'
                 %subsample high-frequency streams and match up different
                 %messages from the same system by rounding timestamp
                 %if your samples are coming in at a *regular* high
@@ -180,11 +159,44 @@ switch opt1
                 %subsample to (approximately) 1/tstep_force hz before
                 %saving
                 stepfreq_force = [];
-                %round time to nearest tstep_resol s before saving
-                tstep_resol = 1;
-            case 'time_problems'
-                fixtimes = 0; check_mono = 0; %assume no repeated or backwards times at edit stage
-            case 'sensor_unit_conversions'
+                %round time to nearest tstep_resol s before saving, to
+                %avoid precision-related duplicate time steps (lots of
+                %time steps that have data from A but not B, or B but not A) later
+                tstep_resol = 1; %this should be much shorter than the later averaging interval (e.g. 30 or 60 s)
+            case 'uway_raw_edit'
+                %assume no repeated or backwards times at edit stage
+                fixtimes = 0;
+                check_mono = 0;
+                %range limits by variable type should usually be
+                %conservative (wide) so as not to risk throwing out good
+                %points, or masking certain types of problems
+                r = {'head', [-0.1 360.1]; 'pitch', [-5 5]; 'roll', [-7 7];...
+                    'lon', [-181 181]; 'lat', [-91 91];...
+                    'airtemp', [-50 50]; 'humid', [0.1 110];...
+                    'rwindd', [-0.1 360.1]; 'twindd', [-0.1 360.1];...
+                    'rwinds', [-0.001 200]; 'twinds', [-0.001 200];...
+                    'airpres', [0.01 1500];...
+                    'ppar', [-10 1500]*1e6; 'ptir', [-10 1500]*1e6;...
+                    'spar', [-10 1500]*1e6; 'stir', [-10 1500]*1e6;...
+                    'sst', [-2 50]; 'temp', [-2 50];...
+                    'cond', [0 10]; 'trans', [0 105];...
+                    'dep', [20 1e4]; 'depsref', [20 1e4]; 'deptref', [20 1e4]};
+                %now match to actual variable names in the file being
+                %worked on
+                for no = 1:size(r,1)
+                    n = munderway_varname([r{no,1} 'var'], h.fldnam, 's');
+                    for nno = 1:length(n)
+                        uopts.rangelim.(n{nno}) = r{no,2};
+                    end
+                end
+                %despike bathymetry because it usually needs it
+                n = munderway_varname('depvar', h.fldnam, 's');
+                n = union(n, munderway_varname('depsrefvar', h.fldnam, 's'));
+                n = union(n, munderway_varname('deptrefvar', h.fldnam, 's'));
+                for nno = 1:length(n)
+                    uopts.despike.(n{nno}) = [10 5 3]; %m
+                end
+            case 'uway_sensor_unit_conversions'
                 so = struct(); %default: none, parameters are read from database in physical units
             case 'rawedit'
                 %lots of these (including ranges for many parameters), so
@@ -242,50 +254,6 @@ switch opt1
                     uo = rmfield(uo,'calstr'); %no default, must be set by opt_{cruise}
                     %see opt_sd025 for examples
                 end
-        end
-
-    case 'samp_proc'
-        switch opt2
-            case 'files'
-                sopts.remove_empty_cols = 1;
-            case 'parse'
-                clear varmap
-                %keepothervars, varmap
-                addcomment = '';
-            case 'replcheck'
-                %threshold to use to check replicate agreement (set to 0 to
-                %skip checking that sample type)
-                checksam.chl = [1 2]; %compare by ratio, highlight differences over factor of 2
-                checksam.oxy = [2 0.01]; %compare by ratio, highlight differences over +/- 1%
-                checksam.nut = [2 0.05]; %compare by ratio, highlight differences over +/- 5%
-                checksam.sal = [0 1e-5]; %compare (salinometer reading) by difference, highlight differences over +/- 1e-5
-                checksam.co2 = [2 0.05]; %***confirm default
-                checksam.sbe35 = 0; %no threshold but if set to 1, check ascii file download quality (rarely necessary)
-            case 'flags'
-                ft = {'1 = sample drawn but analysis not received';
-                    '2 = acceptable';
-                    '3 = questionable';
-                    '4 = bad';
-                    '5 = not reported';
-                    '6 = mean of duplicates';
-                    '9 = sample not drawn'};
-                if ~MEXEC_G.quiet || (exist('helpmode','var') && helpmode)
-                    fprintf(1,'WOCE flags: \n%s', ft{:})
-                end
-                %***these should be set using gui and editlogs and
-                %apply_edits, so record is all in one place. only niskin
-                %flags should be set in opt_cruise*** also data file
-                %metadata should list location/name pattern of editlogs
-                %files (when they exist/have been applied)
-        end
-
-    case 'adcp_proc'
-        %for vmadcp
-        min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
-        min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
-        min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
-        if strcmp(MEXEC_G.datatypes.ladcp,'ix')
-            mexec_defaults_ixladcp
         end
 
     case 'outputs'

@@ -38,7 +38,7 @@ else
         depth_source = {'ctd'};
     end
 end
-opt1 = 'ctd_proc'; opt2 = 'bestdeps'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'bestdeps'; run(MEXEC_G.opt_cruise)
 
 if ~iscell(depth_source)
     depth_source = {depth_source};

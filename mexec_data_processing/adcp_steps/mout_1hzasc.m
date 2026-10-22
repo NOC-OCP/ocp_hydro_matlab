@@ -8,7 +8,7 @@ function mout_1hzasc(stn)
 
 m_common
 
-opt1 = 'ctd_proc'; opt2 = 'm_stn_string'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
 if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s.02.asc\n',stn_string); end
 
 %%%%%%%%% write ctd data %%%%%%%%%
@@ -28,7 +28,7 @@ else
     dd.dnum = m_commontime(dd,'time',dh,'datenum');
     dv1 = datevec(dd.dnum(1)-1/24);
     dv2 = datevec(dd.dnum(end)+1/24);
-    opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+    opt1 = 'ship'; opt2 = 'datasys_best'; run(MEXEC_G.opt_cruise)
     switch MEXEC_G.Mshipdatasystem
         case 'rvdas'
             try
@@ -55,7 +55,7 @@ else
     dd.latitude = interp1(dn.dnum,dn.latitude,dd.dnum);
     dd.longitude = interp1(dn.dnum,dn.longitude,dd.dnum);
 end
-opt1 = 'mstar'; get_cropt
+opt1 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf
     [~,to] = timeunits_mstar_cf(dh.fldunt{strcmp('time',dh.fldnam)});
     y0 = to(1);
@@ -67,7 +67,7 @@ dd.yearday = m_commontime(dd,'time',dh,sprintf('days since %d 1 1 0 0 0',y0));
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
 cfg.stnstr = stn_string;
-opt1 = 'adcp_proc'; get_cropt
+opt1 = 'adcp_proc'; run(MEXEC_G.opt_cruise)
 fid = fopen(cfg.f.ctd,'w'); mfixperms(cfg.f.ctd);
 %fprintf(fid,'%s\n',ctdh);
 for kl = 1:length(kok)

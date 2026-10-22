@@ -30,14 +30,14 @@ var_copycell = mcvars_list(2); %which variables to copy from 24hz CTD file
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
 %load and average data
-opt1 = 'ctd_proc'; opt2 = 'fir_fill'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'fir_fill'; run(MEXEC_G.opt_cruise)
 [dfir, hfir] = mload(f,'scan',' ');
 [dc, hc] = mload(file1, var_copystr);
 dc = grid_profile(dc, 'scan', dfir.scan, firmethod, firopts);
 
 %this will go into sam_all file, so use cruise time origin, not cast time origin
 to = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
-opt1 = 'mstar'; get_cropt
+opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 [dc.time,tun] = m_commontime(dc,'time',hc,to);
 if docf
     hc.fldunt{strncmp(hc.fldnam,'time',4)} = tun;
@@ -64,7 +64,7 @@ hnew.comment = hc.comment;
 MEXEC_A.Mprog = mfilename;
 mfsave(f, dnew, hnew, '-addvars');
 
-opt1 = 'ctd_proc'; opt2 = 'fir_extra'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'fir_extra'; run(MEXEC_G.opt_cruise)
 if fir_extra
     if MEXEC_G.quiet<=1; fprintf(1,'adds bottle stop background gradient, standard deviation, and gamma_n-matched downcast data to fir_%s_%s.nc\n', mcruise, stn_string); end
 

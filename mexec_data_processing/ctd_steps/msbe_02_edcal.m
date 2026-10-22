@@ -27,7 +27,7 @@ function msbe_02_edcal(stn)
 %%%%% setup %%%%%
 
 m_common; MEXEC_A.mprog = mfilename;
-if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hysteresis), as set in get_cropt and opt_%s\n',mcruise); end
+if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hysteresis), as set in run(MEXEC_G.opt_cruise) and opt_%s\n',mcruise); end
 
 % input and output files
 pd = mexec_file_locations('procfiles','ctd');
@@ -51,9 +51,9 @@ doneco.celltm = contains(h.comment, '# celltm_date');
 
 
 % what corrections, edits, and calibrations will we do
-opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
-opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; get_cropt
-opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; run(MEXEC_G.opt_cruise)
 
 
 %%%% edit out bad points
@@ -94,7 +94,7 @@ h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldser
 
 %pressure offset (deck pressure)
 if co.dpoff_calc
-    iid = 1:60*24;
+    iid = 1:60*24; %***
     if max(d.press(iid))>0.3 %&& checked = [6 1]; ~checked(checked(:,1)==stnlocal)
         keyboard
     else
@@ -232,7 +232,7 @@ end
 
 
 %%%%% check and warn
-opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'cast_divide'; run(MEXEC_G.opt_cruise)
 if exist(dfile,'file')
     [ddc,~] = mload(dfile,'/');
     m = d.scan>=ddc.scan_start & d.scan<=ddc.scan_end;

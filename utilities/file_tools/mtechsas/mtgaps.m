@@ -70,7 +70,7 @@ kount = 0;
 m = ['loading variable ' 'time'];
 if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
 
-scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+scriptname = 'ship'; oopt = 'datasys_best'; MEXEC_G.mcruise
 for kf = 1:nf
     fn = fnames{kf};
     fullfn = fullfile(uway_root, fn);

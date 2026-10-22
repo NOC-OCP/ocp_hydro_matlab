@@ -19,7 +19,7 @@ function tstreams = mtgetstreams
 %
 m_common
 
-scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+scriptname = 'ship'; oopt = 'datasys_best'; MEXEC_G.mcruise
 files = dir(fullfile(uway_root,'*.*'));
 fnames = {d.name};
 fnames = fnames(cellfun('length',fnames)>16); %just in case there are other files

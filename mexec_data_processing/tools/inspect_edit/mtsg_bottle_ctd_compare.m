@@ -21,7 +21,7 @@ function mtsg_bottle_ctd_compare(varargin)
 
 
 m_common
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING; % cruise name (from MEXEC_G global)
+mcruise = MEXEC_G.mcruise; % cruise name (from MEXEC_G global)
 
 v = {3, 0, 1, 1, ''};
 v(1:nargin) = varargin(1:nargin);
@@ -292,7 +292,7 @@ function tbreak = find_cleaning(dt, temph)
 % set breakpoints for fitting/smoothed differences any time tsg was not
 % running (tbreaks) to allow for cleaning
 tbreak = [];
-opt1 = 'uway_proc'; opt2 = 'tsg_ddaybreaks'; get_cropt; %maybe cleaning times were recorded!***how to use
+opt1 = 'uway_proc'; opt2 = 'tsg_ddaybreaks'; run(MEXEC_G.opt_cruise); %maybe cleaning times were recorded!***how to use
 %check and look for more
 dgood = dt.dday(~isnan(dt.(temph)));
 d = diff(dgood);
@@ -383,7 +383,7 @@ sdiff = db.(cvar) - db.(uvar);
 end
 sc1 = 0.5; %absolute difference relative to median -- bad flag of 3, excluded from smoothing
 sc2 = 0.02; %absolute difference relative to first-pass smoothed -- exclude from second pass
-opt1 = 'uway_proc'; opt2 = 'tsg_sdiff'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'tsg_sdiff'; run(MEXEC_G.opt_cruise)
 
 % List and discard possible major outliers
 sdiff_test = sdiff; id0 = find(flags==4);
@@ -482,16 +482,16 @@ for kseg = 1:nseg
         cs.smd_all = sdf;
     else
         cs.smd(ksens) = sdf;
-    %compute median of smoothed segment
-    cs.msmdseg(ksens) = median(sdf);
-    %map back to bottle points and compute trend
-    s = interp1(dt.dday(ksens),sdf,db.dday(kbottle));
-    mb = isnan(s);
-    s(mb) = interp1(find(~mb),s(~mb),find(mb),'nearest','extrap');
-    %compute trend coefficients of segment
-    cs.csmdseg(:,kseg) = regress(s,[ones(length(kbottle),1) db.dday(kbottle)]);
-    %and trend series for segment
-    cs.trsmdseg(ksens) = [ones(length(ksens),1) dt.dday(ksens)]*cs.csmdseg(:,kseg);
+        %compute median of smoothed segment
+        cs.msmdseg(ksens) = median(sdf);
+        %map back to bottle points and compute trend
+        s = interp1(dt.dday(ksens),sdf,db.dday(kbottle));
+        mb = isnan(s);
+        s(mb) = interp1(find(~mb),s(~mb),find(mb),'nearest','extrap');
+        %compute trend coefficients of segment
+        cs.csmdseg(:,kseg) = regress(s,[ones(length(kbottle),1) db.dday(kbottle)]);
+        %and trend series for segment
+        cs.trsmdseg(ksens) = [ones(length(ksens),1) dt.dday(ksens)]*cs.csmdseg(:,kseg);
     end
 
 end

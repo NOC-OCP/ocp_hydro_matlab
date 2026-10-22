@@ -47,7 +47,7 @@ for no = 1:length(names)
         names{no} = namesnew{no};
     end
     if strcmp(names{no},'time')
-        %opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+        %opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
         %data.(names{no}) = 86400*(data.(names{no}) + uway_torg - datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN));
         %vunits{no} = 'seconds';
         [data.(names{no}),vunits{no}] = m_commontime(data.(names{no}),'datenum',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
@@ -57,7 +57,7 @@ units = vunits;
 data = orderfields(data,names);
 
 %subsample to 1 hz (if indicated) or remove repeated times
-opt1 = 'uway_proc'; opt2 = '1hz_max'; get_cropt
+opt1 = 'uway_proc'; opt2 = '1hz_max'; MEXEC_G.mcruise
 if save_1hz_uway && isempty(tstep_force)
     dt = diff(data.time); dt = dt(dt>0); 
     dt = mode(dt);
@@ -88,7 +88,7 @@ for kl = 1:length(names)
 end
 hnew.fldnam = hnew.fldnam(m); hnew.fldunt = hnew.fldunt(m);
 
-opt1 = 'mstar'; get_cropt
+opt1 = 'mstar'; MEXEC_G.mcruise
 if docf
     hnew.data_time_origin = [];
 else

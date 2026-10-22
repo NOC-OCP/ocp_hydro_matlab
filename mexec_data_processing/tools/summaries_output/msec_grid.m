@@ -41,7 +41,7 @@ else
     clear kstns
 end
 sam_gridlist = {'botoxy'};
-opt1 = 'outputs'; opt2 = 'grid'; get_cropt     
+opt1 = 'outputs'; opt2 = 'grid'; run(MEXEC_G.opt_cruise)     
 
 if ~isfield(mgrid,'zpressgrid') || isempty(mgrid.zpressgrid) %find defaults by section
     switch section
@@ -98,7 +98,7 @@ else
     end
     cdata.lat = nan(1,length(kstns)); cdata.lon = cdata.lat; 
     for kstn = 1:length(kstns)
-        stn = kstns(kstn); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+        stn = kstns(kstn); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
         if strcmp(section,'quick')
             cfile = sprintf(pd.ctd10s,stn_string);
         else

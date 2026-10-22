@@ -3,7 +3,8 @@ function msbe_03_derive_tbin(stn)
 %
 % input: _24hz
 %
-%   copy data from sensors chosen in opt_cruise to temp, cond, and oxygen; 
+%   copy data from preferred temp, cond, oxygen sensor, chosen in 
+%   opt_cruise, to temp, cond, and oxygen (no 1/2 suffix); 
 %   calculate psal, asal, potemp using GSW;
 %   average to 1 hz and 0.1 hz and fill gaps as set in opt_cruise
 %
@@ -108,7 +109,7 @@ hnew = keep_hvatts(hnew, h);
 hnew.comment = h.comment;
 
 %average to 1hz, output to _1hz file
-opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt
+opt1 = 'ctd_proc'; opt2 = '1hz_interp'; run(MEXEC_G.opt_cruise)
 tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew.time,1)>1; tg = tg'; end
 dnew0 = dnew;

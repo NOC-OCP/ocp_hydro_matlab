@@ -23,7 +23,7 @@ else
     [d1, ~] = mloadq(file1,'time','scan','press',' ');
 end
 
-opt1 = 'ctd_proc'; opt2 = 'cast_divide'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'cast_divide'; run(MEXEC_G.opt_cruise)
 
 kstart = []; kbot = []; kend = []; 
 if exist(m_add_nc(dfile),'file')
@@ -111,7 +111,7 @@ d24 = mloadq(sprintf(pd.ctd24,stn_string),'scan',' ');
 varnames = fieldnames(ds)';
 varunits = repmat({'number'},size(varnames));
 istime = strncmp('time', varnames, 4);
-opt1 = 'mstar'; get_cropt
+opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf
     varunits(istime) = h1.fldunt(strcmp('time',h1.fldnam));
     hnew.data_time_origin = [];

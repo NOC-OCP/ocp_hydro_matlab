@@ -19,7 +19,7 @@ for stno = 1:length(samtypes)
     varmap.statnum = {'ctd_number'};
     varmap.position = {'niskin'};
     fnin = {};
-    opt1 = 'outputs'; opt2 = 'sam_shore'; get_cropt
+    opt1 = 'outputs'; opt2 = 'sam_shore'; run(MEXEC_G.opt_cruise)
 
     %load existing sam data, so we can apply Niskin flags and also check we're
     %not overwriting data that has been filled in
@@ -44,7 +44,7 @@ for stno = 1:length(samtypes)
         if fillstat
             st = fill_samdata_statnum(st, varsta);
         end
-        opt1 = 'outputs'; opt2 = 'sam_shore_editlog'; get_cropt %place to combine columns
+        opt1 = 'outputs'; opt2 = 'sam_shore_editlog'; run(MEXEC_G.opt_cruise) %place to combine columns
         %assume we don't need to know about replicates as there will always be
         %a first sample***
         [~,ii] = unique(st.sampnum,'stable');

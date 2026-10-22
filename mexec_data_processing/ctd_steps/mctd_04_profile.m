@@ -17,7 +17,7 @@ function mctd_04_profile(stn)
 %     mloadq
 %     grid_profile
 %     mfsave
-% and via get_cropt:
+% and via run(MEXEC_G.opt_cruise):
 %     setdef_cropt_cast (ctd_proc and mctd_04 cases)
 
 m_common; 
@@ -62,7 +62,7 @@ end
 [var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
 
 %use oxy_end to NaN that many seconds before dcs scan_start
-opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
 if co.oxy_align>0
     oe = d.scan>=dd.scan_end-24*co.oxy_align;
     oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
@@ -104,7 +104,7 @@ if isdown
     doloopedit = 0;
     ptol = 0.08; %default is not to apply, but this would be the default value if you did
     spdtol = 0.24; %default value from SBE program
-    opt1 = 'ctd_proc'; opt2 = 'doloopedit'; get_cropt
+    opt1 = 'ctd_proc'; opt2 = 'doloopedit'; run(MEXEC_G.opt_cruise)
     if doloopedit
         vars_other = setdiff(var_copycell, {'press'});
         disp(['applying loopediting for ' otfile1d])
@@ -129,7 +129,7 @@ pg = [0:2:1e4]';
 g2opts.int = [-1 1]; %interval for bins
 g2opts.grid_ends = [0 0]; %discard empty bins
 g2opts.bin_partial = 0; %only use bins with data in both halves
-opt1 = 'ctd_proc'; opt2 = 'interp2db'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'interp2db'; run(MEXEC_G.opt_cruise)
 if isdown
     dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
     if sum(~isnan(dn2.press))<minbins

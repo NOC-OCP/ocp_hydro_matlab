@@ -24,9 +24,6 @@ function status = mout_columns(intype, outtype, varargin)
 % params: optional structure (defaults set by mout_columns_defaults.m): 
 %
 %   fields used for any intype and outtype: 
-%     ddir: directory where input data files are found
-%        e.g. /data/pstar/cruise/data/ctd or for underway,
-%        /data/pstar/cruise/data 
 %     outdir: directory for output file(s)
 %        e.g. /data/pstar/cruise/data/collected_files
 %     stnlist: list of stations to include
@@ -148,7 +145,7 @@ while kloop<=length(params.stnlist)
     else
         params.stn_string = '';
     end
-    outfile = sprintf('%s%s%s.csv',params.csvpre,params.stn_string,params.csvpost);
+    outfile = fullfile(params.outdir,sprintf('%s%s%s.csv',params.csvpre,params.stn_string,params.csvpost));
     if exist(outfile, 'file')
         delete(outfile);
         fid = fopen(outfile,'w');

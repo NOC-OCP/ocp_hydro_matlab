@@ -305,7 +305,7 @@ for no = 1:length(stns_examine)
     du = rmfield(du,hu.fldnam(m));
     hu.fldnam(m) = []; hu.fldunt(m) = []; hu.fldserial(m) = [];
     if co_cal
-        opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
+        opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; run(MEXEC_G.opt_cruise)
         if exist('co','var') && isfield(co,'calstr')
             calstr = co.calstr;
         else

@@ -57,8 +57,8 @@ if ismember('ladcp',types)
 
         % configuration defaults and cruise-specific options
         cfg = cfg0;
-        opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
-        pd = mexec_file_locations('procfiles','ctd');
+        opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
+        pd = mexec_file_locations('procfiles','ladcp');
         cfg.stnstr = stn_string;
         cfg.p.cruise_id = mcruise;
         cfg.p.ladcp_station = stnlocal;
@@ -71,9 +71,9 @@ if ismember('ladcp',types)
             cfg.p.btrk_mode = 2;
             %cfg.p.btrk_ts = 30;
         end
-        opt1 = 'adcp_proc'; get_cropt %cfg and set pattern for down- and up-looker files
-        infiled = fullfile(cfg.rawdir,cfg.dnpat);
-        infileu = fullfile(cfg.rawdir,cfg.uppat);
+        opt1 = 'adcp_proc'; opt2 = 'ladcp_cfg'; run(MEXEC_G.opt_cruise) %cfg and set pattern for down- and up-looker files
+        infiled = sprintf(pd.ladcpraw,cfg.dnpat);
+        infileu = sprintf(pd.ladcpraw,cfg.uppat);
         %stn = stnlocal;
         % first sync (if lad_syncscript found) -- just once per call
         if dosync; system(['bash ' css]); dosync = 0; end
@@ -101,8 +101,6 @@ if ismember('ladcp',types)
         end
         if ~isfield(cfg.f,'sadcp') || ~exist(cfg.f.sadcp,'file')
             cfg.constraints = setdiff(cfg.constraints,'SADCP');
-        else
-            cfg.SADCP_inst = SADCP_inst;
         end
 
         %first run with downlooking
@@ -140,11 +138,10 @@ if ismember('ladcp',types)
         if ladcp_incr
             %now run with one less
             cfg.constraints(end) = [];
-            if isfield(cfg,'SADCP_inst') && ~sum(ismember(cfg.constraints,'SADCP'))
-                cfg = rmfield(cfg,'SADCP_inst');
-                cfg.f = rmfield(cfg.f,'sadcp');
-            end
             while ~isempty(cfg.constraints)
+                if isfield(cfg.f,'sadcp') && ~sum(ismember(cfg.constraints,'SADCP'))
+                    cfg.f = rmfield(cfg.f,'sadcp');
+                end
                 process_cast_cfgstr(stn, cfg); lpause(cfg,ladcp_pause)
                 cfg.constraints(end) = [];
             end

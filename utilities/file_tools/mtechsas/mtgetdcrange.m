@@ -6,7 +6,7 @@ function [dc1 dc2 timem] = mtgetdcrange(techsasfn,dn1,dn2)
 
 m_common
 
-scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+scriptname = 'ship'; oopt = 'datasys_best'; MEXEC_G.mcruise
 fullfn = fullfile(uway_root, techsasfn);
 
 dns = sort([dn1 dn2]); % just in case user reverses order

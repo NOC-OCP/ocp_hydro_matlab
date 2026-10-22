@@ -3,7 +3,7 @@ function [d, h] = copy_sensor(d, h, stn)
 m_common
 
 %identify preferred sensors for (T,C) and O on this station
-opt1 = 'ctd_proc'; opt2 = 'sensor_choice'; get_cropt 
+opt1 = 'ctd_proc'; opt2 = 'sensor_choice'; run(MEXEC_G.opt_cruise) 
 if o_choice == 2 && ~sum(strcmp('oxy2', h.fldnam))
    error(['no oxy2 found; edit opt_' mcruise ' ctd_proc, sensor_choice and try again'])
 end

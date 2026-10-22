@@ -1,31 +1,50 @@
-% help mode (when help_cropt set to 1) can be called three ways:
+function display_options(helpMode, varargin)
 %
-% 1) with empty opt1 and opt2, e.g.
-%     >> help_cropt = 1; opt1 = ''; opt2 = ''; get_cropt
-%       displays the full list of opt1s and opt2s in setdef_cropt
+% print to screen information about cruise options, depending on input
+% argument(s): 
+%   display_options('help') displays all the help text (comments) from
+%     mexec_defaults_* 
+%   display_options('help', opt1) displays only that corresponding to opt1
+%   display_options('help', opt1, opt2) displays only that corresponding to
+%     (opt1, opt2)
+%
+%   display_options('where', opt1) displays the list of
+%   scripts/functions that call the cruise options file with opt1
+%   display_options('where', opt1, opt2) displays the list of
+%   scripts/functions that call the cruise options file with (opt1, opt2)
+%
+%   display_options('calls') displays all calls to the cruise options
+%     script in any scripts/functions within mexec_data_processing
+%   display_options('calls', filename) displays all calls to the cruise
+%     options script in [filename '.m'] 
+%   
+%   display_options('examples', opt1, opt2) displays the code corresponding
+%   to (opt1, opt2) in each (past or present) cruise options script in
+%   mexec_data_processing/options/cruise_options/
+%
 %
 % 2) with opt1 but empty opt2, e.g.
-%     >> help_cropt = 1; opt1 = 'mctd_02b'; opt2 = ''; get_cropt
+%     >> help_cropt = 1; opt1 = 'mctd_02b'; opt2 = ''; run(MEXEC_G.opt_cruise)
 %       displays the list of (opt1, opt2) pairs in mctd_02b.m:
-%         opt1 = mfilename; opt2 = 'raw_corrs'; get_cropt
-%         opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
-%         opt1 = mfilename; opt2 = 'oxyrev'; get_cropt
-%         opt1 = mfilename; opt2 = 'oxyrev'; get_cropt
-%         opt1 = mfilename; opt2 = 'oxyhyst'; get_cropt
-%         opt1 = mfilename; opt2 = 'oxyhyst'; get_cropt
-%         opt1 = mfilename; opt2 = 'turbVpars'; get_cropt
+%         opt1 = mfilename; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
+%         opt1 = 'castpars'; opt2 = 'oxyvars'; run(MEXEC_G.opt_cruise)
+%         opt1 = mfilename; opt2 = 'oxyrev'; run(MEXEC_G.opt_cruise)
+%         opt1 = mfilename; opt2 = 'oxyrev'; run(MEXEC_G.opt_cruise)
+%         opt1 = mfilename; opt2 = 'oxyhyst'; run(MEXEC_G.opt_cruise)
+%         opt1 = mfilename; opt2 = 'oxyhyst'; run(MEXEC_G.opt_cruise)
+%         opt1 = mfilename; opt2 = 'turbVpars'; run(MEXEC_G.opt_cruise)
 %       (mfilename gives the name of the current script, so in this example
 %       is equivalent to opt1 = 'mctd_02b')
-%     >> help_cropt = 1; opt1 = 'castpars'; opt2 = ''; get_cropt
+%     >> help_cropt = 1; opt1 = 'castpars'; opt2 = ''; run(MEXEC_G.opt_cruise)
 %       (because there is no castpars.m) displays the list of scripts calling
-%       get_cropt with opt1 = 'castpars', along with the opt2s used:
-%         mbot_00.m:opt1 = 'castpars'; opt2 = 'nnisk'; get_cropt
-%         mctd_02b.m:opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt
-%         mctd_checkplots.m:opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt; nox = size(oxyvars,1);
-%         mctd_rawshow.m:opt1 = 'castpars'; opt2 = 'oxyvars'; get_cropt; nox = size(oxyvars,1);
+%       run(MEXEC_G.opt_cruise) with opt1 = 'castpars', along with the opt2s used:
+%         mbot_00.m:opt1 = 'castpars'; opt2 = 'nnisk'; run(MEXEC_G.opt_cruise)
+%         mctd_02b.m:opt1 = 'castpars'; opt2 = 'oxyvars'; run(MEXEC_G.opt_cruise)
+%         mctd_checkplots.m:opt1 = 'castpars'; opt2 = 'oxyvars'; run(MEXEC_G.opt_cruise); nox = size(oxyvars,1);
+%         mctd_rawshow.m:opt1 = 'castpars'; opt2 = 'oxyvars'; run(MEXEC_G.opt_cruise); nox = size(oxyvars,1);
 %
 % 3) with opt1 and opt2, e.g.
-%     >> help_cropt = 1; opt1 = 'mctd_03'; opt2 = 's_choice'; get_cropt
+%     >> help_cropt = 1; opt1 = 'mctd_03'; opt2 = 's_choice'; run(MEXEC_G.opt_cruise)
 %       displays the corresponding help message from this case of setdef_cropt:
 %         's_choice (default 1) sets the primary sensor for temperature and conductivity; '
 %         'stns_alternate_s (default []) lists stations on which to use the other one. if there is '
@@ -33,7 +52,7 @@
 
 
 if ~isunix
-    clear help_cropt
+    clear helpMode
     error('help mode uses grep and does not currently work on windows')
 
 elseif ~exist('opt1','var') || isempty(opt1)
@@ -45,7 +64,7 @@ elseif ~exist('opt1','var') || isempty(opt1)
         [st, slist] = system('grep case cruise_options/setdef_cropt_*.m | grep -v switch');
         cd(dc);
         more on
-        disp('these are the opt1 and opt2 (the latter indented) with settings under get_cropt')
+        disp('these are the opt1 and opt2 (the latter indented) with settings under run(MEXEC_G.opt_cruise)')
         disp(slist)
         more off
     catch me
@@ -57,12 +76,12 @@ elseif ~exist('opt2', 'var') || isempty(opt2)
     %called to get list of options for specific opt1
     f = which(opt1); %***
 
-    if ~isempty(f) %show calls to get_cropt in m-file opt1.m
+    if ~isempty(f) %show calls to run(MEXEC_G.opt_cruise) in m-file opt1.m
         [st, olist] = unix(['grep cropt ' f ]);
-        disp(['calls to get_cropt in ' opt1 '.m:'])
+        disp(['calls to run(MEXEC_G.opt_cruise) in ' opt1 '.m:'])
         disp(olist)
 
-    else %show calls to get_cropt with opt1 in all m-files in mexec_processing_scripts and subdirectories
+    else %show calls to run(MEXEC_G.opt_cruise) with opt1 in all m-files in mexec_processing_scripts and subdirectories
         dm = which('m_setup'); dm = dm(1:end-9);
         dc = pwd;
         try
@@ -71,7 +90,7 @@ elseif ~exist('opt2', 'var') || isempty(opt2)
             [~, slist2] = unix(['grep ' opt1 ' */*.m | grep opt2 | grep -v cruise_options']);
             [~, slist3] = unix(['grep ' opt1 ' */*/*.m | grep opt2 | grep -v cruise_options']);
             cd(dc);
-            disp(['mexec_processing_scripts that call get_cropt with opt1 = ''' opt1 ''':'])
+            disp(['mexec_processing_scripts that call run(MEXEC_G.opt_cruise) with opt1 = ''' opt1 ''':'])
             more on
             disp(slist1); disp(slist2); disp(slist3)
             more off
@@ -111,8 +130,6 @@ else %called to get help message for specific opt1, opt2 pair
     end
 
 end
-
-clear help_cropt %don't want this to persist
 
 %********************
 

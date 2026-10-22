@@ -75,7 +75,7 @@ end
 dc1 = nan+ones(nf,1); dc2 = dc1; totdc = 0;
 m = 'Counting data cycles';
 if ~MEXEC_G.quiet; fprintf(MEXEC_A.Mfidterm,'%s\n',m); end
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 
 for kf = 1:nf
     fn = fnames{kf};

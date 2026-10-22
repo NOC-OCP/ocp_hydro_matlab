@@ -20,7 +20,7 @@ gvars = {}; %by default grid all other variables
 %define input and output files
 switch datatype
     case 'nav'
-        opt1 = 'uway_proc'; opt2 = 'datasys_best'; get_cropt
+        opt1 = 'uway_proc'; opt2 = 'datasys_best'; run(MEXEC_G.opt_cruise)
         source = {'position'; 'heading'; 'attitude'};
         streams = {default_navstream; default_hedstream; default_attstream};
         required = [1 1 0];
@@ -45,7 +45,7 @@ switch datatype
         tavp_s = 60; % 1 min
         gmethod = 'meannum';
     case 'atmos'
-        opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+        opt1 = 'ship'; opt2 = 'datasys_best'; run(MEXEC_G.opt_cruise)
         source = {'surfmet'; 'windsonic'; 'position'};
         streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'};
         required = [0 1 1];
@@ -55,7 +55,7 @@ switch datatype
 end
 pd = mexec_file_locations('procfiles','sumout');
 otfile = fullfile(pd.collected,otfile);
-opt1 = 'uway_proc'; opt2 = 'merge_av'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'merge_av'; run(MEXEC_G.opt_cruise)
 
 %***check for multiple streams from same inst? not important at this
 %stage, all will be in corresponding mstar file
@@ -73,7 +73,7 @@ filepre = unique(filepre,'stable');
 if regrid
 
     %gridding parameters
-    opt1 = 'uway_proc'; opt2 = 'uway_av'; get_cropt
+    opt1 = 'uway_proc'; opt2 = 'uway_av'; run(MEXEC_G.opt_cruise)
     %grid in seconds
     tavp_s = round(tavp_s);
     tg = [round(ddays(1)*86400-tavp_s/2):round(tavp_s):round(ddays(end)*86400+1+tavp_s/2)]';
@@ -144,7 +144,7 @@ end
 [dg, hg] = mload(otfile,'/');
 
 %edit
-opt1 = 'uway_proc'; opt2 = 'avedit'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'avedit'; run(MEXEC_G.opt_cruise)
 %apply previous manually selected edits
 btol = (tavp_s/2)/86400;
 edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);

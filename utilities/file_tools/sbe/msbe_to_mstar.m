@@ -4,7 +4,7 @@ function varargout = msbe_to_mstar(varargin)
 % [d, h, ncfile] = msbe_to_mstar(varargin)
 % [d, h] = msbe_to_mstar(varargin)
 %
-% load sbe ctd file into mstar file (ncfile)
+% load sbe ctd (.cnv) or .bl/.btl/.ros file into mstar file (ncfile)
 % and/or into mstar-format data (d) and header (h) structures
 
 m_common
@@ -90,7 +90,7 @@ head(index) = [];
 % ** Station:
 % ** Latitude:
 % ** Longitude:
-h.platform_type = 'ship'; % maybe a safe assumption ?'
+h.platform_type = MEXEC_G.PLATFORM_TYPE; % maybe a safe assumption ?
 
 index = strncmp('** Ship',head,7);
 if sum(index)
@@ -263,7 +263,7 @@ h.instrument_identifier = 'ctd';
 h.dataname = 'sbe_ctd_rawdata';
 
 
-opt1 = 'mstar'; get_cropt %use cf-compliant units or not?
+opt1 = 'mstar'; MEXEC_G.mcruise %use cf-compliant units or not?
 if savefile
     
     %get mstar filename and check it is not open
@@ -288,7 +288,7 @@ if savefile
     end
 
 else
-    h.fldnam = {}; h.fldunt = {}; h.fldser = {}; h.longname = {};
+    h.fldnam = {}; h.fldunt = {}; h.fldserial = {}; h.longname = {};
     clear d %unnecessary? but acts as marker
 end
 h.comment = [];
@@ -310,7 +310,7 @@ end
 % separate names and units where necessary, rename to standard variable
 % names, and add list of renamed variables and list of discarded variables
 % to comment
-opt1 = 'ctd_proc'; opt2 = 'ctdvarsunits'; get_cropt
+[nu, ut, nn] = mcvars_rephrase('ctd_sbe');
 names_new = varname; 
 for no = 1:size(nu,1)
     m = cellfun(@(x) contains(x,nu{no,1}), varname);
@@ -323,48 +323,21 @@ for no = 1:size(ut,1)
 end
 [~,ia,ib] = intersect(nn(:,1),names_new,'stable');
 disc = varname(setdiff(1:length(names_new),ib));
-comment = ['not saving variables ' sprintf('%s, ',disc{:})]; comment(end-1) = [];
+comment = ['not saving variables: ' sprintf('%s, ',disc{:})]; comment(end-1) = [];
 names_new = names_new(ib); varname = varname(ib);
 varunits = varunits(ib); varname_long = varname_long(ib);
 data1 = data1(ib,:);
 names_new = nn(ia,2)';
-m = strcmp(varname,names_new);
+m = ~strcmp(varname,names_new);
 if sum(m)
-    vr = cellfun(@(x,y) sprintf('%s (%s),',x,y),varname(m),names_new(m),'UniformOutput',false);
-    comment = [comment '\nrenamed ' sprintf('renamed %s ',vr{:})]; comment(end-1) = [];
+    vr = cellfun(@(x,y) sprintf('%s to %s,',x,y),varname(m),names_new(m),'UniformOutput',false);
+    comment = [comment '\n' sprintf('renamed %s ',vr{:})]; comment(end-1) = [];
 end
 varname = names_new;
 h.comment = [h.comment comment];
 
 %parse sensor serial numbers from header
-st = {'#     <TemperatureSensor', 'temp1', 'temp2';
-    '#     <ConductivitySensor', 'cond1', 'cond2'
-    '#     <OxygenSensor', 'oxy1', 'oxy2'
-    '#     <PressureSensor', 'press', 'junk'
-    '#     <PAR_Biospherical', 'par', 'junk'
-    '#     <Fluoro', 'fluor', 'junk'
-    '#     <Turbidity', 'turbidity', 'junk'
-    '#     <Altimeter', 'altimeter', 'junk'
-    '#     <WET_LabsCStar', 'transmissivity', 'junk'
-    '#     <SPAR_Sensor', 'spar', 'junk'    
-    };
-opt1 = 'ctd_proc'; opt2 = 'track_serials'; get_cropt
-sns = {};
-for sno = 1:length(st)
-    ii = find(strncmp(st{sno,1},head,length(st{sno,1})));
-    if ~isempty(ii)
-        sn = cellfun(@(x) x(findstr('<SerialNumber>',x)+14:findstr('</Serial',x)-1),head(ii+1),'UniformOutput',false);
-        %sn = regexprep(sn,'[^a-zA-Z0-9]','_');
-        %later will need use numeric values so remove characters and
-        %leading 0s
-        sns = [sns; [st(sno,2) regexprep(sn(1), '[^0-9]', '')]];
-        if length(sn)>1
-            sns = [sns; [st(sno,3) regexprep(sn(2), '[^0-9]', '')]];
-        end
-        sns(:,2) = cellfun(@(x) num2str(str2num(x)), sns(:,2), 'UniformOutput', false);
-    end
-end
-sns(cellfun('isempty',sns(:,2)),:) = [];
+sns = sns_from_sbe_hdr(head, varname);
 
 for k = 1:length(varname)
     clear v
@@ -390,13 +363,12 @@ for k = 1:length(varname)
     else
         h.fldnam = [h.fldnam v.name];
         h.fldunt = [h.fldunt v.units];
-        h.fldser = [h.fldser v.serial];
+        h.fldserial = [h.fldserial v.serial];
         h.longname = [h.longname v.longname];
         d.(v.name) = v.data;
     end
 end
 
-tic
 %pack remainder of header in comments
 while ~isempty(head)
     c = [];
@@ -412,7 +384,6 @@ end
 if savefile
     m_add_comment(ncfile,h.comment);
 end
-toc
 
 nowstring = datestr(now,31);
 if savefile

@@ -11,12 +11,16 @@ function msam_merge(samtyp)
 % switch-case on paramtype, below, can can be modified in the opt_cruise
 % file
 %
-% called by samp_process.m
+% called by samp_process 
 
 m_common
+if ismember(samtyp,{'sal','oxy','cfc','co2','nut','iso','chl','pig'})
 pd = mexec_file_locations('procfiles','samp',samtyp);
-pdu = mexec_file_locations('procfiles','uway'); %***
 if MEXEC_G.quiet<1; fprintf(1, 'loading bottle %s from %s, saving to %s and %s',pd.(samtyp),pd.samc,pd.samu); end
+elseif strcmp(samtyp,'sbe35')
+    pd = mexec_file_locations('procfiles','samp');
+end
+pdu = mexec_file_locations('procfiles','uway'); %***
 
 %defaults
 svars = {'sampnum','niskin_flag'}; %variables to load from sample file (already matched to Niskin firings)
@@ -33,14 +37,14 @@ switch samtyp
         svars = [svars, 'uasal'];
         pvars = {'botoxy','botoxy_temp','botoxy_flag'};
         hnew.comment = ['oxygen data from ' pd.(samtyp)];
-        opt1 = 'samp_proc'; opt2 = 'oxy_to_sam'; get_cropt %could set to not avg, or could set to not convert units if they were already reported in /kg
+        opt1 = 'samp_proc'; opt2 = 'oxy_to_sam'; run(MEXEC_G.opt_cruise) %could set to not avg, or could set to not convert units if they were already reported in /kg
         %losing backwards compatibility to make an appended oxy file
         %first***
     case 'nut'
         convs.umol_per_l_to_per_kg.temp = 20; %convert using default lab temperature***
         svars = [svars, 'uasal'];
         uvars = [uvars, 'salinity']; %***
-        opt1 = 'samp_proc'; opt2 = 'nut_to_sam'; get_cropt %could set to not avg, or change the lab temp***
+        opt1 = 'samp_proc'; opt2 = 'nut_to_sam'; run(MEXEC_G.opt_cruise) %could set to not avg, or change the lab temp***
         hnew.comment = ['nutrient data from ' pd.(samtyp)]; %***overwrite comment or add comment?
     case 'sal'
 %        convs.rename = {'botpsal', {'salinity_adj','salinity'};... %by

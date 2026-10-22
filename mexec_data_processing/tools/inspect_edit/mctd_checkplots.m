@@ -172,8 +172,8 @@ end
 cklist = cklist(:)'; % force to row
 
 saltype = 'psal';
-opt1 = mfilename; opt2 = 'plot_saltype'; get_cropt
-opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; get_cropt
+opt1 = mfilename; opt2 = 'plot_saltype'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
 oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
 oxyvars = oxyvars(cellfun(@(x) length(x)>3,oxyvars));
 nox = length(oxyvars);

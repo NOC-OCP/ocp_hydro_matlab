@@ -41,7 +41,7 @@ root_ctd = mgetdir('M_CTD');
 
 % Set the name of the input file, and load into structure indata
                 input_file_name = fullfile(root_co2, ['co2_' mcruise '_01.mat']);
-opt1 = mfilename; opt2 = 'infile'; get_cropt
+opt1 = mfilename; opt2 = 'infile'; run(MEXEC_G.opt_cruise)
 if ~exist('indata','var'); indata = load(input_file_name); end
 
 % Set up the output file name
@@ -56,7 +56,7 @@ otfile = fullfile(root_co2, [prefix1 '01']);
                     'dic_flag' 'DICflag'
                     'sample_id' 'SAMPLE'
                     };
-opt1 = mfilename; opt2 = 'varnames'; get_cropt
+opt1 = mfilename; opt2 = 'varnames'; run(MEXEC_G.opt_cruise)
 for no = 1:size(varnames,1)
    indata = setfield(indata, varnames{no,1}, getfield(indata, varnames{no,2}));
 end
@@ -102,7 +102,7 @@ d.alk_flag = 9+zeros(size(sampnum)); d.dic_flag = d.alk_flag;
 %average duplicates according to flags
 d = sam_dupl(indata, {'alk' 'dic'}, 'good');
 
-opt1 = mfilename; opt2 = 'flags'; get_cropt
+opt1 = mfilename; opt2 = 'flags'; run(MEXEC_G.opt_cruise)
 
 %and check for flags matching NaNs
 d = hdata_flagnan(d);

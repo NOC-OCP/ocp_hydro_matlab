@@ -10,7 +10,7 @@ m_common
 switch params.in
     case 'ctd'
         stn = params.stnlist{kloop}; 
-        opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+        opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
         pd = mexec_file_locations('procfiles','ctd');
         infile = sprintf(pd.(['ctd' params.suf]),stn_string);
         params.stn_string = stn_string;

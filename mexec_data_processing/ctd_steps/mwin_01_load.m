@@ -36,7 +36,7 @@ dataname = pd.winname;
 time_window = [-600 800];
 winch_time_start = nan;
 winch_time_end = nan;
-opt1 = mfilename; opt2 = 'winchtime'; get_cropt;
+opt1 = mfilename; opt2 = 'winchtime'; run(MEXEC_G.opt_cruise);
 
 % bak on jc159 15 april 2018: need to be able to read in some winch data 
 % on swivel test stations where there are no ctd files; new cruise opt to set

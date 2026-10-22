@@ -45,7 +45,7 @@ intdelim = int8(delim);
 % set up file names
 faco = matnames{1};
 ftpl = [faco(1:end-4) '.TPL'];
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 fullfaco = [uway_sed '/' faco];
 fullftpl = [uway_sed '/' ftpl];
 

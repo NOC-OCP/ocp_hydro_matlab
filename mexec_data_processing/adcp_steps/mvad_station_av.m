@@ -55,8 +55,8 @@ if strcmp(cast_select,'list')
 end
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; get_cropt
-opt1 = 'adcp_proc'; get_cropt
+opt1 = 'setup'; opt2 = 'procfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'adcp_proc'; run(MEXEC_G.opt_cruise)
 
 %get start and end times
 if strcmp(cast_select,'ctd')
@@ -108,7 +108,7 @@ else
         end
     end
     % check that the number of vmadcp profiles in ctd cast is not too small
-    opt1 = 'ladcp_proc'; get_cropt
+    opt1 = 'ladcp_proc'; run(MEXEC_G.opt_cruise)
 
     nvmadcpprf = sum(mt);
     if nvmadcpprf < min_nvmadcpprf
@@ -163,7 +163,7 @@ end
 %check dims
 mfsave(sadcpfile.av,da,ha); 
 
-opt1 = 'mstar'; get_cropt
+opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf
     [~,to] = timeunits_mstar_cf(h.fldunt{strcmp('decday',h.fldnam)});
 else

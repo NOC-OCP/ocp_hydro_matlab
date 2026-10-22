@@ -61,7 +61,7 @@ vars = {
     };
 snames = {'nsal'};
 sgrps = {{'botpsal'}}; % salt
-opt1 = 'outputs'; opt2 = 'summary'; get_cropt %set vars, snames, sgrps
+opt1 = 'outputs'; opt2 = 'summary'; run(MEXEC_G.opt_cruise) %set vars, snames, sgrps
 for no = 1:length(snames)
     if contains(snames{no},'_shore')
         vars = [vars; {snames{no} 'number' 0 snames{no}(1:end-6) '  %2d'}];
@@ -81,7 +81,7 @@ d = dir(replace(pd.ctd1,'%s','*')); d = {d.name}; d = cell2mat(d(:));
 stnall = str2num(d(:,length(mcruise)+[6:8]));
 stnmiss = [];
 stnadd = [];
-opt1 = mfilename; opt2 = 'sum_stn_list'; get_cropt
+opt1 = mfilename; opt2 = 'sum_stn_list'; run(MEXEC_G.opt_cruise)
 stnset = setdiff(stnall,stnmiss); stnset = stnset(:)'; %these are stations to include with ctd data
 stnall = unique([stnset(:); stnadd(:)]); stnall = stnall(:)'; %these are stations to include with or without ctd data
 
@@ -108,7 +108,7 @@ if ~isempty(stnall)
     end
     for k = 1:length(statnum)
 
-        stn = statnum(k); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+        stn = statnum(k); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
         %lat, lon, ctd depths
         fnsal = sprintf(pd.ctd1,stn_string);
         if exist(m_add_nc(fnsal),'file')
@@ -176,7 +176,7 @@ if ~isempty(stnall)
         disp(stnall(k))
     end
 
-    opt1 = mfilename; opt2 = 'sum_edit'; get_cropt; %edit depths, times, etc. not captured from CTD data
+    opt1 = mfilename; opt2 = 'sum_edit'; run(MEXEC_G.opt_cruise); %edit depths, times, etc. not captured from CTD data
     bestdeps = best_station_depths(stnall);
     [~,ia,ib] = intersect(statnum,bestdeps(:,1));
     cordep(ia) = bestdeps(ib,2);
@@ -198,7 +198,7 @@ if ~isempty(stnall)
             hnew.fldunt = [hnew.fldunt vars{k,2}];
         end
     end
-    opt1 = 'mstar'; get_cropt
+    opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
     if docf
         m = strncmp('time_',hnew.fldnam,5);
         hnew.fldunt(m) = repmat({timestring},sum(m),1);
@@ -221,7 +221,7 @@ end
 
 %other info, like event number, station names, comments (strings can't
 %be saved as mstar variables)
-opt1 = mfilename; opt2 = 'sum_extras'; get_cropt
+opt1 = mfilename; opt2 = 'sum_extras'; run(MEXEC_G.opt_cruise)
 
 
 %%%%% write to ascii file %%%%%
@@ -250,7 +250,7 @@ for k = 1:length(stnall)
     for cno = 1:length(vars)
         if isnumeric(vars{cno,4}) && vars{cno,4}==-1 %line before
             svar = special_print(ds,vars,cno,k);
-            opt1 = mfilename; opt2 = 'sum_special_print'; get_cropt
+            opt1 = mfilename; opt2 = 'sum_special_print'; run(MEXEC_G.opt_cruise)
             fprintf(fid, '%s, ', svar);
             extraline = 1;
         end
@@ -261,7 +261,7 @@ for k = 1:length(stnall)
         if ~isempty(vars{cno,5})
             if isempty(strfind(vars{cno,5},'%'))
                 svar = special_print(ds,vars,cno,k);
-                opt1 = mfilename; opt2 = 'sum_special_print'; get_cropt
+                opt1 = mfilename; opt2 = 'sum_special_print'; run(MEXEC_G.opt_cruise)
                 fprintf(fid, '%s, ', svar);
             else
                 dk = ds.(vars{cno,1})(k);
@@ -279,7 +279,7 @@ for k = 1:length(stnall)
     for cno = 1:length(vars)
         if isnumeric(vars{cno,4}) && vars{cno,4}==1 %line after
             svar = special_print(ds,vars,cno,k);
-            opt1 = mfilename; opt2 = 'sum_special_print'; get_cropt
+            opt1 = mfilename; opt2 = 'sum_special_print'; run(MEXEC_G.opt_cruise)
             fprintf(fid, '%s, ', svar);
             extraline = 1;
         end

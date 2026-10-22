@@ -31,7 +31,7 @@ m_common
 
 % some users like to alias ls to have options that return extra chars at the
 % end of file names
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 [MEXEC.status result] = unix(['/bin/ls -1 ' uway_sed '/*ACO']);
 
 snl = sprintf('\n');

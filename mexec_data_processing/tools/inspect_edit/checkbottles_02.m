@@ -18,7 +18,7 @@ function nsubs = checkbottles_02(stn, varargin)
 % requires a gridded section file (mstar .mat)
 
 m_common
-opt1 = 'ctd_proc'; opt2 = 'm_stn_string'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
 
 %subplots will be psal (and botpsal), oxy (and botoxy), and potemp (and botoxytemp and sbe35temp [if avail]),
 %as well as the variable input names
@@ -39,13 +39,13 @@ root_ctd = mgetdir('M_CTD');
 
 fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal']);
 fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
-opt1 = 'outputs'; opt2 = 'section_for_station'; get_cropt
+opt1 = 'outputs'; opt2 = 'section_for_station'; run(MEXEC_G.opt_cruise)
 if exist('sections','var')
     section = sections{1}; 
 else
     section = 'profiles_only';
 end
-opt1 = 'outputs'; opt2 = 'grid'; get_cropt
+opt1 = 'outputs'; opt2 = 'grid'; run(MEXEC_G.opt_cruise)
 stnlist = intersect(stnlocal-2:stnlocal+2,kstns);
 if length(stnlist)<3
     warning('fewer than 2 neighbouring stations in section list; skipping')
@@ -98,7 +98,7 @@ end
 
 %optionally apply preliminary calibration functions (most relevant to get ctd and bottle oxy close)
 testcal = [];
-opt1 = 'calibration'; opt2 = 'ctd_cals'; get_cropt
+opt1 = 'calibration'; opt2 = 'ctd_cals'; run(MEXEC_G.opt_cruise)
 if ~isempty(testcal) && isfield(castopts,'calstr')
     [dctd_c, hctd_c] = apply_calibrations(dctd, hctd, castopts.calstr, testcal);
     for no = 1:length(hctd_c.fldnam)

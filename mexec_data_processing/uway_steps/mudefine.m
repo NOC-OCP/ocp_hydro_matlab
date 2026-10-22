@@ -21,9 +21,9 @@ function mutv = mudefine(varargin)
 
 m_common
 %definitions will be saved to readable (and git-friendly) .csv
-tabledefcsv = fullfile(fileparts(mfilename('fullpath')),['utabledef_' mcruise '.csv']);
+tabledefcsv = fullfile(fileparts(mfilename('fullpath')),['utabledef_' MEXEC_G.mcruise '.csv']);
 %but it doesn't load back in the same way, so they are also saved as .mat
-tabledefmat = fullfile(MEXEC_G.mexec_data_root,MEXEC_G.Mshipdatasystem,['utabledef_' mcruise '.mat']);
+tabledefmat = fullfile(MEXEC_G.mexec_data_root,MEXEC_G.Mshipdatasystem,['utabledef_' MEXEC_G.mcruise '.mat']);
 
 if nargin>0 && strcmp(varargin{1},'redo')
 
@@ -34,7 +34,7 @@ if nargin>0 && strcmp(varargin{1},'redo')
             mutv = mrdefine;
 
             %for writing
-            opt1 = 'uway_proc'; opt2 = 'rvdas_database'; get_cropt
+            opt1 = 'uway_proc'; opt2 = 'rvdas_database'; run(MEXEC_G.opt_cruise)
             header = {sprintf('RVDAS info from database %s and .json files in %s',RVDAS.database,RVDAS.jsondir);...
                 sprintf('loaded by mrdefine.m on %s',datestr(now));...
                 sprintf('saved in %s and %s', tabledefmat, tabledefcsv);...

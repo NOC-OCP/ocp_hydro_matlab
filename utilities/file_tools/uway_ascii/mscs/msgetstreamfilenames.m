@@ -39,7 +39,7 @@ tstream = msresolve_stream(instream);
 
 % some users like to alias ls to have options that return extra chars at the
 % end of file names
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 [MEXEC.status, result] = unix(['/bin/ls -1 ' uway_sed '/' tstream suf]);
 if MEXEC.status || contains(result, 'No such')
     tstream1 = replace(tstream,'_','-');

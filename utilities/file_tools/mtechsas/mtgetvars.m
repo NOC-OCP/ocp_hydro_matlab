@@ -19,7 +19,7 @@ function [vars, units] = mtgetvars(instream)
 m_common
 tstream = mtresolve_stream(instream);
 
-scriptname = 'ship'; oopt = 'datasys_best'; get_cropt
+scriptname = 'ship'; oopt = 'datasys_best'; MEXEC_G.mcruise
 files = dir(fullfile(uway_root, ['*' tstream]));
 
 if ~isempty(files)

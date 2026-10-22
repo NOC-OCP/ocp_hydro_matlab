@@ -47,7 +47,7 @@ drbr.fluor = drbr.fluor(ii); drbr.back = drbr.back(ii);
 
 %for each station, find rbr data, grid to 1 hz; also subsample sbe 24 hz
 %data to 16/24 samples and grid the same way
-opt1 = 'ctd_proc'; opt2 = '1hz_interp'; get_cropt
+opt1 = 'ctd_proc'; opt2 = '1hz_interp'; run(MEXEC_G.opt_cruise)
 maxfill16 = round(maxfill24*2/3);
 root_ctd = mgetdir('ctd');
 klist = [1:180];

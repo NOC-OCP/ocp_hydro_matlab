@@ -5,12 +5,14 @@ function params = mout_columns_defaults(params)
 % for bodc and exch types, some user-supplied settings (in input arguments)
 % may be overwritten, but generally the user-supplied settings will be used
 % where available, and defaults set below otherwise
+% for ixladcpin, 
 
 m_common
 pd = mexec_file_locations('procfiles','ctd');
 pds = mexec_file_locations('procfiles','samp');
+pdo = mexec_file_locations('procfiles','sumout');
 if ~isfield(params,'vars_exclude'); params.vars_exclude = {}; end
-opt1 = 'outputs'; opt2 = params.out; get_cropt %vars_exclude, header, etc.
+opt1 = 'outputs'; opt2 = params.out; run(MEXEC_G.opt_cruise) %vars_exclude, header, etc.
 
 % defaults about header and footer
 if ~isfield(params,'autoheader')
@@ -45,6 +47,8 @@ switch params.out
                 params.varsh = params.varsh([1:6 10:11],:);
             end
         end
+    case 'ixladcpin'
+        params.varsh = {};
 end
 
 % defaults (or requirements) about variables and units
@@ -106,6 +110,14 @@ switch params.out
         params.lastblank = 0;
     case 'mstar'
         params.sep = ', ';
+    case 'ixladcpin'
+        params.vars_unts = {'yearday','yday','','%12.7f'
+            'press','press','','%8.2f'
+            'temp','temp','','%8.4f'
+            'psal','psal','','%8.4f'
+            'latitude','lat','','%11.6f'
+            'longitude','lon','','%10.6f'
+            };
 end
 
 % defaults about which stations to use
@@ -139,7 +151,7 @@ if strcmp(params.in,'ctd')
         if params.bin_size==2 && strcmp(params.bin_units,'dbar')
             params.suf = '_2db';
         elseif params.bin_size==1 && strcmp(params.bin_units,'hz')
-            params.suf = '_psal';
+            params.suf = '_1hz';
         else
             params.suf = '_24hz';
             if params.bin_size~=24 || ~strcmp(params.bin_units,'hz')
@@ -182,8 +194,8 @@ if params.autoheader
 end
 
 % defaults about filenames
-if ~isfield(params,'ddir')
-    params.ddir = MEXEC_G.MDIRLIST.(['M_' upper(params.in)]);
+if ~isfield(params,'outdir')
+    params.outdir = fileparts(pdo.collected);
 end
 switch params.out
     case 'exch'

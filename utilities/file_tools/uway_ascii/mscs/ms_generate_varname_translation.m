@@ -31,7 +31,7 @@ tunder(strfind(tunder,'.')) = '_';
 
 % set up file names
 ftpl = [tstream '.TPL'];
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 fullftpl = [uway_sed '/' ftpl];
 
 if exist(fullftpl,'file') ~= 2; return; end % skip if no TPL file

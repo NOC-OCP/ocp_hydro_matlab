@@ -26,7 +26,7 @@ function [firstm, lastm, numdc] = msgetfiletimes(fname,tonly)
 m_common
 if nargin == 1; tonly = ' '; end
 
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 fullfn = [uway_sed '/' fname];
 
 if strncmp(tonly,'f',1) % faster option; don't count numdc in every file

@@ -1,12 +1,19 @@
 function [data, vars_wrong_units] = check_units(data, units_expected, varargin)
 % [data, vars_wrong_units] = check_units(data, units_expected)
-% [data, vars_wrong_units] = check_units(data, units_expected, quiet_flag)
+% [data, vars_wrong_units] = check_units(data, units_expected, 'quiet', 'replace')
 %
 
 if nargin>2
-    quiet_flag = varargin{1};
-else
-    quiet_flag = 0;
+    if sum(strcmp('quiet',varargin))
+        quiet_flag = 1;
+    else
+        quiet_flag = 0;
+    end
+    if sum(strcmp('replace',varargin))
+        replace = 1;
+    else
+        replace = 0;
+    end
 end
 
 if istable(data)
@@ -34,7 +41,9 @@ for no = 1:length(uvars)
     iiv = find(strcmp(uvars{no},fn));
     if ~isempty(iiv)
         if isempty(un{iiv})
-            warning('assigning default units for %s',uvars{no})
+            if ~quiet_flag
+                warning('assigning default units for %s',uvars{no})
+            end
             un{iiv} = units_expected.(uvars{no}){1};
         elseif ~sum(strcmp(un{iiv}, units_expected.(uvars{no})))
             if ~quiet_flag
@@ -42,6 +51,8 @@ for no = 1:length(uvars)
             end
             disp(units_expected.(uvars{no}))
             vars_wrong_units = [vars_wrong_units; uvars{no}];
+        elseif replace
+            un{iiv} = units_expected.(uvars{no}){1};
         end
     end
 end

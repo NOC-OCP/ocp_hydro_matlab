@@ -39,7 +39,7 @@ if strcmp(param,'oxy')
 end
 nc = 1;
 for stn = klist
-    opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+    opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
     infile = sprintf(pd.ctd2d,stn_string);
     if ~exist(infile,'file')
         continue

@@ -19,7 +19,7 @@ clear d h
 if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     
     [dwin, hwin] = mloadq(w,'/');
-    opt1 = 'mstar'; get_cropt
+    opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
     if docf
         dwin.time = m_commontime(dwin,'time',hwin,hf.fldunt{strcmp(hf.fldnam,'utime')});
     else
@@ -42,7 +42,7 @@ if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     clear d h
     d.utime = df.utime;
     d.wireout = interp1(dwin.time(iig), dwin.(cabvar)(iig), df.utime);
-    opt1 = mfilename; opt2 = 'winch_fix'; get_cropt
+    opt1 = mfilename; opt2 = 'winch_fix'; run(MEXEC_G.opt_cruise)
     if sum(~isnan(d.wireout))>0
         h.fldnam = {'utime' 'wireout'}; h.fldunt = {hf.fldunt{strcmp('utime',hf.fldnam)} 'metres'};
         h.dataname = hwin.dataname; h.mstar_string = hwin.mstar_string;

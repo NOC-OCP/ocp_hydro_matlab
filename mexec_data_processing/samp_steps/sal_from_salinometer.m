@@ -1,66 +1,20 @@
-function msal_01
-% msal_01: read in the bottle salinities from digitized autosal log(s)
-% and save to sal_cruise_01.nc, tsgsal_cruise_01.nc
+function sdata = sal_from_salinometer(sdata)
+% ds_sal = sal_calc(ds_sal)
+% apply offset set in opt_cruise to autosal/portasal readings, and compute
+% salinity
 %
-% Use: msal_01 
+%   uses gsw
+% for autosal: 
+%   salinity = gsw_SP_salinometer((reading+offset)/2, cellT);
+% for portasal: 
+%   salinity = gsw_SP_salinometer(reading+offset, cellT);
 %
-%   uses gsw: salinity = gsw_SP_salinometer((runavg+offset)/2, cellT);
-%
-% the input files must include a column or field "sampnum" which takes the
-% form
-% sampnum = 100*statnum + position
-%     where statnum is the station and position the niskin position 
-%     ([1 24] or [1 36])
-%     for ctd samples,
-% and for tsg samples, 
-% sampnum = yyyymmddhhmm
-% or 
-% sampnum = -dddhhmm (where ddd is year-day, and the negative sign is
-%   important) 
-%
-% and for standards, 
-% sampnum = 999NNN
-%     where NNN increments sequentially as the standards were run
-%     (998NNN, 990NNN, etc. may be used for sub-standards)
+% the input ds_sal must include a column or field "sampnum" which follows
+%   the convention in m_sampnum, i.e.
+%   sampnum = 100*statnum + position for ctd samples, 
+%   sampnum = yyyyMMddhhmm or -DDDhhmm for underway samples,
+%   sampnum = 999NNN for standards
 % 
-% lines where the sampnum column is empty will be filled in from the last
-% non-empty sampnum above 
-
-m_common
-if MEXEC_G.quiet<1; fprintf(1, 'loading bottle salinities from the file(s) specified in opt_%s and writing ctd samples to sal_%s_01.nc and sam_%s_all.nc, and underway samples to tsg_%s_01.nc',mcruise,mcruise,mcruise,mcruise); end
-
-std_samp_range = [999000 1e6]; %sample numbers for ssw are in this range, e.g. 999000, 999001, etc.
-sub_samp_range = [998000 998999]; %substandards
-%ctd sampnums are <1e5, and tsg sampnums are either <0 or larger than 1e7
-
-% find list of files and information on variables
-root_sal = mgetdir('M_BOT_SAL');
-salfiles = dir(fullfile(root_sal, ['sal_' mcruise '_*.csv'])); 
-hcpat = {'sampnum'}; chrows = 1; chunits = [];
-sheets = 1; iopts = struct([]);
-datform = 'dd/mm/yyyy';
-timform = 'HH:MM:SS';
-opt1 = 'samp_proc'; opt2 = 'sal_files'; get_cropt %list of files to load
-if isempty(salfiles)
-    warning(['no salinity data files found in ' root_sal '; skipping']);
-    return
-end
-salfiles = fullfile({salfiles.folder}',{salfiles.name}');
-
-%%%%%% load and parse %%%%%%
-
-%load
-%***datetime format is already read in wrong by default? causes wrong
-%ordering of samples***
-[ds_sal, salhead] = load_samdata(salfiles, 'hcpat', hcpat, 'chrows', chrows, 'chunits', chunits, 'sheets', sheets, iopts); 
-if isempty(ds_sal)
-    error('no data loaded')
-end
-if isfield(ds_sal,'sampnum') && sum(isnan(ds_sal.sampnum))
-    %if repeat readings are on different lines and sampnum has only been
-    %filled in for the first (average) line, for example
-    ds_sal = fill_samdata_statnum(ds_sal, 'sampnum');
-end
 
 %parse, for instance getting information from header
 % for no = 1:length(salhead)
@@ -74,11 +28,8 @@ end
 %         l = str2num(l(ii:ii+1));
 %     end
 % end
-opt1 = 'samp_proc'; opt2 = 'sal_parse'; get_cropt
-opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
-m = ~isfinite(ds_sal.sampnum);
-ds_sal(m,:) = [];
 
+calcsal = 1;
 if calcsal
     %add option to fill in information about cellt or Bath Temp and k15 from header***
     fn = ds_sal.Properties.VariableNames;
@@ -94,76 +45,14 @@ if calcsal
         ds_sal.k15 = repmat(ssw_k15,size(ds_sal,1),1);
     end
 
-    %rename
-    clear samevars
-    samevars.sample_1 = {'sample1' 'reading_1' 'reading1' 'r1'};
-    samevars.sample_2 = {'sample2' 'reading_2' 'reading2' 'r2'};
-    samevars.sample_3 = {'sample3' 'reading_3' 'reading3' 'r3'};
-    samevars.sample_4 = {'sample4' 'reading_4' 'reading4' 'r4'};
-    samevars.runavg = {'average'};
-    vars = fieldnames(samevars);
-    fn = ds_sal.Properties.VariableNames;
-    for vno = 1:length(vars)
-        ii0 = strcmp(vars{vno},fn);
-        iid = find(contains(samevars.(vars{vno}),fn));
-        if ~sum(ii0) && ~isempty(iid)
-            %add this one
-            ds_sal.(vars{vno}) = nan(size(ds_sal,1),1);
-            fn = [fn vars{vno}];
-            ii0 = strcmp(vars{vno},fn);
-        end
-    end
-    fn = ds_sal.Properties.VariableNames;
-
-    %deal with time variable(s)
-    md = strcmp('date',fn); mt = strcmp('time',fn);
-    if sum(md) && sum(mt)
-        if ischar(ds_sal{:,mt})
-            tim = datevec(ds_sal{:,mt},timform);
-        else
-            tim = datevec(ds_sal{:,mt});
-        end
-        if ischar(ds_sal{:,md})
-            dat = datevec(ds_sal{:,md},datform);
-        else
-            dat = datevec(ds_sal{:,md});
-        end
-        ds_sal.runtime = datenum(dat + tim); %***
-        ds_sal.time = []; ds_sal.date = [];
-        fn = ds_sal.Properties.VariableNames;
-    end
-
     if ~sum(strcmp('flag',fn))
         ds_sal.flag = 2+zeros(size(ds_sal,1),1);
     else
         ds_sal.flag(isnan(ds_sal.flag)) = 9;
     end
 
-    if 0 %***
-        if sum(strcmp('comment',fn))
-            ds_sal.comment(iid,1) = ds.comment;
-        else
-            ds_sal.comment(iid,1) = repmat(' ',size(a0));
-        end
-    end
-
-    if ~ismember('sample_4',fn)
-        ds_sal.sample_4 = NaN+ds_sal.sample_1;
-    end
-
-    %shift tsg sampnum times if using >0 method
-    ii = find(ds_sal.sampnum>1000e8);
-    ds_sal.sampnum(ii) = ds_sal.sampnum(ii)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
-
-    %edits
-    reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
-    opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
-    if reapply_saledits
-        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
-    end
-
-    ds_sal.runavg = m_nanmean([ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4],2);
-
+    ds_sal.runavg = mean(ds_sal.reading,2,'omitmissing');
+    
     %inspect for new edits
     if check_sal
         %standards and substandards (999NNN and 998NNN): plot together
@@ -202,7 +91,7 @@ if calcsal
     if exist('bads','var') && ~isempty(bads) %new edits to apply
         [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
     end
-    opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'sal_flags'; run(MEXEC_G.opt_cruise)
     %recalculate mean
     a = [ds_sal.sample_1 ds_sal.sample_2 ds_sal.sample_3 ds_sal.sample_4];
     ds_sal.runavg = m_nanmean(a,2);
@@ -220,7 +109,7 @@ if calcsal
     %%%%%% standards offsets %%%%%%
 
     salin_off = []; salin_off_base = 'sampnum_run'; sal_adj_comment = '';
-    opt1 = 'samp_proc'; opt2 = 'sal_calc'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'sal_calc'; run(MEXEC_G.opt_cruise)
     if ~strcmp(salin_off_base,'sampnum_list') && sum(strcmp('runtime',fn))
         [~,ii] = sort(ds_sal.runtime);
         ds_sal = ds_sal(ii,:);
@@ -366,13 +255,13 @@ else
     salunits.flag = {'woce_9.4'};
     salunits.salinity = {'psu'};
 end
-opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'sal_flags'; run(MEXEC_G.opt_cruise)
 
 %%%%%% save %%%%%%
 
 dataname = ['sal_' mcruise '_01'];
 salfile = fullfile(root_sal, [dataname '.nc']);
-opt1 = 'ship'; opt2 = 'ship_data_sys_names'; get_cropt
+opt1 = 'ship'; opt2 = 'ship_data_sys_names'; run(MEXEC_G.opt_cruise)
 tsgfile = fullfile(root_sal, ['tsgsal_' mcruise '_all.nc']);
 
 %select the variables we want to save
@@ -396,7 +285,7 @@ hc.comment = [sal_adj_comment];
 mfsave(salfile, d, hc);
 
 %plot CTD samples
-opt1 = 'samp_proc'; opt2 = 'check_sams'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'check_sams'; run(MEXEC_G.opt_cruise)
 if check_sal
     figure(10); subplot(223)
     ii = find(d.sampnum>0 & d.sampnum<9e5);
@@ -433,10 +322,10 @@ if ~isempty(iiu)
         MM = str2num(s(:,6:7));
         tsg.dnum(ii) = datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1) + jjj-1 + (HH+MM/60)/24;
     end
-    opt1 = 'samp_proc'; opt2 = 'tsg_sampnum'; get_cropt
+    opt1 = 'samp_proc'; opt2 = 'tsg_sampnum'; run(MEXEC_G.opt_cruise)
     [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
     dsu.time = NaN+dsu.sampnum;
-    opt1 = 'mstar'; get_cropt
+    opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
     if docf
         un = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
     else
@@ -479,14 +368,14 @@ if MEXEC_G.quiet<=1; fprintf(1, 'reading bottle del13C, Del14C, del18O data from
 root_iso = mgetdir('M_BOT_ISO');
 dataname = ['iso_' mcruise '_01'];
 otfile2 = fullfile(root_iso, dataname);
-opt1 = mfilename; opt2 = 'iso_files'; get_cropt
+opt1 = mfilename; opt2 = 'iso_files'; run(MEXEC_G.opt_cruise)
 
 %load data
 if ~iscell(isofiles); isofiles = {isofiles}; end
 [ds_iso, isohead] = load_samdata(isofiles, hcpat, 'chrows', 1, 'chunits', 2);
 
 %parse (rename variables)
-opt1 = mfilename; opt2 = 'iso_parse'; get_cropt %***what about file-dependent parsing, like if we have multiple sources of 13c to rename?
+opt1 = mfilename; opt2 = 'iso_parse'; run(MEXEC_G.opt_cruise) %***what about file-dependent parsing, like if we have multiple sources of 13c to rename?
 if ~isempty(isovarmap)
     ds_iso_fn = ds_iso.Properties.VariableNames;
     [~,ia,ib] = intersect(isovarmap(:,2)',ds_iso_fn);
@@ -553,7 +442,7 @@ end
 sg = unique(sg);
 iisg = ismember(statnum, sg);
 
-opt2 = 'iso_flags'; get_cropt %additional modifications to flags if required
+opt2 = 'iso_flags'; run(MEXEC_G.opt_cruise) %additional modifications to flags if required
 
 %prepare for writing mstar file
 varnames = {'sampnum';'statnum';'position'};

@@ -59,7 +59,7 @@ if nargin >= 3
         load(fngrid,'mgrid'); dg = mgrid;
         clear hg; hg.fldnam = dg.vars; hg.fldunt = dg.unts;
         dg = rmfield(dg,{'vars' 'unts'});
-%         opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; get_cropt
+%         opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; run(MEXEC_G.opt_cruise)
 %         if isfield(castopts, 'calstr') 
 %             [dg, hg] = apply_calibrations(dg, hg, calstr, castopts.docal);
 %             if castopts.docal.cond || castopts.docal.temp

@@ -15,7 +15,7 @@ function m_setup(varargin)
 %    >> m_setup(MEXEC_G_user)
 %    these may be useful if you want to reprocess an old cruise's data with
 %    a newer branch's software.
-%      MSCRIPT_CRUISE_STRING (e.g. 'jc238')
+%      mcruise (e.g. 'jc238')
 %      MDEFAULT_DATA_TIME_ORIGIN (e.g. [2022 1 1 0 0 0]) -- but note this
 %        is only necessary if reprocessing a cruise from before 2022
 %      SITE_suf (e.g. 'atsea' or 'atnoc' to make SITE 'jc238_atsea' etc.)
@@ -47,28 +47,31 @@ global MEXEC_G
 
 %defaults that can be overwritten by input structure: what are we
 %processing, and where?
-MEXEC_G.MSCRIPT_CRUISE_STRING='ce26008';
+MEXEC_G.mcruise='ce26008';
+MEXEC_G.data_time_origin_string = '2026-01-01 00:00:00'; %yyyy-MM-dd HH:mm:SS, usually midnight on 1 Jan of the start year of the cruise. do not change once processing for a given cruise has started!
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
-MEXEC_G.mexec_data_root = '/noc/mpoc/eurogoship/ce26008/data'; %if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/'; %not relevant for post-cruise processing
-MEXEC_G.sw = '/noc/mpoc/eurogoship/programs';
-MEXEC_G.perms = [664; 775]; % permissions for files and directories
-MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
-MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
-MEXEC_G.datatypes.ctd = 'sbe'; %currently the only option
-MEXEC_G.datatypes.uway = 'auto'; %auto sets to rvdas, techsas, or scs depending on ship
-MEXEC_G.datatypes.sadcp = 'uhdas'; %or vmdas
-MEXEC_G.datatypes.ladcp = 'ix'; %or ix to process LADCP data with LDEO_IX
+MEXEC_G.mexec_data_root = '/noc/mpoc/eurogoship/ce26008/data'; %contains raw (e.g. ctd/ASCII_FILES) and will contain processed (e.g. ctd/*.nc) data
+MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/'; %optional; only relevant for on-ship processing to run bash scripts to sync data to Linux workstations
+MEXEC_G.sw = '/noc/mpoc/eurogoship/programs'; %if the required GSW and Seawater toolboxes (and optionally gamma_n, and LDEO_IX) are not on the path already, they should be here
+MEXEC_G.datatypes.ctd = 'sbe'; %sbe is currently the only option, in future add rbr
+MEXEC_G.datatypes.uway = 'scs'; %underway data acquisition/storage system: rvdas is a PotgreSQL database (more recently also duplicated in NetCDF files***check); scs stores (minimally) parsed NMEA strings as either ASCII or NetCDF; techsas stores as NetCDF
+MEXEC_G.datatypes.sadcp = 'codas'; %type of processed VMADCP data. codas is currently the only option; code could be added to read in IFREMER or BAS processed matlab files, etc.
+MEXEC_G.datatypes.ladcp = 'ix'; %ix to process LADCP data with LDEO_IX, no if no LADCP data
 MEXEC_G.datatypes.moor = 'no'; %or yes (affects what is added to path)
+MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_data_processing programs will be verbose; if 1, only the latter; if 2, neither
+%not generally recommended to change the following, but you can
+MEXEC_G.opt_cruise = ['opt_' MEXEC_G.mcruise '.m']; %this could be changed to temporarily try another options script but this is not recommended (as much as possible, a single options script should record all processing choices)
+MEXEC_G.perms = [664; 775]; % permissions for files and directories
+MEXEC_G.Muse_version_lockfile = 'yes'; %takes value 'yes' or 'no', 'yes' is recommended but if only one person is processing from one matlab session at any one time, it may not matter
 
-%replace with user-supplied parameters for this session/run
+%replace above with any user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
     MGu = varargin{1};
     fn = fieldnames(MGu);
     fn0 = fieldnames(MEXEC_G);
     for fno = 1:length(fn)
         if ~ismember(fn{fno},fn0)
-            MG0.(fn{fno}) = MGu.(fn{fno}); %store in case these are overwritten (test at end***)
+            MG0.(fn{fno}) = MGu.(fn{fno}); %store in case these are overwritten (***need to add test at end***)
         end
         MEXEC_G.(fn{fno}) = MGu.(fn{fno});
     end
@@ -78,12 +81,18 @@ end
 clear MGu
 
 %%%%% with luck, you don't need to edit anything after this for standard installations %%%%%
-%%%%% (or it can be edited in opt_{cruise}.m instead) %%%%%
 
-MEXEC_G.SITE = [MEXEC_G.MSCRIPT_CRUISE_STRING '_' MEXEC_G.SITE_suf];
+MEXEC_G.SITE = [MEXEC_G.mcruise '_' MEXEC_G.SITE_suf];
 MEXEC_G = rmfield(MEXEC_G, 'SITE_suf');
+if ~isfield(MEXEC_G,'data_time_origin_string') || length(MEXEC_G.data_time_origin_string)~=19
+    yr = input('cruise start year? (add MEXEC.data_time_origin near the top of m_setup to avoid this message in future)   ','s');
+    MEXEC_G.data_time_origin_string = [yr '-01-01 00:00:00'];
+end
+MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = datevec(MEXEC_G.data_time_origin_string); %***check, does this always work
 
-disp(['m_setup for ' MEXEC_G.MSCRIPT_CRUISE_STRING ' mexec (ocp_hydro_matlab)'])
+fprintf(1,'m_setup for %s mexec (ocp_hydro_matlab) to process\n', MEXEC_G.mcruise)
+disp(MEXEC_G.datatypes)
+fprintf(1,'using settings in %s\n', MEXEC_G.opt_cruise)
 
 %add ocp_hydro_tools to path
 MEXEC_G.mexec_source_root = fileparts(which('m_setup'));
@@ -98,7 +107,7 @@ end
 MEXEC_G.mexec_version = mexecs_version;
 cd(cdir)
 clear mexecs_version s c cdir pdir
-if isempty(which('get_cropt')) || isempty(which('m_common'))
+if isempty(which('mexec_defaults_all')) || isempty(which('m_common'))
     disp(['adding MEXEC_G.mexec_source_root to path, currently: ' MEXEC_G.mexec_version])
     % add paths at and below source
     addpath(genpath(MEXEC_G.mexec_source_root))
@@ -107,25 +116,40 @@ end
 
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
-MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.MSCRIPT_CRUISE_STRING)];
-opt1 = 'ship'; mexec_defaults_shipuway
+MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.mcruise)];
+switch MEXEC_G.mcruise(1:2)
+    case {'di' 'dy'}
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
+    case 'jc'
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
+    case 'sd'
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
+    case 'jr'
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
+    case 'kn'
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
+    case 'en'
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
+    case 'ce'
+        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
+    otherwise
+        MEXEC_G.PLATFORM_IDENTIFIER = input('ship ID not recognised in cruise; enter platform identifier (ship long name), e.g. ''RRS James Cook'' ','s');
+        warning('add case to m_setup'); pause(0.1)
+end
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
-if strcmp(MEXEC_G.datatypes.uway,'auto')
-    %look up which underway data system to use based on ship
-    MEXEC_G.datatypes.uway = MEXEC_G.Mshipdatasystem;
-elseif strcmp(MEXEC_G.datatypes.uway,'no')
-    MEXEC_G.datatypes = rmfield(MEXEC_G.datatypes,'uway');
+if strcmp(MEXEC_G.datatypes.sadcp,'uhdas') || strcmp(MEXEC_G.datatypes.sadcp,'vmdas')
+    %if system environment variables were used to set datatypes, the acquisition system may be specified, but what matters at this stage (reading in processed data) is the processing system. we usually process both uhdas and vmdas data with codas.
+    warning('setting sadcp processing system: MEXEC_G.datatypes.sadcp = ''codas'';')
+    MEXEC_G.datatypes.sadcp = 'codas';
 end
 
 % cruise-specific settings
-opt1 = 'setup'; opt2 = 'time_origin'; get_cropt %MDEFAULT_DATA_TIME_ORIGIN
-if ~isfield(MEXEC_G,'MDEFAULT_DATA_TIME_ORIGIN')
-    error('you must set MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN in opt_{cruise}.m under opt1=''setup''; opt2=''time_origin''')
+if ~exist(MEXEC_G.opt_cruise,'file')
+    create_opt_cruise
 end
-MEXEC_G.data_time_origin_string = sprintf('%04d-%02d-%02d %02d:%02d:%02d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
-opt1 = 'setup'; opt2 = 'setup_datatypes'; get_cropt
+run(MEXEC_G.opt_cruise) 
 
 % checks if external libraries are on path, and if processing ladcp or moored checks which to avoid conflicts
 sw_checkpath
@@ -155,9 +179,6 @@ if ~strcmp(MEXEC_G.datatypes.uway,'no')
         end
     end
 end
-
-% set data directories within MEXEC_G.mexec_data_root
-mexec_file_locations('mdirlist');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% --------------------------- %%%%%%%%%%%%%%%%%%%%%%%%%%%

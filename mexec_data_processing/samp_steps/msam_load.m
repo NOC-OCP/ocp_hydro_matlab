@@ -14,7 +14,7 @@ function msam_load(samtyp)
 %
 % sampnum is used to match bottle sample data with CTD or underway sensor
 %   data, so it must either be included in each input file or calculated in
-%   opt_{cruise}.m, following the conventions given by sampnum_ranges.m:   
+%   opt_{cruise}.m, following the conventions given by m_sampnum.m:   
 % for CTD samples, 
 %   sampnum = 100*statnum + position
 %       where statnum is the unique cast number (often referred to as
@@ -31,16 +31,16 @@ function msam_load(samtyp)
 %     which the standards were run (and 998NNN, 990NNN, etc. may be used
 %     for sub-standards) 
 %
-% lines where the sampnum column is empty will be filled in from the last
-%   non-empty sampnum above (effectively labelling successive rows as
-%   replicates)
+% lines where the sampnum column is empty will be assumed to be replicates
+% and filled in from the last non-empty sampnum above (unless opt_cruise
+% samp_proc, parse case removes them first)
 %
 % called by
 %   samp_process.m
 % sets cruise-specific options using
 %   opt1 = 'samp_proc' and
 %   opt2 in 'files', 'parse', 'calc', 'check', 'flags'***
-%   when calling get_cropt.m (mexec_defaults_all.m, opt_{cruise}.m)
+%   when calling run(MEXEC_G.opt_cruise).m (mexec_defaults_all.m, opt_{cruise}.m)
 % also calls 
 %   load_samdata.m, var_renamer.m, msam_replicates.m, mfsave.m
 % and may call
@@ -48,8 +48,7 @@ function msam_load(samtyp)
 
 
 m_common
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle/calibration %s from file(s) specified in opt_%s, \nhandling calculations, replicates and flags, writing to \n%s_%s_01.nc and sam_%s_all.nc\n',samtyp,mcruise,samtyp,mcruise,mcruise); end
+if MEXEC_G.quiet<=1; fprintf(1, 'loading bottle/calibration %s from file(s) specified in opt_%s, \nhandling calculations, replicates and flags, writing to \n%s_%s_01.nc and sam_%s_all.nc\n',samtyp,MEXEC_G.mcruise,samtyp,MEXEC_G.mcruise,MEXEC_G.mcruise); end
 
 %files to load
 if nargin==0
@@ -57,9 +56,9 @@ if nargin==0
 end
 clear sopts
 pd = mexec_file_locations('procfiles','samp',samtyp);
-opt1 = 'samp_proc'; opt2 = 'files'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'files'; run(['opt_' MEXEC_G.mcruise])
 if isempty(files)
-    warning('no %s files found in %s; check opt_%s', samtyp, root_in, mcruise)
+    warning('no %s files found in %s; check opt_%s', samtyp, root_in, MEXEC_G.mcruise)
     return
 end
 if length(sopts)>1 && length(sopts)~=length(files)
@@ -72,20 +71,23 @@ end
 %remove columns with no non-nan values
 
 %parse what was in files (split strings and datetimes, fill in missing
-%station numbers, rename variables to standardised names, add units)
-opt1 = 'samp_proc'; opt2 = 'parse'; get_cropt
+%station numbers, rename variables to standardised names, where replicates
+%are in different columnes combine them, and add units if necessary) 
+%also do some basic checks on sampnums and other values in case of typos
+%(only if switched on?) before doing any filling or renaming or relabelling
+%units
+opt1 = 'samp_proc'; opt2 = 'parse'; run(['opt_' MEXEC_G.mcruise])
 if exist('fillstatnum','var')
     sdata = fill_samdata_statnum(sdata, fillstatum);
     names0 = sdata.Properties.VariableNames;
     m1 = ismember(names0,{fillstatnum});
     sdata = rmmissing(sdata,'DataVariables',names0(~m1),'MinNumMissing',sum(~m1));
     sdata.sampnum(~isnan(sdata.position)) = sdata.statnum(~isnan(sdata.position))*100 + sdata.position(~isnan(sdata.position));
-    %***
 end
 if exist('varmap','var')
     sdata = var_renamer(sdata, varmap, 'keep_othervars', keepothervars);
 end
-%where _per_l is in name, move into units
+%where _per_l is in name, move into units (in case this wasn't done above)
 m = cellfun(@(x) contains(x,'_per_l'), sdata.Properties.VariableNames);
 sdata.Properties.VariableUnits(m) = {'umol_per_l'}; %***what if not umol?
 sdata.Properties.VariableNames(m) = cellfun(@(x) replace(x,'_per_l',''), sdata.Properties.VariableNames(m), 'UniformOutput', false);
@@ -93,29 +95,57 @@ sdata.Properties.VariableUnits(strcmp('sampnum',sdata.Properties.VariableNames))
 %assign units to flags, and replace NaN flags with 9s
 mf = cellfun(@(x) contains(x,'_flag'),sdata.Properties.VariableNames);
 if sum(mf)
+    mnw = strcmp('woce_4.9',sdata.Properties.VariableUnits);
+    if sum(mf & mnw)
+        warning('about to overwrite flag units; should you convert instead (in opt_cruise, samp_proc, parse)?')
+        keyboard
+    end%***
     sdata.Properties.VariableUnits(mf) = {'woce_4.9'}; %***overwrite?
     dat = sdata{:,mf}; dat(isnan(dat)) = 9; sdata{:,mf} = dat;
 end
 
-%derive certain parameters from those in files -- separate this into steps
-%that happen before averaging and steps that happen after averaging (for
-%replicates, but analogous to 
+%do parameters need to be derived before examining replicates and flagging?
 switch samtyp
     case 'oxy'
-        %e.g. oxy concentration from titre, std vol, blank vol
-        sdata = oxy_calc(sdata); %***output is per_l or per_kg? 
+      m = strncmp('botoxy',sdata.Properties.VariableNames,6);
+      if ~sum(m)
+          tpar.vol_reag_tot = 2; %total volume of reagents (mL) added before closing bottle
+tpar.vol_std = 5; %volume of standard added in standardisation
+  %e.g. oxy concentration from titre, std vol, blank vol
         mt = cellfun(@(x) contains(x, '_temp'), sdata.Properties.VariableNames);
         if sum(mt); sdata.Properties.VariableUnits(mt) = {'degC'}; end %***overwrite?
-        %rename and keep only some variables
-sdata.botoxy = sdata.conc_o2;
-sdata.botoxy_flag = sdata.flag;
-sdata.botoxy_temp = sdata.fix_temp;
-vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
-sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
+        sdata = oxy_from_titre(sdata, 'vol_std', vol_std, 'vol_reag_tot', vol_reag_tot); %***output is per_l or per_kg?
+        sdata.botoxy = sdata.conc_o2;
+      end
+
+        sdata.botoxy_temp = sdata.fix_temp;
+        vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
+        vnrequire = {'botoxy','botoxy_temp'}; %all must be non-nan for value of first to be reported
+        vnrepl = {'botoxy'};
     case 'sal'
         %e.g. average conductivity from 3 readings, and salinity from that
-        sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
+
+        %sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
+        vnkeep = {'sampnum','reading','botpsal'};
+        vnrequire = {'reading','botpsal','k15','cellT'};
+        vnrepl = {'reading'};
+    case 'nut'
+    case 'co2'
+    case 'chl'
+    case 'cfc'
+    case 'iso'
 end
+
+    %shift tsg sampnum times if using >0 method
+    ii = find(ds_sal.sampnum>1000e8);
+    ds_sal.sampnum(ii) = ds_sal.sampnum(ii)-MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)*1e8;
+
+    % flags
+if ~sum(strcmp(sdata.Properties.VariableNames,'flag'))
+    sdata.flag = nan(size(sdata.sampnum));
+end
+
+sdata(:,~ismember(sdata.Properties.VariableNames,union(vnkeep,vnrepl,vnrequire))) = [];
 %***custom code, e.g. average extra readings, ... 
 
 %group or arrange replicates into 2D matrices, add flags, and check
@@ -127,6 +157,13 @@ dbot = msam_replicates(sdata, samtyp);
 %    ds.Properties.VariableUnits(strcmp('flag',ds.Properties.VariableNames)) = {'woce_4.9'};
 %end
 %***
+
+%
+switch samtyp
+    case 'sal'
+        sdata.botpsal_flag(sdata.botpsal_flag==5) = 2; %always? option to re-run msam_replicates to find and compare true replicates? 
+        sdata = sal_from_salinometer(sdata);
+end
 
 %turn into structure
 dnew = dbot;
@@ -195,7 +232,7 @@ for varno = find(~mx)
     varnam = names0{varno};
     
     %***if replicates are already called {param}a, {param}b or {param}1,
-    %{param}2, etc., rearrange in to matrix***
+    %{param}2, etc., rearrange into matrix***
 
     %replicates are on different lines; put into padded array for each sampnum
     a = splitapply(@(x) [x(:)' nan(1,mr-length(x))], ds.(varnam), g);
@@ -213,7 +250,14 @@ gs.position = gs.sampnum-gs.statnum*100;
 gs.Properties.VariableUnits(end-1:end) = {'number','on.rosette'};
 
 %add existing flags from editlogs***
-opt1 = 'samp_proc'; opt2 = 'flag'; get_cropt %apply flags if specified in opt_cruise
+    %edits
+    reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
+    opt1 = 'samp_proc'; opt2 = 'sal_flags'; run(['opt_' MEXEC_G.mcruise])
+    if reapply_saledits
+        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+    end
+
+opt1 = 'samp_proc'; opt2 = 'flag'; run(['opt_' MEXEC_G.mcruise]) %apply flags if specified in opt_cruise
 %recalculate mean, stdev, range (or for the first time? or do this after
 %repl_check?)
 okf = [2 3];
@@ -239,7 +283,7 @@ for varno = find(mv)
 end
 
 %optionally check replicates against each other
-opt1 = 'samp_proc'; opt2 = 'replcheck'; get_cropt
+opt1 = 'samp_proc'; opt2 = 'replcheck'; run(['opt_' MEXEC_G.mcruise])
 if isfield(checksam,samtyp) && (length(checksam.(samtyp))>1) || checksam.(samtyp)
     repl_check(samtyp, gs, checksam.(samtyp)); %***working on this for nut, need to add code for chl as well as sal and sbe35 (sal repls compared earlier? yes, and handled differently, not flagged as mean of replicates because not separate samples exactly)***
 end

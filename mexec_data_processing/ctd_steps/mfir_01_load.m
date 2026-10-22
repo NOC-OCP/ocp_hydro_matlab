@@ -7,7 +7,7 @@ function mfir_01_load(stn)
 m_common
 
 % input file names
-opt1 = 'ctd_proc'; opt2 = 'niskfilename'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'niskfilename'; run(MEXEC_G.opt_cruise)
 if ~exist(blinfile,'file')
     fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stn);
     pause
@@ -73,7 +73,7 @@ pos = pos(:);
 scn = scn(:);
 
 %add (from defaults) corresponding information like bottle S/N, bottle flag
-opt1 = 'ctd_proc'; opt2 = 'niskins'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'niskins'; run(MEXEC_G.opt_cruise)
 niskin_number = niskin_number(:);
 niskin_pos = niskin_pos(:);
 [~,ia,ib] = intersect(pos,niskin_pos);
@@ -88,7 +88,7 @@ position = position(m);
 niskin = niskin_number(m);
 niskin_flag = niskin_flag(m);
 clear m ia ib
-opt1 = 'ctd_proc'; opt2 = 'botflags'; get_cropt %change flags here
+opt1 = 'ctd_proc'; opt2 = 'botflags'; run(MEXEC_G.opt_cruise) %change flags here
 %check that possible bad code in opt file hasn't added dimensions
 if size(niskin)==size(niskin_flag)
 else
@@ -96,14 +96,14 @@ else
 end
 
 %in case cast was stitched together by offsetting scan
-opt1 = 'ctd_proc'; opt2 = 'cast_split_comb'; get_cropt
+opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; run(MEXEC_G.opt_cruise)
 blappend = 0;
-if exist('comb_stns','var') && comb_stns(1)==stnlocal
+if exist('append_stn_strings','var')
     if isnan(comb_stns(3))
         warning('not applying NaN offset to .bl scan number for %s',stn_string)
     else
         scan = scan + comb_stns(3);
-        stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; get_cropt
+        stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
         firot = sprintf(pd.firfile,stn_string);
         if exist(m_add_nc(firot),'file')
             blappend = 1;

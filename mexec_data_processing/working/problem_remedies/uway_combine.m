@@ -1,7 +1,7 @@
 %combine _raw.nc underway RVDAS streams in order to subsequently edit using
 %more recent code (which expects more streams to be in each file)
 
-opt1 = 'uway_proc'; opt2 = 'combine'; get_cropt
+opt1 = 'uway_proc'; opt2 = 'combine'; run(MEXEC_G.opt_cruise)
 
 %first get times
 [d1,h] = mload(infiles{1},'/');

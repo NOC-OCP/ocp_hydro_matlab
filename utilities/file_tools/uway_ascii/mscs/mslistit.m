@@ -91,7 +91,7 @@ ms_update_aco_to_mat(tstream); % ensure mat file is up to date before loading
 
 [data units]= msload(tstream,dn1,dn2,loadvlist);
 
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 
 t = data.time + uway_torg;
 if length(t) == 0

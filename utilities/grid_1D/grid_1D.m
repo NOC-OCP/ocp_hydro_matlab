@@ -1,8 +1,8 @@
-function dg = grid_profile(d, gridvar, gridvec, method, varargin)
-% dg = grid_profile(d, gridvar, gridvec, method, varargin);
-% dg = grid_profile(d, gridvar, gridvec, 'medbin');
-% dg = grid_profile(d, gridvar, gridvec, 'medint', 'int', [below above]);
-% dg = grid_profile(d, gridvar, gridvec, 'smhan', 'len', len);
+function dg = grid_1D(d, gridvar, gridvec, method, varargin)
+% dg = grid_1D(d, gridvar, gridvec, method, varargin);
+% dg = grid_1D(d, gridvar, gridvec, 'medbin');
+% dg = grid_1D(d, gridvar, gridvec, 'medint', 'int', [below above]);
+% dg = grid_1D(d, gridvar, gridvec, 'smhan', 'len', len);
 %
 % grids variables in d (structure or table) based on field/variable gridvar
 %   (string) using one of the following methods: 

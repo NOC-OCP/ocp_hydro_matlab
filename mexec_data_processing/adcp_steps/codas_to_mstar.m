@@ -14,7 +14,7 @@ function [d, h] = codas_to_mstar(inst)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 opt1 = 'setup'; opt2 = 'procfiles';
-opt1 = mfilename; opt2 = 'codas_file'; get_cropt
+opt1 = mfilename; opt2 = 'codas_file'; run(MEXEC_G.opt_cruise)
 if ~exist(fnin, 'file')
     error(['input file ' fnin ' not found'])
 end
@@ -50,7 +50,7 @@ allin.vship(allin.vship > 1e10) = nan;
 
 unin.time = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
 allin.time = m_commontime(allin,'decday',unin.decday,unin.time);
-opt1 = 'mstar'; get_cropt
+opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf
     h.data_time_origin = [];
     h.data_time_origin_string = '';

@@ -57,7 +57,7 @@ cmd = ['cat /local/users/pstar/projects/rpdmoc/' mcruise '/mcruise/data/scs/scs_
 faco = [tstream '.ACO'];
 ftpl = [tstream '.TPL'];
 fmat = [tstream '.mat'];
-opt1 = 'ship'; opt2 = 'datasys_best'; get_cropt
+opt1 = 'ship'; opt2 = 'datasys_best'; MEXEC_G.mcruise
 fullfaco = [uway_sed '/' faco];
 fullftpl = [uway_sed '/' ftpl];
 fullfmat = [uway_mat '/' fmat];
