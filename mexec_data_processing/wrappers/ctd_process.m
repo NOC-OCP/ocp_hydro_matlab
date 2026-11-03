@@ -127,9 +127,9 @@ if dostep.guisteps && (dostep.edit || dostep.postedit || dostep.part1)
                 mout_1hzasc(stn)
             end
         end
-    % if ~dostep.part2
-    %     mctd_checkplots(stn,3,'quick')
-    % end
+    if ~dostep.part2
+        mctd_checkplots(stn,3,'quick')
+    end
     end
 end
 
@@ -168,7 +168,7 @@ if dostep.sbe35
     msbe35_01(max(stns)) %read sbe35 data for stations up to max(stns)
 end
 
-if dostep.sum %&& (dostep.part2 || dostep.postedit)
+if dostep.sum && (dostep.part2 || dostep.postedit)
     %calculate depths and other info for a range of stations
     station_summary(stns)
     for stn = stns

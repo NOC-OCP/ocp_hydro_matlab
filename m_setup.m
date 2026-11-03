@@ -48,10 +48,10 @@ global MEXEC_G
 %defaults that can be overwritten by input structure: what are we
 %processing, and where?
 MEXEC_G.MSCRIPT_CRUISE_STRING='dy214';
-MEXEC_G.SITE_suf = 'atsea'; % common suffixes 'atsea', 'athome', '', etc.
-MEXEC_G.mexec_data_root = '/data/pstar/projects/osnap/cruises/dy214/data'; %if empty, will search for cruise directory near current directory and near home directory
-MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/';
-MEXEC_G.sw = '/data/pstar/programs';
+MEXEC_G.SITE_suf = 'atsams'; % common suffixes 'atsea', 'athome', '', etc.
+MEXEC_G.mexec_data_root = '/home/sa07kb/shared/marphys-workspace/cruises/dy214/data/'; %if empty, will search for cruise directory near current directory and near home directory
+MEXEC_G.mexec_shell_scripts = '/home/sa07kb/projects/programs/repos_github/';
+MEXEC_G.sw = '/home/sa07kb/projects/programs';
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_processing_scripts will be verbose; if 1, only the latter; if 2, neither
 MEXEC_G.Muse_version_lockfile = 'yes'; % takes value 'yes' or 'no'
@@ -267,23 +267,23 @@ m_common
 
 slibs.seawater = 'sw_svel';
 slibs.gsw_matlab = 'gsw_CT_from_t';
-if strcmp(MEXEC_G.datatypes.ladcp,'ix')
-    l = 1;
-    if strcmp(MEXEC_G.datatypes.moor,'yes')
-        l = input('processing ladcp (1) or moored (2) data this session?  ');
-    end
-    if l==1
-        %check paths for LDEO_IX below
-        slibs.LDEO_IX = 'getinv';
-    else
-        %if LDEO_IX is on path, remove because there are conflicts with
-        %names of functions in mooring toolbox
-        prm = which('getinv');
-        if ~isempty(prm)
-            rmpath(genpath(prm))
-        end
-    end
-end
+% if strcmp(MEXEC_G.datatypes.ladcp,'ix')
+%     l = 1;
+%     if strcmp(MEXEC_G.datatypes.moor,'yes')
+%         l = input('processing ladcp (1) or moored (2) data this session?  ');
+%     end
+%     if l==1
+%         %check paths for LDEO_IX below
+%         slibs.LDEO_IX = 'getinv';
+%     else
+%         %if LDEO_IX is on path, remove because there are conflicts with
+%         %names of functions in mooring toolbox
+%         prm = which('getinv');
+%         if ~isempty(prm)
+%             rmpath(genpath(prm))
+%         end
+%     end
+% end
 slibs.gamma_n = 'eos80_legacy_gamma_n';
 %slibs.m_map = 'm_coast';
 

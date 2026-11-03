@@ -109,39 +109,39 @@ switch opt1
         switch opt2
             case 'ctd_cals'
                 co.docal.temp = 1;
-                co.docal.cond = 1;
-                co.docal.oxy = 1;
-                
-                %stainless
-                co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp + interp1([0 2400 3100],[-.5e-3 -2.e-3 -3.e-3],d0.press) + 5.2e-4;';
+                co.docal.cond = 0;
+                co.docal.oxy = 0;
+                % 
+                % %stainless
+                co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp - 5e-10.*(d0.press-1300).^2 - d0.press*5e-7 + 5e-4;';
                 co.calstr.temp.sn5785.msg = 'temp s/n 5785 calibrated based on comparison with 78/546 SBE35 measurements';
-                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + interp1([0 2500 3100],[0 -1.2e-3 -1.8e-3],d0.press) + 5e-4;';
+                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + 1e-10.*(d0.press-1300).^2 - d0.press*6e-7 + 2.5e-4;';
                 co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
-                
-                co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 1000 3100],[-1e-3 -1.5e-3 -2e-3],d0.press)/35);';
-                co.calstr.cond.sn2231.msg = 'cond s/n 2231 calibrated based on comparison with 110/290 bottle samples';
-                co.calstr.cond.sn2841.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 2500 3100],[-1.1e-3 -2e-3 -2.6e-3],d0.press)/35);';
-                co.calstr.cond.sn2841.msg = 'cond s/n 2841 calibrated based on comparison with 111/293 bottle samples';
-                 
-                % oxy spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
-                % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
-                % mainly oxy1: 3836
-                % mainly oxy2: 4580
-                co.calstr.oxy.sn619.dy214 = 'dcal.oxy = d0.oxy.*(1.1+interp1([0 3100],[0 2e-2],d0.press));'; 
-                co.calstr.oxy.sn619.msg = 'oxygen s/n 0619 calibrated based on comparison between 4/5 bottle samples and gamma_n-matched downcast';
-                co.calstr.oxy.sn2540.dy214 = 'dcal.oxy = d0.oxy.*(1.115+interp1([0 3100],[-4e-2 0],d0.press));'; 
-                co.calstr.oxy.sn2540.msg = 'oxygen s/n 2540 calibrated based on comparison between 10/12 bottle samples and gamma_n-matched downcast';
-                
-                co.calstr.oxy.sn3836.dy214 = ['dcal.oxy = d0.oxy .* ( ' ...
-                    '((d0.statnum<25).*(1+interp1([0 3100],[-2e-2 8e-3],d0.press)' ...
-                    '+interp1([1 25 26 53],[6e-3 -3e-3 0 0],d0.statnum)))' ...
-                    '+ ' ...
-                    '((d0.statnum >= 25).*(1.06 + interp1([0 3100],[-6e-3 2e-2],d0.press)))' ...
-                    ');'];
-                co.calstr.oxy.sn3836.msg = 'oxygen s/n 3836 calibrated based on comparison between 144/173 bottle samples and gamma_n-matched downcast';
-                
-                co.calstr.oxy.sn4580.dy214 = 'dcal.oxy = d0.oxy.*(1.04+interp1([0 1800 3100],[-9e-4 1.4e-2 1.5e-2],d0.press));'; 
-                co.calstr.oxy.sn4580.msg = 'oxygen s/n 4580 calibrated based on comparison between 131/155 bottle samples and gamma_n-matched downcast';
+
+                % co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 1000 3100],[-1e-3 -1.5e-3 -2e-3],d0.press)/35);';
+                % co.calstr.cond.sn2231.msg = 'cond s/n 2231 calibrated based on comparison with 110/290 bottle samples';
+                % co.calstr.cond.sn2841.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 2500 3100],[-1.1e-3 -2e-3 -2.6e-3],d0.press)/35);';
+                % co.calstr.cond.sn2841.msg = 'cond s/n 2841 calibrated based on comparison with 111/293 bottle samples';
+
+                % % oxy spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
+                % % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
+                % % mainly oxy1: 3836
+                % % mainly oxy2: 4580
+                % co.calstr.oxy.sn619.dy214 = 'dcal.oxy = d0.oxy.*(1.1+interp1([0 3100],[0 2e-2],d0.press));'; 
+                % co.calstr.oxy.sn619.msg = 'oxygen s/n 0619 calibrated based on comparison between 4/5 bottle samples and gamma_n-matched downcast';
+                % co.calstr.oxy.sn2540.dy214 = 'dcal.oxy = d0.oxy.*(1.115+interp1([0 3100],[-4e-2 0],d0.press));'; 
+                % co.calstr.oxy.sn2540.msg = 'oxygen s/n 2540 calibrated based on comparison between 10/12 bottle samples and gamma_n-matched downcast';
+                % 
+                % co.calstr.oxy.sn3836.dy214 = ['dcal.oxy = d0.oxy .* ( ' ...
+                %     '((d0.statnum<25).*(1+interp1([0 3100],[-2e-2 8e-3],d0.press)' ...
+                %     '+interp1([1 25 26 53],[6e-3 -3e-3 0 0],d0.statnum)))' ...
+                %     '+ ' ...
+                %     '((d0.statnum >= 25).*(1.06 + interp1([0 3100],[-6e-3 2e-2],d0.press)))' ...
+                %     ');'];
+                % co.calstr.oxy.sn3836.msg = 'oxygen s/n 3836 calibrated based on comparison between 144/173 bottle samples and gamma_n-matched downcast';
+                % 
+                % co.calstr.oxy.sn4580.dy214 = 'dcal.oxy = d0.oxy.*(1.04+interp1([0 1800 3100],[-9e-4 1.4e-2 1.5e-2],d0.press));'; 
+                % co.calstr.oxy.sn4580.msg = 'oxygen s/n 4580 calibrated based on comparison between 131/155 bottle samples and gamma_n-matched downcast';
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
@@ -163,20 +163,24 @@ switch opt1
                     o_choice = 2; 
                 end
             case 'raw_corrs'
-                co.oxy_align = 1; %0 until we check oxygen hysteresis, done            
+                %number of seconds to shift oxygen earlier, 2s default for subpolar?
+                co.oxy_align = 2; %0 until we check oxygen hysteresis
 
-                % before jump 
-                oxy3836_1.H1 = -0.033; oxy3836_1.H2 = 5000; % pressure
-                oxy3836_1.H3 = [-10 500;1000 500;1001 1800;1300 1800;1301 2100;9000 2100];% time
+                % % % before jump - default
+                oxy3836_1.H1 = -0.033; 
+                oxy3836_1.H2 = 5000; % pressure
+                oxy3836_1.H3 = 1450;
                 
-                % after jump
-                oxy3836_2.H1 = -0.03; oxy3836_2.H2 = 5000; % pressure
+                % % % after jump
+                oxy3836_2.H1 = -0.03; 
+                oxy3836_2.H2 = 5000; % pressure
                 oxy3836_2.H3 = [-10 500;1500 500;1501 1450;2000 1450;2001 2000;9000 2000]; %time
-                
-                oxy4580.H1 = -0.028;oxy4580.H2 = 5000;
+                % % 
+                oxy4580.H1 = -0.028;
+                oxy4580.H2 = 5000;
                 oxy4580.H3 = [-10 500;1500 500;1501 1000;2000 1000;2001 2000;9000 2000]; %time
-
-                if ismember(stnlocal,[1:21,24:25])
+                % 
+                if ismember(stnlocal,[1:21,23:25])
                     co.hyst_oxy1 = oxy3836_1;
                 elseif stnlocal==22
                     co.hyst_oxy1 = oxy4580;
@@ -759,7 +763,7 @@ case 'samp_proc'
                 elseif ismember(sntlocal,[49,50])
                     sections = {'darwin_mounds'};
                 elseif ismember(sntlocal,[51,52,53])
-                    sections = {'scotshelf'};
+                    sections = {'inner_scotshelf'};
                 end
             case 'grid'
                 sam_gridlist = {'botoxy' 'botpsal'};
@@ -767,7 +771,7 @@ case 'samp_proc'
                 if contains(section,'osnape')
                     kstns = [4:13 15:28 30:43 45:48];
                     mgrid.xlim = 2; mgrid.zlim = 4;
-                elseif contains(section,'scotshelf')
+                elseif contains(section,'inner_scotshelf')
                     kstns = [51:53];
                     mgrid.xlim = 2; mgrid.zlim = 4;
                 else
