@@ -13,9 +13,9 @@ m_common;
 if MEXEC_G.quiet<=1; fprintf(1,'finding scan numbers corresponding to cast segments for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
 pd = mexec_file_locations('procfiles','ctd');
-file1 = sprintf(pd.ctd1,stn_string);
+file1 = filefmt(pd.ctd1,stn_string);
 pdd = mexec_file_locations('procfiles','dcs');
-dfile = sprintf(pdd.dcsfile,stn_string);
+dfile = filefmt(pdd.dcsfile,stn_string);
 h1 = m_read_header(file1);
 if ~isempty(intersect(h1.fldnam,'pumps'))
     [d1, ~] = mloadq(file1,'time','scan','press','pumps',' ');
@@ -102,7 +102,7 @@ if ~isfield(ds,'dc_end') || force_auto.end
 end
 
 %corresponding indices in 24hz file
-d24 = mloadq(sprintf(pd.ctd24,stn_string),'scan',' ');
+d24 = mloadq(filefmt(pd.ctd24,stn_string),'scan',' ');
 [~,ds.dc24_bot] = min(abs(d24.scan-ds.scan_bot));
 [~,ds.dc24_start] = min(abs(d24.scan-ds.scan_start));
 [~,ds.dc24_end] = min(abs(d24.scan-ds.scan_end));

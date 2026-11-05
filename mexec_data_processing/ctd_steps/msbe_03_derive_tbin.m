@@ -22,10 +22,10 @@ m_common; MEXEC_A.mprog = mfilename;
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
 
 pd = mexec_file_locations('procfiles','ctd');
-file24 = sprintf(pd.ctd24,stn_string);
-file1 = sprintf(pd.ctd1,stn_string);
-file10 = sprintf(pd.ctd10s,stn_string);
-filesv = sprintf(pd.svel,stn_string);
+file24 = filefmt(pd.ctd24,stn_string);
+file1 = filefmt(pd.ctd1,stn_string);
+file10 = filefmt(pd.ctd10s,stn_string);
+filesv = filefmt(pd.svel,stn_string);
 
 %calculate derived variables
 [d, h] = mloadq(file24,'/');

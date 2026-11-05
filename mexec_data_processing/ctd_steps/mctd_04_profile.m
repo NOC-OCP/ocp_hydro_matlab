@@ -24,11 +24,11 @@ m_common;
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from 24 hz to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
 pd = mexec_file_locations('procfiles','ctd');
-file24 = sprintf(pd.ctd24,stn_string);
-file2d = sprintf(pd.ctd2d,stn_string);
-file2u = sprintf(pd.ctd2u,stn_string);
+file24 = filefmt(pd.ctd24,stn_string);
+file2d = filefmt(pd.ctd2d,stn_string);
+file2u = filefmt(pd.ctd2u,stn_string);
 pdd = mexec_file_locations('procfiles','dcs');
-dcsfile = sprintf(pdd.dcsfile,stn_string);
+dcsfile = filefmt(pdd.dcsfile,stn_string);
 
 MEXEC_A.Mprog = mfilename;
 

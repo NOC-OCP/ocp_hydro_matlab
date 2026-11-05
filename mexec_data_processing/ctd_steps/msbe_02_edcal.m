@@ -31,12 +31,12 @@ if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hy
 
 % input and output files
 pd = mexec_file_locations('procfiles','ctd');
-rawfile = sprintf(pd.ctdraw,stn_string);
-cleanfile = m_add_nc(sprintf(pd.ctdclean,stn_string));
-file24 = sprintf(pd.ctd24,stn_string);
-edfilepre = sprintf(pd.edctd24, stn_string);
+rawfile = filefmt(pd.ctdraw,stn_string);
+cleanfile = m_add_nc(filefmt(pd.ctdclean,stn_string));
+file24 = filefmt(pd.ctd24,stn_string);
+edfilepre = filefmt(pd.edctd24, stn_string);
 pd = mexec_file_locations('procfiles','dcs');
-dfile = sprintf(pd.dcsfile,stn_string);
+dfile = filefmt(pd.dcsfile,stn_string);
 
 % start from the raw (cnv) file
 [d, h] = mloadq(rawfile,'/');

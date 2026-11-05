@@ -108,15 +108,15 @@ switch opt1
         % part 1 not printing acdp files
         switch opt2
             case 'ctd_cals'
-                co.docal.temp = 1;
+                co.docal.temp = 0;
                 co.docal.cond = 0;
                 co.docal.oxy = 0;
                 % 
                 % %stainless
-                co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp - 5e-10.*(d0.press-1300).^2 - d0.press*5e-7 + 5e-4;';
-                co.calstr.temp.sn5785.msg = 'temp s/n 5785 calibrated based on comparison with 78/546 SBE35 measurements';
-                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + 1e-10.*(d0.press-1300).^2 - d0.press*6e-7 + 2.5e-4;';
-                co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
+                % co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp - 5e-10.*(d0.press-1300).^2 - d0.press*5e-7 + 5e-4;';
+                % co.calstr.temp.sn5785.msg = 'temp s/n 5785 calibrated based on comparison with 78/546 SBE35 measurements';
+                % co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + 1e-10.*(d0.press-1300).^2 - d0.press*6e-7 + 2.5e-4;';
+                % co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
 
                 % co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 1000 3100],[-1e-3 -1.5e-3 -2e-3],d0.press)/35);';
                 % co.calstr.cond.sn2231.msg = 'cond s/n 2231 calibrated based on comparison with 110/290 bottle samples';
