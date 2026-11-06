@@ -15,12 +15,12 @@ m_common
 if MEXEC_G.quiet<=1; fprintf(1,'plotting 24 hz and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
 
 pd = mexec_file_locations('procfiles','ctd');
-cfile = m_add_nc(sprintf(pd.ctdclean,stn_string));
-rfile = m_add_nc(sprintf(pd.ctdraw,stn_string));
-efile = sprintf(pd.edctd24,stn_string);
-infile1 = sprintf(pd.ctd1,stn_string);
+cfile = m_add_nc(filefmt(pd.ctdclean,stn_string));
+rfile = m_add_nc(filefmt(pd.ctdraw,stn_string));
+efile = filefmt(pd.edctd24,stn_string);
+infile1 = filefmt(pd.ctd1,stn_string);
 pdd = mexec_file_locations('procfiles','dcs');
-infiled = sprintf(pdd.dcsfile,stn_string);
+infiled = filefmt(pdd.dcsfile,stn_string);
 
 if nargin>1
     rt = varargin{1};

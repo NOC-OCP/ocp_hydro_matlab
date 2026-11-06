@@ -97,18 +97,18 @@ d2up = d2db; dpsal = d2db; ddcs = d2db;
 for no = 1:length(klist)
     ks = klist(no);
     sstring = sprintf('%03d',ks);
-    infile3 = m_add_nc(sprintf(pd.ctd1,sstring));
+    infile3 = m_add_nc(filefmt(pd.ctd1,sstring));
     if ks==0 && ~exist('infile3','file')
        warning(sprintf('File %s not found. Skipping station %d.',infile3,ks))
        continue
     end
-    infile4 = m_add_nc(sprintf(pdd.dcsfile,sstring));
+    infile4 = m_add_nc(filefmt(pdd.dcsfile,sstring));
     infiles{3,no} = infile3;
     infiles{4,no} = infile4;
     [dpsal{no}, ~] = mloadq(infile3,'/');
     [ddcs{no}, ~] = mloadq(infile4,'/');
     if quick
-        infile1 = m_add_nc(sprintf(pd.ctd10s,sstring));
+        infile1 = m_add_nc(filefmt(pd.ctd10s,sstring));
         if exist(infile1,'file') && exist(infile3,'file') && exist(infile4,'file')
             infiles{1,no} = infile1; infiles{2,no} = infile1;
             [d,h] = mloadq(infile1,'/');
@@ -120,8 +120,8 @@ for no = 1:length(klist)
             sused(no) = 1;
         end
     else
-        infile1 = m_add_nc(sprintf(pd.ctd2d,sstring));
-        infile2 = m_add_nc(sprintf(pd.ctd2u,sstring));
+        infile1 = m_add_nc(filefmt(pd.ctd2d,sstring));
+        infile2 = m_add_nc(filefmt(pd.ctd2u,sstring));
         % skip stations that don't have a complete set of files
         if exist(infile1,'file') && exist(infile2,'file') && exist(infile3,'file') && exist(infile4,'file')
             infiles{1,no} = infile1;

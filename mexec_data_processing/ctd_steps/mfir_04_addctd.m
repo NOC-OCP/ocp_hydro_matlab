@@ -12,15 +12,15 @@ function mfir_04_addctd(stn)
 
 m_common
 pd = mexec_file_locations('procfiles','fir');
-f = sprintf(pd.firfile,stn_string);
+f = filefmt(pd.firfile,stn_string);
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)
     return
 end
 pd = mexec_file_locations('procfiles','ctd');
-file1 = sprintf(pd.ctd1,stn_string);
-dfile = sprintf(pd.ctd2d,stn_string);
-ufile = sprintf(pd.ctd2u,stn_string);
+file1 = filefmt(pd.ctd1,stn_string);
+dfile = filefmt(pd.ctd2d,stn_string);
+ufile = filefmt(pd.ctd2u,stn_string);
 if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to %s\n', f); end
 %not using 24hz because we want at least some averaging
 

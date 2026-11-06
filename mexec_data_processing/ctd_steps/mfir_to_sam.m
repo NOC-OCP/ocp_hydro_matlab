@@ -10,7 +10,7 @@ m_common
 opt1 = 'mstar'; get_cropt
 
 pd = mexec_file_locations('procfiles','fir');
-f = m_add_nc(sprintf(pd.firfile,stn_string));
+f = m_add_nc(filefmt(pd.firfile,stn_string));
 pd = mexec_file_locations('procfiles','samp');
 samfile = pd.samc;
 if ~exist(f,'file')
