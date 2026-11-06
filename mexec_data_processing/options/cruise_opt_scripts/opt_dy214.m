@@ -109,7 +109,7 @@ switch opt1
         switch opt2
             case 'ctd_cals'
                 co.docal.temp = 1;
-                co.docal.cond = 0;
+                co.docal.cond = 1;
                 co.docal.oxy = 0;
                 % 
                 % %stainless
@@ -118,10 +118,10 @@ switch opt1
                 co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + 1e-10.*(d0.press-1300).^2 - d0.press*6e-7 + 2.5e-4;';
                 co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
 
-                % co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 1000 3100],[-1e-3 -1.5e-3 -2e-3],d0.press)/35);';
-                % co.calstr.cond.sn2231.msg = 'cond s/n 2231 calibrated based on comparison with 110/290 bottle samples';
-                % co.calstr.cond.sn2841.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 2500 3100],[-1.1e-3 -2e-3 -2.6e-3],d0.press)/35);';
-                % co.calstr.cond.sn2841.msg = 'cond s/n 2841 calibrated based on comparison with 111/293 bottle samples';
+                co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+ (interp1([0 2500 3100],[-1 -1.2 -2].*1e-3,d0.press))/35);';
+                co.calstr.cond.sn2231.msg = 'cond s/n 2231 calibrated based on comparison with 110/290 bottle samples';
+                co.calstr.cond.sn2841.dy214 = 'dcal.cond = d0.cond.*(1+(-1.25e-3 - 5e-7.*d0.press)/35);';
+                co.calstr.cond.sn2841.msg = 'cond s/n 2841 calibrated based on comparison with 111/293 bottle samples';
 
                 % % oxy spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
                 % % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
