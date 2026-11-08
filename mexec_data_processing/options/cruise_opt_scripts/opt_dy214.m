@@ -1,0 +1,780 @@
+% Todo
+% add DIC for onshore analysis
+% add nutrients for onshore analysis
+
+switch opt1
+
+    case 'setup'
+        switch opt2
+            case 'time_origin'
+                MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = [2026 1 1 0 0 0];
+        end
+
+    case 'shipuway'
+        switch opt2
+            case 'rvdas_database'
+                % Data is on two data bases however server adress it saved 
+                % in MXEC_G.RVDAS_check for the first successfull stream
+                % resetting it for each variabel so it gets the second
+                % server adress for salrmtemp
+                MEXEC_G.RVDAS_checked = [];
+                RVDAS.loginfile = '/data/plocal/rvdas_addr';
+                if exist('sqltext','var') && ~isempty(strfind(sqltext, 'salrmtemp_salin'))
+                    MEXEC_G.RVDAS_checked = [];
+                    RVDAS.loginfile = '/data/plocal/rvdas_addr_base2';
+                end
+        end
+
+%%%%%%%%%%%%%%%%%%%% uway_proc %%%%%%%%%%    
+    case 'uway_proc'
+        switch opt2
+            case 'datasys_best'
+                default_navstream = 'posmv_gpgga';
+                default_hedstream = 'posmv_pashr';
+                default_attstream = 'posmv_pashr';
+            case 'rvdas_skip'
+                % %usbl not used, wamos not used
+                % %don't need to read ctd depth through rvdas
+                % %can read surfmet variables from nudam instead
+                % skips.sentence_pat = [skips.sentence_pat, ...
+                %     'usbl', 'wamos', 'ctuopd', 'surfmet'];
+                % %below tables are present but have 0 data (return COPY 0)
+                skips.sentence = [skips.sentence, ...
+                    'truewind_truewind','metocean_QC' ...
+                    'ranger2usbl_psonlld', 'ctd_smctd', ...
+                    'metocean_TEST','metocean_TEST_QC','samos_QC',...
+                    'samos_TEST','samos_TEST_QC','truewind_QC',...
+                    'truewind_TEST','truewind_TEST_QC',...
+                     ];
+            case 'avedit'
+                switch datatype
+                    %tried adding nav data but it's not showing plots yet
+                    case 'nav'
+                        %handedit = 1;
+                        vars_to_ed.g1 = {{'heading_av_corrected','heading','head_gyr'}};%{{'roll'},{'pitch'},{'heave'},{'dum_e'},...
+                            %{'dum_n'},{'heading'},{'smg'},{'cmg'},{'distrun'}};
+                        %yl.roll = [-5 5];
+                        %yl.pitch = [-5 5];
+                        %yl.heave = [-5 5];
+                        %yl.dum_e = [-5 5];
+                        %yl.dum_n = [-5 5];
+                        yl.heading_av_corrected = [0 360];
+                        yl.heading = [0 360];
+                        yl.head_gyr = [0 360];
+                        %yl.smg = [-5 5];
+                        %yl.cmg = [-5 5];
+                        %yl.distrun = [-5 5];
+                    case 'bathy'
+                        vars_to_ed.g1 = {{'waterdepthfromsurface_sbm'},{'waterdepth_mbm'}};
+                        yl.waterdepthfromsurface_sbm = [-2 3100];
+                        yl.waterdepth_mbm = [-100 3000];
+                    case 'atmos'
+                        vars_to_ed.g1={{'press'},{'airtemp'},{'humidity'},...
+                            {'truwind_spd','truwind_e','truwind_n'},...
+                            {'ptir','ppar','stir','spar'}};
+                        yl.press = [0 1050];
+                        yl.airtemp = [-10 30];
+                        yl.ppar = [0 1e5];
+                        yl.spar = yl.ppar;
+                        yl.ptir = yl.ppar;
+                        yl.stir = yl.ppar;
+                    case 'ocean'
+                        yl.tempr = yl.temph;
+                        yl.conductivity = [0 5.5];
+                        yl.salinity = yl.psal;
+                        yl.soundvelocity = [1000 1600];
+                        yl.trans = [0 50];
+                        yl.flow = [0.5 1.8];
+                        vars_to_ed.g1 = {{'temph','tempr','tempdk'}, {'conductivity'}, {'salinity'},{'flow'}};
+                        vars_to_ed.g2 = {{'temph'},{'fluo'},{'flow'},{'trans','transmittance'}};
+                end
+            case 'tsg_ddaybreaks'
+                % tbreaks = which format???
+        end
+%%%%%%%%%%%%%%%%%%%% end uway_proc %%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%% bathy (not a script) %%%%%%%%%%
+        % not sure if needed for DY214
+    % case 'bathy'
+    %     switch opt2
+    %         case 'bathy_grid'
+    %             crhelp_str = {'load gridded bathymetry into top.lon, top.lat, top.depth,'
+    %                 'for use by mbathy_edit_av'};
+    %     end
+%%%%%%%%%%%%%%%%%%%%  end bathy (not a script) %%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%% ctd_proc %%%%%%%%%%%%
+    case 'ctd_proc'
+        % part 1 not printing acdp files
+        switch opt2
+            case 'ctd_cals'
+                co.docal.temp = 1;
+                co.docal.cond = 1;
+                co.docal.oxy = 1;
+                
+                %stainless
+                co.calstr.temp.sn5785.dy214 = 'dcal.temp = d0.temp + interp1([0 2400 3100],[-.5e-3 -2.e-3 -3.e-3],d0.press) + 5.2e-4;';
+                co.calstr.temp.sn5785.msg = 'temp s/n 5785 calibrated based on comparison with 78/546 SBE35 measurements';
+                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + interp1([0 2500 3100],[0 -1.2e-3 -1.8e-3],d0.press) + 5e-4;';
+                co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
+                
+                co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 1000 3100],[-1e-3 -1.5e-3 -2e-3],d0.press)/35);';
+                co.calstr.cond.sn2231.msg = 'cond s/n 2231 calibrated based on comparison with 110/290 bottle samples';
+                co.calstr.cond.sn2841.dy214 = 'dcal.cond = d0.cond.*(1+interp1([0 2500 3100],[-1.1e-3 -2e-3 -2.6e-3],d0.press)/35);';
+                co.calstr.cond.sn2841.msg = 'cond s/n 2841 calibrated based on comparison with 111/293 bottle samples';
+                 
+                % oxy spiky: 2055 [1,2]; 2575 [3,14]; - set as badoxyscan
+                % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
+                % mainly oxy1: 3836
+                % mainly oxy2: 4580
+                co.calstr.oxy.sn619.dy214 = 'dcal.oxy = d0.oxy.*(1.1+interp1([0 3100],[0 2e-2],d0.press));'; 
+                co.calstr.oxy.sn619.msg = 'oxygen s/n 0619 calibrated based on comparison between 4/5 bottle samples and gamma_n-matched downcast';
+                co.calstr.oxy.sn2540.dy214 = 'dcal.oxy = d0.oxy.*(1.115+interp1([0 3100],[-4e-2 0],d0.press));'; 
+                co.calstr.oxy.sn2540.msg = 'oxygen s/n 2540 calibrated based on comparison between 10/12 bottle samples and gamma_n-matched downcast';
+                
+                co.calstr.oxy.sn3836.dy214 = ['dcal.oxy = d0.oxy .* ( ' ...
+                    '((d0.statnum<25).*(1+interp1([0 3100],[-2e-2 8e-3],d0.press)' ...
+                    '+interp1([1 25 26 53],[6e-3 -3e-3 0 0],d0.statnum)))' ...
+                    '+ ' ...
+                    '((d0.statnum >= 25).*(1.06 + interp1([0 3100],[-6e-3 2e-2],d0.press)))' ...
+                    ');'];
+                co.calstr.oxy.sn3836.msg = 'oxygen s/n 3836 calibrated based on comparison between 144/173 bottle samples and gamma_n-matched downcast';
+                
+                co.calstr.oxy.sn4580.dy214 = 'dcal.oxy = d0.oxy.*(1.04+interp1([0 1800 3100],[-9e-4 1.4e-2 1.5e-2],d0.press));'; 
+                co.calstr.oxy.sn4580.msg = 'oxygen s/n 4580 calibrated based on comparison between 131/155 bottle samples and gamma_n-matched downcast';
+            case 'ctdfiles'
+                cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
+                    sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
+            case 'redoctm'
+                redoctm = 1;
+            case 'niskfilename'            
+                blinfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_BOT,...
+                    sprintf('%s_CTD%s.bl', upper(mcruise), stn_string));
+            case 'header_edits'
+            h.comment = replace(h.comment,'PSO: Tiago Dotto','PSO: Kristin Burmeister');
+            m_write_header(otfiles{1},h);
+            case 'sensor_choice'
+                ts_choice = 2;
+                o_choice = 2;
+                if ismember(stnlocal,[14,21,22]) % other sensors, to spiky - CTD 21/0: oxy-hyst off in shallow; /21 maybe too? however we have oxy avail to calib those
+                    o_choice = 1;
+                else
+                    ts_choice = 2;
+                    o_choice = 2; 
+                end
+            case 'raw_corrs'
+                co.oxy_align = 1; %0 until we check oxygen hysteresis, done            
+
+                % before jump 
+                oxy3836_1.H1 = -0.033; oxy3836_1.H2 = 5000; % pressure
+                oxy3836_1.H3 = [-10 500;1000 500;1001 1800;1300 1800;1301 2100;9000 2100];% time
+                
+                % after jump
+                oxy3836_2.H1 = -0.03; oxy3836_2.H2 = 5000; % pressure
+                oxy3836_2.H3 = [-10 500;1500 500;1501 1450;2000 1450;2001 2000;9000 2000]; %time
+                
+                oxy4580.H1 = -0.028;oxy4580.H2 = 5000;
+                oxy4580.H3 = [-10 500;1500 500;1501 1000;2000 1000;2001 2000;9000 2000]; %time
+
+                if ismember(stnlocal,[1:21,24:25])
+                    co.hyst_oxy1 = oxy3836_1;
+                elseif stnlocal==22
+                    co.hyst_oxy1 = oxy4580;
+                    co.hyst_oxy2 = oxy3836_1;
+                elseif stnlocal>25
+                    co.hyst_oxy1 = oxy3836_2; %need to double check if oxy sensor aligns here
+                end
+
+                if ismember(stnlocal,[4:13 15 17:20 23:53])
+                    co.hyst_oxy2 = oxy4580;
+                end
+            case 'rawedit_auto'
+           % oxy sensors - persistent primary-secondary offsets so
+           % regular sensor changes:
+           % CTD 25: primary sensor started aligning with secondary sensor
+           % (smaller offset)
+           % CTD 28: secondary showed very little variability on downcast,
+           % primary fine on downcast, but big difference during upcast. 
+           % John and Finn have notes
+        
+
+           % to do - station 3 auto de spiking conductivity and 
+           % fluorescence
+           % done: 004 despiking of conductivity - not seen after autospike
+           % done: 005 spikes in cond - not seen after autospike
+           % done: 009 despiking of conductivity, 
+           %           + issue with oxy sensor being very noisy on the way
+           %           up.
+           %           also, one of the oxy sensor was affected when 
+           %           surfacing before the automatically detected time 
+           %           cutoff. 
+           % done: 015 oxygen and conductivity on primary sensor affected
+           %           by something during a small bit of the descent
+           %           (around 1000m depth). Correction needed.
+           % done: 019 conductivity 1 needs despiking
+           % todo: 030 spiking in transmittance - unusually large number of
+           % data points, felt weird to remove that many so have left it
+           % todo: 030 primary oxygen sensor has a section of bad data,
+           % also salinity: reject all?: scan 23700.5-22628.5
+           % todo: 012 spike in u[cast primary
+           %check: Does oxygen get spikier towards the end?
+
+                %use rangelim first to exclude very large %skspikes
+                co.rangelim.press = [-1.25 3300];
+                co.rangelim.cond1 = [30 50]; % our measurements are in mS/cm
+                co.rangelim.temp1 = [-2 18]; 
+                if ismember(stnlocal,[1,2]) %
+                    co.rangelim.temp1 = [-2 25];
+                end
+                co.rangelim.oxy2 = [150 350]; % very broad
+                co.rangelim.temp2 = co.rangelim.temp1;
+                co.rangelim.cond2 = co.rangelim.cond1;
+                co.rangelim.oxy1 = co.rangelim.oxy2;
+                co.rangelim.turbidity = [0 1];
+                co.rangelim.fluor = [0 8];
+                co.rangelim.transmittance = [0 100];
+                co.rangelim.turbidity = [0 1];
+                co.rangelim.par = [0 100];
+                % oxygen s/n 3836 has odd response in top 40 m of downcast
+                % for stations up to and including ***
+                m = strncmp(h.fldnam,'oxy',3) & strcmp(h.fldserial,'3836');
+                if sum(m)
+                    ov = h.fldnam{m};
+                    d.(ov)(d.press<40 & d.scan<d.scan(round(length(d.scan)/2))) = NaN;
+                    d.(ov)(d.press<10 & d.scan>d.scan(round(length(d.scan)/2))) = NaN;
+                    h.comment = [h.comment '\ninitial part of oxygen s/n 3836 profile removed as bad.']; 
+                end
+                % %then despike with 2 repetitions of a 12-scan median
+                % %despiker
+                co.despike.press = [2 12; 2 12]; %avg 1m/s so 2 dbar/0.5 s is large
+                co.despike.temp1 = [0.5 12; 0.5 12];
+                co.despike.cond1 = [0.02 12; 0.02 12]; 
+                co.despike.oxy1 = [3 12; 3 12];
+                co.despike.temp2 = co.despike.temp1;
+                co.despike.cond2 = co.despike.cond1;
+                co.despike.oxy2 = co.despike.oxy1;
+                % %so many spikes it's not worth cleaning in some sensore 
+                if ismember(stnlocal,[3 28]) % 
+                    co.badscan.oxy1 = [-inf inf]; %so many spikes it's not worth cleaning
+                end
+                if ismember(stnlocal,[3, 14]) % 3,14,16,21: tried different oxy sensor
+                    co.badscan.oxy2 = [-inf inf];
+                end
+                if ismember(stnlocal,[9]) % sudden increase/decrease at start/end not visible in oxy2
+                    co.badscan.oxy1 = [-inf 19767];
+                    co.badscan.oxy1 = [175993 inf];
+                elseif stnlocal==11 %between 300-320m up data looks suspicous, exp sens 2
+                    co.badscan.cond2=[47633 49160]; %cond1 spkiky as well but less suspcious
+                    co.badscan.oxy2=[47633 49160];
+                    co.badscan.tmep2=[47633 49160];
+                elseif stnlocal==12 %cond 1 and 2 sometimes different, cond1 looks a bit suspicious,
+                    co.badscan.temp1 = [14365 14434;
+                                        15920 15975]; %suspicious spikes- 
+                    % large variabilty also in 40-45m up, all sens1:
+                    % [132024 136412]
+                elseif ismember(stnlocal,15)
+                    co.badscan.oxy1 = [37600 39961];
+                    co.badscan.cond1 = [37884 39550];
+                    co.badscan.temp1 = [37884 39550];
+                elseif stnlocal==18
+                    co.badscan.oxy1 = [-inf inf]; %suspicious in plots, espcieally theto-o characteristics
+                elseif stnlocal==25
+                    co.badscan.oxy1 = [69932 inf];
+                    co.badscan.cond2 = [9257 9838]; %maybe suspicous
+                    co.badscan.temp2 = [9257 9838];
+                elseif stnlocal==28
+                    co.badscan.cond1 = [-inf inf]; %bad
+                elseif ismember(stnlocal,30) % all three sensor1 suspicious
+                    co.badscan.cond1 = [23700.5 27247];
+                    co.badscan.temp1 = [23700.5 27247];
+                    co.badscan.oxy1 = [23700.5 28805;65283 inf];
+                % elseif ismember(stnlocal,32) # could be true signal
+                %     co.badscan.cond2 = [41200 42400];
+                %     co.badscan.temp2 = [41200 42400];
+                %     co.badscan.oxy2 = [41200 42400];
+                elseif ismember(stnlocal,44)
+                    co.badscan.cond1 = [68280 68350];
+                    % co.badscan.temp1 = [68280 68350]; suspicous in
+                    % cond/temp 2 - there is a stop and ens 1 is more
+                    % stable
+                    % co.badscan.oxy1 = [68280 68350];
+                elseif ismember(stnlocal,46)
+                co.badscan.cond1 = [31670 31710];
+                co.badscan.temp1 = [31670 31710];
+                co.badscan.oxy1 = [31670 31710];
+                elseif ismember(stnlocal,48)
+                co.badscan.cond1 = [12920 12960;13099 13130];
+                co.badscan.temp1 = [12920 12960;13099 13130];
+                co.badscan.oxy1 = [12920 12960; 13099 13130];
+                elseif stnlocal==49
+                co.badscan.oxy1 = [-inf 11998];
+                % elseif stnlocal ==49/50 oxy 1 seems suspicous, noisier
+                % then befor and differes on o-theta despite in same
+                % location, maybe set it nan?
+                end
+                if ismember(stnlocal,[1,2,29]) %remove test ctds, and 29 which was aborted, no samples
+                    co.badscan.oxy1 = [-inf inf];
+                    co.badscan.oxy2 = [-inf inf];
+                    co.badscan.temp1 = [-inf inf];
+                    co.badscan.temp2 = [-inf inf];
+                    co.badscan.cond1 = [-inf inf];
+                    co.badscan.cond2 = [-inf inf];
+                    co.badscan.turbidity = [-inf inf];
+                    co.badscan.transmittance = [-inf inf];
+                    co.badscan.fluor = [-inf inf];
+                end
+                % %then mask all on CTD whenever P is bad
+                co.badpress.temp1 = [NaN NaN];
+                co.badpress.temp2 = [NaN NaN];
+                co.badpress.cond1 = [NaN NaN];
+                co.badpress.cond2 = [NaN NaN];
+                co.badpress.oxy1 = [NaN NaN];
+                co.badpress.oxy2 = [NaN NaN];
+                co.badpress.turbidity = [NaN NaN];
+                co.badpress.transmittance = [NaN NaN];
+                co.badpress.fluor = [NaN NaN];
+            case 'rawshow'
+                repars = rmfield(repars,'g2'); %don't edit fluo etc.
+                yl.press = [-1 3200];
+                yl.press = [-1 ceil(d.press(ddcs.dc24_bot)/100)*100+10];
+                yl.fluor = [0 8]; yl.par = [0 40];
+		        if stn == 1
+                    yl.temp = [15 25];
+                end
+                if ismember(stn,[1,2])
+                    yl.cond = [40 50];
+                    yl.press = [-2 170];
+                    yl.fluor = [0 2];
+                    yl.turbidity = [0 0.2];
+                else 
+                    yl.cond = [25 45];
+                end
+                yl.temp1 = yl.temp; yl.temp2 = yl.temp; 
+                yl.cond1 = yl.cond; yl.cond2 = yl.cond;
+                yl.oxy1 = yl.oxy; yl.oxy2 = yl.oxy;
+            case 'niskins'
+                niskin_pos = 1:24;
+                niskin_number = [2754:2774,2776:2778];
+                % double check barcodes of the straight niskin numbers
+                if ismember(stn,[1:4 18:44])
+                    niskin_pos = niskin_pos(1:2:end);
+                    niskin_number = niskin_number(1:2:end);
+                end
+            case 'botflags'
+                switch stnlocal % station number
+                    % DY214
+                    % Add a new case for the station if a problem with the
+                    % bottle occured after the ctd came up (M3). These are
+                    % the bottle flags:
+                    % 1: no info; 2: no problems noted; 3: leaking;
+                    % 4: did not trip correctly; 5: not reported;
+                    % 7: unknown problem; 9: samples not drawn
+                    
+                    % If you are unsure about syntax add a comment.
+                    % Example:
+                    % todo: For station 4, bottle 9 and 11 leaked
+                    case 4
+                        niskin_flag(ismember(position,[9 11])) = 3; % bottles leaked
+                    case 6
+                        niskin_flag(ismember(position,[3])) = 3; % bottles leaked
+                    case 9 
+                        niskin_flag(ismember(position,2)) = 9; % bottle leaked and was not sampled              
+                        niskin_flag(ismember(position,18)) = 3; % bottle leaked   
+                        niskin_flag(ismember(position,[2 6 8 10 18 20 22])) = 9; % samples not drawn; backup bottles
+                    case 10
+                        niskin_flag(ismember(position,[1 6])) = 3; % bottle leaked
+                    case 12
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16 18 20 22])) = 9; % samples not drawn; backup bottles
+                    case 13
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16 18 20 22 24])) = 9; % samples not drawn; backup bottles
+                    case 14
+                        niskin_flag(ismember(position,[6 8 10 12 14 16])) = 9; % samples not drawn; backup bottles
+                    case 15
+                        niskin_flag(ismember(position,22)) = 3; % bottle leaked  
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16 18 20 22 24])) = 9; % samples not drawn; backup bottles
+                    case 16
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16 18 20 22 24])) = 9; % samples not drawn; backup bottles
+                    case 17
+                        niskin_flag(ismember(position,[2 4 6 8 10 12 14 16])) = 9; % samples not drawn; backup bottles
+                    case 18 
+                        niskin_flag(ismember(position,[3 7 11 15 19])) = 9; % samples not drawn; backup bottles
+                    case 20
+                        niskin_flag(ismember(position,[3 7])) = 9; % samples not drawn; backup bottles
+                        niskin_flag(ismember(position,[5]))=5; % not reporting because it appears to be fired on the fly
+                    case 21
+                        niskin_flag(ismember(position,[3])) = 5; % looks like nisking was closed at 1492m but stop was at 1520m
+                    case 23
+                        niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
+                    case 24
+                        niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
+                    case 25
+                        niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
+                        niskin_flag(ismember(position,17)) = 9; % bottle leaked (spout not reset); samples not drawn 
+                    case 26
+                        niskin_flag(ismember(position, [3 7 11 15 19 23])) = 9; % samples not drawn; backup bottles
+                    case 31
+                        niskin_flag(ismember(position, [3 7])) = 9; % samples not drawn; backup bottles
+                    case 32
+                        niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
+                    case 33
+                        niskin_flag(ismember(position, [3 7 11 15])) = 9; % samples not drawn; backup bottles
+                    case 39
+                        niskin_flag(ismember(position, [3])) = 9; % samples not drawn; backup bottles
+                    case 40 
+                        niskin_flag(ismember(position, [1])) = 3; % bottle leaked
+                    case 46
+                        niskin_flag(ismember(position, [1])) = 3; % bottle leaked, still drew salt and DO
+                end
+
+        end
+%%%%%%%%%%%%%%%%%%%% end ctd_proc %%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%  adcp_proc %%%%%%%%%%%%
+case 'adcp_proc'
+        cfg.rawdir = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'rawdata');
+        cfg.uppat = sprintf('%s_LADCP_%sS.000',upper(mcruise),cfg.stnstr);
+        cfg.dnpat = sprintf('%s_LADCP_%sM.000',upper(mcruise),cfg.stnstr);
+        SADCP_inst = 'os75nb';
+        cfg.f.sadcp = fullfile(MEXEC_G.MDIRLIST.M_VMADCP, 'mproc', [SADCP_inst '_' mcruise '_ctd_' stn_string '_forladcp.mat']);
+        %set magnetic declination here, rather than using either of the two
+        %options built in to LDEO_IX/loadnav
+        %[p, f, ext] = fileparts(cfg.f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
+
+        %from CE26008 - however pyIGRF is not install - so I do not use it
+        %at the moment
+        %%%
+        % a = {dbstack(2).file}; 
+        % if ~strcmp(a{1},'mout_1hzasc.m') %bash script uses the output of mout_1hzasc so don't want to try to call this before that
+        %     mdfile = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'magdec.txt');
+        %     if ~exist(mdfile,'file')
+        %         fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
+        %         pause
+        %     end
+        %     md = load(mdfile);
+        %     if ~sum(md==stnlocal)
+        %         fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
+        %         pause
+        %         md = load(mdfile);
+        %     end
+        %     ii = find(md==stnlocal); 
+        %     if isempty(ii)
+        %         warning('no mag dec for %s',stn_string)
+        %     else
+        %         ii = ii(1);
+        %         cfg.p.drot = md(ii+1);
+        %         fprintf(1,'using mag dec %f for %s',cfg.p.drot,stn_string)
+        %     end
+        % end
+%%%%%%%%%%%%%%%%%%%%  end adcp_proc %%%%%%%%%%%%        
+
+%%%%%%%%%%%%%%%%%%%%  sbe35 %%%%%%%%%%%%
+    case 'sbe35'
+        switch opt2
+            case 'sbe35files'
+                sbe35in = fullfile(MEXEC_G.MDIRLIST.M_SBE35,...
+                    sprintf('CTD_*.asc')); % not station specific
+                stnind = -6:-4; % index in file name of where the station number can be found.
+                %stnind is indices in filename sbe35file normally
+                %containing the station number; use negative to indicate
+                %distance from end e.g. [-6:-4] for dy113_SBE35_CTD_010.asc
+            case 'sbe35_flags'
+                 bad_sampnum = [2005 2007];
+                 bad_idx = ismember(t.sampnum, bad_sampnum);
+                 t.flag(bad_idx) = 3;
+                 
+            case 'restartsam'
+                pd = mexec_file_locations('procfiles','samp');    
+                %delete sam_*_all file
+                if exist(pd.samc,'file')
+                    warning('deleting sam file: %s in 1 s',pd.samc)
+                    pause(1)
+                    delete(pd.samc)
+                end
+                % find which stations have bottle firing files
+                pfir = mexec_file_locations('procfiles','fir')
+                d = dir(sprintf(pfir.firfile,'*'));
+                % Extract 3-digit blocks directly and convert to numbers
+                [~, namesWithoutExt] = cellfun(@fileparts, {d.name}, 'UniformOutput', false);
+                stns = cellfun(@(x) split(x, '_'), namesWithoutExt, 'UniformOutput', false);
+                stns = cellfun(@(x) str2double(x{3}), stns);
+                stns = stns(:)';
+                for stn = stns
+                    %re-run to freshly add CTD data to sam file
+                    mfir_to_sam(stn)
+                end
+                %add serial numbers (already saved in .mat file)
+                get_sensor_groups(stns,'samonly')
+
+        end
+%%%%%%%%%%%%%%%%%%%% end sbe35 %%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%% samp_proc %%%%%%%%%%   
+case 'samp_proc'
+        switch opt2
+            case 'files'
+                % uway_sample_log_file = fullfile(MEXEC_G.MDIRLIST.M_BOT,'uway_sample_log.csv');
+                switch samtyp
+                    case 'ulog'
+                    case 'chl'
+                    case 'oxy'
+                        files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,...
+                        'Winkler Calculation Spreadsheet_DY214_FINAL.xlsx')};
+                        sopts.numhead = 8;
+                        % below from CE26008, above not working - need to
+                        % edit, more
+                        ct = {'date','char','string';...
+                            'statnum','double','number';...
+                            'station','char','string';...
+                            'latitude','char','degreeN';...
+                            'longitude','char','degreeW';...
+                            'd','double','m';...
+                            'position','double','number';...
+                            'samno','double','number';...
+                            'sampler','char','string';...
+                            'botno','double','number';...
+                            'botvol20','double','mls';...
+                            'blank_titre','double','mls';...
+                            'OSIL_std','char','string';...
+                            'vol_std','double','mls';...
+                            'std_titre','double','mls';...
+                            'fix_temp','double','degc';...
+                            'bot_vol_tfix','double','mls';...
+                            'sample_titre','double','mls';...
+                            'analysed_by','char','string';...
+                            'iodatemol','double','M';...
+                            'n_o2','double','moles';...
+                            'conc_o2_ml','double','mg_per_l';...
+                            'conc_o2','double','umol_per_l';...
+                            'flag','double','number';...
+                            };  
+                        sopts.VariableNames = ct(:,1)';
+                        sopts.VariableTypes = ct(:,2)';
+                        sopts.VariableUnits = ct(:,3)';
+                        sopts.sheets = 1;
+                    case 'sal'
+                        files = {dir(fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,'DY214*.csv')).name};
+                        files = cellfun(@(x) fullfile(MEXEC_G.MDIRLIST.M_BOT_SAL,x),files,'UniformOutput',false);
+                        sopts.numhead = 9;
+                        sopts.numhead = 9;
+                   
+                    case 'nut'
+                    case 'co2'
+                    case 'cfc'
+                    case 'doc'
+                    case 'iso'
+                end
+            case 'replcheck'
+                checksam.oxy = [0 1]; %compare by difference (0), highlight differences over +/- 1mumol/kg     
+            case 'mctd_evaluate_sensors'
+                switch parameter
+                    case 'oxy'
+                        p.rlim=1+[-.15 .15];
+                        p.edges = [p.rlim(1):.005:p.rlim(2)];
+                end
+            case 'restartsam'
+                restartsam = 0;
+                restartusam = 0; %that seems not to be a thing
+            case 'bot_to_sam';
+                switch samtyp
+                    case 'sal'
+                      mapping = {'botpsal', 'salinity_adj';...
+                                  'botpsal_flag','flag';...
+                                'botpsal_uncor', 'salinity'};
+                        for i = 1:size(mapping, 1)
+                        new_name = mapping{i, 1}; % 'botpsal' or 'botpsal_uncor'
+                        old_name = mapping{i, 2}; % 'salinity_adj' or 'salinity'
+                        
+                        if isfield(dp, old_name)
+                            dp.(new_name) = dp.(old_name);
+                            dp = rmfield(dp, old_name);
+                            hp.fldnam = strrep(hp.fldnam, old_name,new_name);
+                            fprintf('Successfully renamed "%s" to "%s"\n', old_name, new_name);
+                        else
+                            warning('Could not find field "%s" in your dp structure.', old_name);
+                        end
+                        end
+                        vars_to_remove = {'Sample1', 'Sample2', 'Sample3', 'k15', 'cellt'};
+                        dp = rmfield(dp, vars_to_remove);
+                        remove_mask = ismember(hp.fldnam, vars_to_remove);
+                        hp.fldnam(remove_mask) = [];
+                        hp.fldunt(remove_mask) = [];
+                        % remove tsg and stds
+                        ii = find(dp.sampnum>0 & dp.sampnum<9e5);
+                        fnames = fieldnames(dp);
+                        for i = 1:length(fnames)
+                            dp.(fnames{i}) = dp.(fnames{i})(ii, :);
+                        end
+      
+               case 'oxy'
+                        % dbot = splitvars(dbot, {'botoxy', 'botoxy_flag', 'botoxy_temp'});
+                end
+            case 'parse'
+                switch samtyp
+                    case 'sal'
+                        cellT = 21;
+                        ssw_k15 = 0.99993;
+                        calcsal = 1;
+                        ssw_batch = 'P170';
+                    case 'oxy'
+                        m = isnan(sdata.flag);
+                        sdata.flag(m) = 2; %no problems noted
+                        sdata.sampnum = sdata.statnum*100+sdata.position;
+                        sdata(:,ismember(sdata.Properties.VariableNames,{'botno','botvol20','flags','statnum','position'})) = [];
+                end
+            case 'calc'
+                switch samtyp
+                    case 'sal'
+                        %salin_off = -1.5e-5; %constant
+                    case 'oxy'
+                        calcoxyfromtitre=0; % use the calculation from the spreadsheet, it is otherwise not working for dy214...
+                end
+            case 'redoctm'
+                redoctm = 1;
+            case 'check'
+                checksam.sbe35 = 0;
+                checksam.sal = 0; %0 for done: done 18/09/2026 KB
+                checksam.oxy = 0; %0 for done
+            case 'flags' %flags before replicate averaging and after replicate averaging***
+            % not yet received (1), acceptable (2), questionable (3), ...
+            % bad (4) measurements, values not reported (5), replicate means (6), ...
+            % manual chromatographic peaks (7),...
+            % irregular digital peak integrations (8), sample not drawn (9)
+                switch samtyp
+                    case 'sal'
+                        sal_adj_comment = [];
+                        salin_off = [ 
+                       1 +6.2; 2 +5.2; 3 +3.9; 4 +0.3; 5 -1.7; 6 -3.7
+                       7 -0.1; 8 -0.7; 9 -1.6
+                       10 -0.9;11 -0.9;12 -0.9;13 -0.9;14 -0.9;15 -0.9
+                       16 -1.3;17 -1.3;18 -1.3;19 -1.3;20 -1.3;21 -1.3
+                       22 +2.2;23 +0.5;24 -0.7;25 -1.5
+                       26 +2.2 ;27 +2.2;28 +2.2
+                       29 +2.9;30 +2.9; 31 +2.9
+                       32 +15.7; 33 +14.8 %suspicious, needs investigating
+                       34 +5.1; 35 1.6
+                    ];
+                    salin_off(:,1) = salin_off(:,1)+999e3;
+                    salin_off(:,2) = salin_off(:,2)*1e-5;
+                    salin_off_base = 'sampnum_run'; %'sampnum_list';
+                    
+                    % %% FLAGS
+                    % CTD 1 and 2 were the test stations - i.e. bad sample
+                    m = ismember(ds_sal.sampnum,[109,111,113,115,117,201,203,205,209,211]);
+                    ds_sal.flag(m) = 4;
+                    % questionable compared to ctd profile
+                    m3 = ismember(ds_sal.sampnum,[409,411,2201,4001,4207,4309,4601,202608281716]);
+                    ds_sal.flag(m3) = 3;
+                    case 'oxy'
+                        %sampnum, a flag, b flag, c flag
+                        % flr = [...
+                        %     %2703 3 3 9; ...
+                        %     ];
+                        % [~,ifl,id] = intersect(flr(:,1),d.sampnum);
+                        % d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
+                        % d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
+                        % d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
+                        % outliers relative to profile/CTD (not replicates)
+                        flag4 = [36]'; % this seems not to be applied
+                        gs.botoxy_flag(ismember(gs.statnum,flag4)) = 4;
+                        % flag4b = [1501 ]; %both a and b high, maybe bad niskin closure
+                        % d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
+                        % d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
+   
+                end
+        end
+%%%%%%%%%%%%%%%%%%%% end samp_proc %%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%% outputs and summaries %%%%%%%%%%%%%%%%%%%%%%
+    case 'outputs'
+        switch opt2
+            % case 'columndata'
+            %     outtypes = {'bodc','exch'}; 
+            case 'summary'
+                snames = {'nsal' 'noxy'}; % add nuts samples and DIC samples to be used onshore?
+                sgrps = {{'botpsal'} {'botoxy'} };
+                % snames = {'nsal' 'noxy' 'nnut_shore' 'nco2_shore'}; % add nuts samples and DIC samples to be used onshore?
+                % sgrps = {{'botpsal'} {'botoxy'} {'silc' 'phos' 'totnit'} {'dic' 'talk'}};
+            % case 'sam_shore'
+            %    fnin = fullfile(mgetdir('M_CTD'),'BOTTLE_SHORE', 'DY181 Samples for Onshore Analysis - DIC.xlsx');
+            %    varmap.statnum = {'CTDNumber'};
+            %    varmap.position = {'Niskin'};
+            %    varmap.dic = {'N_DICSamples'};
+            %    varmap.talk = {'N_DICSamples'};
+                % case 'sam_ashore_nut'
+            %     fnin = {fullfile(mgetdir('M_BOT_ISO'),'Nutrient_Tube_Numbers.xlsx')};
+            %     varmap = {'statnum' 'CTDCastNo_' ' '
+            %         'position' 'NiskinBottleNo_' ' '
+            %         'silc_flag' 'No_OfNutrientSamples' 'num_samples'
+            %         'phos_flag' 'No_OfNutrientSamples' 'num_samples'
+            %         'totnit_flag' 'No_OfNutrientSamples' 'num_samples'};
+            %     do_empty_vars = 1;
+            %     fillstat = 1;
+            % case 'sam_ashore_co2'
+            %     fnin = {fullfile(mgetdir('M_BOT_ISO'),'Carbon_Bottle_Names.xlsx')};
+            %     varmap = {'statnum' 'CTDCastNo_' ' '
+            %         'position' 'NiskinBottleNo_' ' '
+            %         'dic_flag' 'CarbonSamplesNo_' 'num_samples'
+            %         'alk_flag' 'CarbonSamplesNo_' 'num_samples'};
+                % do_empty_vars = 1;
+                % fillstat = 1;
+            case 'exch'
+                ns = 53; % Number of stations? not sure what this is
+                expocode = '74EQ20260820'; %{shipcode}{start YYYYMMDD}
+                sect_id = 'OSNAPe-Ellet Array';
+                submitter = 'NASAMSKB'; %group institution person
+                common_headstr = {'#SHIP: RRS Discovery';...
+                    '#Cruise DY214; UK-OSNAP/Ellett Array 2026';...
+                    '#Region: Eastern North Atlantic (subpolar)';...
+                    ['#EXPOCODE: ' expocode];...
+                    '#DATES: 20260820 - 20260909';...
+                    '#Chief Scientist: T. S. Dotto (NOC) and K. Burmeister (SAMS)';...
+                    '#Supported by grants NE/K010700/1 and NE/Y005473/1 (UK OSNAP), NE/T00858X/1 (UK OSNAP Decade), and NE/Y005589/1 (AtlantiS) from the UK Natural Environment Research Council.'};
+                if strcmp(params.in,'ctd')
+                    headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
+                    headstring = [headstring; common_headstr;
+                        {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',ns);...
+                        '#CTD: Who - K. Burmeister (SAMS) & Yvonne Firing (NOC); Status - work in progress.';...
+                        %'#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        %'# DEPTH_TYPE   : COR';...
+                        %'# DEPTH_TYPE   : water depth from CTDPRS + CTD altimeter range to bottom (station 6), or speed of sound-corrected ship-mounted bathymetric echosounder'...
+                        }];
+                else
+                    headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
+                    headstring = [headstring; common_headstr;
+                        {sprintf('#%d stations with 24-place rosette with 12 or 24 bottles',ns);...
+                        '#CTD: Who - K. Burmeister (SAMS) & Yvonne Firing (NOC); Status - work in progress';...
+                        '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
+                        % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                        % '# DEPTH_TYPE   : COR';...
+                        % '# DEPTH_TYPE   : water depth from CTDPRS + CTD altimeter range to bottom (station 6), or speed of sound-corrected ship-mounted bathymetric echosounder';...
+                        '#Salinity: Who - K. Burmeister (SAMS) & Yvonne Firing (NOC); Status - work in progress; SSW batch P170.';...
+                        '#Oxygen: Who - R. Abell  (SAMS); Status - final.';...
+                        '#Nutrients: Who - R. Abell (SAMS); Status - not yet analysed.';...
+                        '#DIC and Talk: Who - C. Johnson (SAMS); Status - not yet analysed.';...
+                        }];
+                end
+                case 'section_for_station'
+                if stnlocal>=3 && stnlocal<49 %49 SUNA @ Darwin Mounds, 48: 2nd OSNAP 26 caldip, OSNAP 27/28 not done bc weather
+                    sections = {'osnape_plus'};
+                elseif ismember(sntlocal,[49,50])
+                    sections = {'darwin_mounds'};
+                elseif ismember(sntlocal,[51,52,53])
+                    sections = {'scotshelf'};
+                end
+            case 'grid'
+                sam_gridlist = {'botoxy' 'botpsal'};
+                mgrid.sdata_flag_accept = [2 3]; %***or just 2
+                if contains(section,'osnape')
+                    kstns = [4:13 15:28 30:43 45:48];
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                elseif contains(section,'scotshelf')
+                    kstns = [51:53];
+                    mgrid.xlim = 2; mgrid.zlim = 4;
+                else
+                    section = 'profiles_only';
+                    %kstns = [1 2 10:33 3 4 5 40 41 66 70 100]; %test, dm, yo-yo, caldip, cal profile, argo 60N
+                    kstns = 1:53; %useful to do profiles_only for all stations anyway (smooth in vertical)
+                end
+        end
+   
+end

@@ -42,7 +42,7 @@ end
 if nargin>1
     mrtv = varargin{1};
 else
-    mrtv = mrdefine;
+    mrtv = mudefine;
 end
 
 tmap_mexec = mrtv.mstarpre;

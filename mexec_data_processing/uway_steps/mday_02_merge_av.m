@@ -1,7 +1,7 @@
-function mday_02_merge_av(datatype, ydays, mtable, varargin)
-% mday_02_merge_av(datatype, ydays, mtable)
+function mday_02_merge_av(datatype, ddays, mtable, varargin)
+% mday_02_merge_av(datatype, ddays, mtable)
 %
-% ydays is in yearday
+% ddays is decimal days since MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN
 % merge data from multiple inputs/instruments
 
 if nargin>3
@@ -12,7 +12,6 @@ end
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-ddays = ydays-1;
 
 ngvars = {'utctime','timeUTC','time','dday'}; %never grid this
 gvars = {}; %by default grid all other variables
@@ -24,37 +23,38 @@ switch datatype
         source = {'position'; 'heading'; 'attitude'};
         streams = {default_navstream; default_hedstream; default_attstream};
         required = [1 1 0];
-        otfile = ['bestnav_' mcruise '.nc'];
+        otfile_pre = 'bestnav';
         tavp_s = 30; %30 s
         gmethod = 'meannum';
         ngvars = [ngvars 'altitude' 'headingtrue' 'coursetrue'];
         ngvars = [ngvars 'speedknots' 'speedkmph' 'rollaccuracy' 'pitchaccuracy' 'headingaccuracy' 'ggaqual'];
     case 'bathy'
         source = {'sbm'; 'mbm'};
-        %streams = {'ea640_sddpt'; 'em122_kidpt'};
-        streams = {'es18', 'es38'};
+        streams = {'ea640_sddpt'; 'em122_kidpt'};
+        %streams = {'es18', 'es38'};
         required = [0 0];
-        otfile = ['bathy_' mcruise '.nc'];
+        otfile_pre = 'bathy';
         tavp_s = 5*60; % 5 min
         gmethod = 'medbin';
     case 'ocean'
         source = {'surfmet';'sbe45';'sbe38'};
-        streams = {'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'};
+        streams = {'brainboxuwy_ppuwy';'surfmet_sfuwy'; 'sbe45_nanan'; 'sbe38dk_sbe38'};
         required = [1 1 0]; %***make cruise-specific
-        otfile = ['surface_ocean_' mcruise '.nc'];
+        otfile_pre = 'surface_ocean';
         tavp_s = 60; % 1 min
         gmethod = 'meannum';
     case 'atmos'
         opt1 = 'ship'; opt2 = 'datasys_best'; run(MEXEC_G.opt_cruise)
         source = {'surfmet'; 'windsonic'; 'position'};
-        streams = {'surfmet_sfmet'; 'surfmet_sflgt'; 'windsonic_iimwv'};
+        streams = {'brainboxmet_ppmet'; 'surfmet_sflgt'; 'windsonic_iimwv'};
         required = [0 1 1];
-        otfile = ['atmos_truewind_' mcruise '.nc'];
+        otfile_pre = 'surface_atmos';
+        tavp_s = 'atmos_truewind';
         tavp_s = 30; % 30 s
         gmethod = 'meannum';
 end
-pd = mexec_file_locations('procfiles','sumout');
-otfile = fullfile(pd.collected,otfile);
+
+opt1 = 'uway_proc'; opt2 = 'uway_pfiles'; run(MEXEC_G.opt_cruise)
 opt1 = 'uway_proc'; opt2 = 'merge_av'; run(MEXEC_G.opt_cruise)
 
 %***check for multiple streams from same inst? not important at this
@@ -63,8 +63,11 @@ if isstruct(mtable) || istable(mtable)
     filepre = cell(size(streams)); filepre_old = filepre;
     for fno = 1:length(streams)
         ii = find(strcmp(streams{fno},mtable.tablenames),1);
-        filepre{fno} = fullfile(MEXEC_G.MDIRLIST.(['M_' upper(mtable.mstarpre{ii})]), mtable.mstarpre{ii});
+        if ~isempty(ii)
+            filepre{fno} = fullfile(MEXEC_G.MDIRLIST.(['M_' upper(mtable.mstarpre{ii})]), mtable.mstarpre{ii});
+        end
     end
+    filepre = filepre(~cellfun('isempty',filepre));
 elseif iscell(mtable)
     filepre = mtable;
 end
@@ -141,17 +144,17 @@ if regrid
 end
 
 % load and QC combined data (all?***)
-[dg, hg] = mload(otfile,'/');
+[dg, hg] = mload(otfile,'/'); %***are there lots of nans in gridded data still? ***dy214***y
 
 %edit
 opt1 = 'uway_proc'; opt2 = 'avedit'; run(MEXEC_G.opt_cruise)
 %apply previous manually selected edits
 btol = (tavp_s/2)/86400;
 edfile = fullfile(fileparts(otfile),'editlogs',[datatype '_' mcruise]);
-[dg, ~] = apply_guiedits(dg, 'dday', [edfile '*'], 0, btol);
+[dg, ~] = apply_guiedits(dg, 'dday', edfile, btol);
 if ~isempty(uopts)
     % autoedits (e.g. if A depends on B, remove A when B is bad)
-    [dg, comment] = apply_autoedits(dg, uopts);
+    [dg, comment] = apply_autoedits(dg, uopts); %not editing out all badflow in conductivity even where it is in temph?***dy214***y 
     if ~isempty(comment)
         hg.comment = [hg.comment comment];
     end

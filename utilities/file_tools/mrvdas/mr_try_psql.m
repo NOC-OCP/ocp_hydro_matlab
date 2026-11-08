@@ -9,7 +9,7 @@ function [csvname, result, psql_string] = mr_try_psql(sqltext,varargin)
 %
 
 m_common
-opt1 = 'uway_proc'; opt2 = 'rvdas_database'; MEXEC_G.mcruise
+opt1 = 'uway_proc'; opt2 = 'rvdas_database'; run(MEXEC_G.opt_cruise)
 quiet = 1; if nargin>1; quiet = varargin{1}; end
 
 %if we haven't checked before in this session, first see if we have the

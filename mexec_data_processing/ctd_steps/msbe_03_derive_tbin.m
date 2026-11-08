@@ -19,14 +19,13 @@ function msbe_03_derive_tbin(stn)
 %     gsw functions
 %     mfsave
 
-m_common; MEXEC_A.mprog = mfilename;
+m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
-
-pd = mexec_file_locations('procfiles','ctd');
-file24 = sprintf(pd.ctd24,stn_string);
-file1 = sprintf(pd.ctd1,stn_string);
-file10 = sprintf(pd.ctd10s,stn_string);
-filesv = sprintf(pd.svel,stn_string);
+opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise);
+file24 = sprintf(pfiles.ctd_cleancal,stn_string);
+file1 = sprintf(pfiles.ctd_1hz,stn_string);
+file10 = sprintf(pfiles.ctd_10s,stn_string);
+filesv = sprintf(pfiles.svel,stn_string);
 
 %calculate derived variables
 [d, h] = mloadq(file24,'/');
@@ -113,7 +112,7 @@ opt1 = 'ctd_proc'; opt2 = '1hz_interp'; run(MEXEC_G.opt_cruise)
 tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew.time,1)>1; tg = tg'; end
 dnew0 = dnew;
-dnew = grid_profile(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_ends', [0 0], 'postfill', maxfill1);
+dnew = grid_1D(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_ends', [0 0], 'postfill', maxfill1);
 %at this stage all the input flag fields were either 2 or 7, so anything > 2 becomes 7
 dnew = struct2table(dnew);
 % m = cellfun(@(x) endsWith(x,'_flag'),dnew.Properties.VariableNames);
@@ -124,7 +123,7 @@ mfsave(file1, dnew, hnew);
 %average to 0.1hz, output to _10s file and svel.csv file
 tg = [dnew0.time(1):10:dnew0.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew0.time,1)>1; tg = tg'; end
-dnew = grid_profile(dnew0, 'time', tg, 'meannum', 'num', 240, 'prefill', 240, 'grid_ends', [0 0], 'postfill', 0);
+dnew = grid_1D(dnew0, 'time', tg, 'meannum', 'num', 240, 'prefill', 240, 'grid_ends', [0 0], 'postfill', 0);
 %at this stage all the input flag fields were either 2 or 7, so anything > 2 becomes 7
 dnew = struct2table(dnew);
 % m = cellfun(@(x) endsWith(x,'_flag'),dnew.Properties.VariableNames);
@@ -133,6 +132,7 @@ md = dnew.press<max(dnew.press);
 ds = [sw_dpth(dnew.press(md),dnew.latitude(md)) sw_svel(dnew.psal(md),dnew.temp(md),dnew.press(md))]';
 dnew = table2struct(dnew,'ToScalar',true);
 mfsave(file10, dnew, hnew);
+
 fid = fopen(filesv,'w');
 fprintf(fid,'depth (m), sound speed (m/s)\n');
 fprintf(fid, '%f, %f\n', ds(:));

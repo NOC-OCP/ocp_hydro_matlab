@@ -22,14 +22,14 @@ mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 didedits = 0;
 
 %definitions
-ii = find(strcmp(abbrev,mtable.mstarpre)); 
-rootdir = fullfile(MEXEC_G.mexec_data_root, mtable.mstardir{ii(1)});
-infile = fullfile(rootdir, sprintf('%s_%s_all_raw.nc', abbrev, mcruise));
+ii = find(strcmp(abbrev,mtable.mstarpre));
+opt1 = 'uway_proc'; opt2 = 'uway_pfiles';
+infile = sprintf(pfiles.uway_raw, abbrev);
 if ~exist(m_add_nc(infile),'file')
     warning('no %s, skipping', infile)
     return
 end
-otfile = [infile(1:end-6) 'edt.nc'];
+otfile = sprintf(pfiles.uway_edt, abbrev);
 if exist(otfile,'file')
     didedits = 1; %always add days to file if it already exists
 end

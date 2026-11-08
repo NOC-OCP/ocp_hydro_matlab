@@ -188,12 +188,13 @@ end
 if dostep.guisteps && (dostep.part2 || dostep.postedit)
     for stn = stns
         mctd_checkplots(stn,3)
+        disp('Press any key to continue...');
         pause
     end
 end
 
 
-if dostep.part2 || dostep.postedit
+if dostep.sum %&& (dostep.part2 || dostep.postedit)
     %calculate depths and other info for a range of stations
     station_summary(stns)
     for stn = stns

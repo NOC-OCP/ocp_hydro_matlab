@@ -55,19 +55,19 @@ if nargin==0
     samtyp = input('what type of sample (sal, oxy, nut, chl, co2, etc.)?  ','s');
 end
 clear sopts
-pd = mexec_file_locations('procfiles','samp',samtyp);
-opt1 = 'samp_proc'; opt2 = 'files'; run(['opt_' MEXEC_G.mcruise])
-if isempty(files)
+
+opt1 = 'samp_proc'; opt2 = 'samp_infiles'; run(MEXEC_G.opt_cruise)
+if isempty(infiles.(samtyp))
     warning('no %s files found in %s; check opt_%s', samtyp, root_in, MEXEC_G.mcruise)
     return
 end
-if length(sopts)>1 && length(sopts)~=length(files)
+if length(sopts)>1 && length(sopts)~=length(infiles.(samtyp))
     warning('sopts must be a scalar or must have the same length as files')
     return
 end
 %load column/matrix data into table sdata, and any headers in cell array
 %shead, which may be used by opt_{cruise}.m
-[sdata, shead] = load_samdata(files, sopts); 
+[sdata, shead] = load_samdata(infiles.(samtyp), sopts); 
 %remove columns with no non-nan values
 
 %parse what was in files (split strings and datetimes, fill in missing
@@ -76,7 +76,7 @@ end
 %also do some basic checks on sampnums and other values in case of typos
 %(only if switched on?) before doing any filling or renaming or relabelling
 %units
-opt1 = 'samp_proc'; opt2 = 'parse'; run(['opt_' MEXEC_G.mcruise])
+opt1 = 'samp_proc'; opt2 = 'parse'; run(MEXEC_G.opt_cruise)
 if exist('fillstatnum','var')
     sdata = fill_samdata_statnum(sdata, fillstatum);
     names0 = sdata.Properties.VariableNames;
@@ -93,7 +93,7 @@ sdata.Properties.VariableUnits(m) = {'umol_per_l'}; %***what if not umol?
 sdata.Properties.VariableNames(m) = cellfun(@(x) replace(x,'_per_l',''), sdata.Properties.VariableNames(m), 'UniformOutput', false);
 sdata.Properties.VariableUnits(strcmp('sampnum',sdata.Properties.VariableNames)) = {'number'};
 %assign units to flags, and replace NaN flags with 9s
-mf = cellfun(@(x) contains(x,'_flag'),sdata.Properties.VariableNames);
+mf = cellfun(@(x) contains(x,'flag'),sdata.Properties.VariableNames);
 if sum(mf)
     mnw = strcmp('woce_4.9',sdata.Properties.VariableUnits);
     if sum(mf & mnw)
@@ -107,6 +107,7 @@ end
 %do parameters need to be derived before examining replicates and flagging?
 switch samtyp
     case 'oxy'
+<<<<<<< HEAD
       m = strncmp('botoxy',sdata.Properties.VariableNames,6);
       if ~sum(m)
           tpar.vol_reag_tot = 2; %total volume of reagents (mL) added before closing bottle
@@ -122,8 +123,23 @@ tpar.vol_std = 5; %volume of standard added in standardisation
         vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
         vnrequire = {'botoxy','botoxy_temp'}; %all must be non-nan for value of first to be reported
         vnrepl = {'botoxy'};
+=======
+        %e.g. oxy concentration from titre, std vol, blank vol
+        sdata = oxy_calc(sdata); %***output is per_l or per_kg? - KB seems still to be per_l
+        mt = cellfun(@(x) contains(x, '_temp'), sdata.Properties.VariableNames);
+        if sum(mt); sdata.Properties.VariableUnits(mt) = {'degC'}; end %***overwrite?
+        % rename and keep only some variables
+        sdata(:, 'botoxy') = sdata(:, 'conc_o2');
+        sdata(:,'botoxy_flag') = sdata(:,'flag');
+        sdata(:,'botoxy_temp') = sdata(:,'fix_temp');
+        vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
+        sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
+>>>>>>> dy214
     case 'sal'
+        warning('msam_load cannot process salinity bottle sample yet. Please use msal_01 as standalone function for this')
+        return
         %e.g. average conductivity from 3 readings, and salinity from that
+<<<<<<< HEAD
 
         %sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
         vnkeep = {'sampnum','reading','botpsal'};
@@ -134,6 +150,15 @@ tpar.vol_std = 5; %volume of standard added in standardisation
     case 'chl'
     case 'cfc'
     case 'iso'
+=======
+        % sdata = sal_calc(sdata); %***this happens after replicates are checked, keep special code to not flag reading replicates as replicate sample bottles?***
+        % edit below to match whatever is called for in msam_merge?
+        % sdata(:, 'botoxy') = sdata(:, 'conc_o2');
+        % sdata(:,'botoxy_flag') = sdata(:,'flag');
+        % sdata(:,'botoxy_temp') = sdata(:,'fix_temp');
+        % vnkeep = {'sampnum','botoxy','botoxy_flag','botoxy_temp'};
+        % sdata(:,~ismember(sdata.Properties.VariableNames,vnkeep)) = [];
+>>>>>>> dy214
 end
 
     %shift tsg sampnum times if using >0 method
@@ -250,14 +275,15 @@ gs.position = gs.sampnum-gs.statnum*100;
 gs.Properties.VariableUnits(end-1:end) = {'number','on.rosette'};
 
 %add existing flags from editlogs***
-    %edits
-    reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
-    opt1 = 'samp_proc'; opt2 = 'sal_flags'; run(['opt_' MEXEC_G.mcruise])
-    if reapply_saledits
-        [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
-    end
+%edits
+% reapply_saledits = 1; edfile = fullfile(root_sal,'editlogs','bad_sal_readings');
+% opt1 = 'samp_proc'; opt2 = 'sal_flags'; get_cropt
+% if reapply_saledits
+%     [ds_sal, ~] = apply_guiedits(ds_sal, 'sampnum', [edfile '*']);
+% end
 
-opt1 = 'samp_proc'; opt2 = 'flag'; run(['opt_' MEXEC_G.mcruise]) %apply flags if specified in opt_cruise
+opt1 = 'samp_proc'; opt2 = 'flags'; get_cropt %apply flags if specified in opt_cruise
+
 %recalculate mean, stdev, range (or for the first time? or do this after
 %repl_check?)
 okf = [2 3];
@@ -283,7 +309,7 @@ for varno = find(mv)
 end
 
 %optionally check replicates against each other
-opt1 = 'samp_proc'; opt2 = 'replcheck'; run(['opt_' MEXEC_G.mcruise])
+opt1 = 'samp_proc'; opt2 = 'replcheck'; run(MEXEC_G.opt_cruise)
 if isfield(checksam,samtyp) && (length(checksam.(samtyp))>1) || checksam.(samtyp)
     repl_check(samtyp, gs, checksam.(samtyp)); %***working on this for nut, need to add code for chl as well as sal and sbe35 (sal repls compared earlier? yes, and handled differently, not flagged as mean of replicates because not separate samples exactly)***
 end

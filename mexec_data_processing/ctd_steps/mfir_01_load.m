@@ -7,22 +7,24 @@ function mfir_01_load(stn)
 m_common
 
 % input file names
-opt1 = 'ctd_proc'; opt2 = 'niskfilename'; run(MEXEC_G.opt_cruise)
-if ~exist(blinfile,'file')
-    fprintf(2,'.bl file for cast %03d not found; try sync again and enter to continue\n',stn);
+opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
+infile = fprintf(infiles.ctd_nisk_fir,stn_string);
+[~,~,ext] = fileparts(infiles.ctd_nisk_fir);
+if ~exist(infile,'file')
+    fprintf(2,'%s file for cast %03d not found; try sync again and enter to continue\n',ext,stn); 
     pause
-    if ~exist(blinfile,'file')
-        warning('no .bl file %s; skipping',blinfile)
+    if ~exist(infile,'file')
+        warning('no .bl file %s; skipping',infile)
         return
     end
 end
 if MEXEC_G.quiet<=1; fprintf(1,['reading in .bl file to ' dataname '.nc\n'],stn_string); end
-pd = mexec_file_locations('procfiles','fir');
-firot = sprintf(pd.firfile,stn_string);
+otfile = sprintf(pfiles.ctd_nisk,stn_string);
 
 %load scan and position for each rosette firing, from .bl or .btl file
-if contains(blinfile,'.bl')
-    cellall = mtextdload(blinfile,',',10); % load all text
+if strcmp(ext,'.bl')
+    cellall = mtextdload(infile,',',10); % load all text
     if size(cellall,2)<4
         warning('no bottles for cast %s; skipping',stn_string)
         return
@@ -37,11 +39,11 @@ if contains(blinfile,'.bl')
             n = n+1;
         end
     end
-elseif contains(blinfile,'.btl')
+elseif strcmp(ext, '.btl')
     n = 0; pos = []; scn = [];
     iis = nan; iip = nan;
     cont = true;
-    fid = fopen(blinfile,'r');
+    fid = fopen(infile,'r');
     while cont
         s = fgets(fid);
         if ~ischar(s); break; elseif contains(s,'#') || contains(s,'*'); continue; end
@@ -61,7 +63,7 @@ elseif contains(blinfile,'.btl')
         end
     end
     fclose(fid);
-% elseif contains(blinfile,'.ros')
+% elseif strcmp(ext,'.ros') %***
 %     [d,h] = msbe_to_mstar(blinfile,'y','y');
 %     pos = d.Position; h = d.scan;
 else
@@ -73,7 +75,7 @@ pos = pos(:);
 scn = scn(:);
 
 %add (from defaults) corresponding information like bottle S/N, bottle flag
-opt1 = 'ctd_proc'; opt2 = 'niskins'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'nisk_numbers'; run(MEXEC_G.opt_cruise)
 niskin_number = niskin_number(:);
 niskin_pos = niskin_pos(:);
 [~,ia,ib] = intersect(pos,niskin_pos);
@@ -88,7 +90,7 @@ position = position(m);
 niskin = niskin_number(m);
 niskin_flag = niskin_flag(m);
 clear m ia ib
-opt1 = 'ctd_proc'; opt2 = 'botflags'; run(MEXEC_G.opt_cruise) %change flags here
+opt1 = 'ctd_proc'; opt2 = 'nisk_flags'; run(MEXEC_G.opt_cruise) %change flags here
 %check that possible bad code in opt file hasn't added dimensions
 if size(niskin)==size(niskin_flag)
 else
@@ -104,19 +106,20 @@ if exist('append_stn_strings','var')
     else
         scan = scan + comb_stns(3);
         stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
-        firot = sprintf(pd.firfile,stn_string);
-        if exist(m_add_nc(firot),'file')
+        otfile = sprintf(pfiles.ctd_nisk,stn_string);
+        if exist(m_add_nc(otfile),'file')
             blappend = 1;
         end
     end
 end
 
 %write to .fir file
-comment = ['input data from ' blinfile];
+comment = ['input data from ' infile];
 if blappend
-    d.scan = scan; d.position = position;
+    %append to existing file
+    d.scan = scan+append_scan_offsets; d.position = position;
     d.niskin = niskin; d.niskin_flag = niskin_flag;
-    h = m_read_header(firot);
+    h = m_read_header(otfile);
     [h.fldnam,~,ib] = intersect(fieldnames(d)',h.fldnam,'stable');
     h.fldunt = h.fldunt(ib); 
     if isfield(h,'fldserial')
@@ -124,13 +127,13 @@ if blappend
     end
     h = rmfield(h,{'alrlim','uprlim','absent','num_absent','dimrows','dimcols','dimsset'});
     h.comment = [h.comment '\n' comment];
-    mfsave(firot, d, h, '-merge', 'scan')
+    mfsave(otfile, d, h, '-merge', 'scan')
 
 else
 
     timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
     MEXEC_A.MARGS_IN = {
-        firot
+        otfile
         'scan'
         'position'
         'niskin'
@@ -138,7 +141,7 @@ else
         ' '
         ' '
         '1'
-        sprintf(pd.firname,stn_string)
+        sprintf('fir_%s_%s',MEXEC_G.mcruise,stn_string)
         '/'
         '2'
         MEXEC_G.PLATFORM_TYPE
@@ -170,6 +173,6 @@ else
         '-1'
         };
     msave
-    mfixperms(pd.firname)
+    mfixperms(otfile)
     %--------------------------------
 end

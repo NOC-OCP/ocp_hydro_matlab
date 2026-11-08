@@ -27,13 +27,15 @@ svars = {'sampnum','niskin_flag'}; %variables to load from sample file (already 
 uvars = {'dday','flow'}; %variables to load from underway time series file (and interpolate)
 pvars = 1; %1 to save all variables from paramfile to sam*file, otherwise list specific variables (using names after convs.rename has been applied)
 %modify defaults
+convs = {};
 switch samtyp
     case 'chl'
         hnew.comment = ['chlorophyll data from ' pd.(samtyp)];
         uvars = [uvars, 'fluo'];
     case 'oxy'
         %rename for backwards compatibility?***
-        convs.umol_per_l_to_per_kg.temp = 'botoxy_temp'; %convert using oxygen draw temperature from each sample if recorded
+        apply_repl_ave=1;
+        convs.per_l_to_per_kg.temp = 'botoxy_temp'; %convert using oxygen draw temperature from each sample if recorded
         svars = [svars, 'uasal'];
         pvars = {'botoxy','botoxy_temp','botoxy_flag'};
         hnew.comment = ['oxygen data from ' pd.(samtyp)];
@@ -41,22 +43,27 @@ switch samtyp
         %losing backwards compatibility to make an appended oxy file
         %first***
     case 'nut'
-        convs.umol_per_l_to_per_kg.temp = 20; %convert using default lab temperature***
+        convs.per_l_to_per_kg.temp = 20; %convert using default lab temperature***
         svars = [svars, 'uasal'];
         uvars = [uvars, 'salinity']; %***
         opt1 = 'samp_proc'; opt2 = 'nut_to_sam'; run(MEXEC_G.opt_cruise) %could set to not avg, or change the lab temp***
         hnew.comment = ['nutrient data from ' pd.(samtyp)]; %***overwrite comment or add comment?
     case 'sal'
-%        convs.rename = {'botpsal', {'salinity_adj','salinity'};... %by
+       apply_repl_ave=0;
+ %by
 %        default this should be in mexec_defaults samp_proc parse as
 %        varmap***
-%            'botpsal_flag', {'flag'}}; %backwards compatibility
-        pvars = {'botpsal','botpsal_flag'};
+%            'botpsal_flag'
+% , {'flag'}}; %backwards compatibility
         uvars = [uvars, 'salinity'];
+        pvars = [{'botpsal';'botpsal_flag'}; uvars(:)];
         hnew.comment = ['salinity data from ' pd.(samtyp)];
     case 'sbe35'
+        % warning('msam_merge.m needs to be edited for sbe35 to work')
+        apply_repl_ave=1;
         pvars = {'sbe35temp'; 'sbe35temp_flag'}; %list which to copy because we don't need to copy tdiff etc.***
         hnew.comment = ['SBE35 data from ' pd.(samtyp)];
+        % return
     case 'iso'
         %***just default?
     otherwise
@@ -65,6 +72,8 @@ end
 %load data saved by msam_load, along with CTD/underway
 %parameters required to convert from samufile and ucfiles.ocean 
 [dp, hp] = mloadq(pd.(samtyp),'/');
+opt1 = 'samp_proc'; opt2 = 'bot_to_sam'; get_cropt
+
 if sum(dp.sampnum>0 & dp.sampnum<1e6)
     %there are CTD samples
     [dc, hc] = mloadq(pd.samc, strjoin(svars, ' ')); 
@@ -74,40 +83,60 @@ if sum(dp.sampnum>0 & dp.sampnum<1e6)
 end
 if sum(dp.sampnum<0 | dp.sampnum>1e9) && exist(pdu.buocean,'file')
     %there are underway samples; interpolate from surface_ocean file
-    [du, hu] = mloadq(pdu.buocean, strjoin(uvars, ' '));
+    otfile = fullfile(pdu.buocean,sprintf(pdu.buallform, 'surface_ocean', mcruise));
+    [du, hu] = mloadq(otfile,strjoin(uvars, ' '));
     dnum = m_commontime(du,'dday',hu,'datenum');
     sampnump = str2num(datestr(dnum,'yyyymmddHHMM'));
     sampnumn = -floor(du.dday)*1e4 - str2num(datestr(dnum,'HHMM'));
     flds = setdiff(uvars, {'dday','times'});
     for no = 1:length(flds)
+        dp.(flds{no}) = NaN(size(dp.sampnum));
         m = dp.sampnum>1e9;
+        if length(sampnump) > length(unique(sampnump))
+        [sampnump_unique, ~, uii] = unique(sampnump);
+        data_averaged = accumarray(uii, du.(flds{no}), [], @(x) mean(x, 'omitnan'));
+        dp.(flds{no})(m) = interp1(sampnump_unique, data_averaged, dp.sampnum(m));
+        else
         dp.(flds{no})(m) = interp1(sampnump,du.(flds{no}),dp.sampnum(m));
+        end
         m = dp.sampnum<0;
+        if length(sampnumn) > length(unique(sampnumn))
+        [sampnumn_unique, ~, uii] = unique(sampnumn);
+        data_averaged = accumarray(uii, du.(flds{no}), [], @(x) mean(x, 'omitnan'));
+        dp.(flds{no})(m) = interp1(sampnumn_unique, data_averaged, dp.sampnum(m));
+        else
         dp.(flds{no})(m) = interp1(sampnumn,du.(flds{no}),dp.sampnum(m));
+        end
         m = strcmp(flds{no},hu.fldnam);
-        hp.fldnam = [hp.fldnam flds{no}];
-        hp.fldunt = [hp.fldunt hu.fldunt{m}];
+        hp.fldnam = [hp.fldnam {flds{no}}];
+        hp.fldunt = [hp.fldunt {hu.fldunt{m}}];
     end
 end
 
 %turn into table, add units, and rename variables if specified
 dp = struct2table(dp);
-dp.Properties.VariableUnits = hp.fldunt;
-hnew.comment = '';
+dp = match_table_units(dp, hp);
+% hnew.comment = ''; % seems not logical to overwrite it.
 
 %convert parameter sample data e.g. from umol_per_l to umol_per_kg, as
 %specified in convs  
-[dp, hnew] = samp_units_conv(dp, hnew, convs);
+if ~isempty(convs)
+    [dp, hnew] = samp_units_conv(dp, hnew, convs);
+end
 %***what about underway data?
 
 if iscell(pvars)
     %drop variables we don't need
-    m = ismember(dp.Properties.VariableNames, [pvars 'sampnum niskin_flag']); %***uway flag var?
+    m = ismember(dp.Properties.VariableNames, [pvars(:); {'sampnum'; 'niskin_flag'}]); %***uway flag var?
     dp = dp(:,m);
+    hnew.fldnam = dp.Properties.VariableNames;
+    hnew.fldunt = dp.Properties.VariableUnits;
 end
 
 %average replicates 
+if apply_repl_ave
 [dp, hnew] = repl_avg(dp, hnew, svars);
+end
 
 %***post-averaging conversions/calculations?
 
@@ -123,8 +152,35 @@ end
 %flag)
 dp = table2struct(dp,'ToScalar',true);
 dp.niskin_flag = dc.niskin_flag;
+
 dp = hdata_flagnan(dp, 'keepemptyvars', 1);
 dp = rmfield(dp,'niskin_flag');
+target_fields = fieldnames(dp);
+old_fldnam = hnew.fldnam;
+old_fldunt = hnew.fldunt;
+
+hnew.fldnam = target_fields'; % Transposed to match your 1xN row layout
+hnew.fldunt = cell(1, numel(target_fields));
+for k = 1:numel(target_fields)
+    current_field = target_fields{k};
+    
+    if endsWith(current_field, '_flag')
+        % Rule A: Force flag fields to get the exact WOCE format string
+        hnew.fldunt{k} = 'woce_4.8 and 4.9';
+        
+    else
+        % Rule B: Look up if this field already has a unit assigned previously
+        match_idx = strcmp(old_fldnam, current_field);
+        
+        if any(match_idx)
+            % Keep the old unit (e.g., 'umol_per_kg' or 'number')
+            hnew.fldunt{k} = old_fldunt{match_idx};
+        else
+            % Fallback: Provide a default string if it is a brand-new data variable
+            hnew.fldunt{k} = 'unknown'; 
+        end
+    end
+end
 
 %save samfile
 mfsave(pd.samc, dp, hnew, '-merge', 'sampnum');
@@ -166,16 +222,18 @@ if isfield(convs,'per_l_to_per_kg') && isfield(convs.per_l_to_per_kg,'temp')
         ctemp = dp.(temp); %e.g. botoxy_temp
     end
     nc = size(ctemp,2);
-    dens = gsw_rho(repmat(dp.uasal,1,nc), gsw_CT_from_t(repmat(dp.uasal1,nc), ctemp, 0), 0);
+    dens = gsw_rho(repmat(dp.uasal,1,nc), gsw_CT_from_t(repmat(dp.uasal,1,nc), ctemp, 0), 0);
     %convert all variables whose units are umol_per_l (*** or just
     %*_per_l?)
     m = strcmp('umol_per_l',dp.Properties.VariableUnits);
-    dp(:,m) = dp(:,m)./(repmat(dens,1,sum(m))/1000);
+    dp{:,m} = dp{:,m}./(repmat(dens,1,sum(m))/1000);
     %change units
     dp.Properties.VariableUnits(m) = {'umol_per_kg'};
     %if variable names also contained _per_l, change them
     dp.Properties.VariableNames(m) = cellfun(@(x) replace(x,'_per_l',''), dp.Properties.VariableNames(m), 'UniformOutput', false); %***
-    hnew.comment = [hnew.comment ', converted from umol/l to umol/kg using ' c.temp ' and CTD salinity'];
+    hnew.comment = [hnew.comment ', converted from umol/l to umol/kg using ' temp ' and CTD salinity'];
+    hnew.fldnam = dp.Properties.VariableNames;
+    hnew.fldunt = dp.Properties.VariableUnits;
 end
 
 function [dp, hnew] = repl_avg(dp, hnew, svars)
@@ -195,7 +253,8 @@ for nno = 1:length(vnames)
     vunit = un{nno};
     data = dp.(vname);
     [nr,nc] = size(data);
-    flag = dp.([vname '_flag']);
+    fname = [vname '_flag'];
+    flag = dp.(fname);
     %find best flag for each sampnum (2 better than 3
     %better than 4, 1 and 9 irrelevant)
     flag(flag==1) = NaN; %1 not yet analysed means we won't have data anyway
@@ -227,8 +286,26 @@ for nno = 1:length(vnames)
     %add new fields
     dp.(vname) = dataav;
     dp.(fname) = flag0;
-    hnew.fldnam = [hnew.fldnam vname fname];
-    hnew.fldunt = [hnew.fldunt vunit 'woce_4.9'];
+    if ismember(vname, hnew.fldnam)
+        % Find exactly where it is and replace the unit
+        idx_v = strcmp(vname, hnew.fldnam);
+        hnew.fldunt(idx_v) = {vunit}; 
+    else
+        % It doesn't exist, so append both name and unit
+        hnew.fldnam = [hnew.fldnam {vname}];
+        hnew.fldunt = [hnew.fldunt {vunit}];
+    end
+    
+    % --- Handle fname & its flag unit ---
+    if ismember(fname, hnew.fldnam)
+        % Find exactly where it is and replace the unit
+        idx_f = strcmp(fname, hnew.fldnam);
+        hnew.fldunt(idx_f) = {'woce_4.9'};
+    else
+        % It doesn't exist, so append both name and unit
+        hnew.fldnam = [hnew.fldnam {fname}];
+        hnew.fldunt = [hnew.fldunt {'woce_4.9'}];
+    end
     if max(nav)>1
         sname = [vname '_std'];
         nname = [vname '_N'];
@@ -238,10 +315,40 @@ for nno = 1:length(vnames)
         hnew.fldunt = [hnew.fldunt vunit 'number'];
     end
     if sum(flag0==6)
-        hnew.comment = [hnew.comment ', ' vname ' average of replicates (' strjoin(rname,',') ')'];
+        hnew.comment = [hnew.comment ', ' vname ' average of replicates (' strjoin(vnames,',') ')'];
     end
-    %remove replicate fields
-    m = ismember(hnew.fldnam,[rnames rfnames]);
-    dp(:,m) = []; hnew.fldnam(m) = []; hnew.fldunt(m) = [];
 end
+% drop files not averaged
+all_vars = dp.Properties.VariableNames;
+vars_to_drop = {};
+for i = 1:numel(all_vars)
+    if size(dp.(all_vars{i}), 2) > 1
+        vars_to_drop{end+1} = all_vars{i}; % Add to drop list if multi-column
+    end
+end
+% drop replicates
+dp = removevars(dp, vars_to_drop);
+m = ismember(hnew.fldnam,dp.Properties.VariableNames);
+hnew.fldnam = hnew.fldnam(:,m);
+hnew.fldunt = hnew.fldunt(:,m);
 
+function dp = match_table_units(dp, hp)
+table_vars = dp.Properties.VariableNames;
+num_vars = length(table_vars);
+
+matched_units = cell(1, num_vars);
+
+for idx = 1:num_vars
+    % Find logical index matches (case-sensitive)
+    match_idx = strcmp(table_vars{idx}, hp.fldnam);
+    
+    if any(match_idx)
+        % Grab the first match (safeguards against duplicates in hp.fldnam)
+        first_match = find(match_idx, 1);
+        matched_units{idx} = hp.fldunt{first_match};
+    else
+        % Fallback if a table variable has no matching metadata header entry
+        matched_units{idx} = ''; 
+    end
+end
+dp.Properties.VariableUnits = matched_units;

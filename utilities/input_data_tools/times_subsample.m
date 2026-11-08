@@ -1,4 +1,4 @@
-function dd = times_subsample(dd, tvar, stepfreq_force, tstep_resol);
+function dd = times_subsample(dd, tvar, stepfreq_force, tstep_resol)
 % subsample and/or round to tstep_resol based on variable tvar in table dd
 % used for downsampling e.g. gyro or anemometer data to e.g. 1 Hz
 % rounding is useful for merging different streams that come in with

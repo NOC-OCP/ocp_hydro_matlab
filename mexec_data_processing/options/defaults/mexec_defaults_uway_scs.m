@@ -1,12 +1,16 @@
 switch opt2
     case 'scs_skip'
+        foundit = true;
         skip = {'USBL'};
     case 'scs_nmea_form' 
+        foundit = true;
         colsi = {}; colsf = {};
         untsi = {}; untsf = {};
     case 'scs_nmea_custom'
+        foundit = true;
         inform = '';
     case 'uway_ascii_parse'
+        foundit = true;
         if exist('inform','var') && ~isempty(inform) && ~strcmp(inform,'none')
             t = ua_times_parse(t, MEXEC_G.data_time_origin_string, 'inform', inform);
         elseif strcmp(inform,'none')

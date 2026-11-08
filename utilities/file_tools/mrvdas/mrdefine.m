@@ -1,4 +1,4 @@
-function mrtv = mrdefine
+function mrtv = mrdefine(varargin)
 % mexec interface for RVDAS data acquisition
 % First drafts of scripts for start jc211 28 jan 2021, alongside in Stanley
 %
@@ -6,6 +6,12 @@ function mrtv = mrdefine
 % *************************************************************************
 %
 % Create definitions for mexec processing of rvdas data
+
+if nargin>0
+    quiet = varargin{1};
+else
+    quiet = 1;
+end
 
 % Identify rvdas tables present in database
 mrtables = mrgetrvdascontents(quiet);

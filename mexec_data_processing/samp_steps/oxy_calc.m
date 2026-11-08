@@ -36,6 +36,7 @@ ds_oxy.(dname)(~bd & bt) = NaN;
 %neither oxy nor temp: 9
 ds_oxy.flag(bd & bt) = 9;
 
-samtyp = 'oxy'; opt1 = 'samp_proc'; opt2 = 'calc'; run(MEXEC_G.opt_cruise)
-ds_oxy = oxy_from_titre(ds_oxy);
-
+opt1 = 'samp_proc'; opt2 = 'oxy_calc'; run(MEXEC_G.opt_cruise)
+if calc_oxy_from_titre
+    ds_oxy = oxy_from_titre(ds_oxy);
+end

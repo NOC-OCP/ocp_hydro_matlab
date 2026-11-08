@@ -31,7 +31,7 @@ if nargin>0 && strcmp(varargin{1},'redo')
 
     switch MEXEC_G.Mshipdatasystem
         case 'rvdas'
-            mutv = mrdefine;
+            mutv = mrdefine(quiet);
 
             %for writing
             opt1 = 'uway_proc'; opt2 = 'rvdas_database'; run(MEXEC_G.opt_cruise)

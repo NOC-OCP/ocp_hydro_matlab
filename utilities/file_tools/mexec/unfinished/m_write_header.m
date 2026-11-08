@@ -21,8 +21,6 @@ end
 
 for k = 1:length(hatt_names)
     gattnam = hatt_names{k};
-    cmd = ['gattval = h.' gattnam ';'];
-    eval(cmd);
-    gattval;
+    gattval = h.(gattnam);
     nc_attput(ncfile.name,nc_global,gattnam,gattval);
 end

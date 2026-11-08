@@ -26,17 +26,15 @@ function msbe_02_edcal(stn)
 
 %%%%% setup %%%%%
 
-m_common; MEXEC_A.mprog = mfilename;
+m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hysteresis), as set in run(MEXEC_G.opt_cruise) and opt_%s\n',mcruise); end
 
 % input and output files
-pd = mexec_file_locations('procfiles','ctd');
-rawfile = sprintf(pd.ctdraw,stn_string);
-cleanfile = m_add_nc(sprintf(pd.ctdclean,stn_string));
-file24 = sprintf(pd.ctd24,stn_string);
-edfilepre = sprintf(pd.edctd24, stn_string);
-pd = mexec_file_locations('procfiles','dcs');
-dfile = sprintf(pd.dcsfile,stn_string);
+opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
+rawfile = sprintf(pfiles.ctd_raw,stn_string);
+cfile = sprintf(pfiles.ctd_cleancal,stn_string);
+edfilepre = sprintf(efiles.ctd_editsrecord, stn_string);
+dfile = sprintf(pfiles.ctd_castcut,stn_string);
 
 % start from the raw (cnv) file
 [d, h] = mloadq(rawfile,'/');
@@ -94,9 +92,14 @@ h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldser
 
 %pressure offset (deck pressure)
 if co.dpoff_calc
-    iid = 1:60*24; %***
-    if max(d.press(iid))>0.3 %&& checked = [6 1]; ~checked(checked(:,1)==stnlocal)
+    iid = 1:60*24; %first minute should be on deck***
+    if ~isempty(co.dpoff_checked) && ismember(stn,co.dpoff_checked(:,1))
+        co.dpoff = co.dpoff_checked(co.dpoff_checked(:,1)==stn,2);
+    elseif max(d.press(iid))>0.3
+        warning('calculated deck pressure offset > 0.3; check')
         keyboard
+        co.dpoff = input(sprintf('enter deck pressure offset (dbar) to be added to pressures for cast %s    ',stn_string),'s');
+        warning('add to opt_cruise file under opt1 = ''ctd_proc'', opt2 = ''raw_corrs''')
     else
         co.dpoff = -median(d.press(iid),'omitnan');
         fprintf(1,'pre-cast p offset: %f\n',co.dpoff)
@@ -136,23 +139,36 @@ if ~doneco.oxytau %is this likely to happen?***
 end
 if co.re_dooxyhyst
     %set up a new structure
-    oco.H_0 = [co.hyst_oxy0.H1 co.hyst_oxy0.H2 co.hyst_oxy0.H3];
+    oco.H_0 = [-0.033 5000 1450]; %default values, used by apply_oxyhyst to determine contents of comment
     if doneco.oxy1hyst
-        %reverse first, then apply new
-        oco.hrev_oxy1 = co.hyst_oxy0;
+        if isfield(co,'hyst_oxy1') && ...
+                (co.hyst_oxy0.H1~=co.hyst_oxy1.H1 || ...
+                co.hyst_oxy0.H2~=co.hyst_oxy1.H2 || ...
+                co.hyst_oxy0.H3~=co.hyst_oxy1.H3)
+            %reverse first, then apply hyst_oxy1
+            oco.hrev_oxy1 = co.hyst_oxy0;
+            oco.hyst_oxy1 = co.hyst_oxy1;
+        else
+            disp('co.hyst_oxy1 matches already-applied default oxygen hysteresis; nothing to change')
+        end
+    elseif isfield(co,'hyst_oxy1')
+        %nothing applied yet; apply hyst_oxy1
+        oco.hyst_oxy1 = co.hyst_oxy1;
     end
     if doneco.oxy2hyst
-        oco.hrev_oxy2 = co.hyst_oxy0;
-    end
-    if isfield(co,'hyst_oxy1')
-        oco.hyst_oxy1 = co.hyst_oxy1;
-    else
-        oco.hyst_oxy1 = co.hyst_oxy0;
-    end
-    if isfield(co,'hyst_oxy2')
+        if isfield(co,'hyst_oxy2') && ...
+                (co.hyst_oxy0.H1~=co.hyst_oxy2.H1 || ...
+                co.hyst_oxy0.H2~=co.hyst_oxy2.H2 || ...
+                co.hyst_oxy0.H3~=co.hyst_oxy2.H3)
+            %reverse first, then apply hyst_oxy2
+            oco.hrev_oxy2 = co.hyst_oxy0;
+            oco.hyst_oxy2 = co.hyst_oxy2;
+        else
+            disp('co.hyst_oxy2 matches already-applied default oxygen hysteresis; nothing to change')
+        end
+    elseif isfield(co,'hyst_oxy2')
+        %nothing applied yet; apply hyst_oxy2
         oco.hyst_oxy2 = co.hyst_oxy2;
-    else
-        oco.hyst_oxy2 = co.hyst_oxy0;
     end
     [dnew, hnew] = apply_oxyhyst(d, h, oco);
     fn = fieldnames(dnew);
@@ -203,13 +219,6 @@ end
 %comment string each time
 MEXEC_G.doneco(stnlocal) = doneco;
 
-tic
-%%%%% save as cleaned %%%%%
-if exist(cleanfile,'file')
-    delete(cleanfile)
-end
-mfsave(cleanfile, d, h);
-toc
 
 %%%%% user sensor calibrations (based on discrete sample data) %%%%%
 if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
@@ -219,16 +228,19 @@ if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
 
     %if there were calibrations applied to any variables, save those to
     %24hz file (overwriting uncalibrated versions)
+    cal_fields = intersect(fieldnames(dcal), fieldnames(d));
+
     if ~isempty(hcal.fldnam)
-        d = dcal; h = hcal;
-        mfsave(file24, d, h, '-addvars');
+        for f = 1:length(cal_fields)
+            calfldnam = cal_fields{f};
+            d.(calfldnam) = dcal.(calfldnam); 
+        end
+        h.comment = [h.comment, hcal.comment];
     end
-
-else
-    %just save to 24 hz file
-    copyfile(cleanfile, file24);
-
 end
+
+%%%%% save %%%%%
+mfsave(cfile, d, h);
 
 
 %%%%% check and warn
@@ -240,7 +252,7 @@ else
     m = true(size(d.scan));
 end
 if min(d.press(m))<=-3 && (~isfield(co,'badpress') || ((isfield(co,'badtemp1') || isfield(co,'badtemp2'))))
-    msg = ['negative pressures in ' file24 ' may indicate you should apply a deck ' ...
+    msg = ['negative pressures in ' c3file ' may indicate you should apply a deck ' ...
         '\npressure offset and/or apply range editing, despiking, or hand edits to remove '...
         '\noutliers. if large spikes also affect temperature, you should reprocess this station,'...
         '\nloading data to which the cell thermal mass correction has not yet been applied, '...

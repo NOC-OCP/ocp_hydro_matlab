@@ -13,14 +13,12 @@ function ed = mctd_raw_show_check_edit(stn, varargin)
 
 m_common
 if MEXEC_G.quiet<=1; fprintf(1,'plotting 24 hz and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
-
-pd = mexec_file_locations('procfiles','ctd');
-cfile = m_add_nc(sprintf(pd.ctdclean,stn_string));
-rfile = m_add_nc(sprintf(pd.ctdraw,stn_string));
-efile = sprintf(pd.edctd24,stn_string);
-infile1 = sprintf(pd.ctd1,stn_string);
-pdd = mexec_file_locations('procfiles','dcs');
-infiled = sprintf(pdd.dcsfile,stn_string);
+opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; get_cropt
+cfile = m_add_nc(sprintf(pfiles.ctd_cleancal,stn_string));
+rfile = m_add_nc(sprintf(pfiles.ctd_raw,stn_string));
+efile = sprintf(pfiles.ctd_editsrecord,stn_string);
+infile1 = sprintf(pfiles.ctd_1hz,stn_string);
+infiled = sprintf(pfiles.ctd_castcut,stn_string);
 
 if nargin>1
     rt = varargin{1};
@@ -31,6 +29,7 @@ if nargin>1
             infiler = cfile;
         else
             warning('%s not found, skipping',cfile)
+            return
         end
     else
         error('2nd input %s not recognised or file does not exist',varar)
@@ -53,6 +52,7 @@ end
 dn_start = m_commontime(ddcs.time_start(1),'time_start',hdcs,'datenum');
 dn_end = m_commontime(ddcs.time_end(1),'time_end',hdcs,'datenum');
 if strcmp(rt,'cleaned')
+    %want to know about co.oxy_align
     opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
 end
 

@@ -32,7 +32,7 @@ function rvdas_tables = mrgettables(varargin)
 m_common
 quiet = 1; if nargin>0; quiet = varargin{1}; end
 
-opt1 = 'uway_proc'; opt2 = 'rvdas_form'; MEXEC_G.mcruise
+opt1 = 'uway_proc'; opt2 = 'rvdas_form'; run(MEXEC_G.opt_cruise)
 if use_cruise_views
     sqltext = ['"\dv ' view_name '*" >'];
 else

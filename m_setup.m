@@ -47,36 +47,42 @@ global MEXEC_G
 
 %defaults that can be overwritten by input structure: what are we
 %processing, and where?
-MEXEC_G.mcruise='ce26008';
+MEXEC_G.mcruise='ce26008'; 
+%MEXEC_G.mcruise = 'dy214';
 MEXEC_G.data_time_origin_string = '2026-01-01 00:00:00'; %yyyy-MM-dd HH:mm:SS, usually midnight on 1 Jan of the start year of the cruise. do not change once processing for a given cruise has started!
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
-MEXEC_G.mexec_data_root = '/noc/mpoc/eurogoship/ce26008/data'; %contains raw (e.g. ctd/ASCII_FILES) and will contain processed (e.g. ctd/*.nc) data
+MEXEC_G.data_root = '/noc/mpoc/eurogoship/ce26008/data'; %contains raw (e.g. ctd/ASCII_FILES) and will contain processed (e.g. ctd/*.nc) data
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/'; %optional; only relevant for on-ship processing to run bash scripts to sync data to Linux workstations
 MEXEC_G.sw = '/noc/mpoc/eurogoship/programs'; %if the required GSW and Seawater toolboxes (and optionally gamma_n, and LDEO_IX) are not on the path already, they should be here
 MEXEC_G.datatypes.ctd = 'sbe'; %sbe is currently the only option, in future add rbr
+MEXEC_G.datatypes.tref = 'sbe35'; %there is an SBE35 deep standards thermometer, or 'no' if not
 MEXEC_G.datatypes.uway = 'scs'; %underway data acquisition/storage system: rvdas is a PotgreSQL database (more recently also duplicated in NetCDF files***check); scs stores (minimally) parsed NMEA strings as either ASCII or NetCDF; techsas stores as NetCDF
+%MEXEC_G.datatypes.uway = 'rvdas';
 MEXEC_G.datatypes.sadcp = 'codas'; %type of processed VMADCP data. codas is currently the only option; code could be added to read in IFREMER or BAS processed matlab files, etc.
 MEXEC_G.datatypes.ladcp = 'ix'; %ix to process LADCP data with LDEO_IX, no if no LADCP data
 MEXEC_G.datatypes.moor = 'no'; %or yes (affects what is added to path)
+%MEXEC_G.datatypes.moor = 'yes';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_data_processing programs will be verbose; if 1, only the latter; if 2, neither
 %not generally recommended to change the following, but you can
-MEXEC_G.opt_cruise = ['opt_' MEXEC_G.mcruise '.m']; %this could be changed to temporarily try another options script but this is not recommended (as much as possible, a single options script should record all processing choices)
+MEXEC_G.opt_cruise = ['opt_' MEXEC_G.mcruise '.m']; %rarely. this could be changed to temporarily try another options script (as much as possible, a single options script should record all processing choices)
 MEXEC_G.perms = [664; 775]; % permissions for files and directories
 MEXEC_G.Muse_version_lockfile = 'yes'; %takes value 'yes' or 'no', 'yes' is recommended but if only one person is processing from one matlab session at any one time, it may not matter
 
 %replace above with any user-supplied parameters for this session/run
 if nargin>0 && isstruct(varargin{1})
     MGu = varargin{1};
-    fn = fieldnames(MGu);
-    fn0 = fieldnames(MEXEC_G);
-    for fno = 1:length(fn)
-        if ~ismember(fn{fno},fn0)
-            MG0.(fn{fno}) = MGu.(fn{fno}); %store in case these are overwritten (***need to add test at end***)
+    fnu = fieldnames(MGu);
+    for fno = 1:length(fnu)
+        if isfield(MEXEC_G,fnu{fno}) && isstruct(MEXEC_G.(fnu{fno}))
+            %datatypes: don't overwrite those that are not in MGu
+            fn2 = fieldnames(MGu.(fnu{fno}));
+            for fno2 = 1:length(fn2)
+                MEXEC_G.(fnu{fno}).(fn2{fno2}) = MGu.(fnu{fno}).(fn2{fno2});
+            end
+        else
+            MEXEC_G.(fnu{fno}) = MGu.(fnu{fno});
         end
-        MEXEC_G.(fn{fno}) = MGu.(fn{fno});
     end
-else
-    disp('no input arguments to m_setup; using defaults')
 end
 clear MGu
 
@@ -141,28 +147,31 @@ MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
 if strcmp(MEXEC_G.datatypes.sadcp,'uhdas') || strcmp(MEXEC_G.datatypes.sadcp,'vmdas')
     %if system environment variables were used to set datatypes, the acquisition system may be specified, but what matters at this stage (reading in processed data) is the processing system. we usually process both uhdas and vmdas data with codas.
-    warning('setting sadcp processing system: MEXEC_G.datatypes.sadcp = ''codas'';')
+    fprintf(1,'MEXEC_G.datatypes.sadcp specified SADCP data acquisition system ''%s'';\n replacing with SADCP data processing system ''%s''\n',MEXEC_G.datatypes.sadcp,'codas')
     MEXEC_G.datatypes.sadcp = 'codas';
 end
 
 % cruise-specific settings
 if ~exist(MEXEC_G.opt_cruise,'file')
     create_opt_cruise
+    %also runs test at the end
+else
+    %just test the syntax
+    opt1 = 'test'; run(MEXEC_G.opt_cruise) 
 end
-run(MEXEC_G.opt_cruise) 
 
 % checks if external libraries are on path, and if processing ladcp or moored checks which to avoid conflicts
 sw_checkpath
 
 % location processing and writing mexec files
-if isempty(MEXEC_G.mexec_data_root) || ~exist(MEXEC_G.mexec_data_root,'dir')
-    MEXEC_G.mexec_data_root = input('input path to data directory (e.g. ~/cruises/ce26008/data/) where processed data will be written   ','s');
+if isempty(MEXEC_G.data_root) || ~exist(MEXEC_G.data_root,'dir')
+    MEXEC_G.data_root = input('input path to data directory (e.g. ~/cruises/ce26008/data/) where processed data will be written   ','s');
 else
-    fprintf(1,'working in %s\n',MEXEC_G.mexec_data_root)
+    fprintf(1,'working in %s\n',MEXEC_G.data_root)
 end
 
 % Set path for directory with housekeeping files (in subdirectories version and history)
-housekeeping_root = fullfile(MEXEC_G.mexec_data_root, 'mexec_housekeeping');
+housekeeping_root = fullfile(MEXEC_G.data_root, 'mexec_housekeeping');
 
 if ~strcmp(MEXEC_G.datatypes.uway,'no')
     %***still need to configure where directories are for some applications***

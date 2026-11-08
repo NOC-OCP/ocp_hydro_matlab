@@ -35,9 +35,10 @@ end
 
 %%%%% load data %%%%%
 
-sdir = fullfile(MEXEC_G.mexec_data_root,'met');
-tsgfile = fullfile(MEXEC_G.mexec_data_root,'met',['surface_ocean_' mcruise '.nc']);
-atmfile = fullfile(MEXEC_G.mexec_data_root,'met',['surfmet_' mcruise '_all_edt.nc']);
+sdir = fullfile(MEXEC_G.mexec_data_root,'plots');
+pd = mexec_file_locations('procfiles','uway');
+tsgfile = fullfile(pd.buocean,sprintf(pd.buallform,'surface_ocean',mcruise));
+atmfile = fullfile(pd.buatmos,sprintf(pd.buallform,'surface_atmos',mcruise));
 salfile = fullfile(mgetdir('M_BOT_SAL'),['tsgsal_' mcruise '_all.nc']);
 chlfile = fullfile(mgetdir('M_BOT_CHL'),['ucswchl_' mcruise '_all.nc']);
 cdatafile = fullfile(MEXEC_G.mexec_data_root,'bottle_samples','uway_cal_data'); %save here
@@ -83,9 +84,14 @@ if reload_cal
         db = dbf;
     end
 
+    if db.dday>7e5
+        db.dday = db.dday-datenum(MEXEC_G.data_time_origin_string);
+    end
+
     %add ctd data
     if comp2ctd
         disp('loading CTD data')
+        
         dc = ctds_from_level(dintake, 1);
         n0 = length(db.dday); nn = length(dc.dday);
         db.dday = [db.dday; dc.dday];
@@ -236,7 +242,7 @@ if dosal
     end
     if bsal
         %prefer to compare to bottles, so make this last
-        pdata.points = [pdata.points; 'salinity_adj', 'Bottle-TSG'];
+        pdata.points = [pdata.points {'salinity_adj'} {'Bottle-TSG'}];
     end
     plt.ylab = {'S (psu)';'S difference'};
     if ~isempty(printsuf)
@@ -250,7 +256,7 @@ if dochl %note if CTD is calibrated or not
     figure(3); clf
     %also plot par
     [dr, ~] = mload(atmfile,'/');
-    dt.par = interp1(dr.dday,dr.parport+dr.parstarboard,dt.dday)/2/1e7;
+    dt.par = interp1(dr.dday,dr.ppar+dr.spar,dt.dday)/2/1e7;
     dispnames.dt.par = 'PAR/1e7 (allowed<0.1)';
     db.par = interp1(dt.dday,dt.par,db.dday);
     ll = 0.1; %cruise option? does this depend on sensor cal?***

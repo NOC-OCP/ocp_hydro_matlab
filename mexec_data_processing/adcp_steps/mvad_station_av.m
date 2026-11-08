@@ -55,12 +55,13 @@ if strcmp(cast_select,'list')
 end
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; run(MEXEC_G.opt_cruise)
-opt1 = 'adcp_proc'; run(MEXEC_G.opt_cruise)
+opt1 = 'adcp_proc'; opt2 = 'sadcp_files'; run(MEXEC_G.opt_cruise)
 
 %get start and end times
 if strcmp(cast_select,'ctd')
-    [dd, hd] = mloadq(dcsfile.file,'/');
+    opt1 = 'ctd_proc'; opt2 = 'ctd_files'; run(MEXEC_G.opt_cruise)
+    dcsfile = fullfile(sprintf(pfiles.ctd_castcut,stn_string));
+    [dd, hd] = mloadq(dcsfile,'/');
     tstart = m_commontime(dd,'time_start',hd,'datenum');
     tend = m_commontime(dd,'time_end',hd,'datenum');
 else
@@ -108,8 +109,8 @@ else
         end
     end
     % check that the number of vmadcp profiles in ctd cast is not too small
-    opt1 = 'ladcp_proc'; run(MEXEC_G.opt_cruise)
-
+    cfg.stnstr=stn_string;
+    opt1 = 'adcp_proc'; opt2 = 'ladcp_cfg'; run(MEXEC_G.opt_cruise)
     nvmadcpprf = sum(mt);
     if nvmadcpprf < min_nvmadcpprf
         mwarn = ['Warning [station ' stn_string ']: Number of vmADCP profiles (' num2str(nvmadcpprf) ') is less than minimum (' num2str(min_nvmadcpprf) ')'];
@@ -126,7 +127,7 @@ else
         fprintf(MEXEC_A.Mfider, '%s\n', ['Warning[station ' stn_string ']: vmADCP u and v have different gaps'])
     end
     np = sum(fgu,2);
-    fbprf = max(find(np>0));
+    fbprf = find(np>0, 1, 'last' );
     if ~isempty(fbprf) && min(np(1:fbprf)) < min_nvmadcpbin %mask depths with good profiles less than a threshold
         fmsk = np < min_nvmadcpbin;
         d.(h.fldnam{5})(fmsk,mt) = NaN;
@@ -151,7 +152,8 @@ for no = 1:length(h.fldnam)
     da.(h.fldnam{no}) = m_nanmean(d.(h.fldnam{no})(:,mt),2);
 end
 ha = h;
-ha.dataname = sadcpfile.dataname;
+[~, name, ext] = fileparts(pfiles.sadcp_all);
+ha.dataname = [name ext];
 ha.latitude = da.lat(1); ha.lon = da.lon(1);
 %ha.instrument_depth_metres = 5; %***
 if strcmp(cast_select,'ctd')
@@ -160,8 +162,7 @@ else
     ha.comment = [h.comment sprintf('\n averaged over %s to %s from %s',sstart,send,time_list_file)];
 end
 
-%check dims
-mfsave(sadcpfile.av,da,ha); 
+mfsave(sprintf(pfiles.sadcp_av,stn_string),da,ha); 
 
 opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf
@@ -170,7 +171,7 @@ else
     to = h.data_time_origin;
 end
 %file for ladcp
-if MEXEC_G.ix_ladcp && sum(mt)>1
+if strcmp(MEXEC_G.datatypes.ladcp,'ix') && sum(mt)>1
     % CV 2018/11/17: edit to get the right variable names and time for LDEO_IX_12
     tim_sadcp = d.decday(1,mt) + julian(to(1),to(2),to(3));
     lat_sadcp = d.lat(1,mt);
@@ -184,5 +185,5 @@ if MEXEC_G.ix_ladcp && sum(mt)>1
         v_sadcp = d.vabs(:,mt)/100;
     end
     z_sadcp   = d.depth(:,1);
-    save(ladfile, 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp'); mfixperms(ladfile);
+    save(pfiles.forladcp_sadcpav, 'tim_sadcp', 'z_sadcp', 'u_sadcp', 'v_sadcp', 'lon_sadcp', 'lat_sadcp'); mfixperms(cfg.f.sadcp);
 end

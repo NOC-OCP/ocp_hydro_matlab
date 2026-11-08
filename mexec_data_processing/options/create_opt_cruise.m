@@ -38,14 +38,14 @@ end
 %cruise options file
 fp = fileparts(which(mfilename));
 cofile = fullfile(fp, 'cruise_opt_scripts', MEXEC_G.opt_cruise);
-if exist([cofile '.m'],'file')
+if exist(cofile,'file')
     warning('%s exists in %s/cruise_opt_scripts',MEXEC_G.opt_cruise,fp)
     cr = input('do you want to overwrite it? (y/n)  ','s');
     if ~strcmp(cr,'y')
         return
     end
 elseif ~isempty(which(MEXEC_G.opt_cruise))
-    warning('%s exists on path, but not where it is expected to be; skipping')
+    warning('%s exists on path, but not where it is expected to be; skipping',MEXEC_G.opt_cruise)
     return
 end
 
@@ -77,10 +77,11 @@ fprintf(cfid,'%s mexec_version: ''%s''\n\n','%',MEXEC_G.mexec_version);
 cont = true;
 foundstart = false;
 dfid = fopen(deffile, 'r');
+l1 = 'foundit = false; outofopts = false;';
 while cont && ~foundstart
     s = fgets(dfid);
     if ~ischar(s); error('end of file reached before mcruise = MEXEC_G.mcruise;'); end
-    if strncmp(s,'switch opt1',11)
+    if strncmp(s,l1,length(l1))
         foundstart = true;
     end
 end
@@ -94,8 +95,9 @@ while cont
     s = fgets(dfid);
     if ~ischar(s); break; end
     if strncmp(s,'        placeholder_',20)
-        s = replace(strtrim(s),'placeholder_','');
-        dtfile = fullfile(fp,'defaults',['mexec_defaults_' s '.m']);
+        s1 = replace(strtrim(s),'placeholder_datatypes_','');
+        s2 = MEXEC_G.datatypes.(s1);
+        dtfile = fullfile(fp,'defaults',sprintf('mexec_defaults_%s_%s.m',s1,s2));
         printed = false;
         if exist(dtfile,'file')
             tfid = fopen(dtfile,'r');
@@ -103,9 +105,10 @@ while cont
             while tcont
                 l = fgets(tfid);
                 if ~ischar(l); break; end
-                fprintf(cfid,'    %s',l); %these all start with switch opt2, so print with extra indentation
+                fprintf(cfid,'        %s',l); %these all start with switch opt2 but will be nested inside switch opt1, so print with extra indentation
                 printed = true;
             end
+            fprintf(cfid,'\n');
             fclose(tfid);
         end
         if ~printed
@@ -119,6 +122,6 @@ fclose(dfid);
 fclose(cfid);
 
 edit(MEXEC_G.opt_cruise)
-fprintf(1,'initialised %s,\nnow make additional edits, then enter to continue',MEXEC_G.opt_cruise);
+fprintf(1,'initialised %s,\nnow make additional edits, then enter to continue\n',MEXEC_G.opt_cruise);
 pause
-run(MEXEC_G.opt_cruise)
+opt1 = 'test'; run(MEXEC_G.opt_cruise)

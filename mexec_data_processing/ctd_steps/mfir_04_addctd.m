@@ -11,16 +11,15 @@ function mfir_04_addctd(stn)
 %         pressures
 
 m_common
-pd = mexec_file_locations('procfiles','fir');
-f = sprintf(pd.firfile,stn_string);
+opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
+f = sprintf(pfiles.ctd_nisk,stn_string);
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)
     return
 end
-pd = mexec_file_locations('procfiles','ctd');
-file1 = sprintf(pd.ctd1,stn_string);
-dfile = sprintf(pd.ctd2d,stn_string);
-ufile = sprintf(pd.ctd2u,stn_string);
+file1 = sprintf(pfiles.ctd_1hz,stn_string);
+dfile = sprintf(pfiles.ctd_2db_dn,stn_string);
+ufile = sprintf(pfiles.ctd_2db_up,stn_string);
 if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to %s\n', f); end
 %not using 24hz because we want at least some averaging
 
@@ -33,7 +32,7 @@ if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 opt1 = 'ctd_proc'; opt2 = 'fir_fill'; run(MEXEC_G.opt_cruise)
 [dfir, hfir] = mload(f,'scan',' ');
 [dc, hc] = mload(file1, var_copystr);
-dc = grid_profile(dc, 'scan', dfir.scan, firmethod, firopts);
+dc = grid_1D(dc, 'scan', dfir.scan, firmethod, firopts);
 
 %this will go into sam_all file, so use cruise time origin, not cast time origin
 to = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];

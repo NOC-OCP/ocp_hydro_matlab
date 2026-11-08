@@ -2,16 +2,16 @@ function uway_process(dates, varargin)
 %
 % wrapper to load and process underway data
 %
-% uway_daily_proc(dates)
+% uway_process(dates)
 %   runs through loading, automatic editing of raw data, and averaging,
 %   merging, and editing of combined data, either for all available 
 %    dates can be either an Nx1 vector of decimal days
 %   (dates since the start of the year in MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN)
 %   or a Nx6 vector of [yyyy mm dd HH MM SS]
-% uway_daily_proc(dates, mstar_prefix, 'reload_uway', 0); %processes, for
+% NOT WORKING: uway_process(dates, mstar_prefix, 'reload_uway', 0); %processes, for
 %   mstar_prefix files, days starting from already-loaded raw files and
 %   skipping to editing and averaging stage (mday_01 and mday_02)
-% uway_daily_proc(dates, [], 'reload_uway', 0, 'reload_av', 0);
+% uway_process(dates,'reload_uway', 0, 'reload_av', 0);
 %   %skips to editing of already-generated merged, averaged files
 %
 % by default it will process all the available techsas/scs/rvdas underway
@@ -25,22 +25,16 @@ function uway_process(dates, varargin)
 
 m_common
 
-if size(days,2)==6
-    ddays = datenum(dates)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,1,1);
-elseif size(days,2)==1
+if size(dates,2)==6
+    ddays = datenum(dates)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1);
+elseif size(dates,2)==1
     ddays = dates;
+elseif isempty(dates)
+    ddays = datenum(now)-datenum(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1),1,1)-1;
 else
     error('dates must be either Nx1 vector of decimal days or Nx6 vector of [yyyy mm dd HH MM SS]')
 end
-%defaults
-reload_uway = 1; %load raw data, set to 0 to skip ahead to editing/averaging/merging stage
-reload_av = 1; %set to 0 to just redo edits not averages
-%optional inputs
-if nargin>2
-    for no = 2:2:length(varargin)
-        eval([varargin{no} ' = varargin{no+1};']);
-    end
-end
+ddays = ddays(:)';
 
 %%%%% get list of underway streams to process %%%%%
 mtable = mudefine;
@@ -52,9 +46,20 @@ elseif exist('uway_excludes','var')
     [~,iie,~] = intersect(mtable.mstardir, uway_excludes);
     mtable(iie,:) = [];
 end
-if nargin>1 && ~isempty(varargin{1})
+if nargin>1 && ~isempty(varargin{1}) && ~ischar(varargin{1})
     %only run reload_uway steps for one type, and don't run 
     mtable = mtable(ismember(mtable.mstarpre,varargin{1}),:);
+    varargin(1) = [];
+end
+
+%default steps
+reload_uway = 1; %load raw data, set to 0 to skip ahead to editing/averaging/merging stage
+reload_av = 1; %set to 0 to just redo edits not averages
+%optional inputs
+if nargin>1
+    for no = 1:2:length(varargin)
+        eval([varargin{no} ' = varargin{no+1};']);
+    end
 end
 
 %%%%% loop through processing steps for list of ddays %%%%%
@@ -105,11 +110,19 @@ end
 % return %first examine all the edited data before merging/deciding what to do?***
 %combine streams, do hand edits (for some streams), and average to produce
 %output/best files
-ctypes = {'nav','bathy','ocean','atmos'}; %important to do nav first
+ctypes = {'nav','bathy','atmos','ocean'}; %important to do nav first
+ctypes = {'ocean'};%ctypes = {'atmos','ocean'}; %uway_process throws up error when trying to merge 
+% bathy data so tried to see if 'atmos' and 'ocean' are running by
+% excluding nav and bathy (which works but is obviously not the aim)
 %ctypes = ctypes(2); %did ocean, need to redo nav for wind; bathy is a problem, save for later
 for cno = 1:length(ctypes)
-    mday_02_merge_av(ctypes{cno}, ddays, mtable, reload_av);
-    fprintf(1,'merged %s files\n',ctypes{cno})
+    % try
+        mday_02_merge_av(ctypes{cno}, ddays, mtable, reload_av);
+        fprintf(1,'merged %s files\n',ctypes{cno})
+    % catch me
+    %     fprintf(1,'could not merge %s files\n',ctypes{cno})
+    %     warning(me.message)
+    % end
 end
 
 if ismember(ctypes,'ocean')

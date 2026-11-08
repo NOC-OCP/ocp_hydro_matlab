@@ -159,7 +159,7 @@ if strcmp(params.in,'ctd')
             end
         end
     end
-    if params.dobin
+    if isfield(params,'dobin') && params.dobin
         switch params.bin_units
             case 'hz'
                 params.gvar = 'time';
@@ -186,7 +186,7 @@ if strcmp(params.in,'ctd')
     end
 end
 if params.autoheader
-    if params.dobin
+    if isfield(params,'dobin') && params.dobin
         params.header = [params.header; sprintf('(averaged to %d %s from %s.nc file',params.bin_size,params.bin_units,params.suf)];
     else
         params.header = [params.header; sprintf('from %s.nc file',params.suf)];

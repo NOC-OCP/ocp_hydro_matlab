@@ -85,15 +85,15 @@ function output = munderway_varname(varargin)
 varnames.timvar = {'time' 'measureTS' 'dnum', 'utctime'};
 
 varnames.salvar = {'sal_cal' 'salinity_calibrated' 'salinity_cal' 'salinity' 'psal' 'salinity_raw'};
-varnames.tempvar = {'housingtemp' 'temp_h' 'tstemp' 'temp_raw' 'temph_raw' 'temp_m' 'temp_housing_cal' 'temp_housing' 'temp_housing_raw' 'temperature' 'temp' 'temph'};
-varnames.sstvar = {'remotetemp' 'temp_r' 'sstemp' 'temp_remote' 'temp_remote_raw' 'seasurfacetemperature' 'remotewatertemperature' 'tempr' 'sst'};
+varnames.tempvar = {'housingtemp' 'temp_h' 'tstemp' 'temp_raw' 'temph_raw' 'temp_m' 'temp_housing_cal' 'temp_housing' 'temp_housing_raw' 'temperature' 'temp' 'temph' 'temp_tsg' 'tsgtemp'};
+varnames.sstvar = {'remotetemp' 'temp_r' 'sstemp' 'temp_remote' 'temp_remote_raw' 'seasurfacetemperature' 'remotewatertemperature' 'tempr' 'sst' 'temp_in'};
 varnames.condvar = {'conductivity_calibrated' 'conductivity' 'cond' 'conductivity_raw' 'cond_raw'};
 varnames.svelvar = {'sndspeed' 'soundvelocity' 'soundvelocity_raw'};
 varnames.flowvar = {'flow' 'flow1' 'flowrate'};
 
 varnames.airtempvar = {'airtemp' 'airtemperature'};
 varnames.humidvar = {'humid' 'humidity'};
-varnames.airpresvar = {'airpressure' 'pres'};
+varnames.airpresvar = {'airpressure' 'pres' 'press' 'airpress'};
 varnames.pparvar = {'ppar' 'parport'};
 varnames.sparvar = {'spar' 'parstarboard'};
 varnames.pparvar = {'ptir' 'tirport'};
@@ -106,8 +106,8 @@ varnames.twindsvar = {'windspeed' 'wind_speed_ms' 'truwind_spd'};
 varnames.twinddvar = {'direct' 'wind_dir' 'truwind_dir' 'winddirection'};
 varnames.twindvvar = {'truwind_e' 'truwind_n' 'truwind_u' 'truwind_v'};
 
-varnames.latvar = {'lat' 'latitude' 'seatex_gll_lat'};
-varnames.lonvar = {'lon' 'long' 'longitude' 'seatex_gll_lon'};
+varnames.latvar = {'lat' 'latitude' 'seatex_gll_lat' 'latitudedd'};
+varnames.lonvar = {'lon' 'long' 'longitude' 'seatex_gll_lon' 'longitudedd'};
 varnames.headvar = {'head' 'heading' 'head_gyr' 'heading_av_corrected' 'heading_av' 'headingtrue'};
 varnames.cogvar = {'course' 'courseoverground' 'coursetrue'};
 

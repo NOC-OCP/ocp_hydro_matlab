@@ -61,17 +61,18 @@ cvars = 'sampnum statnum position upress';
 switch samtyp
     case 'sal'
         cvar = 'upsal';
-        useratio = 0;
+        useratio = compare_params(1); % as set in default or opt_cruise: 0=difference
     case 'oxy'
         cvar = 'uoxy';
-        useratio = 1;
+        useratio = compare_params(1); % as set in default of opt_cruise: 1=ratio 
     case 'chl'
         cvar = 'ufluor';
-        useratio = 1; %***
+        useratio = compare_params(1); %***
     case 'nut'
         cvar = '';
-        useratio = 1; %***
+        useratio = compare_params(1); %***
 end
+
 if ~isempty(cvar) && ~contains(cvars,cvar)
     %need to load svar
     cvars = [cvars ' ' cvar];
@@ -109,22 +110,25 @@ for vno = 1:length(vbases)
     if upl
         nr = sum(mv)-1;
     else
-        nr = size(dbot.(vbase),2);
+        nr = size(dbot.(vbase),2)-1;
     end
     %compare all other replicates to 'a' replicate
     sama = repmat(d(:,1),1,nr);
     if useratio
         dbc = d(:,2:end)./sama-1;
         dbc3 = d3(:,2:end)./sama-1;
+        dbc_med = median(d(:,2:end),2,'omitnan');
+        dbc_med3 = median(d3(:,2:end),2,'omitnan');
         if th<1
-            eint = [d(:,2)*(1-th) d(:,2)*(1+th)]./repmat(sama(:,1),1,2)-1;
+            eint = [dbc_med*(1-th) dbc_med*(1+th)]./repmat(sama(:,1),1,2)-1;
         else
-            eint = [d(:,1)/th d(:,2)*th]./repmat(sama(:,1),1,2)-1;
+            eint = [dbc_med3/th dbc_med3*th]./repmat(sama(:,1),1,2)-1;
         end
     else
         dbc = d(:,2:end) - sama;
         dbc3 = d3(:,2:end) - sama;
-        eint = [d(:,2)-th d(:,2)+th] - repmat(sama(:,1),1,2);
+        dbc_med = median(d(:,2:end),2,'omitnan');
+        eint = [dbc_med-th dbc_med+th] - repmat(sama(:,1),1,2);
     end
     mchk = sum(dbc<eint(:,1) | dbc>eint(:,2), 2);
 
@@ -147,7 +151,7 @@ for vno = 1:length(vbases)
     x = dbot.sampnum;
     [mc, mu, ms] = m_sampnum(x);
 
-    if sum(mc)
+    if any(mc==1)
         figure(1); clf
         if isempty(cvar)
             hl0 = plot(NaN,NaN);
@@ -166,7 +170,7 @@ for vno = 1:length(vbases)
         legend([hl0; hli(1); hl])
         grid on; title(['Niskin ' samtyp])
     end
-    if sum(mu)
+    if any(mu==1)
         figure(2); clf
         hli = plot([x(mu) x(mu)]', eint(mu,:)', 'color', [.3 .3 .3], 'DisplayName', ti); hold on
         hl3 = plot(x(mu), dbc3(mu,:), 'o');
@@ -179,7 +183,7 @@ for vno = 1:length(vbases)
         legend([hli; hl])
         grid on; title(['USW ' samtyp])
     end
-    if sum(ms)
+    if any(ms==1)
         figure(3); clf
         hli = plot([x(ms) x(ms)]', eint(ms,:)', 'color', [.3 .3 .3], 'DisplayName', ti); hold on
         hl = plot(x(ms), dbc(ms,:), 'o');
@@ -196,8 +200,12 @@ for vno = 1:length(vbases)
         c = input('p to print list of differing replicates, k for keyboard or enter to continue  ','s');
         if strcmp(c,'p')
             %display mismatched replicates
-            disp('sampnum, deviating replicate values, flags')
-            disp([dbot.sampnum(mchk) dbot(:,mv) dbot(:,mf)])
+            idx_samp = find(strcmp(dbot.Properties.VariableNames, 'sampnum'));
+            idx_v = find(mv);
+            idx_f = find(mf);
+            disp(dbot(mchk>0, [idx_samp, idx_v, idx_f]))
+            % disp('sampnum, deviating replicate values, flags')
+            % disp([dbot.sampnum(mchk>0), dbot{mchk>0, mv}, dbot{mchk>0, mf}])
         elseif strcmp(c,'k')
             keyboard
         end

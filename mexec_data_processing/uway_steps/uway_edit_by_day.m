@@ -1,4 +1,4 @@
-function [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, vars_to_ed, yl)
+function [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, repars, yl)
 % [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, vars_to_ed, yl)
 %
 % on mstar structures d and h, apply previously selected edits from file
@@ -19,7 +19,7 @@ function [d, h] = uway_edit_by_day(d, h, edfile, ddays, btol, vars_to_ed, yl)
 
 %apply previous manually selected edits
 flag = 0; %NaN them
-[d, ~] = apply_guiedits(d, 'dday', [edfile '*'], 0, btol, flag);
+[d, ~] = apply_guiedits(d, 'dday',edfile, 0, btol, flag);
 
 %choose new ones
 edgrp_all = {};
@@ -30,10 +30,11 @@ for no = 1:length(ddays)
     end
 end
 dt = struct2table(d);
-bads = gui_editpoints(dt, 'dday', edgrp_all, [], 'edfilepre', edfile, 'yl', yl);
+
+bads = gui_editpoints(dt, 'dday', edgrp_all, repars, 'edfilepre', edfile, 'yl', struct2table(yl));
 
 %and apply them again
-[d, comment] = apply_guiedits(d, 'dday', [edfile '*'], 0, btol);
+[d, comment] = apply_guiedits(d, 'dday', edfile, 0, btol);
 if ~isempty(comment)
     h.comment = [h.comment comment];
 end

@@ -220,7 +220,8 @@ for fno = 1:length(infiles)
                 [~,ia,ib] = intersect(samdata.Properties.VariableNames,dat.Properties.VariableNames);
                 if sum(~strcmp(samdata.Properties.VariableTypes(ia),dat.Properties.VariableTypes(ib)))
                     warning('incompatible variable types on sheet %d',sno)
-                    keyboard
+                    % keyboard
+                    continue
                 end
                 samdata = load_samdata_combine_tables(samdata, dat);
             else
@@ -327,7 +328,8 @@ if isfield(iopts,'numhead') && isfinite(iopts.numhead)
     end
     if sheet==0
         opts.DataLines(1) = nd;
-        if isfield(opts,'NumHeaderLines')
+        %if isfield(opts,'NumHeaderLines')
+        if isprop(opts, 'NumHeaderLines') % seems not longer to be available in newer matlab verions
             opts.NumHeaderLines = iopts.numhead;
         end
     else

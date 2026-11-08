@@ -15,9 +15,9 @@ if MEXEC_G.quiet<=1; fprintf(1,'adding water depth from station_summary_%s_all.n
 % resolve root directories for various file types
 root_win = mgetdir('M_CTD_WIN');
 root_ctd = mgetdir('M_CTD');
-root_sum = mgetdir('sum');
+pd = mexec_file_locations('procfiles','ctd');
 
-deps_fn = fullfile(root_sum, ['station_summary_' mcruise '_all.nc']);
+deps_fn = pd.sum;
 if ~exist(deps_fn,'file')
     warning('no summary file found, not adding depths')
     return

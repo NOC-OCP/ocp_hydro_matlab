@@ -94,8 +94,8 @@ else
 end
 
 %load d
-rootdir = mgetdir('ctd');
-[d, h] = mloadq(fullfile(rootdir, ['sam_' mcruise '_all']), '/');
+pd = mexec_file_locations('procfiles','samp');
+[d, h] = mloadq(pd.samc, '/');
 snfs = h.fldnam(strncmp(h.fldnam,'sn',2));
 for no = 1:length(snfs)
     if sum(isnan(d.(snfs{no})))
@@ -117,10 +117,12 @@ if sum(cell2mat(struct2cell(testcal)))
 end
 
 %find which serial numbers we have for this sensor type
+
 sns = [d.statnum d.(['sn_' parameter '1'])]; l = size(sns,1);
 if isfield(d,['sn_' parameter '2'])
     sns = [sns; [d.statnum d.(['sn_' parameter '2'])]];
 end
+
 sns(1:l,3) = 1; sns(l+1:end,3) = 2;
 sn = unique(sns(:,2)); sn = sn(~isnan(sn));
 if ~isempty(choose_sns)
@@ -147,7 +149,7 @@ for ks = 1:length(sn)
         [dc, p, mod] = sensor_cal_comparisons(d, parameter, num2str(sn(ks)), udstr, iis1, iis2, okf, p);
     end
     if isempty(dc)
-        %keyboard
+        % keyboard
         continue
     end
     if strcmp(parameter,'oxy') && useoxyratio
@@ -155,6 +157,7 @@ for ks = 1:length(sn)
     else
         p.edges = [-1:.05:1]*p.rlim(2);
     end
+    opt1='samp_proc';opt2='mctd_evaluate_sensors';get_cropt
     p.presrange = [-max(d.([udstr 'press'])(~isnan(d.([udstr parameter])))) 0];
     p.statrange = [0 max(d.statnum(~isnan(d.([udstr parameter]))))+1];
     p.mcruise = mcruise;
@@ -167,7 +170,7 @@ for ks = 1:length(sn)
 
     %stats
     p.deep = dc.press>=pdeep;
-    if length(p.iigc)<10
+    if length(p.iigc)<3
         p.md = NaN; p.iqrd = NaN;
         disp('too few comparison points'); continue
     else
@@ -191,6 +194,12 @@ if ~isempty(printform)
     if ~exist(printdir, 'dir')
         mkdir(printdir)
     end
+    fig = gcf; fig.Units = 'centimeters';fig.PaperUnits = 'centimeters';
+    figWidth = 25; figHeight = 21; 
+    fig.Position = [2, 2, figWidth, figHeight];       % [left, bottom, width, height]
+    fig.PaperSize = [figWidth, figHeight];            % Tells the PDF exactly how big it is
+    fig.PaperPosition = [0, 0, figWidth, figHeight];  % Ensures the plot fills the PDF canvas
+
     print(printform, fullfile(printdir, ['ctd_eval_' parameter '_' num2str(sn(ks)) '_hist' dirstr '_' datestr(now,'yyyymmddHHMM')]))
 end
 cont = input('k for keyboard prompt, enter to continue to next\n','s');
@@ -199,6 +208,13 @@ if strcmp(cont,'k')
 end
 
 ii = find( (abs(dc.res(p.iigc))>p.rlim(2) & dc.press(p.iigc)<pdeep) | (abs(dc.res(p.iigc))>p.rlim(2)/2 & dc.press(p.iigc)>=pdeep) & dc.statnum(p.iigc)>=plotprof);
+if strcmp(parameter,'oxy') && useoxyratio
+    dev = dc.res(p.iigc);
+    ii = find( ( ...
+        ( (dev < p.rlim(1) | dev > p.rlim(2)) & dc.press(p.iigc) < pdeep ) | ...
+        ( (dev < p.rlim(1)/2 | dev > p.rlim(2)/2) & dc.press(p.iigc) >= pdeep ) ...
+    ) & dc.statnum(p.iigc) >= plotprof );
+end
 if ~isempty(ii)
     disp('examine larger differences profile-by-profile to help pick bad or')
     disp('questionable samples and set their flags in opt_cruise msal_01 or moxy_01?')
@@ -226,14 +242,16 @@ if nargin>3
 end
 
 subplot(5,5,[1:5])
-hl = plot(dc.(p.xvar), dc.ctdres, 'y+', dc.(p.xvar)(p.iigc), dc.ctdres(p.iigc), 'c+', dc.(p.xvar), dc.res, '.g', dc.(p.xvar)(p.iigc), dc.res(p.iigc), 'b.'); grid
+hl = plot(dc.(p.xvar), dc.ctdres, 'y+', dc.(p.xvar)(p.iigc), dc.ctdres(p.iigc),...
+    'c+', dc.(p.xvar), dc.res, '.g', dc.(p.xvar)(p.iigc), dc.res(p.iigc), 'b.'); grid
 xlabel(p.xvarlabel); xlim(p.xrange); ylim(p.rlim); 
 set(hl(1),'color',[.8 .8 .8]); set(hl(3),'color',[.5 .5 .5])
 legend(hl([2 4 3]),p.colabel,p.cclabel,'high var','location','southeastoutside');
 set(gca,'xaxislocation','top')
 
 subplot(5,5,[10 15 20 25])
-hl = plot(dc.ctdres, -dc.press, 'y+', dc.ctdres(p.iigc), -dc.press(p.iigc), 'c+', dc.res, -dc.press, '.g', dc.res(p.iigc), -dc.press(p.iigc), 'b.'); grid
+hl = plot(dc.ctdres, -dc.press, 'y+', dc.ctdres(p.iigc), -dc.press(p.iigc), 'c+',...
+    dc.res, -dc.press, '.g', dc.res(p.iigc), -dc.press(p.iigc), 'b.'); grid
 set(hl(1),'color',[.8 .8 .8]); set(hl(3),'color',[.5 .5 .5])
 ylabel('-press'); ylim(p.presrange); xlim(p.rlim)
 set(gca,'yaxislocation','right')
@@ -291,7 +309,7 @@ for no = 1:length(stns_examine)
     stn_string = sprintf('%03d', stnlocal);
 
     %load 1 and 2 dbar upcast profiles
-    [d1, h1] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_psal.nc']), '/');
+    [d1, h1] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_1hz.nc']), '/');
     %remove the individual (parameter)1, (parameter)2 otherwise
     %apply_calibrations might not get to (parameter) (only finds first
     %instance of s/n)*** fix this!
@@ -339,7 +357,8 @@ for no = 1:length(stns_examine)
         dc.caldata(iisbf), -dc.press(iisbf), 'm.', ...
         dc.caldata(iiq), -dc.press(iiq), 'or', ...
         dc.ctddata(iis), -dc.press(iis), 'b.', ...
-        dc.ctddata(iiq), -dc.press(iiq), 'sb');
+        dc.ctddata(iiq), -dc.press(iiq), 'sb', ...
+        'MarkerSize',12);
     grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',stnlocal));
     disp('sampnum residual sample_flag niskin_flag pressure')
     for qno = 1:length(iiq)

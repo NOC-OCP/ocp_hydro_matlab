@@ -10,12 +10,16 @@ function msbe35_01(varargin)
 % already contains data up to that station number, function returns without
 % (re-)reading files
 
-m_common
-if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',mcruise,mcruise); end
+m_common; MEXEC_A.mprog = mfilename;
+if ~isfield(MEXEC_G.datatypes,'tref') || ~sum(strcmp(MEXEC_G.datatypes.tref,'sbe35'))
+    disp('no SBE35 configured; skipping')
+    return
+end
+if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',MEXEC_G.mcruise,MEXEC_G.mcruise); end
 
-pd = mexec_file_locations('procfiles','ctd');
-outfile = sprintf(pd.sbe35,pd.sbe35name);
-if nargin>0 && ~isempty(varargin{1}) && exist(outfile,'file')
+opt1 = 'samp_proc'; opt2 = 'sbe35_files'; run(MEXEC_G.opt_cruise)
+
+if nargin>0 && ~isempty(varargin{1}) && exist(pfiles.sbe35_all,'file')
     h = m_read_header(outfile);
     if h.uprlim(strcmp('statnum',h.fldnam))>=varargin{1}
         %we've already read in as far as this station, no need to redo
@@ -24,12 +28,8 @@ if nargin>0 && ~isempty(varargin{1}) && exist(outfile,'file')
 end
 
 % load sbe35 data
-opt1 = 'sbe35'; opt2 = 'sbe35files'; eval(['opt_' mcruise]);
-if strcmp(sbe35in,'none')
-    return
-end
-d = dir(sbe35in);
-p = fileparts(sbe35in);
+d = dir(infiles.sbe35_raw);
+p = fileparts(infiles.sbe35_raw);
 file_list = {d.name};
 if isempty(file_list)
     warning('no sbe35 files found; skipping')
@@ -76,7 +76,7 @@ for kf = 1:length(file_list)
     end
     fclose(fid2);
     %make any adjustments to statnum/bn for files with wrong name/combined casts, etc.
-    opt1 = 'sbe35'; opt2 = 'sbe35_parse'; run(MEXEC_G.opt_cruise) 
+    opt1 = 'sbe35'; opt2 = 'sbe35_irregular_parse'; run(MEXEC_G.opt_cruise) 
 end
 t.sampnum = t.statnum*100+t.bn;
 t(isnan(t.sampnum),:) = [];
@@ -148,14 +148,14 @@ if docf
 else
     hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 end
-hnew.dataname = pd.sbe35name;
+hnew.dataname = ['sbe35_' MEXEC_G.mcruise];
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; 
 
 t.position = t.bn;
 t.time = m_commontime(t.datnum,'time','datenum',hnew);
 t.sbe35temp = t.t90;
 t.sbe35temp_flag = t.flag;
-opt1 = mfilename; opt2 = 'sbe35flag'; eval(['opt_' mcruise]);
+opt1 = mfilename; opt2 = 'sbe35_flags'; run(MEXEC_G.opt_cruise)
 %bottle not fired won't be in list, so nan must be bad
 t.sbe35temp_flag(isnan(t.sbe35temp) & t.sbe35temp_flag<4) = 4;
 clear d %rather than using table2struct, loop so they'll be in same order as hnew.fldnam
@@ -166,7 +166,7 @@ end
 d = rmfield(d,'junk');
 
 MEXEC_A.Mprog = mfilename;
-mfsave(outfile, d, hnew);
+mfsave(pfiles.sbe35_all, d, hnew);
 
 %and update sam_cruise_all file
 msam_merge('sbe35')

@@ -43,7 +43,9 @@ function mvad_list_station(stn, inst)
 % tbuffer = 3600/86400; % days
 
 m_common
-opt1 = 'setup'; opt2 = 'procfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'adcp_process'; opt2 = 'sadcp_files'; run(MEXEC_G.opt_cruise)
+opt1 = 'uway_process'; opt2 = 'nav_files'; run(MEXEC_G.opt_cruise);
+opt1 = 'ctd_process'; opt2 = 'ctd_files'; run(MEXEC_G.opt_cruise);
 %reset constants, just in case
 i = sqrt(-1);
 pi = 4*atan(1);

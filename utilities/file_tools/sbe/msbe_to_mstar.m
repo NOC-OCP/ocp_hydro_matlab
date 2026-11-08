@@ -345,7 +345,7 @@ for k = 1:length(varname)
     v.longname = varname_long{k};
     v.data = data1(k,:)';
     v.data(v.data == sbe_bad_flag) = nan; % set sbe bad data to nan
-    if docf && strcmp(varunits{k},'seconds')
+    if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024 && strcmp(varunits{k},'seconds')
         v.units = ['seconds since ' datestr(h.data_time_origin, 'yyyy-mm-dd HH:MM:SS')];
     else
         v.units = varunits{k};

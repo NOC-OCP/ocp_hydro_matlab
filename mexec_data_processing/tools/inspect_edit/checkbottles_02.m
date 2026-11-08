@@ -35,10 +35,10 @@ nsubs = length(vnams)+3; % = length(varargin)+3
 
 %%%%%%%%% get data %%%%%%%%%
 
-root_ctd = mgetdir('M_CTD');
-
-fnctd = fullfile(root_ctd, ['ctd_' mcruise '_' sprintf('%03d',stnlocal) '_psal']);
-fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
+opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'samp_proc'; opt2 = 'samp_pfiles'; run(MEXEC_G.opt_cruise)
+fnctd = sprintf(pfiles.ctd_1hz,stnlocal);
+fnsamall = pfiles.samp_ctd;
 opt1 = 'outputs'; opt2 = 'section_for_station'; run(MEXEC_G.opt_cruise)
 if exist('sections','var')
     section = sections{1}; 

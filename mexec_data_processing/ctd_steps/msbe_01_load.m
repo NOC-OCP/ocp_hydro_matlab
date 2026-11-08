@@ -20,21 +20,22 @@ function varargout = msbe_01_load(stn)
 %%%%% setup %%%%%
 
 m_common; 
-opt1 = 'ctd_proc'; opt2 = 'ctdfiles'; run(MEXEC_G.opt_cruise)
-pd = mexec_file_locations('procfiles','ctd');
-dataname = sprintf(pd.ctdname,stn_string);
-rawfile = sprintf(pd.ctdraw,stn_string);
-if MEXEC_G.quiet<=1; fprintf(1,'converting %s to %s\n',cnvfile,rawfile); end
+opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise);
+dataname = sprintf('ctd_%s_%s',MEXEC_G.mcruise,stn_string);
+infile = sprintf(infiles.ctd_raw,stn_string);
+otfile = sprintf(pfiles.ctd_cnv,stn_string);
+if MEXEC_G.quiet<=1; fprintf(1,'converting %s to %s\n',infile,rawfile); end
 
 % input and output files
-if ~exist(cnvfile,'file') && isfield(MEXEC_G,'mexec_shell_scripts')
+if ~exist(infile,'file') && isfield(MEXEC_G,'mexec_shell_scripts')
     css = fullfile(MEXEC_G.mexec_shell_scripts,'data_to_ws','ctd_syncscript.sh');
     if exist(css,'file')
         system(['bash ' css]);
     end
 end
-if ~exist(cnvfile,'file')
-    warning(['file ' cnvfile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
+if ~exist(infile,'file')
+    warning(['file ' infile ' not found; make sure it''s there (and not gzipped) and return to try again, or ctrl-c to quit'])
     pause
 end
 
@@ -42,7 +43,7 @@ end
 %%%%% convert to mstar %%%%%
 
 %load data
-[d,h] = msbe_to_mstar(cnvfile,'y','y');
+[d,h] = msbe_to_mstar(infile,'y','y');
 if ~ismember(h.fldnam,'scan')
     error('scan is required for processing %s',cnvfilename)
 end
@@ -87,19 +88,15 @@ if ~isempty(append_stn_strings)
             warning('update comb_scan_off in opt_%s ctd_proc, ctd_raw_extra case to %d (it is also used by mfir_01_load)',mcruise,comb_scan_off(fno));
         end
         dn.scan = dn.scan + append_scan_offsets(fno);
-        h.comment = [h.comment sprintf('\noffsetting ctd file %s by %d scans%s and appending to ctd file %s',append_stn_strings{fno},append_scan_offsets(fno),stn_string)];
+        h.comment = [h.comment sprintf('\noffsetting ctd file %s by %d scans and appending to ctd file %s',append_stn_strings{fno},append_scan_offsets(fno),stn_string)];
         [d, h] = merge_mvars(d, h, dn, hn, 'scan', 1); %***no sort?
     end
 end
 
 if isempty(split_castnos_scans)
-    % position at bottom of cast (estimate; can update at mdcs stage***)
-    [botlon, botlat] = getpos_for_ctd(h);
-    %used to write to file using %14.8f string, keep this level of rounding
-    h.longitude = round(botlon*1e8)/1e8;
-    h.latitude = round(botlat*1e8)/1e8;
-    %write file
-    mfsave(rawfile, d, h)
+    mfsave(otfile, d, h)
+    %add position at bottom of cast (from .cnv file if available, otherwise from underway)
+    getpos_for_ctd(otfile,'write');
     varargout{1} = [];
 
 else
@@ -107,35 +104,21 @@ else
     d0 = d; h0 = h;
     keyboard
     for fno = 1:size(split_castnos_scans,1)
-        rawfile = sprintf(pd.ctdraw,sprintf('%03d',split_castnos_scans(fno,1)));
+        otfile = sprintf(pfiles.ctd_raw,sprintf('%03d',split_castnos_scans(fno,1)));
         m = d0.scan>=split_castnos_scans(fno,2) & d0.scan<=split_castnos_scans(fno,3);
         keyboard %structfun?
         d = structfun(@(x) x(m), d);
         h = h0; h.comment = [h.comment '\n split from original ' h.dataname ' using scan range in opt_' mcruise '.m ctd_proc, ctd_raw_extra'];
-        %position at bottom of cast (estimate; can update at mdcs stage***)
-        [botlon, botlat] = getpos_for_ctd(h);
-        %used to write to file using %14.8f string, keep this level of rounding
-        h.longitude = round(botlon*1e8)/1e8;
-        h.latitude = round(botlat*1e8)/1e8;
         %write file
-        mfsave(rawfile, d, h)
+        mfsave(otfile, d, h)
+        %add position at bottom of cast (from .cnv file if available, otherwise from underway)
+        getpos_for_ctd(otfile, 'write');
     end
     varargout{1} = split_castnos_scans(:,1);
-
 end
 
 %other special cases e.g. typos in S/Ns
 opt1 = 'ctd_proc'; opt2 = 'header_edits'; run(MEXEC_G.opt_cruise)
-
-% Get position at bottom of cast either from ctd-logged nmea lat, lon or
-% from bottom of cast time and mtposinfo/msposinfo/mrposinfo; put in header
-for fno = 1:length(otfiles)
-    rawfile = otfiles{fno};
-    [botlon, botlat] = getpos_for_ctd(h);
-    %used to write to file using %14.8f string, keep this level of rounding
-    h.longitude = round(botlon*1e8)/1e8; 
-    h.latitude = round(botlat*1e8)/1e8;
-end
 
 function [d, h] = mctd_extra(d, h, extravars, extrasource)
 

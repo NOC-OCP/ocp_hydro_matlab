@@ -8,11 +8,10 @@ function mfir_to_sam(stn)
 
 m_common
 opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-
-pd = mexec_file_locations('procfiles','fir');
-f = m_add_nc(sprintf(pd.firfile,stn_string));
-pd = mexec_file_locations('procfiles','samp');
-samfile = pd.samc;
+opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'samp_proc'; opt2 = 'samp_pfiles'; run(MEXEC_G.opt_cruise)
+f = sprintf(pfiles.ctd_nisk,stn_string);
+samfile = pfiles.samp_ctd;
 if ~exist(f,'file')
     warning('no bottle firing file for %s',f)
     return
@@ -47,7 +46,7 @@ if sum(~isnan(d.sampnum))>0
     h.fldnam = [h.fldnam 'stndepth']; h.fldunt = [h.fldunt 'metres'];
     h.latitude = -999; h.longitude = -999; h.water_depth_metres = -999; % sam file has multiple stations
     h.comment = sprintf('CTD data from station %03d added',stn);
-    h.dataname = ['sam_' mcruise '_all'];
+    h.dataname = ['sam_' MEXEC_G.mcruise '_all'];
     MEXEC_A.Mprog = mfilename;
     mfsave(samfile, d, h, '-merge', 'sampnum');
 end

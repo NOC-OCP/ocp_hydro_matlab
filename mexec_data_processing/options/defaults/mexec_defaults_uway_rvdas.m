@@ -1,12 +1,15 @@
 switch opt2
     case 'ship_data_sys_names'
+        foundit = true;
         tsgpre = 'tsg';
         metpre = 'surfmet';
     case 'rvdas_database'
+        foundit = true;
         RVDAS.csvroot = fullfile(MEXEC_G.mexec_data_root, 'rvdas', 'rvdas_csv_tmp');
         %RVDAS.jsondir = '/data/pstar/mounts/links/mnt_cruise_data/Ship_Systems/Data/RVDAS/sensorfiles/';
         RVDAS.database = ['"' upper(MEXEC_G.mcruise) '"'];
     case 'rvdas_form'
+        foundit = true;
         switch MEXEC_G.Mship
             case 'sda'
                 use_cruise_views = 1; %prepend string view_name to names from json files
@@ -17,5 +20,6 @@ switch opt2
                 use_cruise_views = 0;
         end
     case 'rvdas_skip'
+        foundit = true;
         %see opt_dy181
 end

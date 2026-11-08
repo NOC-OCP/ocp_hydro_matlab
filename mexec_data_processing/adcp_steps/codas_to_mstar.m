@@ -6,22 +6,20 @@ function [d, h] = codas_to_mstar(inst)
 %
 % YLF jc238, derived from mvad_01 (BAK)
 % it is no longer part of standard processing to convert the whole CODAS
-%   .nc to Mstar .nc (though you could save d and h to an Mstar format file
-%   using mfsave)
+%   .nc to Mstar .nc 
 % instead, this function is called by mvad_list_stations and mvad_stations
 %   to list or average VMADCP data for other processing
 
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
-opt1 = 'setup'; opt2 = 'procfiles';
-opt1 = mfilename; opt2 = 'codas_file'; run(MEXEC_G.opt_cruise)
-if ~exist(fnin, 'file')
-    error(['input file ' fnin ' not found'])
+opt1 = 'adcp_process'; opt2 = 'sadcp_files'; run(MEXEC_G.opt_cruise)
+if ~exist(infiles.sadcp_all, 'file')
+    error(['input file ' infiles.sadcp_all ' not found'])
 end
 
 %start header
 h = m_default_attributes;
-h.dataname = [inst '_' mcruise '_01'];
+h.dataname = [inst '_' mcruise];
 
 %load data
 allin.decday = double(nc_varget(fnin,'time'));

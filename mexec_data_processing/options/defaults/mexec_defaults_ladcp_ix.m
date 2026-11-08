@@ -1,5 +1,13 @@
 switch opt2
+    case 'ladcp_files'
+        foundit = true;
+        infiles.ladcp_raw = fullfile(MEXEC_G.data_root, 'ladcp', 'rawdata', '%s'); %stn_string
+        pfiles.forladcp_ctdnav = fullfile(MEXEC_G.data_root, 'ladcp', 'ctd', 'ctd.%s.02.asc'); %stn_string
+        if exist('inst','var')
+            pfiles.forladcp_sadcpav = fullfile(MEXEC_G.data_root, 'ladcp', 'sadcp', [inst '_' MEXEC_G.mcruise '_ctd_%s_forladcp.mat']); %stn_string
+        end
     case 'ladcp_cfg'
+        foundit = true;
         %file for vmadcp data corresponding to this cast. if available, use
         %the instrument/mode with deepest range
         cfg.f.sadcp = sprintf(pd.sadcp_for_ix,'os75nb',stn_string); 

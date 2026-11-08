@@ -41,8 +41,7 @@ if ~isempty(a)
 end
 
 pd = mexec_file_locations('procfiles','samp');
-restartsam = 0;
-restartusam = 0;
+
 if nargin>1
     for no = 1:2:length(varargin)
         eval([varargin{no} ' = varargin{no+1};']);
@@ -51,6 +50,9 @@ end
 
 %if specified, restart sam_ file and populate with CTD, and samu_ file and
 %populate with underway data
+restartsam = 0; restartusam=0;
+opt1='samp_proc'; opt2='restartsam';get_cropt
+
 if restartsam
     %delete sam_*_all file
     if exist(pd.samc,'file')
@@ -59,8 +61,11 @@ if restartsam
         delete(pd.samc)
     end
     % find which stations have bottle firing files
-    d = dir(firfile.fir);
-    stns = cellfun(@(x) split(x,'_'), {d.name}, 'UniformOutput', false);
+    pfir = mexec_file_locations('procfiles','fir')
+    d = dir(sprintf(pfir.firfile,'*'));
+    % Extract 3-digit blocks directly and convert to numbers
+    [~, namesWithoutExt] = cellfun(@fileparts, {d.name}, 'UniformOutput', false);
+    stns = cellfun(@(x) split(x, '_'), namesWithoutExt, 'UniformOutput', false);
     stns = cellfun(@(x) str2double(x{3}), stns);
     stns = stns(:)';
     for stn = stns
@@ -83,9 +88,9 @@ if restartusam
  end
 
 %now start loading parameter data
-for pno = 1:length(ptlist)
-    msam_load(ptlist{pno})
-    msam_merge(ptlist{pno})
+for pno = 1:size(ptlist,1)
+    msam_load(ptlist(pno,:))
+    msam_merge(ptlist(pno,:))
 end
 
 opt1 = 'outputs'; opt2 = 'columndata'; run(MEXEC_G.opt_cruise)
