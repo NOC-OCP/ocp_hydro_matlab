@@ -115,7 +115,7 @@ switch opt1
                 % %stainless
                 co.calstr.temp.sn5785.dy214 =  'dcal.temp = d0.temp + interp1([0 2400 3100],[-.5e-3 -2.e-3 -3.e-3],d0.press) + 5.2e-4;';
                 co.calstr.temp.sn5785.msg = 'temp s/n 5785 calibrated based on comparison with 78/546 SBE35 measurements';
-                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp + 1e-10.*(d0.press-1300).^2 - d0.press*6e-7 + 2.5e-4;';
+                co.calstr.temp.sn5835.dy214 = 'dcal.temp = d0.temp - (d0.press-1500)*9e-4/1500 -3.2e-4;';
                 co.calstr.temp.sn5835.msg = 'temp s/n 5835 calibrated based on comparison with 78/546 SBE35 measurements';
 
                 co.calstr.cond.sn2231.dy214 = 'dcal.cond = d0.cond.*(1+ (interp1([0 2500 3100],[-1 -1.2 -2].*1e-3,d0.press))/35);';
