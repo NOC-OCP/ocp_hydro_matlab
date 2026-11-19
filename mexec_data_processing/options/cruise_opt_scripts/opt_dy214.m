@@ -163,23 +163,20 @@ switch opt1
                     o_choice = 2; 
                 end
             case 'raw_corrs'
-                %number of seconds to shift oxygen earlier, 2s default for subpolar?
-                co.oxy_align = 2; %0 until we check oxygen hysteresis
-
                 % % % before jump - default
                 oxy3836_1.H1 = -0.033; 
                 oxy3836_1.H2 = 5000; % pressure
                 oxy3836_1.H3 = 1450;
-                
+
                 % % % after jump
-                oxy3836_2.H1 = -0.03; 
+                oxy3836_2.H1 = -0.028; 
                 oxy3836_2.H2 = 5000; % pressure
-                oxy3836_2.H3 = [-10 500;1500 500;1501 1450;2000 1450;2001 2000;9000 2000]; %time
-                % % 
+                oxy3836_2.H3 = 1450; %time
+
                 oxy4580.H1 = -0.028;
                 oxy4580.H2 = 5000;
                 oxy4580.H3 = [-10 500;1500 500;1501 1000;2000 1000;2001 2000;9000 2000]; %time
-                % 
+                
                 if ismember(stnlocal,[1:21,23:25])
                     co.hyst_oxy1 = oxy3836_1;
                 elseif stnlocal==22
