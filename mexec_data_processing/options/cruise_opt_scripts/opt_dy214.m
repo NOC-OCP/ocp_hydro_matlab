@@ -569,8 +569,10 @@ case 'samp_proc'
             case 'mctd_evaluate_sensors'
                 switch parameter
                     case 'oxy'
+                        if useoxyratio
                         p.rlim=1+[-.15 .15];
                         p.edges = [p.rlim(1):.005:p.rlim(2)];
+                        end
                 end
             case 'restartsam'
                 restartsam = 0;
