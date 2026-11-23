@@ -19,6 +19,7 @@ switch opt2
         co.pumpsNaN.oxy2 = 8*24;
     case 'raw_corrs'
         foundit = true;
+        sbe_ctd_coeffs %set co.hyst_oxy0 and co.pumpsNaN
         co.dpoff_calc = 1; %try to calculate deck pressure from start of record
         co.dpoff_checked = []; %list of 
         % number of seconds to shift oxygen earlier, based on delay in membrane response (varies from 1-8 S partially depending on temperature)
@@ -28,13 +29,4 @@ switch opt2
         %temp1 or temp2
         co.dooxy1V = 0; co.dooxy2V = 0;
         %set re_dooxyhyst = 1 to apply oxygen hysteresis correction
-        %hyst_oxy0 if not already applied in SBE processing, then undo and
-        %redo using user-supplied hyst_oxy 
-        %SBE defaults are: H1 = -0.033, H2 = 5000, H3 = 1450
-        %change hyst_oxy0 if you have applied different values *before
-        %mexec processing*
-        co.hyst_oxy0.H1 = -0.033;
-        co.hyst_oxy0.H2 = 5000;
-        co.hyst_oxy0.H3 = 1450;
-        co.hrev_oxy0 = co.hyst_oxy0;
 end

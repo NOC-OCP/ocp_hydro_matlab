@@ -6,11 +6,6 @@ switch opt2
         if exist('inst','var')
             pfiles.forladcp_sadcpav = fullfile(MEXEC_G.data_root, 'ladcp', 'sadcp', [inst '_' MEXEC_G.mcruise '_ctd_%s_forladcp.mat']); %stn_string
         end
-    case 'ladcp_cfg'
-        foundit = true;
-        %file for vmadcp data corresponding to this cast. if available, use
-        %the instrument/mode with deepest range
-        cfg.f.sadcp = sprintf(pd.sadcp_for_ix,'os75nb',stn_string); 
         %file and format for ascii file of 1hz ctd data and corresponding nmea nav data
         cfg.f.ctd = sprintf(pd.ctdnav_for_ix, stn_string);
         cfg.f.ctd_header_lines      = 1;
@@ -27,6 +22,11 @@ switch opt2
         cfg.f.nav_time_field	= cfg.f.ctd_time_field;
         cfg.f.nav_lat_field 	= 5;
         cfg.f.nav_lon_field 	= 6;
+    case 'ladcp_cfg'
+        foundit = true;
+        %file for vmadcp data corresponding to this cast. if available, use
+        %the instrument/mode with deepest range
+        cfg.f.sadcp = sprintf(pd.sadcp_for_ix,'os75nb',stn_string); 
         %parameters for LADCP processing
         %cfg.p.magdec_source = 1;
         %cfg.p.drot = system()

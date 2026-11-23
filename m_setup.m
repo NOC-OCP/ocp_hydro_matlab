@@ -168,7 +168,7 @@ end
 sw_checkpath
 
 % location processing and writing mexec files
-if isempty(MEXEC_G.data_root) || ~exist(MEXEC_G.data_root,'dir')
+if ~isfield(MEXEC_G,'data_root') || isempty(MEXEC_G.data_root) || ~exist(MEXEC_G.data_root,'dir')
     MEXEC_G.data_root = input('input path to data directory (e.g. ~/cruises/ce26008/data/) where processed data will be written   ','s');
 else
     fprintf(1,'working in %s\n',MEXEC_G.data_root)
@@ -232,7 +232,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
         datanames = {};
         versions = [];
         save(MEXEC_G.VERSION_FILE,'datanames','versions'); mfixperms(MEXEC_G.VERSION_FILE);
-        [us,~] = system(['touch ''' MEXEC.simplelockfile '''']); mfixperms(MEXEC.simplelockfile);
+        [us,~] = system(['touch ' MEXEC.simplelockfile]); mfixperms(MEXEC.simplelockfile);
         if us == 0 && exist(MEXEC.simplelockfile,'file') == 2 % seems to be a successful create of lock file
             m = 'Version lock file touched successfully';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m)
@@ -242,7 +242,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
 
     % might have to wait a bit to find it
     nsecwait = 0;
-    while exist(MEXEC.simplelockfile,'file') ~= 2 && nsecwait<40
+    while exist(MEXEC.simplelockfile,'file') ~= 2 && nsecwait<30
         fprintf(MEXEC_A.Mfider, '%s\n', 'waiting for version lock file');
         pause(2); nsecwait = nsecwait + 2;
     end

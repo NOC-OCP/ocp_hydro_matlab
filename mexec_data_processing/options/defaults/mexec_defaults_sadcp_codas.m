@@ -1,8 +1,7 @@
 switch opt2
-    case 'sadcp_files'
+    case 'sadcp_infiles'
         foundit = true;
         infiles.sadcp_all = fullfile(MEXEC_G.data_root, 'vmadcp', 'postprocessing', upper(MEXEC_G.mcruise), 'proc_editing', inst, 'contour', [inst '_' MEXEC_G.mcruise '.nc']);
-        pfiles.sadcp_stnav = fullfile(MEXEC_G.data_root, 'vmadcp', 'mproc', [inst '_' MEXEC_G.mcruise '_%s_ave.nc']); %stn_string
     case 'sadcp_on_station'
         foundit = true;
         min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this

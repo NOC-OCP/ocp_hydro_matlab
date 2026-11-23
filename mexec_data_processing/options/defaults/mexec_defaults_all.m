@@ -41,6 +41,43 @@ while ~foundit & ~outofopts
                     stnlocal = stn;
             end
 
+        case 'pfiles'
+            foundit = true;
+            helptext = 'specify paths and names of processed data files (created by mexec_data_processing, and possibly used by later steps)';
+            pfiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_cnv.nc']); %stn_string
+            pfiles.ctd_cleancal = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_24hz.nc']); %stn_string
+            pfiles.ctd_editsrecords = fullfile(MEXEC_G.data_root, 'ctd', 'editlogs', 'ctd_%s_editpoints'); %stn_string %files that go into producing pfiles.ctd_clean from pfiles.ctd_raw
+            pfiles.ctd_1hz = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_1hz.nc']); %stn_string
+            pfiles.ctd_10s = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_10s.nc']); %stn_string
+            pfiles.ctd_2db_dn = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_2db.nc']); %stn_string
+            pfiles.ctd_2db_up = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_2up.nc']); %stn_string
+            pfiles.ctd_nisk = fullfile(MEXEC_G.data_root, 'ctd', ['fir_' MEXEC_G.mcruise '_%s.nc']); %stn_string
+            pfiles.ctd_castcut = fullfile(MEXEC_G.data_root, 'ctd', ['dcs_' MEXEC_G.mcruise '_%s.nc']); %stn_string
+            %pfiles.ctd_win = fullfile(MEXEC_G.data_root, 'ctd', 'WINCH', ['win_' MEXEC_G.mcruise '_%s.nc']); %stn_string
+            %other standard outputs
+            pfiles.svel = fullfile(MEXEC_G.data_root, 'bathy', 'svel_for_echosounders', ['ctd_' MEXEC_G.mcruise '_10s_down_svel.csv']);
+            pfiles.ctd_nisk_sum = fullfile(MEXEC_G.data_root, 'collected_files', ['station_summary_' MEXEC_G.mcruise '_all.nc']); %***
+            pfiles.sbe35 = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', 'SBE35', ['sbe35_' MEXEC_G.mcruise '_all.nc']);
+            if exist('samtyp','var')
+                pfiles.(samtyp) = fullfile(MEXEC_G.data_root, 'bottle_samples', [samtyp '_' MEXEC_G.mcruise '_all.nc']);
+            end
+            %combined files for all sample (and comparison sensor) data
+            pfiles.samp_ctd = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_nisk_' MEXEC_G.mcruise '_all.nc']);
+            pfiles.samp_uway = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_ucsw_' MEXEC_G.mcruise '_all.nc']);
+            %underway data files
+            if exist('mtable','var') && exist('m','var')
+                pfiles.uway_raw = fullfile(MEXEC_G.data_root,mtable.mstardir{m},['%s_' MEXEC_G.mcruise '_all_raw.nc']); %abbrev
+                pfiles.uway_edt = fullfile(MEXEC_G.data_root,mtable.mstardir{m},['%s_' MEXEC_G.mcruise '_all_edt.nc']); %abbrev
+            end
+            pfiles.nav_final = fullfile(MEXEC_G.data_root, 'nav', ['bestnav_' MEXEC_G.mcruise '_all.nc']);
+            pfiles.uocean_final = fullfile(MEXEC_G.data_root, 'surfmet', ['surface_ocean_' MEXEC_G.mcruise '_all.nc']);
+            pfiles.met_final = fullfile(MEXEC_G.data_root, 'surfmet', ['atmos_truwind_' MEXEC_G.mcruise '_all.nc']);
+            pfiles.bathy_final = fullfile(MEXEC_G.data_root, 'bathy', ['bathy_' MEXEC_G.mcruise '_all.nc']);
+            %adcp
+            if exist('inst','var')
+                pfiles.sadcp_stnav = fullfile(MEXEC_G.data_root, 'vmadcp', 'mproc', [inst '_' MEXEC_G.mcruise '_%s_ave.nc']); %stn_string
+            end
+
         case 'adcp_proc'
             %set input and output files, instrument names, parameters for
             %averaging sadcp data processed using CODAS or another system
@@ -52,29 +89,11 @@ while ~foundit & ~outofopts
         case 'ctd_proc'
             %set input files and parameters for processing of data from the
             %CTD/rosette system and other sensors on the CTD frame (except
-            %LADCP) 
+            %LADCP)
             placeholder_datatypes_ctd
             placeholder_datatypes_nisk
             placeholder_datatypes_tref
             switch opt2
-                case 'ctd_pfiles' %consider just resolving %s to stn_string?***
-                    foundit = true;
-                    helptext = 'specify paths and names of files produced by ctd processing';
-                    %processed files
-                    pfiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_cnv.nc']); %stn_string
-                    pfiles.ctd_clean_corr = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_cleaned.nc']); %stn_string
-                    efiles.ctd_editsrecord = fullfile(MEXEC_G.data_root, 'ctd', 'editlogs', 'ctd_%s_editpoints');  %stn_string %files that go into producing pfiles.ctd_clean from pfiles.ctd_raw
-                    pfiles.ctd_clean_corr_cal = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_24hz.nc']);  %stn_string
-                    pfiles.ctd_1hz = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_1hz.nc']);  %stn_string
-                    pfiles.ctd_10s = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_10s.nc']);  %stn_string
-                    pfiles.ctd_2db_dn = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_2db.nc']);  %stn_string
-                    pfiles.ctd_2db_up = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_2up.nc']);  %stn_string
-                    pfiles.ctd_nisk = fullfile(MEXEC_G.data_root, 'ctd', ['fir_' MEXEC_G.mcruise '_%s.nc']);  %stn_string
-                    pfiles.ctd_castcut = fullfile(MEXEC_G.data_root, 'ctd', ['dcs_' MEXEC_G.mcruise '_%s.nc']);  %stn_string
-                    pfiles.ctd_win = fullfile(MEXEC_G.data_root, 'ctd', 'WINCH', ['win_' MEXEC_G.mcruise '_%s.nc']);  %stn_string
-                    %other standard outputs
-                    pfiles.svel = fullfile(MEXEC_G.data_root, 'bathy', 'svel_for_echosounders', ['ctd_' MEXEC_G.mcruise '_%s_10s_down_svel.csv']); %stn_string
-                    pfiles.ctd_nisk_sum = fullfile(MEXEC_G.data_root, 'collected_files', ['station_summary_' MEXEC_G.mcruise '_all.nc']); %***
                 case 'ctd_raw_extra'
                     foundit = true;
                     helptext = 'if necessary, set to create time variable (if missing) or add variables absent for only some stations as NaNs';
@@ -166,15 +185,6 @@ while ~foundit & ~outofopts
                     helptext = 'set list of files to load for a particular samtyp, and set sopts to specify how to read in csv/spreadsheet files';
                     %how to read in csv/spreadsheet files
                     sopts.remove_empty_cols = 1;
-                case 'samp_pfiles'
-                    foundit = true;
-                    %concatenated file for a type of sample data
-                    if exist('samtyp','var')
-                        pfiles.(samtyp) = fullfile(MEXEC_G.data_root, 'bottle_samples', [samtyp '_' MEXEC_G.mcruise '_all.nc']);
-                    end
-                    %combined files for all sample (and comparison sensor) data
-                    pfiles.samp_ctd = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_nisk_' MEXEC_G.mcruise '_all.nc']);
-                    pfiles.samp_uway = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_ucsw_' MEXEC_G.mcruise '_all.nc']);
                 case 'samp_file_parse'
                     foundit = true;
                     clear varmap
@@ -227,14 +237,6 @@ while ~foundit & ~outofopts
         case 'uway_proc'
             placeholder_datatypes_uway
             switch opt2
-                case 'uway_files'
-                    foundit = true;
-                    pfiles.uway_raw = '%s_%s_all_raw.nc';
-                    pfiles.uway_all = '%s_%s_all.nc';
-                    pfiles.nav_final = fullfile(MEXEC_G.data_root, 'nav', ['bestnav_' MEXEC_G.mcruise '_all.nc']);
-                    pfiles.uocean_final = fullfile(MEXEC_G.data_root, 'surfmet', ['surface_ocean_' MEXEC_G.mcruise '_all.nc']);
-                    pfiles.met_final = fullfile(MEXEC_G.data_root, 'surfmet', ['atmos_truwind_' MEXEC_G.mcruise '_all.nc']);
-                    pfiles.bathy_final = fullfile(MEXEC_G.data_root, 'bathy', ['bathy_' MEXEC_G.mcruise '_all.nc']);
                 case 'uway_raw_tstep_save'
                     foundit = true;
                     %subsample high-frequency streams and match up different
