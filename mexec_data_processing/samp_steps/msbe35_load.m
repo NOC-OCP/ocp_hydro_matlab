@@ -1,8 +1,8 @@
-function msbe35_01(varargin)
-% msbe35_01
-% msbe35_01(max_expected_stn)
+function msbe35_load(varargin)
+% msbe35_load
+% msbe35_load(max_expected_stn)
 %
-% msbe35_01: load sbe35 data from available stations and write to
+% msbe35_load: load sbe35 data from available stations and write to
 %     mstar file sbe35_cruise_01.nc, as well as pasting into
 %     sam_cruise_all.nc
 %
@@ -17,10 +17,11 @@ if ~isfield(MEXEC_G.datatypes,'tref') || ~sum(strcmp(MEXEC_G.datatypes.tref,'sbe
 end
 if MEXEC_G.quiet<=1; fprintf(1,'loading SBE35 ascii file(s) to write to sbe35_%s_01.nc and sam_%s_all.nc\n',MEXEC_G.mcruise,MEXEC_G.mcruise); end
 
-opt1 = 'samp_proc'; opt2 = 'sbe35_files'; run(MEXEC_G.opt_cruise)
+opt1 = 'samp_proc'; opt2 = 'sbe35_infiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'pfiles'; opt2 = 'sbe35'; run(MEXEC_G.opt_cruise)
 
-if nargin>0 && ~isempty(varargin{1}) && exist(pfiles.sbe35_all,'file')
-    h = m_read_header(outfile);
+if nargin>0 && ~isempty(varargin{1}) && exist(pfiles.sbe35,'file')
+    h = m_read_header(pfiles.sbe35);
     if h.uprlim(strcmp('statnum',h.fldnam))>=varargin{1}
         %we've already read in as far as this station, no need to redo
         return
@@ -28,9 +29,8 @@ if nargin>0 && ~isempty(varargin{1}) && exist(pfiles.sbe35_all,'file')
 end
 
 % load sbe35 data
-d = dir(infiles.sbe35_raw);
-p = fileparts(infiles.sbe35_raw);
-file_list = {d.name};
+d = dir(infiles.sbe35);
+file_list = cellfun(@(x,y) fullfile(x,y), {d.folder}, {d.name});
 if isempty(file_list)
     warning('no sbe35 files found; skipping')
     return
@@ -45,7 +45,7 @@ clear flag
 
 kount = 1;
 for kf = 1:length(file_list)
-    fn = fullfile(p, file_list{kf});
+    fn = file_list{kf};
     if stnind(1)<0
         iis = length(file_list{kf})+stnind; 
     else
@@ -166,7 +166,4 @@ end
 d = rmfield(d,'junk');
 
 MEXEC_A.Mprog = mfilename;
-mfsave(pfiles.sbe35_all, d, hnew);
-
-%and update sam_cruise_all file
-msam_merge('sbe35')
+mfsave(pfiles.sbe35, d, hnew);

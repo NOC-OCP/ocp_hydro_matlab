@@ -67,8 +67,8 @@ if ismember('ladcp',types)
         pd = mexec_file_locations('procfiles','ladcp');
         cfg.stnstr = stn_string;
         cfg.p.cruise_id = mcruise;
-        cfg.p.ladcp_station = stnlocal;
-        if exist('shortcasts','var') && ismember(stnlocal,shortcasts)
+        cfg.p.ladcp_station = stn;
+        if exist('shortcasts','var') && ismember(stn,shortcasts)
             cfg.p.btrk_mode = 0;
             cfg.p.getdepth = 1;
             couldbt = 0;
@@ -80,7 +80,7 @@ if ismember('ladcp',types)
         opt1 = 'adcp_proc'; opt2 = 'ladcp_cfg'; run(MEXEC_G.opt_cruise) %cfg and set pattern for down- and up-looker files
         infiled = sprintf(pd.ladcpraw,cfg.dnpat);
         infileu = sprintf(pd.ladcpraw,cfg.uppat);
-        %stn = stnlocal;
+        %stn = stn;
         % first sync (if lad_syncscript found) -- just once per call
         if dosync; system(['bash ' css]); dosync = 0; end
 

@@ -20,7 +20,7 @@ function [d, comment] = apply_autoedits(d, edopts)
 %     edopts.rangelim.temp1 = [-2 40];
 %
 %   despike -- for each parameter which is a field of edopts.despike,
-%     each row in edopts.despike.{parameter}, [TH LEN],
+%     each row in numeric vector edopts.despike.{parameter}, [TH LEN],
 %     successively applies median_despike to remove points that deviate by
 %     more than TH from the median over LEN neighbouring non-NaN points
 %     note this is not a standard deviation filter, instead TH is absolute,
@@ -46,7 +46,15 @@ function [d, comment] = apply_autoedits(d, edopts)
 %     edopts.badtemp1.oxy_sbe1 = [NaN NaN];
 %     edopts.badtemp2.cond2 = [NaN NaN];
 %     edopts.badtemp2.oxy_sbe2 = [NaN NaN];
-%    
+%
+%   special -- for each parameter which is a field of edopts.special, each
+%   row of edopts.special.(parameter) = [ANFUNC, FIELDS] is evaluated with
+%   FIELDS as input to ANFUNC and the result applied as a mask  
+%     e.g.
+%     edopts.despike.oxy1 = {@(x)  isnan(median_despike(x(:,1)./x(:,2),24*10,0.03,[])), {'oxy1','oxy2'})
+%       produces the same result as
+%       d.oxy1(isnan(median_despike(d.oxy1./d.oxy2,24*10,0.03,[]))) = nan;
+%
 % also see ctd_proc, rawedit_auto and uway_proc, mday_01_clean_av cases for
 %   information on edopts 
 % 
@@ -149,4 +157,19 @@ for bpno = 1:length(iibp)
         end
     end
 end
-    
+
+%special edits
+if isfield(edopts,'special')
+    dat = struct2table(d,'AsArray',true);
+    fn = intersect(fieldnames(edopts.special),fnd);
+    for no = 1:length(fn)
+        t = edopts.special.(fn{no});
+        for dno = 1:size(t,1)
+            [~,~,ib] = intersect(t{dno,2},dat.Properties.VariableNames,'stable');
+            m = t{dno,1}; m = m(cell2mat(dat{:,ib}));
+            d.(fn{no})(m) = NaN;
+            comment = [comment '\n despiked ' fn{no} ' using ' func2str(t{dno,1}) ' on '];
+            comment = [comment sprintf('%s ',t{dno,2}{:})];
+        end
+    end
+end

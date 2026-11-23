@@ -305,8 +305,8 @@ else
 end
 rootdir = mgetdir('ctd');
 for no = 1:length(stns_examine)
-    stnlocal = stns_examine(no);
-    stn_string = sprintf('%03d', stnlocal);
+    stn = stns_examine(no);
+    stn_string = sprintf('%03d', stn);
 
     %load 1 and 2 dbar upcast profiles
     [d1, h1] = mloadq(fullfile(rootdir, ['ctd_' mcruise '_' stn_string '_1hz.nc']), '/');
@@ -331,8 +331,8 @@ for no = 1:length(stns_examine)
         end
     end
     if ~isempty(calstr)
-        d1.statnum = repmat(stnlocal,size(d1.press));
-        du.statnum = repmat(stnlocal,size(du.press));
+        d1.statnum = repmat(stn,size(d1.press));
+        du.statnum = repmat(stn,size(du.press));
         [dcal1, hcal1] = apply_calibrations(d1, h1, calstr, testcal, 'q');
         [dcalu, hcalu] = apply_calibrations(du, hu, calstr, testcal, 'q');
         %put calibrated fields back into d1 and du
@@ -345,7 +345,7 @@ for no = 1:length(stns_examine)
     end
 
     %bottle samples and niskin data for this station
-    iis = find(dc.statnum==stnlocal);
+    iis = find(dc.statnum==stn);
     iisbf = intersect(iis,find(~ismember(dc.calflag, okf)));
     iiq = intersect(iis,find(abs(dc.res)>llim & ismember(dc.calflag, okf)));
     if strcmp(parameter,'oxy')
@@ -359,10 +359,10 @@ for no = 1:length(stns_examine)
         dc.ctddata(iis), -dc.press(iis), 'b.', ...
         dc.ctddata(iiq), -dc.press(iiq), 'sb', ...
         'MarkerSize',12);
-    grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',stnlocal));
+    grid; title(sprintf('cast %d, cyan 1 hz, red good cal data, magenta bad cal data, blue ctd data, symbols large residuals',stn));
     disp('sampnum residual sample_flag niskin_flag pressure')
     for qno = 1:length(iiq)
-        fprintf(1,'%d %5.3f %d %d %d\n', stnlocal*100+dc.nisk(iiq(qno)), dc.res(iiq(qno)), dc.calflag(iiq(qno)), dc.niskf(iiq(qno)), round(dc.press(iiq(qno))))
+        fprintf(1,'%d %5.3f %d %d %d\n', stn*100+dc.nisk(iiq(qno)), dc.res(iiq(qno)), dc.calflag(iiq(qno)), dc.niskf(iiq(qno)), round(dc.press(iiq(qno))))
     end
     cont = input('k for keyboard prompt, enter to continue to next\n','s');
     if strcmp(cont,'k')

@@ -8,8 +8,7 @@ function mfir_to_sam(stn)
 
 m_common
 opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
-opt1 = 'samp_proc'; opt2 = 'samp_pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
 f = sprintf(pfiles.ctd_nisk,stn_string);
 samfile = pfiles.samp_ctd;
 if ~exist(f,'file')
@@ -30,9 +29,22 @@ else
 end
 
 [d,h] = mloadq(f,'/');
-d.statnum = repmat(stn,size(d.position));
+%fill in statnum and sampnum fields
+sp = size(d.position);
+d.statnum = repmat(stn,sp);
 d.sampnum = stn*100+d.position;
 h.fldnam = [h.fldnam 'statnum' 'sampnum']; h.fldunt = [h.fldunt 'number' 'number'];
+if isfield(h,'fldserial')
+    %move serial numbers from header (fldserial) into data vectors
+    h.fldserial = [h.fldserial ' ' ' '];
+    for no = 1:length(h.fldserial)
+        if ~isempty(replace(h.fldserial{no},' ',''))
+            d.(['sn_' h.fldnam{no}]) = repmat(str2double(h.fldserial{no}),sp);
+        end
+    end
+else
+    %for backward compatibility, parse from h.comment here? ***
+end
 if sum(~isnan(d.sampnum))>0
     ns = size(d.sampnum);
     d.utime = m_commontime(d,'utime',h,MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
@@ -47,6 +59,5 @@ if sum(~isnan(d.sampnum))>0
     h.latitude = -999; h.longitude = -999; h.water_depth_metres = -999; % sam file has multiple stations
     h.comment = sprintf('CTD data from station %03d added',stn);
     h.dataname = ['sam_' MEXEC_G.mcruise '_all'];
-    MEXEC_A.Mprog = mfilename;
     mfsave(samfile, d, h, '-merge', 'sampnum');
 end

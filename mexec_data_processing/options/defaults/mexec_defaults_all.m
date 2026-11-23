@@ -50,9 +50,12 @@ while ~foundit & ~outofopts
             placeholder_datatypes_ladcp
 
         case 'ctd_proc'
-            %set input files and parameters for processing of data from sensors
-            %on the CTD frame (other than LADCP)
+            %set input files and parameters for processing of data from the
+            %CTD/rosette system and other sensors on the CTD frame (except
+            %LADCP) 
             placeholder_datatypes_ctd
+            placeholder_datatypes_nisk
+            placeholder_datatypes_tref
             switch opt2
                 case 'ctd_pfiles' %consider just resolving %s to stn_string?***
                     foundit = true;
@@ -70,8 +73,7 @@ while ~foundit & ~outofopts
                     pfiles.ctd_castcut = fullfile(MEXEC_G.data_root, 'ctd', ['dcs_' MEXEC_G.mcruise '_%s.nc']);  %stn_string
                     pfiles.ctd_win = fullfile(MEXEC_G.data_root, 'ctd', 'WINCH', ['win_' MEXEC_G.mcruise '_%s.nc']);  %stn_string
                     %other standard outputs
-                    pfiles.svel = fullfile(MEXEC_G.data_root, 'bathy', 'svel_for_echosounders', ['ctd_' MEXEC_G.mcruise '_10s_down_svel.csv']);
-                    pfiles.ctd_sns = fullfile(MEXEC_G.data_root, 'ctd', 'sensor_groups.mat'); %***
+                    pfiles.svel = fullfile(MEXEC_G.data_root, 'bathy', 'svel_for_echosounders', ['ctd_' MEXEC_G.mcruise '_%s_10s_down_svel.csv']); %stn_string
                     pfiles.ctd_nisk_sum = fullfile(MEXEC_G.data_root, 'collected_files', ['station_summary_' MEXEC_G.mcruise '_all.nc']); %***
                 case 'ctd_raw_extra'
                     foundit = true;
@@ -150,7 +152,7 @@ while ~foundit & ~outofopts
                     foundit = true;
                     firmethod = 'medint';
                     clear firopts;
-                    firopts.int = [-1 120]; %average over 5 s, like in .ros file
+                    firopts.int = [-1 120]; %average over 5 s, like in .ros file***
                     firopts.prefill = 24*5; %fill gaps up to 5 s first
                 case 'fir_extra'
                     foundit = true;
@@ -158,7 +160,6 @@ while ~foundit & ~outofopts
             end
 
         case 'samp_proc'
-            placeholder_datatypes_tref
             switch opt2
                 case 'samp_infiles'
                     foundit = true;

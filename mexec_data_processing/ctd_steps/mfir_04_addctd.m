@@ -11,19 +11,18 @@ function mfir_04_addctd(stn)
 %         pressures
 
 m_common
-opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
 f = sprintf(pfiles.ctd_nisk,stn_string);
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)
     return
 end
-file1 = sprintf(pfiles.ctd_1hz,stn_string);
+file1 = sprintf(pfiles.ctd_1hz,stn_string); %not using 24hz because we want at least some averaging
 dfile = sprintf(pfiles.ctd_2db_dn,stn_string);
 ufile = sprintf(pfiles.ctd_2db_up,stn_string);
-if MEXEC_G.quiet<=1; fprintf(1,'adds CTD upcast data at bottle firing times to %s\n', f); end
-%not using 24hz because we want at least some averaging
+if MEXEC_G.quiet<=1; fprintf(1,'adds CTD data corresponding to Niskin closures to %s\n', f); end
 
-var_copycell = mcvars_list(2); %which variables to copy from 24hz CTD file
+var_copycell = mcvars_to_average(2); %which variables to copy from 24hz CTD file
 % remove any vars from copy list that aren't available in the input file
 [var_copycell, var_copystr] = mvars_in_file(var_copycell, file1);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
@@ -31,7 +30,16 @@ if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 %load and average data
 opt1 = 'ctd_proc'; opt2 = 'fir_fill'; run(MEXEC_G.opt_cruise)
 [dfir, hfir] = mload(f,'scan',' ');
-[dc, hc] = mload(file1, var_copystr);
+[dc, hc] = mload(file1,'/');
+m = ismember(hc.fldnam,[var_copycell 'scan']);
+dc = struct2table(dc);
+dc.Properties.VariableNames = hc.fldnam;
+dc = table2struct(dc(:,m),'ToScalar',true);
+hc.fldnam = hc.fldnam(m);
+hc.fldunt = hc.fldunt(m);
+if isfield(hc,'fldserial')
+    hc.fldserial = hc.fldserial(m);
+end
 dc = grid_1D(dc, 'scan', dfir.scan, firmethod, firopts);
 
 %this will go into sam_all file, so use cruise time origin, not cast time origin
@@ -50,14 +58,14 @@ else
     hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
 end
 hnew.latitude = hc.latitude; hnew.longitude = hc.longitude; hnew.water_depth_metres = hc.water_depth_metres;
-hnew.fldnam = {}; hnew.fldunt = {};
-for no = 1:length(var_copycell)
-    ii = find(strcmp(var_copycell{no}, hc.fldnam));
-    uname = ['u' var_copycell{no}];
-    hnew.fldnam = [hnew.fldnam uname];
-    hnew.fldunt = [hnew.fldunt hc.fldunt{ii}];
-    dnew.(uname) = dc.(var_copycell{no});
-end
+[~,~,ii] = intersect(var_copycell,hc.fldnam,'stable');
+hnew.fldnam = cellfun(@(x) ['u' x], hc.fldnam(ii),'UniformOutput',false);
+hnew.fldunt = hc.fldunt(ii);
+hnew.fldserial = hc.fldserial(ii);
+dnew = struct2table(dc);
+dnew = dnew(:,ii);
+dnew.Properties.VariableNames = hnew.fldnam;
+dnew = table2struct(dnew,'ToScalar',true);
 hnew.comment = hc.comment;
 
 MEXEC_A.Mprog = mfilename;
@@ -68,10 +76,9 @@ if fir_extra
     if MEXEC_G.quiet<=1; fprintf(1,'adds bottle stop background gradient, standard deviation, and gamma_n-matched downcast data to fir_%s_%s.nc\n', mcruise, stn_string); end
 
     if ~exist(file1,'file') || ~exist(ufile,'file')
-        warning('missing psal or 2up file for cast %s',stn_string)
+        warning('missing 1hz or 2up file for cast %s',stn_string)
         return
     end
-    [d1,~] = mloadq(file1,'/');
     [up,~] = mloadq(ufile,'/');
 
     fpress = dnew.upress; ftime = dnew.utime; ftu = hnew.fldunt(strcmp(hnew.fldnam,'utime'));
@@ -95,11 +102,11 @@ if fir_extra
             grads.oxy(sno,1) = (up.oxy(gii2)-up.oxy(gii1))/(gp2-gp1);
         end
         %***replace with code to actually identify bottle stops (check existing
-        %code)
-        ii = find(abs(d1.press-fpress(sno))<1 & abs(d1.scan-dfir.scan(sno))<24*60*20);
-        std1.temp(sno,1) = m_nanstd(d1.temp(ii));
-        std1.cond(sno,1) = m_nanstd(d1.cond(ii));
-        std1.oxy(sno,1) = m_nanstd(d1.oxy(ii));
+        %code for winch analysis or m_moorproc_toolbox)
+        ii = find(abs(dc.press-fpress(sno))<1 & abs(dc.scan-dfir.scan(sno))<24*60*20);
+        std1.temp(sno,1) = m_nanstd(dc.temp(ii));
+        std1.cond(sno,1) = m_nanstd(dc.cond(ii));
+        std1.oxy(sno,1) = m_nanstd(dc.oxy(ii));
     end
     dnew.grad_temp = grads.temp; dnew.grad_cond = grads.cond; dnew.grad_oxy = grads.oxy;
     hnew.fldnam = [hnew.fldnam 'grad_temp' 'grad_cond' 'grad_oxy'];
@@ -110,7 +117,7 @@ if fir_extra
     hnew.fldunt = [hnew.fldunt 'degC' 'psu' 'umol/kg'];
     hnew.comment = [hnew.comment '\n stdev at bottle stops from psal (1hz) file'];
 
-    var_copycell = mcvars_list(2);
+    var_copycell = mcvars_to_average(2);
     if exist(dfile,'file')
         [dn,hd] = mloadq(dfile,'/');
         [var_copycell, ~] = mvars_in_file(var_copycell, dfile);

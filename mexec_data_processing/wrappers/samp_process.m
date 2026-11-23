@@ -1,11 +1,12 @@
 function samp_process(ptlist, varargin)
 % function samp_process(ptlist, 'restartsam', [0], 'restartusam', [0])
 %
-% wrapper script for discrete sample data 
+% wrapper script for loading and processing sample data, from both Niskins
+% and underway 
 %
 % to load all available data from all available parameter types and add to
 %   existing sam_*_all.nc file, either:  
-% samp_process({'sal','oxy','nut','co2','iso','cfc','chl'})
+% samp_process({'sbe35','sal','oxy','nut','co2','iso','cfc','chl'})
 %   or
 % samp_process('all')
 %
@@ -25,6 +26,9 @@ m_common
 
 %parameters to try if paramlist is 'all'
 params = {'sal','oxy','nut','co2','iso','cfc','chl'};
+if strcmp(MEXEC_G.datatypes.tref,'sbe35')
+    params = [params 'sbe35'];
+end
 if ~iscell(ptlist)
     if strcmp(ptlist,'all')
         ptlist = params;
@@ -40,19 +44,23 @@ if ~isempty(a)
     ptlist = intersect(params,ptlist);
 end
 
-pd = mexec_file_locations('procfiles','samp');
+opt1 = 'samp_proc'; opt2 = 'samp_infiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
 
+restartsam = 0; restartusam = 0;
 if nargin>1
     for no = 1:2:length(varargin)
         eval([varargin{no} ' = varargin{no+1};']);
     end
 end
-
+if ~exist(pfiles.samp_ctd,'file')
+    restartsam = 1;
+end
+if ~exist(pfiles.samp_uway,'file')
+    restartusam = 1;
+end
 %if specified, restart sam_ file and populate with CTD, and samu_ file and
 %populate with underway data
-restartsam = 0; restartusam=0;
-opt1='samp_proc'; opt2='restartsam';get_cropt
-
 if restartsam
     %delete sam_*_all file
     if exist(pd.samc,'file')
@@ -60,32 +68,24 @@ if restartsam
         pause(1)
         delete(pd.samc)
     end
-    % find which stations have bottle firing files
-    pfir = mexec_file_locations('procfiles','fir')
-    d = dir(sprintf(pfir.firfile,'*'));
-    % Extract 3-digit blocks directly and convert to numbers
-    [~, namesWithoutExt] = cellfun(@fileparts, {d.name}, 'UniformOutput', false);
-    stns = cellfun(@(x) split(x, '_'), namesWithoutExt, 'UniformOutput', false);
-    stns = cellfun(@(x) str2double(x{3}), stns);
-    stns = stns(:)';
-    for stn = stns
-        %re-run to freshly add CTD data to sam file
-        mfir_to_sam(stn)
-    end
-    %add serial numbers (already saved in .mat file)
-    get_sensor_groups(stns,'samonly')
+    %find list of stations available
+    npat = sprintf(pfiles.ctd_nisk,'*');
+    d = dir(npat);
+    npat = split(npat,'*');
+    stns = cellfun(@(x) stru2double(replace(replace(x,npat{1},''),npat{2},'')), {d.name});
+    ctd_process(stns, 'niskins')
 end
 if restartusam
-     %delete sam_ucsw file
-     if exist(pd.samu,'file')
-         warning('deleting underway sam file: %s in 1 s',pd.samu)
-         pause(1)
-         delete(pd.samu)
-     end
-     opt1 = 'samp_proc'; opt2 = 'files'; samtyp = 'ulog'; run(MEXEC_G.opt_cruise)
-     s = readtable(uway_sample_log_file); %the equivalent of a .bl file
-%rename, merge on data from surface_ocean*
- end
+    %delete sam_ucsw file
+    if exist(pd.samu,'file')
+        warning('deleting underway sam file: %s in 1 s',pd.samu)
+        pause(1)
+        delete(pd.samu)
+    end
+    uway_process('samples')
+    s = readtable(uway_sample_log_file); %the equivalent of a .bl file
+    %rename, merge on data from surface_ocean***
+end
 
 %now start loading parameter data
 for pno = 1:size(ptlist,1)

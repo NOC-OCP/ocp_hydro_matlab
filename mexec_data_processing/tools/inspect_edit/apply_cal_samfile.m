@@ -32,7 +32,7 @@ end
 %loop through stations, since they might have different cal functions
 stns = unique(d.statnum);
 for sno = stns(:)'
-    stnlocal = sno;
+    stn = sno;
     %get only the calibration functions we want to test here
     if cropt_cal
         opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; run(MEXEC_G.opt_cruise)
@@ -45,7 +45,7 @@ for sno = stns(:)'
 
     %get the data from just this station, and rename e.g. upress to press
     clear d0
-    iig = find(d.statnum==stnlocal);
+    iig = find(d.statnum==stn);
     for vno = 1:length(udvars)
         if isfield(d,[udstr udvars{vno}])
             d0.(udvars{vno}) = d.([udstr udvars{vno}])(iig);

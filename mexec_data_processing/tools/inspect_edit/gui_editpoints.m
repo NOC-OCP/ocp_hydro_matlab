@@ -6,13 +6,13 @@ function bads = gui_editpoints(data, xvar, xgroups, ygroups, varargin)
 %
 % data is a table
 % ygroups can be
-%   empty, in which case all columns other than data.(xvar) are plotted vs 
+%   empty, in which case all columns other than data.(xvar) are plotted vs
 %     data.(xvar), or
 %   a cell array of strings listing variable names from data, in which
-%     case only columns found in ygroups are plotted vs data.(xvar) 
+%     case only columns found in ygroups are plotted vs data.(xvar)
 %   a cell array of cell arrays, in which case plotting loops through each
 %     set of variables
-% xgroups can be 
+% xgroups can be
 %   empty, in which case all rows are plotted at once, or
 %   a cell array of numeric vectors giving indices to step through
 %
@@ -26,7 +26,7 @@ function bads = gui_editpoints(data, xvar, xgroups, ygroups, varargin)
 %
 % output bads is a table with variables matching those in data (besides
 % xvar) and values listing the xvar values of selected points for each)
-% 
+%
 % e.g.
 % bads = gui_editpoints(data, 'scan', [],...
 %   {{'temp1','temp2','cond1','cond2','press'},{'fluor','oxygen1','oxygen2','press'}});
@@ -42,7 +42,7 @@ ti = '';
 for no = 1:2:length(varargin)
     eval([varargin{no} ' = varargin{no+1};'])
 end
-markers = markers(:); lines = lines(:); 
+markers = markers(:); lines = lines(:);
 %axis offsets, in pairs because we alternate left and right y axis location
 axo = [.2 .2:-0.04:0.04]';
 if ~exist('add_sensnum','var')
@@ -81,7 +81,7 @@ for vgno = 1:length(gs)
 
             if ~exist('hl','var')
                 %make new plot
-                hasdata = 0; clf; 
+                hasdata = 0; clf;
                 vused = {}; hl = [];
                 cused = []; cnused = {}; mused = {}; lused = {};
                 ytl = {}; yt = {}; ano = 1;
@@ -89,10 +89,10 @@ for vgno = 1:length(gs)
                     v = yv{gno};
                     m = ismember(vn,v) & sum(~isnan(data{:,:}));
                     if sum(sum(~isnan(data{iis,m})))
-                        ha(ano) = axes('Box','off');                        
-                        l = yl.(v{1}); 
-                        set(ha(ano),'ylim',l); 
-                        t = get(ha(ano),'ytick'); 
+                        ha(ano) = axes('Box','off');
+                        l = yl.(v{1});
+                        set(ha(ano),'ylim',l);
+                        t = get(ha(ano),'ytick');
                         if length(t)<10
                             ytl{ano} = t(1):(t(2)-t(1))/5:t(end); %make them closer together
                         else
@@ -102,7 +102,7 @@ for vgno = 1:length(gs)
                         hl = [hl; plot(ha(1), data.(xvar)(iis), data{iis,m},...
                             'color', colors(gno,:), 'markersize', markersize)];
                         hold on
-                        vused = [vused vn(m)]; 
+                        vused = [vused vn(m)];
                         cused = [cused; repmat(colors(gno,:),sum(m),1)];
                         cnused = [cnused repmat(colornames(gno),1,sum(m))];
                         mused = [mused; markers(1:sum(m))];
@@ -112,7 +112,7 @@ for vgno = 1:length(gs)
                             ha(ano).YAxisLocation = 'right';
                         else
                             ha(ano).YAxisLocation = 'left';
-                            ha(ano).Color = 'none'; 
+                            ha(ano).Color = 'none';
                             ha(ano).YColor = colors(ano,:);
                             set(ha(ano),'xtick',[])
                             set(ha(ano),'ylim',[0 1],'ytick',yt{ano},'yticklabel',ytl{ano});
@@ -122,12 +122,12 @@ for vgno = 1:length(gs)
                     end
                 end
                 if exist('ha','var')
-                linkaxes(ha,'y');
-                set(ha(1),'ylim',[0 1],'ytick',yt{1},'yticklabel',ytl{1});
-                axes(ha(1)); title(ti)
-                for sno = 1:length(vused)
-                    set(hl(sno),'marker',mused{sno},'linestyle',lused{sno})
-                end
+                    linkaxes(ha,'y');
+                    set(ha(1),'ylim',[0 1],'ytick',yt{1},'yticklabel',ytl{1});
+                    axes(ha(1)); title(ti)
+                    for sno = 1:length(vused)
+                        set(hl(sno),'marker',mused{sno},'linestyle',lused{sno})
+                    end
                 end
                 if ~hasdata; done = 1; cont = 1; continue; end %skip days with no data
                 hold on; grid on
@@ -162,6 +162,9 @@ for vgno = 1:length(gs)
 
             %check edits
             bad = false(size(data.(xvar)));
+            if length(x)/2>floor(length(x)/2)
+                x = x(1:end-1);
+            end
             for no = 1:2:length(x)
                 bad = bad | data.(xvar)>=x(no) & data.(xvar)<=x(no+1) & data.(vused{edno})>=y(no) & data.(vused{edno})<=y(no+1);
             end

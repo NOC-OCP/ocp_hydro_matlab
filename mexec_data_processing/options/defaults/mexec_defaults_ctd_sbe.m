@@ -3,12 +3,11 @@ switch opt2
     %create_opt_cruise, if MEXEC_G.datatypes.ctd = 'sbe' 
     case 'ctd_infiles'
         foundit = true;
-        helptext = 'specify input .cnv, .bl or .btl, and SBE35 files using stn_string';
-        %set patterns for input file paths and names (either including %s
-        %to be filled with stn_string, or with wildcards to be used by dir
-        %function)
+        helptext = 'specify input .cnv file pattern to be resolved using stn_string';
+        %set patterns for input file paths and names (including %s
+        %to be filled with stn_string as set by setup,
+        %m_stn_string case above)
         infiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', ['CTD_' MEXEC_G.mcruise '_%s.cnv']); %stn_string
-        infiles.ctd_nisk_fir = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', ['CTD_' MEXEC_G.mcruise '_%s.bl']); %stn_string
     case 'rawedit_auto'
         foundit = true;
         %when pumps are off

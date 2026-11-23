@@ -26,6 +26,9 @@ for vno = 1:length(hvar)
     end
     %now apply (new) hyst
     if size(oco.(hv).H3,2)==2; oco.(hv).H3 = interp1(oco.(hv).H3(:,1),oco.(hv).H3(:,2),d.press); end
+    if sum(~isnan(d.(ov)))<24
+        continue
+    end
     dnew.(ov) = mcoxyhyst(d.(ov), d.time, d.press, oco.(hv).H1, oco.(hv).H2, oco.(hv).H3);
     %record whether a non-default calibration is set, for mstar comment
     if length(oco.(hv).H1)>1 || length(oco.(hv).H2)>1 || length(oco.(hv).H3)>1
@@ -38,12 +41,12 @@ for vno = 1:length(hvar)
     ohtyp = max(ohtyp);
     if ohtyp>0
         %and add comments to file
-        hnew.comment = [hnew.comment '\noxygen hysteresis correction different from SBE default applied to ' hv];
+        hnew.comment = [hnew.comment '\noxygen hysteresis correction different from SBE default applied to ' ov];
         if ohtyp == 2
             hnew.comment = [hnew.comment ' (depth-varying)'];
         end
     else
-        hnew.comment = [hnew.comment '\nSBE default oxygen hysteresis applied to ' hv];
+        hnew.comment = [hnew.comment '\nSBE default oxygen hysteresis applied to ' ov];
     end
     hnew.fldnam{vno} = ov;
     m = strcmp(h.fldnam,ov);

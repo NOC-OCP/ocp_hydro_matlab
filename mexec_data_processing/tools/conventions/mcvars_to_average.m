@@ -1,5 +1,5 @@
-function var_copycell = mcvars_list(typ)
-%function var_copycell = mcvars_list(typ)
+function var_copycell = mcvars_to_average(typ)
+%function var_copycell = mcvars_to_average(typ)
 %
 %YLF JR15003
 % Lists of ctd variables to copy for ctd profiles (typ = 1)

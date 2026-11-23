@@ -118,8 +118,8 @@ for no = 1:length(times_explanation)
 fprintf(1,'%s   %s\n',datestr(times(no),tform),times_explanation{no});
 end
 fprintf(1,'\n');
-fprintf(1,'%s %03d [%s] [%s]\n','wait',stnlocal,datestr(times(1),tform),datestr(times(6),tform));
-fprintf(1,'%s %03d [%s] [%s]\n','wait',stnlocal,datestr(times(2),tform),datestr(times(5),tform));
+fprintf(1,'%s %03d [%s] [%s]\n','wait',stn,datestr(times(1),tform),datestr(times(6),tform));
+fprintf(1,'%s %03d [%s] [%s]\n','wait',stn,datestr(times(2),tform),datestr(times(5),tform));
 
 
 fprintf(1,'%s %s %s %s %s\n',' yyyy mm dd HH MM SS ',' speed',' head','  uabs','  vabs')
@@ -127,9 +127,9 @@ fprintf(1,'%s %s %s %s %s\n',' yyyy mm dd HH MM SS ',' speed',' head','  uabs','
 if 1
     for kl = knav1:knav6
         if kl == knav2; fprintf(1,'%s\n','speed limit'); end
-        if kl == knav3; fprintf(1,'%s %03d %s\n','CTD',stnlocal,'start'); end
+        if kl == knav3; fprintf(1,'%s %03d %s\n','CTD',stn,'start'); end
         fprintf(1,'%s%s%s %6.2f %5.0f %6.2f %6.2f\n','[',datestr(dvad.refdnum(kl),tform),']',dvad.refshipspd(kl),dvad.shiphead(kl),dvad.refuabs(kl),dvad.refvabs(kl));
-        if kl == knav4; fprintf(1,'%s %03d %s\n','CTD',stnlocal,'end'); end
+        if kl == knav4; fprintf(1,'%s %03d %s\n','CTD',stn,'end'); end
         if kl == knav5; fprintf(1,'%s\n','speed limit'); end
     end
 end

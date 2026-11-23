@@ -64,7 +64,7 @@ for stn = klist
     all2.(v)(ia,nc:nc+1) = [d2.([v '1'])(ib) d2.([v '2'])(ib)];
     m1 = strcmp(h2.fldnam,[v '1']); m2 = strcmp(h2.fldnam,[v '2']);
     all.(['sn_' v])(nc:nc+1) = [str2double(h2.fldserial{m1}) str2double(h2.fldserial{m2})];
-    all.place(nc:nc+1) = [1 2]; all.stn(nc:nc+1) = stnlocal;
+    all.place(nc:nc+1) = [1 2]; all.stn(nc:nc+1) = stn;
     %all.lat(nc:nc+1) = h.latitude; all.lon(nc:nc+1) = h.longitude;
     if strcmp(param,'oxy')
         ii0 = find(dr.pumps(1:end-1)==1 & dr.pumps(2:end)==0); 

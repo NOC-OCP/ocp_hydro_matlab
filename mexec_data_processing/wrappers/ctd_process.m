@@ -15,19 +15,17 @@ function ctd_process(stns, useGUI, varargin)
 %   'load' to run msbe_01_load and mfir_01_load
 %   'edit' to run msbe_02_edcal (and, if useGUI, mctd_raw_show_check_edit)
 %   'average' to run msbe_03_derive_tbin, mdcs_01_auto (and, if useGUI,
-%     mctd_raw_show_check_edit), mctd_04_profile, mfir_04_addctd,
-%     mfir_to_sam (and, if useGUI, mctd_checkplots***)
-% as well as: 
-%   'sbe35' to run msbe35_01 and msbe35_to_sam
-%   'winch' to run mwin_01_load, mfir_02_addwin, mfir_to_sam 
-% and: 
-%   'outputs' to run ***
-%   
+%     mctd_raw_show_check_edit), mctd_04_profile, mfir_04_addctd (and, if
+%     useGUI, mctd_checkplots)
+%   'check' to run mctd_checkplots
+%   'compile' to run mfir_to_sam, station_summary, depth_to_headers
+%   'reformat' to run mout_columns
+%
 % order of steps does not depend on their order as input arguments but will
-%   be run in the logical order of propagation of information through the 
+%   be run in the logical order of propagation of information through the
 %   files, e.g.
-% ctd_process(stns, 0, 'sbe35', 'load', 'average', 'edit')
-%   runs
+% ctd_process(stns, 0, 'load', 'average', 'edit')
+%   runs load then edit then average:
 % msbe_01_load
 % mfir_01_load
 % msbe_02_edcal
@@ -35,39 +33,37 @@ function ctd_process(stns, useGUI, varargin)
 % mdcs_01_auto
 % mctd_04_profile
 % mfir_04_addctd
-% mfir_to_sam
-% msbe35_01
-% msbe35_to_sam
 %
 % if you want to run the complete set of steps from the start, including
-%   graphical user interface data selection/editing functions: 
-% ctd_process(stns, 1, 'load', 'edit', 'average', 'sbe35', 'winch')
-% 
+%   graphical user interface data selection/editing functions, compiling
+%   data at Niskin firing times, and outputting processed data to column
+%   formats:
+% ctd_process(stns, 1, 'load', 'edit', 'average', 'check', 'compile', 'reformat')
+%
 % if running without a display or to skip manual editing stages and accept
-%   the default selections made by mdcs_01, set useGUI to 0 
-% 
+%   the default selections made by mdcs_01, set useGUI to 0
+%
 % a quick run through the preliminary steps (e.g. to prepare data for other
 %   users, such as 1 Hz data for mooring caldip processing or LADCP
-%   processing): 
-% ctd_process(stns, 0, 'load', 'average', 'outputs') 
+%   processing):
+% ctd_process(stns, 0, 'load', 'average', 'compile', 'reformat')
 % should be followed at some point by
-% ctd_process(stns, 1, 'edit', 'average', 'outputs') 
+% ctd_process(stns, 1, 'edit', 'average', 'check', 'compile', 'reformat')
 % for improved data
 %
-% after setting new calibration coefficients (using settings in
-%   opt_cruise***) and/or edits for 24-Hz data (using settings in
-%   opt_cruise*** or by running gui_editpoints)):
-% ctd_process(stns, 0, 'edit', 'average', 'outputs')
-%   will apply these changes and propagate them through the subsequent
-%   steps
-% ctd_process(stns, 1, 'edit')
-%   allows you to check the results of new automatic or manual edits
+% after setting new calibration coefficients and/or edits for 24-Hz data
+% (using settings in the opt_cruise file, or by manual editing in the gui):
+% ctd_process(stns, 0, 'edit')
+%  will apply these changes without rerunning the raw data editing gui
+% ctd_process(stns, 1, 'average', 'check', 'compile', 'reformat')
+%  will propagate them through the subsequent steps, and allow you to check
+%  the resulting averaged data by running mctd_checkplots
 %
 
 m_common
 
 %possible steps
-allsteps = {'load','edit','average','sbe35','winch','outputs'};
+allsteps = {'load','edit','average','profile','compile','check','reformat'};
 if nargin<3
     warning('specify one or more steps from this list:')
     disp(allsteps)
@@ -80,8 +76,11 @@ if dostep.edit && ~dostep.average
         dostep.average = strcmp(input('add averaging step? (y/n)   ','s'),'y');
     end
 end
-if dostep.average && ~dostep.outputs
-    warning('not running outputs step; averaged and sample data saved only as mstar .nc files')
+if dostep.average && ~dostep.compile
+    warning('not adding data to compiled Niskin sample or station summary files')
+end
+if dostep.average && ~dostep.reformat
+    warning('not running reformat step; averaged and sample data saved only as mstar .nc files')
 end
 
 stns = stns(:)'; %needs to be row vector for loop
@@ -90,14 +89,17 @@ if dostep.load
     stns_all = stns;
     for stn = stns
         %read in sbe .cnv data to mstar
-        stns_split = msbe_01_load(stn);
-        stns_all = union(stns_all, stns_split); %add new yo-yo station numbers (if any)
-        mfir_01_load(stn) %***come back to this; edit msbe_to_mstar so mfir_01_load can also call it one or more times
-        if exist('comb_stns','var') && ismember(comb_stns(:,1),stn)
-            stns_all = setdiff(stns_all,stn);
+        out = msbe_01_load(stn);
+        if isfield(out,'split_stns')
+            stns_all = union(stns_all, out.split_stns);
+            %a yo-yo cast will at most have bottle data from the last cast
+            mfir_01_load(out.split_stns(end))
+        else
+            mfir_01_load(stn)
         end
-        stns = stns_all(:)';
     end
+    %subsequently, loop through stations including any yo-yos divided above
+    stns = stns_all(:)';
 end
 
 if dostep.edit
@@ -109,130 +111,126 @@ if dostep.edit
 end
 
 if dostep.average
+
     for stn = stns
         % do the quick (regular time binning) averages
         msbe_03_derive_tbin(stn)
-    end
-    for stn = stns
         % in order to find cast start, bottom, and end
         mdcs_01_auto(stn)
     end
-end
 
-if useGUI && dostep.edit
-    for stn = stns
-        %call gui to check raw or cleaned data and check cast start, bottom, and end
-        ed = mctd_raw_show_check_edit(stn);
-        if strcmp(ed,'y')
-            %new edits to apply
-            msbe_02_edcal(stn)
-            if dostep.average
-                %and to propagate by re-running steps above
-                msbe_03_derive_tbin(stn)
-                mdcs_01_auto(stn)
+    if useGUI && dostep.edit
+        for stn = stns
+            %call gui to check raw or cleaned data and check cast start,
+            %bottom, and end (also uses 1 hz data)
+            ed = mctd_raw_show_check_edit(stn);
+            if strcmp(ed,'y')
+                %new edits to apply
+                msbe_02_edcal(stn)
+                if dostep.average
+                    %and to propagate by re-running steps above
+                    msbe_03_derive_tbin(stn)
+                    mdcs_01_auto(stn)
+                end
             end
         end
     end
-end
 
-if dostep.average
     if strcmp(MEXEC_G.datatypes.ladcp,'ix')
-        %output 1 hz data
+        %output 1 hz CTD and lon, lat data for LADCP processing
         for stn = stns
             mout_1hzasc(stn)
         end
     end
-    for stn = stns
-        %average to 2 dbar
-        mctd_04_profile(stn)
+
+    if dostep.compile
+        %compile the 10s averaged data for all available stations
+        msec_grid('quick')
     end
+
+    if useGUI && dostep.check
+        %plots with 1 hz and 10 s data
+        mctd_checkplots(stn,3,'quick')
+        disp('Press any key to continue...');
+        pause
+    end
+
 end
 
-if dostep.edit || dostep.average
+if dostep.profile
+
     for stn = stns
-        %bottle firing data into .fir file, if there is one
+        %make the down- and upcast pressure profiles (2 dbar grid)
+        mctd_04_profile(stn)
+    end
+
+    if dostep.compile
+        %create compiled (not gridded) file of all 2 dbar downcast data
+        msec_grid('ungridded')
+    end
+
+    if useGUI && dostep.check
+        for stn = stns
+            %plots with 1 hz and 2 dbar data
+            mctd_checkplots(stn,3)
+            disp('Press any key to continue...');
+            pause
+        end
+    end
+
+end
+
+if dostep.average || dostep.profile
+    %bottle firing data into .fir file, if there is one (uses 1 hz and
+    %2 dbar CTD data, if available)
+    for stn = stns
         mfir_04_addctd(stn)
     end
 end
 
-if dostep.winch
+if dostep.average && dostep.load && isfield(pfiles,'ctd_win')
     try
-        %extract and add winch data
-        mwin_01_load(stn);
-        mfir_02_addwin(stn);
+        %extract and add winch data (uses ctd 1 hz file)
+        mwin_01_load(stn)
+        mfir_02_addwin(stn)
     catch me
         warning('could not get or add winch data for station %d',stn)
         warning(me.message)
     end
 end
 
-if dostep.sbe35
-    msbe35_01(max(stns)) %read sbe35 data for stations up to max(stns)
-end
-
-if dostep.edit || dostep.average || dostep.winch || dostep.sbe35
+if dostep.compile
     for stn = stns
+        %add bottle firing data to appended Niskin sample file
+        %(pfiles.samp_ctd)
         mfir_to_sam(stn)
     end
-end
-
-if dostep.part2
-    %add serial numbers to sam_ file
-    if dostep.reload_sns
-        get_sensor_groups(stns,'restart')
-    else
-        get_sensor_groups(stns)
-    end
-end
-
-if dostep.guisteps && (dostep.part2 || dostep.postedit)
-    for stn = stns
-        mctd_checkplots(stn,3)
-        disp('Press any key to continue...');
-        pause
-    end
-end
-
-
-if dostep.sum %&& (dostep.part2 || dostep.postedit)
-    %calculate depths and other info for a range of stations
+    %depth and Niskin stats for this set of stations
     station_summary(stns)
     for stn = stns
-        %add max depths to various files
+        %use the file created by station_summary to update water depth in
+        %CTD processed file headers
         depth_to_headers(stn)
     end
 end
 
-if dostep.output
+if dostep.reformat
     %output from ctd_*_2db and sam_*_all to csv files, if relevant and set in
     %opt_cruise file
-    outc = 0; 
-    if dostep.part2 || dostep.postedit
-        outc = 1;
-    end
-    outs = 1;
     opt1 = 'outputs'; opt2 = 'columndata'; run(MEXEC_G.opt_cruise)
     if exist('outtypes','var')
         for ono = 1:length(outtypes)
             if exist('outparams','var') && isfield(outparams,outtypes{ono})
-                if outc
-                    mout_columns('ctd',outtypes{ono},outparams.(outtypes{ono}))
-                end
-                if outs
-                    mout_columns('sam',outtypes{ono},outparams.(outtypes{ono}))
-                end
+                mout_columns('ctd',outtypes{ono},outparams.(outtypes{ono}))
+                mout_columns('sam',outtypes{ono},outparams.(outtypes{ono}))
             else
-                if outc
-                    mout_columns('ctd',outtypes{ono})
-                end
-                if outs
-                    mout_columns('sam',outtypes{ono})
-                end
+                mout_columns('ctd',outtypes{ono})
+                mout_columns('sam',outtypes{ono})
             end
         end
     end
 
     %sync to shared drive***
-    opt1 = 'output'; opt2 = 'copyover'; run(MEXEC_G.opt_cruise)
+    opt1 = 'outputs'; opt2 = 'copyover'; run(MEXEC_G.opt_cruise)
 
 end

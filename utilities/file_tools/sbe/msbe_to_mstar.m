@@ -263,7 +263,7 @@ h.instrument_identifier = 'ctd';
 h.dataname = 'sbe_ctd_rawdata';
 
 
-opt1 = 'mstar'; MEXEC_G.mcruise %use cf-compliant units or not?
+opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise) %use cf-compliant units or not?
 if savefile
     
     %get mstar filename and check it is not open
@@ -350,9 +350,8 @@ for k = 1:length(varname)
     else
         v.units = varunits{k};
     end
-    m = strcmp(varname{k},sns(:,1));
-    if sum(m)
-        v.serial = num2str(str2double(sns{m,2}));
+    if ~isempty(sns{k})
+        v.serial = num2str(str2double(sns{k}));
     else
         v.serial = 'n/a';
     end

@@ -69,19 +69,12 @@ for no = 1:length(snames)
         vars = [vars; {snames{no} 'number' 0 snames{no} '  %2d'}];
     end
 end
-%find list of processed stations
-pd = mexec_file_locations('procfiles','ctd');
-pds = mexec_file_locations('procfiles','samp');
-pdw = mexec_file_locations('procfiles','win');
-pdd = mexec_file_locations('procfiles','dcs');
-dataname = ['station_summary_' mcruise '_all'];
-d = dir(replace(pd.ctd1,'%s','*')); d = {d.name}; d = cell2mat(d(:));
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
 
 %which stations
 stnall = str2num(d(:,length(mcruise)+[6:8]));
 stnmiss = [];
 stnadd = [];
-opt1 = mfilename; opt2 = 'sum_stn_list'; run(MEXEC_G.opt_cruise)
 stnset = setdiff(stnall,stnmiss); stnset = stnset(:)'; %these are stations to include with ctd data
 stnall = unique([stnset(:); stnadd(:)]); stnall = stnall(:)'; %these are stations to include with or without ctd data
 
@@ -176,11 +169,13 @@ if ~isempty(stnall)
         disp(stnall(k))
     end
 
-    opt1 = mfilename; opt2 = 'sum_edit'; run(MEXEC_G.opt_cruise); %edit depths, times, etc. not captured from CTD data
-    bestdeps = best_station_depths(stnall);
-    [~,ia,ib] = intersect(statnum,bestdeps(:,1));
-    cordep(ia) = bestdeps(ib,2);
-    minalt(ia) = bestdeps(ib,3);
+    opt1 = 'outputs'; opt2 = 'sum_edit'; run(MEXEC_G.opt_cruise); %edit depths, times, etc. not captured from CTD data
+    if ~isempty('best_station_depths')
+        bestdeps = best_station_depths(stnall);
+        [~,ia,ib] = intersect(statnum,bestdeps(:,1));
+        cordep(ia) = bestdeps(ib,2);
+        minalt(ia) = bestdeps(ib,3);
+    end
     minalt((cordep-maxd)>99 | isnan(minalt)) = -9;
     resid = maxd+minalt-cordep;
     resid(cordep==-999 | maxd==-999 | minalt==-9) = -999;

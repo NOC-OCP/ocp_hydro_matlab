@@ -1,85 +1,57 @@
 function msec_grid(section)
-% make gridded section(s) by calling maphsec; save to .mat file
+% compile CTD and Niskin sample data and make gridded section(s) by calling
+%   maphsec; save to .mat file
 %
 % ylf jc238, based on msec_run_mgridp (calling mgridp)
+%
+% section is a string corresponding to one of the fields of kstns set in
+%   opt_cruise (outputs, station_lists), or is 'quick' to compile the 10s
+%   averaged CTD files only, or 'ungridded' to compile the 2 dbar
+%   downcast CTD files only, for the stations in kstns.all
+%
+% this can be used instead of hydro_tools/gridhsec specifically for cruises
+%   processed with mexec (when you are loading mstar-format files and have
+%   the section-station list mapping coded into the opt_cruise file)
 %
 % mapping grid defaults for commonly-used sections are given below, but
 %   can be overwritten in opt_cruise (outputs, grid)
 %
-% specify section to map: either profile_only, or one of the sections with
-%   stations listed in opt_{cruise} (outputs, grid)
-%
-% this replaces hydro_tools/gridhsec specifically for cruises processed
-%   with mexec (when you are loading mstar-format files and have the
-%   section-station list mapping coded into opt_cruise)
 
 m_common
-mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
 clear mgrid
 mgrid.method = 'msec_maptracer';
 mgrid.sam_fill = '';
 mgrid.ctd_fill = '';
 
-zpressgrid_deep = [0 5 25 50 75 100 175 250 375 500 ...
-    625 750 875 1000 1250 1500 1750 2000 2250 2500 ...
-    2750 3000 3250 3500 3750 4000 4250 4500 4750 ...
-    5000 5250 5500 5750 6000 6250 6500]';
-zpressgrid_shal = [0 5 25 50 75 100 125 150 175 200 225 250 ...
-    275 300 350 400 450 500 550 600 650 700 800 900 1000 ...
-    1100 1200 1300 1400 1500 1600 1700 1800 1900 2000]';
-
 %get section parameters
+opt1 = 'outputs'; opt2 = 'station_lists'; run(MEXEC_G.opt_cruise)
 if strcmp(section,'profiles_only')
     mgrid.xlim = 0.01; %each station effectively independent
-    mgrid.zpressgrid = zpressgrid_deep; %***
-    kstns = 1:500;
+    mgrid.zpressgrid = section_grid_params(' ');
+    kstns = kstns.all;
 elseif ismember(section,{'ungridded','quick'}) %compile all the 10 s files
-    kstns = 1:500;
+    kstns = kstns.all;
     ms = true(size(kstns));
 else
+    opt1 = 'outputs'; opt2 = 'grid'; run(MEXEC_G.opt_cruise)
     clear kstns
 end
 sam_gridlist = {'botoxy'};
-opt1 = 'outputs'; opt2 = 'grid'; run(MEXEC_G.opt_cruise)     
+opt1 = 'outputs'; opt2 = 'grid'; run(MEXEC_G.opt_cruise)
 
 if ~isfield(mgrid,'zpressgrid') || isempty(mgrid.zpressgrid) %find defaults by section
-    switch section
-        case {'24n', 'fc'}
-            mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=6500);
-        case {'abas' 'falk' '24s'}
-            mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=6000);
-        case {'sr1b' 'sr1bb' 'orkney' 'a23' 'srp' 'nsra23'}
-            mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=5000);
-        case {'osnapwall' 'laball' 'arcall' 'osnapeall' 'lineball' 'linecall' 'eelall' 'nsr' 'ar7e'}
-            mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=4000);
-        case {'bc' 'ben' 'bc2' 'bc3' 'osnape' 'ta' 'km' 'kgh'}
-            mgrid.zpressgrid = zpressgrid_deep(zpressgrid_deep<=3000);
-        case {'fs27n' 'fs27n2'}
-            mgrid.zpressgrid = zpressgrid_shal(zpressgrid_shal<=1000);
-        case {'osnapwupper' 'labupper' 'arcupper' 'osnapeupper' 'linebupper' 'linecupper' 'eelupper' 'cumb'}
-            mgrid.zpressgrid = zpressgrid_shal(zpressgrid_shal<=500);
-        otherwise
-            mgrid.zpressgrid = zpressgrid_deep;
-    end
+    mgrid.zpressgrid = section_grid_params(section);
 else
     if size(mgrid.zpressgrid,2)>size(mgrid.zpressgrid,1)
         mgrid.zpressgrid = mgrid.zpressgrid';
     end
 end
 
-if strcmp(section,'ungridded')
-    otfile = fullfile(MEXEC_G.mexec_data_root,'ctd',['allctd_' mcruise '_2db.mat']);
-elseif strcmp(section,'quick')
-    otfile = fullfile(MEXEC_G.mexec_data_root,'ctd',['allctd_' mcruise '_quick.mat']);
-else
-    otfile = fullfile(MEXEC_G.mexec_data_root, 'mapped', ['grid_' mcruise '_' section '.mat']);
-end
-pd = mexec_file_locations('procfiles','ctd');
-pds = mexec_file_locations('procfiles','samp');
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
 if ~exist(otfile,'file') || ~exist('ctd_regridlist','var')
     ctd_regridlist = {'temp' 'psal' 'oxy'};
-    if strcmp('section','quick')
+    if strcmp(section,'quick')
         ctd_regridlist = {'temp','psal','oxy','fluor','turbidity','transmissivity','par'};
     end
 end
@@ -96,15 +68,15 @@ else
     for vno = 1:length(ctd_regridlist)
         cdata.(ctd_regridlist{vno}) = NaN+zeros(length(cdata.press),length(kstns));
     end
-    cdata.lat = nan(1,length(kstns)); cdata.lon = cdata.lat; 
+    cdata.lat = nan(1,length(kstns)); cdata.lon = cdata.lat;
     for kstn = 1:length(kstns)
         stn = kstns(kstn); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
         if strcmp(section,'quick')
-            cfile = sprintf(pd.ctd10s,stn_string);
+            cfile = sprintf(pfiles.ctd_10s,stn_string);
         else
-            cfile = sprintf(pd.ctd2d,stn_string);
+            cfile = sprintf(pfiles.ctd_2db_dn,stn_string);
         end
-        if ~exist(m_add_nc(cfile),'file') 
+        if ~exist(m_add_nc(cfile),'file')
             if strcmp(section,'quick')
                 ms(kstn) = false;
                 continue
@@ -156,32 +128,34 @@ end
 
 %load the bottle sample data
 clear sdata
-[d,h] = mload(pds.samc,'/');
-mstn = ismember(d.statnum,kstns);
-sdata.statnum = d.statnum(mstn);
-sdata.position = d.position(mstn);
-sdata.press = d.upress(mstn);
-sdata.ctdtmp = d.utemp(mstn);
-sdata.ctdsal = d.upsal(mstn);
-sdata.ctdoxy = d.uoxy(mstn);
-sdata.ctdfluo = d.ufluor(mstn);
-mv = false(1,length(sam_gridlist));
-for vno = 1:length(sam_gridlist)
-    if isfield(d,sam_gridlist{vno})
-        sdata.(sam_gridlist{vno}) = d.(sam_gridlist{vno})(mstn);
-        fl = d.([sam_gridlist{vno} '_flag'])(mstn);
-        if isfield(mgrid,'sdata_flag_accept')
-            mbf = ~ismember(fl,mgrid.sdata_flag_accept);
-            sdata.(sam_gridlist{vno})(mbf) = NaN;
+if exist(pfiles.samp_ctd,'file')
+    [d,h] = mload(pfiles.samp_ctd,'/');
+    mstn = ismember(d.statnum,kstns);
+    sdata.statnum = d.statnum(mstn);
+    sdata.position = d.position(mstn);
+    sdata.press = d.upress(mstn);
+    sdata.ctdtmp = d.utemp(mstn);
+    sdata.ctdsal = d.upsal(mstn);
+    sdata.ctdoxy = d.uoxy(mstn);
+    sdata.ctdfluo = d.ufluor(mstn);
+    mv = false(1,length(sam_gridlist));
+    for vno = 1:length(sam_gridlist)
+        if isfield(d,sam_gridlist{vno})
+            sdata.(sam_gridlist{vno}) = d.(sam_gridlist{vno})(mstn);
+            fl = d.([sam_gridlist{vno} '_flag'])(mstn);
+            if isfield(mgrid,'sdata_flag_accept')
+                mbf = ~ismember(fl,mgrid.sdata_flag_accept);
+                sdata.(sam_gridlist{vno})(mbf) = NaN;
+            end
+            mv(vno) = true;
+        else
+            warning('sample variable %s not found; skipping',sam_gridlist{vno})
         end
-        mv(vno) = true;
-    else
-        warning('sample variable %s not found; skipping',sam_gridlist{vno})
     end
+    sdata.vars = sam_gridlist(mv);
+    [~,~,ia] = intersect(sam_gridlist(mv),h.fldnam,'stable');
+    sdata.unts = h.fldunt(ia);
 end
-sdata.vars = sam_gridlist(mv);
-[~,~,ia] = intersect(sam_gridlist(mv),h.fldnam,'stable');
-sdata.unts = h.fldunt(ia);
 
 if ismember(section,{'ungridded','quick'}) %this is just a way to compile some or all of the stations into a .mat file
     fn = fieldnames(cdata);
@@ -190,12 +164,18 @@ if ismember(section,{'ungridded','quick'}) %this is just a way to compile some o
             cdata.(fn{no}) = cdata.(fn{no})(:,ms);
         end
     end
-    save(otfile,'cdata','sdata'); mfixperms(otfile);
-else
+    if exist('sdata','var')
+        save(otfile,'cdata','sdata'); mfixperms(otfile);
+    else
+        save(otfile,'cdata'); mfixperms(otfile);
+    end
+elseif exist('sdata','var')
     %run the gridding
     mgrid = maphsec(cdata, sdata, mgrid);
 
     %save
     readme = 'gridded using maphsec calling map_as_mstar';
     save(otfile, 'cdata', 'sdata', 'mgrid', 'readme'); mfixperms(otfile);
+else
+    error('no sample data (%s) found, skipping gridding (try running with section ''ungridded'')',pfiles.samp_ctd)
 end

@@ -214,13 +214,13 @@ if strcmp(params.in,'ctd')
         dd = mloadq(dfile,'statnum scan_start scan_bot scan_end ');
         if isfield(params,'bin_units') && strcmp(params.bin_units,'hz')
             %in-water good part of the cast only
-            params.iiav = find(d.scan>=dd.scan_start(dd.statnum==stnlocal)&d.scan<=dd.scan_end(dd.statnum==stnlocal));
+            params.iiav = find(d.scan>=dd.scan_start(dd.statnum==stn)&d.scan<=dd.scan_end(dd.statnum==stn));
         elseif isfield(params,'bin_prof') && strcmp(params.bin_prof,'up')
             %upcast only
-            params.iiav = find(d.scan>=dd.scan_bot(dd.statnum==stnlocal)&d.scan<=dd.scan_end(dd.statnum==stnlocal));
+            params.iiav = find(d.scan>=dd.scan_bot(dd.statnum==stn)&d.scan<=dd.scan_end(dd.statnum==stn));
         else
             %downcast only
-            params.iiav = find(d.scan>=dd.scan_start(dd.statnum==stnlocal)&d.scan<=dd.scan_bot(dd.statnum==stnlocal));
+            params.iiav = find(d.scan>=dd.scan_start(dd.statnum==stn)&d.scan<=dd.scan_bot(dd.statnum==stn));
         end
         dtab = dtab(params.iiav,:);
     end

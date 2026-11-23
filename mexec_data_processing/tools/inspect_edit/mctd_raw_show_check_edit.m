@@ -12,11 +12,12 @@ function ed = mctd_raw_show_check_edit(stn, varargin)
 % asks if edits were made and outputs this as ed
 
 m_common
-if MEXEC_G.quiet<=1; fprintf(1,'plotting 24 hz and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
-opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; get_cropt
+if MEXEC_G.quiet<=1; fprintf(1,'plotting original and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
 cfile = m_add_nc(sprintf(pfiles.ctd_cleancal,stn_string));
 rfile = m_add_nc(sprintf(pfiles.ctd_raw,stn_string));
-efile = sprintf(pfiles.ctd_editsrecord,stn_string);
+efilepre = sprintf(pfiles.ctd_editsrecords,stn_string);
 infile1 = sprintf(pfiles.ctd_1hz,stn_string);
 infiled = sprintf(pfiles.ctd_castcut,stn_string);
 
@@ -64,7 +65,7 @@ warn = 0;
 for gno = 1:ng
     
     % for each parameter in group, plot both sensors, 1 hz dashed on top of 24 hz
-    figure(gno); clf
+    figure(gno); clf; pause(0.2)
     nr = length(rppars{gno});
     t(gno) = tiledlayout(nr,1,'TileSpacing','compact');
     ax = zeros(nr,1);
@@ -76,7 +77,7 @@ for gno = 1:ng
         if ~isempty(v)
             plot(d.scan,d.pumps*(yl.(p)(2)-yl.(p)(1))+yl.(p)(1),'.r','markersize',8); hold on
             if strcmp(p,'oxy')
-                scan_end = [ddcs.scan_end ddcs.scan_end-co.oxy_align*24];
+                scan_end = [ddcs.scan_end ddcs.scan_end-co.oxy_align*infiles.ctd_raw_hz];
             else
                 scan_end = ddcs.scan_end;
             end
@@ -96,11 +97,12 @@ for gno = 1:ng
     end
     if gno==1; ax_save = ax; end
     xlabel(t(gno),sprintf('scan (cast %s)',stn_string)); 
-    title(t(gno),[rt ' 24 hz (dotted 1 hz), gray dashed verticals start, bottom, end scans'])
+    title(t(gno),[rt ' ' num2str(infiles.ctd_raw_hz) ' hz (dotted 1 hz), gray dashed verticals start, bottom, end scans'])
     linkaxes(ax,'x')
 
 end
 
+pause(0.2)
 figure(1)
 a = 'p';
 while ~isempty(a)
@@ -165,7 +167,7 @@ if exist('k_start','var') && isfinite(k_start) && k_start~=ddcs.dc_start
     ds.scan_start = d.scan(ds.dc_start);
     ds.press_start = d.press(ds.dc_start);
     ds.time_start = d.time(ds.dc_start);
-    [~,ds.dc24_start] = min(abs(d.scan-ds.scan_start));
+    [~,ds.dcr_start] = min(abs(d.scan-ds.scan_start));
 end
 
 if exist('k_end','var') && isfinite(k_end) && (~isfield(ddcs, 'dc_end') || k_end~=ddcs.dc_end)
@@ -173,7 +175,7 @@ if exist('k_end','var') && isfinite(k_end) && (~isfield(ddcs, 'dc_end') || k_end
     ds.scan_end = d.scan(ds.dc_end);
     ds.press_end = d.press(ds.dc_end);
     ds.time_end = d.time(ds.dc_end);
-    [~,ds.dc24_end] = min(abs(d.scan-ds.scan_end));
+    [~,ds.dcr_end] = min(abs(d.scan-ds.scan_end));
 end
 
 if exist('k_bot','var') && isfinite(k_bot) && k_bot~=ddcs.dc_bot
@@ -181,7 +183,7 @@ if exist('k_bot','var') && isfinite(k_bot) && k_bot~=ddcs.dc_bot
     ds.scan_bot = floor(d.scan(ds.dc_bot));
     ds.press_bot = d.press(ds.dc_bot);
     ds.time_bot = d.time(ds.dc_bot);
-    [~,ds.dc24_bot] = min(abs(d.scan-ds.scan_bot));
+    [~,ds.dcr_bot] = min(abs(d.scan-ds.scan_bot));
 end
 
 if exist('ds','var')
@@ -226,8 +228,8 @@ if warn || doed
         gui_editpoints(struct2table(d), 'scan', scans_use, repars,...
             'yl', struct2table(yl), 'ti', stn_string, ...
             'markers', repmat({'o','<'},1,4), 'markersize', 3, 'lines', repmat({'-',':'},1,4), ...
-            'edfilepre', efile);
-        msg = sprintf('did you make any manual edits or change any automatic editing/correction settings in opt_%s?   ',mcruise);
+            'edfilepre', efilepre);
+        msg = sprintf('did you make any manual edits or change any automatic editing/correction settings in opt_%s?   ',MEXEC_G.mcruise);
         ed = input(msg,'s');
     end
 else

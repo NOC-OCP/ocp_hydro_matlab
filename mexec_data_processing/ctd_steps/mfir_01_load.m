@@ -7,72 +7,39 @@ function mfir_01_load(stn)
 m_common
 
 % input file names
-opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
-opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
-infile = fprintf(infiles.ctd_nisk_fir,stn_string);
-[~,~,ext] = fileparts(infiles.ctd_nisk_fir);
+opt1 = 'ctd_proc'; opt2 = 'nisk_infiles'; run(MEXEC_G.opt_cruise)
+opt1 = opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+infile = sprintf(infiles.ctd_nisk_fir,stn_string);
 if ~exist(infile,'file')
-    fprintf(2,'%s file for cast %03d not found; try sync again and enter to continue\n',ext,stn); 
+    fprintf(2,'Niskin bottle file for cast %03d not found; try sync again and enter to continue\n',stn); 
     pause
     if ~exist(infile,'file')
-        warning('no .bl file %s; skipping',infile)
+        warning('no file %s; skipping',infile)
         return
     end
 end
 if MEXEC_G.quiet<=1; fprintf(1,['reading in .bl file to ' dataname '.nc\n'],stn_string); end
 otfile = sprintf(pfiles.ctd_nisk,stn_string);
 
-%load scan and position for each rosette firing, from .bl or .btl file
-if strcmp(ext,'.bl')
-    cellall = mtextdload(infile,',',10); % load all text
-    if size(cellall,2)<4
-        warning('no bottles for cast %s; skipping',stn_string)
-        return
-    end
-    nr = size(cellall,1);
-    n = 1;
-    pos = NaN; scn = NaN;
-    for kline = 1:nr
-        if ~isempty(cellall{kline,4})
-            pos(n) = str2double(cellall{kline,2});
-            scn(n) = str2double(cellall{kline,4});
-            n = n+1;
+%read firing position and scan number when fired 
+[pos, scn] = msbe_niskins_load(infile);
+comment = ['input data from ' infile];
+%in case cast was stitched together from multiple files by offsetting scan
+opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; run(MEXEC_G.opt_cruise)
+for no = 1:length(append_stn_strings)
+    stn_string = append_stn_strings(no);
+    if isnan(append_scan_offsets(no))
+        warning('not applying NaN offset to .bl scan number for %s',stn_string)
+    else
+        infile = sprintf(pfiles.ctd_nisk,stn_string);
+        if exist(infile,'file')
+            %load and append
+            [p, s] = msbe_niskins_load(infile);
+            comment = [comment ' and ' infile];
+            pos = [pos; p]; scn = [scn; s+append_scan_offsets(no)];
         end
     end
-elseif strcmp(ext, '.btl')
-    n = 0; pos = []; scn = [];
-    iis = nan; iip = nan;
-    cont = true;
-    fid = fopen(infile,'r');
-    while cont
-        s = fgets(fid);
-        if ~ischar(s); break; elseif contains(s,'#') || contains(s,'*'); continue; end
-        if isnan(iis) %haven't set this yet
-            %first header line
-            iis = strfind(s,'Scan');
-            if isempty(iis); warning('no Scan in .btl file line %s; skipping', s); return; end
-            iip = strfind(s,'Bottle');
-            if isempty(iip); warning('no Bottle Position in .btl file line %s; skipping', s); return; end
-            iis = iis-4:iis+4; %allow for a slight misalignment
-            iip = iip-1:iip+3; %allow for a slight misalignment
-        elseif contains(s,'avg') %or could test later for non-empty s(iip)
-            %subsequently data lines
-            if ~isempty(str2double(s(iip)))
-                n = n+1; pos(n) = str2double(s(iip)); scn(n) = str2double(s(iis));
-            end
-        end
-    end
-    fclose(fid);
-% elseif strcmp(ext,'.ros') %***
-%     [d,h] = msbe_to_mstar(blinfile,'y','y');
-%     pos = d.Position; h = d.scan;
-else
-    warning('bottle file type not recognised for cast %s; skipping',stn_string)
-    return
 end
-
-pos = pos(:);
-scn = scn(:);
 
 %add (from defaults) corresponding information like bottle S/N, bottle flag
 opt1 = 'ctd_proc'; opt2 = 'nisk_numbers'; run(MEXEC_G.opt_cruise)
@@ -92,87 +59,52 @@ niskin_flag = niskin_flag(m);
 clear m ia ib
 opt1 = 'ctd_proc'; opt2 = 'nisk_flags'; run(MEXEC_G.opt_cruise) %change flags here
 %check that possible bad code in opt file hasn't added dimensions
-if size(niskin)==size(niskin_flag)
-else
+if size(niskin)~=size(niskin_flag)
     error('niskin and niskin_flag sizes do not match; check opt_%s',mcruise)
 end
 
-%in case cast was stitched together by offsetting scan
-opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; run(MEXEC_G.opt_cruise)
-blappend = 0;
-if exist('append_stn_strings','var')
-    if isnan(comb_stns(3))
-        warning('not applying NaN offset to .bl scan number for %s',stn_string)
-    else
-        scan = scan + comb_stns(3);
-        stn = comb_stns(2); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
-        otfile = sprintf(pfiles.ctd_nisk,stn_string);
-        if exist(m_add_nc(otfile),'file')
-            blappend = 1;
-        end
-    end
-end
+%save
+timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
+MEXEC_A.MARGS_IN = {
+    otfile
+    'scan'
+    'position'
+    'niskin'
+    'niskin_flag'
+    ' '
+    ' '
+    '1'
+    sprintf('fir_%s_%s',MEXEC_G.mcruise,stn_string)
+    '/'
+    '2'
+    MEXEC_G.PLATFORM_TYPE
+    MEXEC_G.PLATFORM_IDENTIFIER
+    MEXEC_G.PLATFORM_NUMBER
+    '/'
+    '4'
+    timestring
+    '/'
+    '7'
+    '-1'
+    comment
+    '/'
+    '/'
+    '8'
+    'scan'
+    '/'
+    'number'
+    'position'
+    '/'
+    'on.rosette'
+    'niskin'
+    '/'
+    'number'
+    'niskin_flag'
+    '/'
+    'woce_4.8'
+    '-1'
+    '-1'
+    };
+msave
+mfixperms(otfile)
 
-%write to .fir file
-comment = ['input data from ' infile];
-if blappend
-    %append to existing file
-    d.scan = scan+append_scan_offsets; d.position = position;
-    d.niskin = niskin; d.niskin_flag = niskin_flag;
-    h = m_read_header(otfile);
-    [h.fldnam,~,ib] = intersect(fieldnames(d)',h.fldnam,'stable');
-    h.fldunt = h.fldunt(ib); 
-    if isfield(h,'fldserial')
-        h.fldserial = h.fldserial(ib);
-    end
-    h = rmfield(h,{'alrlim','uprlim','absent','num_absent','dimrows','dimcols','dimsset'});
-    h.comment = [h.comment '\n' comment];
-    mfsave(otfile, d, h, '-merge', 'scan')
-
-else
-
-    timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
-    MEXEC_A.MARGS_IN = {
-        otfile
-        'scan'
-        'position'
-        'niskin'
-        'niskin_flag'
-        ' '
-        ' '
-        '1'
-        sprintf('fir_%s_%s',MEXEC_G.mcruise,stn_string)
-        '/'
-        '2'
-        MEXEC_G.PLATFORM_TYPE
-        MEXEC_G.PLATFORM_IDENTIFIER
-        MEXEC_G.PLATFORM_NUMBER
-        '/'
-        '4'
-        timestring
-        '/'
-        '7'
-        '-1'
-        comment
-        '/'
-        '/'
-        '8'
-        'scan'
-        '/'
-        'number'
-        'position'
-        '/'
-        'on.rosette'
-        'niskin'
-        '/'
-        'number'
-        'niskin_flag'
-        '/'
-        'woce_4.8'
-        '-1'
-        '-1'
-        };
-    msave
-    mfixperms(otfile)
-    %--------------------------------
-end

@@ -3,37 +3,37 @@ function m_setup(varargin)
 %  cruise data; sets up environment (global variables and paths)
 %
 %  for a given cruise, you can configure the first block of code below
-%  initially, as well as setting up the cruise options file
-%  (opt_{cruise}.m, e.g. opt_jc238.m)
-%
-%  for later processing you may then just first block of code, or at most down to line containing "End of
-%  items to be edited on each site/cruise"
+%  initially. the first time this is run, the cruise options file will be
+%  initialised, and other processing parameters should be set there  
+% 
+%  for later processing you may then just change the first block of code,
+%  or at most down to line containing "End of items to be edited on each
+%  site/cruise" 
 %
 %
 %  you can also pass selected fields (below) to MEXEC_G by passing a
-%  structure as input:
+%  structure as input, e.g.:
 %    >> m_setup(MEXEC_G_user)
 %    these may be useful if you want to reprocess an old cruise's data with
 %    a newer branch's software.
 %      mcruise (e.g. 'jc238')
-%      MDEFAULT_DATA_TIME_ORIGIN (e.g. [2022 1 1 0 0 0]) -- but note this
-%        is only necessary if reprocessing a cruise from before 2022
+%      data_time_origin_string (e.g. '2022-01-01 00:00:00)
 %      SITE_suf (e.g. 'atsea' or 'atnoc' to make SITE 'jc238_atsea' etc.)
-%      mexec_data_root (e.g. '~/cruises/jc238/mcruise/data/')
-%      underway (1) to set up underway data directories and test
-%        database access, 2 to set up underway data directories only,
-%        0 to skip
+%      data_root (e.g. '~/cruises/jc238/mcruise/data/')
+%      mexec_shell_scripts (if you are using them to sync data at sea,
+%        specify the path) 
+%      datatypes is itself a structure with fields specifying the types of
+%        data available for processing: 
+%        ctd ('sbe') or 'rbr'
+%        nisk ('sbe')
+%        tref ('sbe35') or 'no'
+%        sadcp ('codas') or 'no'
+%        ladcp ('ix') or 'no'
+%        uway ('rvdas', 'scs', 'techsas', or 'no')
 %      quiet (2) 0 to make both mexec_processing_scripts and
 %        file_tools/mexec programs verbose, 1 to make only
 %        mexec_processing_scripts verbose, 2 to minimise intermediate
 %        output to screen
-%      ladcp ('no') 'ix' to add LDEO IX LADCP processing scripts to
-%        path; 0 to not add them -- this is to avoid interference between
-%        scripts with the same names (e.g. 'julian.m') in different
-%        toolboxes -- for example, ladcp should be set to 'no' for any
-%        Matlab session where you want to process moored data using rodb
-%        tools (as for RAPID and OSNAP/m_moorproc_toolbox)
-%      sw location for programs like gsw (e.g. '~/programs/others/')
 %
 %  note: m_setup is not necessary if you only want to use mexec tools to
 %    read/parse mexec-format files (e.g. use mload or mloadq, m_commontime
@@ -51,10 +51,11 @@ MEXEC_G.mcruise='ce26008';
 %MEXEC_G.mcruise = 'dy214';
 MEXEC_G.data_time_origin_string = '2026-01-01 00:00:00'; %yyyy-MM-dd HH:mm:SS, usually midnight on 1 Jan of the start year of the cruise. do not change once processing for a given cruise has started!
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
-MEXEC_G.data_root = '/noc/mpoc/eurogoship/ce26008/data'; %contains raw (e.g. ctd/ASCII_FILES) and will contain processed (e.g. ctd/*.nc) data
+%MEXEC_G.data_root = '/noc/mpoc/eurogoship/ce26008/data'; %contains raw (e.g. ctd/ASCII_FILES) and will contain processed (e.g. ctd/*.nc) data
+%MEXEC_G.data_root = '/data/pstar/projects/osnap/cruises/dy214/data';
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/'; %optional; only relevant for on-ship processing to run bash scripts to sync data to Linux workstations
-MEXEC_G.sw = '/noc/mpoc/eurogoship/programs'; %if the required GSW and Seawater toolboxes (and optionally gamma_n, and LDEO_IX) are not on the path already, they should be here
-MEXEC_G.datatypes.ctd = 'sbe'; %sbe is currently the only option, in future add rbr
+MEXEC_G.datatypes.ctd = 'sbe'; %sbe is currently the only option for CTD sensors, in future add rbr
+MEXEC_G.datatypes.nisk = 'sbe'; %sbe .bl or .btl files
 MEXEC_G.datatypes.tref = 'sbe35'; %there is an SBE35 deep standards thermometer, or 'no' if not
 MEXEC_G.datatypes.uway = 'scs'; %underway data acquisition/storage system: rvdas is a PotgreSQL database (more recently also duplicated in NetCDF files***check); scs stores (minimally) parsed NMEA strings as either ASCII or NetCDF; techsas stores as NetCDF
 %MEXEC_G.datatypes.uway = 'rvdas';
@@ -64,8 +65,8 @@ MEXEC_G.datatypes.moor = 'no'; %or yes (affects what is added to path)
 %MEXEC_G.datatypes.moor = 'yes';
 MEXEC_G.quiet = 2; %if 0, both file_tools/mexec programs and mexec_data_processing programs will be verbose; if 1, only the latter; if 2, neither
 %not generally recommended to change the following, but you can
-MEXEC_G.opt_cruise = ['opt_' MEXEC_G.mcruise '.m']; %rarely. this could be changed to temporarily try another options script (as much as possible, a single options script should record all processing choices)
-MEXEC_G.perms = [664; 775]; % permissions for files and directories
+MEXEC_G.opt_cruise = ['opt_' MEXEC_G.mcruise '.m']; %change temporarily to try another options script (as much as possible, a single options script should record all processing choices)
+MEXEC_G.perms = [664; 775]; % permissions for files and directories (n*x systems), keep rwX for at least user + group to allow multiple users to modify the processed files
 MEXEC_G.Muse_version_lockfile = 'yes'; %takes value 'yes' or 'no', 'yes' is recommended but if only one person is processing from one matlab session at any one time, it may not matter
 
 %replace above with any user-supplied parameters for this session/run
@@ -91,10 +92,18 @@ clear MGu
 MEXEC_G.SITE = [MEXEC_G.mcruise '_' MEXEC_G.SITE_suf];
 MEXEC_G = rmfield(MEXEC_G, 'SITE_suf');
 if ~isfield(MEXEC_G,'data_time_origin_string') || length(MEXEC_G.data_time_origin_string)~=19
-    yr = input('cruise start year? (add MEXEC.data_time_origin near the top of m_setup to avoid this message in future)   ','s');
+    yr = input('cruise start year? (add MEXEC.data_time_origin_string near the top of m_setup to avoid this message in future)   ','s');
     MEXEC_G.data_time_origin_string = [yr '-01-01 00:00:00'];
 end
 MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN = datevec(MEXEC_G.data_time_origin_string); %***check, does this always work
+if strcmp(MEXEC_G.datatypes.sadcp,'uhdas') || strcmp(MEXEC_G.datatypes.sadcp,'vmdas')
+    %if system environment variables were used to set datatypes, the
+    %acquisition system may be specified, but what matters for
+    %ocp_hydro_matlab is the processing system. codas is our default for
+    %processing either uhdas or vmdas data.   
+    fprintf(1,'MEXEC_G.datatypes.sadcp listed data acquisition system ''%s'';\n replacing with data processing system ''%s''\n',MEXEC_G.datatypes.sadcp,'codas')
+    MEXEC_G.datatypes.sadcp = 'codas';
+end
 
 fprintf(1,'m_setup for %s mexec (ocp_hydro_matlab) to process\n', MEXEC_G.mcruise)
 disp(MEXEC_G.datatypes)
@@ -145,11 +154,6 @@ end
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
-if strcmp(MEXEC_G.datatypes.sadcp,'uhdas') || strcmp(MEXEC_G.datatypes.sadcp,'vmdas')
-    %if system environment variables were used to set datatypes, the acquisition system may be specified, but what matters at this stage (reading in processed data) is the processing system. we usually process both uhdas and vmdas data with codas.
-    fprintf(1,'MEXEC_G.datatypes.sadcp specified SADCP data acquisition system ''%s'';\n replacing with SADCP data processing system ''%s''\n',MEXEC_G.datatypes.sadcp,'codas')
-    MEXEC_G.datatypes.sadcp = 'codas';
-end
 
 % cruise-specific settings
 if ~exist(MEXEC_G.opt_cruise,'file')
@@ -290,9 +294,8 @@ if exist(MEXEC_G.HISTORY_DIRECTORY,'dir') ~= 7
 end
 
 function sw_checkpath
-%
-% add external software toolboxes if they are in MEXEC_G.sw
-%
+% check if required software toolboxes are on path, and also try to avoid
+% conflicts between m_moorproc_toolbox and LDEO_IX 
 
 m_common
 

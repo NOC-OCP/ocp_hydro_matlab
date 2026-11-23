@@ -23,7 +23,7 @@ didedits = 0;
 
 %definitions
 ii = find(strcmp(abbrev,mtable.mstarpre));
-opt1 = 'uway_proc'; opt2 = 'uway_pfiles';
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
 infile = sprintf(pfiles.uway_raw, abbrev);
 if ~exist(m_add_nc(infile),'file')
     warning('no %s, skipping', infile)

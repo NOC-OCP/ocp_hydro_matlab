@@ -8,14 +8,14 @@ function mout_1hzasc(stn)
 
 m_common
 
-opt1 = 'ctd_proc'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
 if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s.02.asc\n',stn_string); end
 
 %%%%%%%%% write ctd data %%%%%%%%%
 
-pd = mexec_file_locations('procfiles','ctd');
-file1 = sprintf(pd.ctd1,stn_string);
-if exist(m_add_nc(file1),'file') ~= 2
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+file1 = sprintf(pfiles.ctd_1hz,stn_string);
+if exist(file1,'file') ~= 2
     disp(['file not found: ' file1 ', not writing 1 hz ascii file'])
     return
 end
@@ -55,7 +55,7 @@ else
     dd.latitude = interp1(dn.dnum,dn.latitude,dd.dnum);
     dd.longitude = interp1(dn.dnum,dn.longitude,dd.dnum);
 end
-opt1 = 'mstar'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf
     [~,to] = timeunits_mstar_cf(dh.fldunt{strcmp('time',dh.fldnam)});
     y0 = to(1);
@@ -66,8 +66,7 @@ dd.yearday = m_commontime(dd,'time',dh,sprintf('days since %d 1 1 0 0 0',y0));
 
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
-cfg.stnstr = stn_string;
-opt1 = 'adcp_proc'; run(MEXEC_G.opt_cruise)
+opt1 = 'adcp_proc'; opt2 = 'ladcp_infiles'; run(MEXEC_G.opt_cruise)
 fid = fopen(cfg.f.ctd,'w'); mfixperms(cfg.f.ctd);
 %fprintf(fid,'%s\n',ctdh);
 for kl = 1:length(kok)

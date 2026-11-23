@@ -845,12 +845,12 @@ switch opt1
         switch opt2
             case 'm_stn_string'
                 crhelp_str = {'queries for stn if not set, makes stn_string (default: 3-digit form of stn)'
-                    'for filenames and moves stn to stnlocal'};
+                    'for filenames and moves stn to stn'};
                 if ~exist('stn', 'var')
                     stn = input('type stn number ');
                 end
-                stnlocal = stn; clear stn
-                stn_string = sprintf('%03d',stnlocal);
+                stn = stn; clear stn
+                stn_string = sprintf('%03d',stn);
             case 'nnisk'
                 crhelp_str = 'nnisk (default: 24) is number of Niskins on rosette. can be station-dependent.';
                 nnisk = 24;

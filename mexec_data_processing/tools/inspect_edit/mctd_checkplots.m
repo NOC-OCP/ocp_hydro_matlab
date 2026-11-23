@@ -1,65 +1,57 @@
 function mctd_checkplots(stn, varargin)
-% mctd_checkplots: read in ctd data
 %
-% Use: mctd_checkplots        and then respond with station number, or for station 16
-%      stn = 16; mctd_checkplots;
+% mctd_checkplots(stn, prev_stns)
+% mctd_checkplots(stn, prev_stns, 'quick')
+% 
+% Makes a set of plots for checking issues with and corrections needed for
+% CTDO dataa, using both 1 hz time series and more smoothed profiles. Data
+% are truncated using the dcs (ctd_castcut) start and end of cast. 
 %
-% rewrite of mplotxy_ctdck on jr281 by bak march 2013. We need some
-% different diagnostics than the ones available previously
+% Second input argument sets the other stations to plot for comparison. If
+% a scalar (including 0), plot that many immediately previous stations. If
+% a vector, plot those stations. Stations that do not have a complete set 
+% of files are skipped. 
 %
-% There are 10 plots available.
-%
-% There are a selection of 1hz and 2 dbar plots. 1 hz plots are trimmed to
-% start and end good scan numbers. 1 hz plots commonly have upcast as
-% dashed lines.
-%
-% Some plots are for the input station only.
-%
-% Others include a user-controllable selection of previous stations.
-% You can select 'The previous X stations',
-% where X can be any number, including zero.
-% Or if you choose '-1' for the number of previous stations, you can offer
-% a list of station numbers as an array eg [33 36 39], or 33:39.
-%
-% Stations that do not have a complete set of files (ctd_2db, ctd_2up,
-% ctd_psal and dcs) are skipped
+% Optional third input argument is 'quick' to use the 10s averaged files
+% (interpolating to 2 dbar) in place of 2 dbar down and upcast files, which 
+% may not have been created yet.  
 %
 % plots are as follows
-% plots 2 to 6 and 10 enable comparison with previous stations
-% plots 7 to 9 are for examining this station only
 %
-% 1: mplotxy of the 1hz data
+% theta, S, O vs pressure, theta-S, and theta-O for this and other 
+% requested stations
+%   Figure 102: CTD1, averaged downcast
+%   Figure 103: CTD2, averaged downcast
+%   Figure 104: CTD1, 1 hz, downcast solid and upcast dashed
+%   Figure 105: CTD2, 1 hz, downcast solid and upcast dashed
+% useful for highlighting sensor changes
+% 
+% theta, S, O vs pressure, theta-S, and theta-O for this station with
+% down and upcast on the same plots
+%   Figure 106: CTD1 and CTD2, averaged downcast
+%   Figure 107: CTD1 and CTD2, averaged upcast
+% useful for oxygen alignment and hysteresis as well as highlighting sensor
+% steps/problems 
 %
-% 2 and 3: 2db profiles and theta-S for primary (2) and secondary (3), for this and all
-% previous requested stations
+% theta, S, O vs pressure, theta-S, and theta-O for this station with
+% primary and secondary on the same plots
+%   Figure 108: CTD1 and CTD2, averaged downcast
+%   Figure 109: CTD1 and CTD2, averaged upcast
+% useful for oxygen alignment and hysteresis as well as highlighting sensor
+% steps/problems 
 %
-% 4 and 5: 1hz profiles and theta-S for primary (4) and secondary (5), for this and all
-% previous requested stations
+% differences in theta, S, O for this station
+%   Figure 108: up minus down cast, 2 dbar. useful for oxygen hysteresis. 
+%   Figure 109: primary minus secondary, 1 hz. useful for sensor steps. 
 %
-% 6: theta-S for primary (left panel) and secondary (right panel), for this and all
-% previous requested stations. This is useful for looking at sensor drift.
+% differences in theta, S, O for all requested stations
+%   Figure 110: primary minus secondary, 1 hz. useful for sensor steps and
+%   drifts. 
 %
-% 7: 2db profiles and theta-S, primary and secondary overplotted. This station only
-%
-% 8: 1hz profiles and theta-S, primary and secondary overplotted. This station only
-%
-% 9: up_minus_down differences, using 2db and 2up files. This station only
-%
-% 10: primary_minus_secondary, using 1hz file, for this and all
-% previous requested stations
-%
-% The selection and order of plots can be controlled by the variable named
-% ctd_cklist. ctd_cklist is an array that will control which
-% plots are produced and the prev_stnsorder they appear in.
-% eg
-%
-% ctd_cklist = [2 3 7 10 6]; mctd_checkplots
-%
-% will produce plot 6 last and in the front figure window.
 %
 
 m_common
-if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD data from station %s along with data from selected previous stations',stn_string);end
+if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD dataa from station %s along with dataa from selected previous stations',stn_string);end
 
 quick = 0; %whether to use 10 hz (quick) or 2 dbar
 if nargin>1
@@ -75,7 +67,7 @@ end
 if numel(nump)>1
     slist = nump; 
 elseif isscalar(nump)
-    slist = stnlocal-nump:stnlocal-1;
+    slist = stn+(-nump:-1);
     slist(slist<0) = []; % bak en705 19 july 2023 : allow station number zero
 else
     disp('you should reply with a single number or a vector')
@@ -83,653 +75,256 @@ else
 end
 clear nump msg1
 
-% stnlocal is now the local station number
-% slist is the list of previous stations
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise) %
+opt1 = 'ctd_proc'; opt2 = 'ctd_checkplots'; run(MEXEC_G.opt_cruise) %saltype
+opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise) %raw resolution
 
-pd = mexec_file_locations('procfiles','ctd');
-pdd = mexec_file_locations('procfiles','dcs');
 % load data
-klist = [slist(:)' stnlocal];
+klist = [slist(:)' stn];
 sused = false(size(klist));
-infiles = cell(4,length(klist));
-d2db = cell(1,length(klist));
-d2up = d2db; dpsal = d2db; ddcs = d2db;
+d2dn = cell(1,length(klist));
+d2up = d2dn; d1 = d2dn; dc = d2dn;
+stn0 = stn; 
 for no = 1:length(klist)
-    ks = klist(no);
-    sstring = sprintf('%03d',ks);
-    infile3 = m_add_nc(sprintf(pd.ctd1,sstring));
-    if ks==0 && ~exist('infile3','file')
-       warning(sprintf('File %s not found. Skipping station %d.',infile3,ks))
-       continue
-    end
-    infile4 = m_add_nc(sprintf(pdd.dcsfile,sstring));
-    infiles{3,no} = infile3;
-    infiles{4,no} = infile4;
-    [dpsal{no}, ~] = mloadq(infile3,'/');
-    [ddcs{no}, ~] = mloadq(infile4,'/');
-    if quick
-        infile1 = m_add_nc(sprintf(pd.ctd10s,sstring));
-        if exist(infile1,'file') && exist(infile3,'file') && exist(infile4,'file')
-            infiles{1,no} = infile1; infiles{2,no} = infile1;
-            [d,h] = mloadq(infile1,'/');
-            d = struct2table(d);
-            iib = find(d.press==max(d.press)); iib = iib(1);
-            dd = table2struct(d(1:iib,:),'ToScalar',true);
-            du = table2struct(d(iib:end,:),'ToScalar',true);
-            d2db{no} = dd; d2up{no} = du;
-            sused(no) = 1;
+    stn = klist(no);
+    opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise);
+    found = true; done = false;
+    while found & ~done
+        [dc,~,found] = load_if_found(sprintf(pfiles.ctd_castcut,stn_string));
+        sb = [dc.scan_start, dc.scan_bot, dc.scan_end];
+        [d,~,found] = load_if_found(sprintf(pfiles.ctd_1hz,stn_string));
+        [d1dn{no}, d1up{no}] = cast_split(d, sb);
+        if quick
+            [d,~,found] = load_if_found(sprintf(pfiles.ctd_10s,stn_string));
+            [d2dn{no}, d2up{no}] = cast_split(d, sb);
+        else
+            [d2dn{no},~,found] = load_if_found(sprintf(pfiles.ctd_2db_dn,stn_string));
+            [d2up{no},~,found] = load_if_found(sprintf(pfiles.ctd_2db_dn,stn_string));
         end
+        done = true;
+    end
+    if found
+        sused(no) = 1;
+    elseif stn==stn0
+        fprintf(2,'station %d was not loaded (check all files are available); exiting',stn)
+        return
     else
-        infile1 = m_add_nc(sprintf(pd.ctd2d,sstring));
-        infile2 = m_add_nc(sprintf(pd.ctd2u,sstring));
-        % skip stations that don't have a complete set of files
-        if exist(infile1,'file') && exist(infile2,'file') && exist(infile3,'file') && exist(infile4,'file')
-            infiles{1,no} = infile1;
-            infiles{2,no} = infile2;
-            [d2db{no}, h] = mloadq(infile1,'/');
-            [d2up{no}, ~] = mloadq(infile2,'/');
-            sused(no) = 1;
-        end
+        warning('skipping additional station %d',stn)
+        continue
     end
 end
-infiles = infiles(:,sused);
-d2db = d2db(:,sused); d2up = d2up(:,sused);
-dpsal = dpsal(:,sused); ddcs = ddcs(:,sused);
-sused = klist(sused);
-numused = length(sused);
-
-if sum(sused==stnlocal)<1
-    msg = ['Station ' sprintf('%03d',stnlocal) ' was not loaded. Check all the files are available'];
-    fprintf(2,'%s\n',msg)
-    return
-end
+d1dn = d1dn(sused); d1up = d1up(sused);
+d2dn = d2dn(sused); d2up = d2up(sused);
+klist = klist(sused);
+nstn = length(klist);
+stn = stn0;
 
 lcolors = [0 0 1; 0 .8 0; .85 0 .85; 0 1 1; 1 0 0; 0 0 0];
-if numused>size(lcolors,1)
-    lcolors = [repmat([.5 .5 .5],numused-length(lcolors),1); lcolors];
+if nstn>size(lcolors,1)
+    lcolors = [repmat([.5 .5 .5],nstn-size(lcolors,1),1); lcolors];
+elseif nstn<size(lcolors,1)
+    lcolors = lcolors(end-nstn+1:end,:);
 end
-col_list = 'krcmgb'; % colours to be used in reverse order. k for most recent station.
-numcol = length(col_list);
-clear cols
-if numused <= numcol
-    cols = fliplr(col_list(1:numused));
+if quick
+    avstr = '10s';
 else
-    cols(1:numcol) = col_list;
-    cols(numcol+1:numused) = col_list(end);
-    cols = fliplr(cols);
+    avstr = '2dbar';
 end
-% cols is now a list of cols corresponding to the list of stations to plot
 
-
-% plots
-
-close all
-lwid = 1;
-pos_title = [.05 .93 .9 .06];
-
+% which plots
+%close all
 if exist('ctd_cklist','var')
     cklist = ctd_cklist;
 else
-    cklist = 1:10;
+    cklist = 102:109;
 end
-
 cklist = cklist(:)'; % force to row
-
-saltype = 'psal';
-opt1 = mfilename; opt2 = 'plot_saltype'; run(MEXEC_G.opt_cruise)
-opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
-oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
-oxyvars = oxyvars(cellfun(@(x) length(x)>3,oxyvars));
-nox = length(oxyvars);
 
 for plotlist = cklist
     
+    figure(plotlist); clf
     switch plotlist
-        case 2
-            
-            % figure 102
-            % 2db primary, all stations, test station last
-            figure(102); clf
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' (' cols(end) ') primary - 2db'];
-                %[sprintf('%03d ',sused) ' (' cols ')']
-                };
-            h = text(.5,.5,titstr); hold on
-            set(h,'HorizontalAlignment','center','VerticalAlignment','middle');
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                text((ks-numused/2)/numused*.4+.45,0,sprintf('%03d ',sused(ks)),'color',lcolors(iic,:));
-            end
-            axis([0 1 -.2 1]); axis off
-            
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                
-                subplot(221)
-                plot(d2db{ks}.press,d2db{ks}.temp1,'linewidth',lwid,'color',lcolors(iic,:)); 
-                hold on
-                
-                subplot(222)
-                plot(d2db{ks}.press,d2db{ks}.([saltype '1']),'linewidth',lwid,'color',lcolors(iic,:));
-                hold on
-                
-                subplot(223)
-                plot(d2db{ks}.press,d2db{ks}.(oxyvars{1}),'linewidth',lwid,'color',lcolors(iic,:));
-                hold on
-                
-                subplot(224)
-                plot(d2db{ks}.([saltype '1']),d2db{ks}.potemp1,'linewidth',lwid,'color',lcolors(iic,:));
-                hold on
-    
-            end
-            subplot(221); grid on; title('temp'),ylabel('temp'),xlabel('press')
-            subplot(222); grid on; title(saltype),ylabel(saltype),xlabel('press')
-            subplot(223); grid on; title ('oxy'),ylabel('oxy'),xlabel('press')
-            subplot(224); grid on; title (['potemp-' saltype]),ylabel('potemp'),xlabel(saltype)
-            
-        case 3
-            
-            % figure 103
-            % 2db secondary, all stations, test station last
-            figure(103); clf
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' (' cols(end) ') secondary - 2db'];
-                %[sprintf('%03d ',sused) ' (' cols ')']
-                };
-            h = text(.5,.5,titstr); hold on
-            set(h,'HorizontalAlignment','center','VerticalAlignment','middle');
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                text((ks-numused/2)/numused*.4+.45,0,sprintf('%03d ',sused(ks)),'color',lcolors(iic,:));
-            end
-            axis([0 1 -.2 1]); axis off
-            
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                
-                subplot(221)
-                plot(d2db{ks}.press,d2db{ks}.temp2,'linewidth',lwid,'color',lcolors(iic,:)); 
-                hold on
-                
-                subplot(222)
-                plot(d2db{ks}.press,d2db{ks}.([saltype '2']),'linewidth',lwid,'color',lcolors(iic,:));
-                hold on
-                
-                subplot(223)
-                if nox>1
-                    plot(d2db{ks}.press,d2db{ks}.(oxyvars{2}),'linewidth',lwid,'color',lcolors(iic,:));
-                    hold on
-                end
-                
-                subplot(224)
-                plot(d2db{ks}.([saltype '2']),d2db{ks}.potemp2,'linewidth',lwid,'color',lcolors(iic,:));
-                hold on
-    
-            end
-            subplot(221); grid on; title('temp'),ylabel('temp'),xlabel('press')
-            subplot(222); grid on; title(saltype),ylabel(saltype),xlabel('press')
-            subplot(223); grid on; title ('oxy'),ylabel('oxy'),xlabel('press')
-            subplot(224); grid on; title (['potemp-' saltype]),ylabel('potemp'),xlabel(saltype)
-            
-        case 4
-            
-            % figure 104
-            % 1hz primary, all stations, test station last
-            figure(104); clf
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' (' cols(end) ') primary - 1hz'];
-                };
-            h = text(.5,.5,titstr); hold on
-            set(h,'HorizontalAlignment','center','VerticalAlignment','middle');
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                text((ks-numused/2)/numused*.4+.45,0,sprintf('%03d ',sused(ks)),'color',lcolors(iic,:));
-            end
-            axis([0 1 -.2 1]); axis off
-            
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
 
-                subplot(221)
-                plot(dpsal{ks}.press(kokd),dpsal{ks}.temp1(kokd),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                plot(dpsal{ks}.press(koku),dpsal{ks}.temp1(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
-                
-                subplot(222)
-                sd = dpsal{ks}.([saltype '1']);
-                plot(dpsal{ks}.press(kokd),sd(kokd),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
-                
-                subplot(223)
-                if isfield(co,'oxy_align') && co.oxy_align
-                    kokdo = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    kokuo = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-co.oxy_align*24);
-                else
-                    kokdo = kokd;
-                    kokuo = koku;
-                end
-                od = dpsal{ks}.(oxyvars{1});
-                plot(dpsal{ks}.temp1(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                plot(dpsal{ks}.temp1(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
-                
-                subplot(224)
-                sd = dpsal{ks}.([saltype '1']);
-                plot(sd(kokd),dpsal{ks}.potemp1(kokd),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                plot(sd(koku),dpsal{ks}.potemp1(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
-                
-            end
-            subplot(221); grid on; title ('temp: dash for upcast'),ylabel('temp'),xlabel('press')
-            subplot(222); grid on; title ([saltype ': dash for upcast']),ylabel(saltype),xlabel('press')
-            subplot(223); grid on; title ('oxy: dash for upcast'),ylabel('oxy'),xlabel('temp')
-            subplot(224); grid on; title (['potemp-' saltype ': dash for upcast']),ylabel('potemp'),xlabel(saltype)
-            
-        case 5
-            
-            % figure 105
-            % 1hz secondary, all stations, test station last
-            figure(105); clf
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' (' cols(end) ') secondary - 1hz'];
-                };
-            h = text(.5,.5,titstr); hold on
-            set(h,'HorizontalAlignment','center','VerticalAlignment','middle');
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                text((ks-numused/2)/numused*.4+.45,0,sprintf('%03d ',sused(ks)),'color',lcolors(iic,:));
-            end
-            axis([0 1 -.2 1]); axis off
-            
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
+        case 102
+            % avgd primary downcast, compare stations, test station last
+            plot_multistations(['primary ' avstr ' down'], klist, lcolors, d2dn, [], saltype, 'oxy', 1)
 
-                subplot(221)
-                plot(dpsal{ks}.press(kokd),dpsal{ks}.temp2(kokd),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                plot(dpsal{ks}.press(koku),dpsal{ks}.temp2(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
-                
-                subplot(222)
-                sd = dpsal{ks}.([saltype '2']);
-                plot(dpsal{ks}.press(kokd),sd(kokd),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                plot(dpsal{ks}.press(koku),sd(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
-                
-                subplot(223)
-                if isfield(co,'oxy_align') && co.oxy_align
-                    kokdo = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    kokuo = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-co.oxy_align*24);
-                else
-                    kokdo = kokd;
-                    kokuo = koku;
-                end
-                if nox>1
-                    od = dpsal{ks}.(oxyvars{2});
-                    plot(dpsal{ks}.temp2(kokdo),od(kokdo),'color',lcolors(iic,:),'linewidth',lwid);
-                    hold on
-                    plot(dpsal{ks}.temp2(kokuo),od(kokuo),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
-                end
-                
-                subplot(224)
-                sd = dpsal{ks}.([saltype '2']);
-                plot(sd(kokd),dpsal{ks}.potemp2(kokd),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                plot(sd(koku),dpsal{ks}.potemp2(koku),'color',lcolors(iic,:),'linewidth',lwid,'linestyle','--');
-                
-            end
-            subplot(221); grid on; title ('temp: dash for upcast'),ylabel('temp'),xlabel('press')
-            subplot(222); grid on; title ([saltype ': dash for upcast']),ylabel(saltype),xlabel('press')
-            subplot(223); grid on; title ('oxy: dash for upcast'),ylabel('oxy'),xlabel('temp')
-            subplot(224); grid on; title (['potemp-' saltype ': dash for upcast']),ylabel('potemp'),xlabel(saltype)
+        case 103
+            % avgd secondary downcast, compare stations, test station last
+            plot_multistations(['secondary ' avstr ' down'], klist, lcolors, d2dn, [], saltype, 'oxy', 2)
+
+        case 104
+            % 1hz primary, compare stations, test station last
+            plot_multistations('primary 1 hz down (-) and up (--)', klist, lcolors, d1dn, d1up, saltype, 'oxy', 1)
+
+        case 105
+            % 1hz secondary, compare stations, test station last
+            plot_multistations('secondary 1 hz down (-) and up (--)', klist, lcolors, d1dn, d1up, saltype, 'oxy', 2)
+
+        case 106
+            % avgd primary, compare stations, test station last
+            plot_multistations(['primary ' avstr ' down (-) and up (--)'], klist, lcolors, d2dn, d2up, saltype, 'oxy', 1)
+
+        case 107
+            % avgd secondary, compare stations, test station last
+            plot_multistations(['secondary ' avstr ' down (-) and up (--)'], klist, lcolors, d2dn, d2up, saltype, 'oxy', 2)
+
+        case 108
+            % avgd downcast primary and secondary, test station
+            plot_multistations([avstr ' down primary (-) and secondary (--)'], klist(end), lcolors(end,:), d2dn(end), [], saltype, 'oxy', [1 2])
+
+        case 109
+            % avgd upcast primary and secondary, test station
+            plot_multistations([avstr ' up primary (-) and secondary (--)'], klist(end), lcolors(end,:), d2up(end), [], saltype, 'oxy', [1 2])
             
-        case 6
-            
-            % figure 106
-            % 2db primary and secondary theta-S, all stations, test station last
-            % bak on jr302; july 2014; theta-O as well
-            figure(106); clf
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' (' cols(end) ') primary & secondary - 2db'];
-                };
-            h = text(.5,.5,titstr); hold on
-            set(h,'HorizontalAlignment','center','VerticalAlignment','middle');
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                text((ks-numused/2)/numused*.4+.45,0,sprintf('%03d ',sused(ks)),'color',lcolors(iic,:));
-            end
-            axis([0 1 -.2 1]); axis off
-            
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                
-                subplot(221)
-                plot(d2db{ks}.([saltype '1']),d2db{ks}.potemp1,'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                
-                subplot(222)
-                plot(d2db{ks}.([saltype '2']),d2db{ks}.potemp2,'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                
-                subplot(223)
-                plot(d2db{ks}.(oxyvars{1}),d2db{ks}.potemp1,'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                
-                if nox>1
-                    subplot(224)
-                    plot(d2db{ks}.(oxyvars{2}),d2db{ks}.potemp2,'color',lcolors(iic,:),'linewidth',lwid);
-                    hold on
-                end
-            end
-            subplot(221); grid on; title (['theta-' saltype ' primary'])
-            subplot(222); grid on; title (['theta-' saltype ' secondary'])
-            subplot(223); grid on; title ('theta-O primary'),ylabel('temp')
-            if nox>1; subplot(224); grid on; title ('theta-O secondary')
-            end
-            
-            
-        case 7
-            % now some plots from just this station
-            
-            % figure 107
-            % 2db primary and secondary
-            
-            figure(107)
-            
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' primary & secondary - 2db'];
-                ['primary (k) secondary (r)']
-                };
-            h = text(.5,.5,titstr);
-            set(h,'HorizontalAlignment','center');
-            set(h,'VerticalAlignment','middle');
-            axis off
-            
-            
-            subplot(221)
-            for ks = numused
-                plot(d2db{ks}.press,d2db{ks}.temp1,['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-                plot(d2db{ks}.press,d2db{ks}.temp2,['r' '-'],'linewidth',lwid);
-            end
-            title ('temp'),ylabel('temp'),xlabel('press');
-            
-            subplot(222)
-            for ks = numused
-                plot(d2db{ks}.press,d2db{ks}.([saltype '1']),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-                plot(d2db{ks}.press,d2db{ks}.([saltype '2']),['r' '-'],'linewidth',lwid);
-            end
-            title(saltype),ylabel(saltype),xlabel('press');
-            
-            subplot(223)
-            for ks = numused
-                plot(d2db{ks}.press,d2db{ks}.(oxyvars{1}),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-                if nox>1
-                    plot(d2db{ks}.press,d2db{ks}.(oxyvars{2}),['r' '-'],'linewidth',lwid);
-                end
-            end
-            title ('oxy')
-            
-            subplot(224)
-            for ks = numused
-                plot(d2db{ks}.([saltype '1']),d2db{ks}.potemp1,['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-                plot(d2db{ks}.([saltype '2']),d2db{ks}.potemp2,['r' '-'],'linewidth',lwid);
-            end
-            title (['theta-' saltype])
-            
-            
-        case 8
-            
-            % figure 108
-            % 1hz primary and secondary
-            
-            figure(108)
-            
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' primary & secondary - 1hz'];
-                ['primary (k) secondary (r)']
-                };
-            h = text(.5,.5,titstr);
-            set(h,'HorizontalAlignment','center');
-            set(h,'VerticalAlignment','middle');
-            axis off
-            
-            
-            subplot(221)
-            for ks = numused
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                plot(dpsal{ks}.press(kokd),dpsal{ks}.temp1(kokd),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-                plot(dpsal{ks}.press(koku),dpsal{ks}.temp1(koku),['k' '--'],'linewidth',lwid);
-                plot(dpsal{ks}.press(kokd),dpsal{ks}.temp2(kokd),['r' '-'],'linewidth',lwid);
-                plot(dpsal{ks}.press(koku),dpsal{ks}.temp2(koku),['r' '--'],'linewidth',lwid);
-            end
-            title ('temp: dash for upcast')
-            
-            subplot(222)
-            for ks = numused
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                sd = dpsal{ks}.([saltype '1']);
-                plot(dpsal{ks}.press(kokd),sd(kokd),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-                plot(dpsal{ks}.press(koku),sd(koku),['k' '--'],'linewidth',lwid);
-                sd = dpsal{ks}.([saltype '2']);
-                plot(dpsal{ks}.press(kokd),sd(kokd),['r' '-'],'linewidth',lwid);
-                plot(dpsal{ks}.press(koku),sd(koku),['r' '--'],'linewidth',lwid);
-            end
-            title ([saltype ': dash for upcast'])
-            
-            
-            subplot(223)
-            for ks = numused
-                if isfield(co,'oxy_align') && co.oxy_align
-                    kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end-co.oxy_align*24);
-                else
-                    kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                    koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                end
-                od = dpsal{ks}.(oxyvars{1});
-                plot(dpsal{ks}.press(kokd),od(kokd),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-                plot(dpsal{ks}.press(koku),od(koku),['k' '--'],'linewidth',lwid);
-                if nox>1
-                    od = dpsal{ks}.(oxyvars{2});
-                    plot(dpsal{ks}.press(kokd),od(kokd),['r' '-'],'linewidth',lwid);
-                    plot(dpsal{ks}.press(koku),od(koku),['r' '--'],'linewidth',lwid);
-                end
-            end
-            title ('oxy: dash for upcast')
-            
-            
-            subplot(224)
-            for ks = numused
-                kokd = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_bot);
-                koku = find(dpsal{ks}.scan > ddcs{ks}.scan_bot & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                sd = dpsal{ks}.([saltype '1']);
-                plot(sd(kokd),dpsal{ks}.temp1(kokd),['k' '-'],'linewidth',lwid);
-                hold on; grid on;
-                plot(sd(koku),dpsal{ks}.temp1(koku),['k' '--'],'linewidth',lwid);
-                sd = dpsal{ks}.([saltype '2']);
-                plot(sd(kokd),dpsal{ks}.temp2(kokd),['r' '-'],'linewidth',lwid);
-                plot(sd(koku),dpsal{ks}.temp2(koku),['r' '--'],'linewidth',lwid);
-            end
-            title (['theta-' saltype ': dash for upcast'])
-            
-        case 9
-            
-            % figure 109
-            % 1hz primary and secondary up-down difference
-            
-            figure(109)
-            
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' up minus down - 2up & 2db'];
-                [' ']
-                };
-            h = text(.5,.5,titstr);
-            set(h,'HorizontalAlignment','center');
-            set(h,'VerticalAlignment','middle');
-            axis off
-            
-            if sum(~isnan(d2up{ks}.press))>1
-                subplot(321)
-                for ks = numused
-                    upintrp = interp1(d2up{ks}.press,d2up{ks}.temp1,d2db{ks}.press);
-                    down = d2db{ks}.temp1;
-                    plot(d2db{ks}.press, upintrp-down,['k' '-'],'linewidth',lwid);
-                    hold on; grid on;
-                end
-                title ('temp1 up minus down diff');
-                
-                subplot(322)
-                for ks = numused
-                    upintrp = interp1(d2up{ks}.press,d2up{ks}.temp2,d2db{ks}.press);
-                    down = d2db{ks}.temp2;
-                    plot(d2db{ks}.press, upintrp-down,['k' '-'],'linewidth',lwid);
-                    hold on; grid on;
-                end
-                title ('temp2 up minus down diff');
-                
-                
-                subplot(323)
-                for ks = numused
-                    upintrp = interp1(d2up{ks}.press,d2up{ks}.([saltype '1']),d2db{ks}.press);
-                    plot(d2db{ks}.press, upintrp-d2db{ks}.([saltype '1']),['k' '-'],'linewidth',lwid);
-                    hold on; grid on;
-                end
-                title ([saltype '1 up minus down diff']);
-                
-                
-                subplot(324)
-                for ks = numused
-                    upintrp = interp1(d2up{ks}.press,d2up{ks}.([saltype '2']),d2db{ks}.press);
-                    plot(d2db{ks}.press, upintrp-d2db{ks}.([saltype '2']),['k' '-'],'linewidth',lwid);
-                    hold on; grid on;
-                end
-                title ([saltype '2 up minus down diff']);
-                
-                
-                subplot(325)
-                for ks = numused
-                    upintrp = interp1(d2up{ks}.press,d2up{ks}.(oxyvars{1}),d2db{ks}.press);
-                    plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{1}),['k' '-'],'linewidth',lwid);
-                    hold on; grid on;
-                end
-                title ('oxy 1 up minus down diff');
-                
-                subplot(326)
-                if nox>1
-                    for ks = numused
-                        upintrp = interp1(d2up{ks}.press,d2up{ks}.(oxyvars{2}),d2db{ks}.press);
-                        plot(d2db{ks}.press, upintrp-d2db{ks}.(oxyvars{2}),['k' '-'],'linewidth',lwid);
-                        hold on; grid on;
-                    end
-                    title ('oxy 2 up minus down diff');
-                end
-            end
-            
-        case 10
-            
-            % figure 110
-            % 1hz primary and secondary difference
-            figure(110); clf
-            axes('position',pos_title);
-            titstr = {
-                ['Station ' sprintf('%03d',sused(end)) ' (' cols(end) ') primary minus secondary - 1hz'];
-                };
-            h = text(.5,.5,titstr); hold on
-            set(h,'HorizontalAlignment','center','VerticalAlignment','middle');
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                text((ks-numused/2)/numused*.4+.45,0,sprintf('%03d ',sused(ks)),'color',lcolors(iic,:));
-            end
-            axis([0 1 -.2 1]); axis off
-            
-            for ks = 1:numused
-                iic = ks+length(lcolors)-numused;
-                
-                subplot(321)
-                kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok),'linewidth',lwid,'color',lcolors(iic,:));
-                hold on
-                
-                subplot(322) %repeat with forced axes
-                kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                
-                subplot(323)
-                kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                sd1 = dpsal{ks}.([saltype '1']); sd2 = dpsal{ks}.([saltype '2']);
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                
-                subplot(324) %zoomed version of above
-                kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end);
-                kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                sd1 = dpsal{ks}.([saltype '1']); sd2 = dpsal{ks}.([saltype '2']);
-                plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,sd1(kok)-sd2(kok),'color',lcolors(iic,:),'linewidth',lwid);
-                hold on
-                
-                if isfield(co,'oxy_align') && co.oxy_align
-                    kok = find(dpsal{ks}.scan > ddcs{ks}.scan_start & dpsal{ks}.scan < ddcs{ks}.scan_end-co.oxy_align*24);
-                end
-                if nox>1
-                    subplot(325)
-                    kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                    od1 = dpsal{ks}.(oxyvars{1}); od2 = dpsal{ks}.(oxyvars{2});
-                    plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),'color',lcolors(iic,:),'linewidth',lwid);
-                    hold on
-                    
-                    subplot(326) %zoomed version of above
-                    kmid = find(dpsal{ks}.scan < ddcs{ks}.scan_bot, 1, 'last' );
-                    od1 = dpsal{ks}.(oxyvars{1}); od2 = dpsal{ks}.(oxyvars{2});
-                    plot((dpsal{ks}.time(kok)-dpsal{ks}.time(kmid))/60,od1(kok)-od2(kok),'color',lcolors(iic,:),'linewidth',lwid);
-                    hold on; grid on;
-                end
-                
-            end
-            subplot(321); grid on; title ('temp diff'); xlabel('minutes away from bottom');
-            subplot(322); grid on; title ('temp diff'); xlabel('minutes away from bottom');
-            % bak on jr302 17 jun 2014; centre axes on data if out of range
-            axoff = m_nanmedian(dpsal{ks}.temp1(kok)-dpsal{ks}.temp2(kok)); 
-            if abs(axoff)<0.004 || isnan(axoff); axoff = 0; end
-            ylim([-0.005 0.005]+axoff);
-            subplot(323); grid on; title ([saltype ' diff']); xlabel('minutes away from bottom');
-            subplot(324); grid on; title ([saltype ' diff']); xlabel('minutes away from bottom');
-            axoff = m_nanmedian(sd1(kok)-sd2(kok));
-            if abs(axoff)<0.015 || isnan(axoff); axoff = 0; end
-            ylim(axoff+[-0.02 0.02]);
-            if nox>1
-                subplot(325); grid on; title ('oxy diff'); xlabel('minutes away from bottom');
-                subplot(326); grid on; title ('oxy diff'); xlabel('minutes away from bottom');
-                axoff = m_nanmedian(od1(kok)-od2(kok));
-                if abs(axoff)<15 || isnan(axoff); axoff = 0; end
-                ylim([-20 20]+axoff)
-            end
+        case 110
+            % avgd up-down differences, vs pressure, test station last
+            plot_diffs('1 hz up minus down, primary (-) and secondary (--)', klist(end), lcolors, saltype, 'oxy', d1dn(end), d1up(end), 'press', 'ud');
+        
+        case 111
+            % avgd primary-secondary differences, vs pressure, test station
+            % last
+            plot_diffs('1 hz primary minus secondary, down (-) and upcast (--)', klist(end), lcolors, saltype, 'oxy', d1dn(end), d1up(end), 'press', 'ps');
+
+        case 112
+            % avgd up-down differences, vs time from bottom, test station last
+            plot_diffs('1 hz up minus down, primary (-) and secondary (--)', klist(end), lcolors, saltype, 'oxy', d1dn(end), d1up(end), 'tab', 'ud');
+        
+        case 113
+            % avgd primary-secondary differences, vs time from bottom, test station
+            % last
+            plot_diffs('1 hz primary minus secondary, down (-) and upcast (--)', klist(end), lcolors, saltype, 'oxy', d1dn(end), d1up(end), 'tab', 'ps');
             
     end
 end
 
 clear klist
+
+
+function [d, h, found] = load_if_found(infile)
+
+if exist(infile,'file')
+    [d, h] = mload(infile,'/');
+    found = true;
+else
+    d = []; h = [];
+    found = false;
+    warning('%s not found; skipping',infile)
+end
+
+
+function plot_multistations(titstr, klist, lcolors, data, datb, saltype, oxypre, sensnum)
+
+if length(sensnum)==2 && isempty(datb)
+    if isempty(datb)
+        datb = data;
+        sensb = sensnum(2); sensnum = sensnum(1);
+    end
+end
+
+[nstn, lwid] = over_title(titstr, klist, lcolors);
+
+%plot data
+ss = num2str(sensnum);
+for ks = 1:nstn
+    subplot(231)
+    plot(data{ks}.(['temp' ss]),-data{ks}.press,'linewidth',lwid,'color',lcolors(ks,:)); 
+    hold on
+    subplot(232)
+    plot(data{ks}.([saltype ss]),-data{ks}.press,'linewidth',lwid,'color',lcolors(ks,:));
+    hold on
+    subplot(223)
+    plot(data{ks}.([saltype ss]),data{ks}.(['potemp' ss]),'linewidth',lwid,'color',lcolors(ks,:));
+    hold on
+end
+if isfield(data{1},[oxypre ss])
+    for ks = 1:nstn
+        subplot(233)
+        plot(data{ks}.([oxypre ss]),-data{ks}.press,'linewidth',lwid,'color',lcolors(ks,:));
+        hold on
+        subplot(224)
+        plot(data{ks}.([oxypre ss]),data{ks}.(['potemp' ss]),'linewidth',lwid,'color',lcolors(ks,:));
+        hold on
+    end
+end
+
+if ~isempty(datb)
+    %add datb on top
+    if exist('sensb','var')
+        ss = num2str(sensb);
+    end
+    for ks = 1:nstn
+        subplot(231)
+        plot(datb{ks}.(['temp' ss]),-datb{ks}.press,'--','linewidth',lwid,'color',lcolors(ks,:));
+        hold on
+        subplot(232)
+        plot(datb{ks}.([saltype ss]),-datb{ks}.press,'--','linewidth',lwid,'color',lcolors(ks,:));
+        hold on
+        subplot(223)
+        plot(datb{ks}.([saltype ss]),datb{ks}.(['potemp' ss]),'--','linewidth',lwid,'color',lcolors(ks,:));
+        hold on
+    end
+    if isfield(datb{1},[oxypre ss])
+        for ks = 1:nstn
+            subplot(233)
+            plot(datb{ks}.([oxypre ss]),-datb{ks}.press,'--','linewidth',lwid,'color',lcolors(ks,:));
+            hold on
+            subplot(224)
+            plot(datb{ks}.([oxypre ss]),datb{ks}.(['potemp' ss]),'--','linewidth',lwid,'color',lcolors(ks,:));
+            hold on
+        end
+    end
+end
+
+subplot(231); grid on; title('temp'),ylabel('temp'),xlabel('-press')
+subplot(232); grid on; title(saltype),ylabel(saltype),xlabel('-press')
+subplot(223); grid on; title (['potemp-' saltype]),ylabel('potemp'),xlabel(saltype)
+subplot(233); grid on; title ('oxy'),ylabel('oxy'),xlabel('-press')
+subplot(224); grid on; title (['potemp-' oxypre]),ylabel('potemp'),xlabel(oxypre)
+
+function plot_diffs(titstr, klist, lcolors, saltype, oxypre, data, datb, xvar, dtyp)
+
+[nstn, lwid] = over_title(titstr, klist, lcolors);
+if strcmp(xvar,'tfb')
+    %time from bottom
+    [~,ii] = max(data.press); ii = ii(1);
+    data.tfb = abs(data.time-data.time(ii));
+    [~,ii] = max(datb.press); ii = ii(1);
+    datb.tfb = abs(datb.time-datb.time(ii));
+end
+
+vars = {'temp','potemp',saltype,oxypre};
+switch dtyp
+    case 'ps'
+        for no = 1:length(vars)
+            da.(vars{no}) = data.([vars{no} '1'])-data.([vars{no} '2']);
+            db.(vars{no}) = datb.([vars{no} '1'])-datb.([vars{no} '2']);
+        end
+    case 'ud'
+        for no = 1:length(vars)
+            da.(vars{no}) = interp1(datb.(xvar),datb.([vars{no} '1']),data.(xvar))-data.([vars{no} '1']);
+            if isfield(data,[vars{no} '2'])
+                db.(vars{no}) = interp1(datb.(xvar),datb.([vars{no} '2']),data.(xvar))-data.([vars{no} '2']);
+            end
+        end
+end
+
+
+function [nstn, lwid] = over_title(titstr, klist, lcolors)
+
+pos_title = [.05 .93 .9 .06];
+lwid = 1;
+axes('position',pos_title);
+h = text(.5,.7,titstr); hold on
+set(h,'HorizontalAlignment','center','VerticalAlignment','middle');
+nstn = length(klist);
+if nstn>1
+    text(.1,.3,'stns')
+    for no = 1:nstn
+        text(.1+.6*no/nstn,.3,sprintf('%03d',klist(no)),'color',lcolors(no,:))
+    end
+else
+    text(.1,.3,sprintf('stn %03d',klist),'color',lcolors)
+end
+axis([0 1 -.2 1]); axis off
+

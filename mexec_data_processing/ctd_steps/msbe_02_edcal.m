@@ -29,11 +29,12 @@ function msbe_02_edcal(stn)
 m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hysteresis), as set in run(MEXEC_G.opt_cruise) and opt_%s\n',mcruise); end
 
-% input and output files
-opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
+% input and output files, and some information about the raw file
+opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
 rawfile = sprintf(pfiles.ctd_raw,stn_string);
 cfile = sprintf(pfiles.ctd_cleancal,stn_string);
-edfilepre = sprintf(efiles.ctd_editsrecord, stn_string);
+edfilepre = sprintf(pfiles.ctd_editsrecords, stn_string);
 dfile = sprintf(pfiles.ctd_castcut,stn_string);
 
 % start from the raw (cnv) file
@@ -48,16 +49,19 @@ doneco.celltm = contains(h.comment, '# celltm_date');
 %***filtering? wildedit? 
 
 
-% what corrections, edits, and calibrations will we do
-opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
-opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; run(MEXEC_G.opt_cruise)
-opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; run(MEXEC_G.opt_cruise)
-
-
 %%%% edit out bad points
 
-%automatic edits
-fn = setdiff(fieldnames(d),{'statnum','latitude','longitude','altimeter','scan','pumps','time'});
+%reapply any hand edits (TBA: adding a flag of 7 (despiked) where points are
+%removed***)
+[d, comment] = apply_guiedits(d, 'scan', edfilepre, 0.1);%, [2 7]);
+if ~isempty(comment)
+    h.comment = [h.comment comment];
+    disp('re-applied manual edits')
+end
+
+%now apply automatic edits (pumpsNaN, despike, rangelim, badvar, and anonymous functions coded in co.special)
+opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; run(MEXEC_G.opt_cruise)
+%fn = setdiff(fieldnames(d),{'statnum','latitude','longitude','altimeter','scan','pumps','time'});
 % for fno = 1:length(fn)
 %     d.([fn{fno} '_flag']) = 2+zeros(size(d.scan));
 %     h.fldnam = [h.fldnam [fn{fno} '_flag']];
@@ -70,35 +74,30 @@ if ~isempty(comment)
     disp('applied automatic edits')
 end
 
-%reapply hand edits, adding a flag of 7 (despiked) where points are removed
-[d, comment] = apply_guiedits(d, 'scan', edfilepre, 0.1);%, [2 7]);
-if ~isempty(comment)
-    h.comment = [h.comment comment];
-    disp('re-applied manual edits')
-end
-
 %fill in some fields we may be missing
-if ~isfield(d, 'statnum')
-    d.statnum = repmat(stn, size(d.scan));
-    h.fldnam = [h.fldnam 'statnum']; h.fldunt = [h.fldunt 'number'];
-    h.fldserial = [h.fldserial 'n/a'];
-end
 ddu = ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00'];
 d.dday = m_commontime(d,'time',h,ddu);
 h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldserial ' '];
 
 
 %%%%% apply corrections %%%%%
+opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
 
 %pressure offset (deck pressure)
-if co.dpoff_calc
-    iid = 1:60*24; %first minute should be on deck***
+if co.dpoff_calc>0
+    iid = 1:co.dpoff_calc*infiles.ctd_raw_hz; 
     if ~isempty(co.dpoff_checked) && ismember(stn,co.dpoff_checked(:,1))
+        %already hard-coded the offset to use in opt_cruise file
         co.dpoff = co.dpoff_checked(co.dpoff_checked(:,1)==stn,2);
-    elseif max(d.press(iid))>0.3
+    elseif min(d.press(iid))>0.3
+        warning('no deck interval at start of this cast? check')
+        keyboard
+        co.dpoff = input(sprintf('enter deck pressure offset (dbar) to be added to pressures for cast %s    ',stn_string));
+        warning('add to opt_cruise file under opt1 = ''ctd_proc'', opt2 = ''raw_corrs''')
+    elseif median(d.press(iid))>0.3
         warning('calculated deck pressure offset > 0.3; check')
         keyboard
-        co.dpoff = input(sprintf('enter deck pressure offset (dbar) to be added to pressures for cast %s    ',stn_string),'s');
+        co.dpoff = input(sprintf('enter deck pressure offset (dbar) to be added to pressures for cast %s    ',stn_string));
         warning('add to opt_cruise file under opt1 = ''ctd_proc'', opt2 = ''raw_corrs''')
     else
         co.dpoff = -median(d.press(iid),'omitnan');
@@ -170,14 +169,16 @@ if co.re_dooxyhyst
         %nothing applied yet; apply hyst_oxy2
         oco.hyst_oxy2 = co.hyst_oxy2;
     end
-    [dnew, hnew] = apply_oxyhyst(d, h, oco);
-    fn = fieldnames(dnew);
-    for no = 1:length(fn)
-        d.(fn{no}) = dnew.(fn{no});
-        doneco.([fn{no} 'hyst']) = 1;
+    if isfield(oco,'hyst_oxy1') || isfield(oco,'hyst_oxy2')
+        [dnew, hnew] = apply_oxyhyst(d, h, oco);
+        fn = fieldnames(dnew);
+        for no = 1:length(fn)
+            d.(fn{no}) = dnew.(fn{no});
+            doneco.([fn{no} 'hyst']) = 1;
+        end
+        h.comment = [h.comment hnew.comment];
+        disp('applied oxygen hysteresis')
     end
-    h.comment = [h.comment hnew.comment];
-    disp('applied oxygen hysteresis')
 elseif ~doneco.oxy1hyst
     warning('no oxygen hysteresis correction has been applied to %s',stn_string)
 end
@@ -210,17 +211,17 @@ end
 if co.doturbV
     d.turbidity = (d.turbidityV-co.turbVpars(2))*co.turbVpars(1);
     d = rmfield(d,'turbidityV');
-    hnew.comment = [hnew.comment '\n turbidity converted from turbidity volts'];
+    h.comment = [h.comment '\n turbidity converted from turbidity volts'];
     h.fldnam{strcmp('turbidityV',h.fldnam)} = 'turbidity';
     d = orderfields(d,h.fldnam);
 end
 
 %save record of corrections applied, so we don't have to parse it from the
-%comment string each time
-MEXEC_G.doneco(stnlocal) = doneco;
-
+%comment string each time***
+MEXEC_G.doneco(stn) = doneco;
 
 %%%%% user sensor calibrations (based on discrete sample data) %%%%%
+opt1 = 'ctd_proc'; opt2 = 'ctd_cals'; run(MEXEC_G.opt_cruise)
 if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
     %apply calibrations
     [dcal, hcal] = apply_calibrations(d, h, co.calstr, co.docal, 'q');
@@ -252,7 +253,7 @@ else
     m = true(size(d.scan));
 end
 if min(d.press(m))<=-3 && (~isfield(co,'badpress') || ((isfield(co,'badtemp1') || isfield(co,'badtemp2'))))
-    msg = ['negative pressures in ' c3file ' may indicate you should apply a deck ' ...
+    msg = ['negative pressures in ' cfile ' may indicate you should apply a deck ' ...
         '\npressure offset and/or apply range editing, despiking, or hand edits to remove '...
         '\noutliers. if large spikes also affect temperature, you should reprocess this station,'...
         '\nloading data to which the cell thermal mass correction has not yet been applied, '...

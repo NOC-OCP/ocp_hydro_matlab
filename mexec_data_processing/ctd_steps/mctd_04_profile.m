@@ -21,56 +21,51 @@ function mctd_04_profile(stn)
 %     setdef_cropt_cast (ctd_proc and mctd_04 cases)
 
 m_common; 
-if MEXEC_G.quiet<=1; fprintf(1,'averaging from 24 hz to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
+if MEXEC_G.quiet<=1; fprintf(1,'averaging from original resolution to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
-pd = mexec_file_locations('procfiles','ctd');
-file24 = sprintf(pd.ctd24,stn_string);
-file2d = sprintf(pd.ctd2d,stn_string);
-file2u = sprintf(pd.ctd2u,stn_string);
-pdd = mexec_file_locations('procfiles','dcs');
-dcsfile = sprintf(pdd.dcsfile,stn_string);
-
-MEXEC_A.Mprog = mfilename;
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+filer = sprintf(pfiles.ctd_cleancal,stn_string);
+file2d = sprintf(pfiles.ctd_2db_dn,stn_string);
+file2u = sprintf(pfiles.ctd_2db_up,stn_string);
+dcsfile = sprintf(pfiles.ctd_castcut,stn_string);
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[dd, hd] = mload(dcsfile,'statnum','dc24_start','dc24_bot','dc24_end','scan_end',' ');
+[dd, hd] = mload(dcsfile,'statnum','dcr_start','dcr_bot','dcr_end','scan_end',' ');
 if isempty(strfind(hd.comment,'manual')) && isempty(strfind(hd.comment,'inspected'))
     warning('using automatically detected cast start/bottom/end')
 end
-%***code to calculate dc24 from dc and scan if there is no dc24?***
+%***code to calculate dcr from dc and scan if there is no dcr?***
 % allow for the possibility that the dcs file contains many stations
 kf = find(dd.statnum == stn);
-dcstart = dd.dc24_start(kf);
-dcbot = dd.dc24_bot(kf);
-dcend = dd.dc24_end(kf);
+dcstart = dd.dcr_start(kf);
+dcbot = dd.dcr_bot(kf);
+dcend = dd.dcr_end(kf);
 
-minlen = 2*60*24; minbins = 10; %require at least 2 minutes and 10 dbar to make a profile
-
-if dcbot-dcstart>=minlen; isdown = 1; else; isdown = 0; end
-if dcend-dcbot>=minlen; isup = 1; else; isup = 0; end
+opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
+minlent = 2*60; minlenp = 10; %require at least 2 minutes and 10 dbar to make a profile
+if dcbot-dcstart>=minlent*infiles.ctd_raw_hz; isdown = true; else; isdown = false; end
+if dcend-dcbot>=minlent*infiles.ctd_raw_hz; isup = true; else; isup = false; end
 if ~isdown && ~isup
     warning('neither down nor up cast is longer than %d minutes; skipping', round(minlen/24/60))
     return
 end
 
+[d, h] = mload(filer, '/');
+opt1 = 'ctd_proc'; opt2 = 'profile'; run(MEXEC_G.opt_cruise)
+pg = (g2opts.pbin/2:g2opts.pbin:max(d.press)+g2opts.pbin/2)';
 
-%%%%% determine what variables will go in 2 dbar averaged files %%%%%
-%%%%% copy for downcast and upcast %%%%%
-
-[d, h] = mload(file24, '/');
-[var_copycell,~,iiv] = intersect(mcvars_list(1),h.fldnam);
-
-%use oxy_end to NaN that many seconds before dcs scan_start
 opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
+%use oxy_align to NaN that many seconds before dcs scan_start
 if co.oxy_align>0
-    oe = d.scan>=dd.scan_end-24*co.oxy_align;
+    opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
+    oe = d.scan>=dd.scan_end-infiles.ctd_raw_hz*co.oxy_align;
     oxyvars = h.fldnam(strncmp(h.fldnam,'oxy',3));
     for no = 1:size(oxyvars,1)
         d.(oxyvars{no})(oe) = NaN;
     end
     d.oxygen(oe) = NaN;
-    commentstr = ['edited out last ' num2str(co.oxy_align*24) ' scans from oxygen'];
+    commentstr = ['edited out last ' num2str(co.oxy_align*infiles.ctd_raw_hz) ' scans from oxygen'];
     if ~contains(h.comment, commentstr); h.comment = [h.comment '\n ' commentstr]; end
 end
 % d.oxy1_2 = interp1(d.time,d.oxy1,d.time+2);
@@ -82,29 +77,32 @@ end
 % h.fldunt = [h.fldunt 'umol/kg' 'umol/kg' 'umol/kg' 'umol/kg'];
 % iiv = [iiv' 55:58]';
 
+%%%%% determine what variables will go in 2 dbar averaged files %%%%%
+[var_copycell,~,iiv] = intersect(mcvars_to_average(1),h.fldnam);
+
 %%%%% separate downcast and upcast ranges %%%%%
 clear dn up
 hn = h;
 hn.fldnam = {}; hn.fldunt = {};
 for vno = 1:length(var_copycell)
     if isdown
-        dn.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_start:dd.dc24_bot);
+        dn.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dcr_start:dd.dcr_bot);
     end
     if isup
-        up.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dc24_bot:dd.dc24_end);
+        up.(var_copycell{vno}) = d.(var_copycell{vno})(dd.dcr_bot:dd.dcr_end);
     end
     hn.fldnam = [hn.fldnam var_copycell{vno}];
     hn.fldunt = [hn.fldunt h.fldunt{iiv(vno)}];
 end
-
-
-
+if isdown & max(dn.press)-min(dn.press)<minlenp
+        isdown = false;
+end
+if isup & max(up.press)-min(up.press)<minlenp
+    isup = false;
+end
+   
 %%%%% optionally loopedit downcast %%%%%
 if isdown
-    doloopedit = 0;
-    ptol = 0.08; %default is not to apply, but this would be the default value if you did
-    spdtol = 0.24; %default value from SBE program
-    opt1 = 'ctd_proc'; opt2 = 'doloopedit'; run(MEXEC_G.opt_cruise)
     if doloopedit
         vars_other = setdiff(var_copycell, {'press'});
         disp(['applying loopediting for ' otfile1d])
@@ -119,28 +117,16 @@ if isdown
 end
 
 %%%%% grid to 2 (or other) dbar %%%%%
-clear g2opts
-%these settings, along with the default of filling up to 1 s in the time
-%series, mean there is not at this stage any interpolation over more than 
-%2 dbar (which would necessitate a woce flag of 6)
-g2opts.postfill = 0; %don't fill after gridding
-g2opts.ignore_nan = 1;
-pg = [0:2:1e4]';
-g2opts.int = [-1 1]; %interval for bins
-g2opts.grid_ends = [0 0]; %discard empty bins
-g2opts.bin_partial = 0; %only use bins with data in both halves
-opt1 = 'ctd_proc'; opt2 = 'interp2db'; run(MEXEC_G.opt_cruise)
 if isdown
     dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
-    if sum(~isnan(dn2.press))<minbins
+    if sum(~isnan(dn2.press))<minlenp/g2opts.pbin
         isdown = 0;
     end
     [dn2, hn] = copy_sensor(dn2, hn, stn);
 end
 if isup
     up2 = grid_profile(up, 'press', pg, 'lfitbin', g2opts);
-    hnu = hn;
-    if sum(~isnan(up2.press))<minbins
+    if sum(~isnan(up2.press))<minlenp/g2opts.pbin
         isup = 0;
     end
     [up2, ~] = copy_sensor(up2, hn, stn);
@@ -155,7 +141,7 @@ if g2opts.postfill>0
     if isfinite(g2opts.postfill)
         commentstr = ['gaps up to ' num2str(g2opts.postfill) ' in 2 dbar filled using linear interpolation'];
     else
-        commentstr = ['gaps in 2 dbar filled using linear interpolation'];
+        commentstr = 'gaps in 2 dbar filled using linear interpolation';
     end
 end
 if ~contains(hn.comment, commentstr); hn.comment = [hn.comment '\n ' commentstr]; end
@@ -194,7 +180,7 @@ if ~contains(hn.comment, commentstr); hn.comment = [hn.comment commentstr]; end
 
 if isdown
     hnd = hn;
-    if ~contains(hnd.comment,commentd); hnd.comment = [commentd; '\n '; hnd.comment]; end
+    if ~contains(hnd.comment,commentd); hnd.comment = [commentd; '\n'; hnd.comment]; end
     mfsave(file2d, dn2, hnd);
 end
 

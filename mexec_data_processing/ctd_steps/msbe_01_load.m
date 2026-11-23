@@ -20,11 +20,16 @@ function varargout = msbe_01_load(stn)
 %%%%% setup %%%%%
 
 m_common; 
-opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
-opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise);
+opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise);
+if strcmp(infiles.ctd_raw,'no_file')
+    %use this for casts after the first in a yo-yo file
+    varargout{1} = [];
+    return
+end
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise);
 dataname = sprintf('ctd_%s_%s',MEXEC_G.mcruise,stn_string);
 infile = sprintf(infiles.ctd_raw,stn_string);
-otfile = sprintf(pfiles.ctd_cnv,stn_string);
+otfile = sprintf(pfiles.ctd_raw,stn_string);
 if MEXEC_G.quiet<=1; fprintf(1,'converting %s to %s\n',infile,rawfile); end
 
 % input and output files
@@ -71,7 +76,7 @@ end
 
 opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; run(MEXEC_G.opt_cruise)
 
-if ~isempty(extrasource) && ~isempty(extravars)
+if ~isempty(extrasource)
     %evaluate extrasource to calculate or change variables
     if MEXEC_G.quiet<=1; fprintf(1,'adding selected variables to ctd_%s_%s_raw.nc\n',mcruise,stn_string); end
     [d, h] = mctd_extra(d, h, extravars, extrasource);
@@ -91,34 +96,57 @@ if ~isempty(append_stn_strings)
         h.comment = [h.comment sprintf('\noffsetting ctd file %s by %d scans and appending to ctd file %s',append_stn_strings{fno},append_scan_offsets(fno),stn_string)];
         [d, h] = merge_mvars(d, h, dn, hn, 'scan', 1); %***no sort?
     end
+    out.append_stns = append_stn_strings;
 end
 
 if isempty(split_castnos_scans)
+    %normal, one cast per file
     mfsave(otfile, d, h)
     %add position at bottom of cast (from .cnv file if available, otherwise from underway)
     getpos_for_ctd(otfile,'write');
-    varargout{1} = [];
 
 else
 
     d0 = d; h0 = h;
-    keyboard
+    if size(split_castnos_scans,2)==1
+        ii = find(d0.press<10); ii = [ii(diff(ii)>24*60*5)];
+        ha(1) = subplot(211); plot(d0.scan, d0.press); grid; hold on
+        ha(2) = subplot(212);
+        for no = 1:length(ii)-1
+            iic = ii(no):ii(no+1);
+            axes(ha(1)); hl = plot(d0.scan(iic),d0.press(iic),'.r');
+            axes(ha(2)); plot(d0.scan(iic),d0.press(iic)); ylim([-2 15]); grid
+            [x(no),y(no)] = ginput(1);
+            axes(ha(1)); plot(d0.scan(d0.scan>x(no)),d0.press(d0.scan>x(no)));
+            delete(hl)
+        end
+        delete(ha(2))
+        set(ha(1),'position',[.1 .1 .85 .85])
+        ylim([-2 15])
+        keyboard
+    end
+    cb = [1; cell2mat(split_castnos_scans(:,2))];
     for fno = 1:size(split_castnos_scans,1)
-        otfile = sprintf(pfiles.ctd_raw,sprintf('%03d',split_castnos_scans(fno,1)));
-        m = d0.scan>=split_castnos_scans(fno,2) & d0.scan<=split_castnos_scans(fno,3);
-        keyboard %structfun?
-        d = structfun(@(x) x(m), d);
-        h = h0; h.comment = [h.comment '\n split from original ' h.dataname ' using scan range in opt_' mcruise '.m ctd_proc, ctd_raw_extra'];
+        otfile = sprintf(pfiles.ctd_raw,split_castnos_scans{fno,1});        
+        m = d0.scan>=cb(fno) & d0.scan<cb(fno+1);
+        d = structfun(@(x) x(m), d0, 'UniformOutput', false);
+        h = h0; h.comment = [h.comment sprintf('\n split from original, multi-cast %s using scan range %d to %d',infile,cb(fno),cb(fno+1))];
         %write file
         mfsave(otfile, d, h)
-        %add position at bottom of cast (from .cnv file if available, otherwise from underway)
+        %add position at bottom of cast (from file itself if available, otherwise from underway)
         getpos_for_ctd(otfile, 'write');
     end
-    varargout{1} = split_castnos_scans(:,1);
+    out.split_stns = cellfun(@(x) str2double(x), split_castnos_scans(:,1)); %***these are required to be numeric?
 end
 
 %other special cases e.g. typos in S/Ns
 opt1 = 'ctd_proc'; opt2 = 'header_edits'; run(MEXEC_G.opt_cruise)
+
+if exist('out','var')
+    varargout{1} = out;
+else
+    varargout{1} = [];
+end
 
 function [d, h] = mctd_extra(d, h, extravars, extrasource)
 

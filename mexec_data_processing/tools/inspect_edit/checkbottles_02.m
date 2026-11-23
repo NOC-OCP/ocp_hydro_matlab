@@ -35,9 +35,8 @@ nsubs = length(vnams)+3; % = length(varargin)+3
 
 %%%%%%%%% get data %%%%%%%%%
 
-opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise)
-opt1 = 'samp_proc'; opt2 = 'samp_pfiles'; run(MEXEC_G.opt_cruise)
-fnctd = sprintf(pfiles.ctd_1hz,stnlocal);
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+fnctd = sprintf(pfiles.ctd_1hz,stn);
 fnsamall = pfiles.samp_ctd;
 opt1 = 'outputs'; opt2 = 'section_for_station'; run(MEXEC_G.opt_cruise)
 if exist('sections','var')
@@ -46,13 +45,13 @@ else
     section = 'profiles_only';
 end
 opt1 = 'outputs'; opt2 = 'grid'; run(MEXEC_G.opt_cruise)
-stnlist = intersect(stnlocal-2:stnlocal+2,kstns);
+stnlist = intersect(stn-2:stn+2,kstns);
 if length(stnlist)<3
     warning('fewer than 2 neighbouring stations in section list; skipping')
     return
 end
 fngrid = fullfile(root_ctd, ['grid_' mcruise '_' section '.mat']);
-fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' sprintf('%03d',stnlocal)]);
+fndcs = fullfile(root_ctd, ['dcs_' mcruise '_' sprintf('%03d',stn)]);
 
 [dctd, hctd] = mload(fnctd,'/');
 [dsamall, ~]  = mload(fnsamall,'/');
@@ -73,14 +72,14 @@ kup = find(ctdtime > dcstime2 & ctdtime < dcstime3);
 tall = struct2table(dsamall);
 for ks = 1:length(stnlist)
     ms = tall.statnum==stnlist(ks);
-    if stnlist(ks)==stnlocal
+    if stnlist(ks)==stn
         if sum(ms)==0
             warning('no sample data for station %03d; skipping',stnlist(3))
             return
         end
         dsam = table2struct(tall(ms,:),'ToScalar',true);
     else
-        n = stnlist(ks)-stnlocal; if n<0; n = abs(n); s = 'l'; else; s = 'h'; end
+        n = stnlist(ks)-stn; if n<0; n = abs(n); s = 'l'; else; s = 'h'; end
        eval(['dsam' num2str(n) s ' = table2struct(tall(ms,:),''ToScalar'',true);']);
     end
 end
@@ -133,7 +132,7 @@ kbadpsal = find(dsam.botpsal_flag~=2);
 kbadsbe35 = find(dsam.sbe35temp_flag~=2);
 h1 = plot(dctd.psal(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
-title(['Stn ' sprintf('%03d',stnlocal)]);
+title(['Stn ' sprintf('%03d',stn)]);
 xlabel('psal');
 h2 = plot(dctd.psal(kup),-dctd.press(kup),'r-');
 h3 = plot(dsam.botpsal,-dsam.upress,'b+','markersize',m1);
@@ -156,7 +155,7 @@ kbadoxy = find(dsam.botoxy_flag~=2 & dsam.botoxy_flag~=6);
 
 plot(dctd.oxy(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
-title(['Stn ' sprintf('%03d',stnlocal)]);
+title(['Stn ' sprintf('%03d',stn)]);
 xlabel('oxy');
 plot(dctd.oxy(kup),-dctd.press(kup),'r-');
 plot(dsam.botoxy,-dsam.upress,'b+','markersize',m1);
@@ -169,7 +168,7 @@ subplot(1,nsubs,3)
 
 plot(dctd.potemp(kdown),-dctd.press(kdown),'m--'); 
 hold on; grid on;
-title(['Stn ' sprintf('%03d',stnlocal)]);
+title(['Stn ' sprintf('%03d',stn)]);
 xlabel('potemp/botoxytemp(b+)/sbe35temp(x)/nisks');
 plot(dctd.potemp(kup),-dctd.press(kup),'r-');
 plot(dsam.botoxya_temp,-dsam.upress,'b+','markersize',m1);
@@ -231,7 +230,7 @@ for veno = 1:nsubs-3
    kok3 = find(dflag1h == 2);
    kok4 = find(dflag2h == 2);
 
-   kmat = find(dgrid.statnum == stnlocal);
+   kmat = find(dgrid.statnum == stn);
    kbad = find(dflag ~= 2 & dflag~=6);
 
    subplot(1,nsubs,veno+3)
@@ -242,7 +241,7 @@ for veno = 1:nsubs-3
    if ~isempty(kok2); plot(d2l(kok2),-dsam2l.upress(kok2),'cs','markersize',m0); end %2 stations before % jc191 k and m are earlier, c and r are later
    if ~isempty(kok3); plot(d1h(kok3),-dsam1h.upress(kok3),'ms','markersize',m0); end
    if ~isempty(kok4); plot(d2h(kok4),-dsam2h.upress(kok4),'ro','markersize',m0); end %2 stations after
-   if veno==nsubs-4; title(['kc (left), b Stn ' sprintf('%03d',stnlocal) ' mr (right)']); end
+   if veno==nsubs-4; title(['kc (left), b Stn ' sprintf('%03d',stn) ' mr (right)']); end
    xlabel(vnam,'interpreter','none');
    plot(d,-dsam.upress,'b+','markersize',m1);
    plot(d(kbad),-dsam.upress(kbad),'k^','markersize',m2);

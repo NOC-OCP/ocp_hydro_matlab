@@ -21,14 +21,14 @@ function msbe_03_derive_tbin(stn)
 
 m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
-opt1 = 'ctd_proc'; opt2 = 'ctd_pfiles'; run(MEXEC_G.opt_cruise);
-file24 = sprintf(pfiles.ctd_cleancal,stn_string);
+opt1 = 'pfiles'; run(MEXEC_G.opt_cruise);
+filer = sprintf(pfiles.ctd_cleancal,stn_string);
 file1 = sprintf(pfiles.ctd_1hz,stn_string);
 file10 = sprintf(pfiles.ctd_10s,stn_string);
 filesv = sprintf(pfiles.svel,stn_string);
 
 %calculate derived variables
-[d, h] = mloadq(file24,'/');
+[d, h] = mloadq(filer,'/');
 iig = find(d.press>-1.495); %gsw won't work on p<=-1.495
 if length(iig)<length(d.press)
     m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points'};
@@ -74,15 +74,15 @@ end
 
 tic
 %save to _24hz file
-mfsave(file24, d, h);
+mfsave(filer, d, h);
 toc
 
 %identify and copy preferred sensor (for this station) to variable without
 %sensor number (e.g. psal = psal1)
 [d, h] = copy_sensor(d, h, stn);
 
-%find variables to copy, that are in both mcvars_list and the input file
-var_copycell = mcvars_list(1);
+%find variables to copy, that are in both mcvars_to_average and the input file
+var_copycell = mcvars_to_average(1);
 var_copycell = intersect(h.fldnam, var_copycell, 'stable');
 clear hnew dnew
 hnew.data_time_origin = h.data_time_origin; 
@@ -108,11 +108,12 @@ hnew = keep_hvatts(hnew, h);
 hnew.comment = h.comment;
 
 %average to 1hz, output to _1hz file
+opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise) %what was the original frequency?
 opt1 = 'ctd_proc'; opt2 = '1hz_interp'; run(MEXEC_G.opt_cruise)
 tg = [dnew.time(1):dnew.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew.time,1)>1; tg = tg'; end
 dnew0 = dnew;
-dnew = grid_1D(dnew, 'time', tg, 'meannum', 'num', 24, 'prefill', maxfill24, 'grid_ends', [0 0], 'postfill', maxfill1);
+dnew = grid_1D(dnew, 'time', tg, 'meannum', 'num', infiles.ctd_raw_hz, 'prefill', maxfillr, 'grid_ends', [0 0], 'postfill', maxfill1);
 %at this stage all the input flag fields were either 2 or 7, so anything > 2 becomes 7
 dnew = struct2table(dnew);
 % m = cellfun(@(x) endsWith(x,'_flag'),dnew.Properties.VariableNames);
@@ -123,7 +124,7 @@ mfsave(file1, dnew, hnew);
 %average to 0.1hz, output to _10s file and svel.csv file
 tg = [dnew0.time(1):10:dnew0.time(end)+1]; %end will be truncated anyway by setting grid_ends to 0
 if size(dnew0.time,1)>1; tg = tg'; end
-dnew = grid_1D(dnew0, 'time', tg, 'meannum', 'num', 240, 'prefill', 240, 'grid_ends', [0 0], 'postfill', 0);
+dnew = grid_1D(dnew0, 'time', tg, 'meannum', 'num', infiles.ctd_raw_hz*10, 'prefill', infiles.ctd_raw_hz*10, 'grid_ends', [0 0], 'postfill', 0);
 %at this stage all the input flag fields were either 2 or 7, so anything > 2 becomes 7
 dnew = struct2table(dnew);
 % m = cellfun(@(x) endsWith(x,'_flag'),dnew.Properties.VariableNames);

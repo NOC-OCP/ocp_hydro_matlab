@@ -220,7 +220,7 @@ end
 params.vars_units(:,4) = {'%f'}; %default
 
 %where possible, get format strings from m_exch_vars_list.m
-exvars = m_exch_vars_list(params.in); exvars = exvars(:,[3 1 2 4]);
+exvars = mvars_outvars_formats('exch', params.in); exvars = exvars(:,[3 1 2 4]);
 [~,ia,ib] = intersect(params.vars_units(:,1),exvars(:,1));
 params.vars_units(ia,3:4) = exvars(ib,3:4); 
 

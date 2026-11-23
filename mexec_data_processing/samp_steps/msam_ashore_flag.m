@@ -29,7 +29,7 @@ for stno = 1:length(samtypes)
 
     %get default units
     if do_empty_vars
-        evarsunts = m_exch_vars_list(2);
+        evarsunts = mvars_outvars_formats('exch','sam');
     end
 
     if ~iscell(fnin); fnin = {fnin}; end
