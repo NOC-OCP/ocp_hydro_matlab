@@ -134,6 +134,8 @@ if apply_repl_ave
 [dp, hnew] = repl_avg(dp, hnew, svars);
 end
 
+opt1 = 'samp_proc'; opt2 = 'flags'; get_cropt
+
 %***post-averaging conversions/calculations?
 
 % %limit variables to save
@@ -276,9 +278,10 @@ for nno = 1:length(vnames)
         temp = mean(temp,2,'omitnan'); %use temp of first recorded good value
     end
     %where two or more points were averaged, set flag to 6,
-    %unless both were flagged bad (4)***what about
-    %questionable (3)?
-    flag0(nav>1 & flag0<4) = 6;
+    %unless both were flagged bad (4) or questionable (3) ***KB kept questionable, because this is a quality
+    %assessment you want to keep and not override as average, 24/11/2026, DY214
+    flag0 = flag0(:,1);
+    flag0(nav>1 & flag0<3) = 6;
     %add new fields
     dp.(vname) = dataav;
     dp.(fname) = flag0;

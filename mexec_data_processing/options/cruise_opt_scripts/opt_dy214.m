@@ -668,21 +668,11 @@ case 'samp_proc'
                     m3 = ismember(ds_sal.sampnum,[409,411,2201,4001,4207,4309,4601,202608281716]);
                     ds_sal.flag(m3) = 3;
                     case 'oxy'
-                        %sampnum, a flag, b flag, c flag
-                        % flr = [...
-                        %     %2703 3 3 9; ...
-                        %     ];
-                        % [~,ifl,id] = intersect(flr(:,1),d.sampnum);
-                        % d.botoxya_flag(id) = max(d.botoxya_flag(id),flr(ifl,2));
-                        % d.botoxyb_flag(id) = max(d.botoxyb_flag(id),flr(ifl,3));
-                        % d.botoxyc_flag(id) = max(d.botoxyc_flag(id),flr(ifl,4));
                         % outliers relative to profile/CTD (not replicates)
-                        flag4 = [36]'; % this seems not to be applied
-                        gs.botoxy_flag(ismember(gs.statnum,flag4)) = 4;
-                        % flag4b = [1501 ]; %both a and b high, maybe bad niskin closure
-                        % d.botoxya_flag(ismember(d.sampnum,flag4b)) = 4;
-                        % d.botoxyb_flag(ismember(d.sampnum,flag4b)) = 4;
-   
+                        % The issue with the replicates is, that even
+                        % though all replicates are 3 they get flagged as 6
+                        % m = ismember(dp.sampnum,[3601:2:3619]);
+                        % dp.botoxy_flag(m) = 3;
                 end
         end
 %%%%%%%%%%%%%%%%%%%% end samp_proc %%%%%%%%%%
