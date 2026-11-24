@@ -569,10 +569,10 @@ case 'samp_proc'
             case 'mctd_evaluate_sensors'
                 switch parameter
                     case 'oxy'
-                        if useoxyratio
-                        p.rlim=1+[-.15 .15];
-                        p.edges = [p.rlim(1):.005:p.rlim(2)];
-                        end
+                        % if useoxyratio
+                        % p.rlim=1+[-.15 .15];
+                        % p.edges = [p.rlim(1):.005:p.rlim(2)];
+                        % end
                 end
             case 'restartsam'
                 restartsam = 0;
@@ -671,8 +671,9 @@ case 'samp_proc'
                         % outliers relative to profile/CTD (not replicates)
                         % The issue with the replicates is, that even
                         % though all replicates are 3 they get flagged as 6
-                        % m = ismember(dp.sampnum,[3601:2:3619]);
-                        % dp.botoxy_flag(m) = 3;
+                        % 
+                        m = ismember(dp.sampnum,[409 905 1201:2:1221 1307 4201 4601:2:4621]); 
+                        dp.botoxy_flag(m) = 3;
                 end
         end
 %%%%%%%%%%%%%%%%%%%% end samp_proc %%%%%%%%%%
