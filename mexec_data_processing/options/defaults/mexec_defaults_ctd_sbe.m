@@ -7,20 +7,11 @@ switch opt2
         %set patterns for input file paths and names (including %s
         %to be filled with stn_string as set by setup,
         %m_stn_string case above)
-        infiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', ['CTD_' MEXEC_G.mcruise '_%s.cnv']); %stn_string
-    case 'rawedit_auto'
-        foundit = true;
-        %when pumps are off
-        co.pumpsNaN.temp1 = 12; %based on jc159, T takes 1/2 s to recover
-        co.pumpsNaN.temp2 = 12;
-        co.pumpsNaN.cond1 = 12;
-        co.pumpsNaN.cond2 = 12;
-        co.pumpsNaN.oxy1 = 8*24; %based on jc159, O takes 8 s to recover
-        co.pumpsNaN.oxy2 = 8*24;
-    case 'raw_corrs'
+        infiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', ['CTD_' MEXEC_G.mcruise '_stn_string.cnv']); %stn_string
+    case 'raw_edits_corrs'
         foundit = true;
         sbe_ctd_coeffs %set co.hyst_oxy0 and co.pumpsNaN
-        co.dpoff_calc = 1; %try to calculate deck pressure from start of record
+        co.dpoff_calc = 60; %try to calculate deck pressure from first 60 s of record, when it is assumed to be stable on deck
         co.dpoff_checked = []; %list of 
         % number of seconds to shift oxygen earlier, based on delay in membrane response (varies from 1-8 S partially depending on temperature)
         co.oxy_align = 2; %check hysteresis first?
@@ -28,5 +19,8 @@ switch opt2
         %unusual: set dooxy1V or dooxy2V to 1 or 2 to recalculate using
         %temp1 or temp2
         co.dooxy1V = 0; co.dooxy2V = 0;
-        %set re_dooxyhyst = 1 to apply oxygen hysteresis correction
+        %apply default oxygen hysteresis correction (if it was already applied in SBE processing, and no new coefficients are supplied, this will be skipped)
+        co.re_dooxyhyst = 1;
+        co.hyst_oxy1 = co.hyst_oxy0; 
+        co.hyst_oxy2 = co.hyst_oxy0;
 end

@@ -1,13 +1,9 @@
 switch opt2
     case 'ladcp_files'
         foundit = true;
-        infiles.ladcp_raw = fullfile(MEXEC_G.data_root, 'ladcp', 'rawdata', '%s'); %stn_string
-        pfiles.forladcp_ctdnav = fullfile(MEXEC_G.data_root, 'ladcp', 'ctd', 'ctd.%s.02.asc'); %stn_string
-        if exist('inst','var')
-            pfiles.forladcp_sadcpav = fullfile(MEXEC_G.data_root, 'ladcp', 'sadcp', [inst '_' MEXEC_G.mcruise '_ctd_%s_forladcp.mat']); %stn_string
-        end
+        cfg.stnstr = stn_string;
         %file and format for ascii file of 1hz ctd data and corresponding nmea nav data
-        cfg.f.ctd = sprintf(pd.ctdnav_for_ix, stn_string);
+        cfg.f.ctd = fullfile(MEXEC_G.data_root, 'ladcp', 'ctd', sprintf('ctd.%s.asc',stn_string));
         cfg.f.ctd_header_lines      = 1;
         cfg.f.ctd_fields_per_line	= 6;
         cfg.f.ctd_time_base = 1; %year-day
@@ -22,11 +18,24 @@ switch opt2
         cfg.f.nav_time_field	= cfg.f.ctd_time_field;
         cfg.f.nav_lat_field 	= 5;
         cfg.f.nav_lon_field 	= 6;
+        if exist('inst','var')
+            %file for vmadcp data corresponding to this cast. if available, use
+            %the instrument/mode with deepest range
+            cfg.f.sadcp = replace(pfiles.sadcp_stnav,'stn_string',stn_string);
+        end
+        cfg.
+        cfg.rawdir = fullfile(MEXEC_G.data_root, 'ladcp','rawdata');
+        if stn==6
+            cfg.uppat = sprintf('UL%s00*m.000',cfg.stnstr);
+            cfg.dnpat = sprintf('DL%s00*s.000',cfg.stnstr);
+        else
+            cfg.uppat = sprintf('UL%s00*s.000',cfg.stnstr);
+            cfg.dnpat = sprintf('DL%s00*m.000',cfg.stnstr);
+        end
     case 'ladcp_cfg'
         foundit = true;
-        %file for vmadcp data corresponding to this cast. if available, use
-        %the instrument/mode with deepest range
-        cfg.f.sadcp = sprintf(pd.sadcp_for_ix,'os75nb',stn_string); 
+        cfg.p.cruise_id = MEXEC_G.mcruise;
+        cfg.p.ladcp_station = stn;
         %parameters for LADCP processing
         %cfg.p.magdec_source = 1;
         %cfg.p.drot = system()
@@ -35,5 +44,6 @@ switch opt2
         cfg.p.orig = 0; % save original data or not
         isul = 1; %is there an uplooker? process it first on its own
         cfg.p.ambiguity = 4.0; %this one is not used?
-        %cfg.p.vlim = 4.0; %this one is***require setting in opt_cruise
+        %cfg.p.vlim = 4.0; %no default set; check LADCP configuration and
+        %set to match
 end

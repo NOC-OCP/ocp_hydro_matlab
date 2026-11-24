@@ -30,7 +30,7 @@ if contains(mstarprefix,['not_' MEXEC_G.Mshipdatasystem])
 end
 
 %where to save processed data
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 root_out = fileparts(pfiles.uway_raw);
 % make output directory if it doesn't exist
 if exist(root_out,'dir') ~= 7

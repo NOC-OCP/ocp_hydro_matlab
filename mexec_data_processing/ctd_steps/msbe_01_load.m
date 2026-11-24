@@ -26,10 +26,10 @@ if strcmp(infiles.ctd_raw,'no_file')
     varargout{1} = [];
     return
 end
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise);
 dataname = sprintf('ctd_%s_%s',MEXEC_G.mcruise,stn_string);
-infile = sprintf(infiles.ctd_raw,stn_string);
-otfile = sprintf(pfiles.ctd_raw,stn_string);
+infile = replace(infiles.ctd_raw,'stn_string',stn_string);
+otfile = replace(pfiles.ctd_raw,'stn_string',stn_string);
 if MEXEC_G.quiet<=1; fprintf(1,'converting %s to %s\n',infile,rawfile); end
 
 % input and output files
@@ -85,7 +85,7 @@ end
 if ~isempty(append_stn_strings)
     %load additional files, and append
     for fno = 1:length(append_stn_strings)
-        addfile = sprintf(pd.ctdraw,append_stn_strings{fno});
+        addfile = replace(pd.ctdraw,append_stn_strings{fno});
         [dn, hn] = msbe_to_mstar(addfile,'y','y');
         if length(append_scan_offset)<fno || isnan(append_scan_offset(fno))
             %calculate from times
@@ -127,7 +127,7 @@ else
     end
     cb = [1; cell2mat(split_castnos_scans(:,2))];
     for fno = 1:size(split_castnos_scans,1)
-        otfile = sprintf(pfiles.ctd_raw,split_castnos_scans{fno,1});        
+        otfile = replace(pfiles.ctd_raw,split_castnos_scans{fno,1});        
         m = d0.scan>=cb(fno) & d0.scan<cb(fno+1);
         d = structfun(@(x) x(m), d0, 'UniformOutput', false);
         h = h0; h.comment = [h.comment sprintf('\n split from original, multi-cast %s using scan range %d to %d',infile,cb(fno),cb(fno+1))];

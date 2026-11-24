@@ -45,7 +45,7 @@ if ~isempty(a)
 end
 
 opt1 = 'samp_proc'; opt2 = 'samp_infiles'; run(MEXEC_G.opt_cruise)
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 
 restartsam = 0; restartusam = 0;
 if nargin>1

@@ -60,7 +60,7 @@ for no = 1:length(d)
 end
 
 
-fprintf(1,'initialising %s based on %s\n', cofile, deffile)
+fprintf(1,'initialising %s \nbased on %s\n', cofile, deffile)
 cfid = fopen(cofile,'w');
 fprintf(cfid,'%s processing settings for cruise %s\n\n','%',MEXEC_G.mcruise);
 %first write selected fields from current MEXEC_G as comments
@@ -94,9 +94,13 @@ fprintf(cfid,s);
 while cont
     s = fgets(dfid);
     if ~ischar(s); break; end
-    if strncmp(s,'        placeholder_',20)
+    if strncmp(s,'            placeholder_',24)
         s1 = replace(strtrim(s),'placeholder_datatypes_','');
         s2 = MEXEC_G.datatypes.(s1);
+        if strcmp(s2,'no')
+            %not working with this datatype; skip its defaults
+            continue
+        end
         dtfile = fullfile(fp,'defaults',sprintf('mexec_defaults_%s_%s.m',s1,s2));
         printed = false;
         if exist(dtfile,'file')
@@ -105,14 +109,14 @@ while cont
             while tcont
                 l = fgets(tfid);
                 if ~ischar(l); break; end
-                fprintf(cfid,'        %s',l); %these all start with switch opt2 but will be nested inside switch opt1, so print with extra indentation
+                fprintf(cfid,'            %s',l); %these all start with switch opt2 but will be nested inside switch opt1 and which, so print with extra indentation
                 printed = true;
             end
             fprintf(cfid,'\n');
             fclose(tfid);
         end
         if ~printed
-            warning('no mexec_defaults_ file found for %s; skipping placeholder',s)
+            warning('no mexec_defaults_%s_%s file found; skipping placeholder',s1,s2)
         end
     else
         fprintf(cfid,'%s',s);

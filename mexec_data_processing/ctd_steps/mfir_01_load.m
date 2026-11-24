@@ -8,8 +8,8 @@ m_common
 
 % input file names
 opt1 = 'ctd_proc'; opt2 = 'nisk_infiles'; run(MEXEC_G.opt_cruise)
-opt1 = opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
-infile = sprintf(infiles.ctd_nisk_fir,stn_string);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+infile = replace(infiles.ctd_nisk_fir,'stn_string',stn_string);
 if ~exist(infile,'file')
     fprintf(2,'Niskin bottle file for cast %03d not found; try sync again and enter to continue\n',stn); 
     pause
@@ -19,7 +19,7 @@ if ~exist(infile,'file')
     end
 end
 if MEXEC_G.quiet<=1; fprintf(1,['reading in .bl file to ' dataname '.nc\n'],stn_string); end
-otfile = sprintf(pfiles.ctd_nisk,stn_string);
+otfile = replace(pfiles.ctd_nisk,'stn_string',stn_string);
 
 %read firing position and scan number when fired 
 [pos, scn] = msbe_niskins_load(infile);
@@ -31,7 +31,7 @@ for no = 1:length(append_stn_strings)
     if isnan(append_scan_offsets(no))
         warning('not applying NaN offset to .bl scan number for %s',stn_string)
     else
-        infile = sprintf(pfiles.ctd_nisk,stn_string);
+        infile = replace(pfiles.ctd_nisk,'stn_string',stn_string);
         if exist(infile,'file')
             %load and append
             [p, s] = msbe_niskins_load(infile);

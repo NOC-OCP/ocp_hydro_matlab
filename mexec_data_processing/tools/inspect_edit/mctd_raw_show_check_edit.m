@@ -13,13 +13,13 @@ function ed = mctd_raw_show_check_edit(stn, varargin)
 
 m_common
 if MEXEC_G.quiet<=1; fprintf(1,'plotting original and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
-cfile = m_add_nc(sprintf(pfiles.ctd_cleancal,stn_string));
-rfile = m_add_nc(sprintf(pfiles.ctd_raw,stn_string));
-efilepre = sprintf(pfiles.ctd_editsrecords,stn_string);
-infile1 = sprintf(pfiles.ctd_1hz,stn_string);
-infiled = sprintf(pfiles.ctd_castcut,stn_string);
+cfile = replace(pfiles.ctd_cleancal,'stn_string',stn_string);
+rfile = replace(pfiles.ctd_raw,'stn_string',stn_string);
+efilepre = replace(pfiles.ctd_editsrecords,'stn_string',stn_string);
+infile1 = replace(pfiles.ctd_1hz,'stn_string',stn_string);
+infiled = replace(pfiles.ctd_castcut,'stn_string',stn_string);
 
 if nargin>1
     rt = varargin{1};
@@ -65,7 +65,7 @@ warn = 0;
 for gno = 1:ng
     
     % for each parameter in group, plot both sensors, 1 hz dashed on top of 24 hz
-    figure(gno); clf; pause(0.2)
+    figure(gno); clf; pause(0.5)
     nr = length(rppars{gno});
     t(gno) = tiledlayout(nr,1,'TileSpacing','compact');
     ax = zeros(nr,1);
@@ -92,7 +92,7 @@ for gno = 1:ng
                     ylabel([p ' (' h.fldunt{strcmp(h.fldnam,v{sno})} ')']);
                 end
             end
-            xlim(d.scan([1 end])); ylim(yl.(p)); pause(0.1)
+            xlim(d.scan([1 end])); ylim(yl.(p)); pause(0.5)
         end
     end
     if gno==1; ax_save = ax; end
@@ -102,7 +102,7 @@ for gno = 1:ng
 
 end
 
-pause(0.2)
+pause(0.5)
 figure(1)
 a = 'p';
 while ~isempty(a)

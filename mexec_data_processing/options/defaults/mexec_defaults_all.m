@@ -38,44 +38,45 @@ while ~foundit & ~outofopts
                         stn = input('type stn number ');
                     end
                     stn_string = sprintf('%03d',stn); %used for file names, default: 001, 002, etc.
-                    stnlocal = stn;
-            end
-
-        case 'pfiles'
-            foundit = true;
-            helptext = 'specify paths and names of processed data files (created by mexec_data_processing, and possibly used by later steps)';
-            pfiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_cnv.nc']); %stn_string
-            pfiles.ctd_cleancal = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_24hz.nc']); %stn_string
-            pfiles.ctd_editsrecords = fullfile(MEXEC_G.data_root, 'ctd', 'editlogs', 'ctd_%s_editpoints'); %stn_string %files that go into producing pfiles.ctd_clean from pfiles.ctd_raw
-            pfiles.ctd_1hz = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_1hz.nc']); %stn_string
-            pfiles.ctd_10s = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_10s.nc']); %stn_string
-            pfiles.ctd_2db_dn = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_2db.nc']); %stn_string
-            pfiles.ctd_2db_up = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_%s_2up.nc']); %stn_string
-            pfiles.ctd_nisk = fullfile(MEXEC_G.data_root, 'ctd', ['fir_' MEXEC_G.mcruise '_%s.nc']); %stn_string
-            pfiles.ctd_castcut = fullfile(MEXEC_G.data_root, 'ctd', ['dcs_' MEXEC_G.mcruise '_%s.nc']); %stn_string
-            %pfiles.ctd_win = fullfile(MEXEC_G.data_root, 'ctd', 'WINCH', ['win_' MEXEC_G.mcruise '_%s.nc']); %stn_string
-            %other standard outputs
-            pfiles.svel = fullfile(MEXEC_G.data_root, 'bathy', 'svel_for_echosounders', ['ctd_' MEXEC_G.mcruise '_10s_down_svel.csv']);
-            pfiles.ctd_nisk_sum = fullfile(MEXEC_G.data_root, 'collected_files', ['station_summary_' MEXEC_G.mcruise '_all.nc']); %***
-            pfiles.sbe35 = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', 'SBE35', ['sbe35_' MEXEC_G.mcruise '_all.nc']);
-            if exist('samtyp','var')
-                pfiles.(samtyp) = fullfile(MEXEC_G.data_root, 'bottle_samples', [samtyp '_' MEXEC_G.mcruise '_all.nc']);
-            end
-            %combined files for all sample (and comparison sensor) data
-            pfiles.samp_ctd = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_nisk_' MEXEC_G.mcruise '_all.nc']);
-            pfiles.samp_uway = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_ucsw_' MEXEC_G.mcruise '_all.nc']);
-            %underway data files
-            if exist('mtable','var') && exist('m','var')
-                pfiles.uway_raw = fullfile(MEXEC_G.data_root,mtable.mstardir{m},['%s_' MEXEC_G.mcruise '_all_raw.nc']); %abbrev
-                pfiles.uway_edt = fullfile(MEXEC_G.data_root,mtable.mstardir{m},['%s_' MEXEC_G.mcruise '_all_edt.nc']); %abbrev
-            end
-            pfiles.nav_final = fullfile(MEXEC_G.data_root, 'nav', ['bestnav_' MEXEC_G.mcruise '_all.nc']);
-            pfiles.uocean_final = fullfile(MEXEC_G.data_root, 'surfmet', ['surface_ocean_' MEXEC_G.mcruise '_all.nc']);
-            pfiles.met_final = fullfile(MEXEC_G.data_root, 'surfmet', ['atmos_truwind_' MEXEC_G.mcruise '_all.nc']);
-            pfiles.bathy_final = fullfile(MEXEC_G.data_root, 'bathy', ['bathy_' MEXEC_G.mcruise '_all.nc']);
-            %adcp
-            if exist('inst','var')
-                pfiles.sadcp_stnav = fullfile(MEXEC_G.data_root, 'vmadcp', 'mproc', [inst '_' MEXEC_G.mcruise '_%s_ave.nc']); %stn_string
+                case 'pfiles'
+                    %in the below fields of pfiles, stn_string and abbrev
+                    %will be replaced by the values of those variables in
+                    %the calling functions
+                    foundit = true;
+                    helptext = 'specify paths and names of processed data files (created by mexec_data_processing, and possibly used by later steps)';
+                    pfiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_cnv.nc']); %stn_string
+                    pfiles.ctd_cleancal = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_24hz.nc']); %stn_string
+                    pfiles.ctd_editsrecords = fullfile(MEXEC_G.data_root, 'ctd', 'editlogs', 'ctd_stn_string_editpoints'); %stn_string %files that go into producing pfiles.ctd_clean from pfiles.ctd_raw
+                    pfiles.ctd_1hz = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_1hz.nc']); %stn_string
+                    pfiles.ctd_10s = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_10s.nc']); %stn_string
+                    pfiles.ctd_2db_dn = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_2db.nc']); %stn_string
+                    pfiles.ctd_2db_up = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_2up.nc']); %stn_string
+                    pfiles.ctd_nisk = fullfile(MEXEC_G.data_root, 'ctd', ['fir_' MEXEC_G.mcruise '_stn_string.nc']); %stn_string
+                    pfiles.ctd_castcut = fullfile(MEXEC_G.data_root, 'ctd', ['dcs_' MEXEC_G.mcruise '_stn_string.nc']); %stn_string
+                    pfiles.ctd_win = fullfile(MEXEC_G.data_root, 'ctd', 'WINCH', ['win_' MEXEC_G.mcruise '_stn_string.nc']); %stn_string
+                    %other standard outputs
+                    pfiles.svel = fullfile(MEXEC_G.data_root, 'bathy', 'svel_for_echosounders', ['ctd_' MEXEC_G.mcruise '_10s_down_svel.csv']);
+                    pfiles.ctd_nisk_sum = fullfile(MEXEC_G.data_root, 'collected_files', ['station_summary_' MEXEC_G.mcruise '_all.nc']); %***
+                    pfiles.sbe35 = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', 'SBE35', ['sbe35_' MEXEC_G.mcruise '_all.nc']);
+                    if exist('samtyp','var')
+                        pfiles.(samtyp) = fullfile(MEXEC_G.data_root, 'bottle_samples', [samtyp '_' MEXEC_G.mcruise '_all.nc']);
+                    end
+                    %combined files for all sample (and comparison sensor) data
+                    pfiles.samp_ctd = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_nisk_' MEXEC_G.mcruise '_all.nc']);
+                    pfiles.samp_uway = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_ucsw_' MEXEC_G.mcruise '_all.nc']);
+                    %underway data files
+                    if exist('mtable','var') && exist('m','var')
+                        pfiles.uway_raw = fullfile(MEXEC_G.data_root,mtable.mstardir{m},['abbrev_' MEXEC_G.mcruise '_all_raw.nc']); %abbrev
+                        pfiles.uway_edt = fullfile(MEXEC_G.data_root,mtable.mstardir{m},['abbrev_' MEXEC_G.mcruise '_all_edt.nc']); %abbrev
+                    end
+                    pfiles.nav_final = fullfile(MEXEC_G.data_root, 'nav', ['bestnav_' MEXEC_G.mcruise '_all.nc']);
+                    pfiles.uocean_final = fullfile(MEXEC_G.data_root, 'surfmet', ['surface_ocean_' MEXEC_G.mcruise '_all.nc']);
+                    pfiles.met_final = fullfile(MEXEC_G.data_root, 'surfmet', ['atmos_truwind_' MEXEC_G.mcruise '_all.nc']);
+                    pfiles.bathy_final = fullfile(MEXEC_G.data_root, 'bathy', ['bathy_' MEXEC_G.mcruise '_all.nc']);
+                    %adcp
+                    if exist('inst','var')
+                        pfiles.sadcp_stnav = fullfile(MEXEC_G.data_root, 'vmadcp', 'mproc', [inst '_' MEXEC_G.mcruise '_stn_string_ave.nc']); %stn_string
+                    end
             end
 
         case 'adcp_proc'
@@ -103,6 +104,8 @@ while ~foundit & ~outofopts
                 case 'header_edits'
                     foundit = true;
                     helptext = 'edit CTD file header information, e.g. cruise code, PI, etc.';
+                case 'metadata_edits'
+                    add_stns_depths_times = []; %add or replace in list
                 case 'ctd_cals'
                     foundit = true;
                     co.docal.temp = 0; %do not apply any user calibration to temp
@@ -121,10 +124,28 @@ while ~foundit & ~outofopts
                     %calculate oxy1 from volts, and temp2 to calculate oxy2
                     ts_choice = 1; %CTD1 is preferred; temp = temp1; cond = cond1
                     o_choice = 1; %CTD-DO1 is preferred; oxy = oxy1
+                case 'ctd_checkplots'
+                    foundit = true;
+                    saltype = 'psal'; %plot practical salinity
                 case '1hz_interp'
                     foundit = true;
-                    maxfill24 = 24;
-                    maxfill1 = 1;
+                    maxfillr = infiles.ctd_raw_hz/2; %fill up to 0.5 s in cleancal data before averaging to 1 hz
+                    maxfill1 = 1; %fill up to 1 s after averaging to 1 hz
+                case 'profiles'
+                    foundit = true;
+                    doloopedit = 0;
+                    ptol = 0.08; %default is not to apply if doloopedit = 0, but these would be the default values if you did
+                    spdtol = 0.24; %default value from SBE program
+                    %these settings, along with the default of filling up to 1 s in the time
+                    %series, mean there is not at this stage any interpolation over more than
+                    %2 dbar (which would necessitate a woce flag of 6)
+                    g2opts.pbin = 2; %2 dbar bins
+                    g2opts.postfill = 0; %don't fill after gridding
+                    g2opts.ignore_nan = 1;
+                    pg = [0:2:1e4]';
+                    g2opts.int = [-1 1]; %interval for bins
+                    g2opts.grid_ends = [0 0]; %discard empty bins
+                    g2opts.bin_partial = 0; %only use bins with data in both halves
                 case 'cast_divide'
                     foundit = true;
                     force_auto.start = 0; force_auto.bot = 0; force_auto.end = 0;
@@ -165,8 +186,9 @@ while ~foundit & ~outofopts
                     end
                 case 'nisk_numbers'
                     foundit = true;
-                    niskin_number = [1:24]'; %replace with S/N, bedford number, etc.
-                    niskin_pos = [1:24]'; %position on firing carousel
+                    nnisk = 24;
+                    niskin_pos = (1:nnsik)'; %position on firing carousel
+                    niskin_number = (1:nnisk)'; %replace with S/N, bedford number, etc.
                 case 'fir_fill'
                     foundit = true;
                     firmethod = 'medint';
@@ -356,14 +378,70 @@ while ~foundit & ~outofopts
 
         case 'outputs'
             switch opt2
+                case 'station_lists'
+                    foundit = true;
+                    %statnums for each section
+                    kstns.all = [1:999];
+                case 'summary_counts'
+                    foundit = true;
+                    samp_groups.sal = {'botpsal'};
+                    samp_groups.oxy = {'botoxy'};
+                    samp_groups.nut = {'silc','phos','totnit'};
                 case 'grid'
                     foundit = true;
-                    ctd_regridlist  = {'temp' 'psal' 'potemp' 'oxy'}; %grid these variables
-                    sam_gridlist = {'botpsal' 'botoxy'}; %grid these variables
+                    ctd_regridlist  = {'temp' 'psal' 'potemp' 'oxy', 'fluor', 'transmittance', 'par'}; %grid these variables
+                    sam_gridlist = {'botpsal', 'botoxy', 'silc', 'phos', 'totnit'}; %grid these variables
+                    mgrid.sdata_flag_accept = [2 3]; %or just 2
+                    if strcmp(section,'ungridded')
+                        otfile = fullfile(MEXEC_G.data_root,'ctd',['allctd_' MEXEC_G.mcruise '_2db.mat']);
+                    elseif strcmp(section,'quick')
+                        otfile = fullfile(MEXEC_G.data_root,'ctd',['allctd_' MEXEC_G.mcruise '_quick.mat']);
+                    else
+                        otfile = fullfile(MEXEC_G.data_root,'mapped',['grid_' MEXEC_G.mcruise '_' section '.mat']);
+                    end
+                case 'section_for_station'
+                    foundit = true;
+                    %set list of sections (from station_lists above) that
+                    %correspond to this station?
+                case 'columndata'
+                    foundit = true;
+                    outtypes = {'bodc','exch'};
                 case 'exch'
                     foundit = true;
                     expocode = 'unknown';
                     sect_id = '';
+                    submitter = whoami; %group institution person
+                    ns = nan;
+                    common_headstr = {'#Ship: ';...
+                        '#Cruise ';...
+                        '#Region ';...
+                        ['#EXPOCODE: ' expocode];...
+                        '#DATES:  - ';...
+                        '#Chief Scientist: Name (Institution); Co-Chief Scientist: Name (Institution)';...
+                        '#Supported by '};
+                    if strcmp(params.in,'ctd')
+                        headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
+                        headstring = [headstring; common_headstr;
+                            {sprintf('#%d stations with 24-place rosette',ns);...
+                            '#CTD: Who - ; Status - .';... %preliminary/final
+                            % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                            '# DEPTH_TYPE   : ';... %COR / UNCOR
+                            % '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
+                            }];
+                    else
+                        headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
+                        headstring = [headstring; common_headstr;
+                            {sprintf('#%d stations with 24-place rosette',ns);...
+                            '#CTD: Who - ; Status - ';...
+                            '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
+                            % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
+                            % '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom';...
+                            '#Salinity: Who - ; Status - ; SSW batch P   .';...
+                            '#Oxygen: Who - ; Status - .';...
+                            %'#Nutrients: Who - ; Status - .';...
+                            % '#DIC and Talk: Who - ; Status - .';...
+                            }];
+                    end
                     vars_exclude_ctd = {}; %changed jc238 from {'fluor' 'transmittance'};
                     vars_exclude_sam = {};
                     vars_rename = {}; %first column in m_exch_vars_list, newname (e.g. CTDTURB, CTDBETA650_124)

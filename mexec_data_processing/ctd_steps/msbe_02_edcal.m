@@ -31,11 +31,11 @@ if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hy
 
 % input and output files, and some information about the raw file
 opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
-rawfile = sprintf(pfiles.ctd_raw,stn_string);
-cfile = sprintf(pfiles.ctd_cleancal,stn_string);
-edfilepre = sprintf(pfiles.ctd_editsrecords, stn_string);
-dfile = sprintf(pfiles.ctd_castcut,stn_string);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+rawfile = replace(pfiles.ctd_raw,'stn_string',stn_string);
+cfile = replace(pfiles.ctd_cleancal,'stn_string',stn_string);
+edfilepre = replace(pfiles.ctd_editsrecords,'stn_string',stn_string);
+dfile = replace(pfiles.ctd_castcut,'stn_string',stn_string);
 
 % start from the raw (cnv) file
 [d, h] = mloadq(rawfile,'/');
@@ -60,7 +60,7 @@ if ~isempty(comment)
 end
 
 %now apply automatic edits (pumpsNaN, despike, rangelim, badvar, and anonymous functions coded in co.special)
-opt1 = 'ctd_proc'; opt2 = 'rawedit_auto'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'raw_edits_corrs'; run(MEXEC_G.opt_cruise)
 %fn = setdiff(fieldnames(d),{'statnum','latitude','longitude','altimeter','scan','pumps','time'});
 % for fno = 1:length(fn)
 %     d.([fn{fno} '_flag']) = 2+zeros(size(d.scan));
@@ -81,7 +81,6 @@ h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldser
 
 
 %%%%% apply corrections %%%%%
-opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
 
 %pressure offset (deck pressure)
 if co.dpoff_calc>0

@@ -48,7 +48,7 @@ else
     end
 end
 
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 if ~exist(otfile,'file') || ~exist('ctd_regridlist','var')
     ctd_regridlist = {'temp' 'psal' 'oxy'};
     if strcmp(section,'quick')
@@ -72,9 +72,9 @@ else
     for kstn = 1:length(kstns)
         stn = kstns(kstn); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
         if strcmp(section,'quick')
-            cfile = sprintf(pfiles.ctd_10s,stn_string);
+            cfile = replace(pfiles.ctd_10s,'stn_string',stn_string);
         else
-            cfile = sprintf(pfiles.ctd_2db_dn,stn_string);
+            cfile = replace(pfiles.ctd_2db_dn,'stn_string',stn_string);
         end
         if ~exist(m_add_nc(cfile),'file')
             if strcmp(section,'quick')

@@ -12,9 +12,9 @@ function mdcs_01_auto(stn)
 m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'finding scan numbers corresponding to cast segments for dcs_%s_%s.nc\n',mcruise,stn_string); end
 
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
-file1 = sprintf(pfiles.ctd_1hz,stn_string);
-dfile = sprintf(pfiles.ctd_castcut,stn_string);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+file1 = replace(pfiles.ctd_1hz,stn_string);
+dfile = replace(pfiles.ctd_castcut,stn_string);
 h1 = m_read_header(file1);
 if ~isempty(intersect(h1.fldnam,'pumps'))
     [d1, ~] = mloadq(file1,'time','scan','press','pumps',' ');
@@ -101,7 +101,7 @@ if ~isfield(ds,'dc_end') || force_auto.end
 end
 
 %corresponding indices in raw file
-dr = mloadq(sprintf(pfiles.ctd_cleancal,stn_string),'scan',' ');
+dr = mloadq(replace(pfiles.ctd_cleancal,stn_string),'scan',' ');
 [~,ds.dcr_bot] = min(abs(dr.scan-ds.scan_bot));
 [~,ds.dcr_start] = min(abs(dr.scan-ds.scan_start));
 [~,ds.dcr_end] = min(abs(dr.scan-ds.scan_end));

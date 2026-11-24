@@ -23,11 +23,11 @@ function mctd_04_profile(stn)
 m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from original resolution to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
-filer = sprintf(pfiles.ctd_cleancal,stn_string);
-file2d = sprintf(pfiles.ctd_2db_dn,stn_string);
-file2u = sprintf(pfiles.ctd_2db_up,stn_string);
-dcsfile = sprintf(pfiles.ctd_castcut,stn_string);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+filer = replace(pfiles.ctd_cleancal,'stn_string',stn_string);
+file2d = replace(pfiles.ctd_2db_dn,'stn_string',stn_string);
+file2u = replace(pfiles.ctd_2db_up,'stn_string',stn_string);
+dcsfile = replace(pfiles.ctd_castcut,'stn_string',stn_string);
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
@@ -52,10 +52,10 @@ if ~isdown && ~isup
 end
 
 [d, h] = mload(filer, '/');
-opt1 = 'ctd_proc'; opt2 = 'profile'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'profiles'; run(MEXEC_G.opt_cruise)
 pg = (g2opts.pbin/2:g2opts.pbin:max(d.press)+g2opts.pbin/2)';
 
-opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
+opt1 = 'ctd_proc'; opt2 = 'raw_edits_corrs'; run(MEXEC_G.opt_cruise)
 %use oxy_align to NaN that many seconds before dcs scan_start
 if co.oxy_align>0
     opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
@@ -118,14 +118,14 @@ end
 
 %%%%% grid to 2 (or other) dbar %%%%%
 if isdown
-    dn2 = grid_profile(dn, 'press', pg, 'lfitbin', g2opts);
+    dn2 = grid_1D(dn, 'press', pg, 'lfitbin', g2opts);
     if sum(~isnan(dn2.press))<minlenp/g2opts.pbin
         isdown = 0;
     end
     [dn2, hn] = copy_sensor(dn2, hn, stn);
 end
 if isup
-    up2 = grid_profile(up, 'press', pg, 'lfitbin', g2opts);
+    up2 = grid_1D(up, 'press', pg, 'lfitbin', g2opts);
     if sum(~isnan(up2.press))<minlenp/g2opts.pbin
         isup = 0;
     end

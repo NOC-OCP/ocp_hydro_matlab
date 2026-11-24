@@ -60,7 +60,7 @@ opt1 = 'adcp_proc'; opt2 = 'sadcp_files'; run(MEXEC_G.opt_cruise)
 %get start and end times
 if strcmp(cast_select,'ctd')
     opt1 = 'ctd_proc'; opt2 = 'ctd_files'; run(MEXEC_G.opt_cruise)
-    dcsfile = fullfile(sprintf(pfiles.ctd_castcut,stn_string));
+    dcsfile = fullfile(replace(pfiles.ctd_castcut,'stn_string',stn_string));
     [dd, hd] = mloadq(dcsfile,'/');
     tstart = m_commontime(dd,'time_start',hd,'datenum');
     tend = m_commontime(dd,'time_end',hd,'datenum');
@@ -162,7 +162,7 @@ else
     ha.comment = [h.comment sprintf('\n averaged over %s to %s from %s',sstart,send,time_list_file)];
 end
 
-mfsave(sprintf(pfiles.sadcp_av,stn_string),da,ha); 
+mfsave(replace(pfiles.sadcp_av,'stn_string',stn_string),da,ha); 
 
 opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf

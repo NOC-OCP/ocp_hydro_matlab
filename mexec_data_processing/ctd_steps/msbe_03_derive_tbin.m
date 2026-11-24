@@ -21,11 +21,11 @@ function msbe_03_derive_tbin(stn)
 
 m_common; 
 if MEXEC_G.quiet<=1; fprintf(1,'choosing preferred sensor, computing salinity, averaging to 1 hz for ctd_%s_%s_psal.nc\n',mcruise,stn_string); end
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise);
-filer = sprintf(pfiles.ctd_cleancal,stn_string);
-file1 = sprintf(pfiles.ctd_1hz,stn_string);
-file10 = sprintf(pfiles.ctd_10s,stn_string);
-filesv = sprintf(pfiles.svel,stn_string);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise);
+filer = replace(pfiles.ctd_cleancal,'stn_string',stn_string);
+file1 = replace(pfiles.ctd_1hz,'stn_string',stn_string);
+file10 = replace(pfiles.ctd_10s,'stn_string',stn_string);
+filesv = replace(pfiles.svel,'stn_string',stn_string);
 
 %calculate derived variables
 [d, h] = mloadq(filer,'/');

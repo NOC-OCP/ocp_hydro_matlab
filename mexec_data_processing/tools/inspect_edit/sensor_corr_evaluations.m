@@ -18,9 +18,11 @@ function sensor_corr_evaluations(param, klist)
 m_common
 mcruise = MEXEC_G.MSCRIPT_CRUISE_STRING;
 
-pd = mexec_file_locations('procfiles','ctd');
-load(pd.sg)
-sn_list = sn_list.(param);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+[ds,hs] = mload(pfiles.samp_ctd);
+m = strncmp(hs.fldnam,['u' param],length(param)+1);
+ds = struct2table(ds); ds = ds(:,m);
+sn_list = unique(ds{:,:});
 
 %load all data
 nstn = length(klist); nsns = length(sn_list); ncols = nstn*nsns;
@@ -40,15 +42,15 @@ end
 nc = 1;
 for stn = klist
     opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
-    infile = sprintf(pd.ctd2d,stn_string);
+    infile = replace(pfiles.ctd_2db_dn,'stn_string',stn_string);
     if ~exist(infile,'file')
         continue
     end
     [d2,h2] = mload(infile,'press oxy1 oxy2 potemp1 potemp2 psal1 psal2');
     if strcmp(param,'oxy')
-        infile = sprintf(pd.ctd10s,stn_string);
+        infile = replace(pfiles.ctd_10s,'stn_string',stn_string);
         [d10,h10] = mload(infile,'press oxy1 oxy2 potemp1 potemp2 time');
-        infile = sprintf(pd.ctdraw,stn_string);
+        infile = sprintf(pfiles.ctd_raw,'stn_string',stn_string); %or ctd_cleancal?
         [dr,hr] = mload(infile,'scan cond1 cond2 oxy1 oxy2 pumps');
     end
     [~,ia,ib] = intersect(pg,d2.press,'stable');

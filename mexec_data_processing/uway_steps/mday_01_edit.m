@@ -23,13 +23,13 @@ didedits = 0;
 
 %definitions
 ii = find(strcmp(abbrev,mtable.mstarpre));
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
-infile = sprintf(pfiles.uway_raw, abbrev);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+infile = replace(pfiles.uway_raw, 'abbrev', abbrev);
 if ~exist(m_add_nc(infile),'file')
     warning('no %s, skipping', infile)
     return
 end
-otfile = sprintf(pfiles.uway_edt, abbrev);
+otfile = replace(pfiles.uway_edt, 'abbrev', abbrev);
 if exist(otfile,'file')
     didedits = 1; %always add days to file if it already exists
 end

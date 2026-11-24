@@ -7,5 +7,5 @@ switch opt2
         %set patterns for input file paths and names (including %s
         %to be filled with stn_string as set by setup,
         %m_stn_string case above)
-        infiles.ctd_nisk_fir = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', ['CTD_' MEXEC_G.mcruise '_%s.bl']); %stn_string
+        infiles.ctd_nisk_fir = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', ['CTD_' MEXEC_G.mcruise '_stn_string.bl']); %stn_string
 end

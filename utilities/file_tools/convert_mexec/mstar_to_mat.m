@@ -18,7 +18,11 @@ if exist('stn','var')
 else
     stn = input('type stn number ');
 end
-stn_string = sprintf('%03d',stn);
+if exist('MEXEC_G','var') && isfield(MEXEC_G,'opt_cruise') && exist(MEXEC_G.opt_cruise,'file')
+    opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
+else
+    stn_string = sprintf('%03d',stn);
+end
 stnlocal = stn;
 clear stn % so that it doesn't persist
 

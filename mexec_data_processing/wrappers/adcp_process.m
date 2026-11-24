@@ -21,6 +21,7 @@ function adcp_process(klist, types, varargin)
 %add option to call mvad_station_av***
 
 m_common
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 ladcp_pause = 1;
 ladcp_constraints = {'GPS','BT','SADCP'};
 ladcp_incr = 1;
@@ -31,7 +32,7 @@ end
 
 klist = klist(:)';
 
-%first vmadcp
+%first make sure we have vmadcp for each station
 if ismember('sadcp',types)    
     for stn = klist
         opt1='setup';opt2='m_stn_string';get_cropt
@@ -54,7 +55,6 @@ if ismember('ladcp',types)
         if exist(css,'file'); dosync = 1; else; dosync = 0; end
     end
 
-    
     for no = 1:14
         cfg0.figh(no) = figure(no);
     end
@@ -64,10 +64,6 @@ if ismember('ladcp',types)
         % configuration defaults and cruise-specific options
         cfg = cfg0;
         opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
-        pd = mexec_file_locations('procfiles','ladcp');
-        cfg.stnstr = stn_string;
-        cfg.p.cruise_id = mcruise;
-        cfg.p.ladcp_station = stn;
         if exist('shortcasts','var') && ismember(stn,shortcasts)
             cfg.p.btrk_mode = 0;
             cfg.p.getdepth = 1;
@@ -78,8 +74,8 @@ if ismember('ladcp',types)
             %cfg.p.btrk_ts = 30;
         end
         opt1 = 'adcp_proc'; opt2 = 'ladcp_cfg'; run(MEXEC_G.opt_cruise) %cfg and set pattern for down- and up-looker files
-        infiled = sprintf(pd.ladcpraw,cfg.dnpat);
-        infileu = sprintf(pd.ladcpraw,cfg.uppat);
+        infiled = fullfile(cfg.rawdir,cfg.dnpat);
+        infileu = fullfile(cfg.rawdir,cfg.uppat);
         %stn = stn;
         % first sync (if lad_syncscript found) -- just once per call
         if dosync; system(['bash ' css]); dosync = 0; end

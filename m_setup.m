@@ -49,14 +49,18 @@ global MEXEC_G
 %processing, and where?
 MEXEC_G.mcruise='ce26008'; 
 %MEXEC_G.mcruise = 'dy214';
+%MEXEC_G.mcruise = 'mdexp1';
 MEXEC_G.data_time_origin_string = '2026-01-01 00:00:00'; %yyyy-MM-dd HH:mm:SS, usually midnight on 1 Jan of the start year of the cruise. do not change once processing for a given cruise has started!
 MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
+%MEXEC_G.SITE_suf = 'test';
 %MEXEC_G.data_root = '/noc/mpoc/eurogoship/ce26008/data'; %contains raw (e.g. ctd/ASCII_FILES) and will contain processed (e.g. ctd/*.nc) data
 %MEXEC_G.data_root = '/data/pstar/projects/osnap/cruises/dy214/data';
+MEXEC_G.data_root = '/data/pstar/projects/goship/cruises/ce26008/data';
 MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/'; %optional; only relevant for on-ship processing to run bash scripts to sync data to Linux workstations
 MEXEC_G.datatypes.ctd = 'sbe'; %sbe is currently the only option for CTD sensors, in future add rbr
 MEXEC_G.datatypes.nisk = 'sbe'; %sbe .bl or .btl files
 MEXEC_G.datatypes.tref = 'sbe35'; %there is an SBE35 deep standards thermometer, or 'no' if not
+%MEXEC_G.datatypes.tref = 'no';
 MEXEC_G.datatypes.uway = 'scs'; %underway data acquisition/storage system: rvdas is a PotgreSQL database (more recently also duplicated in NetCDF files***check); scs stores (minimally) parsed NMEA strings as either ASCII or NetCDF; techsas stores as NetCDF
 %MEXEC_G.datatypes.uway = 'rvdas';
 MEXEC_G.datatypes.sadcp = 'codas'; %type of processed VMADCP data. codas is currently the only option; code could be added to read in IFREMER or BAS processed matlab files, etc.
@@ -132,25 +136,7 @@ end
 % set more defaults
 MEXEC_G.PLATFORM_TYPE= 'ship';
 MEXEC_G.PLATFORM_NUMBER = ['Cruise ' upper(MEXEC_G.mcruise)];
-switch MEXEC_G.mcruise(1:2)
-    case {'di' 'dy'}
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Discovery';
-    case 'jc'
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Cook';
-    case 'sd'
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS Sir David Attenborough';
-    case 'jr'
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RRS James Clark Ross';
-    case 'kn'
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Knorr';
-    case 'en'
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Endeavor';
-    case 'ce'
-        MEXEC_G.PLATFORM_IDENTIFIER = 'RV Celtic Explorer';
-    otherwise
-        MEXEC_G.PLATFORM_IDENTIFIER = input('ship ID not recognised in cruise; enter platform identifier (ship long name), e.g. ''RRS James Cook'' ','s');
-        warning('add case to m_setup'); pause(0.1)
-end
+MEXEC_G.PLATFORM_IDENTIFIER = ship_codes(MEXEC_G.mcruise);
 MEXEC_G.MSTAR_TIME_ORIGIN = [1950 1 1 0 0 0];  % This setting should not
 % normally be changed % not used any more
 MEXEC_G.COMMENT_DELIMITER_STRING = ' \n ';     % This setting should not normally be changed
@@ -168,7 +154,7 @@ end
 sw_checkpath
 
 % location processing and writing mexec files
-if ~isfield(MEXEC_G,'data_root') || isempty(MEXEC_G.data_root) || ~exist(MEXEC_G.data_root,'dir')
+if isempty(MEXEC_G.data_root) || ~exist(MEXEC_G.data_root,'dir')
     MEXEC_G.data_root = input('input path to data directory (e.g. ~/cruises/ce26008/data/) where processed data will be written   ','s');
 else
     fprintf(1,'working in %s\n',MEXEC_G.data_root)
@@ -232,7 +218,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
         datanames = {};
         versions = [];
         save(MEXEC_G.VERSION_FILE,'datanames','versions'); mfixperms(MEXEC_G.VERSION_FILE);
-        [us,~] = system(['touch ' MEXEC.simplelockfile]); mfixperms(MEXEC.simplelockfile);
+        [us,~] = system(['touch ''' MEXEC.simplelockfile '''']); mfixperms(MEXEC.simplelockfile);
         if us == 0 && exist(MEXEC.simplelockfile,'file') == 2 % seems to be a successful create of lock file
             m = 'Version lock file touched successfully';
             fprintf(MEXEC_A.Mfidterm,'%s\n',m)
@@ -242,7 +228,7 @@ if strcmp(MEXEC_G.Muse_version_lockfile,'yes')
 
     % might have to wait a bit to find it
     nsecwait = 0;
-    while exist(MEXEC.simplelockfile,'file') ~= 2 && nsecwait<30
+    while exist(MEXEC.simplelockfile,'file') ~= 2 && nsecwait<40
         fprintf(MEXEC_A.Mfider, '%s\n', 'waiting for version lock file');
         pause(2); nsecwait = nsecwait + 2;
     end

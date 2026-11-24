@@ -13,8 +13,8 @@ if MEXEC_G.quiet<=1; fprintf(1, 'saving 1 hz t,P,T,S,lat,lon to ladcp/ctd/ctd.%s
 
 %%%%%%%%% write ctd data %%%%%%%%%
 
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
-file1 = sprintf(pfiles.ctd_1hz,stn_string);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+file1 = replace(pfiles.ctd_1hz,'stn_string',stn_string);
 if exist(file1,'file') ~= 2
     disp(['file not found: ' file1 ', not writing 1 hz ascii file'])
     return

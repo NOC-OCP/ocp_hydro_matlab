@@ -2,10 +2,10 @@ function mfir_02_addwin(stn)
 % mfir_02_addwin: merge winch wireout onto fir file
 
 m_common
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
-f = sprintf(pfiles.ctd_nisk,stn_string);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+f = replace(pfiles.ctd_nisk,'stn_string',stn_string);
 pd = mexec_file_locations('procfiles', 'win');
-w = sprintf(pfiles.ctd_win,stn_string);
+w = replace(pfiles.ctd_win,'stn_string',stn_string);
 
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)

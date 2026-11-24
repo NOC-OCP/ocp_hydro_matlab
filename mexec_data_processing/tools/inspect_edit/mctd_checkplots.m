@@ -75,7 +75,7 @@ else
 end
 clear nump msg1
 
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise) %
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise) %
 opt1 = 'ctd_proc'; opt2 = 'ctd_checkplots'; run(MEXEC_G.opt_cruise) %saltype
 opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise) %raw resolution
 
@@ -90,16 +90,16 @@ for no = 1:length(klist)
     opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise);
     found = true; done = false;
     while found & ~done
-        [dc,~,found] = load_if_found(sprintf(pfiles.ctd_castcut,stn_string));
+        [dc,~,found] = load_if_found(replace(pfiles.ctd_castcut,'stn_string',stn_string));
         sb = [dc.scan_start, dc.scan_bot, dc.scan_end];
-        [d,~,found] = load_if_found(sprintf(pfiles.ctd_1hz,stn_string));
+        [d,~,found] = load_if_found(replace(pfiles.ctd_1hz,'stn_string',stn_string));
         [d1dn{no}, d1up{no}] = cast_split(d, sb);
         if quick
-            [d,~,found] = load_if_found(sprintf(pfiles.ctd_10s,stn_string));
+            [d,~,found] = load_if_found(replace(pfiles.ctd_10s,'stn_string',stn_string));
             [d2dn{no}, d2up{no}] = cast_split(d, sb);
         else
-            [d2dn{no},~,found] = load_if_found(sprintf(pfiles.ctd_2db_dn,stn_string));
-            [d2up{no},~,found] = load_if_found(sprintf(pfiles.ctd_2db_dn,stn_string));
+            [d2dn{no},~,found] = load_if_found(replace(pfiles.ctd_2db_dn,'stn_string',stn_string));
+            [d2up{no},~,found] = load_if_found(replace(pfiles.ctd_2db_dn,'stn_string',stn_string));
         end
         done = true;
     end
@@ -327,4 +327,3 @@ else
     text(.1,.3,sprintf('stn %03d',klist),'color',lcolors)
 end
 axis([0 1 -.2 1]); axis off
-

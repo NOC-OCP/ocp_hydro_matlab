@@ -7,16 +7,15 @@ function [dtab, params] = mout_columns_prepare_data(params, kloop)
 m_common
 
 % load input file
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise);
 switch params.in
     case 'ctd'
         stn = params.stnlist{kloop}; 
         opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
-        pd = mexec_file_locations('procfiles','ctd');
-        infile = sprintf(pd.(['ctd' params.suf]),stn_string);
         params.stn_string = stn_string;
+        infile = replace(pfiles.(['ctd' params.suf]),'stn_string',stn_string);
     case 'sam'
-        pd = mexec_file_locations('procfiles','samp');
-        infile = pd.samc;
+        infile = pfiles.samp_ctd;
 end
 
 if ~exist(infile,'file')
@@ -210,7 +209,7 @@ if strcmp(params.in,'ctd')
         dtab = []; return
     end
     if ismember(params.suf,{'_24hz','_psal'})
-        dfile = fullfile(mgetdir(params.in),sprintf('dcs_%s_%s.nc',mcruise,stn_string));
+        dfile = replace(pfiles.ctd_castcut,'stn_string',stn_string);
         dd = mloadq(dfile,'statnum scan_start scan_bot scan_end ');
         if isfield(params,'bin_units') && strcmp(params.bin_units,'hz')
             %in-water good part of the cast only

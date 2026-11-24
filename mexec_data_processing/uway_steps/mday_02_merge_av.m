@@ -54,7 +54,7 @@ switch datatype
         gmethod = 'meannum';
 end
 
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 opt1 = 'uway_proc'; opt2 = 'merge_av'; run(MEXEC_G.opt_cruise)
 
 %***check for multiple streams from same inst? not important at this

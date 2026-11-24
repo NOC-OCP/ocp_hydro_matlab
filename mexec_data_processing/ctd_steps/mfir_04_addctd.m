@@ -11,15 +11,15 @@ function mfir_04_addctd(stn)
 %         pressures
 
 m_common
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
-f = sprintf(pfiles.ctd_nisk,stn_string);
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+f = replace(pfiles.ctd_nisk,'stn_string',stn_string);
 if ~exist(m_add_nc(f),'file')
     warning('station %s fir file not found; skipping',stn_string)
     return
 end
-file1 = sprintf(pfiles.ctd_1hz,stn_string); %not using 24hz because we want at least some averaging
-dfile = sprintf(pfiles.ctd_2db_dn,stn_string);
-ufile = sprintf(pfiles.ctd_2db_up,stn_string);
+file1 = replace(pfiles.ctd_1hz,'stn_string',stn_string); %not using 24hz because we want at least some averaging
+dfile = replace(pfiles.ctd_2db_dn,'stn_string',stn_string);
+ufile = replace(pfiles.ctd_2db_up,'stn_string',stn_string);
 if MEXEC_G.quiet<=1; fprintf(1,'adds CTD data corresponding to Niskin closures to %s\n', f); end
 
 var_copycell = mcvars_to_average(2); %which variables to copy from 24hz CTD file

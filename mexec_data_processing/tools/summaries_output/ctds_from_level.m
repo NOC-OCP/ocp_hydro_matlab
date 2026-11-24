@@ -24,13 +24,12 @@ dc.tctdd = dc.dday; dc.sctdd = dc.dday; dc.fctdd = dc.dday;
 dc.tctdu = dc.dday; dc.sctdu = dc.dday; dc.fctdu = dc.dday;
 for sno = 1:ns
     %load 1hz
-    stn_string = sprintf('%03d', statnum(sno));
-    pd = mexec_file_locations('procfiles','ctd');
-    [d, h] = mload(sprintf(pd.ctd1,stn_string),'/');
+    opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
+    opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+    [d, h] = mload(replace(pd.ctd_1hz,'stn_string',stn_string),'/');
     d.dday = m_commontime(d, 'time', h, ['days since ' num2str(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)) '-01-01 00:00:00']);
     %limit to good data
-    pdd = mexec_file_locations('procfiles','dcs');
-    [ddcs, ~] = mload(sprintf(pdd.dcsfile,stn_string),'/');
+    [ddcs, ~] = mload(replace(pfiles.ctd_castcut,'stn_string',stn_string),'/');
     ml = d.press>pmid-ptol & d.press<pmid+ptol;
     md = ml & d.scan>ddcs.scan_start & d.scan<ddcs.scan_bot;
     mu = ml & d.scan>ddcs.scan_bot & d.scan<ddcs.scan_end;

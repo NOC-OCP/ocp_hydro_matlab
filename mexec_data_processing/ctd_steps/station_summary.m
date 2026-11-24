@@ -69,7 +69,7 @@ for no = 1:length(snames)
         vars = [vars; {snames{no} 'number' 0 snames{no} '  %2d'}];
     end
 end
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 
 %which stations
 stnall = str2num(d(:,length(mcruise)+[6:8]));
@@ -103,7 +103,7 @@ if ~isempty(stnall)
 
         stn = statnum(k); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
         %lat, lon, ctd depths
-        fnsal = sprintf(pd.ctd1,stn_string);
+        fnsal = replace(pfiles.ctd_1hz,'stn_string',stn_string);
         if exist(m_add_nc(fnsal),'file')
             [dpsal, hpsal] = mloadq(fnsal,'/');
             lat(k) = hpsal.latitude;
@@ -113,7 +113,7 @@ if ~isempty(stnall)
         end
 
         %winch
-        fnwin = sprintf(pdw.winfile,stn_string);
+        fnwin = replace(pfiles.win,'stn_string',stn_string);
         if exist(m_add_nc(fnwin),'file') == 2
             h3 = m_read_header(fnwin);
             cabname = munderway_varname('cabvar',h3.fldnam,1,'s');
@@ -122,7 +122,7 @@ if ~isempty(stnall)
         end
 
         %cast start, bottom, end times
-        fndcs = sprintf(pdd.dcsfile,stn_string);
+        fndcs = replace(pfiles.ctd_castcut,'stn_string',stn_string);
         if exist(m_add_nc(fndcs),'file')
             [ddcs, h4] = mloadq(fndcs,'/');
             time_start(k) = m_commontime(ddcs.time_start,'time_start',h4,timestring);

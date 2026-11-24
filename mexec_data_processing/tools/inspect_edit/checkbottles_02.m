@@ -35,7 +35,7 @@ nsubs = length(vnams)+3; % = length(varargin)+3
 
 %%%%%%%%% get data %%%%%%%%%
 
-opt1 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 fnctd = sprintf(pfiles.ctd_1hz,stn);
 fnsamall = pfiles.samp_ctd;
 opt1 = 'outputs'; opt2 = 'section_for_station'; run(MEXEC_G.opt_cruise)
