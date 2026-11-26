@@ -72,9 +72,9 @@ else
     for kstn = 1:length(kstns)
         stn = kstns(kstn); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
         if strcmp(section,'quick')
-            cfile = replace(pfiles.ctd_10s,'stn_string',stn_string);
+            cfile = pfiles.ctd_10s;
         else
-            cfile = replace(pfiles.ctd_2db_dn,'stn_string',stn_string);
+            cfile = pfiles.ctd_2db_dn;
         end
         if ~exist(m_add_nc(cfile),'file')
             if strcmp(section,'quick')

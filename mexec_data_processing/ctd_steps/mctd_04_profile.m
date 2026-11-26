@@ -24,23 +24,20 @@ m_common;
 if MEXEC_G.quiet<=1; fprintf(1,'averaging from original resolution to 2 dbar in ctd_%s_%s_2db.nc (downcast) and ctd_%s_%s_2up.nc (upcast)\n',mcruise,stn_string,mcruise,stn_string); end
 
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-filer = replace(pfiles.ctd_cleancal,'stn_string',stn_string);
-file2d = replace(pfiles.ctd_2db_dn,'stn_string',stn_string);
-file2u = replace(pfiles.ctd_2db_up,'stn_string',stn_string);
-dcsfile = replace(pfiles.ctd_castcut,'stn_string',stn_string);
 
 %%%%% determine where to break cast into down and up segments %%%%%
 
-[dd, hd] = mload(dcsfile,'statnum','dcr_start','dcr_bot','dcr_end','scan_end',' ');
+[dd, hd] = mload(pfiles.ctd_castcut,'statnum','dcr_start','dcr_bot','dcr_end','scan_end',' ');
 if isempty(strfind(hd.comment,'manual')) && isempty(strfind(hd.comment,'inspected'))
     warning('using automatically detected cast start/bottom/end')
 end
 %***code to calculate dcr from dc and scan if there is no dcr?***
 % allow for the possibility that the dcs file contains many stations
 kf = find(dd.statnum == stn);
-dcstart = dd.dcr_start(kf);
-dcbot = dd.dcr_bot(kf);
-dcend = dd.dcr_end(kf);
+[d, h] = mload(pfiles.ctd_cleancal, '/');
+[~,dcstart] = min(abs(d.scan-dd.scan_start(kf))); dcstart = dcstart(1);
+[~,dcbot] = min(abs(d.scan-dd.scan_bot(kf))); dcbot = dcbot(1);
+[~,dcend] = min(abs(d.scan-dd.scan_end(kf))); dcend = dcend(1);
 
 opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
 minlent = 2*60; minlenp = 10; %require at least 2 minutes and 10 dbar to make a profile
@@ -51,7 +48,6 @@ if ~isdown && ~isup
     return
 end
 
-[d, h] = mload(filer, '/');
 opt1 = 'ctd_proc'; opt2 = 'profiles'; run(MEXEC_G.opt_cruise)
 pg = (g2opts.pbin/2:g2opts.pbin:max(d.press)+g2opts.pbin/2)';
 
@@ -181,10 +177,10 @@ if ~contains(hn.comment, commentstr); hn.comment = [hn.comment commentstr]; end
 if isdown
     hnd = hn;
     if ~contains(hnd.comment,commentd); hnd.comment = [commentd; '\n'; hnd.comment]; end
-    mfsave(file2d, dn2, hnd);
+    mfsave(pfiles.ctd_2db_dn, dn2, hnd);
 end
 
 if isup
     hnu = hn;
-    mfsave(file2u, up2, hnu);
+    mfsave(pfiles.ctd_2db_up, up2, hnu);
 end

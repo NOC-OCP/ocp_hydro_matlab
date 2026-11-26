@@ -1,13 +1,13 @@
-function mvad_station_av(stn, inst, cast_select, varargin)
-% mvad_station_av(stn, inst, cast_select)
-% mvad_station_av(stn, inst, cast_select, time_list_file)
+function mvad_station_av(stn, SADCP_inst, cast_select, varargin)
+% mvad_station_av(stn, SADCP_inst, cast_select)
+% mvad_station_av(stn, SADCP_inst, cast_select, time_list_file)
 %
 % extract on-station vmadcp data, output to file suitable for LDEO IX LADCP
 %   processing and output an averaged profile to Mstar-format file
 % 
 % inputs: 
 %   stn: CTD cast number (statnum)
-%   inst: 'os75nb' or 'os150nb'
+%   SADCP_inst: 'os75nb' or 'os150nb'
 %   cast_select: 'ctd': use dcs files for station start and end times
 %                any other single-word string: read start and end times
 %                  from the file specified as the 4th input argument,
@@ -24,8 +24,8 @@ function mvad_station_av(stn, inst, cast_select, varargin)
 % mvad_station_av(5,'os150nb', 'file', '~/cruise/data/vmadcp/mproc/list_stn_wait.txt')
 % reads the specified file containing station numbers, start times, end
 %    times***, outputs OS150 velocities averaged over the time interval, 
-%    (for instance, if station 5 was a shallow, quick cast, you may want to
-%    average VMADCP over 2 hours instead for a better reference) and
+%    (for SADCP_instance, if station 5 was a shallow, quick cast, you may want to
+%    average VMADCP over 2 hours SADCP_instead for a better reference) and
 %    outputs to  
 %    data/vmadcp/mproc/os150nb_$cruise_wait_005_ave.nc,
 %    data/vmadcp/mproc/os150nb_$cruise_wait_005_forladcp.mat
@@ -42,7 +42,7 @@ if nargin>3
     time_list_file = varargin{1};
 end
 if strcmp(cast_select,'list')
-    mvad_list_station(stn, inst)
+    mvad_list_station(stn, SADCP_inst)
     cast_select = input('''ctd'' to use times from dcs file, ''file'' to use times from list file, or ''q'' to quit','s');
     if strcmp('q',cast_select)
         return
@@ -56,12 +56,12 @@ end
 
 m_common
 opt1 = 'adcp_proc'; opt2 = 'sadcp_files'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 
 %get start and end times
 if strcmp(cast_select,'ctd')
     opt1 = 'ctd_proc'; opt2 = 'ctd_files'; run(MEXEC_G.opt_cruise)
-    dcsfile = fullfile(replace(pfiles.ctd_castcut,'stn_string',stn_string));
-    [dd, hd] = mloadq(dcsfile,'/');
+    [dd, hd] = mloadq(pfiles.ctd_castcut,'/');
     tstart = m_commontime(dd,'time_start',hd,'datenum');
     tend = m_commontime(dd,'time_end',hd,'datenum');
 else
@@ -80,14 +80,14 @@ end
 sstart = datestr(tstart,31); send = datestr(tend,31);
 
 %get vmadcp data
-[d, h] = codas_to_mstar(inst);
+[d, h] = codas_to_mstar(SADCP_inst);
 d.time = m_commontime(d,'time',h,'datenum');
 
 %find indices of vmadcp data in interval, and check whether tstart and tend
 %are outside vmadcp time series
 mt = (d.time(1,:)>=tstart & d.time(1,:)<=tend);
 if sum(mt)==0
-    error('no times in interval %s to %s found in %s file',sstart,send,inst);
+    error('no times in interval %s to %s found in %s file',sstart,send,SADCP_inst);
 else
     % check ctd times contained in vmadcp
     if tstart < min(d.time)
@@ -155,14 +155,14 @@ ha = h;
 [~, name, ext] = fileparts(pfiles.sadcp_all);
 ha.dataname = [name ext];
 ha.latitude = da.lat(1); ha.lon = da.lon(1);
-%ha.instrument_depth_metres = 5; %***
+%ha.SADCP_instrument_depth_metres = 5; %***
 if strcmp(cast_select,'ctd')
     ha.comment = [h.comment sprintf('\n averaged over %s to %s from dcs_%s_%s.nc',sstart,send,mcruise,stn_string)];
 else
     ha.comment = [h.comment sprintf('\n averaged over %s to %s from %s',sstart,send,time_list_file)];
 end
 
-mfsave(replace(pfiles.sadcp_av,'stn_string',stn_string),da,ha); 
+mfsave(pfiles.sadcp_av,da,ha); 
 
 opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf

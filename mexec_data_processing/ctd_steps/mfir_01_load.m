@@ -9,29 +9,26 @@ m_common
 % input file names
 opt1 = 'ctd_proc'; opt2 = 'nisk_infiles'; run(MEXEC_G.opt_cruise)
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-infile = replace(infiles.ctd_nisk_fir,'stn_string',stn_string);
-if ~exist(infile,'file')
+if ~exist(infiles.ctd_nisk,'file')
     fprintf(2,'Niskin bottle file for cast %03d not found; try sync again and enter to continue\n',stn); 
     pause
-    if ~exist(infile,'file')
-        warning('no file %s; skipping',infile)
+    if ~exist(infiles.ctd_nisk,'file')
+        warning('no file %s; skipping',infiles.ctd_nisk)
         return
     end
 end
 if MEXEC_G.quiet<=1; fprintf(1,['reading in .bl file to ' dataname '.nc\n'],stn_string); end
-otfile = replace(pfiles.ctd_nisk,'stn_string',stn_string);
 
 %read firing position and scan number when fired 
-[pos, scn] = msbe_niskins_load(infile);
-comment = ['input data from ' infile];
+[pos, scn] = msbe_niskins_load(infiles.ctd_nisk);
+comment = ['input data from ' infiles.ctd_nisk];
 %in case cast was stitched together from multiple files by offsetting scan
 opt1 = 'ctd_proc'; opt2 = 'ctd_raw_extra'; run(MEXEC_G.opt_cruise)
 for no = 1:length(append_stn_strings)
-    stn_string = append_stn_strings(no);
     if isnan(append_scan_offsets(no))
         warning('not applying NaN offset to .bl scan number for %s',stn_string)
     else
-        infile = replace(pfiles.ctd_nisk,'stn_string',stn_string);
+        infile= replace(infiles.ctd_nisk,stn_string,append_stn_strings{no});
         if exist(infile,'file')
             %load and append
             [p, s] = msbe_niskins_load(infile);
@@ -57,16 +54,12 @@ position = position(m);
 niskin = niskin_number(m);
 niskin_flag = niskin_flag(m);
 clear m ia ib
-opt1 = 'ctd_proc'; opt2 = 'nisk_flags'; run(MEXEC_G.opt_cruise) %change flags here
-%check that possible bad code in opt file hasn't added dimensions
-if size(niskin)~=size(niskin_flag)
-    error('niskin and niskin_flag sizes do not match; check opt_%s',mcruise)
-end
+%niskin flags will be changed later, in constructing appended sample file
 
 %save
 timestring = ['[' sprintf('%d %d %d %d %d %d',MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN) ']'];
 MEXEC_A.MARGS_IN = {
-    otfile
+    pfiles.ctd_nisk
     'scan'
     'position'
     'niskin'

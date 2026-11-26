@@ -9,26 +9,24 @@ function mfir_to_sam(stn)
 m_common
 opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-f = replace(pfiles.ctd_nisk,'stn_string',stn_string);
-samfile = pfiles.samp_ctd;
-if ~exist(f,'file')
+if ~exist(pfiles.ctd_nisk,'file')
     warning('no bottle firing file for %s',f)
     return
 end
 if MEXEC_G.quiet<=1; fprintf(1,'pasting CTD data at bottle firing times from fir_%s_%s.nc to sam_%s_all.nc\n',mcruise,stn_string,mcruise); end
 
-if exist(samfile,'file')
-    h0 = m_read_header(samfile);
-else
-    clear h0
-    if docf
-        h0.data_time_origin = [];
+if exist(pfiles.samp_ctd,'file')
+    h0 = m_read_header(pfiles.samp_ctd);
+    if isfield(h0,'data_time_origin') && ~isempty(h0.data_time_origin)
+        tu = [h0.fldunt(strcmp('utime',h0.fldnam)) ' since ' sprintf('%d-%d-%d %d:%d:%d', h0.data_time_origin)];
     else
-        h0.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
+        tu = h0.fldunt(strcmp('utime',h0.fldnam));
     end
+else
+    tu = ['seconds since ' MEXEC_G.data_time_origin_string];
 end
 
-[d,h] = mloadq(f,'/');
+[d,h] = mloadq(pfiles.ctd_nisk,'/');
 %fill in statnum and sampnum fields
 sp = size(d.position);
 d.statnum = repmat(stn,sp);
@@ -47,8 +45,8 @@ else
 end
 if sum(~isnan(d.sampnum))>0
     ns = size(d.sampnum);
-    d.utime = m_commontime(d,'utime',h,MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN);
-    h.data_time_origin = h0.data_time_origin;
+    d.utime = m_commontime(d, 'utime', h, tu);
+    h.fldunt{strcmp('utime',h.fldnam)} = tu;
     %add station parameters
     d.stnlat = repmat(h.latitude,ns);
     h.fldnam = [h.fldnam 'stnlat']; h.fldunt = [h.fldunt 'degrees'];
@@ -59,5 +57,5 @@ if sum(~isnan(d.sampnum))>0
     h.latitude = -999; h.longitude = -999; h.water_depth_metres = -999; % sam file has multiple stations
     h.comment = sprintf('CTD data from station %s added',stn_string);
     h.dataname = ['sam_' MEXEC_G.mcruise '_all'];
-    mfsave(samfile, d, h, '-merge', 'sampnum');
+    mfsave(pfiles.samp_ctd, d, h, '-merge', 'sampnum');
 end

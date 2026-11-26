@@ -3,12 +3,10 @@ function mfir_02_addwin(stn)
 
 m_common
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-f = replace(pfiles.ctd_nisk,'stn_string',stn_string);
-pd = mexec_file_locations('procfiles', 'win');
-w = replace(pfiles.ctd_win,'stn_string',stn_string);
 
-if ~exist(m_add_nc(f),'file')
+if ~exist(m_add_nc(pfiles.ctd_win),'file')
     warning('station %s fir file not found; skipping',stn_string)
+    return
 end
 if MEXEC_G.quiet<=1; fprintf(1,'adding winch data from bottle firing times to %s\n',f); end
 
@@ -17,12 +15,11 @@ clear d h
 [df,hf] = mloadq(f,'/');
 if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     
-    [dwin, hwin] = mloadq(w,'/');
-    opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-    if docf
-        dwin.time = m_commontime(dwin,'time',hwin,hf.fldunt{strcmp(hf.fldnam,'utime')});
-    else
+    [dwin, hwin] = mloadq(pfiles.ctd_win,'/');
+    if isfield(hf,'data_time_origin') && ~isempty(hf.data_time_origin)
         dwin.time = m_commontime(dwin.time,hwin.data_time_origin,hf.data_time_origin);
+    else
+        dwin.time = m_commontime(dwin,'time',hwin,hf.fldunt{strcmp(hf.fldnam,'utime')});
     end
 
     % scan input file to extract winch cable out variable name
@@ -46,7 +43,7 @@ if isfield(df, 'utime') && sum(isfinite(df.utime))>0
         h.fldnam = {'utime' 'wireout'}; h.fldunt = {hf.fldunt{strcmp('utime',hf.fldnam)} 'metres'};
         h.dataname = hwin.dataname; h.mstar_string = hwin.mstar_string;
         MEXEC_A.Mprog = mfilename;
-        mfsave(f, d, h, '-merge', 'utime')
+        mfsave(pfiles.ctd_nisk, d, h, '-merge', 'utime')
     end
     
 end

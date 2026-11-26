@@ -4,47 +4,42 @@ function adcp_process(klist, types, varargin)
 % types is {'ladcp', 'sadcp'} or a subset
 % optional arguments are parameter-value pairs:
 %   'ladcp_constraints' is {'GPS', 'BT', 'SADCP'} (default) or a subset
-%   'ladcp_pause' is 0 (default) or 1 to pause after each version of ladcp
+%   'ladcp_pause' is true (default) to pause after each version of ladcp
 %     processing
-%   'ladcp_incr' is 1 (default) to apply each constraint incrementally
+%   'ladcp_incr' is true (default) to apply each constraint incrementally
 %     (i.e. in example above run process_cast with 'GPS', with 'GPS' &
 %     'BT', and with 'GPS', 'BT', & 'SADCP')
-%    'ladcp_sepud' is 1 (default) to process the up- and down-looker
+%    'ladcp_sepud' is true (default) to process the up- and down-looker
 %      separately *as well as together* (ignored if there is only one
 %      instrument)
 %
-%always process up and downlooker separately to check beam
-%quality***(though does this work for really shallow cast?)
-%but only process together if it's deep enough***, otherwise DL is version
-%of record
-
-%add option to call mvad_station_av***
+% 
 
 m_common
-opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-ladcp_pause = 1;
-ladcp_constraints = {'GPS','BT','SADCP'};
-ladcp_incr = 1;
-ladcp_sepud = 1;
+ladcp_pause = true;
+ladcp_constraints = {'GPS', 'BT', 'SADCP'};
+ladcp_incr = true;
+ladcp_sepud = true;
 for no = 1:2:nargin-2
     eval([varargin{no} ' = varargin{no+1};'])
 end
 
 klist = klist(:)';
 
-%first make sure we have vmadcp for each station
-if ismember('sadcp',types)    
+%vmadcp station averages first, if specified, because they may be used in
+%ladcp processing
+if ismember('sadcp',types)
     for stn = klist
-        opt1='setup';opt2='m_stn_string';get_cropt
-        cfg.stnstr = stn_string;
-        opt1='adcp_proc';get_cropt
+        opt1 = 'setup';opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
+        opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+        opt1 = 'adcp_proc'; opt2 = 'sadcp_on_station'; run(MEXEC_G.opt_cruise)
         mvad_station_av(stn, SADCP_inst, 'ctd')
     end
 end
 
 
-%then ladcp
-if ismember('ladcp',types) 
+%then ladcp, if specified
+if ismember('ladcp',types)
     if isempty(which('getinv'))
         error('LADCP processing functions not on path; try running m_setup again')
     end
@@ -52,7 +47,9 @@ if ismember('ladcp',types)
     cdir = pwd;
     if isfield(MEXEC_G,'mexec_shell_scripts')
         css = fullfile(MEXEC_G.mexec_shell_scripts,'data_to_ws','lad_syncscript.sh');
-        if exist(css,'file'); dosync = 1; else; dosync = 0; end
+        if exist(css,'file')
+            system(['bash ' css]);
+        end
     end
 
     for no = 1:14
@@ -61,108 +58,73 @@ if ismember('ladcp',types)
 
     for stn = klist
 
-        % configuration defaults and cruise-specific options
-        cfg = cfg0;
         opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
-        if exist('shortcasts','var') && ismember(stn,shortcasts)
-            cfg.p.btrk_mode = 0;
-            cfg.p.getdepth = 1;
-            couldbt = 0;
-        else
-            couldbt = 1;
-            cfg.p.btrk_mode = 2;
-            %cfg.p.btrk_ts = 30;
-        end
-        opt1 = 'adcp_proc'; opt2 = 'ladcp_cfg'; run(MEXEC_G.opt_cruise) %cfg and set pattern for down- and up-looker files
-        infiled = fullfile(cfg.rawdir,cfg.dnpat);
-        infileu = fullfile(cfg.rawdir,cfg.uppat);
-        %stn = stn;
-        % first sync (if lad_syncscript found) -- just once per call
-        if dosync; system(['bash ' css]); dosync = 0; end
-
-        % find out which raw files we have
-        if isul
-            if isempty(dir(infileu))
-                warning('opt_%s says there should be an uplooker but file\n %s\n not found; maybe not yet synced?',mcruise,infileu)
-                isul = 0;
+        if ismember('SADCP',ladcp_constraints)
+            opt1 = 'adcp_proc'; opt2 = 'sadcp_on_station'; run(MEXEC_G.opt_cruise);
+            opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+            if ~exist(pfiles.sadcp_stnav,'file')
+                ladcp_constraints = setdiff(ladcp_constraints, 'SADCP', 'stable');
             end
         end
-        if isempty(dir(infiled))
-            warning('no downlooker file %s\n maybe not yet synced?',infiled)
-            isdl = 0;
-            couldbt = 0;
-        else
-            isdl = 1;
-        end
-        if ~isdl && ~isul; continue; end
+        ctdnav_asc_for_ladcp(stn); %create an ascii file of 1-hz averaged CTD data
+        
+        opt1 = 'adcp_proc'; opt2 = 'ladcp_files'; run(MEXEC_G.opt_cruise)
+        list_ladcpfiles
 
-        %limit constraints
-        cfg.constraints = ladcp_constraints;
-        if ~isdl || ~couldbt
-            cfg.constraints = setdiff(cfg.constraints,'BT');
-        end
-        if ~isfield(cfg.f,'sadcp') || ~exist(cfg.f.sadcp,'file')
-            cfg.constraints = setdiff(cfg.constraints,'SADCP');
+        if (ladcp_sepud || isempty(infiled)) && ~isempty(infileu)
+            %now process, either all together or adding one constraint at a time, depending on ladcp_incr
+            lconstraints_and_process('UL', stn, ladcp_constraints, ladcp_incr, ladcp_pause)
         end
 
-        %first run with downlooking
-        cfg0 = cfg;
-        if isdl
-            cfg.orient = 'DL'; cfg.constraints = cfg0.constraints(1); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            cfg.orient = 'DL'; cfg.constraints = cfg0.constraints(1:2); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            if length(cfg0.constraints)>2
-                cfg.orient = 'DL'; cfg.constraints = cfg0.constraints(1:end); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            end
-        end
-        if isdl && isul
-            cfg.orient = 'DLUL'; cfg.constraints = cfg0.constraints(1); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            cfg.orient = 'DLUL'; cfg.constraints = cfg0.constraints(1:2); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            if length(cfg0.constraints)>2
-                cfg.orient = 'DLUL'; cfg.constraints = cfg0.constraints(1:end); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            end
-        end
-        if isul
-            cfg.orient = 'UL'; cfg.constraints = cfg0.constraints(1); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            cfg.orient = 'UL'; cfg.constraints = cfg0.constraints(1:2); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            if length(cfg0.constraints)>2
-                cfg.orient = 'UL'; cfg.constraints = cfg0.constraints(1:end); process_cast_cfgstr(stn,cfg); lpause(cfg,ladcp_pause);
-            end
-        end
-        continue
-        if isul && isdl
-            cfg.orient = 'DLUL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
-        elseif isdl
-            cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
-        else
-            cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
+        if (ladcp_sepud || isempty(infileu)) && ~isempty(infiled)
+            %now process, either all together or adding one constraint at a time, depending on ladcp_incr
+            lconstraints_and_process('DL', stn, ladcp_constraints, ladcp_incr, ladcp_pause)
         end
 
-        if ladcp_incr
-            %now run with one less
-            cfg.constraints(end) = [];
-            while ~isempty(cfg.constraints)
-                if isfield(cfg.f,'sadcp') && ~sum(ismember(cfg.constraints,'SADCP'))
-                    cfg.f = rmfield(cfg.f,'sadcp');
-                end
-                process_cast_cfgstr(stn, cfg); lpause(cfg,ladcp_pause)
-                cfg.constraints(end) = [];
-            end
+        if ~isempty(infileu) && ~isempty(infiled)
+            %now process, either all together or adding one constraint at a time, depending on ladcp_incr
+            lconstraints_and_process('DLUL', stn, ladcp_constraints, ladcp_incr, ladcp_pause)
         end
-
-        if ladcp_sepud && isdl && isul
-            %run last (least) set of constraints with dl and ul separately (if
-            %both aren't present for this cast, this is unnecessary)
-            cfg.orient = 'DL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
-            cfg.orient = 'UL'; process_cast_cfgstr(stn, cfg); lpause(cfg, ladcp_pause);
-        end
-
     end
     cd(cdir)
+
+    %ladcp_combined_file
 end
 
-function lpause(cfg, ladcp_pause)
-if ladcp_pause
-    fprintf(1,['inspect ' cfg.orient '_%s' '/ plots, any key to continue\n'],cell2mat(cfg.constraints));
-    pause
+function lconstraints_and_process(subdir, stn, ladcp_constraints, ladcp_incr, ladcp_pause)
+
+m_common; opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
+if ~contains(subdir,'DL')
+    %if no downlooker no point trying to apply bottom tracking constraint
+    ladcp_constraints = setdiff(ladcp_constraints,'BT','stable');
+else
+    opt1 = 'setup'; opt2 = 'station_lists'; run(MEXEC_G.opt_cruise)
+    if isfield(stnlists, 'stns_short') && ismember(stn, stnlists.stns_short)
+        %cast was not full depth
+        ladcp_constraints = setdiff(ladcp_constraints,'BT','stable');
+    end
 end
+
+for cno = 1:length(ladcp_constraints)
+    subdir = [subdir '_' ladcp_constraints{cno}]; %add to this for each constraint
+    ee = ['f.subdir = ''' subdir ''';'];
+    if ladcp_incr
+        %run one at a time. where to put results of
+        %processing:
+        process_cast(stn, 1, 0, ee);
+        if ladcp_pause
+            fprintf(1,['inspect ' subdir ' plots, any key to continue\n'])
+            pause
+        end
+    end
+end
+if ~ladcp_incr
+    %only run the combined constraints, using final ee
+    process_cast(stn, 1, 0, ee)
+    if ladcp_pause
+        fprintf(1,['inspect ' subdir ' plots, any key to continue\n'])
+        pause
+    end
+end
+
 

@@ -13,7 +13,7 @@ function ed = mctd_raw_show_check_edit(stn, varargin)
 
 m_common
 if MEXEC_G.quiet<=1; fprintf(1,'plotting original and 1 hz CTD data for station %s to check for spikes\n',stn_string); end
-opt1 = 'setup; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
+opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
 cfile = replace(pfiles.ctd_cleancal,'stn_string',stn_string);
 rfile = replace(pfiles.ctd_raw,'stn_string',stn_string);
@@ -54,7 +54,7 @@ dn_start = m_commontime(ddcs.time_start(1),'time_start',hdcs,'datenum');
 dn_end = m_commontime(ddcs.time_end(1),'time_end',hdcs,'datenum');
 if strcmp(rt,'cleaned')
     %want to know about co.oxy_align
-    opt1 = 'ctd_proc'; opt2 = 'raw_corrs'; run(MEXEC_G.opt_cruise)
+    opt1 = 'ctd_proc'; opt2 = 'raw_edits_corrs'; run(MEXEC_G.opt_cruise)
 end
 
 % which variables to plot

@@ -23,7 +23,6 @@ switch opt2
             %the instrument/mode with deepest range
             cfg.f.sadcp = replace(pfiles.sadcp_stnav,'stn_string',stn_string);
         end
-        cfg.
         cfg.rawdir = fullfile(MEXEC_G.data_root, 'ladcp','rawdata');
         if stn==6
             cfg.uppat = sprintf('UL%s00*m.000',cfg.stnstr);

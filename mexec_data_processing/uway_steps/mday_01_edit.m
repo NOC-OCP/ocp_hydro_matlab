@@ -24,19 +24,17 @@ didedits = 0;
 %definitions
 ii = find(strcmp(abbrev,mtable.mstarpre));
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-infile = replace(pfiles.uway_raw, 'abbrev', abbrev);
-if ~exist(m_add_nc(infile),'file')
+if ~exist(m_add_nc(pfiles.uway_raw),'file')
     warning('no %s, skipping', infile)
     return
 end
-otfile = replace(pfiles.uway_edt, 'abbrev', abbrev);
-if exist(otfile,'file')
+if exist(pfiles.uway_edt,'file')
     didedits = 1; %always add days to file if it already exists
 end
 streamtype = mtable.paramtype{ii(1)};
 
 %load
-[d, h] = mload(infile,'/');
+[d, h] = mload(pfiles.uway_raw,'/');
 
 %limit to specified ydays
 if ~isempty(ydays)
@@ -140,10 +138,10 @@ end
 
 %%%%%%%%% save %%%%%%%%
 if didedits
-    if exist(m_add_nc(otfile),'file')
-        mfsave(otfile, d, h, '-merge', 'time');
+    if exist(pfiles.uway_edt,'file')
+        mfsave(pfiles.uway_edt, d, h, '-merge', 'time');
     else
-        mfsave(otfile, d, h);
+        mfsave(pfiles.uway_edt, d, h);
     end
 end
 

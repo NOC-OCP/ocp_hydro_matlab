@@ -56,7 +56,9 @@ MEXEC_G.SITE_suf = 'atnoc'; % common suffixes 'atsea', 'athome', '', etc.
 %MEXEC_G.data_root = '/noc/mpoc/eurogoship/ce26008/data'; %contains raw (e.g. ctd/ASCII_FILES) and will contain processed (e.g. ctd/*.nc) data
 %MEXEC_G.data_root = '/data/pstar/projects/osnap/cruises/dy214/data';
 MEXEC_G.data_root = '/data/pstar/projects/goship/cruises/ce26008/data';
-MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/'; %optional; only relevant for on-ship processing to run bash scripts to sync data to Linux workstations
+if strcmp(MEXEC_G.SITE_suf,'atsea')
+    MEXEC_G.mexec_shell_scripts = '/data/pstar/programs/repos_github/mexec_exec/'; %optional; only relevant for on-ship processing to run bash scripts to sync data to Linux workstations
+end
 MEXEC_G.datatypes.ctd = 'sbe'; %sbe is currently the only option for CTD sensors, in future add rbr
 MEXEC_G.datatypes.nisk = 'sbe'; %sbe .bl or .btl files
 MEXEC_G.datatypes.tref = 'sbe35'; %there is an SBE35 deep standards thermometer, or 'no' if not

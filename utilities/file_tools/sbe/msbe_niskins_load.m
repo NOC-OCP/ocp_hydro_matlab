@@ -5,7 +5,7 @@ function [pos, scn] = msbe_niskins_load(infile)
 if strcmp(ext,'.bl')
     cellall = mtextdload(infile,',',10); % load all text
     if size(cellall,2)<4
-        warning('no bottles for cast %s; skipping',stn_string)
+        warning(['no bottles in ' infile])
         return
     end
     nr = size(cellall,1);

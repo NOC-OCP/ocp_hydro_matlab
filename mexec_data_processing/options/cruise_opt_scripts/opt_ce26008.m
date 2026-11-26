@@ -10,7 +10,7 @@
 % data_time_origin_string: '2026-01-01 00:00:00'
 % mexec_version: '5ed81ad5 (last commit)'
 
-%context notes:
+% CTD station notes:
 % cast 1 and 48 aborted, converted from .hex but not processed
 % cast 42 aborted, not converted from .hex
 % cast 2 deep test cast, cast 3 shallow test dip with ***
@@ -18,7 +18,7 @@
 % cast 25 CTD deck box restarted, CTD recorded in 025 and 025b
 % cast 22 exported without time elapsed***
 %
-% record of Niskin samples collected in *** and of Niskin flags in ***
+% record of Niskin samples collected, and Niskin flags observed at collection, in bottle_samples/LOGS/niskin_samples_log.xlsx
 % record of underway samples collected in ***
 %
 % SUNA on *** casts
@@ -58,42 +58,100 @@ while ~foundit & ~outofopts
                         stn = input('type stn number ');
                     end
                     stn_string = sprintf('%03d',stn); %used for file names, default: 001, 002, etc.
+                case 'station_lists'
+                    foundit = true;
+                    %1, 42, 48 were aborted casts; 3 was very shallow dip
+                    %to test a cable
+                    stnlists.all = [2 4:41 43:47 49:82]; %all CTD casts to process
+                    stnlists.stns_short = []; %no non-full-depth casts being processed
+                    stnlists.ar7e = [4:41 43:47 49:51]; %AR7E section
+                    stnlists.km = 52:57; %KM
+                    stnlists.ta = 58:63; %TA
+                    stnlists.kgh = 64:69; %KGH
+                    stnlists.yoyo1 = 70:79;
+                    stnlists.yoyo2 = 80:82;
+                case 'summary_counts'
+                    %type of samples (from concatenated sample data file,
+                    %if available, or as listed on niskin sampling logsheet
+                    %otherwise) to group together for summary table
+                    foundit = true;
+                    %each field of samp_groups should have an entry in the
+                    %metadata_cruise_data file below
+                    samp_groups.sal = {'botpsal'};
+                    samp_groups.oxy = {'botoxy'};
+                    samp_groups.nut = {'silc', 'phos', 'totnit'}; %variable names in this group
+                    samp_groups.co2 = {'dic_ta', 'dic', 'talk', 'ph'};
+                    samp_groups.tt = {'sf6', 'cfc13'};
+                    samp_groups.pig = {'chl', 'hplc'};
+                    samp_groups.gas = {'n2o_ch4'};
+                    samp_groups.rn = {'dic14','rn'}; %
+                    samp_groups.doc = {'doc'};
+                    samp_groups.d18o = {'d18o'};
+                    samp_groups.bioo = {'ifcb_planktoscope','lugols'};
+                    samp_groups.omic = {'edna','viral'};
+                case 'metadata'
+                    foundit = true;
+                    mdc = readtable(fullfile(MEXEC_G.data_root,'collected_files','metadata_ce26008_cruise.csv'));
+                    mdd = readtable(fullfile(MEXEC_G.data_root,'collected_files','metadata_ce26008_data.csv'));
+
+                    mdd.ctd.number = sprintf('#%d stations with 24-place rosette',length(stnlists.all));
+                    mdd.ctd.comment = {'#The CTD PRS; TMP; SAL; OXY are all calibrated and good.';...
+                        '# DEPTH_TYPE   : COR';...
+                        '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
+                        };
+                    %exch_headstr = {['#SHIP: ' mdc.ship];...
+                    % ['#Cruise: ' mdc.cruise_code '; ' mdc.project_cruise_section_tags];...
+                    % ['#Region: ' mdc.region]';...
+                    % ['#EXPOCODE: ' expocode];...
+                    % ['#OceanOps cruise ID: ' oopsid]
+                    % ['#DATES: ' mdc.start ' - ' mdc.end];...
+                    % ['#Chief Scientist: ' mdc.cs '; Co-Chief Scientist: ' mdc.ccs];...
+                    % ['#' mdc.acknowl]};
+                    %                        headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
+                    %                        headstring = [headstring; common_headstr;
+                    %                        headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
+                    %                        headstring = [headstring; common_headstr;
+                case 'infiles'
+
                 case 'pfiles'
                     foundit = true;
                     helptext = 'specify paths and names of processed data files (created by mexec_data_processing, and possibly used by later steps)';
-                    pfiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_cnv.nc']); %stn_string
-                    pfiles.ctd_cleancal = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_24hz.nc']); %stn_string
-                    pfiles.ctd_editsrecords = fullfile(MEXEC_G.data_root, 'ctd', 'editlogs', 'ctd_stn_string_editpoints'); %stn_string %files that go into producing pfiles.ctd_clean from pfiles.ctd_raw
-                    pfiles.ctd_1hz = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_1hz.nc']); %stn_string
-                    pfiles.ctd_10s = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_10s.nc']); %stn_string
-                    pfiles.ctd_2db_dn = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_2db.nc']); %stn_string
-                    pfiles.ctd_2db_up = fullfile(MEXEC_G.data_root, 'ctd', ['ctd_' MEXEC_G.mcruise '_stn_string_2up.nc']); %stn_string
-                    pfiles.ctd_nisk = fullfile(MEXEC_G.data_root, 'ctd', ['fir_' MEXEC_G.mcruise '_stn_string.nc']); %stn_string
-                    pfiles.ctd_castcut = fullfile(MEXEC_G.data_root, 'ctd', ['dcs_' MEXEC_G.mcruise '_stn_string.nc']); %stn_string
-                    %pfiles.ctd_win = fullfile(MEXEC_G.data_root, 'ctd', 'WINCH', ['win_' MEXEC_G.mcruise '_stn_string.nc']); %stn_string
+                    if exist('stn_string','var')
+                        pfiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', sprintf('ctd_%s_%s_cnv.nc', MEXEC_G.mcruise, stn_string));
+                        pfiles.ctd_cleancal = fullfile(MEXEC_G.data_root, 'ctd', sprintf('ctd_%s_%s_24hz.nc', MEXEC_G.mcruise, stn_string)); %stn_string
+                        pfiles.ctd_editsrecords = fullfile(MEXEC_G.data_root, 'ctd', 'editlogs', sprintf('ctd_%s_editpoints', stn_string)); %stn_string %files that go into producing pfiles.ctd_clean from pfiles.ctd_raw
+                        pfiles.ctd_1hz = fullfile(MEXEC_G.data_root, 'ctd', sprintf('ctd_%s_%s_1hz.nc', MEXEC_G.mcruise, stn_string));
+                        pfiles.ctd_10s = fullfile(MEXEC_G.data_root, 'ctd', sprintf('ctd_%s_%s_10s.nc', MEXEC_G.mcruise, stn_string));
+                        pfiles.ctd_2db_dn = fullfile(MEXEC_G.data_root, 'ctd', sprintf('ctd_%s_%s_2db.nc', MEXEC_G.mcruise, stn_string));
+                        pfiles.ctd_2db_up = fullfile(MEXEC_G.data_root, 'ctd', sprintf('ctd_%s_%s_2up.nc', MEXEC_G.mcruise, stn_string));
+                        pfiles.ctd_nisk = fullfile(MEXEC_G.data_root, 'ctd', sprintf('fir_%s_%s.nc', MEXEC_G.mcruise, stn_string));
+                        pfiles.ctd_castcut = fullfile(MEXEC_G.data_root, 'ctd', sprintf('dcs_%s_%s.nc', MEXEC_G.mcruise, stn_string));
+                        %pfiles.ctd_win = fullfile(MEXEC_G.data_root, 'ctd', 'WINCH', sprintf('win_%s_%s.nc', MEXEC_G.mcruise, stn_string));                    pfiles.ctd_1hz_asc = fullfile(MEXEC_G.data_root, 'ladcp', 'ctd', sprintf('ctd.%s.asc',stn_string));
+                        pfiles.ctd_1hz_asc = fullfile(MEXEC_G.data_root, 'ladcp', 'ctd', sprintf('ctd.%s.asc',stn_string));
+                        %adcp on station average
+                        if exist('SADCP_inst','var')
+                            pfiles.sadcp_stnav = fullfile(MEXEC_G.data_root, 'vmadcp', 'mproc', sprintf('%s_%s_%s_ave.nc', SADCP_inst, MEXEC_G.mcruise, stn_string));
+                        end
+                    end
                     %other standard outputs
-                    pfiles.svel = fullfile(MEXEC_G.data_root, 'bathy', 'svel_for_echosounders', ['ctd_' MEXEC_G.mcruise '_10s_down_svel.csv']);
-                    pfiles.ctd_nisk_sum = fullfile(MEXEC_G.data_root, 'collected_files', ['station_summary_' MEXEC_G.mcruise '_all.nc']); %***
-                    pfiles.sbe35 = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', 'SBE35', ['sbe35_' MEXEC_G.mcruise '_all.nc']);
+                    pfiles.svel = fullfile(MEXEC_G.data_root, 'bathy', 'svel_for_echosounders', sprintf('ctd_%s_10s_down_svel.csv',MEXEC_G.mcruise)); %don't store these, overwrite with latest
+                    pfiles.ctd_nisk_sum = fullfile(MEXEC_G.data_root, 'collected_files', sprintf('station_summary_%s_all.nc', MEXEC_G.mcruise)); %cast stats
+                    pfiles.sbe35 = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', 'SBE35', sprintf('sbe35_%s_all.nc', MEXEC_G.mcruise));
                     if exist('samtyp','var')
-                        pfiles.(samtyp) = fullfile(MEXEC_G.data_root, 'bottle_samples', [samtyp '_' MEXEC_G.mcruise '_all.nc']);
+                        pfiles.(samtyp) = fullfile(MEXEC_G.data_root, 'bottle_samples', sprintf('%s_%s_all.nc', samtyp, MEXEC_G.mcruise));
                     end
                     %combined files for all sample (and comparison sensor) data
-                    pfiles.samp_ctd = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_nisk_' MEXEC_G.mcruise '_all.nc']);
-                    pfiles.samp_uway = fullfile(MEXEC_G.data_root, 'bottle_samples', ['samp_ucsw_' MEXEC_G.mcruise '_all.nc']);
-                    %underway data files
-                    if exist('mtable','var') && exist('m','var')
-                        pfiles.uway_raw = fullfile(MEXEC_G.data_root,mtable.mstardir{m},['abbrev_' MEXEC_G.mcruise '_all_raw.nc']); %abbrev
-                        pfiles.uway_edt = fullfile(MEXEC_G.data_root,mtable.mstardir{m},['abbrev_' MEXEC_G.mcruise '_all_edt.nc']); %abbrev
+                    pfiles.samp_ctd = fullfile(MEXEC_G.data_root, 'bottle_samples', sprintf('samp_nisk_%s_all.nc', MEXEC_G.mcruise));
+                    pfiles.samp_uway = fullfile(MEXEC_G.data_root, 'bottle_samples', sprintf('samp_ucsw_%s_all.nc', MEXEC_G.mcruise));
+                    %underway data files (all days appended)
+                    if exist('mtable','var') && exist('m','var') && exist('abbrev','var')
+                        pfiles.uway_raw = fullfile(MEXEC_G.data_root,mtable.mstardir{m},sprintf('%s_%s_all_raw.nc', abbrev, MEXEC_G.mcruise));
+                        pfiles.uway_edt = fullfile(MEXEC_G.data_root,mtable.mstardir{m},sprintf('%s_%s_all_edt.nc', abbrev, MEXEC_G.mcruise));
                     end
-                    pfiles.nav_final = fullfile(MEXEC_G.data_root, 'nav', ['bestnav_' MEXEC_G.mcruise '_all.nc']);
-                    pfiles.uocean_final = fullfile(MEXEC_G.data_root, 'surfmet', ['surface_ocean_' MEXEC_G.mcruise '_all.nc']);
-                    pfiles.met_final = fullfile(MEXEC_G.data_root, 'surfmet', ['atmos_truwind_' MEXEC_G.mcruise '_all.nc']);
-                    pfiles.bathy_final = fullfile(MEXEC_G.data_root, 'bathy', ['bathy_' MEXEC_G.mcruise '_all.nc']);
-                    %adcp
-                    if exist('inst','var')
-                        pfiles.sadcp_stnav = fullfile(MEXEC_G.data_root, 'vmadcp', 'mproc', [inst '_' MEXEC_G.mcruise '_stn_string_ave.nc']); %stn_string
-                    end
+                    pfiles.nav_final = fullfile(MEXEC_G.data_root, 'nav', sprintf('bestnav_%s_all.nc', MEXEC_G.mcruise));
+                    pfiles.ocean_final = fullfile(MEXEC_G.data_root, 'surfmet', sprintf('surface_ocean_%s_all.nc', MEXEC_G.mcruise));
+                    pfiles.atmos_final = fullfile(MEXEC_G.data_root, 'surfmet', sprintf('atmos_truwind_%s_all.nc', MEXEC_G.mcruise));
+                    pfiles.bathy_final = fullfile(MEXEC_G.data_root, 'bathy', sprintf('bathy_%s_all.nc', MEXEC_G.mcruise));
             end
 
         case 'adcp_proc'
@@ -102,9 +160,10 @@ while ~foundit & ~outofopts
             switch opt2
                 case 'sadcp_infiles'
                     foundit = true;
-                    infiles.sadcp_all = fullfile(MEXEC_G.data_root, 'vmadcp', 'postprocessing', upper(MEXEC_G.mcruise), 'proc_editing', inst, 'contour', [inst '_' MEXEC_G.mcruise '.nc']);
+                    infiles.sadcp_all = fullfile(MEXEC_G.data_root, 'vmadcp', 'postprocessing', upper(MEXEC_G.mcruise), 'proc_editing', SADCP_inst, 'contour', [SADCP_inst '_' MEXEC_G.mcruise '.nc']);
                 case 'sadcp_on_station'
                     foundit = true;
+                    SADCP_inst = 'os75nb'; %***
                     min_nvmadcpprf = 3;      %throws a warning if number of vmADCP profiles within an LADCP cast is less than this
                     min_nvmadcpbin = 3;      %masks depths with number of valid bins less than this
                     min_nvmadcpbin_refl = 3; %throws a warning if number of good profiles at any depth in the watertrack reference layer is less than this
@@ -112,74 +171,39 @@ while ~foundit & ~outofopts
             %set input and output*** files and contraints for processing LADCP
             %data using LDEO IX toolbox
             switch opt2
-                case 'ladcp_infiles'
+                case 'ladcp_files'
                     foundit = true;
-                    cfg.stnstr = stn_string;
-                    %file and format for ascii file of 1hz ctd data and corresponding nmea nav data
-                    cfg.f.ctd = fullfile(MEXEC_G.data_root, 'ladcp', 'ctd', sprintf('ctd.%s.asc',stn_string));
-                    cfg.f.ctd_header_lines      = 1; %***
-                    cfg.f.ctd_fields_per_line	= 6;
-                    cfg.f.ctd_time_base = 1; %year-day
-                    cfg.f.ctd_time_field = 1;
-                    cfg.f.ctd_pressure_field	= 2;
-                    cfg.f.ctd_temperature_field = 3;
-                    cfg.f.ctd_salinity_field	= 4;
-                    cfg.f.nav                   = cfg.f.ctd;
-                    cfg.f.nav_header_lines	= cfg.f.ctd_header_lines;
-                    cfg.f.nav_fields_per_line	= cfg.f.ctd_fields_per_line;
-                    cfg.f.nav_time_base = cfg.f.ctd_time_base;
-                    cfg.f.nav_time_field	= cfg.f.ctd_time_field;
-                    cfg.f.nav_lat_field 	= 5;
-                    cfg.f.nav_lon_field 	= 6;
-                    if exist('inst','var')
-                        %file for vmadcp data corresponding to this cast. if available, use
-                        %the instrument/mode with deepest range
-                        cfg.f.sadcp = replace(pfiles.sadcp_stnav,'stn_string',stn_string);
-                    end
-                    cfg.rawdir = fullfile(MEXEC_G.data_root, 'ladcp','rawdata');
+                    %directory for raw (.000) ladcp data
+                    rawdir = fullfile(MEXEC_G.data_root, 'ladcp','rawdata');
+                    %uplooker and downlooker files in uppat and dnpat
+                    %(allows wildcards in case of rare case of multiple
+                    %files for one cast)
                     if stn==6
-                        cfg.uppat = sprintf('UL%s00*m.000',cfg.stnstr);
-                        cfg.dnpat = sprintf('DL%s00*s.000',cfg.stnstr);
+                        %mistakenly deployed with uplooker as master
+                        uppat = ['UL' stn_string '00*m.000'];
+                        dnpat = ['DL' stn_string '00*s.000'];
                     else
-                        cfg.uppat = sprintf('UL%s00*s.000',cfg.stnstr);
-                        cfg.dnpat = sprintf('DL%s00*m.000',cfg.stnstr);
+                        uppat = ['UL' stn_string '00*s.000'];
+                        dnpat = ['DL' stn_string '00*m.000'];
                     end
+                    pdir = fullfile(MEXEC_G.data_root,'ladcp','ix');
+                    f.checkpoints = fullfile(pdir, 'checkpoints', stn_string);
                 case 'ladcp_cfg'
                     foundit = true;
-                    %the rest of the parameters for LADCP processing
-                    %cfg.p.magdec_source = 1;
-                    %cfg.p.drot = system()
-                    %cfg.p.edit_mask_dn_bins = 1;
-                    %cfg.p.edit_mask_up_bins = 1;
-                    cfg.p.orig = 0; % save original data or not
-                    isul = 1; %is there an uplooker? process it first on its own
-                    cfg.p.ambiguity = 4.0; %this one is not used?
-                    %cfg.p.vlim = 4.0; %this one is***require setting in opt_cruise
+                    %parameters that can be set automatically (based on
+                    %constraints being used, for example) are set in
+                    %set_cast_params. here are others you may want to
+                    %change from default:
+                    %p.magdec_source = 1;
+                    %p.drot = system()
+                    %p.edit_mask_dn_bins = 1;
+                    %p.edit_mask_up_bins = 1;
+                    p.orig = 0; % save original data or not
+                    p.ambiguity = 4.0; %this one is not used?
+                    %p.vlim = 4.0; %this one is***require setting in opt_cruise
                     %set magnetic declination here, rather than using either of the two
                     %options built in to LDEO_IX/loadnav
-                    %[p, f, ext] = fileparts(cfg.f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
-                    a = {dbstack(2).file};
-                    if ~strcmp(a{1},'mout_1hzasc.m') %bash script uses the output of mout_1hzasc so don't want to try to call this before that
-                        mdfile = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'magdec.txt');
-                        if ~exist(mdfile,'file')
-                            fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
-                            pause
-                        end
-                        md = load(mdfile);
-                        if ~sum(md==stn)
-                            fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
-                            pause
-                            md = load(mdfile);
-                        end
-                        ii = find(md==stn);
-                        if isempty(ii)
-                            warning('no mag dec for %s',stn_string)
-                        else
-                            ii = ii(1);
-                            cfg.p.drot = md(ii+1);
-                            fprintf(1,'using mag dec %f for %s',cfg.p.drot,stn_string)
-                        end
-                    end
+                    %[p, f, ext] = fileparts(f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
             end
 
         case 'ctd_proc'
@@ -190,7 +214,7 @@ while ~foundit & ~outofopts
                     foundit = true;
                     helptext = 'specify input file (e.g. .cnv file), and the original sampling frequency';
                     if stn<=71
-                        infiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', [upper(MEXEC_G.mcruise) '_stn_string.cnv']); %stn_string
+                        infiles.ctd_raw = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', sprintf('%s_%s.cnv', upper(MEXEC_G.mcruise), stn_string));
                     elseif stn==80
                         %CE26008_071.cnv is a yo-yo file containing casts
                         %71:79; CE26008_072.cnv is a yo-yo file containing
@@ -296,13 +320,13 @@ while ~foundit & ~outofopts
             switch opt2
                 case 'nisk_infiles'
                     foundit = true;
-                    infiles.ctd_nisk_fir = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', [upper(MEXEC_G.mcruise) '_stn_string.bl']);
+                    infiles.ctd_nisk = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', sprintf('%s_%s.bl', upper(MEXEC_G.mcruise), stn_string));
                     helptext = 'specify input .bl or .btl files using stn_string';
             end
             switch opt2
                 case 'sbe35_infiles'
                     foundit = true;
-                    infiles.sbe35 = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', 'SBE35', [upper(MEXEC_G.mcruise) '_*.txt']);
+                    infiles.sbe35 = fullfile(MEXEC_G.data_root, 'ctd', 'ASCII_FILES', 'SBE35', sprintf('%s_*.txt', upper(MEXEC_G.mcruise)));
                     %stnind is indices in filename sbe35file normally
                     %containing the station number; use negative to indicate
                     %distance from end e.g. [-6:-4] for dy113_SBE35_CTD_010.asc
@@ -399,7 +423,6 @@ while ~foundit & ~outofopts
                     g2opts.pbin = 2; %2 dbar bins
                     g2opts.postfill = 0; %don't fill after gridding
                     g2opts.ignore_nan = 1;
-                    pg = [0:2:1e4]';
                     g2opts.int = [-1 1]; %interval for bins
                     g2opts.grid_ends = [0 0]; %discard empty bins
                     g2opts.bin_partial = 0; %only use bins with data in both halves
@@ -436,24 +459,6 @@ while ~foundit & ~outofopts
                     %despiked
                     edit_vars_exclude = {'pressure_temp'}; %starts with press but don't plot this
                     edit_vars_exclude = [edit_vars_exclude 'par_corrected']; %this seems to be identically 0 so don't bother
-                case 'nisk_flags'
-                    foundit = true;
-                    ft = {'1 no info';
-                        '2 no problems noted';
-                        '3 leaking';
-                        '4 did not trip correctly';
-                        '5 not reported';
-                        '7 unknown problem';
-                        '9 samples not drawn'}; %***
-                    if ~MEXEC_G.quiet
-                        fprintf(1,'using WOCE Niskin flags: \n%s',ft{:})
-                    end
-                    infiles.ctd_nisk_flags = fullfile(MEXEC_G.data_root, 'ctd', 'niskin_flags_logged_ce26008.csv'); %flags from sampling logsheet (leaks or misfires)
-                    f = readtable(infiles.ctd_nisk_flags,'Delimiter',',');
-                    f = f(f.statnum==stn,:);
-                    [~,ia,ib] = intersect(position,f.position,'stable');
-                    niskin_flag(ia) = f.niskin_flag(ib);
-                    niskin_flag(position==3) = 4; %latch does not release
                 case 'nisk_numbers'
                     foundit = true;
                     niskin_number = [1:24]'; %replace with S/N, bedford number, etc.
@@ -471,6 +476,24 @@ while ~foundit & ~outofopts
 
         case 'samp_proc'
             switch opt2
+                case 'samp_nisk_infiles'
+                    foundit = true;
+                    ft = {'1 no info';
+                        '2 no problems noted';
+                        '3 leaking';
+                        '4 did not trip correctly';
+                        '5 not reported';
+                        '7 unknown problem';
+                        '9 samples not drawn'}; %***
+                    if ~MEXEC_G.quiet
+                        fprintf(1,'using WOCE Niskin flags: \n%s',ft{:})
+                    end
+                    infiles.ctd_nisk_flags = fullfile(MEXEC_G.data_root, 'bottle_samples', 'LOGS', 'niskin_samples_log_ce26008.csv'); %flags from sampling logsheet (leaks or misfires)
+                    f = readtable(infiles.ctd_nisk_flags,'Delimiter',',');
+                    f = f(f.statnum==stn,:);
+                    [~,ia,ib] = intersect(position,f.position,'stable');
+                    niskin_flag(ia) = f.niskin_flag(ib);
+                    niskin_flag(position==3) = 4; %latch does not release
                 case 'samp_infiles'
                     foundit = true;
                     helptext = 'set list of files to load for a particular samtyp, and set sopts to specify how to read in csv/spreadsheet files';
@@ -767,21 +790,6 @@ while ~foundit & ~outofopts
 
         case 'outputs'
             switch opt2
-                case 'station_lists'
-                    foundit = true;
-                    %statnums for each section
-                    kstns.all = [2 4:41 43:47 49:82]; %all CTD casts to process
-                    kstns.ar7e = [4:41 43:47 49:51]; %AR7E section
-                    kstns.km = 52:57; %KM
-                    kstns.ta = 58:63; %TA
-                    kstns.kgh = 64:69; %KGH
-                case 'summary_counts'
-                    foundit = true;
-                    samp_groups.sal = {'botpsal'};
-                    samp_groups.oxy = {'botoxy'};
-                    samp_groups.nut = {'silc', 'phos', 'totnit'};
-                    samp_groups.co2 = {'dic', 'talk', 'ph'};
-                    samp_groups.tt = {'sf6', 'cfc13'};
                 case 'grid'
                     foundit = true;
                     %compile and grid these sensor variables:
@@ -803,56 +811,6 @@ while ~foundit & ~outofopts
                     else
                         otfile = fullfile(MEXEC_G.data_root,'mapped',['grid_' MEXEC_G.mcruise '_' section '.mat']);
                     end
-                case 'section_for_station'
-                    foundit = true;
-                    if stn>=4 && stn<88
-                        sections = {'ar7e','km','ta','kgh'};
-                    end
-                case 'columndata'
-                    foundit = true;
-                    outtypes = {'bodc','exch'};
-                case 'exch'
-                    foundit = true;
-                    ns = 35;
-                    expocode = '54CE20260723';
-                    sect_id = 'AR7E; AR07E';
-                    submitter = 'OCPNOCYLF'; %group institution person
-                    common_headstr = {'#SHIP: RV Celtic Explorer';...
-                        '#Cruise CE26008; GO-SHIP AR7E 2026';...
-                        '#Region: subpolar north Atlantic';...
-                        ['#EXPOCODE: ' expocode];...
-                        '#DATES: 20260723 - 20260811';...
-                        '#Chief Scientist: Y. Firing (NOC); Co-Chief Scientist: M. Clark (NOC)';...
-                        '#Supported by ...'};
-                    if strcmp(params.in,'ctd')
-                        headstring = {['CTD,' datestr(now,'yyyymmdd') submitter]};
-                        headstring = [headstring; common_headstr;
-                            {sprintf('#%d stations with 24-place rosette',ns);...
-                            % '#CTD: Who - Y. Firing (NOC); Status - final.';...
-                            % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
-                            % '# DEPTH_TYPE   : COR';...
-                            % '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom, or speed of sound-corrected ship-mounted bathymetric echosounder'...
-                            }];
-                    else
-                        headstring = {['BOTTLE,' datestr(now,'yyyymmdd') submitter]};
-                        headstring = [headstring; common_headstr;
-                            {sprintf('#%d stations with 24-place rosette',ns);...
-                            % '#CTD: Who - Y. Firing (NOC); Status - final';...
-                            % '#Notes: Includes CTDSAL, CTDOXY, CTDTMP';...
-                            % '#The CTD PRS; TMP; SAL; OXY data are all calibrated and good.';...
-                            % '# DEPTH_TYPE   : rosette depth from CTDPRS + CTD altimeter range to bottom';...
-                            % '#Salinity: Who - Y. Firing (NOC); Status - final; SSW batch P168.';...
-                            % '#Oxygen: Who - R. Abell (SAMS); Status - final.';...
-                            % '#Nutrients: Who - R. Abell (SAMS); Status - preliminary.';...
-                            % '#DIC and Talk: Who - C. Johnson (SAMS); Status - not yet analysed.';...
-                            }];
-                    end
-                    vars_exclude_ctd = {}; %changed jc238 from {'fluor' 'transmittance'};
-                    vars_exclude_sam = {};
-                    vars_rename = {}; %first column in m_exch_vars_list, newname (e.g. CTDTURB, CTDBETA650_124)
-                case 'bodc'
-                    foundit = true;
-                    %vars_exclude = {};
                 case 'plot' %***
                     foundit = true;
                     station_depth_width = 0;

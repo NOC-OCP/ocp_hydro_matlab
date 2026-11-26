@@ -96,14 +96,16 @@ if ~isempty(stnall)
 
     %get information from files
     disp('loading')
-    if exist(m_add_nc(pds.samc),'file') == 2
-        dsam0 = mloadq(pds.samc,'/');
+    if exist(m_add_nc(pfiles.samp_ctd),'file') == 2
+        dsam0 = mloadq(pfiles.samp_ctd,'/');
     end
     for k = 1:length(statnum)
 
-        stn = statnum(k); opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
+        stn = statnum(k); 
+        opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
+        opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
         %lat, lon, ctd depths
-        fnsal = replace(pfiles.ctd_1hz,'stn_string',stn_string);
+        fnsal = pfiles.ctd_1hz;
         if exist(m_add_nc(fnsal),'file')
             [dpsal, hpsal] = mloadq(fnsal,'/');
             lat(k) = hpsal.latitude;
@@ -113,18 +115,16 @@ if ~isempty(stnall)
         end
 
         %winch
-        fnwin = replace(pfiles.win,'stn_string',stn_string);
-        if exist(m_add_nc(fnwin),'file') == 2
-            h3 = m_read_header(fnwin);
+        if exist(pfiles.ctd_win,'file') == 2
+            h3 = m_read_header(pfiles.ctd_win);
             cabname = munderway_varname('cabvar',h3.fldnam,1,'s');
             [dwin, ~] = mloadq(fnwin,cabname,'/');
             maxw(k) = max(dwin.(cabname));
         end
 
         %cast start, bottom, end times
-        fndcs = replace(pfiles.ctd_castcut,'stn_string',stn_string);
-        if exist(m_add_nc(fndcs),'file')
-            [ddcs, h4] = mloadq(fndcs,'/');
+        if exist(pfiles.ctd_castcut,'file')
+            [ddcs, h4] = mloadq(pfiles.ctd_castcut,'/');
             time_start(k) = m_commontime(ddcs.time_start,'time_start',h4,timestring);
             time_bottom(k) = m_commontime(ddcs.time_bot,'time_bot',h4,timestring);
             time_end(k) = m_commontime(ddcs.time_end,'time_end',h4,timestring);
@@ -206,7 +206,7 @@ if ~isempty(stnall)
 else
 
     disp('not regenerating station_summary file, just loading and printing table');
-    ds = mloadq(fullfile(root_sum, ['station_summary_' mcruise '_all']),'/');
+    ds = mloadq(pfiles.ctd_nisk_sum,'/');
     fn = fieldnames(ds);
     for k = 1:length(fn)
         eval([fn{no} ' = ds.(fn{no});']);
@@ -222,13 +222,13 @@ opt1 = mfilename; opt2 = 'sum_extras'; run(MEXEC_G.opt_cruise)
 %%%%% write to ascii file %%%%%
 
 %reload file in case we only added some stations in workspace
-[ds, ~] = mloadq(pd.sum,'/');
+[ds, ~] = mloadq(pfiles.ctd_nisk_sum,'/');
 ds.time_start = m_commontime(ds.time_start,timestring,'datenum');
 ds.time_bottom = m_commontime(ds.time_bottom,timestring,'datenum');
 ds.time_end = m_commontime(ds.time_end,timestring,'datenum');
 stnall = unique(ds.statnum);
 
-sumcsv = replace(pd.sum,'.nc','.csv');
+sumcsv = replace(pfiles.ctd_nisk_sum,'.nc','.csv');
 fid = fopen(sumcsv,'w'); mfixperms(sumcsv);
 
 % list headings

@@ -45,6 +45,7 @@ if ~isempty(a)
 end
 
 opt1 = 'samp_proc'; opt2 = 'samp_infiles'; run(MEXEC_G.opt_cruise)
+stn_string = '*';
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 
 restartsam = 0; restartusam = 0;
@@ -69,10 +70,9 @@ if restartsam
         delete(pd.samc)
     end
     %find list of stations available
-    npat = sprintf(pfiles.ctd_nisk,'*');
-    d = dir(npat);
-    npat = split(npat,'*');
-    stns = cellfun(@(x) stru2double(replace(replace(x,npat{1},''),npat{2},'')), {d.name});
+    d = dir(pfiles.ctd_nisk);
+    f = split(pfiles.ctd_nisk,'*');
+    stns = cellfun(@(x) str2double(replace(replace(x,f{1},''),f{2},'')), {d.name});
     ctd_process(stns, 'niskins')
 end
 if restartusam

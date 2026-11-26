@@ -105,8 +105,8 @@ end
 if dostep.edit
     for stn = stns
         %apply corrections (e.g. oxygen hysteresis) and calibrations, as specified in opt_cruise
-        msbe_02_edcal(stn)
-        %average to 1 hz, compute salinity from C and T
+        %compute salinity from C and T, average to 10 s
+        msbe_02_cleancal_derive(stn)
     end
 end
 
@@ -114,7 +114,7 @@ if dostep.average
 
     for stn = stns
         % do the quick (regular time binning) averages
-        msbe_03_derive_tbin(stn)
+        mctd_03_tbin(stn)
         % in order to find cast start, bottom, and end
         mdcs_01_auto(stn)
     end
@@ -126,20 +126,13 @@ if dostep.average
             ed = mctd_raw_show_check_edit(stn);
             if strcmp(ed,'y')
                 %new edits to apply
-                msbe_02_edcal(stn)
+                msbe_02_cleancal_derive(stn)
                 if dostep.average
                     %and to propagate by re-running steps above
-                    msbe_03_derive_tbin(stn)
+                    mctd_03_tbin(stn)
                     mdcs_01_auto(stn)
                 end
             end
-        end
-    end
-
-    if strcmp(MEXEC_G.datatypes.ladcp,'ix')
-        %output 1 hz CTD and lon, lat data for LADCP processing
-        for stn = stns
-            mout_1hzasc(stn)
         end
     end
 
@@ -188,7 +181,7 @@ if dostep.average || dostep.profile
     end
 end
 
-if dostep.average && dostep.load && isfield(pfiles,'ctd_win')
+if dostep.average && dostep.load
     try
         %extract and add winch data (uses ctd 1 hz file)
         mwin_01_load(stn)

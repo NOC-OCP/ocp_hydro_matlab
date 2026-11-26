@@ -24,9 +24,9 @@ if MEXEC_G.quiet<=1; fprintf(1,'adding winch data to %s\n',stn_string); end
 
 % resolve root directories for various file types
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-infile1 = replace(pfiles.ctd_1hz,'stn_string',stn_string);
-pd = mexec_file_locations('procfiles','win');
-winfile = replace(pd.winfile,'stn_string',stn_string);
+if ~isfield(pfiles,'ctd_win')
+    error('no winch file defined, skipping')
+end
 wkfile3 = fullfile(MEXEC_G.MDIRLIST.M_CTD_WIN, ['wk_' opt1 '_' datestr(now,30)]);
 dataname = pd.winname;
 
@@ -47,7 +47,7 @@ if exist('winch_time_start','var') && ~isnan(winch_time_start) && ~isnan(winch_t
     t_start = datenum(winch_time_start);
     t_end = datenum(winch_time_end);
 else
-    h_in=m_read_header(infile1);
+    h_in=m_read_header(pfiles.ctd_1hz);
     k_time=find(strcmp('time',h_in.fldnam));
     if isempty(h_in.data_time_origin)
         t_start=m_commontime(h_in.alrlim(k_time),h_in.fldunt{k_time},'datenum')+time_window(1)/86400;
@@ -88,10 +88,10 @@ varlist = '-';
 switch MEXEC_G.Mshipdatasystem
     case 'scs'
     mdatapupscs(yy_start,daystart,timestart,yy_end,dayend,timeend,...
-        flags,instream,winfile,varlist);
+        flags,instream,pfiles.ctd_win,varlist);
     case 'techsas'
      mdatapuptechsas(yy_start,daystart,timestart,yy_end,dayend,timeend,...
-        flags,instream,winfile,varlist);
+        flags,instream,pfiles.ctd_win,varlist);
     case 'rvdas'
         if strcmp(MEXEC_G.Mship,'sda')
             %limit variables
@@ -103,12 +103,12 @@ switch MEXEC_G.Mshipdatasystem
             %varlist = [varlist 'deeptowoutboardtension deeptowinboardtension deeptowcablelengthout deeptwodeployeddepth deeptowlinespeed '];
             %varlist = [varlist 'biowireoutboardtension biowireinboardtension biowirecablelengthout biowiredeployeddepth biowireoverboardpointselec'];
         end
-        if exist(m_add_nc(winfile),'file')
+        if exist(m_add_nc(pfiles.ctd_win),'file')
             %mrrvdas2mstar will merge if file exists, don't want that here
-            movefile(m_add_nc(winfile),[otfile2 '.tmp'])
+            movefile(m_add_nc(pfiles.ctd_win),[otfile2 '.tmp'])
         end
-        mrrvdas2mstar(instream,t_start_vec,t_end_vec,winfile,dataname,varlist);
-        delete([winfile '.tmp']);
+        mrrvdas2mstar(instream,t_start_vec,t_end_vec,pfiles.ctd_win,dataname,varlist);
+        delete([pfiles.ctd_win '.tmp']);
 %         if strcmp(MEXEC_G.Mship,'sda')
 %             %subsample to 1 Hz (from 4 Hz)
 %             [d,h] = mloadq(otfile2,'/');
@@ -123,10 +123,10 @@ end
 
 
 MEXEC_A.MARGS_IN = {
-winfile
+pfiles.ctd_win
 'y'
 '1'
-sprintf(winfile.dataname,stn_string)
+dataname
 '/'
 '2'
 MEXEC_G.PLATFORM_TYPE
@@ -138,12 +138,12 @@ MEXEC_G.PLATFORM_NUMBER
 MEXEC_A.MARGS_IN0 = MEXEC_A.MARGS_IN;
 mheadr;
 
-hdr = m_read_header(winfile);
+hdr = m_read_header(pfiles.ctd_win);
 noflds = hdr.noflds;
 copystring = ['1~' sprintf('%d',noflds)];
 
 MEXEC_A.MARGS_IN = {
-winfile
+pfiles.ctd_win
 wkfile3
 '/'
 'time'
@@ -156,7 +156,7 @@ mcalc;
 
 MEXEC_A.MARGS_IN = {
 wkfile3
-winfile
+pfiles.ctd_win
 '2'
 'tflag .5 1.5'
 ' '
@@ -165,7 +165,7 @@ copystring
 mdatpik;
 
 if strncmp(MEXEC_G.Mshipdatasystem,'scs',3)
-    mtranslate_varnames(winfile,instream);
+    mtranslate_varnames(pfiles.ctd_win,instream);
 end
 
 delete(m_add_nc(wkfile3));

@@ -32,13 +32,9 @@ if MEXEC_G.quiet<=1; fprintf(1,'applying corrections/conversions (e.g. oxygen hy
 % input and output files, and some information about the raw file
 opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise)
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-rawfile = replace(pfiles.ctd_raw,'stn_string',stn_string);
-cfile = replace(pfiles.ctd_cleancal,'stn_string',stn_string);
-edfilepre = replace(pfiles.ctd_editsrecords,'stn_string',stn_string);
-dfile = replace(pfiles.ctd_castcut,'stn_string',stn_string);
 
 % start from the raw (cnv) file
-[d, h] = mloadq(rawfile,'/');
+[d, h] = mloadq(pfiles.ctd_raw,'/');
 
 % what steps have been done
 doneco.oxytau = contains(h.comment, '# datcnv_ox_tau_correction = yes');
@@ -240,13 +236,13 @@ if isfield(co, 'calstr') && sum(cell2mat(struct2cell(co.docal)))
 end
 
 %%%%% save %%%%%
-mfsave(cfile, d, h);
+mfsave(pfiles.ctd_cleancal, d, h);
 
 
 %%%%% check and warn
 opt1 = 'ctd_proc'; opt2 = 'cast_divide'; run(MEXEC_G.opt_cruise)
-if exist(dfile,'file')
-    [ddc,~] = mload(dfile,'/');
+if exist(pfiles.ctd_castcut,'file')
+    [ddc,~] = mload(pfiles.ctd_castcut,'/');
     m = d.scan>=ddc.scan_start & d.scan<=ddc.scan_end;
 else
     m = true(size(d.scan));
@@ -263,3 +259,52 @@ if min(d.press(m))<=-3 && (~isfield(co,'badpress') || ((isfield(co,'badtemp1') |
         keyboard
     end
 end
+
+%calculate derived variables
+iig = find(d.press>-1.495); %gsw won't work on p<=-1.495
+if length(iig)<length(d.press)
+    m = {'negative pressures < -1.495 found, psal etc. will not be calculated for these points'};
+    if min(d.press<-10)
+        m = [m; 'you may also want to check in mctd_rawshow and set rangelim under mctd_02';
+            'case in opt_' mcruise ' in case pressure spikes need to be edited out'];
+        warning('%s\n',m{:});
+    end
+end
+cu = {'S/m', 'mS/cm'; 10, 1};
+m = strcmp(cu(1,:),h.fldunt{strcmp(h.fldnam,'cond1')});
+if sum(m)
+    csc = cu{2,m};
+else
+    warning('conductivity units not recognised, should be S/m or mS/cm')
+    csc = NaN;
+end
+d.psal1 = NaN+d.cond1; d.psal1(iig) = gsw_SP_from_C(d.cond1(iig)*csc,d.temp1(iig),d.press(iig));
+d.psal2 = NaN+d.cond2; d.psal2(iig) = gsw_SP_from_C(d.cond2(iig)*csc,d.temp2(iig),d.press(iig));
+d.asal1 = NaN+d.cond1; d.asal1(iig) = gsw_SA_from_SP(d.psal1(iig),d.press(iig),h.longitude,h.latitude);
+d.asal2 = NaN+d.cond2; d.asal2(iig) = gsw_SA_from_SP(d.psal2(iig),d.press(iig),h.longitude,h.latitude);
+d.potemp1 = NaN+d.cond1; d.potemp1(iig) = gsw_pt0_from_t(d.asal1(iig),d.temp1(iig),d.press(iig));
+d.potemp2 = NaN+d.cond2; d.potemp2(iig) = gsw_pt0_from_t(d.asal2(iig),d.temp2(iig),d.press(iig));
+% d.psal1_flag = max([d.cond1_flag,d.temp1_flag,d.press_flag],2);
+% d.psal2_flag = max([d.cond2_flag,d.temp2_flag,d.press_flag],2);
+% d.potemp1_flag = d.psal1_flag; d.potemp2_flag = d.psal2_flag;
+% d.asal1_flag = d.psal1_flag; d.asal2_flag = d.psal2_flag;
+
+%new variable names and units
+hnew.fldnam = {'psal1' 'psal2' 'asal1' 'asal2' 'potemp1' 'potemp2'};
+hnew.fldunt = {'pss-78' 'pss-78' 'g/kg' 'g/kg' 'degc90' 'degc90'};
+% hnew.fldnam = [hnew.fldnam 'psal1_flag' 'psal2_flag' 'asal1_flag' 'asal2_flag' 'potemp1_flag' 'potemp2_flag'];
+% hnew.fldunt = [hnew.fldunt 'woce' 'woce' 'woce' 'woce' 'woce' 'woce'];
+hnew.fldserial = repmat({' '},1,6);
+[h.fldnam,ia,ib] = union(h.fldnam,hnew.fldnam,'stable'); 
+h.fldunt = [h.fldunt(ia) hnew.fldunt(ib)];
+h.fldserial = [h.fldserial(ia) hnew.fldserial(ib)];
+d = orderfields(d,h.fldnam);
+cstr = 'psal, asal, potemp calculated using gsw';
+if ~contains(h.comment, cstr)
+    h.comment = [h.comment '\n ' cstr];
+end
+
+tic
+%save to _24hz file
+mfsave(pfiles.ctd_cleancal, d, h);
+toc

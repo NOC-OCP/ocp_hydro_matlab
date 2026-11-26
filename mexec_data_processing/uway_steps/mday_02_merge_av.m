@@ -180,4 +180,4 @@ if ~isempty(comment)
 end
 
 %save again
-mfsave(otfile, dg, hg);
+mfsave(pfiles.([datatype '_final']), dg, hg);

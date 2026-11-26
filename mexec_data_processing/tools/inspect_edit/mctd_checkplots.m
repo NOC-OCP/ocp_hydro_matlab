@@ -51,7 +51,7 @@ function mctd_checkplots(stn, varargin)
 %
 
 m_common
-if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD dataa from station %s along with dataa from selected previous stations',stn_string);end
+if MEXEC_G.quiet<=1; fprintf(1,'plotting CTD data from station %s along with dataa from selected previous stations',stn_string);end
 
 quick = 0; %whether to use 10 hz (quick) or 2 dbar
 if nargin>1
@@ -80,7 +80,7 @@ opt1 = 'ctd_proc'; opt2 = 'ctd_checkplots'; run(MEXEC_G.opt_cruise) %saltype
 opt1 = 'ctd_proc'; opt2 = 'ctd_infiles'; run(MEXEC_G.opt_cruise) %raw resolution
 
 % load data
-klist = [slist(:)' stn];
+klist = [slist(:)' stn]; klist = klist(klist>0);
 sused = false(size(klist));
 d2dn = cell(1,length(klist));
 d2up = d2dn; d1 = d2dn; dc = d2dn;
@@ -99,7 +99,7 @@ for no = 1:length(klist)
             [d2dn{no}, d2up{no}] = cast_split(d, sb);
         else
             [d2dn{no},~,found] = load_if_found(replace(pfiles.ctd_2db_dn,'stn_string',stn_string));
-            [d2up{no},~,found] = load_if_found(replace(pfiles.ctd_2db_dn,'stn_string',stn_string));
+            [d2up{no},~,found] = load_if_found(replace(pfiles.ctd_2db_up,'stn_string',stn_string));
         end
         done = true;
     end

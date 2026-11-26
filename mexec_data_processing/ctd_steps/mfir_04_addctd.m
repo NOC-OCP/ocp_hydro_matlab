@@ -12,25 +12,21 @@ function mfir_04_addctd(stn)
 
 m_common
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
-f = replace(pfiles.ctd_nisk,'stn_string',stn_string);
-if ~exist(m_add_nc(f),'file')
+if ~exist(m_add_nc(pfiles.ctd_nisk),'file')
     warning('station %s fir file not found; skipping',stn_string)
     return
 end
-file1 = replace(pfiles.ctd_1hz,'stn_string',stn_string); %not using 24hz because we want at least some averaging
-dfile = replace(pfiles.ctd_2db_dn,'stn_string',stn_string);
-ufile = replace(pfiles.ctd_2db_up,'stn_string',stn_string);
-if MEXEC_G.quiet<=1; fprintf(1,'adds CTD data corresponding to Niskin closures to %s\n', f); end
+if MEXEC_G.quiet<=1; fprintf(1,'adds CTD data corresponding to Niskin closures to %s\n', pfiles.ctd_nisk); end
 
 var_copycell = mcvars_to_average(2); %which variables to copy from 24hz CTD file
 % remove any vars from copy list that aren't available in the input file
-[var_copycell, var_copystr] = mvars_in_file(var_copycell, file1);
+[var_copycell, var_copystr] = mvars_in_file(var_copycell, pfiles.ctd_1hz);
 if ~sum(strcmp('scan',var_copycell)); var_copystr = ['scan ' var_copystr]; end
 
 %load and average data
 opt1 = 'ctd_proc'; opt2 = 'fir_fill'; run(MEXEC_G.opt_cruise)
-[dfir, hfir] = mload(f,'scan',' ');
-[dc, hc] = mload(file1,'/');
+[dfir, ~] = mload(pfiles.ctd_nisk,'scan',' ');
+[dc, hc] = mload(pfiles.ctd_1hz,'/');
 m = ismember(hc.fldnam,[var_copycell 'scan']);
 dc = struct2table(dc);
 dc.Properties.VariableNames = hc.fldnam;
@@ -43,20 +39,14 @@ end
 dc = grid_1D(dc, 'scan', dfir.scan, firmethod, firopts);
 
 %this will go into sam_all file, so use cruise time origin, not cast time origin
-to = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+to = ['seconds since ' MEXEC_G.data_time_origin_string];
 opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 [dc.time,tun] = m_commontime(dc,'time',hc,to);
-if docf
-    hc.fldunt{strncmp(hc.fldnam,'time',4)} = tun;
-end
+hc.fldunt{strncmp(hc.fldnam,'time',4)} = tun;
 
 %copy and rename (for upcast) selected variables
 clear dnew hnew
-if docf
-    hnew.data_time_origin = [];
-else
-    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
-end
+hnew.data_time_origin = [];
 hnew.latitude = hc.latitude; hnew.longitude = hc.longitude; hnew.water_depth_metres = hc.water_depth_metres;
 [~,~,ii] = intersect(var_copycell,hc.fldnam,'stable');
 hnew.fldnam = cellfun(@(x) ['u' x], hc.fldnam(ii),'UniformOutput',false);
@@ -69,17 +59,17 @@ dnew = table2struct(dnew,'ToScalar',true);
 hnew.comment = hc.comment;
 
 MEXEC_A.Mprog = mfilename;
-mfsave(f, dnew, hnew, '-addvars');
+mfsave(pfiles.ctd_nisk, dnew, hnew, '-addvars');
 
 opt1 = 'ctd_proc'; opt2 = 'fir_extra'; run(MEXEC_G.opt_cruise)
 if fir_extra
     if MEXEC_G.quiet<=1; fprintf(1,'adds bottle stop background gradient, standard deviation, and gamma_n-matched downcast data to fir_%s_%s.nc\n', mcruise, stn_string); end
 
-    if ~exist(file1,'file') || ~exist(ufile,'file')
+    if ~exist(pfiles.ctd_1hz,'file') || ~exist(pfiles.ctd_2db_up,'file')
         warning('missing 1hz or 2up file for cast %s',stn_string)
         return
     end
-    [up,~] = mloadq(ufile,'/');
+    [up,~] = mloadq(pfiles.ctd_2db_up,'/');
 
     fpress = dnew.upress; ftime = dnew.utime; ftu = hnew.fldunt(strcmp(hnew.fldnam,'utime'));
     clear dnew hnew
@@ -118,8 +108,8 @@ if fir_extra
     hnew.comment = [hnew.comment '\n stdev at bottle stops from psal (1hz) file'];
 
     var_copycell = mcvars_to_average(2);
-    if exist(dfile,'file')
-        [dn,hd] = mloadq(dfile,'/');
+    if exist(pfiles.ctd_2db_dn,'file')
+        [dn,hd] = mloadq(pfiles.ctd_2db_dn,'/');
         [var_copycell, ~] = mvars_in_file(var_copycell, dfile);
 
         %get down and up T and S on common pressure grid (from 2 dbar data)
@@ -155,7 +145,7 @@ if fir_extra
         hnew.comment = [hnew.comment '\n downcast data matched on neutral density (smoothed using heaveND.m)'];
 
         %save
-        mfsave(f, dnew, hnew, '-addvars');
+        mfsave(pfiles.ctd_nisk, dnew, hnew, '-addvars');
     end
 end
 
