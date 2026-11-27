@@ -95,12 +95,30 @@ h.fldnam = [h.fldnam 'dday']; h.fldunt = [h.fldunt ddu]; h.fldserial = [h.fldser
 %pressure offset (deck pressure)
 if co.dpoff_calc
     iid = 1:60*24;% first minute on deck
-    %if max(d.press(iid))>0.3 %&& checked = [6 1]; ~checked(checked(:,1)==stnlocal)
-        %keyboard
-    %else
+    if max(abs(d.press(iid)))>1 %&& checked = [6 1]; &~checked(checked(:,1)==stnlocal)
+        if isfield(co,'dpoff_checked')
+            idx = find(co.dpoff_checked(:,1)==stnlocal,1);
+            if ~isempty(idx) && co.dpoff_checked(idx,2)
+                co.dpoff = -median(d.press(iid),'omitnan');
+            elseif ~isempty(idx) && co.dpoff_checked(idx,2)==0
+                co.dpoff = 0;
+            else
+                plot(d.scan,d.press)
+                title(sprintf('ctd cast = %d',stnlocal))
+                fprintf(1,'Check pressure offset\n')
+                keyboard
+            end
+            fprintf(1,'pre-cast p offset: %f\n',co.dpoff)
+        else
+            plot(d.scan,d.press)
+            title(sprintf('ctd cast = %d',stnlocal))
+            fprintf(1,'Check pressure offset\n')
+            keyboard
+        end
+    else
         co.dpoff = -median(d.press(iid),'omitnan');
         fprintf(1,'pre-cast p offset: %f\n',co.dpoff)
-    %end
+    end
     d.press = d.press + co.dpoff;
     h.comment = [h.comment '\npressure offset by ' num2str(co.dpoff) ' dbar'];
     doneco.dpoff = 1;
