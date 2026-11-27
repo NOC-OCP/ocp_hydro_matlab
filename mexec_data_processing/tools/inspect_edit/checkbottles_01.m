@@ -41,7 +41,7 @@ bdffile = fullfile(root_ctd, 'bottle_data_flags.txt');
 
 % check for existence of sam file and load; exit if absent;
 
-fnsamall = fullfile(root_ctd, ['sam_' mcruise '_all']);
+fnsamall = fullfile('C:\Users\sa07kb\work\data\cruises\dy214\data\bottle_samples', ['nisksamp_' mcruise '_all']);
 
 if exist(m_add_nc(fnsamall),'file') == 2
     [dsam, ~]  = mload(fnsamall,'/');
