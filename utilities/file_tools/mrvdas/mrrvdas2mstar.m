@@ -107,12 +107,6 @@ if sum(m)
 end
 dd = table2struct(times_subsample(struct2table(dd), 'time', stepfreq_force, tstep_resol),'ToScalar',true);
 
-if docf
-    hnew.data_time_origin = [];
-else
-    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
-end
-
 hnew.dataname = dataname;
 hnew.comment = ['Variables written from rvdas to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER];
 if exist(m_add_nc(otfile),'file')

@@ -173,7 +173,11 @@ if mergemode
         error([indepvar ' not found in file ' filename ' to merge on']);
     end
 
-    d0 = mloadq(filename, indepvar);
+    [d0,h0] = mloadq(filename, indepvar);
+    if contains(indepvar,'time')
+        d.(indepvar) = m_commontime(d, indepvar, h, h0);
+        h.fldunt(strcmp(indepvar,h.fldnam)) = h0.fldunt(strcmp(indepvar,h0.fldnam));
+    end
     d0.(indepvar) = d0.(indepvar)(:);
     if size(d.(indepvar),2)>1
         d0.(indepvar) = d0.(indepvar).';

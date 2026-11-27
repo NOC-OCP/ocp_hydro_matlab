@@ -46,10 +46,10 @@ elseif isfield(params, 'dateform')
 else
     %print time as numeric
     if ~isempty(iit)
-        if ~isempty(h.data_time_origin)
+        if isfield(h,'data_time_origin') && ~isempty(h.data_time_origin)
             %old mstar format, first convert units to CF
             h.fldunt{iit} = sprintf('%s since %s',datestr(h.data_time_origin),h.fldunt{iit},'yyyy-mm-dd HH:MM:SS');
-            h.data_time_origin = [];
+            h = rmfield(h,'data_time_origin');
         end
         if isfield(params,'time_units')
             %convert to desired time units

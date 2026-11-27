@@ -12,9 +12,6 @@ function [mt, varargout] = mrdef_dirs_tables
 % they come from the same instrument and will be read into the same
 % directory and files).  
 %
-% for backwards compatibility it may be helpful to add new lines using a
-% test on MEXEC_G.mdefault_data_time_origin or similar ...
-%
 % optionally, also output skips, a structure listing tables/sentences,
 % messages, and variables or patterns in variables to skip from this
 % ship (set below) or cruise (opt_cruise rvdas_skip case)

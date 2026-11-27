@@ -39,14 +39,12 @@ end
 dc = grid_1D(dc, 'scan', dfir.scan, firmethod, firopts);
 
 %this will go into sam_all file, so use cruise time origin, not cast time origin
-to = ['seconds since ' MEXEC_G.data_time_origin_string];
-opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-[dc.time,tun] = m_commontime(dc,'time',hc,to);
-hc.fldunt{strncmp(hc.fldnam,'time',4)} = tun;
+timunt = ['seconds since ' MEXEC_G.data_time_origin_string];
+dc.time = m_commontime(dc,'time',hc,timunt);
+hc.fldunt{strncmp(hc.fldnam,'time',4)} = timunt;
 
 %copy and rename (for upcast) selected variables
 clear dnew hnew
-hnew.data_time_origin = [];
 hnew.latitude = hc.latitude; hnew.longitude = hc.longitude; hnew.water_depth_metres = hc.water_depth_metres;
 [~,~,ii] = intersect(var_copycell,hc.fldnam,'stable');
 hnew.fldnam = cellfun(@(x) ['u' x], hc.fldnam(ii),'UniformOutput',false);

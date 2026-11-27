@@ -9,10 +9,10 @@ m_common
 un1 = h1.fldunt(strcmp(h1.fldnam,timename));
 un2 = h2.fldunt(strcmp(h2.fldnam,timename));
 
-if ~isempty(h1.data_time_origin)
+if isfield(h1,'data_time_origin') && ~isempty(h1.data_time_origin)
     un1 = [un1 ' since ' datestr(h1.data_time_origin,'yyyy-mm-dd HH:MM:SS')];
 end
-if ~isempty(h2.data_time_origin)
+if isfield(h2,'data_time_origin') && ~isempty(h2.data_time_origin)
     un2 = [un2 ' since ' datestr(h2.data_time_origin,'yyyy-mm-dd HH:MM:SS')];
 end
 data0 = data;

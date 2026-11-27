@@ -13,7 +13,10 @@ function adcp_process(klist, types, varargin)
 %      separately *as well as together* (ignored if there is only one
 %      instrument)
 %
-% 
+% to process ladcp quickly after each cast, with all available constraints
+% (probably will not include SADCP yet) and both down and uplooker (if both
+% are available) together:  
+%   adcp_process(stn, 'ladcp', 'ladcp_incr', false, 'ladcp_sepud', false, 'ladcp_pause', false)
 
 m_common
 ladcp_pause = true;

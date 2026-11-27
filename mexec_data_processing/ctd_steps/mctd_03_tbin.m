@@ -24,13 +24,15 @@ opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise);
 
 %load data and copy preferred sensor e.g. psal = psal1
 [d, h] = mloadq(pfiles.ctd_cleancal,'/');
+timunt = ['seconds since ' MEXEC_G.data_time_origin_string];
+d.time = m_commontime(d, 'time', h, timunt);
+h.fldunt{strcmp('time',h.fldnam)} = timunt;
 [d, h] = copy_sensor(d, h, stn);
 
 %find variables to copy, that are in both mcvars_to_average and the input file
 var_copycell = mcvars_to_average(1);
 var_copycell = intersect(h.fldnam, var_copycell, 'stable');
 clear hnew dnew
-hnew.data_time_origin = h.data_time_origin; 
 hnew.dataname = h.dataname;
 hnew.latitude = h.latitude;
 hnew.longitude = h.longitude;

@@ -163,9 +163,10 @@ if calcsal
         else
             xlabel('index')
             if sum(strcmp('runtime',ds_sal.Properties.VariableNames))
-            text(x(iistd),zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'dd'));
-            text(x(iistd),-5e-6+zeros(1,length(iistd)),datestr(ds_sal.runtime(iistd),'HH:MM'));
-            disp('labels: dd;HH:MM of standard');
+                dv = datevec(ds_sal.runtime(iistd));
+            text(x(iistd),zeros(1,length(iistd)),sprintf('%02d',dv(3)));
+            text(x(iistd),-5e-6+zeros(1,length(iistd)),sprintf('%02d:%02d',dv(4),dv(5)));
+                disp('labels: dd;HH:MM of standard');
             end
         end
         ylim([-1 1]*1e-4); ylabel('nominal (2xK15) - recorded value')
@@ -180,11 +181,11 @@ if calcsal
 
     %get offsets for samples
     if isempty(sal_adj_comment) && ~isempty(salin_off)
-        sal_adj_comment = ['Adjustments specified in opt_' mcruise];
+        sal_adj_comment = ['Adjustments specified in opt_' MEXEC_G.mcruise];
     end
     if isempty(salin_off)
         sal_adj_comment = 'no standards adjustment';
-    elseif length(salin_off)==1
+    elseif isscalar(salin_off)
         ds_sal.salin_off = repmat(salin_off, size(ds_sal.sampnum));
     elseif length(salin_off)==length(ds_sal.sampnum)
         ds_sal.salin_off = salin_off;
@@ -328,12 +329,8 @@ if ~isempty(iiu)
     [c,ia,ib] = intersect(dsu.sampnum,tsg.sampnum);
     dsu.time = NaN+dsu.sampnum;
     opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-    if docf
-        un = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
-    else
-        un = ['seconds since ' datestr(hc.data_time_origin,'yyyy-mm-dd HH:MM:SS')];
-    end
-    dsu.time(ia) = m_commontime(tsg.dnum(ib),'datenum',un);
+    timunt = ['seconds since ' MEXEC_G.data_time_origin_string];
+    dsu.time(ia) = m_commontime(tsg.dnum(ib),'datenum',timunt);
     if sum(isnan(dsu.time))>0
         warning('missing times for tsg samples:')
         disp(dsu.sampnum(isnan(dsu.time)))

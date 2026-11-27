@@ -11,7 +11,7 @@ function [d, hnew] = merge_mvars(d0, h0, d, h, indepvar, nosort)
 %   variables present in d0, h0.fldunt (etc.) will be used; h.fldunt (etc.)
 %   will be used only for variables present in d but not d0
 % no other fields from h0 or h (e.g. comment, data_time_origin) will be
-%   carried through (and common time base will not be checked)***
+%   carried through (and common time base will not be checked, this needs to be done earlier? or add units checking here)***
 
 %initialise hnew with h0
 hnew.fldnam = h0.fldnam;

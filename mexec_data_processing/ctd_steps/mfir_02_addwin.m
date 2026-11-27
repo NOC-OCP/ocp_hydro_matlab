@@ -4,7 +4,7 @@ function mfir_02_addwin(stn)
 m_common
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 
-if ~exist(m_add_nc(pfiles.ctd_win),'file')
+if ~exist(pfiles.ctd_win,'file')
     warning('station %s fir file not found; skipping',stn_string)
     return
 end
@@ -12,16 +12,17 @@ if MEXEC_G.quiet<=1; fprintf(1,'adding winch data from bottle firing times to %s
 
 clear d h
 
-[df,hf] = mloadq(f,'/');
+[df,hf] = mloadq(pfiles.ctd_win,'/');
 if isfield(df, 'utime') && sum(isfinite(df.utime))>0
     
     [dwin, hwin] = mloadq(pfiles.ctd_win,'/');
-    if isfield(hf,'data_time_origin') && ~isempty(hf.data_time_origin)
-        dwin.time = m_commontime(dwin.time,hwin.data_time_origin,hf.data_time_origin);
-    else
-        dwin.time = m_commontime(dwin,'time',hwin,hf.fldunt{strcmp(hf.fldnam,'utime')});
-    end
-
+    %rename time to match fir file
+    dwin.utime = dwin.time;
+    hwin.fldnam{strcmp(hwin.fldnam,'time')} = 'utime';
+    dwin = orderfields(rmfield(dwin,'time'),hwin.fldnam);
+    %put time in same units and origin
+    dwin.time = m_commontime(dwin,'utime',hwin,hf);
+    
     % scan input file to extract winch cable out variable name
     cabvar = intersect({'cableout' 'cab' 'cable' 'wireout' 'out' 'mfctdcablelengthout' 'ctdcablelengthout'}, hwin.fldnam);
     if isempty(cabvar)

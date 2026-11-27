@@ -86,8 +86,9 @@ if sum(dp.sampnum<0 | dp.sampnum>1e9) && exist(pdu.buocean,'file')
     otfile = fullfile(pdu.buocean,sprintf(pdu.buallform, 'surface_ocean', mcruise));
     [du, hu] = mloadq(otfile,strjoin(uvars, ' '));
     dnum = m_commontime(du,'dday',hu,'datenum');
-    sampnump = str2num(datestr(dnum,'yyyymmddHHMM'));
-    sampnumn = -floor(du.dday)*1e4 - str2num(datestr(dnum,'HHMM'));
+    dv = datevec(dnum);
+    sampnump = str2num(sprintf('%04d%02d%02d%02d%02d',dv(1:5))); %yyyymmddHHMM
+    sampnumn = -floor(du.dday)*1e4 - str2num(sprintf('%02d%02d',dv(4:5))); %HHMM
     flds = setdiff(uvars, {'dday','times'});
     for no = 1:length(flds)
         dp.(flds{no}) = NaN(size(dp.sampnum));
@@ -190,11 +191,11 @@ switch samtyp
     case 'chl'
         tsd_uway = dc(strncmp('UW',dc.cast_number,2),:);
         clear du hu
-        to = [MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1) 1 1 0 0 0];
-        du.time = datenum(tsd_uway.date_day_month_year)-datenum(to); %***HH MM?????
+        to = ['days since ' MEXEC_G.data_time_origin_string];
+        du.dday = m_commontime(datenum(tsd_uway.date_day_month_year),'datenum',to); %***
         du.chl = tsd_uway.chlorophyll_dil_x_r_adj_x_fl_bl_x_ace_per_sampl;
-        hu.fldnam = {'time', 'chl'};
-        hu.fldunt = {['days since ' datestr(to,'yyyy-mm-dd HH:MM:SS')], 'ug_per_l'}; %***
+        hu.fldnam = {'dday', 'chl'};
+        hu.fldunt = {'to', 'ug_per_l'};
         hu.comment = comment;
         mfsave(pd.samu,du,hu)
 end

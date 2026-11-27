@@ -46,17 +46,8 @@ allin.vabs(allin.vabs > 1e10) = nan;
 allin.uship(allin.uship > 1e10) = nan;
 allin.vship(allin.vship > 1e10) = nan;
 
-unin.time = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
+unin.time = ['seconds since ' MEXEC_G.data_time_origin_string];
 allin.time = m_commontime(allin,'decday',unin.decday,unin.time);
-opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-if docf
-    h.data_time_origin = [];
-    h.data_time_origin_string = '';
-else
-    unin.time = 'seconds';
-    h.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
-    h.data_time_origin_string = datestr(h.data_time_origin,'yyyy mm dd HH MM SS');
-end
 
 % expand the 1-D vars to 2-D
 ndeps = size(allin.depth,1);

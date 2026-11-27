@@ -1,5 +1,4 @@
 function mwin_01_load(stn)
-
 % mwin_01_load(stn)
 % read in winch data corresponding to a CTD station
 %
@@ -49,13 +48,8 @@ if exist('winch_time_start','var') && ~isnan(winch_time_start) && ~isnan(winch_t
 else
     h_in=m_read_header(pfiles.ctd_1hz);
     k_time=find(strcmp('time',h_in.fldnam));
-    if isempty(h_in.data_time_origin)
-        t_start=m_commontime(h_in.alrlim(k_time),h_in.fldunt{k_time},'datenum')+time_window(1)/86400;
-        t_end=m_commontime(h_in.uprlim(k_time),h_in.fldunt{k_time},'datenum')+time_window(2)/86400;
-    else
-        t_start=datenum(h_in.data_time_origin)  + (h_in.alrlim(k_time)+time_window(1))/86400;
-        t_end=datenum(h_in.data_time_origin)+(h_in.uprlim(k_time)+time_window(2))/86400;
-    end
+    t_start=m_commontime(h_in.alrlim(k_time),h_in,'datenum')+time_window(1)/86400;
+    t_end=m_commontime(h_in.uprlim(k_time),h_in,'datenum')+time_window(2)/86400;
 end
 
 t_start_vec=datevec(t_start);

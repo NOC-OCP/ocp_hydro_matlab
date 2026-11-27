@@ -39,44 +39,33 @@ otfiles = {[prefix1 stn_string '_1hz.mat'],...
            [prefix1 stn_string '_2db.mat']};
 
 
-for i = 1:length(infiles)
+timunt = ['seconds since ' MEXEC_G.data_time_origin_string];
+timunty = ['days since ' MEXEC_G.data_time_origin_string '-01-01 00:00:00'];
+for ii = 1:length(infiles)
   
-  infilei = infiles{i};
-  otfilei = otfiles{i};
+  infilei = infiles{ii};
+  otfilei = otfiles{ii};
 
-  [d h] = mload(infilei,'/');
-
-
+  [d, h] = mload(infilei,'/');
+  [d.time, h.fldunt(strcmp('time',h.fldnam))] = m_commontime(d, 'time', h, timunt);
+  
   vars = fieldnames(d);
-  for i = 1:length(vars)
-    var = vars{i};
+  for ii = 1:length(vars)
+    var = vars{ii};
     eval([var ' = getfield(d,''' var ''');']);
   end
 
-  data_time_origin = h.data_time_origin;
-  date = datevec(datenum(data_time_origin) + time/3600/24);
-
-  year = date(:,1);
-  month = date(:,2);
-  day = date(:,3);
-  hour = date(:,4);
-  minute = date(:,5);
-  sec = date(:,6);
-
-  yday = datenum(date) - datenum(2009,1,1)+1; % 01 Jan 1200 is yearday 1.5
-
+  dday = m_commontime(d.time, timunt, timunty);
 
   disp(['saving data to ' otfilei])
   try
     save(otfilei,'time','scan','pumps','time_bin_average','press','temp','temp2',...
          'cond','cond2','t2_minus_t1','c2_minus_c1','pressure_temp','altimeter',...
-         'nbf','flag','data_time_origin','date','year','month','day',...
-         'hour','minute','sec','yday','h')
+         'nbf','flag','data_time_origin','dday','h')
   catch
     save(otfilei,'time','scan','pumps','time_bin_average','press','temp','temp2',...
          'cond','cond2','t2_minus_t1','c2_minus_c1','pressure_temp','altimeter',...
-         'data_time_origin','date','year','month','day',...
-         'hour','minute','sec','yday','h')
+         'data_time_origin','dday','h')
   end
   
 end

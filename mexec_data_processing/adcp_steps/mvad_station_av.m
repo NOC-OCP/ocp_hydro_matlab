@@ -164,7 +164,6 @@ end
 
 mfsave(pfiles.sadcp_av,da,ha); 
 
-opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
 if docf
     [~,to] = timeunits_mstar_cf(h.fldunt{strcmp('decday',h.fldnam)});
 else

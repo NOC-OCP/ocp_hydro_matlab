@@ -17,13 +17,8 @@ if MEXEC_G.quiet<=1; fprintf(1,'pasting CTD data at bottle firing times from fir
 
 if exist(pfiles.samp_ctd,'file')
     h0 = m_read_header(pfiles.samp_ctd);
-    if isfield(h0,'data_time_origin') && ~isempty(h0.data_time_origin)
-        tu = [h0.fldunt(strcmp('utime',h0.fldnam)) ' since ' sprintf('%d-%d-%d %d:%d:%d', h0.data_time_origin)];
-    else
-        tu = h0.fldunt(strcmp('utime',h0.fldnam));
-    end
 else
-    tu = ['seconds since ' MEXEC_G.data_time_origin_string];
+    h0 = ['seconds since ' MEXEC_G.data_time_origin_string];
 end
 
 [d,h] = mloadq(pfiles.ctd_nisk,'/');
@@ -45,7 +40,7 @@ else
 end
 if sum(~isnan(d.sampnum))>0
     ns = size(d.sampnum);
-    d.utime = m_commontime(d, 'utime', h, tu);
+    [d.utime, tu] = m_commontime(d, 'utime', h, h0);
     h.fldunt{strcmp('utime',h.fldnam)} = tu;
     %add station parameters
     d.stnlat = repmat(h.latitude,ns);

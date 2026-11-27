@@ -10,10 +10,9 @@ function varargout = ctdnav_asc_for_ladcp(stn)
 
 m_common
 
-opt1 = 'setup'; opt2 = 'm_stn_string'; run(MEXEC_G.opt_cruise)
 opt1 = 'setup'; opt2 = 'pfiles'; run(MEXEC_G.opt_cruise)
 f.ctd = pfiles.ctd_1hz_asc;
-f.ctd_header_lines      = 1; %***
+f.ctd_header_lines      = 1; 
 f.ctd_fields_per_line	= 6;
 f.ctd_time_base = 1; %year-day
 f.ctd_time_field = 1;
@@ -77,18 +76,14 @@ else
     dd.latitude = interp1(dn.dnum,dn.latitude,dd.dnum);
     dd.longitude = interp1(dn.dnum,dn.longitude,dd.dnum);
 end
-if isfield(dh,'data_time_origin') && ~isempty(dh.data_time_origin)
-    y0 = dh.data_time_origin(1);
-else
-    [~,to] = timeunits_mstar_cf(dh.fldunt{strcmp('time',dh.fldnam)});
-    y0 = to(1);
-end
-dd.yearday = m_commontime(dd,'time',dh,sprintf('days since %d 1 1 0 0 0',y0));
+ddunt = ['days since ' MEXEC_G.data_time_origin_string];
+dd.dday = m_commontime(dd, 'time', dh, ddunt);
+dd.yearday = dd.dday + 1; %1.0 at 00:00:00 on 1 Jan
 
 kok = find(isfinite(dd.temp) & isfinite(dd.psal) & isfinite(dd.press));
 
 fid = fopen(f.ctd,'w'); mfixperms(f.ctd);
-fprintf(fid,'%s\n','TimeJ, press, temp, psal, latitude, longitude');
+fprintf(fid,'%s\n','yday, press, temp, psal, latitude, longitude');
 
 for kl = 1:length(kok)
    fprintf(fid,'%12.7f %8.2f %8.4f %8.4f %11.6f %10.6f\n', dd.yearday(kok(kl)), dd.press(kok(kl)), dd.temp(kok(kl)), dd.psal(kok(kl)), dd.latitude(kok(kl)), dd.longitude(kok(kl)));

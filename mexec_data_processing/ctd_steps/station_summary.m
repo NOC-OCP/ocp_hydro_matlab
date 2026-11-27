@@ -193,14 +193,8 @@ if ~isempty(stnall)
             hnew.fldunt = [hnew.fldunt vars{k,2}];
         end
     end
-    opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-    if docf
-        m = strncmp('time_',hnew.fldnam,5);
-        hnew.fldunt(m) = repmat({timestring},sum(m),1);
-        hnew.data_time_origin = [];
-    else
-        hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
-    end
+    m = strncmp('time_',hnew.fldnam,5);
+    hnew.fldunt{m} = timestring;
     mfsave(pd.sum, ds, hnew, '-merge', 'statnum');
 
 else

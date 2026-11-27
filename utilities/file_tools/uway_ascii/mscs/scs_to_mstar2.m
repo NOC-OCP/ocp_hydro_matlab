@@ -88,13 +88,6 @@ for kl = 1:length(names)
 end
 hnew.fldnam = hnew.fldnam(m); hnew.fldunt = hnew.fldunt(m);
 
-opt1 = 'mstar'; MEXEC_G.mcruise
-if docf
-    hnew.data_time_origin = [];
-else
-    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
-end
-
 hnew.dataname = dataname; hnew.instrument_identifier = stream; %***
 hnew.comment = ['Variables written from scs to mstar at ' datestr(now,31) ' by ' MEXEC_G.MUSER];
 %think these are included by default since they are from MEXEC_G?***

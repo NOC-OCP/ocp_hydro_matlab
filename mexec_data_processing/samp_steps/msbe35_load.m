@@ -139,15 +139,9 @@ end
 
 %rename and save
 clear hnew
+tun = ['seconds since ' MEXEC_G.data_time_origin_string];
 hnew.fldnam = {'time' 'position' 'sampnum' 'tdiff' 'val' 'sbe35temp' 'sbe35temp_flag' 'statnum'};
-hnew.fldunt = {'seconds' 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_4.9' 'number'};
-opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-if docf
-    hnew.fldunt{1} = ['seconds since ' datestr(MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN,'yyyy-mm-dd HH:MM:SS')];
-    hnew.data_time_origin = [];
-else
-    hnew.data_time_origin = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN;
-end
+hnew.fldunt = {tun 'on.rosette' 'number' 'number' 'number' 'degc90' 'woce_4.9' 'number'};
 hnew.dataname = ['sbe35_' MEXEC_G.mcruise];
 hnew.comment = ['files ' sprintf('%s ', file_list{:})]; 
 

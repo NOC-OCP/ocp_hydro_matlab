@@ -49,8 +49,8 @@ if sum(index)
     st = head{index};
     isp = strfind(st,'=');
     string = st(isp+2:end);
-    dnum = datenum(string,'mmm dd yyyy  HH:MM:SS');
-    h.data_time_origin = datevec(dnum);
+    dv = datevec(string,'mmm dd yyyy  HH:MM:SS');
+    timunt = sprintf('%04d-%02d-%02d %02d:%02d:%02d',dv);
     head(index) = [];
 end
 
@@ -281,11 +281,6 @@ if savefile
     if ~isempty(h.recording_interval); nc_attput(ncfile.name,nc_global,'recording_interval',h.recording_interval); end
     if ~isempty(h.latitude); nc_attput(ncfile.name,nc_global,'latitude',h.latitude); end
     if ~isempty(h.longitude);nc_attput(ncfile.name,nc_global,'longitude',h.longitude); end
-    if docf
-        nc_attput(ncfile.name,nc_global,'data_time_origin',[]); %now use cf-compliant units instead
-    else
-        nc_attput(ncfile.name,nc_global,'data_time_origin',h.data_time_origin);
-    end
 
 else
     h.fldnam = {}; h.fldunt = {}; h.fldserial = {}; h.longname = {};
@@ -345,11 +340,7 @@ for k = 1:length(varname)
     v.longname = varname_long{k};
     v.data = data1(k,:)';
     v.data(v.data == sbe_bad_flag) = nan; % set sbe bad data to nan
-    if MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1)>=2024 && strcmp(varunits{k},'seconds')
-        v.units = ['seconds since ' datestr(h.data_time_origin, 'yyyy-mm-dd HH:MM:SS')];
-    else
-        v.units = varunits{k};
-    end
+    v.units = timunt;
     if ~isempty(sns{k})
         v.serial = num2str(str2double(sns{k}));
     else

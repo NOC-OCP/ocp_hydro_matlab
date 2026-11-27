@@ -21,14 +21,18 @@ else
 end
 
 opt1 = 'ctd_proc'; opt2 = 'cast_divide'; run(MEXEC_G.opt_cruise)
+timunt = ['seconds since ' MEXEC_G.data_time_origin_string];
+d1.time = m_commontime(d1, 'time', h1, timunt);
 
 kstart = []; kbot = []; kend = []; 
 if exist(m_add_nc(dfile),'file')
     [ds, hnew] = mloadq(dfile,'/');
+    %make time origin the same
+    ds.time = m_commontime(ds, 'time', hnew, timunt);
 else
+    %first time this is run
     clear ds hnew
     ds.statnum = stn;
-    hnew.data_time_origin = h1.data_time_origin;
     hnew.comment = '';
 end
 
@@ -107,14 +111,8 @@ dr = mloadq(pfiles.ctd_cleancal,'scan',' ');
 % write
 varnames = fieldnames(ds)';
 varunits = repmat({'number'},size(varnames));
-istime = strncmp('time', varnames, 4);
-opt1 = 'setup'; opt2 = 'mstar'; run(MEXEC_G.opt_cruise)
-if docf
-    varunits(istime) = h1.fldunt(strcmp('time',h1.fldnam));
-    hnew.data_time_origin = [];
-else
-    varunits(istime) = {'seconds'};
-end
+mt = strncmp('time', varnames, 4);
+varunits{mt} = timunt;
 ispress = strncmp('press', varnames, 5);
 varunits(ispress) = {'dbar'};
 

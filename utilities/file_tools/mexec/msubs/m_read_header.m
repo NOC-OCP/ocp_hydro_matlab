@@ -37,13 +37,11 @@ end
 % % end
 
 h.last_update_string = datestr(h.date_file_updated,31);
-if isempty(h.data_time_origin)
-    h.data_time_origin_string = '';
+if isfield(h,'data_time_origin') && ~isempty(h.data_time_origin)
+    h.data_time_origin_string = sprintf('%04d-%02d-%02d %02:%02:%02',h.data_time_origin);
 else
-    h.data_time_origin_string = datestr(datenum(h.data_time_origin),31); 
+    h.data_time_origin_string = MEXEC_G.data_time_origin_string;
 end
-% for some reason datstr([X 1 1 0 0 0],31) doesn't work properly for X <
-% about 1481. This construct with datestr(datenum[],31) seems to work OK .
 
 
 
