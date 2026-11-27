@@ -110,7 +110,7 @@ switch opt1
             case 'ctd_cals'
                 co.docal.temp = 1;
                 co.docal.cond = 1;
-                co.docal.oxy = 0;
+                co.docal.oxy = 1;
                 % 
                 % %stainless
                 co.calstr.temp.sn5785.dy214 =  'dcal.temp = d0.temp + interp1([0 2400 3100],[-.5e-3 -2.e-3 -3.e-3],d0.press) + 5.2e-4;';
@@ -127,21 +127,22 @@ switch opt1
                 % % ok but offset: 2540 [16]; 0619 [21] - oxy sample avail
                 % % mainly oxy1: 3836
                 % % mainly oxy2: 4580
-                % co.calstr.oxy.sn619.dy214 = 'dcal.oxy = d0.oxy.*(1.1+interp1([0 3100],[0 2e-2],d0.press));'; 
-                % co.calstr.oxy.sn619.msg = 'oxygen s/n 0619 calibrated based on comparison between 4/5 bottle samples and gamma_n-matched downcast';
-                % co.calstr.oxy.sn2540.dy214 = 'dcal.oxy = d0.oxy.*(1.115+interp1([0 3100],[-4e-2 0],d0.press));'; 
-                % co.calstr.oxy.sn2540.msg = 'oxygen s/n 2540 calibrated based on comparison between 10/12 bottle samples and gamma_n-matched downcast';
-                % 
-                % co.calstr.oxy.sn3836.dy214 = ['dcal.oxy = d0.oxy .* ( ' ...
-                %     '((d0.statnum<25).*(1+interp1([0 3100],[-2e-2 8e-3],d0.press)' ...
-                %     '+interp1([1 25 26 53],[6e-3 -3e-3 0 0],d0.statnum)))' ...
-                %     '+ ' ...
-                %     '((d0.statnum >= 25).*(1.06 + interp1([0 3100],[-6e-3 2e-2],d0.press)))' ...
-                %     ');'];
-                % co.calstr.oxy.sn3836.msg = 'oxygen s/n 3836 calibrated based on comparison between 144/173 bottle samples and gamma_n-matched downcast';
-                % 
-                % co.calstr.oxy.sn4580.dy214 = 'dcal.oxy = d0.oxy.*(1.04+interp1([0 1800 3100],[-9e-4 1.4e-2 1.5e-2],d0.press));'; 
-                % co.calstr.oxy.sn4580.msg = 'oxygen s/n 4580 calibrated based on comparison between 131/155 bottle samples and gamma_n-matched downcast';
+                co.calstr.oxy.sn2540.dy214 = 'dcal.oxy = d0.oxy.*(1.0779 + 1.17e-5.*d0.press);';
+                co.calstr.oxy.sn2540.msg = 'Oxygen sensor S/N 2540 was deployed on a single station only. Calibration was based on comparison with the 2 dbar downcast oxygen profile from sensor S/N 3836.';
+                
+                co.calstr.oxy.sn0619.dy214 = 'dcal.oxy = d0.oxy.*(1.1101 - 1.1e-6.*d0.press);';
+                co.calstr.oxy.sn0619.msg = 'Oxygen sensor S/N 0619 was deployed on a single station only. Calibration was based on comparison with the 2 dbar downcast oxygen profile from sensor S/N 3836.';
+                
+                co.calstr.oxy.sn3836.dy214 = ['dcal.oxy = d0.oxy .* ( ' ...
+                    '((d0.statnum<25).*(0.9780+9.1e-6*d0.press))' ...
+                    '+ ' ...
+                    '((d0.statnum >= 25).*(1.0484+8.8e-6*d0.press))' ...
+                    ');'];
+                co.calstr.oxy.sn3836.msg = 'oxygen s/n 3836 calibrated based on comparison between 118/145 bottle samples and gamma_n-matched downcast';
+
+                co.calstr.oxy.sn4580.dy214 = 'dcal.oxy = d0.oxy.*(1.0379 + 5.7e-6*d0.press);'; 
+                co.calstr.oxy.sn4580.msg = 'oxygen s/n 4580 calibrated based on comparison between 111/132 bottle samples and gamma_n-matched downcast';
+
             case 'ctdfiles'
                 cnvfile = fullfile(MEXEC_G.MDIRLIST.M_CTD_CNV,...
                     sprintf('%s_CTD%s.cnv', upper(mcruise), stn_string));
@@ -156,13 +157,14 @@ switch opt1
             case 'sensor_choice'
                 ts_choice = 2;
                 o_choice = 2;
-                if ismember(stnlocal,[14,21,22]) % other sensors, to spiky - CTD 21/0: oxy-hyst off in shallow; /21 maybe too? however we have oxy avail to calib those
+                if ismember(stnlocal,[14,21]) % other sensors, to spiky - CTD 21/0: oxy-hyst off in shallow; /21 maybe too? however we have oxy avail to calib those
                     o_choice = 1;
                 else
                     ts_choice = 2;
                     o_choice = 2; 
                 end
             case 'raw_corrs'
+                
                 % % % before jump - default
                 oxy3836_1.H1 = -0.033; 
                 oxy3836_1.H2 = 5000; % pressure
@@ -189,6 +191,9 @@ switch opt1
                 if ismember(stnlocal,[4:13 15 17:20 23:53])
                     co.hyst_oxy2 = oxy4580;
                 end
+
+                co.dpoff_checked = [22 0
+                    6 1; 7 1;8 1; 9 1; 13 1; 14 1; 38 1];
             case 'rawedit_auto'
            % oxy sensors - persistent primary-secondary offsets so
            % regular sensor changes:
@@ -437,35 +442,6 @@ case 'adcp_proc'
         cfg.dnpat = sprintf('%s_LADCP_%sM.000',upper(mcruise),cfg.stnstr);
         SADCP_inst = 'os75nb';
         cfg.f.sadcp = fullfile(MEXEC_G.MDIRLIST.M_VMADCP, 'mproc', [SADCP_inst '_' mcruise '_ctd_' stn_string '_forladcp.mat']);
-        %set magnetic declination here, rather than using either of the two
-        %options built in to LDEO_IX/loadnav
-        %[p, f, ext] = fileparts(cfg.f.ctd); y0 = MEXEC_G.MDEFAULT_DATA_TIME_ORIGIN(1);
-
-        %from CE26008 - however pyIGRF is not install - so I do not use it
-        %at the moment
-        %%%
-        % a = {dbstack(2).file}; 
-        % if ~strcmp(a{1},'mout_1hzasc.m') %bash script uses the output of mout_1hzasc so don't want to try to call this before that
-        %     mdfile = fullfile(MEXEC_G.MDIRLIST.M_LADCP,'magdec.txt');
-        %     if ~exist(mdfile,'file')
-        %         fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
-        %         pause
-        %     end
-        %     md = load(mdfile);
-        %     if ~sum(md==stnlocal)
-        %         fprintf(1,'in terminal, run the following:\nbash /data/pstar/programs/repos_github/mexec_exec/run_pyIGRF.sh\nthen enter to continue (here)')
-        %         pause
-        %         md = load(mdfile);
-        %     end
-        %     ii = find(md==stnlocal); 
-        %     if isempty(ii)
-        %         warning('no mag dec for %s',stn_string)
-        %     else
-        %         ii = ii(1);
-        %         cfg.p.drot = md(ii+1);
-        %         fprintf(1,'using mag dec %f for %s',cfg.p.drot,stn_string)
-        %     end
-        % end
 %%%%%%%%%%%%%%%%%%%%  end adcp_proc %%%%%%%%%%%%        
 
 %%%%%%%%%%%%%%%%%%%%  sbe35 %%%%%%%%%%%%
@@ -521,8 +497,6 @@ case 'samp_proc'
                         files = {fullfile(MEXEC_G.MDIRLIST.M_BOT_OXY,...
                         'Winkler Calculation Spreadsheet_DY214_FINAL.xlsx')};
                         sopts.numhead = 8;
-                        % below from CE26008, above not working - need to
-                        % edit, more
                         ct = {'date','char','string';...
                             'statnum','double','number';...
                             'station','char','string';...
@@ -671,9 +645,12 @@ case 'samp_proc'
                         % outliers relative to profile/CTD (not replicates)
                         % The issue with the replicates is, that even
                         % though all replicates are 3 they get flagged as 6
-                        % 
-                        m = ismember(dp.sampnum,[409 905 1201:2:1221 1307 4201 4601:2:4621]); 
+                        % need to double check 
+                        m = ismember(dp.sampnum,[409 905 1201:2:1221 1307 4201 4607 4613 4615 4617]); 
                         dp.botoxy_flag(m) = 3;
+                        
+                        m4 = ismember(dp.sampnum,[1213 1219 4601 4609]);
+                        dp.botoxy_flag(m4) = 4;
                 end
         end
 %%%%%%%%%%%%%%%%%%%% end samp_proc %%%%%%%%%%
@@ -767,7 +744,7 @@ case 'samp_proc'
                 else
                     section = 'profiles_only';
                     %kstns = [1 2 10:33 3 4 5 40 41 66 70 100]; %test, dm, yo-yo, caldip, cal profile, argo 60N
-                    kstns = 1:53; %useful to do profiles_only for all stations anyway (smooth in vertical)
+                    kstns = [3:28,30:53]; %useful to do profiles_only for all stations anyway (smooth in vertical)
                 end
         end
    
